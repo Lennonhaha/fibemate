@@ -77,7 +77,7 @@
     <span style="color:var(--muted);font-size:1.2rem;">→</span>
     <span class="status-tag pending">⬜ PQC-Active</span>
   </div>
-  <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid (路径 A) 已上线：TLS 1.3 X25519MLKEM768 混合 KEM 全栈启用（oqs-provider + nginx）。X25519(32B) + ML-KEM-768(1184B) 混合密钥协商已进入生产环境。路径 C (应用层) 仍保留作为 SM2 混合辅助通道。</strong></p>
+  <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid (路径 A)：oqs-provider + liboqs 编译链就绪，nginx 原生接入待完成 🔧。X25519(32B) + ML-KEM-768(1184B) 混合密钥协商规范就绪，编译链已验证。路径 C (应用层) 仍保留作为 SM2 混合辅助通道。</strong></p>
 </div>
 
 <p style="font-size:0.9rem;margin-top:0.5rem;color:var(--muted);max-width:44rem;">LookingGlass 锁死格分解捷径，VWZ 构筑独立算力高墙，双原创纵深防御，填补标准后量子算法的结构安全空白</p>
@@ -125,10 +125,10 @@
   <td><span style="color:var(--green);">✅ 上线</span></td>
   <td>不改 Nginx/OpenSSL，TLS 1.3 Session ID 绑定，会话密钥实时混合</td>
 </tr>
-<tr><td>TLS 1.3 混合握手对接<br/><span style="font-size:0.8rem;color:var(--muted);">路径 A: NamedGroup 原生集成</span></td><td><span style="color:var(--green);">✅ 已上线</span></td><td>nginx 1.30.1 + OpenSSL 3.0.13 + oqs-provider 0.12.0-dev；零重新编译，systemd 环境注入</td></tr>
+<tr><td>TLS 1.3 混合握手对接<br/><span style="font-size:0.8rem;color:var(--muted);">路径 A: NamedGroup 原生集成</span></td><td><span style="color:#d4a800;">🔧 编译链就绪</span></td><td>liboqs 0.12.0 + oqs-provider 0.12.0-dev 编译通过并安装至系统 OsslModules；nginx 原生接入待完成</td></tr>
 <tr><td>ClientHello 新增 #4590 扩展</td><td><span style="color:var(--green);">✅ 应用层验证通过</span></td><td>TLS 层命名组待 oqs-provider 适配；应用层路径 C-2（SM2+ML-KEM-768）5/5 E2E 全绿，lg-053 存证</td></tr>
 <tr><td>浏览器到服务端全链路 TLS 测试</td><td><span style="color:var(--amber);">⬜ 待启动</span></td><td>完整三节点联调环境</td></tr>
-<tr><td>官网生产环境开启混合加密</td><td><span style="color:var(--green);">✅ 已上线</span></td><td>TLS 1.3 X25519MLKEM768 混合 KEM 已激活；Let’s Encrypt ECDSA cert + oqs-provider；普通客户端自动降级至经典 ECDH</td></tr>
+<tr><td>官网生产环境开启混合加密</td><td><span style="color:var(--green);">🔧 待完成</span></td><td>oqs-provider 编出但未接入 nginx；当前 TLS 为经典 ECDH；Let’s Encrypt ECDSA cert + oqs-provider；普通客户端自动降级至经典 ECDH</td></tr>
 </tbody>
 </table>
 
@@ -165,7 +165,7 @@
   <div class="timeline-step"><div class="step-marker pending">2</div><div class="step-body"><div class="step-title">开发 ClientHello 扩展</div><div class="step-desc">在握手报文 supported_groups 字段写入 4590，并附带约 1184 字节 ML-KEM-768 公钥。</div></div></div>
   <div class="timeline-step"><div class="step-marker pending">3</div><div class="step-body"><div class="step-title">网络边界测试</div><div class="step-desc">验证 1249 字节左右的握手首包不会被防火墙、CGNAT、中间网关截断。</div></div></div>
   <div class="timeline-step"><div class="step-marker pending">4</div><div class="step-body"><div class="step-title">实现服务端混合密钥协商</div><div class="step-desc">服务端回复 ML-KEM 密文，两端分别导出密钥材料，将 SM2 与 ML-KEM 输出做密钥混合。</div></div></div>
-  <div class="timeline-step"><div class="step-marker done">5</div><div class="step-body"><div class="step-title">TLS 混合握手上线</div><div class="step-desc">X25519MLKEM768 混合 KEM 已启用；内网 s_client/s_server 验证通过；Chrome 133+ 客户端待用户确认。</div></div></div>
+  <div class="timeline-step"><div class="step-marker pending">5</div><div class="step-body"><div class="step-title">TLS 混合握手编译链就绪</div><div class="step-desc">liboqs 0.12.0 + oqs-provider 0.12.0-dev 编译通过；nginx 原生接入待完成；内网 s_client/s_server 验证待执行。</div></div></div>
   <div class="timeline-step"><div class="step-marker pending">6</div><div class="step-body"><div class="step-title">Chrome 客户端兼容性验证 + 性能基准</div><div class="step-desc">确认 Chrome 133+ ClientHello 正确发送 X25519MLKEM768 命名组；对比纯 X25519 与 X25519+ML-KEM 握手耗时。</div></div></div>
   <div class="timeline-step"><div class="step-marker pending">7</div><div class="step-body"><div class="step-title">正式上线与长期观测</div><div class="step-desc">切换 fibemate.net 证书与握手策略，持续监测全网浏览器兼容性与延迟指标。</div></div></div>
 </div>
@@ -200,7 +200,7 @@
 <h2>5. 常见问答</h2>
 
 <h4>Q：FIBEMATE 当前具备抗量子能力吗？</h4>
-<p>A：客观如实说明：已完成基础能力部署。ML-KEM-768 算法已经实现并通过 KAT 严格校验。TLS 1.3 混合握手（路径 A）已于 2026-07-06 上线：fibemate.net 通过 nginx + OpenSSL 3.0.13 + oqs-provider 0.12.0-dev 原生支持 X25519MLKEM768 混合密钥协商，key_share 包含 32B X25519 + 1184B ML-KEM-768。路径 C（应用层混合）保留作为 SM2 混合辅助通道。普通客户端自动降级至经典 ECDH，无 PQC 客户端不受影响。本页面会持续更新部署进度。</p>
+<p>A：客观如实说明：已完成基础能力部署。ML-KEM-768 算法已经实现并通过 KAT 严格校验。TLS 1.3 混合握手（路径 A）编译链已于 2026-07-06 就绪：liboqs 0.12.0 + oqs-provider 0.12.0-dev 编译并安装至 /usr/lib/ossl-modules/；nginx 原生接入正在推进中。届时 key_share 将包含 32B X25519 + 1184B ML-KEM-768。路径 C（应用层混合）保留作为 SM2 混合辅助通道。普通客户端自动降级至经典 ECDH，无 PQC 客户端不受影响。本页面会持续更新部署进度。</p>
 
 <h4>Q：何时可以正式开启抗量子通信？</h4>
 <p>A：TLS 1.3 混合握手已于 2026-07-06 完成（实际耗时约 1 小时编译 + 配置）。SM2 混合通道（#4590）保留在应用层，不阻塞标准 PQC 部署。后续工作重点：Chrome 客户端兼容性验证 + 性能基准压测。最终上线时间取决于 OpenSSL、Nginx 的源码改造难度。</p>

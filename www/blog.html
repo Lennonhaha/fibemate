@@ -651,7 +651,7 @@
                 <tr><td style="padding:10px;border:1px solid var(--border);">SLH-DSA</td><td style="padding:10px;border:1px solid var(--border);">NIST FIPS 205，pqc_sphincsplus WASM</td><td style="padding:10px;border:1px solid var(--border);color:var(--green);">✅ 签名验证闭环</td></tr>
                 <tr><td style="padding:10px;border:1px solid var(--border);">SM2 ECDH</td><td style="padding:10px;border:1px solid var(--border);">BigInt 标量掩码 + 射影随机化 TVLA 5/5</td><td style="padding:10px;border:1px solid var(--border);color:var(--green);">✅ N=10,000 全绿</td></tr>
                 <tr><td style="padding:10px;border:1px solid var(--border);">SM4-αGCM</td><td style="padding:10px;border:1px solid var(--border);">α=7.5 认证加密，10/10 PASS</td><td style="padding:10px;border:1px solid var(--border);color:var(--green);">✅ 生产就绪</td></tr>
-                <tr><td style="padding:10px;border:1px solid var(--border);">TLS 混合握手</td><td style="padding:10px;border:1px solid var(--border);">路径 A (X25519MLKEM768) + 路径 C-2 (SM2+ML-KEM)</td><td style="padding:10px;border:1px solid var(--border);color:var(--green);">✅ 双轨道上线</td></tr>
+                <tr><td style="padding:10px;border:1px solid var(--border);">TLS 混合握手</td><td style="padding:10px;border:1px solid var(--border);">路径 A (X25519MLKEM768) + 路径 C-2 (SM2+ML-KEM)</td><td style="padding:10px;border:1px solid var(--border);color:var(--green);">✅ 双轨道并行 (路径 A 编译链就绪)</td></tr>
                 <tr><td style="padding:10px;border:1px solid var(--border);">OPK 预密钥</td><td style="padding:10px;border:1px solid var(--border);">X3DH 异步握手，7/7 全绿</td><td style="padding:10px;border:1px solid var(--border);color:var(--green);">✅ 端到端闭环</td></tr>
                 <tr><td style="padding:10px;border:1px solid var(--border);">FPGA v5</td><td style="padding:10px;border:1px solid var(--border);">NTT 7 级流水线 + LFSR256 + 故障保护，Artix-7</td><td style="padding:10px;border:1px solid var(--border);color:var(--green);">✅ 综合通过</td></tr>
                 <tr><td style="padding:10px;border:1px solid var(--border);">LookingGlass</td><td style="padding:10px;border:1px solid var(--border);">DMTH 多层递归逆向混淆 (d=3)，36/36 TVLA</td><td style="padding:10px;border:1px solid var(--border);color:var(--yellow);">🔬 实验分支</td></tr>
@@ -672,7 +672,7 @@
             <ul>
                 <li>FIBEMATE 核心价值在密码学协议实现本身，而非封装 API。GPLv3 保护代码改进回流社区。</li>
                 <li>对抗 "GPL 洗白" — 任何衍生工作必须保持开源，防止私有化分支架空公共审计能力。</li>
-                <li>与 liboqs/oqs-provider 的 Apache 2.0 + MIT 兼容 — 链接层通过动态加载隔离，无许可证冲突。</li>
+                <li>与 liboqs/liboqs 0.12.0 与 oqs-provider 0.12.0-dev 均为 Apache 2.0 + MIT 许可证，通过动态加载隔离，无许可证冲突。</li>
             </ul>
             <p>商业授权双轨：对希望闭源集成的企业，我们提供独立商业许可协商通道。</p>
 
@@ -691,7 +691,7 @@
                 <div style="background:rgba(255,171,64,0.08);padding:16px;border-radius:8px;border:1px solid rgba(255,171,64,0.2);">
                     <div style="color:#ffab40;font-weight:600;font-size:1.1rem;">🌐 Phase 3</div>
                     <div style="color:var(--text-secondary);font-size:0.85rem;">2027.H1</div>
-                    <div style="margin-top:8px;">形式化安全证明<br>+ 第三方安全审计<br>+ oqs-provider 上游贡献</div>
+                    <div style="margin-top:8px;">形式化安全证明<br>+ 第三方安全审计<br>+ oqs-provider nginx 接入</div>
                 </div>
                 <div style="background:rgba(255,82,82,0.08);padding:16px;border-radius:8px;border:1px solid rgba(255,82,82,0.2);">
                     <div style="color:#ff5252;font-weight:600;font-size:1.1rem;">🎓 Phase 4</div>

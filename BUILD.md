@@ -156,6 +156,10 @@ server {
 
 ```bash
 # 安装 liboqs + oqs-provider (一次性)
+
+> **⚠️ 状态**: 编译链就绪但 nginx 接线未完成。本节为技术参考，
+> 生产环境尚未启用 X25519MLKEM768。待 nginx 重编译后更新。
+
 cd /tmp
 git clone --depth 1 -b 0.12.0 https://github.com/open-quantum-safe/liboqs
 cd liboqs && mkdir build && cd build

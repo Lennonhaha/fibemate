@@ -168,9 +168,9 @@ export function init() {
 
 /**
  * Generate a new keypair with parameter k.
- * k=8 → PK ~468B, Sig ~36B, security ~73 bits (tensor OWF lower bound)
- * k=16 → PK ~1.7KB, Sig ~68B
- * k=32 → PK ~6.3KB, Sig ~132B
+ * k=8 → PK ~2.8KB (rank-1 压缩后 ~468B), Sig ~36B, security ~73 bits (tensor OWF lower bound)
+ * k=16 → PK ~19KB (rank-1 压缩后 ~1.7KB), Sig ~68B
+ * k=32 → PK ~142KB (rank-1 压缩后 ~6.5KB), Sig ~132B
  * @param {number} k
  * @returns {Keypair}
  */
