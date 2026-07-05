@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-06-03T18:26:42.007Z",
+  "N_SAMPLES": 5000,
+  "WARMUP": 2000,
+  "THRESH": 4.5,
+  "results": [
+    {
+      "name": "generateKeypair",
+      "tStat": 0.2914673555363454,
+      "passed": true
+    },
+    {
+      "name": "encapsulate",
+      "tStat": 0.6858215310832203,
+      "passed": true
+    },
+    {
+      "name": "decapsulate",
+      "tStat": 0.6865820935865337,
+      "passed": true
+    },
+    {
+      "name": "byteEncode",
+      "tStat": 60.583530296931706,
+      "passed": false
+    },
+    {
+      "name": "byteDecode",
+      "tStat": 67.46199763227142,
+      "passed": false
+    },
+    {
+      "name": "compress",
+      "tStat": 89.35966036228443,
+      "passed": false
+    },
+    {
+      "name": "decompress",
+      "tStat": 98.40549993504877,
+      "passed": false
+    },
+    {
+      "name": "polyMul",
+      "tStat": 63.76999224573924,
+      "passed": false,
+      "mA": 195.9267099999997,
+      "mB": 1861.0052859999955
+    },
+    {
+      "name": "matVecMul",
+      "tStat": 8.429488997398298,
+      "passed": false,
+      "mA": 33997.70348700003,
+      "mB": 34988.80954300002
+    }
+  ],
+  "summary": {
+    "pass": 3,
+    "fail": 6,
+    "total": 9
+  }
+}

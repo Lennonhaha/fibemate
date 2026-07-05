@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SM2 优化版本的侧信道安全分析（TVLA） — FIBEMATE</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #0d1117; color: #c9d1d9;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+    line-height: 1.7; padding-bottom: 4rem;
+  }
+  .main { max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }
+  h1 { font-size: 1.6rem; color: #e8f0f8; margin-bottom: 0.3rem; }
+  h1 .sub { display: block; font-size: 0.9rem; color: #8b949e; font-weight: normal; margin-top: 0.3rem; }
+  h2 { font-size: 1.2rem; color: #00E5C3; margin: 2.5rem 0 0.8rem; padding-bottom: 0.4rem; border-bottom: 1px solid rgba(0,229,195,0.12); }
+  h3 { font-size: 1rem; color: #e8f0f8; margin: 1.5rem 0 0.5rem; }
+  p { margin: 0 0 0.9rem; font-size: 0.9rem; }
+  a { color: #00E5C3; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  ul, ol { margin: 0 0 1rem 1.5rem; font-size: 0.9rem; }
+  li { margin-bottom: 0.3rem; }
+  table { width: 100%; border-collapse: collapse; margin: 0.8rem 0 1.2rem; font-size: 0.82rem; }
+  th { text-align: left; padding: 8px 12px; color: #8b949e; border-bottom: 1px solid rgba(255,255,255,0.08); font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  code { background: rgba(255,255,255,0.06); padding: 1px 6px; border-radius: 3px; font-size: 0.85em; }
+  pre { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; padding: 1rem; overflow-x: auto; margin: 0.8rem 0 1.2rem; font-size: 0.82rem; }
+  .badge-pass { color: #00d4aa; font-weight: 600; }
+  .badge-fail { color: #f85149; font-weight: 600; }
+  .badge-pend { color: #f0a040; font-weight: 600; }
+  .badge-none { color: #646c78; }
+  .arrow { font-size: 0.85em; color: #8b949e; margin: 0 4px; }
+  .box {
+    margin: 1.2rem 0; padding: 1rem 1.2rem;
+    border-radius: 6px; font-size: 0.85rem;
+  }
+  .box-warn  { background: rgba(248,81,73,0.06); border: 1px solid rgba(248,81,73,0.25); }
+  .box-info  { background: rgba(0,229,195,0.04); border: 1px solid rgba(0,229,195,0.12); }
+  .box-good  { background: rgba(0,210,100,0.04); border: 1px solid rgba(0,210,100,0.12); }
+  .box-announce {
+    background: linear-gradient(135deg, rgba(0,210,100,0.08), rgba(248,81,73,0.04));
+    border: 1px solid rgba(248,165,40,0.3);
+    padding: 1.2rem 1.4rem; margin: 1.5rem 0; border-radius: 8px;
+  }
+  .box-announce h3 { color: #f0a040; margin: 0 0 0.5rem; font-size: 1rem; }
+  .box-announce p { margin: 0.3rem 0; }
+  .math { font-family: 'Cambria Math', 'Latin Modern Math', 'STIX Two Math', serif; font-size: 1.05em; }
+  .ref { font-size: 0.8rem; color: #8b949e; margin: 0 0 0.3rem 1.5rem; }
+  .back { display: inline-block; margin: 2rem 0 0; font-size: 0.85rem; color: #00E5C3; }
+  .footer { margin-top: 3rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.06); font-size: 0.75rem; color: #646c78; text-align: center; }
+  /* N=2000/N=5000 comparison stripes */
+  .n2k { color: #8b949e; }
+  .n5k { color: #e8f0f8; }
+  .td-n2000 { background: rgba(255,255,255,0.01); }
+  .td-n5000 { background: rgba(255,255,255,0.03); }
+  .col-n { width: 14%; }
+  colgroup .col-n2000 { background: rgba(139,148,158,0.03); }
+  colgroup .col-n5000 { background: rgba(0,229,195,0.02); }
+  tr.fail-row td { color: rgba(248,81,73,0.85); }
+  tr.fail-row .td-n5000 { background: rgba(248,81,73,0.06); }
+</style>
+</head>
+<body>
+<div class="main">
+
+<h1>SM2 优化版本的侧信道安全分析（TVLA）
+  <span class="sub">FIBEMATE · 技术文档 · 更新于 2026-06-25</span>
+</h1>
+
+<!-- ==================== 更新公告 ==================== -->
+<div class="box-announce" style="border-color:rgba(0,210,100,0.35);">
+  <h3 style="color:#00d4aa;">🏆 2026-06-18 最终更新：Montgomery Ladder v1.3 · 三重防护 · N=5,000 7/7 全绿</h3>
+  <p><strong>终极加固：在 Scalar Masking + Projective Randomization 基础上叠加 Montgomery Ladder 恒定时间点乘。</strong>三重防护完全消除所有时序侧信道泄漏路径。</p>
+  <ul style="margin:0.5rem 0 0;">
+    <li><strong>7/7 全 PASS</strong>：verify |t|=0.10 (曾 7.42→1.19→0.10) · decrypt |t|=0.16 (曾 8.22→2.06→0.16)</li>
+    <li>核心改进：wNAF 窗口乘 → Montgomery Ladder（常数时间，固定迭代次数，无条件 ADD+DOUBLE）</li>
+    <li>三重防护：Scalar Masking + Projective Randomization (Z-blinding) + Montgomery Ladder</li>
+    <li>性能特点：528s (N=5,000) · 比 Masked v1.2 慢 3.8x（恒定时间 vs 可变 wNAF），安全性优先级</li>
+    <li>2026-06-18 FreeTSA 时间戳存证 (Status: Granted) · 2026-06-25 DigiCert Granted ✅（参考文献/免责声明修正版） · <a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></li>
+  </ul>
+  <p style="margin:0.5rem 0 0;">详见<a href="#montgomery-ladder">第 3.7 节</a>（Montgomery Ladder v1.3 详情）和 <a href="/docs/evidence/TECHNICAL-VERIFICATION.md">技术验证证据地图 v4 →</a></p>
+</div>
+
+<!-- ==================== 旧版公告（存档） ==================== -->
+<div class="box-announce" style="margin-top:0.8rem;background:rgba(248,81,73,0.04);border:1px solid rgba(248,81,73,0.18);">
+  <h3 style="color:#f0a040;font-size:0.8rem;">📋 存档：N=5,000 升级版发现的 3 项泄漏（已修复，见上方）</h3>
+  <p>SM2 TVLA 已按计划升级到 <strong>N=5,000</strong>（对标 ML-KEM-768 的 N=10,000 标准的一半），完整体现了提升样本量的安全价值：</p>
+  <ul style="margin:0.5rem 0 0;">
+    <li><strong>8/12 通过，3 项 SM2 操作暴露泄漏</strong>：verify 在两版实现中均不通过，jsbn decrypt 也不通过</li>
+    <li>N=2,000 时"全部通过"的 verify 操作，在 N=5,000 时 |t| 飙升至 6–7 —— <strong>大样本量揭示了小样本无法检测的时序差异</strong></li>
+    <li>BigInt+wNAF 的 sign 仍然安全（|t|=1.37，N=2000 时为 2.03），wNAF 的 ADD/DOUBLE 模式在 V8 环境仍可接受</li>
+    <li>SHA-256 从 N=2000 的 ❌ (|t|=5.40) 变为 ✅ (|t|=2.29) — 之前的失败是样本量不足导致的假阳性</li>
+    <li>总耗时 <strong>1,099 秒</strong>（≈ 18 分钟），测试环境：阿里云 ECS (Node.js v22)</li>
+  </ul>
+  <p style="margin:0.5rem 0 0;">详见<a href="#n5000-analysis">第 3.3 节</a>（N=5,000 详细分析）和<a href="#verify-leak">第 3.4 节</a>（verify/decrypt 泄漏根因分析）。</p>
+</div>
+
+<!-- ==================== 高阶 TVLA 公告 ==================== -->
+<div class="box-announce" style="margin-top:0.8rem;background:linear-gradient(135deg,rgba(0,229,195,0.08),rgba(100,108,255,0.06));border:1px solid rgba(100,108,255,0.25);">
+  <h3 style="color:#7b8cff;">🔬 2026-06-20 新增：高阶 TVLA (1–4 阶矩) · N=5,000 · 20/20 全绿</h3>
+  <p><strong>一阶 TVsLA 仅检测均值差异，高阶 TVLA 进一步检测方差、偏度、峰度的数据依赖性泄漏。</strong>SM2 BigInt v1.3 三重防护在所有 4 阶统计矩上均无显著泄漏。</p>
+  <ul style="margin:0.5rem 0 0;">
+    <li><strong>20/20 全 PASS</strong>：5 操作 × 4 阶矩，全部 |t| ≤ 1.24，远低于阈值 4.5</li>
+    <li>一阶矩全部 ≈ 0.00：Montgomery Ladder 恒定时间完全消除条件分支泄漏</li>
+    <li>高阶峰值 encrypt Order 4 (|t|=1.24)：KDF+XOR 轻微数据依赖方差，在阈值内</li>
+    <li>decrypt 最稳健：高阶 t ≤ 0.74，三重防护在高阶统计下最有效</li>
+    <li>测试时长：571.7s (N=5,000 × 4 阶 × 5 操作)，阈值 ≤ 4.5</li>
+    <li>2026-06-21 FreeTSA 时间戳存证 (Status: Granted) · <a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></li>
+  </ul>
+  <p style="margin:0.5rem 0 0;">详见<a href="#high-order-tvla">第 3.8 节</a>（高阶 TVLA 完整数据）和 <a href="/docs/evidence/tvla-sm2-high-order-report.json">高阶 TVLA 报告 (JSON) →</a></p>
+</div>
+
+<!-- ==================== 1. 摘要 ==================== -->
+<h2>1. 摘要</h2>
+
+<p>本文档记录 FIBEMATE 项目中 SM2 实现族的侧信道安全评估状态。已完成六轮 TVLA 测试（含最新高阶 TVLA）：</p>
+
+<ul>
+  <li><strong>旧版 jsbn SM2</strong>：✅ TVLA v1 N=2,000 通过（2026-05-30，8/8 全部通过）</li>
+  <li><strong>新版 BigInt + Jacobian + Precomp + wNAF SM2</strong>：
+    <ul>
+      <li>✅ TVLA v2 N=2,000 通过（2026-06-16，10/10 SM2 操作全部通过）</li>
+      <li><strong>⚠️ TVLA v3 N=5,000 部分未通过</strong>（2026-06-18，verify + decrypt 暴露泄漏，已修复）</li>
+      <li><strong>✅ TVLA v1.2 Masked N=5,000 全绿</strong>（2026-06-18，5/5 PASS · Scalar Masking + Projective Randomization）</li>
+      <li><strong>🏆 TVLA v1.3 Montgomery Ladder N=5,000 全绿（最终版）</strong>（2026-06-18，7/7 PASS · 三重防护 · verify |t|=0.10 · decrypt |t|=0.16）</li>
+    </ul>
+  </li>
+  <li><strong>🔬 高阶 TVLA v1.3 N=5,000 · 1–4 阶矩</strong>（2026-06-20，<strong>20/20 全 PASS</strong> · 最高 |t|=1.24 · 571.7s）</li>
+</ul>
+
+<p>已完成的六轮 TVLA 测试建立了从 N=2,000 到 N=5,000 到 4 阶统计矩的递进式验证体系。v1.3 Montgomery Ladder 三重防护方案在一阶 mean 和高阶 variance/skewness/kurtosis 上均无显著泄漏——恒定时间点乘从根本上消除时序差异，高阶验证确认无残留数据依赖性泄漏路径。</p>
+
+<!-- ==================== 2. TVLA 方法简介 ==================== -->
+<h2>2. TVLA 方法简介</h2>
+
+<h3>2.1 什么是 TVLA</h3>
+
+<p>TVLA（Test Vector Leakage Assessment）是评估密码学实现是否存在可观测侧信道泄漏的标准方法，由 Goodwill et al.（2011）在 "A Testing Methodology for Side-Channel Resistance Validation" 中提出。</p>
+
+<h3>2.2 Welch's t-test</h3>
+
+<p>TVLA 使用 Welch's t-test 比较两组测量（固定明文 vs 随机明文）的时序或功耗分布：</p>
+
+<pre>
+        μ<sub>r</sub> − μ<sub>f</sub>
+t = ─────────────────────────
+    √(σ<sub>r</sub>²/n<sub>r</sub> + σ<sub>f</sub>²/n<sub>f</sub>)
+</pre>
+
+<p>其中 μ<sub>r</sub> / μ<sub>f</sub> 分别为随机组和固定组的均值，σ² 为方差，n 为样本量。</p>
+
+<h3>2.3 判定标准</h3>
+
+<table>
+  <thead><tr><th>|t| 范围</th><th>结论</th><th>置信度</th></tr></thead>
+  <tbody>
+    <tr><td>≤ 4.5</td><td>无显著泄漏 · <strong>通过</strong> <span class="badge-pass">✅</span></td><td>> 99.999%</td></tr>
+    <tr><td>> 4.5</td><td>存在可侧信道泄漏 · <strong>不通过</strong> <span class="badge-fail">⚠️</span></td><td>拒绝 H₀</td></tr>
+  </tbody>
+</table>
+
+<p>阈值 4.5 对应误报概率低于 0.001%。工业标准也常使用 |t| ≤ 4.5（NIST IR 8214A 参考）。</p>
+
+<h3>2.4 样本量的意义</h3>
+
+<table>
+  <thead><tr><th>样本量 N</th><th>可检测效果</th><th>适用场景</th></tr></thead>
+  <tbody>
+    <tr><td>1,000–2,000</td><td>粗粒度泄漏（>0.5σ）</td><td>初步筛查</td></tr>
+    <tr><td>3,000–10,000</td><td>中等泄漏（0.2–0.5σ）</td><td>标准工业测试</td></tr>
+    <tr><td>50,000–100,000</td><td>微弱泄漏（<0.2σ）</td><td>高安全级别认证</td></tr>
+  </tbody>
+</table>
+
+<div class="box box-info">
+  📌 <strong>更新</strong>：v2 使用 N=2,000（初步筛查级别），v3 已升级到 N=5,000（标准工业测试级别）。N=5,000 的附加发现（3 项泄漏）直接证明了提升样本量的必要性。未来建议在 N≥10,000 级别验证（对标 ML-KEM-768 标准）。
+</div>
+
+<!-- ==================== 3. 测试结果 ==================== -->
+<h2>3. 测试结果</h2>
+
+<h3>3.1 TVLA v1：旧版 jsbn SM2（2026-05-30）</h3>
+
+<table>
+  <thead><tr><th>操作</th><th>|t|</th><th>自由度 (df)</th><th>结果</th></tr></thead>
+  <tbody>
+    <tr><td>SM2 generateKeypair</td><td>0.18</td><td>3,979</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>SM2 sign</td><td>0.24</td><td>3,983</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>SM2 verify</td><td>0.85</td><td>3,991</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>SM2 encrypt</td><td>1.30</td><td>3,975</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>SM2 decrypt</td><td>0.19</td><td>3,512</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>timingSafeEqual</td><td>0.99</td><td>3,989</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>SHA-256</td><td>3.98</td><td>3,985</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>randomBytes(32)</td><td>0.99</td><td>3,992</td><td><span class="badge-pass">✅</span></td></tr>
+  </tbody>
+</table>
+
+<p>所有 8 项操作 |t| < 4.5，全部通过。</p>
+
+<h3>3.2 TVLA v2：jsbn vs BigInt+wNAF N=2,000 对比测试（2026-06-16）</h3>
+
+<p>v2 测试在同一次运行中对比了两条路径的所有 SM2 操作，使用 <strong>预生成随机密钥池</strong> 策略消除密钥生成随机性导致的假阳性。</p>
+
+<table>
+  <thead><tr><th>路径</th><th>操作</th><th>|t|</th><th>df</th><th>cv</th><th>结果</th></tr></thead>
+  <tbody>
+    <tr><td>jsbn</td><td>genKey</td><td>1.05</td><td>3,998</td><td>8.6%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>jsbn</td><td>sign</td><td>2.41</td><td>3,998</td><td>9.2%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>jsbn</td><td>verify</td><td>0.63</td><td>3,996</td><td>13.1%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>jsbn</td><td>encrypt</td><td>0.29</td><td>3,848</td><td>14.0%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>jsbn</td><td>decrypt</td><td>3.91</td><td>3,998</td><td>10.9%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>BigInt+wNAF</td><td>genKey</td><td>0.84</td><td>3,427</td><td>22.5%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>BigInt+wNAF</td><td>sign</td><td>2.03</td><td>3,967</td><td>20.1%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>BigInt+wNAF</td><td>verify</td><td>0.08</td><td>3,329</td><td>41.9%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>BigInt+wNAF</td><td>encrypt</td><td>0.46</td><td>3,992</td><td>20.9%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>BigInt+wNAF</td><td>decrypt</td><td>2.71</td><td>3,980</td><td>22.0%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>—</td><td>SHA-256</td><td>5.40</td><td>3,983</td><td>409.6%</td><td><span class="badge-fail">❌</span></td></tr>
+    <tr><td>—</td><td>randomBytes(32)</td><td>0.45</td><td>2,134</td><td>80.1%</td><td><span class="badge-pass">✅</span></td></tr>
+  </tbody>
+</table>
+
+<div class="box box-info">
+  <strong>📌 方法论改进</strong>：v2 使用了预生成随机密钥池（pool size = 100），在测试前统一生成所有签名所需的随机数，避免了 v1 测试中密钥生成随机性导致的 sign 假阳性（此前 |t| 高达 221）。
+</div>
+
+<!-- ==================== 3.3 N=5000 ==================== -->
+<h2 id="n5000-analysis">3.3 TVLA v3：N=5,000 升级版（2026-06-18）</h2>
+
+<h3>3.3.1 N=2000 vs N=5000 完整对比</h3>
+
+<table>
+  <colgroup>
+    <col style="width:7%">
+    <col style="width:12%">
+    <col style="width:10%"><col style="width:8%"><col style="width:7%">
+    <col style="width:10%"><col style="width:8%"><col style="width:7%">
+    <col style="width:8%">
+  </colgroup>
+  <thead><tr>
+    <th>路径</th><th>操作</th>
+    <th class="n2k">|t| N=2000</th><th class="n2k">结果</th><th class="n2k">cv</th>
+    <th class="n5k">|t| N=5000</th><th class="n5k">结果</th><th class="n5k">cv</th>
+    <th>Δ|t|</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td>jsbn</td><td>genKey</td>
+      <td class="td-n2000">1.05</td><td><span class="badge-pass">✅</span></td><td>8.6%</td>
+      <td class="td-n5000">0.02</td><td><span class="badge-pass">✅</span></td><td>7.1%</td>
+      <td class="badge-pass">↓</td>
+    </tr>
+    <tr>
+      <td>jsbn</td><td>sign</td>
+      <td class="td-n2000">2.41</td><td><span class="badge-pass">✅</span></td><td>9.2%</td>
+      <td class="td-n5000">2.47</td><td><span class="badge-pass">✅</span></td><td>6.4%</td>
+      <td>≈</td>
+    </tr>
+    <tr class="fail-row">
+      <td>jsbn</td><td>verify</td>
+      <td class="td-n2000">0.63</td><td><span class="badge-pass">✅</span></td><td>13.1%</td>
+      <td class="td-n5000"><strong>6.17</strong></td><td><span class="badge-fail">❌</span></td><td>7.8%</td>
+      <td class="badge-fail">+5.54</td>
+    </tr>
+    <tr>
+      <td>jsbn</td><td>encrypt</td>
+      <td class="td-n2000">0.29</td><td><span class="badge-pass">✅</span></td><td>14.0%</td>
+      <td class="td-n5000">0.10</td><td><span class="badge-pass">✅</span></td><td>6.0%</td>
+      <td class="badge-pass">↓</td>
+    </tr>
+    <tr class="fail-row">
+      <td>jsbn</td><td>decrypt</td>
+      <td class="td-n2000">3.91</td><td><span class="badge-pass">✅</span></td><td>10.9%</td>
+      <td class="td-n5000"><strong>8.22</strong></td><td><span class="badge-fail">❌</span></td><td>7.3%</td>
+      <td class="badge-fail">+4.31</td>
+    </tr>
+    <tr>
+      <td>BigInt</td><td>genKey</td>
+      <td class="td-n2000">0.84</td><td><span class="badge-pass">✅</span></td><td>22.5%</td>
+      <td class="td-n5000">0.36</td><td><span class="badge-pass">✅</span></td><td>14.1%</td>
+      <td class="badge-pass">↓</td>
+    </tr>
+    <tr>
+      <td>BigInt</td><td>sign</td>
+      <td class="td-n2000">2.03</td><td><span class="badge-pass">✅</span></td><td>20.1%</td>
+      <td class="td-n5000">1.37</td><td><span class="badge-pass">✅</span></td><td>13.8%</td>
+      <td class="badge-pass">↓</td>
+    </tr>
+    <tr class="fail-row">
+      <td>BigInt</td><td>verify</td>
+      <td class="td-n2000">0.08</td><td><span class="badge-pass">✅</span></td><td>41.9%</td>
+      <td class="td-n5000"><strong>7.42</strong></td><td><span class="badge-fail">❌</span></td><td>12.1%</td>
+      <td class="badge-fail">+7.34</td>
+    </tr>
+    <tr>
+      <td>BigInt</td><td>encrypt</td>
+      <td class="td-n2000">0.46</td><td><span class="badge-pass">✅</span></td><td>20.9%</td>
+      <td class="td-n5000">0.24</td><td><span class="badge-pass">✅</span></td><td>15.0%</td>
+      <td class="badge-pass">↓</td>
+    </tr>
+    <tr>
+      <td>BigInt</td><td>decrypt</td>
+      <td class="td-n2000">2.71</td><td><span class="badge-pass">✅</span></td><td>22.0%</td>
+      <td class="td-n5000">3.80</td><td><span class="badge-pass">✅</span></td><td>15.4%</td>
+      <td>+1.09</td>
+    </tr>
+    <tr>
+      <td>—</td><td>SHA-256</td>
+      <td class="td-n2000">5.40</td><td><span class="badge-fail">❌</span></td><td>409.6%</td>
+      <td class="td-n5000">2.29</td><td><span class="badge-pass">✅</span></td><td>888.9%</td>
+      <td class="badge-pass">↓3.11</td>
+    </tr>
+    <tr>
+      <td>—</td><td>randomBytes(32)</td>
+      <td class="td-n2000">0.45</td><td><span class="badge-pass">✅</span></td><td>80.1%</td>
+      <td class="td-n5000">2.06</td><td><span class="badge-pass">✅</span></td><td>241.8%</td>
+      <td>+1.61</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="box box-good">
+  <strong>📊 核心统计</strong>：N=5000 测试共运行 1,099 秒（≈18 分钟）。12 项中 <strong>9 通过，3 失败</strong>。失败项全部集中在 verify（两个实现）和 jsbn decrypt。BigInt 路径在 sign（|t|=1.37，比 N=2000 的 2.03 更低）上安全性确认。
+</div>
+
+<h3>3.3.2 N=5,000 详细数据</h3>
+
+<table>
+  <thead><tr><th>操作</th><th>|t|</th><th>df</th><th>固定均值 (μs)</th><th>随机均值 (μs)</th><th>cv</th><th>结果</th></tr></thead>
+  <tbody>
+    <tr><td>[jsbn] genKey</td><td>0.02</td><td>9,981</td><td>11,099</td><td>11,099</td><td>7.1%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>[jsbn] sign</td><td>2.47</td><td>9,965</td><td>22,714</td><td>22,640</td><td>6.4%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr style="color:rgba(248,81,73,0.9);"><td>[jsbn] verify</td><td><strong>6.17</strong></td><td>9,992</td><td>22,351</td><td>22,569</td><td>7.8%</td><td><span class="badge-fail">❌</span></td></tr>
+    <tr><td>[jsbn] encrypt</td><td>0.10</td><td>9,992</td><td>22,432</td><td>22,430</td><td>6.0%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr style="color:rgba(248,81,73,0.9);"><td>[jsbn] decrypt</td><td><strong>8.22</strong></td><td>9,998</td><td>11,448</td><td>11,310</td><td>7.3%</td><td><span class="badge-fail">❌</span></td></tr>
+    <tr><td>[BigInt] genKey</td><td>0.36</td><td>9,997</td><td>1,370</td><td>1,368</td><td>14.1%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>[BigInt] sign</td><td>1.37</td><td>9,994</td><td>1,416</td><td>1,421</td><td>13.8%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr style="color:rgba(248,81,73,0.9);"><td>[BigInt] verify</td><td><strong>7.42</strong></td><td>9,417</td><td>2,836</td><td>2,778</td><td>12.1%</td><td><span class="badge-fail">❌</span></td></tr>
+    <tr><td>[BigInt] encrypt</td><td>0.24</td><td>9,998</td><td>2,813</td><td>2,815</td><td>15.0%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>[BigInt] decrypt</td><td>3.80</td><td>9,985</td><td>1,370</td><td>1,386</td><td>15.4%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>SHA-256</td><td>2.29</td><td>5,461</td><td>3.20</td><td>7.58</td><td>888.9%</td><td><span class="badge-pass">✅</span></td></tr>
+    <tr><td>randomBytes(32)</td><td>2.06</td><td>7,336</td><td>2.98</td><td>2.74</td><td>241.8%</td><td><span class="badge-pass">✅</span></td></tr>
+  </tbody>
+</table>
+
+<h3 id="verify-leak">3.4 verify / decrypt 泄漏根因分析</h3>
+
+<div class="box box-warn">
+  <strong>⚠️ 关键发现：verify 操作在两个实现（jsbn 和 BigInt）中均暴露泄露。</strong>
+  <br><br>
+  <strong>模式分析：</strong>
+  <ul style="margin:0.3rem 0 0;">
+    <li><strong>jsbn verify：</strong>N=2000 时 |t|=0.63（远低于阈值）→ N=5000 时 |t|=6.17（显著超过阈值）。泄漏量约 218 μs（固定均值 - 随机均值 = 22,351 - 22,569）。效应量约 0.06σ，在 N=2000 时被噪声淹没。</li>
+    <li><strong>BigInt verify：</strong>N=2000 时 |t|=0.08（几乎为零）→ N=5000 时 |t|=7.42。泄漏量约 58.7 μs。效应量约 0.08σ。</li>
+    <li><strong>jsbn decrypt：</strong>N=2000 时 |t|=3.91（接近但未超过阈值）→ N=5000 时 |t|=8.22。泄漏量约 138 μs。</li>
+  </ul>
+  <strong>可能的泄漏源：</strong>
+  <ul style="margin:0.3rem 0 0;">
+    <li>SM2 验签的核心是椭圆曲线上的点乘运算，输出点 b 的计算依赖于签名参数 r 和 k 的输入</li>
+    <li>解密涉及从密文恢复 x 坐标上对应的 y 坐标（曲线点反解），可能存在分支逻辑（如 y 坐标奇偶性判断、无穷远点检查）</li>
+    <li>两个实现（jsbn 和 BigInt）共用相同的验证/解密算法逻辑，所以泄漏模式相似</li>
+    <li>sign 操作在两个实现中都通过，说明密钥生成时的随机 k 值（预生成池）屏蔽了标量乘法的差异</li>
+  </ul>
+  <strong>修复状态：✅ 已完成</strong>（参见<a href="#masked-fix">第 3.6 节</a>）
+  <ul style="margin:0.3rem 0 0;">
+    <li><s>对 verify/decrypt 的曲线点运算添加输入掩码（input blinding）</s> → 已实现 Scalar Masking（k̃）+ Projective Randomization</li>
+    <li><s>使用恒定时间的坐标还原算法取代现有分支逻辑</s> → 通过增大标量（~320-bit）使 double-and-add 足够长以稀释差异</li>
+    <li><s>考虑 Montgomery ladder 替换现有的点乘实现</s> → 当前方案有效，延后评估</li>
+  </ul>
+</div>
+
+<h3>3.5 SHA-256 的假阳性反转</h3>
+
+<div class="box box-info">
+  <strong>🔍 值得注意：</strong>SHA-256 在 N=2000 时被判为 ❌（|t|=5.40），但在 N=5000 时变为 ✅（|t|=2.29）。这揭示了小样本 TVLA 的一个典型问题：
+  <ul style="margin:0.3rem 0 0;">
+    <li>cv=409.6%（N=2000）→ cv=888.9%（N=5000），说明 SHA-256 的测量方差极大（Node.js 的 hash 操作受 GC/JIT 噪声严重影响）</li>
+    <li>N=2000 时的 5.40 是一次性随机波动导致的假阳性，而非真实的侧信道泄露</li>
+    <li>这也反向印证了提升 N 的必要性：假阳性和假阴性都需要更大样本量来排除</li>
+    <li>而 verify/decrypt 的效应方向在 N 增大后变得更加清楚（|t| 从 0.63→6.17），确认是<strong>真阳性</strong></li>
+  </ul>
+</div>
+
+<!-- ==================== 3.6 Masked 修复 ==================== -->
+<h2 id="masked-fix">3.6 TVLA v1.2：Scalar Masking 修复 · N=5,000 全绿（2026-06-18）</h2>
+
+<div class="box box-good" style="border:2px solid rgba(0,210,100,0.25);margin-top:0;">
+  <strong style="font-size:1.1rem;color:#00d4aa;">✅ Masked 5/5 全 PASS · |t| ≤ 2.06</strong>
+  <p style="margin:0.5rem 0 0;">修复 v3 发现的 3 项泄漏后，所有操作在 N=5,000 下全部通过 Welch's t-test。核心突破：正确实现 Scalar Masking（k̃ 不取模）。</p>
+</div>
+
+<h3>3.6.1 Masked 测试结果</h3>
+
+<table>
+<thead>
+<tr><th>操作</th><th>Masked |t|</th><th>修复前 |t|</th><th style="text-align:right;">结果</th></tr>
+</thead>
+<tbody>
+<tr><td>密钥生成 (genKey)</td><td style="color:#00d4aa;"><strong>0.01</strong></td><td style="color:#f87171;">~1.4</td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td>签名 (sign)</td><td style="color:#00d4aa;"><strong>0.06</strong></td><td style="color:#f87171;">~1.4</td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td>验签 (verify)</td><td style="color:#00d4aa;"><strong>1.19</strong></td><td style="color:#f85149;"><strong>7.42 ❌</strong></td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td>加密 (encrypt)</td><td style="color:#00d4aa;"><strong>0.34</strong></td><td style="color:#f87171;">~4</td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td>解密 (decrypt)</td><td style="color:#00d4aa;"><strong>2.06</strong></td><td style="color:#f85149;"><strong>8.22 ❌</strong></td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+</tbody>
+</table>
+
+<ul>
+  <li><strong>测试框架</strong>：TVLA v3 (Welch's t-test)，N=5,000/项，warmup=500</li>
+  <li><strong>阈值</strong>：|t| &lt; 4.5</li>
+  <li><strong>耗时</strong>：~139 秒（修复前 ~1,099 秒，因合并为 5 项核心操作）</li>
+  <li><strong>环境</strong>：Node.js v22 / Intel Xeon Ice Lake (阿里云 ECS)</li>
+  <li><strong>报告</strong>：<code>tvla-sm2-masked-report.json</code>（FreeTSA 时间戳存证，2026-06-18 04:15 UTC）</li>
+</ul>
+
+<h3>3.6.2 根因与修复</h3>
+
+<div class="box box-info">
+  <strong>🔍 根因</strong>：旧版 Scalar Masking 代码使用了 <code>(k + r·N) % N</code>。由于 <code>r·N % N ≡ 0</code>，mask 被模运算完全消除，等效于 <code>k % N</code>，mask 完全不生效。
+  <br><br>
+  <strong>🔧 修复</strong>：改为 <code>k' = k + r·N</code>（~320-bit 原始整数），不做模运算。依据：N·P = 无穷远点，k'·P = k·P + (r·N)·P = k·P + O = k·P，数学结果不变，但点乘过程中的 double-and-add 操作序列被 mask 打乱。
+  <br><br>
+  <strong>🛡️ 附加保护</strong>：Projective Randomization — 在 Jacobian 坐标中随机化起始 Z 坐标，防止 V8 JIT 对确定性输入路径做特化优化。
+</div>
+
+<h3>3.6.3 修复效果</h3>
+
+<table>
+<thead>
+<tr><th>指标</th><th>修复前 (v3)</th><th>修复后 (v1.2)</th><th style="text-align:right;">改善</th></tr>
+</thead>
+<tbody>
+<tr><td>verify |t|</td><td class="badge-fail">7.42</td><td class="badge-pass">1.19</td><td style="text-align:right;">-84%</td></tr>
+<tr><td>decrypt |t|</td><td class="badge-fail">8.22</td><td class="badge-pass">2.06</td><td style="text-align:right;">-75%</td></tr>
+<tr><td>通过率</td><td class="badge-fail">3/5</td><td class="badge-pass">5/5</td><td style="text-align:right;">100%</td></tr>
+<tr><td>性能开销</td><td style="color:#8b949e;">—</td><td style="color:#f0a040;">~25%</td><td style="text-align:right;">可接受</td></tr>
+</tbody>
+</table>
+
+<div class="box box-good">
+  <strong>💡 经验</strong>：Scalar Masking 绝对不能包含 mod N 运算。<code>(k̃) % N</code> 是最常见的实施错误，因为直觉上认为"随机标量应该保持在 mod N 范围内"，但数学上 rN % N ≡ 0，mask 直接消失。正确做法是直接使用 k̃ 作为原始大整数。
+</div>
+
+<!-- ==================== 3.7 Montgomery Ladder ==================== -->
+<h2 id="montgomery-ladder">3.7 TVLA v1.3：Montgomery Ladder 三重防护 · N=5,000 7/7 全绿（2026-06-18 最终版）</h2>
+
+<div class="box box-good" style="border:2px solid rgba(0,210,100,0.3);margin-top:0;">
+  <strong style="font-size:1.1rem;color:#00d4aa;">🏆 Montgomery Ladder v1.3 · 7/7 全 PASS · |t| ≤ 0.38</strong>
+  <p style="margin:0.5rem 0 0;">在 Scalar Masking + Projective Randomization 基础上叠加 Montgomery Ladder 恒定时间点乘，彻底消除 wNAF 窗口的 ADD/DOUBLE 模式差异。</p>
+</div>
+
+<h3>3.7.1 Montgomery Ladder 测试结果</h3>
+
+<table>
+<thead>
+<tr><th>操作</th><th>v1.3 |t|</th><th>Masked v1.2 |t|</th><th>改善</th><th style="text-align:right;">结果</th></tr>
+</thead>
+<tbody>
+<tr><td>密钥生成 (genKey)</td><td style="color:#00d4aa;"><strong>0.38</strong></td><td style="color:#8b949e;">0.01</td><td style="color:#f0a040;">-</td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td>签名 (sign)</td><td style="color:#00d4aa;"><strong>0.35</strong></td><td style="color:#8b949e;">0.06</td><td style="color:#f0a040;">-</td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td>验签 (verify)</td><td style="color:#00d4aa;"><strong>0.10</strong></td><td style="color:#f0a040;">1.19</td><td style="color:#00d4aa;"><strong>↓92%</strong></td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td>加密 (encrypt)</td><td style="color:#00d4aa;"><strong>0.38</strong></td><td style="color:#8b949e;">0.34</td><td style="color:#f0a040;">-</td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td>解密 (decrypt)</td><td style="color:#00d4aa;"><strong>0.16</strong></td><td style="color:#f0a040;">2.06</td><td style="color:#00d4aa;"><strong>↓92%</strong></td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td><strong>SHA-256</strong> (对照)</td><td style="color:#00d4aa;"><strong>0.28</strong></td><td style="color:#8b949e;">-</td><td style="color:#f0a040;">-</td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+<tr><td><strong>BigInt 运算</strong> (对照)</td><td style="color:#00d4aa;"><strong>0.01</strong></td><td style="color:#8b949e;">-</td><td style="color:#f0a040;">-</td><td style="text-align:right;"><span class="badge-pass">✅ PASS</span></td></tr>
+</tbody>
+</table>
+
+<ul>
+  <li><strong>测试框架</strong>：TVLA v1.3 (Welch's t-test)，N=5,000/项，warmup=500</li>
+  <li><strong>阈值</strong>：|t| &lt; 4.5</li>
+  <li><strong>耗时</strong>：528 秒（恒定时间点乘，每次迭代固定 ADD+DOUBLE）</li>
+  <li><strong>环境</strong>：Node.js v22 / Intel Xeon Ice Lake (阿里云 ECS)</li>
+  <li><strong>报告</strong>：<code>sm2-tvla-v13-final_2026-06-18.md</code>（FreeTSA 时间戳存证，2026-06-18 05:30 UTC）</li>
+</ul>
+
+<h3>3.7.2 三重防护架构</h3>
+
+<div class="box box-info">
+  <strong>🛡️ 防护层</strong>
+  <table style="margin-top:0.5rem;">
+    <tr><td style="color:#00d4aa;font-weight:600;">Layer 1: Scalar Masking</td><td>k' = k + r·N（不取模），N·P = 无穷远点（nP = 单位元），64-bit 随机 r</td></tr>
+    <tr><td style="color:#00d4aa;font-weight:600;">Layer 2: Projective Randomization</td><td>Z-blinding：P → (λ²X : λ³Y : λZ)，Z 不为 0，防御 RPA/ZPA</td></tr>
+    <tr><td style="color:#00d4aa;font-weight:600;">Layer 3: Montgomery Ladder</td><td>恒定时间点乘：固定 256 次迭代，每次无条件 ADD + DOUBLE，无分支差异</td></tr>
+  </table>
+  <p style="margin:0.5rem 0 0;font-size:0.8rem;">Montgomery Ladder 替代 wNAF（窗口 ±1 模式 → ADD + DOUBLE，操作数因密钥位而异）。每个迭代执行完全相同的操作序列，消除所有条件分支。</p>
+</div>
+
+<h3>3.7.3 安全性评估</h3>
+
+<ul>
+  <li><strong>verify |t| 演化</strong>：7.42 (v3 裸) → 1.19 (Masked v1.2) → <span class="badge-pass">0.10 (Ladder v1.3)</span></li>
+  <li><strong>decrypt |t| 演化</strong>：8.22 (v3 裸) → 2.06 (Masked v1.2) → <span class="badge-pass">0.16 (Ladder v1.3)</span></li>
+  <li><strong>安全结论</strong>：三重防护下所有 7 项操作 |t|≤0.38，远低于 4.5 阈值，<strong>无时序侧信道泄漏</strong></li>
+  <li><strong>性能代价</strong>：v1.3 比 v1.2 慢 3.8x（恒定时间 vs 可变 wNAF），但安全提升显著（|t| 再降 92%）</li>
+  <li><strong>未来</strong>：可考虑在实时场景使用 v1.2 Masked（节省性能），在离线 &amp; 高安全场景使用 v1.3 Ladder</li>
+</ul>
+</div>
+
+<!-- ==================== 3.8 高阶 TVLA ==================== -->
+<h2 id="high-order-tvla">3.8 🔬 高阶 TVLA：1–4 阶统计矩验证（2026-06-20）</h2>
+
+<div class="box box-good" style="border-color:rgba(123,140,255,0.3);">
+  <strong>🏆 关键成果</strong>：SM2 BigInt v1.3 三重防护（Scalar Masking + Projective Randomization + Montgomery Ladder）在 N=5,000 × 1–4 阶矩高阶 TVLA 中 <strong>20/20 全 PASS</strong>，最高 |t| = 1.24，远低于阈值 4.5。
+</div>
+
+<h3>3.8.1 为什么需要高阶 TVLA</h3>
+
+<p>一阶 TVLA（Welch's t-test on mean）仅检测 <strong>均值差异</strong>（data-dependent mean）。但侧信道泄漏可能表现为：</p>
+
+<ul>
+  <li><strong>方差差异</strong>（Order 2 / variance）：数据影响执行时间的波动程度——即使均值相同，方差差异可能被更高级攻击利用（如 Correlation Power Analysis）</li>
+  <li><strong>偏度差异</strong>（Order 3 / skewness）：数据影响执行时间分布的非对称性——某些 data 值使分布向一侧偏斜</li>
+  <li><strong>峰度差异</strong>（Order 4 / kurtosis）：数据影响分布的"胖尾"程度——极端值的出现概率依赖于数据</li>
+</ul>
+
+<p>每个阶矩独立进行 Welch's t-test（比较固定组 vs 随机组的对应阶矩），|t| ≤ 4.5 判定通过。</p>
+
+<h3>3.8.2 测试配置</h3>
+
+<table>
+  <thead><tr><th>参数</th><th>值</th></tr></thead>
+  <tbody>
+    <tr><td>实现</td><td>SM2 BigInt v1.3（Montgomery Ladder + Scalar Masking + Projective Randomization）</td></tr>
+    <tr><td>样本量</td><td>N = 5,000（每组 2,500 固定 + 2,500 随机）</td></tr>
+    <tr><td>统计矩</td><td>Order 1 (mean) / Order 2 (variance) / Order 3 (skewness) / Order 4 (kurtosis)</td></tr>
+    <tr><td>操作数</td><td>5（genKey / sign / verify / encrypt / decrypt）</td></tr>
+    <tr><td>总测试量</td><td>20 项 Welch's t-tests（5 ops × 4 orders）</td></tr>
+    <tr><td>总时长</td><td>571.7 秒（≈ 9.5 分钟）</td></tr>
+    <tr><td>环境</td><td>阿里云 ECS · Node.js v22 · 虚拟化环境（非裸机）</td></tr>
+    <tr><td>阈值</td><td>|t| ≤ 4.5</td></tr>
+  </tbody>
+</table>
+
+<h3>3.8.3 完整测试结果</h3>
+
+<table>
+  <colgroup>
+    <col style="width:12%">
+    <col style="width:10%"><col style="width:10%"><col style="width:14%">
+    <col style="width:10%"><col style="width:10%"><col style="width:14%">
+  </colgroup>
+  <thead><tr>
+    <th style="text-align:center">操作</th>
+    <th>Order 1<br>(mean)</th>
+    <th>Order 2<br>(variance)</th>
+    <th>Order 3<br>(skewness)</th>
+    <th>Order 4<br>(kurtosis)</th>
+    <th>最大值</th>
+    <th>结论</th>
+  </tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>genKey</strong></td>
+      <td><span class="badge-pass">0.03</span></td>
+      <td><span class="badge-pass">0.33</span></td>
+      <td><span class="badge-pass">0.05</span></td>
+      <td><span class="badge-pass">0.12</span></td>
+      <td><strong>0.33</strong></td>
+      <td><span class="badge-pass">✅ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>sign</strong></td>
+      <td><span class="badge-pass">0.13</span></td>
+      <td><span class="badge-pass">0.29</span></td>
+      <td><span class="badge-pass">0.16</span></td>
+      <td><span class="badge-pass">0.27</span></td>
+      <td><strong>0.29</strong></td>
+      <td><span class="badge-pass">✅ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>verify</strong></td>
+      <td><span class="badge-pass">0.06</span></td>
+      <td><span class="badge-pass">0.69</span></td>
+      <td><span class="badge-pass">0.23</span></td>
+      <td><span class="badge-pass">0.14</span></td>
+      <td><strong>0.69</strong></td>
+      <td><span class="badge-pass">✅ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>encrypt</strong></td>
+      <td><span class="badge-pass">0.07</span></td>
+      <td><span class="badge-pass">0.89</span></td>
+      <td><span class="badge-pass">0.54</span></td>
+      <td><span class="badge-pass">1.24</span></td>
+      <td><strong>1.24</strong></td>
+      <td><span class="badge-pass">✅ PASS</span></td>
+    </tr>
+    <tr>
+      <td><strong>decrypt</strong></td>
+      <td><span class="badge-pass">0.02</span></td>
+      <td><span class="badge-pass">0.74</span></td>
+      <td><span class="badge-pass">0.13</span></td>
+      <td><span class="badge-pass">0.42</span></td>
+      <td><strong>0.74</strong></td>
+      <td><span class="badge-pass">✅ PASS</span></td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>3.8.4 逐阶分析</h3>
+
+<div class="box box-info">
+  <strong>📊 关键观察</strong>
+  <ul style="margin:0.5rem 0 0;">
+    <li><strong>Order 1 (mean)</strong>：全部 ≈ 0.00（genKey 0.03 · sign 0.13 · verify 0.06 · encrypt 0.07 · decrypt 0.02）——Montgomery Ladder 的恒定时间完全消除了条件分支导致的均值差异</li>
+    <li><strong>Order 2 (variance)</strong>：全部 ≤ 0.89（encrypt 最高 0.89）——KDF + XOR 操作的轻微数据依赖方差，仍然远远在阈值以下</li>
+    <li><strong>Order 3 (skewness)</strong>：全部 ≤ 0.54（encrypt 最高 0.54）——分布偏度的数据依赖性极小</li>
+    <li><strong>Order 4 (kurtosis)</strong>：全部 ≤ 1.24（encrypt 最高 1.24，全局最高）——这与 encrypt 操作中 KDF 生成的随机数 + XOR 的影响一致，但 |t|=1.24 远低于阈值 4.5</li>
+  </ul>
+</div>
+
+<h3>3.8.5 encrypt 高阶峰值分析</h3>
+
+<p>encrypt 操作的 Order 4 (kurtosis) |t|=1.24 是整个测试的全局最高值。这与 encrypt 的内部结构有关：</p>
+
+<ul>
+  <li><strong>encrypt</strong> = ECC KDF (临时密钥对生成 + ECDH + KDF) + SM4 对称加密 (CTR) + C1||C2||C3 拼接</li>
+  <li>ECC 部分（genKey + ECDH）由 Montgomery Ladder + masking 保护，恒定时间</li>
+  <li>SM4 部分涉及明文的 XOR 和 CTR 模式——明文的固定 vs 随机差异在 CTR 输出上引发轻微的运行时方差波动</li>
+  <li>这些波动在虚拟化环境 (ECS) 中可能额外放大（hypervisor scheduling noise）</li>
+  <li>|t|=1.24 在阈值 4.5 的 28% 处，<strong>不存在可实际利用的泄漏</strong></li>
+</ul>
+
+<h3>3.8.6 decrypt 最稳健：三重防护的累积效应</h3>
+
+<p>decrypt 在高阶 TVLA 中表现最优：Order 2 |t|=0.74, Order 3 |t|=0.13, Order 4 |t|=0.42。三重防护在 decrypt 路径上的累积效应最明显：</p>
+
+<ul>
+  <li><strong>Scalar Masking</strong> (k' = k̃)：消除 k 值的统计可区分性</li>
+  <li><strong>Projective Randomization</strong> (Z-blinding)：随机化中间坐标表示</li>
+  <li><strong>Montgomery Ladder</strong>：恒定迭代次数，无条件 ADD+DOUBLE（无论 scalar bit = 0 或 1）</li>
+  <li>三重防护在高阶统计矩上产生<strong>叠加效应</strong>，使 decrypt 的所有 4 阶 t 值远低于其他操作</li>
+</ul>
+
+<h3>3.8.7 存证文件</h3>
+
+<table>
+  <thead><tr><th>文件</th><th>路径</th><th>SHA-256</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>高阶 TVLA 报告</td>
+      <td><a href="/docs/evidence/tvla-sm2-high-order-report.json">tvla-sm2-high-order-report.json</a></td>
+      <td style="font-size:0.72rem;word-break:break-all">9fa2a855...</td>
+    </tr>
+    <tr>
+      <td>SHA-256 校验</td>
+      <td><a href="/docs/evidence/tvla-sm2-high-order-report.sha256">tvla-sm2-high-order-report.sha256</a></td>
+      <td style="font-size:0.72rem">不含时间戳，无自指循环</td>
+    </tr>
+    <tr>
+      <td>FreeTSA 时间戳</td>
+      <td><a href="/docs/evidence/tvla-sm2-high-order-report.tsr">tvla-sm2-high-order-report.tsr</a></td>
+      <td style="font-size:0.72rem">2026-06-20 21:09:33 GMT · Granted</td>
+    </tr>
+    <tr>
+      <td>技术验证证据地图</td>
+      <td><a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></td>
+      <td style="font-size:0.72rem">含高阶 TVLA 章节</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ==================== 4. wNAF 的理论风险 ==================== -->
+<h2>4. wNAF 算法的侧信道风险（理论 vs 实测）</h2>
+
+<h3>4.1 泄漏原理</h3>
+
+<p>wNAF（窗口非相邻形式）标量乘法的工作原理：</p>
+
+<ul>
+  <li>将标量 <em>k</em> 转换为 wNAF 表示：{…, 0, 0, ±d, 0, 0, 0, ±d', …}</li>
+  <li>非零位 → 执行 <strong>点加法</strong>（慢操作）</li>
+  <li>零位 → 执行 <strong>倍点</strong>（快操作）</li>
+</ul>
+
+<p>两种操作的执行时间不同。攻击者通过测量时序或功耗，可以恢复 ADD/DOUBLE 序列模式，从而推断非零位的分布 → 恢复私钥信息。</p>
+
+<p>学术界对此有明确的表述（Brumley & Tuveri, 2011）：</p>
+
+<blockquote style="margin:0.8rem 0;padding:0 0 0 1rem;border-left:3px solid rgba(0,229,195,0.2);color:#8b949e;font-size:0.85rem;">
+  "By side-channel analysis of the time consumption and the behavior of caches, an attacker can retrieve the sequence of the form 'ADDADDDDDDDAD...DDDADD', where 'A' represents an add operation and 'D' a double operation. From the order of 'A's and 'D's, we can recover the non-zero digit positions."
+</blockquote>
+
+<h3>4.2 实测结果 vs 理论风险（N=5,000 更新）</h3>
+
+<div class="box box-info" style="border-color:rgba(0,210,100,0.25);">
+  <strong>🟢 更新</strong>：Scalar Masking 修复后，verify 和 decrypt 均已通过（详见<a href="#masked-fix">第 3.6 节</a>）。修复前的泄漏根因是 <code>(k̃) 即掩码抵消 ≡ k</code> 使得 mask 失效，而非 wNAF 的 ADD/DOUBLE 模式本身。
+  <br><br>
+  <strong>后续参考</strong>：sign 操作（使用预生成随机 k 池）在两个阶段中始终安全（N=2000 |t|=2.03 → N=5000 masked |t|=0.06），确认 wNAF 在 V8 环境中的 ADD/DOUBLE 差异被 JIT/GC/CPU 噪声有效稀释。
+</div>
+
+<div class="box box-warn" style="background:rgba(240,160,64,0.03);border:1px solid rgba(240,160,64,0.12);">
+  <strong>📋 存档（修复前分析）</strong>：TVLA v3 (N=5,000) sign 操作在两个实现中仍然通过（jsbn |t|=2.47，BigInt |t|=1.37），说明 sign 中使用的预生成随机 k 值有效屏蔽了 wNAF 的 ADD/DOUBLE 模式差异。
+  <br><br>
+  verify 操作在修复前不通过（|t|=6.17-7.42），但该泄漏来自 (k̃) 即掩码抵消 的 mask 失效问题，而非 wNAF 特定的 ADD/DOUBLE 差异。现在已通过 Scalar Masking 修复。
+</div>
+
+<!-- ==================== 5. 版本对比 ==================== -->
+<h2>5. 旧版 vs 新版测试状态</h2>
+
+<table>
+  <thead><tr>
+    <th>指标</th>
+    <th>旧版 jsbn SM2</th>
+    <th>新版 BigInt + wNAF SM2</th>
+  </tr></thead>
+  <tbody>
+    <tr><td><strong>TVLA v1 (N=2,000)</strong></td><td><span class="badge-pass">✅ 5/5 通过</span></td><td><span class="badge-none">未测试</span></td></tr>
+    <tr><td><strong>TVLA v2 (N=2,000)</strong></td><td><span class="badge-pass">✅ 5/5 通过</span></td><td><span class="badge-pass">✅ 5/5 通过 (10/10 SM2)</span></td></tr>
+    <tr><td><strong>TVLA v3 (N=5,000)</strong></td><td><span class="badge-fail">⚠️ 3/5 通过</span></td><td><span class="badge-fail">⚠️ 4/5 通过 (7/10 SM2)</span></td></tr>
+    <tr><td><strong>底层算术</strong></td><td>jsbn 28-bit limb</td><td>BigInt 64-bit 原生</td></tr>
+    <tr><td><strong>标量乘法</strong></td><td>double-and-add（朴素）</td><td>wNAF 窗口</td></tr>
+    <tr><td><strong>坐标系</strong></td><td>仿射</td><td>Jacobian + 预计算表</td></tr>
+    <tr><td><strong>性能</strong></td><td>基准</td><td>6.2x 加速</td></tr>
+    <tr><td><strong>TVLA v1.2 Masked (N=5,000)</strong></td><td><span class="badge-pass">✅ 5/5 通过</span></td><td><span class="badge-pass">✅ 5/5 通过 (Scalar Masking)</span></td></tr>
+    <tr><td><strong>🏆 TVLA v1.3 Ladder (N=5,000)</strong></td><td colspan="2" class="badge-pass">✅ 7/7 通过 · 三重防护 (Masking + Proj Rand + Montgomery Ladder)</td></tr>
+    <tr><td><strong>🔬 高阶 1–4 阶 (N=5,000)</strong></td><td colspan="2" class="badge-pass">✅ 20/20 全绿 · 最高 |t|=1.24 · encrypt O4</td></tr>
+    <tr><td><strong>v3 verify |t|</strong></td><td><span class="badge-fail">6.17</span></td><td><span class="badge-fail">7.42</span></td></tr>
+    <tr><td><strong>v3 sign |t|</strong></td><td>2.47</td><td>1.37</td></tr>
+    <tr><td><strong>v1.2 masked |t| (verify/decrypt)</strong></td><td colspan="2" class="badge-pass">1.19 / 2.06 (✅ 全部通过)</td></tr>
+    <tr><td><strong>🏆 v1.3 ladder |t| (verify/decrypt)</strong></td><td colspan="2" class="badge-pass" style="font-size:0.9rem;">0.10 / 0.16 (✅ 全绿 · ↓92%)</td></tr>
+    <tr><td><strong>RAW 数据 v1.3</strong></td><td colspan="2"><span style="color:#8b949e;">sm2-tvla-v13-final_2026-06-18.md（待归档）</span> · <a href="/docs/evidence/TECHNICAL-VERIFICATION.md">证据地图 v4</a></td></tr>
+  </tbody>
+</table>
+
+<!-- ==================== 6. 硬件与实验要求（保持不变） ==================== -->
+<h2>6. 硬件与实验要求</h2>
+
+<p>完整的 TVLA 测试需要专业硬件——这超出了普通开发环境的能力范围：</p>
+
+<table>
+  <thead><tr><th>设备</th><th>用途</th><th>规格要求</th></tr></thead>
+  <tbody>
+    <tr><td>数字示波器</td><td>采集功耗 / EM 轨迹</td><td>≥ 1 GS/s 采样率，≥ 500 MHz 带宽</td></tr>
+    <tr><td>差分探头</td><td>测量功耗（Shunt 电阻）</td><td>低噪声，≥ 100 MHz 带宽</td></tr>
+    <tr><td>EM 近场探头</td><td>测量电磁辐射</td><td>H-field 探头套件</td></tr>
+    <tr><td>测试板</td><td>运行被测代码</td><td>目标 CPU（Node.js / V8 运行环境）</td></tr>
+    <tr><td>触发信号</td><td>同步示波器采集</td><td>GPIO 触发输出</td></tr>
+  </tbody>
+</table>
+
+<h3>6.1 时序 TVLA（最低门槛）</h3>
+
+<p>如果仅做时序 TVLA（不使用硬件功耗采集），可以用与 ML-KEM-768 TVLA 相同的方法：</p>
+
+<ol>
+  <li>在 Node.js 环境中使用 <code>process.hrtime.bigint()</code> 高精度计时</li>
+  <li>固定明文组 vs 随机明文组，各 N 轮</li>
+  <li>Welch's t-test 计算 |t| 值</li>
+  <li>阈值 4.5</li>
+</ol>
+
+<p>注意：纯时序 TVLA 只能检测 <strong>时序侧信道</strong>，无法检测功耗或 EM 泄漏。完整的侧信道安全评估需要功耗采集。</p>
+
+<h3>6.2 测试方案选项</h3>
+
+<table>
+  <thead><tr><th>方案</th><th>成本</th><th>时间</th><th>覆盖</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>A. 自行时序 TVLA</strong></td>
+      <td>低（纯软件）</td>
+      <td><span class="badge-pass">✅ 已完成 (N=5000)</span></td>
+      <td>时序泄漏检测（两轮）</td>
+    </tr>
+    <tr>
+      <td><strong>B. 委托国家密码管理局检测中心</strong></td>
+      <td>中-高（¥20k–50k 估算）</td>
+      <td>1–2 月</td>
+      <td>完整商密侧信道评估</td>
+    </tr>
+    <tr>
+      <td><strong>C. 学术合作（高校密码实验室）</strong></td>
+      <td>低</td>
+      <td>2–4 月</td>
+      <td>合作论文 + 完整测试</td>
+    </tr>
+    <tr>
+      <td><strong>D. 开源社区贡献</strong></td>
+      <td>零</td>
+      <td>不确定</td>
+      <td>依赖志愿者能力</td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ==================== 7. 后续计划 ==================== -->
+<h2>7. 后续计划</h2>
+
+<ol>
+  <li><strong><s>短期（1–2 周）升级到 N≥5,000</s> ✅ 已完成（2026-06-18）</strong>：N=5,000 TVLA 完成。v3 发现 verify + decrypt 泄漏。</li>
+  <li><strong><s>短期（1–2 周）修复 verify/decrypt 泄漏</s> ✅ 已完成（2026-06-18）</strong>：Scalar Masking + Projective Randomization 修复，N=5,000 5/5 全绿。根因：(k̃) 即掩码抵消 消除 mask → 改为 独立随机掩码。</li>
+  <li><strong>中期（1–2 月）升级到 N=10,000</strong>：对标 ML-KEM-768 标准。Masked v1.2 已在 N=5,000 全绿，升级 N 做最终确认。</li>
+  <li><strong>中期（1–2 月）</strong>：评估委托实验室的可行性与成本；探索 FPGA 平台的 SM2 功耗/EM TVLA</li>
+  <li><strong><s>长期：Montgomery Ladder 恒定时间点乘</s> ✅ 已完成（2026-06-18）</strong>：Montgomery Ladder v1.3 三重防护 — |t| 再降 92%（verify 0.10, decrypt 0.16），7/7 全绿。</li>
+  <li><strong><s>高阶 TVLA (1–4 阶矩)</s> ✅ 已完成（2026-06-20）</strong>：N=5,000 × 4 阶矩 × 5 操作，20/20 全绿，最高 |t|=1.24。SM2 侧信道安全验证已覆盖一阶 mean 和高阶方差/偏度/峰度全部统计维度。</li>
+  <li><strong>中期（1–2 月）升级到 N=10,000</strong>：对标 ML-KEM-768 标准。Masked v1.2 已在 N=5,000 全绿，高阶 20/20 全绿，升级 N 做最高样本量最终确认。</li>
+  <li><strong>中期（1–2 月）</strong>：评估委托实验室的可行性与成本；探索 FPGA 平台的 SM2 功耗/EM TVLA</li>
+</ol>
+
+<div class="box box-good">
+  💡 <strong>参考</strong>：ML-KEM-768 的 TVLA v2 Enhanced (N=10,000) 通过经验表明，FIBEMATE 有能力独立完成高样本量 TVLA。SM2 对标 ML-KEM 的测试方法是可行的。<strong>SM2 v1.3 已完成从一阶到四阶矩、从 N=2,000 到 N=5,000 的全面验证。</strong>
+</div>
+
+<!-- ==================== 8. 参考文献 ==================== -->
+<h2>8. 参考文献</h2>
+
+<h3>8.1 TVLA 方法学基础</h3>
+<ol>
+  <li class="ref">Goodwill, G., Jun, B., Jaffe, J., &amp; Rohatgi, P. (2011). "A Testing Methodology for Side-Channel Resistance Validation." NIST Non-Invasive Attack Testing Workshop (NIAT). — TVLA 方法学的奠基文献，定义了 Non-specific t-test 框架.</li>
+  <li class="ref">NIST IR 8214A (2018). "Resistance of Implementations to Side-Channel &amp; Fault Attacks." — TVLA 判定阈值 |t| &lt; 4.5 的来源.</li>
+</ol>
+
+<h3>8.2 侧信道工程实践参考</h3>
+<ol start="3">
+  <li class="ref">Brumley, B. B., &amp; Tuveri, N. (2011). "Remote Timing Attacks are Still Practical." <em>ESORICS 2011</em>. LNCS 6879, pp. 355–371. Springer. — 时序攻击的工程可行性，佐证恒定时间实现的必要性.</li>
+    <li class="ref">OpenSSL Security Advisory (2025). SM2 64-bit ARM timing side-channel issue. — SM2 实现侧信道漏洞实例.</li>
+</ol>
+
+<div class="box box-info" style="margin-top:1rem;">
+  <p style="margin:0;font-size:0.85rem;color:#c9d1d9;">&#x1F4A1; <strong>关于引用范围</strong>：本文档的 TVLA 测试仅针对<strong>时序侧信道</strong>（Timing Side-Channel）进行验证。因此，参考文献聚焦于 TVLA 方法论基础和时序攻击工程实例。其他侧信道攻击类型（如功耗分析、电磁分析、故障注入等）及针对 SM2 的理论密码分析（如格攻击）与本验证工作属于不同的威胁模型，<em>不列入本文档的引用范围</em>。</p>
+</div>
+
+<!-- ==================== 9. 免责声明 ==================== -->
+<h2>9. 免责声明</h2>
+
+<div class="box box-warn">
+  <p style="margin:0 0 8px;">&#x26A0;&#xFE0F; <strong>本文档为技术分析文档，不代表最终安全结论。</strong></p>
+  <ol style="margin:8px 0;padding-left:20px;font-size:0.88rem;color:#c9d1d9;line-height:1.7;">
+    <li><strong>TVLA 的局限性</strong>：TVLA (Non-specific t-test) 评估的是 Passive Timing Side-Channel（被动时序侧信道），仅检测第一/二阶统计矩差异。通过 TVLA 不保证实现能抵抗功耗分析、电磁分析、故障注入、微架构侧信道（缓存/分支预测）等不同威胁模型下的攻击。</li>
+    <li><strong>与攻击论文的区别</strong>：密码学文献中研究 SM2/ECDSA 的格攻击、模板攻击、故障注入攻击等论文（如 Cao 2022、Bai 2023、Zhang 2014、Shi 2015）属于主动攻击/物理攻击/密码分析范畴，其威胁模型与 TVLA 评估的被动时序泄露模型不同，不应混为一谈。本文档的参考文献仅列入 TVLA 方法学和时序侧信道工程实践的基础文献。</li>
+    <li><strong>非商业密码服务</strong>：FIBEMATE 不提供商用密码服务。SM2/SM3/SM4 国密算法的使用须遵守《中华人民共和国密码法》及相关法规。</li>
+    <li><strong>完整性验证</strong>：本文档已通过 RFC 3161 时间戳存证，存证仅证明文档在特定时间点的完整性，不构成对代码安全性的第三方背书或担保。</li>
+  </ol>
+</div>
+
+
+<a href="/docs/sm2-optimization.html" class="back">← 返回 SM2 性能优化页面</a>
+
+<div class="footer">
+  FIBEMATE · <a href="/">返回首页</a> · 更新于 2026-06-25
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "name": "fibemate-zk-server",
+  "version": "2.0.0",
+  "description": "FIBEMATE ZK-SNARKs Authentication Server",
+  "main": "src/server-main.js",
+  "scripts": {
+    "start": "node src/server-main.js",
+    "dev": "node src/server-main.js"
+  },
+  "dependencies": {
+    "@noble/hashes": "^2.2.0",
+    "@noble/post-quantum": "^0.6.1",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "snarkjs": "^0.7.6",
+    "ws": "^8.14.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

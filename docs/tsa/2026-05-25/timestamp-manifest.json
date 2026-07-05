@@ -1,0 +1,241 @@
+[
+  {
+    "file": "www/message-crypto-v2.js",
+    "size": 54836,
+    "sha256": "4e2f4bef677578b4c019b1c177ca7c34eba45ce5017166f9e6a948957b05bc9f",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T00:49:00+08:00"
+  },
+  {
+    "file": "www/crypto/sm2-browser.js",
+    "size": 1298,
+    "sha256": "5df297037ac1951f0511a16bd4a6842fb8753f42b788260a4edd14baa29f40ce",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T00:49:00+08:00"
+  },
+  {
+    "file": "www/crypto/sm2-browser.bundle.js",
+    "size": 39782,
+    "sha256": "14cfcdbc8cecb70201c56661b4785e34ab1d22714fdd8e079589bc7b708bda04",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T00:49:00+08:00"
+  },
+  {
+    "file": "www/crypto/ml-kem-768.js",
+    "size": 20384,
+    "sha256": "60b3f61bba0f7a6cf6deddd5bc375f88c0a63496dcb686372fbdba45b37eaefd",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T00:49:00+08:00"
+  },
+  {
+    "file": "www/crypto/sm2-browser.esm.js",
+    "size": 1284,
+    "sha256": "6563d887e2bb7c67528f4634bd1e191259f48b6ce54005f7ccbe23e8af5b58c4",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T00:49:00+08:00"
+  },
+  {
+    "file": "www/crypto/sm2-browser.cjs.js",
+    "size": 39731,
+    "sha256": "de05878842c4e8ebda1542425bfe15a2fa830187dddb6cf4d61c76e3fed75507",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T00:49:00+08:00"
+  },
+  {
+    "file": "fibemate-algoreg-v3.0.0-algoreg.tar.gz",
+    "size": 144579,
+    "sha256": "5f07de2b9a5dcfc3b377630b2997ac35c4d088fc4d686e7dc897123cbc43ee2b",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T00:49:00+08:00"
+  },
+  {
+    "file": "www/zk/bulletproofs.js",
+    "size": 7101,
+    "sha256": "5a3c0fb51c524a64d930195ad344f3aa58a8189b3a8d19654ce701f9277ef9b3",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-25T00:49:00+08:00"
+  },
+  {
+    "file": "www/privacy-layers/index.js",
+    "size": 68329,
+    "sha256": "46cc03b88272168f1488ae36db9cc16071a7932af2983ae8ce2ad24a74d41462",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-25T00:49:00+08:00"
+  },
+  {
+    "file": "www/session-manager.js",
+    "size": 23125,
+    "sha256": "00c9c720279cc333cb9065b6f19efaf8e631ec22527ed00d282adc203edc8943",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-25T00:49:00+08:00"
+  },
+  {
+    "file": "www/ml-kem-hybrid-integration.js",
+    "size": 8236,
+    "sha256": "da7519650c7eec68fbaa50329d59beb893f370e99f10f597360024ef22a1fc15",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-25T00:49:00+08:00"
+  },
+  {
+    "file": "www/legacy-crypto-bridge.js",
+    "size": 6087,
+    "sha256": "5841764ca926577edecb61e48a90cda14b75baf33b3797094e78f967a92a9712",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-25T00:49:00+08:00"
+  },
+  {
+    "file": "www/index.html",
+    "size": 43207,
+    "sha256": "19b70b7031793c133ae15720079e358dc1332ca283557b8e32fd606bb60adacb",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:24:00+08:00"
+  },
+  {
+    "file": "www/docs/architecture.html",
+    "size": 11819,
+    "sha256": "15217ea509a170b4ccfc1659500eefb2516b45debdebf34e5d8ae6fec6d6c319",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:24:00+08:00"
+  },
+  {
+    "file": "www/main.html",
+    "size": 34508,
+    "sha256": "def402bb1e298bc9ca1dbe72f9a59345eb0f38681a6d209d9505186b25fcaa76",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:24:00+08:00"
+  },
+  {
+    "file": "www/privacy-layers/pir-search.js",
+    "size": 6765,
+    "sha256": "ba43abcfd98d39ea62927e1ffd3e44f7088d794ad43b944de3318ad0a22b780e",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:41:00+08:00"
+  },
+  {
+    "file": "src/crypto/bloom-filter.js",
+    "size": 8148,
+    "sha256": "6ba1f9fb75e426a960b8282d3889ea22dd593f645c36c2f78e53ef6243f30198",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:41:00+08:00"
+  },
+  {
+    "file": "src/crypto/mixnet-transport.js",
+    "size": 11080,
+    "sha256": "991b84cd821cb89a293f8847e469cdcbbe98695cf572f6d3315938802b9f73c5",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:41:00+08:00"
+  },
+  {
+    "file": "src/crypto/distributed-mixnet.js",
+    "size": 7635,
+    "sha256": "899d744ccc5c559185a61ade6550c6d6932b865e602e3b14f5267d53e04ab938",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:41:00+08:00"
+  },
+  {
+    "file": "www/privacy-layers/sphinx-packet.js",
+    "size": 17996,
+    "sha256": "45a8fe8af8fdce1a9c095fcbe1fb494d631b42097675d58e0e9614dc11cce6b7",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:41:00+08:00"
+  },
+  {
+    "file": "src/crypto/nym-mixnet.js",
+    "size": 11089,
+    "sha256": "9aec6a8bff5e4043beee632754a467e8f2dce94f6ace01896301295baa7e8222",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:41:00+08:00"
+  },
+  {
+    "file": "src/crypto/traffic-shaping.js",
+    "size": 11208,
+    "sha256": "a4dd1102321e5a6882dd3364300f278fa56eaa3dc46238ecb760118b7deeca67",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-05-25T06:41:00+08:00"
+  },
+  {
+    "file": "src/index.js",
+    "size": 49174,
+    "sha256": "230a631865ba0ec04f1400fe765786a79938fc555233e00a01be28025a051b2f",
+    "sha256_current": "c29aee736d4bddb58cbb4b27494b6c4da3a8d46ae82970404a9dc9cad93ccb96",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T01:18:00+08:00",
+    "note": "modified after timestamp; original archived snapshot"
+  },
+  {
+    "file": "src/lib/jwt-helper.js",
+    "size": 618,
+    "sha256": "77217b718824e0ac35f25cceae2ae7094929586b6f2e0be4dff26924e98f666e",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T01:18:00+08:00"
+  },
+  {
+    "file": "backup/mlkem-1024-verified/test_1024.c",
+    "size": 3403,
+    "sha256": "d6a70f9bab00e69796a54bc3ffabe1c30fc9c47ff2bee447cd35e13989b031cc",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-19T00:00:00+08:00"
+  },
+  {
+    "file": "backup/mlkem-1024-verified/kem.c",
+    "size": 3403,
+    "sha256": "fa06d66571099ed3d25504d83d88c198443c461b0a559211593d9b09165c0180",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-19T00:00:00+08:00"
+  },
+  {
+    "file": "docs/kat/KeyGen-ML-DSA-44.txt",
+    "size": 0,
+    "sha256": "d3afbeff16c5fcadbf116b671dfb7aac8b8a8ec97db8330f7768a5d0c68e4c1e",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-21T00:00:00+08:00",
+    "status": "archived",
+    "note": "file not on server; .tsr on CFCA cloud"
+  },
+  {
+    "file": "docs/kat/SigGen-ML-DSA-44.txt",
+    "size": 0,
+    "sha256": "cae189138d049e443dc92a66f9ec14e9c1e466ab1b967c0c4385a04473ec3984",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-21T00:00:00+08:00",
+    "status": "archived",
+    "note": "file not on server; .tsr on CFCA cloud"
+  },
+  {
+    "file": "docs/kat/SigVer-ML-DSA-44.txt",
+    "size": 0,
+    "sha256": "9962b232ba7ee5520af52efd8d951d8feb544ad7071ff4a805e7b02e4db21371",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-21T00:00:00+08:00",
+    "status": "archived",
+    "note": "file not on server; .tsr on CFCA cloud"
+  },
+  {
+    "file": "kat_fips.js",
+    "size": 8825,
+    "sha256": "7ef6e8e6e12515eef923bca9b665f769e51e82e4e984ed3cea96f7979718d52d",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T03:12:00+08:00"
+  },
+  {
+    "file": "verify_final.js",
+    "size": 6968,
+    "sha256": "e1c9dec551424811e6a947bd31ed4cf46f5fc368a3ec4f05027f31c3c77aaf6e",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-23T03:12:00+08:00"
+  },
+  {
+    "file": "docs/kat/test_sm2.js",
+    "size": 1534,
+    "sha256": "1217dd38a08092ca3f3389e3f520ac90ef21b56ae337c588b985286f1291f08a",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-21T00:00:00+08:00"
+  },
+  {
+    "file": "docs/kat/test_sm2_module.js",
+    "size": 1845,
+    "sha256": "dff62334216451473f6a2ddc845443c1b96237c98161f5d996871df3bb3694fa",
+    "tsa": "CFCA",
+    "timestamp": "2026-05-21T00:00:00+08:00"
+  }
+]

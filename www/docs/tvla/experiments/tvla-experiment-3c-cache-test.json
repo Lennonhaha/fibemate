@@ -1,0 +1,53 @@
+{
+  "experiment": "TVLA Experiment #3c: Fixed-Different vs Random (Cache Test)",
+  "timestamp": "2026-06-03T17:22:58.136Z",
+  "params": {
+    "N": 10000,
+    "THRESH": 4.5
+  },
+  "hypothesis": "Fixed-same-input timing differences are caused by Node.js caching/memoization",
+  "results": [
+    {
+      "name": "byteEncode",
+      "tStat": 66.12790564849418,
+      "mA": 13.969970700000028,
+      "mB": 960.5108199000013,
+      "cvA": 236.41959225047472,
+      "cvB": 148.98299090667558,
+      "passed": false
+    },
+    {
+      "name": "byteDecode",
+      "tStat": 65.97106495289889,
+      "mA": 10.174733399999964,
+      "mB": 905.1217167999964,
+      "cvA": 248.2616478109502,
+      "cvB": 149.85164899866587,
+      "passed": false
+    },
+    {
+      "name": "compress",
+      "tStat": 85.16530432707674,
+      "mA": 56.306266599999965,
+      "mB": 960.5399109999976,
+      "cvA": 745.1763851521258,
+      "cvB": 101.53837317601122,
+      "passed": false
+    },
+    {
+      "name": "decompress",
+      "tStat": 99.13841342204009,
+      "mA": 42.33847199999999,
+      "mB": 949.9084457999941,
+      "cvA": 697.3844016338023,
+      "cvB": 91.22299067892848,
+      "passed": false
+    }
+  ],
+  "summary": {
+    "passed": 0,
+    "failed": 4,
+    "total": 4
+  },
+  "conclusion": "CACHE HYPOTHESIS REJECTED — some real timing differences may remain"
+}

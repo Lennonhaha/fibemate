@@ -1,0 +1,15 @@
+{
+  "appName": "FIBEMATE",
+  "version": "2.0.0",
+  "apiBaseUrl": "http://8.156.77.68:3001/api",
+  "wsUrl": "ws://8.156.77.68:3001/ws",
+  "icpNumber": "黑ICP备2026005787号-1",
+  "domain": "8.156.77.68:3001",
+  "features": {
+    "pqCrypto": true,
+    "zkAuth": true,
+    "voiceCall": true,
+    "videoCall": true,
+    "community": true
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "name": "fibemate-e2e-tests",
+  "version": "1.0.0",
+  "description": "FIBEMATE End-to-End Test Suite",
+  "scripts": {
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "test:auth": "cypress run --spec 'cypress/e2e/auth.spec.js'",
+    "test:messaging": "cypress run --spec 'cypress/e2e/messaging.spec.js'",
+    "test:contacts": "cypress run --spec 'cypress/e2e/contacts.spec.js'",
+    "test:security": "cypress run --spec 'cypress/e2e/security.spec.js'",
+    "test:all": "cypress run"
+  },
+  "devDependencies": {
+    "cypress": "^13.0.0",
+    "cypress-file-upload": "^5.0.8"
+  },
+  "dependencies": {
+    "tail": "^2.2.6"
+  }
+}

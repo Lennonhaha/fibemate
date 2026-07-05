@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>KAT 快速诊断</title>
+<style>
+body { font-family: system-ui; max-width: 600px; margin: 40px auto; background: #0a0a0f; color: #e0e0e8; }
+.btn { padding: 14px 32px; border: none; border-radius: 100px; font-size: 15px; cursor: pointer; margin: 5px; }
+.btn-run { background: #00E5C3; color: #000; }
+.btn-run:hover { background: #00F0D0; }
+.log { background: #111118; padding: 16px; border-radius: 8px; margin: 16px 0; max-height: 400px; overflow-y: auto; font: 13px monospace; }
+.ok { color: #00E5C3; } .err { color: #FF4757; } .dim { color: #6a6a7a; }
+</style>
+</head>
+<body>
+<h2>KAT 连通性诊断</h2>
+<p class="dim">测试 fetch("/api/mlkem/test") 是否可达</p>
+<button class="btn btn-run" onclick="test()">▶ 发送 1 个请求</button>
+<button class="btn btn-run" onclick="run5()">▶ 并发 5 个</button>
+<button class="btn btn-run" onclick="runFull()" id="btnFull" disabled>▶ 1000 轮全量</button>
+<div class="log" id="log"></div>
+
+<script>
+var LOG = document.getElementById('log');
+var BTN = document.getElementById('btnFull');
+function L(cls, msg) { var d = document.createElement('div'); d.className = cls; d.textContent = '[' + new Date().toISOString().slice(11,19) + '] ' + msg; LOG.appendChild(d); LOG.scrollTop = LOG.scrollHeight; }
+
+async function test() {
+  LOG.innerHTML = '';
+  L('dim', 'fetch("/api/mlkem/test")...');
+  try {
+    var t0 = performance.now();
+    var r = await fetch('/api/mlkem/test');
+    var d = await r.json();
+    var ms = (performance.now() - t0).toFixed(1);
+    L('ok', 'OK! roundTrip=' + d.roundTrip + ' status=' + d.status + ' (' + ms + 'ms)');
+    BTN.disabled = false;
+  } catch(e) {
+    L('err', 'FAILED: ' + e.message + ' (name=' + e.name + ')');
+  }
+}
+
+async function run5() {
+  LOG.innerHTML = '';
+  L('dim', '并发 5 个请求...');
+  var t0 = performance.now();
+  var ok = 0, fail = 0;
+  var ps = [];
+  for (var i = 0; i < 5; i++) {
+    ps.push(fetch('/api/mlkem/test').then(r => r.json()).then(d => d.roundTrip === true ? ok++ : fail++).catch(e => { fail++; L('err', '#' + (i+1) + ': ' + e.message); }));
+  }
+  await Promise.allSettled(ps);
+  var ms = (performance.now() - t0).toFixed(0);
+  L(ok === 5 ? 'ok' : 'err', ok + '/' + 5 + ' 通过 (' + ms + 'ms)');
+  if (ok === 5) BTN.disabled = false;
+}
+
+async function runFull() {
+  LOG.innerHTML = '';
+  var TOTAL = 1000, BATCH = 20, passed = 0, failed = 0;
+  var start = performance.now();
+  for (var i = 0; i < TOTAL; i += BATCH) {
+    var n = Math.min(BATCH, TOTAL - i);
+    var ps = [];
+    for (var j = 0; j < n; j++) {
+      ps.push(fetch('/api/mlkem/test').then(r => r.json()).then(d => d.roundTrip === true).catch(() => false));
+    }
+    var results = await Promise.allSettled(ps);
+    results.forEach(r => { if (r.status === 'fulfilled' && r.value) passed++; else failed++; });
+    if ((i + n) % 200 === 0) L('dim', (i + n) + '/' + TOTAL);
+  }
+  var totalS = ((performance.now() - start) / 1000).toFixed(1);
+  L(passed === TOTAL ? 'ok' : 'err', 'DONE: ' + passed + '/' + TOTAL + ' passed (' + totalS + 's)');
+}
+</script>
+</body>
+</html>

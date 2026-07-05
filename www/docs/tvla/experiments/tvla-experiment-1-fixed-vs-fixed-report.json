@@ -1,0 +1,155 @@
+{
+  "experiment": "TVLA Experiment #1: Fixed-vs-Fixed Control Group",
+  "methodology": "Interleaved A/B + 2000-iteration warmup",
+  "timestamp": "2026-06-02T23:48:04.975Z",
+  "N": 10000,
+  "threshold": 4.5,
+  "allPassed": true,
+  "results": [
+    {
+      "name": "generateKeypair",
+      "note": "fresh keypair (internal RNG)",
+      "groupA": {
+        "mean": 1878.3717463000055,
+        "variance": 165362.54698840834,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 1877.5392558999956,
+        "variance": 162646.35170713768,
+        "N": 10000
+      },
+      "tStat": 0.1453571573072844,
+      "passed": true
+    },
+    {
+      "name": "encapsulate",
+      "note": "fixed pk",
+      "groupA": {
+        "mean": 2548.9646200999923,
+        "variance": 300541.8010231833,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 2538.7891632,
+        "variance": 261166.0552381175,
+        "N": 10000
+      },
+      "tStat": 1.3576839064081991,
+      "passed": true
+    },
+    {
+      "name": "decapsulate",
+      "note": "fixed sk + ct",
+      "groupA": {
+        "mean": 3523.848047300005,
+        "variance": 679384.2502856029,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 3529.7836144999983,
+        "variance": 815931.0460496661,
+        "N": 10000
+      },
+      "tStat": 0.48539560339665916,
+      "passed": true
+    },
+    {
+      "name": "byteEncode",
+      "note": "fixed poly",
+      "groupA": {
+        "mean": 18.266744600000084,
+        "variance": 433.9210713309042,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 18.022529100000067,
+        "variance": 17.67573382113537,
+        "N": 10000
+      },
+      "tStat": 1.149205760078032,
+      "passed": true
+    },
+    {
+      "name": "byteDecode",
+      "note": "fixed poly",
+      "groupA": {
+        "mean": 15.921449599999928,
+        "variance": 1033.5252093380086,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 16.01251209999994,
+        "variance": 610.3135565081083,
+        "N": 10000
+      },
+      "tStat": 0.22460010767045493,
+      "passed": true
+    },
+    {
+      "name": "compress",
+      "note": "fixed poly",
+      "groupA": {
+        "mean": 23.018218500000074,
+        "variance": 430.75614304186104,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 22.992613400000092,
+        "variance": 283.8364206986077,
+        "N": 10000
+      },
+      "tStat": 0.09578493967358734,
+      "passed": true
+    },
+    {
+      "name": "decompress",
+      "note": "fixed poly",
+      "groupA": {
+        "mean": 10.37904499999997,
+        "variance": 207.66050495467013,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 10.355583900000026,
+        "variance": 192.08239537689812,
+        "N": 10000
+      },
+      "tStat": 0.11734321718915537,
+      "passed": true
+    },
+    {
+      "name": "polyMul",
+      "note": "fixed f,g",
+      "groupA": {
+        "mean": 225.06077139999974,
+        "variance": 4038.260379287079,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 225.5561804000002,
+        "variance": 5682.495882135676,
+        "N": 10000
+      },
+      "tStat": 0.5024743131244799,
+      "passed": true
+    },
+    {
+      "name": "matVecMul",
+      "note": "fixed A,v",
+      "groupA": {
+        "mean": 1857.391552600003,
+        "variance": 81935.63828702699,
+        "N": 10000
+      },
+      "groupB": {
+        "mean": 1854.634469599993,
+        "variance": 68368.42022960962,
+        "N": 10000
+      },
+      "tStat": 0.7111553582926833,
+      "passed": true
+    }
+  ],
+  "conclusion": "All Fixed-vs-Fixed |t| < 4.5 with interleaved measurement -- environment stable."
+}

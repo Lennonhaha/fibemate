@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SM2 前端集成联调验证 — 2026-06-25</title>
+<style>
+  body { font-family: -apple-system, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; background: #0a0e17; color: #e2e8f0; line-height: 1.7; }
+  h1 { color: #00E5C3; font-size: 1.6rem; }
+  h2 { color: #c9d1d9; font-size: 1.2rem; margin-top: 2rem; border-bottom: 1px solid rgba(0,229,195,0.15); padding-bottom: 0.3rem; }
+  h3 { color: #94a3b8; font-size: 1rem; margin-top: 1.5rem; }
+  table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+  th, td { border: 1px solid rgba(0,229,195,0.2); padding: 6px 10px; text-align: left; font-size: 0.9rem; }
+  th { background: rgba(0,229,195,0.08); color: #00E5C3; }
+  code { background: rgba(0,229,195,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.9em; }
+  pre { background: #111827; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; border: 1px solid rgba(0,229,195,0.1); }
+  ul, ol { padding-left: 1.5rem; }
+  li { margin: 0.3rem 0; }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(0,229,195,0.1); font-size: 0.8rem; color: #646c78; }
+  a { color: #00E5C3; }
+</style>
+</head>
+<body>
+
+<h1>SM2 前端集成联调验证 — 2026-06-25</h1>
+
+<h2>摘要</h2>
+<p>SM2 前端整套链路在 Tauri 开发环境下验证全部通过。整条国密加密通信链路一共 11 项用例，11/11 全部 PASS。</p>
+
+<h2>一、环境启动验证</h2>
+<p>执行命令：<code>npm run tauri dev</code></p>
+<ol>
+  <li>Rust 编译耗时：3.80s，开发配置构建无报错</li>
+  <li>桌面窗口正常拉起，密钥仓库 KeyStore 初始化干净，无残留会话</li>
+  <li>运行环境版本：
+    <ul>
+      <li>Tauri CLI 2.10.1</li>
+      <li>Rust 1.95.0</li>
+      <li>Node.js v22.22.3</li>
+    </ul>
+  </li>
+</ol>
+
+<h2>二、全链路测试结果</h2>
+<p>执行脚本：<code>scripts/verify-sm2-browser.mjs</code></p>
+
+<table>
+<tr><th>序号</th><th>测试项目</th><th>结果</th></tr>
+<tr><td>1</td><td>SM3 哈希自测</td><td>✅</td></tr>
+<tr><td>2</td><td>SM4-GCM 加密自测</td><td>✅</td></tr>
+<tr><td>3</td><td>往返加解密（中文+Emoji混合文本）</td><td>✅</td></tr>
+<tr><td>4</td><td>密文篡改拦截校验</td><td>✅</td></tr>
+<tr><td>5</td><td>10KB长文本（9.2K字符）：加密 25.6ms / 解密 18.2ms</td><td>✅</td></tr>
+<tr><td>6</td><td>非法密钥自动拒绝</td><td>✅</td></tr>
+<tr><td>7</td><td>空字符串加解密往返</td><td>✅</td></tr>
+<tr><td>8</td><td>超大Unicode特殊字符边界测试</td><td>✅</td></tr>
+<tr><td>9</td><td>消息信封字段格式合规校验</td><td>✅</td></tr>
+<tr><td>10</td><td>10组独立SM4密钥生成无冲突</td><td>✅</td></tr>
+<tr><td>11</td><td>桥接全流程自测：密钥生成→签名→验签→加密→解密→ECDH协商</td><td>✅</td></tr>
+</table>
+
+<h2>三、调用链路完整覆盖</h2>
+<pre>sm2-ec-browser.js（底层椭圆运算，TVLA 5/5 通过）
+→ sm3-browser.js
+→ sm4-browser.js（AEAD认证加密）
+→ sm2-bridge.js（桥接层七项接口封装）
+→ message-gm.js（双棘轮 + SM2-SM4混合加密）
+→ main.js（上层聊天业务、密钥管理、P2P直连模式）</pre>
+
+<h2>四、前端资源加载链（main.html）</h2>
+<pre>sm2-ec-browser.js → sm3-browser.js → sm4-browser.js → sm2-bridge.js
+→ message-gm.js → slh-dsa.js → opk-client.js → pq-integration.js
+→ security-levels.js → main.js</pre>
+<p>共计 12 个密码学模块，加载顺序正常，无缺失、无脚本阻塞。</p>
+
+<h2>五、关键勘误与环境说明</h2>
+<ol>
+  <li>接口名称修正：原规划的 <code>encryptWithGM.diagnostics()</code> 未实现，最终对外 API 统一为 <code>MessageGM.encryptWithSM2()</code> / <code>MessageGM.decryptWithSM2()</code></li>
+  <li>桥接自测依赖浏览器 localStorage；在 Node 命令行运行测试需要补齐存储 polyfill</li>
+  <li>Tauri 开发地址锁定：<code>http://localhost:3002</code></li>
+  <li>消息信封标准结构：
+<pre>{
+  "version": 3,
+  "protocol": "sm2-sm4-hybrid",
+  "AAD": "c1前32字节",
+  "ciphertext": "...",
+  "iv": "...",
+  "signature": "..."
+}</pre>
+  </li>
+</ol>
+
+<h2>六、CI 安全审计完成状态</h2>
+<ul>
+  <li>✅ <code>npm audit</code>：0 高危漏洞</li>
+  <li>✅ <code>cargo fmt --check</code>：代码格式完全统一</li>
+  <li>✅ <code>cargo clippy</code>：清理完毕，0 警告、0 错误</li>
+  <li>⏳ <code>cargo audit</code>：仅网络原因待代理环境复测</li>
+</ul>
+
+<h2>七、本次同步上线的配套模块</h2>
+<ol>
+  <li><strong>SLH-DSA WASM</strong>：WebWorker 异步加载，不阻塞 UI 主线程</li>
+  <li><strong>OPK 预密钥客户端</strong>：公钥打包扩展 gmPublicKey，复用现有接口</li>
+  <li><strong>PQC 国密混合调度层</strong>：三档安全等级 Standard / High / PQC-Hybrid</li>
+</ol>
+
+<h2>八、链接入口</h2>
+<p>完整性能指标、高阶 TVLA 侧信道测试数据详见附件文档。</p>
+
+<div class="footer">
+  FIBEMATE v3.0-preview &nbsp;|&nbsp; 2026-06-25 &nbsp;|&nbsp; <a href="/">← 返回首页</a>
+</div>
+
+</body>
+</html>

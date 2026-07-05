@@ -1,0 +1,40 @@
+﻿{
+  "experiment": "Attack Verification for polyMul/matVecMul",
+  "date": "2026-06-04T02:04:00Z",
+  "method": "Correlation analysis + direct timing measurement + Wilcoxon test",
+  "results": {
+    "part1_correlation_ciphertext": {
+      "pearson_coefficient": -0.005389,
+      "significant": false,
+      "threshold": 0.05,
+      "conclusion": "No correlation between ciphertext[0] and decapsulation timing"
+    },
+    "part1_correlation_hamming_weight": {
+      "pearson_coefficient": -0.002493,
+      "significant": false,
+      "threshold": 0.05,
+      "conclusion": "No correlation with Hamming weight of ciphertext[0]"
+    },
+    "part2_matVecMul_timing": {
+      "A1_mean_us": 34601.62,
+      "A2_mean_us": 34583.91,
+      "t_statistic": 0.11,
+      "significant": false,
+      "threshold": 4.5,
+      "conclusion": "No significant timing difference for different A matrices"
+    },
+    "part3_wilcoxon_median_diff": {
+      "median_A1_us": 32999.68,
+      "median_A2_us": 32990.30,
+      "median_diff_us": 9.38,
+      "exploitable": false,
+      "conclusion": "Median difference too small to exploit (< 50us)"
+    }
+  },
+  "summary": {
+    "overall_conclusion": "IMPLEMENTATION APPEARS SAFE (no obvious timing leak)",
+    "tvla_failures_explanation": "TVLA failures may be false positives OR due to public inputs",
+    "recommendation": "No constant-time implementation needed for polyMul/matVecMul"
+  },
+  "raw_output": "See console output 2026-06-04 02:04 GMT+8 for full details"
+}

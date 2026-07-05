@@ -1,0 +1,6 @@
+75c9d92b661db50fdafa2c7766dfddd9dd0e47969258d40c172160888172fc48  kat_10000rounds_2026-06-03T18-57-09-936Z_FINAL.json
+a0853f48e2da86f7c25b92c4a92638aee1dadde8ec13f3c04048af59cc6aebbc  kat_10000rounds_2026-06-03T18-57-09-936Z_FINAL.txt
+b01be7ab15a061337086aa56f82536113a6a1f7399e41c1621e3d73ed03bbcc6  paper-response-2026-06-04.md
+754061d335ac7caab0487beef40d56c94203817e983475c895589c8b38d9feda  tvla-9of9-corrected-report.json
+2e1d36a1e94ebb8fcdcc58f9ba1a4c5242c7d22151b90f0d2c3d44553d5264b7  tvla-defense-for-reviewers.md
+7329c49fc49efabc9f41e14df160f8125613506bead1fe53868c7c65c3b183e4  tvla-experiment-5-polyMul-attack-verification.json

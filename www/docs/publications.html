@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>学术论文 — FIBEMATE</title>
+    <style>
+        :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e; --accent:#00E5C3; --amber:#f59e0b; --red:#f87171; --green:#22c55e; --purple:#8b5cf6; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.75; padding:0 1rem 4rem; }
+        .container { max-width:900px; margin:0 auto; }
+        header { padding:3rem 0 2rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+        header h1 { font-size:2rem; color:#f0f6fc; line-height:1.3; margin-bottom:0.5rem; }
+        header .meta { color:var(--muted); font-size:0.9rem; }
+        .paper { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:2rem; margin:2rem 0; }
+        .paper h2 { font-size:1.35rem; color:#f0f6fc; margin-bottom:0.75rem; line-height:1.5; }
+        .paper .venue { display:inline-block; background:rgba(139,92,246,0.15); color:var(--purple); padding:0.2em 0.8em; border-radius:4px; font-size:0.82rem; font-weight:600; margin-bottom:1rem; }
+        .paper .abstract-label { font-size:0.85rem; font-weight:700; color:var(--accent); margin:1.2rem 0 0.5rem; text-transform:uppercase; letter-spacing:1px; }
+        .paper .abstract { color:var(--muted); font-size:0.93rem; line-height:1.8; margin-bottom:1.2rem; }
+        .paper .keywords { font-size:0.82rem; color:var(--muted); margin-bottom:1.2rem; }
+        .paper .keywords strong { color:var(--text); }
+        .paper .specs { display:flex; gap:2rem; flex-wrap:wrap; margin:1rem 0; padding-top:1rem; border-top:1px solid var(--border); }
+        .paper .spec { font-size:0.82rem; color:var(--muted); }
+        .paper .spec strong { color:var(--text); display:block; font-size:0.75rem; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:0.2rem; }
+        .innovation-tags { display:flex; gap:0.5rem; flex-wrap:wrap; margin:0.8rem 0; }
+        .tag { background:rgba(0,229,195,0.1); color:var(--accent); padding:0.15em 0.7em; border-radius:999px; font-size:0.78rem; border:1px solid rgba(0,229,195,0.2); }
+        pre { background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:6px; padding:1rem; overflow-x:auto; font-size:0.82rem; margin:0.8rem 0; color:var(--muted); }
+        a { color:var(--accent); text-decoration:none; }
+        a:hover { text-decoration:underline; }
+        .status { font-size:0.82rem; color:var(--amber); margin-top:1rem; }
+        .status-done { color:var(--green); }
+    </style>
+</head>
+<body>
+<div class="container">
+
+<header>
+    <h1>📄 学术论文</h1>
+    <p class="meta">FIBEMATE 密码学工程研究成果 · 更新时间 2026-06-25</p>
+</header>
+
+<!-- Paper 1: SM2 TVLA -->
+<div class="paper">
+    <span class="venue">TCHES / CHES 2026 (目标)</span>
+    <h2>Engineering Hardening and High-Order TVLA Evaluation for SM2 Elliptic Curve Implementation</h2>
+
+    <div class="innovation-tags">
+        <span class="tag">掩码失效诊断</span>
+        <span class="tag">N=2000 假阴性</span>
+        <span class="tag">三重防护</span>
+        <span class="tag">1-4 阶 20/20 全绿</span>
+        <span class="tag">3.8× 代价量化</span>
+    </div>
+
+    <div class="abstract-label">Abstract</div>
+    <div class="abstract">
+        Timing side-channel leakage remains a major threat to elliptic curve
+        cryptography implementations. In this work, we report a complete bug-hunting
+        and hardening story for a pure JavaScript SM2 implementation based on native
+        BigInt. A well-known but frequently misimplemented scalar masking scheme failed
+        completely due to an unnecessary modulo reduction, which remained invisible
+        under small-scale TVLA with N=2000 and only emerged after we raised the sample
+        size to N=5000. We then build a three-layer countermeasure suite: scalar
+        blinding without modulo truncation, projective coordinate randomization, and
+        Montgomery ladder constant-time scalar multiplication. Beyond first-order
+        Welch's t-test, we carry out high-order TVLA covering mean, variance, skewness
+        and kurtosis (1–4 statistical moments). All 20 test cases pass with maximum
+        |t| &lt; 1.24, far below the threshold 4.5.
+    </div>
+
+    <div class="keywords"><strong>Keywords:</strong> SM2; side-channel analysis; TVLA; high-order t-test; scalar masking; Montgomery ladder; timing leakage</div>
+    <div class="specs">
+        <div class="spec"><strong>页数</strong>~8 页 IEEE 短文</div>
+        <div class="spec"><strong>状态</strong><span class="status-done">✅ 初稿脱稿</span></div>
+        <div class="spec"><strong>目标</strong>TCHES / CHES 2026</div>
+        <div class="spec"><strong>参考文献</strong>4 篇</div>
+    </div>
+</div>
+
+<!-- Paper 2: NTT Pipeline -->
+<div class="paper">
+    <span class="venue">FCCM / FPL 2026 (目标)</span>
+    <h2>A 5-Stage Pipelined NTT with B=32 Barrett Reduction: Theory-vs-Measurement Decomposition and Path to 11.8× Acceleration</h2>
+
+    <div class="innovation-tags">
+        <span class="tag">流水线≠吞吐量</span>
+        <span class="tag">6.5× 差距拆解</span>
+        <span class="tag">双 FIFO 投影</span>
+        <span class="tag">256/256 全匹配</span>
+        <span class="tag">11.8× 路线图</span>
+    </div>
+
+    <div class="abstract-label">Abstract</div>
+    <div class="abstract">
+        This paper presents a latency-decomposition analysis of a 5-stage pipelined
+        number-theoretic transform (NTT) implementation for ML-KEM-768 on a Xilinx
+        Artix-7 FPGA. The design achieves 2-DSP48E1 utilization through a unified
+        Cooley–Tukey/Gentleman–Sande butterfly with B=32 Barrett modular reduction.
+        While classic utilization-based models predict 1029 cycles (99.5% pipeline
+        efficiency), RTL simulation with a 7-deep address pipeline and 2-deep
+        write-back queue measures 6652 cycles — a 6.5× gap. We decompose this gap
+        into per-stage feed–drain overhead (6265 cycles across 127 groups) and FSM
+        overhead (387 cycles), and project that dual-FIFO group overlap reduces
+        latency to 1065 cycles (11.8× over serial, 6.25× over current pipelined
+        implementation).
+    </div>
+
+    <div class="keywords"><strong>Keywords:</strong> NTT; Barrett reduction; ML-KEM; FPGA; pipeline decomposition; latency analysis</div>
+    <div class="specs">
+        <div class="spec"><strong>页数</strong>~6 页 IEEE 短文</div>
+        <div class="spec"><strong>状态</strong><span class="status-done">✅ 初稿脱稿</span></div>
+        <div class="spec"><strong>目标</strong>FCCM / FPL 2026</div>
+        <div class="spec"><strong>参考文献</strong>7 篇</div>
+    </div>
+</div>
+
+<!-- Submission Note -->
+<div style="color:var(--muted);font-size:0.85rem;margin:2rem 0;padding:1rem;background:rgba(245,158,11,0.05);border-left:3px solid var(--amber);border-radius:0 6px 6px 0;">
+    <strong>⏳ 投稿状态</strong>：两篇论文均已完成初稿和验证脚本（verify.py PASS），待确认投稿渠道和 arXiv 提交时间后放链接。论文以匿名作者形式投递，符合 IEEE 双盲评审要求。
+</div>
+
+<!-- Reproducibility -->
+<h2>可重现性</h2>
+<p>每篇论文独立配有：</p>
+<ul>
+    <li><code>bib/refs.bib</code> — 参考文献</li>
+    <li><code>figures/</code> — PGF/TikZ 矢量绘图（4+2 张）</li>
+    <li><code>verify.py</code> — 自动化验证脚本（LaTeX 大括号平衡、交叉引用完整性、图片文件存在性）</li>
+</ul>
+<p>所有数据基于公开文档和开源实现，第三方可完全重现。</p>
+
+</div>
+</body>
+</html>

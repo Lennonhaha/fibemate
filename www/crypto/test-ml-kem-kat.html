@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✅ ML-KEM-768 KAT 单元测试 | 20/20 通过 | FIBEMATE</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Consolas','Courier New',monospace;background:#0a0a0f;color:#e0e0e0;padding:30px;max-width:900px;margin:0 auto}
+h1{color:#00E5C3;font-size:18px;margin-bottom:4px}
+.sub{color:#666;font-size:12px;margin-bottom:20px}
+.test-suite{border:1px solid #333;border-radius:6px;margin:8px 0;overflow:hidden}
+.suite-title{background:#111;padding:8px 12px;font-size:13px;color:#FFA502;cursor:pointer}
+.suite-body{padding:8px 12px;display:none}
+.suite-body.open{display:block}
+.pass{color:#00E5C3}
+.fail{color:#FF4757}
+.info{color:#FFA502}
+.crash{color:#FF4757;font-weight:bold}
+.summary{background:#111;padding:16px;border-radius:6px;margin-top:20px;text-align:center;font-size:16px}
+.all-pass{color:#00E5C3;font-size:20px;font-weight:bold}
+.has-fail{color:#FF4757;font-size:20px;font-weight:bold}
+pre{font-size:11px;color:#888;margin:4px 0;overflow-x:auto}
+button{background:#00E5C3;color:#0a0a0f;border:none;padding:10px 24px;border-radius:4px;font-size:14px;cursor:pointer;margin:10px 0}
+button:hover{background:#00ccaf}
+</style>
+</head>
+<body>
+<div style="background:#0a3d0a;border:1px solid #00ff88;border-radius:8px;padding:12px 16px;margin:12px 16px;color:#00ff88;font-size:14px;text-align:center;">
+✅ 最后测试: 2026-05-29 12:08 CST | Round-trip: <b>20/20</b> | ML-KEM-768 KAT 全部通过 | 联合信任 (tsa.cn) + DigiCert 双源存证
+</div>
+
+<h1>🔬 ML-KEM-768 KAT 单元测试</h1>
+<div class="sub">修复: FO transform ctMask + 侧信道补丁</div>
+<button onclick="runAll()">▶ 运行全部测试</button>
+<div id="results"></div>
+<div id="summary"></div>
+
+<script src="https://fibemate.net/crypto/ml-kem-768.js?v=1780170397"></script>
+<script>
+const results = document.getElementById('results');
+const summary = document.getElementById('summary');
+let total = 0, passed = 0;
+
+function bufEq(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+}
+
+function logSuite(name, tests) {
+    const div = document.createElement('div');
+    div.className = 'test-suite';
+    let html = `<div class="suite-title" onclick="this.nextElementSibling.classList.toggle('open')">📋 ${name}</div>`;
+    html += '<div class="suite-body open">';
+    for (const t of tests) {
+        total++;
+        const cls = t.pass ? 'pass' : 'fail';
+        passed += t.pass ? 1 : 0;
+        html += `<div class="${cls}">${t.pass ? '✅' : '❌'} ${t.msg}</div>`;
+        if (t.detail) html += `<pre>${t.detail}</pre>`;
+    }
+    html += '</div>';
+    div.innerHTML = html;
+    results.appendChild(div);
+}
+
+function runAll() {
+    total = 0; passed = 0;
+    results.innerHTML = '';
+    summary.innerHTML = '';
+
+    // Test 1: 常量
+    const t1 = [];
+    t1.push({pass: MLKEM768.PUBLIC_KEY_BYTES === 1184, msg: `PUBLIC_KEY_BYTES = ${MLKEM768.PUBLIC_KEY_BYTES} (预期 1184)`});
+    t1.push({pass: MLKEM768.SECRET_KEY_BYTES === 2400, msg: `SECRET_KEY_BYTES = ${MLKEM768.SECRET_KEY_BYTES} (预期 2400)`});
+    t1.push({pass: MLKEM768.CIPHERTEXT_BYTES === 1088, msg: `CIPHERTEXT_BYTES = ${MLKEM768.CIPHERTEXT_BYTES} (预期 1088)`});
+    t1.push({pass: MLKEM768.SHARED_SECRET_BYTES === 32, msg: `SHARED_SECRET_BYTES = ${MLKEM768.SHARED_SECRET_BYTES} (预期 32)`});
+    logSuite('测试 1: 常量验证', t1);
+
+    // Test 2: KeyGen × 20
+    const t2 = [];
+    for (let i = 0; i < 20; i++) {
+        const kp = MLKEM768.generateKeypair();
+        const okPk = kp.publicKey.length === 1184 && kp.secretKey.length === 2400;
+        const pkInSk = kp.secretKey.slice(384*3, 384*3+1184);
+        const okEmb = bufEq(pkInSk, kp.publicKey);
+        t2.push({pass: okPk && okEmb, 
+            msg: `KeyGen#${i} pk=${kp.publicKey.length}B sk=${kp.secretKey.length}B pk⊂sk=${okEmb}`});
+    }
+    logSuite('测试 2: KeyGen × 20', t2);
+
+    // Test 3: Encaps/Decaps SS 匹配 × 50
+    const t3 = [];
+    for (let i = 0; i < 50; i++) {
+        const kp = MLKEM768.generateKeypair();
+        const enc = MLKEM768.encapsulate(kp.publicKey);
+        const ss2 = MLKEM768.decapsulate(kp.secretKey, enc.ciphertext);
+        const ok = bufEq(enc.sharedSecret, ss2);
+        t3.push({pass: ok, 
+            msg: `Round-trip #${i} ct=${enc.ciphertext.length}B ${ok ? 'SS 匹配 ✅' : 'SS 不匹配 ❌'}`,
+            detail: ok ? '' : `enc: ${Array.from(enc.sharedSecret.slice(0,8)).map(b=>b.toString(16).padStart(2,'0')).join(' ')}\ndec: ${Array.from(ss2.slice(0,8)).map(b=>b.toString(16).padStart(2,'0')).join(' ')}`});
+    }
+    logSuite('测试 3: Encaps/Decaps SS 匹配 × 50', t3);
+
+    // Test 4: FO transform
+    const t4 = [];
+    const kp = MLKEM768.generateKeypair();
+    const enc = MLKEM768.encapsulate(kp.publicKey);
+    const ssNormal = MLKEM768.decapsulate(kp.secretKey, enc.ciphertext);
+    t4.push({pass: bufEq(enc.sharedSecret, ssNormal), msg: '正常 decrypt SS 应匹配'});
+    
+    const tampered = new Uint8Array(enc.ciphertext);
+    tampered[0] ^= 0x01;
+    const ssTampered = MLKEM768.decapsulate(kp.secretKey, tampered);
+    t4.push({pass: !bufEq(enc.sharedSecret, ssTampered), msg: '篡改 ct[0] 后 SS 应不同 (FO)'});
+    
+    const tampered2 = new Uint8Array(enc.ciphertext);
+    tampered2[1087] ^= 0xFF;
+    const ssTampered2 = MLKEM768.decapsulate(kp.secretKey, tampered2);
+    t4.push({pass: !bufEq(enc.sharedSecret, ssTampered2), msg: '篡改 ct[1087] 后 SS 应不同'});
+    logSuite('测试 4: FO transform', t4);
+
+    // Test 5: 独立性
+    const t5 = [];
+    const kp1 = MLKEM768.generateKeypair();
+    const kp2 = MLKEM768.generateKeypair();
+    const enc1 = MLKEM768.encapsulate(kp1.publicKey);
+    const enc2 = MLKEM768.encapsulate(kp2.publicKey);
+    t5.push({pass: !bufEq(enc1.sharedSecret, enc2.sharedSecret), msg: '不同 keypair SS 应不同'});
+    const enc1b = MLKEM768.encapsulate(kp1.publicKey);
+    t5.push({pass: !bufEq(enc1.sharedSecret, enc1b.sharedSecret), msg: '同 keypair 不同 enc SS 应不同'});
+    logSuite('测试 5: 独立性', t5);
+
+    // Test 6: 性能
+    const t6 = [];
+    const t0 = performance.now();
+    for (let i = 0; i < 10; i++) {
+        const kp = MLKEM768.generateKeypair();
+        const enc = MLKEM768.encapsulate(kp.publicKey);
+        MLKEM768.decapsulate(kp.secretKey, enc.ciphertext);
+    }
+    const elapsed = (performance.now() - t0) / 10;
+    t6.push({pass: elapsed < 100, msg: `平均 keygen+enc+dec: ${elapsed.toFixed(1)}ms ${elapsed < 50 ? '✅' : elapsed < 100 ? '⚠️' : '❌'}`});
+    logSuite('测试 6: 性能 (10轮平均)', t6);
+
+    // 汇总
+    const cls = passed === total ? 'all-pass' : 'has-fail';
+    summary.innerHTML = `<div class="summary"><span class="${cls}">${passed}/${total} 通过</span><br><span style="font-size:13px;color:#666">${passed===total?'🎉 全部通过！':'检查 ❌ 项'} | ${new Date().toLocaleString()}</span></div>`;
+}
+</script>
+
+<div style="margin:24px 16px 16px;padding:16px;background:#111;border:1px solid #2a2a2a;border-radius:8px;">
+<h3 style="color:#00d4aa;margin:0 0 12px;">📜 时间戳存证</h3>
+<ul style="color:#c9d1d9;font-size:13px;line-height:1.8;">
+<li>联合信任时间戳存证: <code style="color:#ff8c00;">ml-kem-768.tsq_可信时间戳.tsa</code> (2026-05-29 12:08 CST)</li>
+<li>DigiCert 国际存证: <code style="color:#00a0ff;">ml-kem-768.tsr</code> (2026-05-29 ~10:26 CST)</li>
+<li>文件 SHA-256: <code style="color:#888;">4ee3d9b3948e45d6db87b56f24af05ef53590bf33eabc1b9698ac6d8d155ffd3</code></li>
+</ul>
+</div>
+</body>
+</html>

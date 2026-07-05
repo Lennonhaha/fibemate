@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" width="120" height="140">
+  <defs>
+    <!-- Cyan accent glow -->
+    <filter id="hexglow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Strong outer glow for hero -->
+    <filter id="outerglow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Inner gradient -->
+    <linearGradient id="innergrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#1a1a24"/>
+      <stop offset="100%" style="stop-color:#0a0a0f"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Outer glow background -->
+  <ellipse cx="60" cy="60" rx="55" ry="60" fill="#00d4aa" opacity="0.08" filter="url(#outerglow)"/>
+  
+  <!-- Hexagon outer border with glow -->
+  <path d="M60 8 L106 34 L106 86 L60 112 L14 86 L14 34 Z" 
+        fill="none" 
+        stroke="#00d4aa" 
+        stroke-width="2.5"
+        filter="url(#hexglow)"
+        opacity="0.9"/>
+  
+  <!-- Hexagon inner fill -->
+  <path d="M60 14 L100 37 L100 83 L60 106 L20 83 L20 37 Z" 
+        fill="url(#innergrad)"/>
+  
+  <!-- Inner subtle border -->
+  <path d="M60 22 L94 42 L94 78 L60 98 L26 78 L26 42 Z" 
+        fill="none" 
+        stroke="#00d4aa" 
+        stroke-width="0.5"
+        opacity="0.2"/>
+  
+  <!-- Shield icon inside hexagon (privacy/security symbol) -->
+  <path d="M60 35 L78 44 L78 62 C78 74 70 82 60 87 C50 82 42 74 42 62 L42 44 Z"
+        fill="none"
+        stroke="#00d4aa"
+        stroke-width="2"
+        opacity="0.8"/>
+  
+  <!-- Lock icon in center -->
+  <rect x="52" y="56" width="16" height="12" rx="2" fill="none" stroke="#00d4aa" stroke-width="1.5" opacity="0.9"/>
+  <path d="M55 56 L55 52 C55 48 65 48 65 52 L65 56" fill="none" stroke="#00d4aa" stroke-width="1.5" stroke-linecap="round" opacity="0.9"/>
+  
+  <!-- FIBEMATE text below -->
+  <text x="60" y="128"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="14"
+        font-weight="800"
+        letter-spacing="4"
+        fill="#00d4aa"
+        text-anchor="middle"
+        filter="url(#hexglow)">FIBEMATE</text>
+</svg>

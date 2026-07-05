@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE - Cookie Policy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0f; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.8; padding: 40px 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #00d4aa; font-size: 28px; margin-bottom: 8px; }
+        .version { color: #888; font-size: 13px; margin-bottom: 30px; }
+        h2 { color: #00d4aa; font-size: 18px; margin: 30px 0 12px; border-bottom: 1px solid #1a1a2e; padding-bottom: 6px; }
+        p, li { color: #b0b0b0; font-size: 14px; }
+        ul { padding-left: 20px; margin: 8px 0; }
+        li { margin: 6px 0; }
+        .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #1a1a2e; color: #666; font-size: 12px; }
+        a { color: #00d4aa; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .lang-switch { text-align: right; margin-bottom: 24px; }
+        .lang-switch a { color: #888; text-decoration: none; font-size: 13px; padding: 4px 8px; border: 1px solid #333; border-radius: 4px; }
+        table { width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px; }
+        th { background: #1a1a2e; color: #00d4aa; padding: 10px; text-align: left; }
+        td { padding: 10px; border-bottom: 1px solid #1a1a2e; color: #b0b0b0; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 11px; margin-right: 4px; }
+        .essential { background: #1b5e20; color: #a5d6a7; }
+        .functional { background: #0d47a1; color: #90caf9; }
+        .analytics { background: #e65100; color: #ffcc80; }
+    </style>
+</head>
+<body>
+
+<div style="background:#ff9800;color:#000;padding:12px 20px;text-align:center;font-weight:bold;font-size:14px;">
+  ⚠️ This document is a draft for internal review (v3.0.0-DRAFT). It has NOT been reviewed by legal counsel and does NOT constitute legal advice. Consult a qualified attorney before official use.
+</div>
+
+<div class="container">
+    <div class="lang-switch">
+        <a href="cookie.html">中文</a>
+    </div>
+
+    <h1>Cookie Policy</h1>
+    <p class="version">Version v3.0.0-DRAFT | Effective: May 16, 2026</p>
+
+    <h2>1. What Are Cookies</h2>
+    <p>Cookies are small text files stored on your device when you visit a website. They help the site remember your preferences, improve user experience, and ensure security. FIBEMATE follows the principles of minimization and transparency in cookie usage.</p>
+
+    <h2>2. Types of Cookies We Use</h2>
+
+    <h3>2.1 Essential Cookies</h3>
+    <p><span class="tag essential">Essential</span> These cookies are critical for service operation and cannot be disabled.</p>
+    <table>
+        <tr><th>Name</th><th>Purpose</th><th>Duration</th></tr>
+        <tr><td>fibemate_session</td><td>Session management, maintain login state</td><td>End of session</td></tr>
+        <tr><td>fibemate_csrf</td><td>CSRF protection token</td><td>End of session</td></tr>
+        <tr><td>fibemate_auth</td><td>JWT authentication token</td><td>7 days</td></tr>
+        <tr><td>fibemate_device</td><td>Device binding identifier</td><td>30 days</td></tr>
+    </table>
+
+    <h3>2.2 Functional Cookies</h3>
+    <p><span class="tag functional">Functional</span> These cookies enhance user experience; some features may be limited if disabled.</p>
+    <table>
+        <tr><th>Name</th><th>Purpose</th><th>Duration</th></tr>
+        <tr><td>fibemate_lang</td><td>Language preference</td><td>1 year</td></tr>
+        <tr><td>fibemate_theme</td><td>Dark/light theme preference</td><td>1 year</td></tr>
+        <tr><td>fibemate_notif</td><td>Notification preferences</td><td>6 months</td></tr>
+    </table>
+
+    <h3>2.3 Analytics Cookies</h3>
+    <p><span class="tag analytics">Analytics</span> These cookies help us understand service usage; disabled by default.</p>
+    <table>
+        <tr><th>Name</th><th>Purpose</th><th>Duration</th></tr>
+        <tr><td>fibemate_analytics</td><td>Anonymous usage statistics</td><td>1 year</td></tr>
+    </table>
+
+    <h2>3. FIBEMATE's Special Commitment</h2>
+    <p>As an end-to-end encrypted communication app, FIBEMATE specifically commits to:</p>
+    <ul>
+        <li><strong>No tracking cookies:</strong> We do not track your browsing behavior across sites</li>
+        <li><strong>No advertising cookies:</strong> We display no ads, so no ad tracking is needed</li>
+        <li><strong>No third-party sharing:</strong> Cookie data is used only for service functionality</li>
+        <li><strong>Encrypted storage:</strong> Sensitive cookie values are encrypted</li>
+        <li><strong>Local-first:</strong> Most preferences are stored locally and not uploaded to servers</li>
+    </ul>
+
+    <h2>4. Managing Cookies</h2>
+    <p>You can manage cookies through:</p>
+    <ul>
+        <li><strong>In-app settings:</strong> FIBEMATE Settings > Privacy > Cookie Management</li>
+        <li><strong>Browser settings:</strong> Manage cookies in your browser preferences</li>
+        <li><strong>First visit:</strong> We display a cookie consent banner on your first visit</li>
+    </ul>
+    <p>Please note: Disabling essential cookies may prevent the service from functioning properly.</p>
+
+    <h2>5. Local Storage Technologies</h2>
+    <p>In addition to cookies, FIBEMATE uses the following local storage technologies:</p>
+    <ul>
+        <li><strong>IndexedDB:</strong> Stores encryption key material and local message cache</li>
+        <li><strong>LocalStorage:</strong> Stores UI preferences and session state</li>
+        <li><strong>Session Storage:</strong> Stores temporary session data</li>
+    </ul>
+    <p>All local storage data is protected by end-to-end encryption; servers cannot access plaintext content.</p>
+
+    <h2>6. Policy Updates</h2>
+    <p>We may update this Cookie Policy periodically. Significant changes will be communicated through in-app notifications or email. Continued use of the service constitutes acceptance of the updated policy.</p>
+
+    <h2>7. Contact</h2>
+    <p>For questions about this Cookie Policy, contact:</p>
+    <ul>
+        <li>Privacy Team: support@fibemate.net (Privacy)</li>
+        <li>General Inquiries: support@fibemate.net</li>
+    </ul>
+
+    <div class="footer">
+        <p>© 2026 FIBEMATE. Last updated: May 16, 2026.</p>
+        <p><a href="terms-en.html">Terms of Service</a> | <a href="privacy-en.html">Privacy Policy</a> | <a href="security-en.html">Security Disclosure</a></p>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer style="background:#111;padding:20px;text-align:center;margin-top:40px;border-top:1px solid #333;">
+  <div style="margin-bottom:10px;">
+    <a href="index.html" style="color:#00E5C3;text-decoration:none;">首页</a> |
+    <a href="terms.html" style="color:#00E5C3;text-decoration:none;">服务条款</a> |
+    <a href="privacy.html" style="color:#00E5C3;text-decoration:none;">隐私政策</a> |
+    <a href="security.html" style="color:#00E5C3;text-decoration:none;">安全披露</a> |
+    <a href="cookie.html" style="color:#00E5C3;text-decoration:none;">Cookie政策</a> |
+    <a href="dmca.html" style="color:#00E5C3;text-decoration:none;">DMCA</a> |
+    <a href="acceptable-use.html" style="color:#00E5C3;text-decoration:none;">使用规范</a>
+  </div>
+  <div style="margin-bottom:8px;">
+    <a href="terms-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Terms</a> |
+    <a href="privacy-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Privacy</a> |
+    <a href="security-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Security</a> |
+    <a href="cookie-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Cookies</a> |
+    <a href="dmca-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">DMCA</a> |
+    <a href="acceptable-use-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Acceptable Use</a>
+  </div>
+  <p style="color:#888;font-size:0.8em;">© 2026 FIBEMATE. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

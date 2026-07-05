@@ -1,0 +1,53 @@
+FIBEMATE — Post-Quantum Privacy Communication Protocol
+Copyright (C) 2026 FIBEMATE Contributors
+
+This product is distributed under the GNU General Public License v3.0.
+A copy of the license is included in the LICENSE file.
+
+Third-Party Dependencies
+========================
+
+This project uses the following open-source libraries:
+
+Noir Backend (noir-backend):
+  - @noble/curves        (MIT)        — Elliptic curve cryptography
+  - @noble/post-quantum  (MIT)        — Post-quantum cryptography primitives
+  - bcryptjs             (MIT)        — Password hashing
+  - better-sqlite3       (MIT)        — SQLite3 bindings
+  - cors                 (MIT)        — Cross-Origin Resource Sharing
+  - express              (MIT)        — Web framework
+  - helmet               (MIT)        — Security headers
+  - jsonwebtoken         (MIT)        — JWT authentication
+  - lowdb                (MIT)        — JSON database
+  - mongoose             (MIT)        — MongoDB ODM
+  - node-addon-api       (MIT)        — Native addon API
+  - sm-crypto            (MIT)        — Chinese national cryptographic algorithms (SM2/SM3/SM4)
+  - uuid                 (MIT)        — UUID generation
+  - ws                   (MIT)        — WebSocket
+
+FIBEMATE ZK-SNARKs Server (fibemate-zk-server):
+  - @noble/hashes        (MIT)        — Hash functions
+  - @noble/post-quantum  (MIT)        — PQC primitives
+  - snarkjs              (GPL-3.0)    — Zero-knowledge proof system
+
+FIBEMATE Mixnet (fibemate-mixnet):
+  - minimist             (MIT)        — CLI argument parser
+
+TSA Timestamp Verification
+==========================
+
+This project uses Trusted Timestamp Authority (TSA) services for code integrity
+verification and non-repudiation:
+
+  - 联合信任时间戳服务中心 (tsa.cn)
+  - DigiCert Timestamp Service
+
+Timestamp certificates and verification instructions are available alongside
+the relevant source files.
+
+SM2/SM3/SM4 Notice
+==================
+
+The Chinese national cryptographic algorithms (SM2, SM3, SM4) are provided for
+technical research purposes only. This product is NOT a certified commercial
+cryptographic product under Chinese regulations (商用密码产品).

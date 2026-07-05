@@ -1,0 +1,55 @@
+<!-- ========== 安全验证区块（首页精简版） ========== -->
+<section class="security-verification">
+ <div class="container">
+ <div class="section-badge">🔐 可验证完整性</div>
+ <h2>后量子安全 · 时间戳存证</h2>
+ <p class="section-subtitle">
+ FIBEMATE 使用 <strong>ML-KEM-768</strong> (NIST FIPS 203) 作为后量子密钥封装机制。
+ 所有核心实现已通过三线测试套件并完成 <strong>RFC 3161 时间戳存证</strong>。
+ </p>
+
+ <div class="verification-grid">
+ <div class="verification-card">
+ <div class="card-icon">✅</div>
+ <h3>正式验证</h3>
+ <ul>
+ <li>KAT 向量 9/9 全通过</li>
+ <li>IND-CPA 属性验证</li>
+ <li>隐式拒绝安全特性</li>
+ </ul>
+ </div>
+ <div class="verification-card">
+ <div class="card-icon">🔄</div>
+ <h3>确定性可重现</h3>
+ <ul>
+ <li>同种子 → 同密钥对</li>
+ <li>800/800 循环验证通过</li>
+ <li>JS / WASM 双轨自洽</li>
+ </ul>
+ </div>
+ <div class="verification-card">
+ <div class="card-icon">📋</div>
+ <h3>FIPS 140-3 样式自检</h3>
+ <ul>
+ <li>上电自检 (POST)</li>
+ <li>软件完整性度量</li>
+ <li>失败自锁机制</li>
+ </ul>
+ </div>
+ <div class="verification-card">
+ <div class="card-icon">🕒</div>
+ <h3>时间戳存证</h3>
+ <ul>
+ <li>RFC 3161 标准</li>
+ <li>9 个核心文件已存证</li>
+ <li><code>/docs/tsa/2026-06-08/</code></li>
+ </ul>
+ </div>
+ </div>
+
+ <div class="verification-footer">
+ <a href="/security" class="btn-primary">查看完整安全验证报告 →</a>
+ <a href="/docs/tsa/2026-06-08/timestamp-manifest-seeded.json" class="btn-secondary" download>📥 下载存证清单</a>
+ </div>
+ </div>
+</section>

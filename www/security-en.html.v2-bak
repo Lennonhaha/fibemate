@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE - Security Vulnerability Disclosure Policy</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #0a0a0f; color: #e0e0e0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.8; padding: 40px 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        h1 { color: #00d4aa; font-size: 28px; margin-bottom: 8px; }
+        .version { color: #888; font-size: 13px; margin-bottom: 30px; }
+        h2 { color: #00d4aa; font-size: 18px; margin: 30px 0 12px; border-bottom: 1px solid #1a1a2e; padding-bottom: 6px; }
+        p, li { color: #b0b0b0; font-size: 14px; }
+        ul { padding-left: 20px; margin: 8px 0; }
+        li { margin: 6px 0; }
+        .footer { margin-top: 50px; padding-top: 20px; border-top: 1px solid #1a1a2e; color: #666; font-size: 12px; }
+        a { color: #00d4aa; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .lang-switch { text-align: right; margin-bottom: 24px; }
+        .lang-switch a { color: #888; text-decoration: none; font-size: 13px; padding: 4px 8px; border: 1px solid #333; border-radius: 4px; }
+        .highlight { background: #1a1a2e; padding: 12px 16px; border-radius: 6px; border-left: 3px solid #00d4aa; margin: 16px 0; }
+        .email { color: #00d4aa; font-weight: 500; }
+        .severity { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; margin-right: 8px; }
+        .critical { background: #ff5252; color: #fff; }
+        .high { background: #ff9800; color: #fff; }
+        .medium { background: #ffc107; color: #000; }
+        .low { background: #4caf50; color: #fff; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="lang-switch">
+        <a href="security.html">中文</a>
+    </div>
+
+    <h1>Security Vulnerability Disclosure Policy</h1>
+    <p class="version">Version 2.20.0 | Effective: May 16, 2026</p>
+
+    <h2>1. Overview</h2>
+    <p>FIBEMATE is committed to providing secure and reliable communication services. We take security issues seriously and welcome security researchers and users to help us discover and fix potential vulnerabilities.</p>
+    <p>This policy describes how we handle security vulnerability reports and the rules researchers should follow when testing our services.</p>
+
+    <h2>2. In-Scope Vulnerabilities</h2>
+    <p>We accept reports for the following types of vulnerabilities:</p>
+    <ul>
+        <li>Cryptographic implementation flaws (e.g., key leakage, algorithm defects)</li>
+        <li>Authentication/authorization bypass</li>
+        <li>Cross-site scripting (XSS)</li>
+        <li>Cross-site request forgery (CSRF)</li>
+        <li>SQL injection or other database vulnerabilities</li>
+        <li>Server-side request forgery (SSRF)</li>
+        <li>Identity verification bypass</li>
+        <li>Sensitive information disclosure</li>
+        <li>Privilege escalation</li>
+        <li>Remote code execution</li>
+    </ul>
+
+    <h2>3. Out-of-Scope Testing</h2>
+    <p>The following activities are not covered by this policy:</p>
+    <ul>
+        <li>Testing third-party services</li>
+        <li>Social engineering attacks (including against employees or users)</li>
+        <li>Physical security testing</li>
+        <li>Denial of service (DoS/DDoS) attacks</li>
+        <li>Automated mass scanning (please verify vulnerabilities manually)</li>
+        <li>Accessing, modifying, or deleting unauthorized data</li>
+        <li>Actions that affect service availability for other users</li>
+    </ul>
+
+    <h2>4. How to Report</h2>
+    <div class="highlight">
+        <p><strong>Security Report Email:</strong> <span class="email">security@fibemate.net</span></p>
+        <p><strong>Encrypted Communication:</strong> Please use our PGP public key (available on our website) to send encrypted reports</p>
+    </div>
+    <p>Please include the following in your report:</p>
+    <ul>
+        <li>Vulnerability type and severity</li>
+        <li>Affected components/pages</li>
+        <li>Detailed reproduction steps</li>
+        <li>Proof-of-concept code (if available)</li>
+        <li>Potential impact assessment</li>
+        <li>Suggested fix (if available)</li>
+    </ul>
+
+    <h2>5. Severity Classification</h2>
+    <p>We use the following criteria to assess vulnerability severity:</p>
+    <ul>
+        <li><span class="severity critical">Critical</span> Mass user data exfiltration, complete system compromise, total encryption failure</li>
+        <li><span class="severity high">High</span> User data leakage, authentication bypass, privilege escalation</li>
+        <li><span class="severity medium">Medium</span> Partial user information disclosure, limited service impact</li>
+        <li><span class="severity low">Low</span> Minor issues with limited impact scope</li>
+    </ul>
+
+    <h2>6. Response Timeline</h2>
+    <p>We commit to:</p>
+    <ul>
+        <li>Critical: Acknowledge within 24 hours, fix or mitigate within 72 hours</li>
+        <li>High: Acknowledge within 48 hours, fix within 7 days</li>
+        <li>Medium: Acknowledge within 72 hours, fix within 14 days</li>
+        <li>Low: Acknowledge within 7 days, fix within 30 days</li>
+    </ul>
+
+    <h2>7. Safe Harbor</h2>
+    <p>For researchers who follow this policy, we commit to:</p>
+    <ul>
+        <li>Not initiating legal proceedings</li>
+        <li>Not reporting your activities to law enforcement</li>
+        <li>Not suspending or terminating your account</li>
+    </ul>
+    <p><strong>Conditions:</strong> You must comply with all policy terms, report vulnerabilities promptly, not disclose vulnerability details, and not impact other users.</p>
+
+    <h2>8. Disclosure Guidelines</h2>
+    <p>To ensure user safety, we request researchers to:</p>
+    <ul>
+        <li>Not publicly disclose vulnerability details before fixes are deployed</li>
+        <li>Allow reasonable time for remediation (typically 90 days)</li>
+        <li>Coordinate disclosure timing to ensure user safety</li>
+        <li>Communicate with us before any public disclosure</li>
+    </ul>
+
+    <h2>9. Recognition</h2>
+    <p>While we do not currently offer cash bounties, for valid vulnerability reports we will:</p>
+    <ul>
+        <li>Publicly acknowledge you on our security thanks page (optional)</li>
+        <li>Provide FIBEMATE premium feature access</li>
+        <li>Offer special memorabilia for significant vulnerability discoveries</li>
+    </ul>
+
+    <h2>10. Contact</h2>
+    <p>For any questions about this policy, contact:</p>
+    <ul>
+        <li>Security Team: security@fibemate.net</li>
+        <li>General Inquiries: support@fibemate.net</li>
+    </ul>
+
+    <div class="footer">
+        <p>© 2026 FIBEMATE. Last updated: May 16, 2026.</p>
+        <p><a href="terms-en.html">Terms of Service</a> | <a href="privacy-en.html">Privacy Policy</a> | <a href="cookie-en.html">Cookie Policy</a></p>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer style="background:#111;padding:20px;text-align:center;margin-top:40px;border-top:1px solid #333;">
+  <div style="margin-bottom:10px;">
+    <a href="index.html" style="color:#00E5C3;text-decoration:none;">首页</a> |
+    <a href="terms.html" style="color:#00E5C3;text-decoration:none;">服务条款</a> |
+    <a href="privacy.html" style="color:#00E5C3;text-decoration:none;">隐私政策</a> |
+    <a href="security.html" style="color:#00E5C3;text-decoration:none;">安全披露</a> |
+    <a href="cookie.html" style="color:#00E5C3;text-decoration:none;">Cookie政策</a> |
+    <a href="dmca.html" style="color:#00E5C3;text-decoration:none;">DMCA</a> |
+    <a href="acceptable-use.html" style="color:#00E5C3;text-decoration:none;">使用规范</a>
+  </div>
+  <div style="margin-bottom:8px;">
+    <a href="terms-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Terms</a> |
+    <a href="privacy-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Privacy</a> |
+    <a href="security-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Security</a> |
+    <a href="cookie-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Cookies</a> |
+    <a href="dmca-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">DMCA</a> |
+    <a href="acceptable-use-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Acceptable Use</a>
+  </div>
+  <p style="color:#888;font-size:0.8em;">© 2026 FIBEMATE. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

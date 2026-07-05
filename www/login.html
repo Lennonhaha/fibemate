@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - FIBEMATE</title>
+  <link rel="stylesheet" href="main.css">
+  <script src="zk-auth.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: #0a0e17;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #e0e0e0;
+      overflow-x: hidden;
+    }
+
+    /* Hex grid background (matches index.html style) */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(rgba(0, 212, 170, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0, 212, 170, 0.035) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    /* Radial glow overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background:
+        radial-gradient(ellipse at 30% 40%, rgba(0, 212, 170, 0.06) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 60%, rgba(0, 150, 200, 0.04) 0%, transparent 50%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .login-wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 400px;
+      padding: 30px 20px;
+    }
+
+    /* Shield Icon with glow */
+    .shield-icon {
+      text-align: center;
+      margin-bottom: 18px;
+    }
+    .shield-icon svg {
+      width: 64px;
+      height: 64px;
+      filter: drop-shadow(0 0 12px rgba(0, 212, 170, 0.5));
+    }
+
+    /* Title */
+    .login-title {
+      text-align: center;
+      margin-bottom: 6px;
+    }
+    .login-title h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      color: #fff;
+    }
+    .login-title .subtitle {
+      font-size: 11px;
+      color: #7a8899;
+      letter-spacing: 1.5px;
+      margin-top: 4px;
+      line-height: 1.6;
+    }
+
+    /* Feature badge */
+    .feature-badge {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      background: rgba(0, 212, 170, 0.08);
+      border: 1px solid rgba(0, 212, 170, 0.15);
+      border-radius: 20px;
+      padding: 6px 16px;
+      margin: 14px auto 24px;
+      font-size: 11px;
+      color: #00d4aa;
+      width: fit-content;
+    }
+    .feature-badge svg { flex-shrink: 0; }
+
+    /* Login Card */
+    .login-card {
+      background: rgba(15, 20, 30, 0.85);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 28px 24px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    /* Tabs */
+    .login-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 22px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      padding: 3px;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 9px 0;
+      border: none;
+      background: transparent;
+      color: #667;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.25s ease;
+      font-weight: 500;
+    }
+    .tab-btn.active {
+      background: rgba(0, 212, 170, 0.15);
+      color: #00d4aa;
+    }
+    .tab-btn:hover:not(.active) { color: #aab; }
+
+    /* Form */
+    .login-form { display: block; }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+
+    .input-group {
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .input-group label {
+      display: block;
+      font-size: 12px;
+      color: #7a8899;
+      margin-bottom: 6px;
+      letter-spacing: 0.5px;
+    }
+    .input-group input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      color: #e0e0e0;
+      font-size: 14px;
+      outline: none;
+      transition: all 0.25s ease;
+      autocomplete="off";
+      data-lpignore="true";
+    }
+    .input-group input:focus {
+      border-color: rgba(0, 212, 170, 0.4);
+      box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.08);
+      background: rgba(255,255,255,0.07);
+    }
+    .input-group input::placeholder { color: #4a5568; }
+
+    /* Password toggle */
+    .pwd-toggle {
+      position: absolute;
+      right: 12px;
+      top: 38px;
+      background: none;
+      border: none;
+      color: #556;
+      cursor: pointer;
+      padding: 4px;
+      opacity: 0.6;
+      transition: opacity 0.2s;
+    }
+    .pwd-toggle:hover { opacity: 1; }
+
+    /* Strength bar */
+    .strength-bar {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+    }
+    .strength-bar .seg {
+      flex: 1;
+      height: 3px;
+      background: rgba(255,255,255,0.06);
+      border-radius: 2px;
+      transition: background 0.3s;
+    }
+
+    /* Submit button */
+    .btn-submit {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, #00d4aa, #00b494);
+      border: none;
+      border-radius: 10px;
+      color: #0a0e17;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: all 0.25s ease;
+    }
+    .btn-submit:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0, 212, 170, 0.3);
+    }
+    .btn-submit:active { transform: translateY(0); }
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    /* Guest entry */
+    .guest-entry {
+      text-align: center;
+      margin-top: 18px;
+      padding-top: 18px;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+    .guest-entry a {
+      color: #888;
+      text-decoration: none;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: color 0.2s;
+    }
+    .guest-entry a:hover { color: #00d4aa; }
+    .guest-entry p {
+      color: #555;
+      font-size: 11px;
+      margin-top: 6px;
+    }
+
+    /* Error message */
+    .error-msg {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid rgba(255, 68, 68, 0.2);
+      color: #ff6b6b;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    .error-msg.show { display: block; }
+
+    /* Register link */
+    .register-link {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 13px;
+      color: #667;
+    }
+    .register-link a {
+      color: #00d4aa;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .register-link a:hover { text-decoration: underline; }
+
+    /* Responsive */
+    @media (max-width: 480px) {
+      .login-wrapper { padding: 20px 16px; }
+      .login-card { padding: 24px 18px; }
+    }
+  
+    /* ZK status text */
+    #zkStatus { transition: color 0.3s; }
+
+    /* ZK panel hint text */
+    #panel-zk p { margin: 0; }
+
+</style>
+
+<script>
+window.onerror = function(msg, src, lineno, colno, error) {
+  console.log('[GLOBAL ERROR] msg=' + msg + ' src=' + src + ' line=' + lineno + ' col=' + colno);
+  var body = document.getElementsByTagName('body')[0];
+  if (body) {
+    var d = document.createElement('div');
+    d.id = 'error-info';
+    d.style.cssText = 'position:fixed;top:0;left:0;right:0;background:red;color:white;padding:10px;z-index:99999;';
+    d.textContent = '[GLOBAL ERROR] ' + msg + ' | ' + src + ' | line ' + lineno;
+    body.appendChild(d);
+  }
+  return false;
+};
+console.log('[onerror handler] installed');
+</script>
+</head>
+<body>
+
+<div class="login-wrapper">
+
+  <!-- Shield Logo -->
+  <div class="shield-icon">
+    <svg viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="sg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#00d4aa"/>
+          <stop offset="100%" style="stop-color:#00b494"/>
+        </linearGradient>
+        <linearGradient id="sf" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:rgba(0,212,170,0.15)"/>
+          <stop offset="100%" style="stop-color:rgba(0,180,160,0.06)"/>
+        </linearGradient>
+      </defs>
+      <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+            stroke="url(#sg)" stroke-width="2" fill="url(#sf)"/>
+      <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z"
+            stroke="url(#sg)" stroke-width="1" fill="none" opacity="0.35"/>
+      <circle cx="32" cy="32" r="6" stroke="url(#sg)" stroke-width="1.5" fill="none"/>
+      <path d="M32 38V48" stroke="url(#sg)" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <!-- Title -->
+  <div class="login-title">
+    <h1>FIBEMATE</h1>
+    <p class="subtitle">Security-First Messaging &middot; End-to-End Encryption</p>
+  </div>
+
+  <!-- Feature Badge -->
+  <div class="feature-badge">
+    <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+      <path d="M5 1L9 2.5V6C9 8.5 7 10.5 5 11.5C3 10.5 1 8.5 1 6V2.5L5 1Z"
+            stroke="currentColor" stroke-width="1" fill="none"/>
+    </svg>
+    <span>End-to-End Encryption &middot; Zero-Knowledge Proof</span>
+  </div>
+
+  <!-- Login Card -->
+  <div class="login-card">
+    <!-- Tabs -->
+    <div class="login-tabs">
+      <button type="button" class="tab-btn active" data-tab="password">密码登录</button>
+      <button type="button" class="tab-btn" data-tab="phone">手机号登录</button>
+      <button type="button" class="tab-btn" data-tab="zk">ZK 匿名</button>
+    </div>
+
+    <!-- Error Message -->
+    <div class="error-msg" id="errorMsg"></div>
+
+    <!-- Password Login Form -->
+    <form class="login-form" id="loginForm" autocomplete="off" data-lpignore="true">
+      <div class="tab-panel active" id="panel-password">
+        <div class="input-group">
+          <label for="username">用户名 / 邮箱</label>
+          <input type="text" id="username" name="fm_un" placeholder="请输入用户名或邮箱"
+                 autocomplete="off" data-lpignore="true" spellcheck="false">
+        </div>
+
+        <div class="input-group">
+          <label for="password">密码</label>
+          <input type="password" id="password" name="fm_pw" placeholder="请输入密码"
+                 autocomplete="new-password" data-lpignore="true">
+          <button type="button" class="pwd-toggle" id="pwdToggle" title="显示/隐藏密码">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M8 3C4.5 3 1.73 5.11 1 8c.73 2.89 3.5 5 7 5s6.27-2.11 7-5c-.73-2.89-3.5-5-7-5z" stroke="#667" stroke-width="1.2"/><circle cx="8" cy="8" r="2" stroke="#667" stroke-width="1.2"/></svg>
+          </button>
+        </div>
+
+        <div class="strength-bar" id="strengthBar">
+          <div class="seg" id="seg1"></div><div class="seg" id="seg2"></div><div class="seg" id="seg3"></div><div class="seg" id="seg4"></div>
+        </div>
+      </div>
+
+      <!-- Phone Login Panel -->
+      <div class="tab-panel" id="panel-phone">
+        <div class="input-group">
+          <label for="phone">手机号</label>
+          <input type="tel" id="phone" name="fm_phone" placeholder="请输入手机号码"
+                 autocomplete="off" data-lpignore="true" maxlength="11">
+        </div>
+        <div class="input-group">
+          <label for="smsCode">验证码</label>
+          <input type="text" id="smsCode" name="fm_sms" placeholder="请输入验证码"
+                 autocomplete="off" data-lpignore="true" maxlength="6">
+        </div>
+      </div>
+
+      <button type="submit" class="btn-submit" id="submitBtn">登 录</button>
+    
+      <!-- ZK Anonymous Panel -->
+      <div class="tab-panel" id="panel-zk">
+        <p style="color:#7a8899;font-size:12px;margin-bottom:12px;line-height:1.6;">
+          使用 Schnorr 零知识证明 + Pedersen 承诺，无需密码，匿名认证。
+        </p>
+        <div class="input-group">
+          <label for="zkDisplayName">昵称</label>
+          <input type="text" id="zkDisplayName" placeholder="你的匿名昵称"
+                 autocomplete="off" data-lpignore="true" spellcheck="false">
+        </div>
+        <button type="button" class="btn-submit" id="zkRegisterBtn" style="margin-bottom:8px;">匿名注册</button>
+        <button type="button" class="btn-submit" id="zkLoginBtn" style="background:rgba(0,212,170,0.12);border-color:rgba(0,212,170,0.3);">匿名登录</button>
+        <p id="zkStatus" style="text-align:center;font-size:11px;margin-top:8px;color:#667;"></p>
+        <!-- 合规标注 -->
+        <p class="compliance-notice" style="font-size:12px;color:#888;margin-top:12px;text-align:center;line-height:1.6;">
+          ⚠️ 技术验证功能 · 仅用于隐私技术研究演示<br>
+          🔬 ZK 匿名认证为技术能力演示，本系统不含真实用户注册与账户体系。<br>
+          根据《中华人民共和国网络安全法》，互联网信息服务提供者<br>
+          在正式提供服务时应当要求用户提供真实身份信息。<br>
+          本系统为技术研究演示，不涉及正式通信服务。<br>
+          正式使用请通过下方手机号/邮箱注册
+        </p>
+      </div>
+</form>
+
+    <!-- Register Link -->
+    <div class="register-link">
+      还没有账号？<a href="#" id="showRegister">立即注册</a>
+    </div>
+  </div>
+
+  <!-- Guest Entry -->
+  <div class="guest-entry">
+    <a href="#" id="anonymousBtn">
+      <svg width="12" height="14" viewBox="0 0 10 12" fill="none">
+        <path d="M5 1L9 2.5V6C9 8.5 7 10.5 5 11.5C3 10.5 1 8.5 1 6V2.5L5 1Z"
+              stroke="currentColor" stroke-width="1" fill="none"/>
+      </svg>
+      Anonymous Login (Zero-Knowledge Proof)
+    </a>
+    <p>无需注册，零知识证明身份验证</p>
+  </div>
+
+</div>
+
+<script>
+// ============================================
+// Tab Switching
+// ============================================
+const tabBtns = document.querySelectorAll('.tab-btn');
+const panels = document.querySelectorAll('.tab-panel');
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabBtns.forEach(b => b.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    const target = btn.dataset.tab;
+    const panel = document.getElementById('panel-' + target);
+    if (panel) panel.classList.add('active');
+  });
+});
+
+// ============================================
+// Password Toggle
+// ============================================
+const pwdToggle = document.getElementById('pwdToggle');
+const pwdInput = document.getElementById('password');
+if (pwdToggle && pwdInput) {
+  pwdToggle.addEventListener('click', () => {
+    const isPwd = pwdInput.type === 'password';
+    pwdInput.type = isPwd ? 'text' : 'password';
+  });
+}
+
+// ============================================
+// Password Strength
+// ============================================
+function updatePasswordStrength(pw) {
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  score = Math.min(score, 4);
+
+  const colors = ['', '#FF5252', '#FF9800', '#FFC107', '#00d4aa'];
+  for (let i = 1; i <= 4; i++) {
+    const seg = document.getElementById('seg' + i);
+    if (seg) seg.style.background = i <= score ? colors[score] : 'rgba(255,255,255,0.06)';
+  }
+}
+
+const passwordField = document.getElementById('password');
+if (passwordField) {
+  passwordField.addEventListener('input', e => updatePasswordStrength(e.target.value));
+}
+
+// ============================================
+// Form Submit
+// ============================================
+const loginForm = document.getElementById('loginForm');
+const submitBtn = document.getElementById('submitBtn');
+const errorMsg = document.getElementById('errorMsg');
+
+function showError(msg) {
+  if (!errorMsg) return;
+  errorMsg.textContent = msg;
+  errorMsg.classList.add('show');
+}
+function hideError() {
+  if (errorMsg) errorMsg.classList.remove('show');
+}
+
+if (loginForm) {
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    hideError();
+
+    const activeTab = document.querySelector('.tab-btn.active')?.dataset.tab || 'password';
+
+    if (activeTab === 'password') {
+      const username = document.getElementById('username')?.value?.trim();
+      const password = document.getElementById('password')?.value;
+
+      if (!username || !password) {
+        showError('请填写用户名和密码');
+        return;
+      }
+
+      // Show loading
+      submitBtn.disabled = true;
+      submitBtn.textContent = '登录中...';
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+
+        if (res.ok && data.token) {
+          // Store tokens using keys that main.html expects
+          localStorage.setItem('fibemate_token', data.token);
+          localStorage.setItem('fibemate_username', data.username || data.displayName || 'User');
+          localStorage.setItem('fibemate_userId', data.userId);
+          localStorage.setItem('fibemate_displayName', data.displayName || data.username || 'User');
+          // Also store refresh token
+          if (data.refreshToken) {
+            localStorage.setItem('fibemate_refreshToken', data.refreshToken);
+          }
+          window.location.href = 'm.html';
+        } else {
+          showError(data.error || '登录失败，请检查账号密码');
+        }
+      } catch (err) {
+        showError('网络错误，请稍后重试');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '登 录';
+      }
+    } else {
+      showError('手机号验证功能开发中');
+    }
+  });
+}
+
+// ============================================
+// Register link
+// ============================================
+document.getElementById('showRegister')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  alert('注册功能即将开放，敬请期待');
+});
+
+// ============================================
+// Anonymous Login
+// ============================================
+document.getElementById('anonymousBtn')?.addEventListener('click', (e) => {
+  e.preventDefault();
+  window.location.href = 'm.html?mode=anonymous';
+});
+
+// ============================================
+// ZK Anonymous Register / Login (Schnorr + Pedersen)
+// ============================================
+const zkRegisterBtn = document.getElementById('zkRegisterBtn');
+const zkLoginBtn = document.getElementById('zkLoginBtn');
+const zkDisplayName = document.getElementById('zkDisplayName');
+const zkStatus = document.getElementById('zkStatus');
+
+function setZkStatus(msg, color) {
+  if (zkStatus) { zkStatus.textContent = msg; zkStatus.style.color = color || '#667'; }
+}
+
+if (zkRegisterBtn) {
+  zkRegisterBtn.addEventListener('click', async () => {
+    const name = (zkDisplayName?.value?.trim()) || '';
+    if (!name) { setZkStatus('请输入昵称', '#FF5252'); return; }
+    setZkStatus('生成 ZK 证明中...', '#00d4aa');
+    zkRegisterBtn.disabled = true;
+    try {
+      const data = await doZKRegister(name, '');
+      if (data?.token) {
+        setZkStatus('注册成功，跳转中...', '#00d4aa');
+        localStorage.setItem('fibemate_token', data.token);
+        localStorage.setItem('fibemate_userId', data.userId);
+        localStorage.setItem('fibemate_username', data.displayName || name);
+        localStorage.setItem('fibemate_displayName', data.displayName || name);
+        if (data.refreshToken) localStorage.setItem('fibemate_refreshToken', data.refreshToken);
+        setTimeout(() => { window.location.href = 'm.html'; }, 800);
+      }
+    } catch(e) {
+      setZkStatus('注册失败: ' + (e.message || '网络错误'), '#FF5252');
+    } finally {
+      zkRegisterBtn.disabled = false;
+    }
+  });
+}
+
+if (zkLoginBtn) {
+  zkLoginBtn.addEventListener('click', async () => {
+    if (!localStorage.getItem('fk_zk_secrets')) {
+      setZkStatus('未找到密钥，请先注册', '#FF9800');
+      return;
+    }
+    setZkStatus('验证 ZK 证明中...', '#00d4aa');
+    zkLoginBtn.disabled = true;
+    try {
+      const data = await doZKLogin();
+      if (data?.token) {
+        setZkStatus('登录成功，跳转中...', '#00d4aa');
+        localStorage.setItem('fibemate_token', data.token);
+        localStorage.setItem('fibemate_userId', data.userId);
+        localStorage.setItem('fibemate_username', data.displayName || '');
+        localStorage.setItem('fibemate_displayName', data.displayName || '');
+        if (data.refreshToken) localStorage.setItem('fibemate_refreshToken', data.refreshToken);
+        setTimeout(() => { window.location.href = 'm.html'; }, 800);
+      }
+    } catch(e) {
+      setZkStatus('登录失败: ' + (e.message || '密钥可能已过期，请重新注册'), '#FF5252');
+    } finally {
+      zkLoginBtn.disabled = false;
+    }
+  });
+}
+
+// Wire "showRegister" link to ZK tab
+const showReg = document.getElementById('showRegister');
+if (showReg) {
+  showReg.addEventListener('click', (e) => {
+    e.preventDefault();
+    tabBtns.forEach(b => b.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    const zkTab = document.querySelector('[data-tab="zk"]');
+    const zkPanel = document.getElementById('panel-zk');
+    if (zkTab) zkTab.classList.add('active');
+    if (zkPanel) zkPanel.classList.add('active');
+  });
+}
+
+</script>
+
+</body>
+</html>

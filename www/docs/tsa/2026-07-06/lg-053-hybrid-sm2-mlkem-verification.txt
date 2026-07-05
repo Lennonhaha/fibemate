@@ -1,0 +1,32 @@
+===== lg-053: SM2+ML-KEM-768 混合握手验证 =====
+TSR编号: lg-053
+时间: 2026-07-06 04:35 CST
+路径: C-2 (应用层混合, IANA #4590)
+协议: SM2 ECDH + ML-KEM-768 混合后量子密钥交换
+验证: 5/5 全绿
+
+[1/5] GET /init: SM2 130-char pub + ML-KEM 2368-char pub ✅
+[2/5] SM2 ECDH: client SK * server PK → shared x-coordinate (64 hex) ✅
+[3/5] ML-KEM encapsulate: ciphertext 1088B, shared secret 32B ✅
+[4/5] POST /finalize: server-side SM2 ECDH + ML-KEM decaps → confirmed ✅
+[5/5] 混合 HKDF: HKDF-SHA256(SM2_ss || ML-KEM_ss, info=FIBEMATE_SM2_MLKEM_HYBRID_v1) → sessionKey 32B ✅
+
+安全属性:
+- SM2 ECDH ephemeral keypair (前向安全)
+- ML-KEM-768 NIST FIPS 203 (后量子 128-bit)
+- HKDF-SHA256 混合派生 (RFC 5869)
+- TLS Session ID 绑定 (防跨会话重放)
+- IANA #4590 (SM2-MLKEM-768) 应用层验证
+
+测试环境:
+- 服务端: fibemate.net (8.156.77.68), Node.js v22.22.2
+- SM2 实现: sm2-bigint-ec.js v1.2 (TVLA 5/5 PASS)
+- ML-KEM 实现: C Native addon (128-bit)
+- 测试脚本: /tmp/test-c2-e2e.js
+
+架构互补验证:
+- 路径 A: TLS 1.3 X25519MLKEM768 (nginx层) ✅
+- 路径 C-2: HTTP SM2+ML-KEM-768 (应用层) ✅
+- 两条路径互不干扰, 经典+后量子双通道已全面覆盖
+
+===== 验证完成 =====

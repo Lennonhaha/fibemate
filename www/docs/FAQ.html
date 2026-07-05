@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>常见问题 — FIBEMATE</title>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e; --accent:#00E5C3; --amber:#f59e0b; --red:#f87171; --green:#22c55e; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.75; padding:0 1rem 4rem; }
+  .container { max-width:900px; margin:0 auto; }
+  header { padding:3rem 0 2rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+  header h1 { font-size:2rem; color:#f0f6fc; line-height:1.3; margin-bottom:0.5rem; }
+  header .meta { color:var(--muted); font-size:0.9rem; }
+  strong { color:#f0f6fc; }
+  h2 { font-size:1.35rem; color:#f0f6fc; margin:2.5rem 0 1rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border); }
+  h3 { font-size:1.1rem; color:#e6edf3; margin:1.8rem 0 0.8rem; }
+  h4 { font-size:1rem; color:var(--text); margin:1.5rem 0 0.5rem; }
+  p, li { margin:0.5rem 0; }
+  ul, ol { margin:0.5rem 0 0.5rem 1.5rem; }
+  code { background:rgba(110,118,129,0.2); padding:0.15em 0.4em; border-radius:4px; font-size:0.9em; font-family:"SF Mono",Consolas,monospace; }
+  pre { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:1rem; overflow-x:auto; font-size:0.87em; margin:0.8rem 0; }
+  table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.92rem; }
+  th, td { padding:0.6rem 0.8rem; border:1px solid var(--border); text-align:left; }
+  th { background:var(--card); color:#f0f6fc; font-weight:600; }
+  tr:nth-child(even) { background:rgba(22,27,34,0.5); }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  hr { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+  .note { background:rgba(245,158,11,0.1); border-left:3px solid var(--amber); padding:0.8rem 1rem; margin:1rem 0; border-radius:0 6px 6px 0; font-size:0.9rem; }
+  .badge { display:inline-block; padding:0.15em 0.5em; border-radius:4px; font-size:0.82rem; font-weight:600; }
+  .badge-green { background:rgba(34,197,94,0.15); color:var(--green); }
+  .badge-amber { background:rgba(245,158,11,0.15); color:var(--amber); }
+  footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
+  footer a { color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>❓ FIBEMATE 常见问题</h1>
+  <p class="meta">更新于 <strong>2026-06-25</strong> · <a href="/">← 返回首页</a></p>
+</header>
+
+<h2>基础</h2>
+
+<h3>Q1: FIBEMATE 是什么？</h3>
+<p>一个<strong>端到端加密即时通讯技术研究项目</strong>，核心技术特点：</p>
+<ul>
+  <li><strong>后量子密码学</strong>：ML-KEM-768（FIPS 203 标准）抵抗量子计算机攻击</li>
+  <li><strong>Double Ratchet</strong>：每条消息独立密钥，历史消息不可回溯解密</li>
+  <li><strong>国密支持</strong>：SM2/SM3/SM4 全套国密算法，TVLA 侧信道全通过</li>
+  <li><strong>桌面优先</strong>：Tauri v2 跨平台桌面应用（Windows/macOS/Linux）</li>
+</ul>
+
+<h3>Q2: 和 Signal / WhatsApp 有什么区别？</h3>
+<table>
+<tr><th>维度</th><th>Signal</th><th>FIBEMATE</th></tr>
+<tr><td>密钥封装</td><td>ECDH (X25519)</td><td><strong>ML-KEM-768</strong> (后量子)</td></tr>
+<tr><td>量子安全</td><td>❌ 不抵抗</td><td>✅ 抵抗</td></tr>
+<tr><td>国密支持</td><td>❌</td><td>✅ SM2/SM3/SM4</td></tr>
+<tr><td>侧信道审计</td><td>部分</td><td><strong>TVLA 10k+ 全通过</strong></td></tr>
+</table>
+<p>Signal 使用经典的 X25519 ECDH，在量子计算机下不保证安全。FIBEMATE 的 ML-KEM-768 基于格密码（Kyber），理论上抵抗 Shor 算法。</p>
+
+<h2>密码学</h2>
+
+<h3>Q3: 私钥存在哪里？会被盗吗？</h3>
+<p><strong>私钥不落盘</strong>。ML-KEM-768 私钥始终存在于 WebView 内存，不写入 <code>localStorage</code>、文件系统或服务器。</p>
+<p>ECDH 身份密钥存储在 IndexedDB，但标记为 <strong><code>extractable: false</code></strong>（WebCrypto non-extractable），无法导出原始密钥材料。攻击者即使获得文件系统访问权，也无法提取私钥。</p>
+
+<h3>Q4: ML-KEM-768 安全吗？NIST 批准了吗？</h3>
+<p>ML-KEM-768 基于 <strong>Kyber-768</strong>，NIST 于 2024 年 8 月正式标准化为 <strong>FIPS 203</strong>。它是：</p>
+<ul>
+  <li>NIST 安全等级 3（等效于 AES-192）</li>
+  <li>全球首个标准化后量子 KEM</li>
+  <li>算法本身已被 NSA、BSI、ANSSI 等机构采纳或推荐使用（注：被认可的为 NIST FIPS 203 标准算法，非本项目的具体实现）</li>
+</ul>
+<p>FIBEMATE 的实现通过了 <strong>KAT 10,000/10,000</strong>（已知答案测试）和 <strong>TVLA 10,000</strong>（侧信道验证）。</p>
+
+<h3>Q5: Double Ratchet 是什么？为什么需要它？</h3>
+<p>Double Ratchet 是 Signal 协议的核心机制，确保：</p>
+<ol>
+  <li><strong>Forward Secrecy（前向安全）</strong>：即使长期密钥泄露，历史消息仍无法解密</li>
+  <li><strong>Post-Compromise Security（后泄露安全）</strong>：攻击者停止窃听后，未来消息自动恢复安全</li>
+  <li><strong>每条消息独立密钥</strong>：不存在"主密钥"，单条密钥泄露不影响其他消息</li>
+</ol>
+<p>FIBEMATE 将 ML-KEM-768 作为 Ratchet 的初始密钥交换（替代 X3DH），后续消息使用 Double Ratchet 轮转。</p>
+
+<h3>Q6: 什么是 TVLA？结果怎么看？</h3>
+<p>TVLA（Test Vector Leakage Assessment）是侧信道安全的标准评估方法（Goodwill et al. 2011, NIST NIAT Workshop）。用 Welch's t-test 检测密码学操作是否泄漏密钥信息：</p>
+<ul>
+  <li><strong>|t| &lt; 4.5</strong>：无统计显著泄漏（通过 ✅）</li>
+  <li><strong>|t| ≥ 4.5</strong>：存在侧信道泄漏（不通过 ⚠️）</li>
+</ul>
+<p>FIBEMATE SM2 实现经过 3 轮 TVLA 测试：</p>
+<table>
+<tr><th>版本</th><th>N</th><th>结果</th><th>关键改进</th></tr>
+<tr><td>v1.0 wNAF</td><td>2,000</td><td>10/10 ✓</td><td>基线实现</td></tr>
+<tr><td>v1.2 Masked</td><td>5,000</td><td>5/5 ✓</td><td>Scalar Masking + Projective Randomization</td></tr>
+<tr><td>v1.3 Montgomery</td><td>5,000</td><td><strong>7/7 ✓</strong></td><td>Montgomery Ladder 恒定时间点乘</td></tr>
+<tr><td>高阶 TVLA</td><td>5,000</td><td><strong>20/20 ✓</strong></td><td>1–4 阶矩全通过</td></tr>
+</table>
+<p>完整报告：<a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 侧信道分析</a></p>
+
+<div class="note">
+  <strong>⚠️ 重要说明</strong>：TVLA 验证的是时序侧信道泄露（Timing Side-Channel），是密码工程的安全基线，但<strong>不等于</strong>形式化安全证明。TVLA 通过不表示实现能抵抗物理/电磁/故障注入等主动攻击。攻击论文（如模板攻击、格攻击、故障注入）研究的攻击方法与 TVLA 验证的是不同威胁模型，不应混为一谈。
+</div>
+
+<h2>开发</h2>
+
+<h3>Q7: 为什么不用 Electron，选 Tauri？</h3>
+<table>
+<tr><th>维度</th><th>Electron</th><th>Tauri v2</th></tr>
+<tr><td>打包体积</td><td>~150 MB</td><td><strong>~10 MB</strong></td></tr>
+<tr><td>内存占用</td><td>~300 MB</td><td><strong>~50 MB</strong></td></tr>
+<tr><td>后端语言</td><td>Node.js</td><td><strong>Rust</strong> (零成本抽象)</td></tr>
+<tr><td>原生性能</td><td>JS 引擎</td><td>Rust 原生编译</td></tr>
+<tr><td>WebView</td><td>Chromium 内嵌</td><td>系统 WebView（Edge/WebKit）</td></tr>
+</table>
+<p>Tauri 用 Rust 写后端、系统 WebView 做前端，体积小 15 倍，内存省 6 倍，且 Rust 的密码学实现更安全（无 GC 时序、确定性内存管理）。</p>
+
+<h3>Q8: 怎么能看到我的代码在做什么？</h3>
+<p>打开 DevTools：</p>
+<ol>
+  <li>右键 FIBEMATE 窗口 → <strong>Inspect</strong>（或 F12）</li>
+  <li>Console 中运行 <code>window.MLKEM768.keygen()</code> 等测试命令</li>
+  <li>Network 标签可查看 WebSocket 连接</li>
+</ol>
+
+<h3>Q9: 怎么验证构建是否安全？</h3>
+<pre># 1. 运行全部测试
+cargo test
+
+# 2. 运行 KAT（已知答案测试）
+node scripts/kat-check.js
+
+# 3. 运行 TVLA 快速检查（N=100）
+node scripts/tvla-quick-check.js --n=100
+
+# 4. 验证构建完整性
+sha256sum src-tauri/target/release/fibemate-tauri.exe</pre>
+
+<h2>部署 &amp; 运维</h2>
+
+<h3>Q10: FIBEMATE 可以自部署吗？</h3>
+<p>可以。计划于 2026.08.31 以 GPLv3 开源：</p>
+<ol>
+  <li>部署自己的信令服务器（<code>backend/</code> 目录）</li>
+  <li>修改 CSP 配置指向你的域名</li>
+  <li>打包自定义应用</li>
+</ol>
+<p>后端基于 Node.js + Express + WebSocket，轻量部署在 1 核 1G 服务器即可。</p>
+
+<h3>Q11: 时间戳存证是什么？</h3>
+<p>FIBEMATE 所有关键文档（TVLA 报告、验证报告、技术文档）通过 <strong>FreeTSA RFC 3161 + DigiCert 双源时间戳</strong> 存证。这提供了：</p>
+<ul>
+  <li><strong>不可篡改性</strong>：任何修改都会破坏时间戳签名</li>
+  <li><strong>时间证明</strong>：第三方证明文档在某个时间点已存在</li>
+  <li><strong>审计追溯</strong>：完整证据链（TECHNICAL-VERIFICATION.md → .tsr 时间戳文件）</li>
+</ul>
+
+<h3>Q12: PQC 混合握手是什么？和纯 ML-KEM 有什么区别？</h3>
+<p><strong>PQC 混合握手（路径 C）</strong> 是 FIBEMATE 当前采用的密钥交换方案：</p>
+<ul>
+  <li><strong>TLS 1.3 ECDHE-SM2</strong> 先完成经典握手 → 浏览器通过 <code>GET /api/pqc-hybrid/init</code> 获取服务端 ML-KEM-768 公钥</li>
+  <li>浏览器执行 <code>ML-KEM-768.Encaps(pk)</code> → 密文通过 <code>POST /api/pqc-hybrid/finalize</code> 发送 → 双方 HKDF 派生相同 sessionKey</li>
+  <li><strong>不修改 Nginx/OpenSSL</strong>：纯应用层实现，零侵入</li>
+  <li><strong>高压验证</strong>：900/900 会话全部通过（p95=78.5ms），零 session 泄漏</li>
+</ul>
+<p><strong>与纯 ML-KEM 的区别</strong>：纯 ML-KEM（如路径 A 的 NamedGroup 原生集成）性能更好但需改造 TLS 栈；路径 C 是实用主义折中——不改基础设施，把 PQC 安全增量叠加在现有 TLS 之上。详见 <a href="/docs/pqc-readiness.html">PQC 就绪度报告</a>。</p>
+<h2>已知限制</h2>
+<table>
+<tr><th>限制</th><th>状态</th><th>计划</th></tr>
+<tr><td>TVLA 仅检测时序泄露（非物理/电磁攻击）</td><td>已说明</td><td>FAQ Q6 明确标注</td></tr>
+<tr><td>前端 SM2 加密集成</td><td><span class="badge badge-green">✅ 已上线</span></td><td>v3.0-preview 前端桥接 11/11 通过</td></tr>
+<tr><td>ECDH 非后量子（身份层）</td><td>使用中</td><td>计划升级 ML-DSA</td></tr>
+<tr><td>PWA 离线消息队列</td><td>部分支持</td><td>v1.2 完善</td></tr>
+<tr><td>移动端</td><td><span class="badge badge-amber">开发中</span></td><td>React Native 先行</td></tr>
+</table>
+
+<h2>更多资源</h2>
+<table>
+<tr><th>资源</th><th>链接</th></tr>
+<tr><td>官网</td><td><a href="https://fibemate.net">fibemate.net</a></td></tr>
+<tr><td>API 文档</td><td><a href="/docs/API.html">docs/API.html</a></td></tr>
+<tr><td>架构设计</td><td><a href="/docs/architecture.html">docs/architecture.html</a></td></tr>
+<tr><td>SM2 TVLA 报告</td><td><a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 侧信道分析</a></td></tr>
+<tr><td>证据地图</td><td><a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md</a></td></tr>
+<tr><td>PQC 就绪状态</td><td><a href="/docs/pqc-readiness.html">抗量子就绪状态</a></td></tr>
+</table>
+
+<hr>
+
+<h2>免责声明</h2>
+
+<ol>
+  <li><strong>关于 TVLA 验证</strong>：本项目的 SM2 实现已完成 Test Vector Leakage Assessment (TVLA) 验证（Welch's t-test，N=5,000/10,000，阈值 |t| &lt; 4.5）。该测试用于检测实现中是否存在可被利用的<strong>时序侧信道泄露（Timing Side-Channel）</strong>，是评估密码实现侧信道抵抗能力的行业通用方法，但<strong>不能等同于形式化安全证明</strong>。TVLA 通过不表示实现能抵抗物理攻击（功耗分析、电磁辐射分析）、故障注入攻击（激光、电压毛刺）、或微架构侧信道攻击（缓存、分支预测）等不同威胁模型下的攻击。</li>
+
+  <li><strong>关于后量子与国密集成</strong>：ML-KEM-768 与 SM2 的实现均基于 NIST FIPS 203 与 GM/T 标准进行技术验证。KAT 向量验证和 TVLA 验证结果仅代表参考实现在特定测试条件下的正确性与侧信道抵抗能力，不代表任何商业产品的合规认证。</li>
+
+  <li><strong>非商密认证说明</strong>：本项目中 SM2/SM3/SM4 国密算法的实现仅为技术研究与验证目的，<strong>未经过国家密码管理局商用密码产品认证</strong>，不适用于需要国密认证的商业或政务场景。</li>
+
+  <li><strong>第三方存证声明</strong>：代码已通过 DigiCert 与联合信任（tsa.cn）进行时间戳存证。存证仅用于记录代码在特定时间点的完整性，<strong>不构成对代码安全性的第三方背书或担保</strong>。</li>
+
+  <li><strong>参考文献与攻击论文的区别</strong>：本文档中引用的参考文献均为 TVLA 方法论和侧信道工程实践的基础文献。密码学文献中存在大量针对 ECDSA/SM2 的理论攻击论文（如格攻击、模板攻击、故障注入攻击），这些攻击方法与 TVLA 验证属于不同的威胁模型和安全评估范畴，不应混为一谈，也不宜作为 TVLA 验证的佐证引用。</li>
+</ol>
+
+<footer>
+  <p>最后更新：2026-06-25 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a> · <a href="/legal.html">文档中心</a></p>
+  <p style="margin-top:0.5rem;">© 2026 FIBEMATE · 独立技术研究项目 · 非商业运营</p>
+</footer>
+
+</div>
+</body>
+</html>

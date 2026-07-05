@@ -1,0 +1,94 @@
+version: '3.8'
+
+# FIBEMATE Mixnet - 真实网络拓扑（非单机仿真）
+# 3 个独立 Mix 节点，通过 Docker 内部网络通信
+# 每个节点运行在独立容器中，具备真实网络延迟与转发
+
+services:
+  # Mix 节点 1 - 入口节点
+  mix-node-1:
+    image: node:20-alpine
+    container_name: fibemate-mix-1
+    working_dir: /app
+    volumes:
+      - ./mixnet:/app
+    command: node mix-node.js --port 8001 --peers mix-node-2:8002,mix-node-3:8003
+    networks:
+      - mixnet_network
+    ports:
+      - "8001:8001"  # 对外暴露入口
+    environment:
+      - NODE_ID=1
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js", "--port", "8001"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Mix 节点 2 - 中间节点
+  mix-node-2:
+    image: node:20-alpine
+    container_name: fibemate-mix-2
+    working_dir: /app
+    volumes:
+      - ./mixnet:/app
+    command: node mix-node.js --port 8002 --peers mix-node-1:8001,mix-node-3:8003
+    networks:
+      - mixnet_network
+    environment:
+      - NODE_ID=2
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js", "--port", "8002"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Mix 节点 3 - 出口节点
+  mix-node-3:
+    image: node:20-alpine
+    container_name: fibemate-mix-3
+    working_dir: /app
+    volumes:
+      - ./mixnet:/app
+    command: node mix-node.js --port 8003 --peers mix-node-1:8001,mix-node-2:8002
+    networks:
+      - mixnet_network
+    environment:
+      - NODE_ID=3
+      - LOG_LEVEL=info
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "healthcheck.js", "--port", "8003"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # 测试客户端（可选）
+  test-client:
+    image: node:20-alpine
+    container_name: fibemate-test-client
+    working_dir: /app
+    volumes:
+      - ./mixnet:/app
+    command: node test-client.js --entry mix-node-1:8001
+    networks:
+      - mixnet_network
+    depends_on:
+      - mix-node-1
+      - mix-node-2
+      - mix-node-3
+    environment:
+      - TEST_MODE=benchmark
+      - MESSAGE_COUNT=100
+    restart: "no"
+
+networks:
+  mixnet_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

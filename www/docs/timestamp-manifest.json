@@ -1,0 +1,148 @@
+{
+  "version": "2026-06-25-v2",
+  "generated_at": "2026-06-25T16:10:00+08:00",
+  "files": [
+    {
+      "id": "intt-final-verified",
+      "file": "intt_v1_verified.bit",
+      "sha256": "833BB501498B662DAB921AD644A66C12B1E75BC34B0B49FF4EA0FDDB7B244441",
+      "commit": "4a0eacc0653606b402b3796e2a787f64e4b5a8a7",
+      "device": "A7-Lite-35T (XC7A35T-2FGG484)",
+      "desc": "INTT hardware verification 256/256 passed",
+      "timestamps": [
+        {
+          "provider": "tsa.cn",
+          "file": "commit_hash.txt_可信时间戳.tsa",
+          "timestamp_utc": "2026-06-12T22:26:11Z",
+          "type": "PKCS#7 SignedData",
+          "verified": true
+        },
+        {
+          "provider": "FreeTSA",
+          "file": "commit_intt_v1.tsr",
+          "timestamp_utc": "2026-06-12T22:18:03Z",
+          "type": "RFC 3161 .tsr",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "id": "intt-commit",
+      "file": "git-commit-4a0eacc0",
+      "sha256": "58AB52272551DA8B3D09A50E02C7F74F480DF611F68E0FB61E938960867BBD61",
+      "commit": "4a0eacc0653606b402b3796e2a787f64e4b5a8a7",
+      "desc": "Git commit locking RTL + scripts + bitstream for INTT V1",
+      "timestamps": [
+        {
+          "provider": "tsa.cn",
+          "file": "commit_hash.txt_可信时间戳.tsa",
+          "timestamp_utc": "2026-06-12T22:26:11Z",
+          "type": "PKCS#7 SignedData",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "file": "ml-kem-768.js",
+      "path": "/crypto/ml-kem-768.js",
+      "version": "final (KAT 20/20 PASS)",
+      "sha256": "4ee3d9b3948e45d6db87b56f24af05ef53590bf33eabc1b9698ac6d8d155ffd3",
+      "kat_status": "20/20 PASS",
+      "timestamps": [
+        {
+          "provider": "tsa.cn",
+          "file": "ml-kem-768.tsq_可信时间戳.tsa",
+          "timestamp_utc": "2026-05-29T04:08:33Z",
+          "type": "PKCS#7 SignedData",
+          "verified": true
+        },
+        {
+          "provider": "DigiCert",
+          "file": "ml-kem-768_digicert.tsr",
+          "timestamp_utc": "2026-05-29T02:26:18Z",
+          "type": "RFC 3161 .tsr",
+          "verified": true
+        }
+      ]
+    },
+    {
+      "file": "package.json",
+      "path": "/package.json",
+      "timestamps": [
+        {
+          "provider": "DigiCert",
+          "file": "package_json.tsr",
+          "timestamp_utc": "2026-05-29T02:30:00Z",
+          "type": "RFC 3161 .tsr"
+        }
+      ]
+    },
+    {
+      "file": "test-ml-kem-kat.html",
+      "path": "/crypto/test-ml-kem-kat.html",
+      "timestamps": [
+        {
+          "provider": "DigiCert",
+          "file": "test-ml-kem-kat.tsr",
+          "timestamp_utc": "2026-05-29T02:30:00Z",
+          "type": "RFC 3161 .tsr"
+        }
+      ]
+    },
+    {
+      "file": "index.html",
+      "path": "/index.html",
+      "version": "v3.0-preview / 6-25 six-fixes",
+      "sha256": "09CE797A6416E5C9393551920C8718498CD216115D297CDF6295C628414AD143",
+      "desc": "P0:TVLA wording+P0:license plan+P1:perf side-by-side+P1:hybrid definition+P2:disclaimer+P3:poem footer",
+      "timestamps": [
+        {
+          "provider": "DigiCert",
+          "file": "index-fixes.tsr",
+          "timestamp_utc": "2026-06-25T06:34:14Z",
+          "serial": "0xE6BD85FA7240D662F25EA2FD09360172",
+          "type": "RFC 3161 .tsr",
+          "verified": true,
+          "status": "Granted"
+        }
+      ]
+    },
+    {
+      "id": "ntt-pipeline-v1.3",
+      "file": "hardware/ntt_core_pipe.v",
+      "sha256": "d8a151a6ce87c3d0ac65f6c0019f0987836edf3222c087b468764d333baf4d5b",
+      "version": "v1.3",
+      "desc": "NTT Pipeline core — FIFO 128-deep, 256/256 ALL MATCH, 1.89x speedup",
+      "timestamps": [
+        {
+          "provider": "FreeTSA",
+          "file": "hardware/ntt_core_pipe.tsr",
+          "type": "RFC 3161 .tsr",
+          "verified": true,
+          "status": "Granted",
+          "timestamp_utc": "2026-06-25T08:10:00Z"
+        }
+      ]
+    },
+    {
+      "id": "ntt-pipeline-v1.3-bundle",
+      "file": "hardware/ntt_pipeline_v1.3.sha256",
+      "desc": "SHA256 bundle: ntt_core_pipe.v + ntt_core.v + ntt_butterfly_unif.v + tb_ntt_compare.v",
+      "timestamps": [
+        {
+          "provider": "FreeTSA",
+          "file": "hardware/ntt_bundle.tsr",
+          "type": "RFC 3161 .tsr",
+          "verified": true,
+          "status": "Granted",
+          "timestamp_utc": "2026-06-25T08:10:00Z"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "2026-06-25: six fixes deployed - P0-1 TVLA precise wording, P0-2 open-source plan, P1-1 perf side-by-side display, P1-2 hybrid KEX definition, P2 compliance disclaimer banner, P3 poem moved to footer",
+    "Prior: ml-kem-768.js KAT 20/20 PASS, INTT V1 FPGA 256/256 verified",
+    "2026-06-25 hardware: NTT Pipeline v1.3 — 12,550→6,652 cycles, 1.89x speedup, 256/256 ALL MATCH, zero BRAM"
+  ]
+}

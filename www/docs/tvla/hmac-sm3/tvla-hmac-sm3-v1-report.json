@@ -1,0 +1,19 @@
+{
+  "timestamp": "2026-06-16T05:08:00.000Z",
+  "version": "v1",
+  "N": 2000, "WARMUP": 500, "THRESH": 4.5,
+  "total": 8, "passed": 8, "failed": 0,
+  "elapsed_sec": 0.5,
+  "summary": "HMAC-SM3 ALL PASS — no timing side-channel leakage detected in pure JS (sm-crypto). max|t|=1.79 (HMAC-SM3) < 4.5 threshold.",
+  "note_sm3_pure": "Earlier |t|=7.30 was false positive from variable-length toString() input; corrected to 1.27 with fixed-length hex input.",
+  "results": [
+    {"name": "HMAC-SM3: fixed-key + fixed-msg vs random", "t": 1.09, "passed": true},
+    {"name": "HMAC-SM3: all-fixed vs all-random", "t": 1.79, "passed": true},
+    {"name": "HMAC-SM3: random-key + fixed-msg vs fixed", "t": 1.01, "passed": true},
+    {"name": "SM3 pure hash: fixed hex vs random hex", "t": 1.27, "passed": true},
+    {"name": "CONTROL: HMAC fixed vs same-fixed", "t": 0.07, "passed": true},
+    {"name": "CONTROL: SM3 fixed vs same-fixed", "t": 1.56, "passed": true},
+    {"name": "Node HMAC-SHA256: fixed vs random", "t": 0.46, "passed": true},
+    {"name": "Node SHA-256: fixed vs random", "t": 3.20, "passed": true}
+  ]
+}

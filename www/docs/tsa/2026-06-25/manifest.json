@@ -1,0 +1,38 @@
+{
+  "batch": "2026-06-25",
+  "provider": "DigiCert RFC 3161",
+  "total": 7,
+  "files": [
+    {
+      "file": "index.html",
+      "tsr": "index.tsr"
+    },
+    {
+      "file": "sm2-frontend-verification.html",
+      "tsr": "sm2-frontend-verification.tsr"
+    },
+    {
+      "file": "sm2-optimization.html",
+      "tsr": "sm2-optimization.tsr"
+    },
+    {
+      "file": "sm2-tvla-analysis.html",
+      "tsr": "sm2-tvla-analysis.tsr"
+    },
+    {
+      "file": "pqc-readiness.html",
+      "tsr": "pqc-readiness.tsr"
+    },
+    {
+      "file": "index.html",
+      "tsr": "index.tsr",
+      "note": "v3.0-preview OPK闭环·异步X3DH文案更新"
+    },
+    {
+      "file": "pqc-readiness.html",
+      "tsr": "pqc-readiness.tsr",
+      "note": "75%→85% · Pre-key协议闭环上线"
+    }
+  ],
+  "updated": "2026-06-25T18:15:00+08:00"
+}

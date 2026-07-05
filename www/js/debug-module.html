@@ -1,0 +1,8 @@
+<script type=module>
+try {
+  await import('./app.js');
+  document.body.textContent = 'OK loaded';
+} catch(e) {
+  document.body.textContent = 'FAIL: ' + e.message;
+}
+</script>

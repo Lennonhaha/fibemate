@@ -1,0 +1,33 @@
+{
+  "name": "noir-backend",
+  "version": "1.0.0",
+  "description": "Noir - E2E Encrypted Social Backend Server",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test:keccak": "node test/test-keccak.js"
+  },
+  "dependencies": {
+    "@alicloud/dysmsapi20170525": "^4.5.1",
+    "@alicloud/openapi-client": "^0.4.15",
+    "@noble/curves": "^2.2.0",
+    "@noble/post-quantum": "^0.6.1",
+    "bcryptjs": "^2.4.3",
+    "better-sqlite3": "^12.10.0",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "helmet": "^7.2.0",
+    "jsonwebtoken": "^9.0.3",
+    "lowdb": "^7.0.1",
+    "mongoose": "^9.6.2",
+    "node-addon-api": "^8.7.0",
+    "sm-crypto": "^0.4.0",
+    "uuid": "^11.1.1",
+    "ws": "^8.16.0"
+  },
+  "overrides": {
+    "jsonpath": "^1.1.1",
+    "bfj": "^8.0.0"
+  }
+}

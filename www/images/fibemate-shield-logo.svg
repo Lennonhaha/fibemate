@@ -1,0 +1,17 @@
+﻿<svg viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00E5C3"/>
+      <stop offset="100%" style="stop-color:#00B4A0"/>
+    </linearGradient>
+    <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:rgba(0,229,195,0.15)"/>
+      <stop offset="100%" style="stop-color:rgba(0,180,160,0.08)"/>
+    </linearGradient>
+  </defs>
+  <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z" stroke="url(#shieldGrad)" stroke-width="2" fill="url(#shieldFill)"/>
+  <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z" stroke="url(#shieldGrad)" stroke-width="1" fill="none" opacity="0.4"/>
+  <circle cx="32" cy="32" r="6" stroke="url(#shieldGrad)" stroke-width="1.5" fill="none"/>
+  <path d="M32 38V48" stroke="url(#shieldGrad)" stroke-width="2" stroke-linecap="round"/>
+  <path d="M32 8L52 17V22" stroke="url(#shieldGrad)" stroke-width="0.5" opacity="0.3"/>
+</svg>

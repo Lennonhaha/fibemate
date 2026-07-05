@@ -1,0 +1,1170 @@
+/** FIBEMATE Nexus Community - Professional Design System
+ * Inspired by: Discord, Linear, Notion, Signal
+ */
+
+/* ========== CSS Variables ========== */
+:root {
+  --nexus-bg-primary: #0a0a0f;
+  --nexus-bg-secondary: #12121a;
+  --nexus-bg-tertiary: #1a1a25;
+  --nexus-bg-hover: #252532;
+  --nexus-bg-active: #2d2d3d;
+  --nexus-border: #2a2a3a;
+  --nexus-border-hover: #3a3a4f;
+  --nexus-text-primary: #f0f0f5;
+  --nexus-text-secondary: #a0a0b0;
+  --nexus-text-muted: #6a6a7a;
+  --nexus-accent: #5865f2;
+  --nexus-accent-hover: #4752c4;
+  --nexus-success: #3ba55d;
+  --nexus-warning: #f9a825;
+  --nexus-danger: #ed4245;
+  --nexus-mention: #faa81a;
+  --nexus-encrypted: #00d4aa;
+  --nexus-glow: 0 0 20px rgba(88, 101, 242, 0.15);
+  --nexus-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ========== Layout ========== */
+.nexus-layout {
+  display: grid;
+  grid-template-columns: 72px 240px 1fr 240px;
+  height: 100vh;
+  background: var(--nexus-bg-primary);
+  color: var(--nexus-text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* ========== Space Sidebar (Left) ========== */
+.nexus-space-sidebar {
+  background: var(--nexus-bg-secondary);
+  border-right: 1px solid var(--nexus-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.space-list-header {
+  margin-bottom: 8px;
+}
+
+.btn-create-space {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--nexus-bg-tertiary);
+  border: 2px dashed var(--nexus-border-hover);
+  color: var(--nexus-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+}
+
+.btn-create-space:hover {
+  border-color: var(--nexus-success);
+  background: var(--nexus-bg-hover);
+  transform: scale(1.05);
+}
+
+.btn-create-space svg {
+  width: 24px;
+  height: 24px;
+}
+
+.space-item {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--nexus-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--nexus-text-primary);
+}
+
+.space-item:hover {
+  border-radius: 16px;
+  background: var(--nexus-accent);
+  transform: translateY(-2px);
+}
+
+.space-item.active {
+  border-radius: 16px;
+  background: var(--nexus-accent);
+  box-shadow: var(--nexus-glow);
+}
+
+.space-item.active::before {
+  content: '';
+  position: absolute;
+  left: -16px;
+  width: 4px;
+  height: 40%;
+  background: var(--nexus-text-primary);
+  border-radius: 0 4px 4px 0;
+}
+
+.space-icon img {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  object-fit: cover;
+}
+
+.space-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--nexus-danger);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  border: 2px solid var(--nexus-bg-secondary);
+}
+
+.space-encrypted {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  font-size: 12px;
+  background: var(--nexus-bg-secondary);
+  border-radius: 50%;
+  padding: 2px;
+}
+
+/* ========== Channel Sidebar ========== */
+.nexus-channel-sidebar {
+  background: var(--nexus-bg-secondary);
+  border-right: 1px solid var(--nexus-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.channel-list-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--nexus-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.channel-list-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--nexus-text-primary);
+}
+
+.channel-category {
+  margin-top: 16px;
+}
+
+.category-header {
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--nexus-text-muted);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.category-chevron {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s;
+}
+
+.category-header:hover {
+  color: var(--nexus-text-secondary);
+}
+
+.channel-items {
+  padding: 2px 8px;
+}
+
+.channel-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--nexus-text-secondary);
+  font-size: 14px;
+  transition: var(--nexus-transition);
+}
+
+.channel-item:hover {
+  background: var(--nexus-bg-hover);
+  color: var(--nexus-text-primary);
+}
+
+.channel-item.active {
+  background: var(--nexus-bg-active);
+  color: var(--nexus-text-primary);
+}
+
+.channel-icon {
+  width: 20px;
+  height: 20px;
+  opacity: 0.6;
+}
+
+.channel-item:hover .channel-icon,
+.channel-item.active .channel-icon {
+  opacity: 1;
+}
+
+.channel-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-badge {
+  background: var(--nexus-danger);
+  color: white;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+}
+
+/* ========== Nexus Container ========== */
+.nexus-container {
+  display: grid;
+  grid-template-columns: 72px 240px 1fr;
+  height: 100%;
+  background: var(--nexus-bg-primary);
+  color: var(--nexus-text-primary);
+}
+
+/* ========== Space List (Left Sidebar) ========== */
+.nexus-space-list {
+  background: var(--nexus-bg-secondary);
+  border-right: 1px solid var(--nexus-border);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 12px 0;
+  gap: 8px;
+  overflow-y: auto;
+}
+
+.space-list-header {
+  margin-bottom: 8px;
+}
+
+.btn-create-space {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--nexus-bg-tertiary);
+  border: 2px dashed var(--nexus-border-hover);
+  color: var(--nexus-success);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+}
+
+.btn-create-space:hover {
+  background: var(--nexus-bg-hover);
+  border-color: var(--nexus-success);
+  transform: scale(1.05);
+}
+
+.btn-create-space svg {
+  width: 24px;
+  height: 24px;
+}
+
+.space-items {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  padding: 0 8px;
+}
+
+.space-item {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--nexus-bg-tertiary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+  position: relative;
+  margin: 0 auto;
+}
+
+.space-item:hover {
+  background: var(--nexus-bg-hover);
+  border-radius: 16px;
+}
+
+.space-item.active {
+  background: var(--nexus-accent);
+  border-radius: 16px;
+}
+
+.space-icon {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--nexus-text-primary);
+}
+
+.space-badge {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  background: var(--nexus-danger);
+  color: white;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 5px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+.space-encrypted {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  font-size: 10px;
+}
+
+/* ========== Channel List (Middle Sidebar) ========== */
+.nexus-channel-list {
+  background: var(--nexus-bg-secondary);
+  border-right: 1px solid var(--nexus-border);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.channel-list-header {
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--nexus-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.channel-list-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--nexus-text-primary);
+}
+
+.channel-items {
+  flex: 1;
+  padding: 8px 0;
+}
+
+.channel-category {
+  margin-bottom: 16px;
+}
+
+.category-header {
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--nexus-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+}
+
+.category-chevron {
+  width: 12px;
+  height: 12px;
+  transition: transform 0.2s;
+}
+
+.channel-item {
+  padding: 6px 16px 6px 28px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: var(--nexus-text-secondary);
+  transition: var(--nexus-transition);
+}
+
+.channel-item:hover {
+  background: var(--nexus-bg-hover);
+  color: var(--nexus-text-primary);
+}
+
+.channel-item.active {
+  background: var(--nexus-bg-active);
+  color: var(--nexus-text-primary);
+}
+
+.channel-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.channel-name {
+  flex: 1;
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ========== Main Content ========== */
+.nexus-main {
+  display: flex;
+  flex-direction: column;
+  background: var(--nexus-bg-primary);
+}
+
+.nexus-header {
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--nexus-border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nexus-header-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--nexus-text-muted);
+}
+
+.nexus-header-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--nexus-text-primary);
+}
+
+.nexus-header-topic {
+  color: var(--nexus-text-muted);
+  font-size: 13px;
+  margin-left: 8px;
+  padding-left: 12px;
+  border-left: 1px solid var(--nexus-border);
+}
+
+.nexus-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+}
+
+.message-group {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 4px 0;
+}
+
+.message-group:hover {
+  background: var(--nexus-bg-secondary);
+  border-radius: 4px;
+}
+
+.message-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nexus-accent), var(--nexus-encrypted));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.message-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.message-author {
+  font-weight: 600;
+  color: var(--nexus-text-primary);
+  font-size: 15px;
+}
+
+.message-time {
+  color: var(--nexus-text-muted);
+  font-size: 12px;
+}
+
+.message-text {
+  color: var(--nexus-text-secondary);
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+}
+
+.message-encrypted {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--nexus-encrypted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+/* ========== Chat Header ========== */
+.nexus-chat-header {
+  height: 48px;
+  padding: 0 16px;
+  border-bottom: 1px solid var(--nexus-border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--nexus-bg-primary);
+}
+
+.nexus-chat-header span {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--nexus-text-primary);
+}
+
+/* ========== Message List ========== */
+.nexus-message-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  background: var(--nexus-bg-primary);
+}
+
+/* ========== Input Area ========== */
+.nexus-input-area {
+  padding: 12px 16px;
+  border-top: 1px solid var(--nexus-border);
+  background: var(--nexus-bg-primary);
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+#nexusMessageInput {
+  flex: 1;
+  background: var(--nexus-bg-tertiary);
+  border: 1px solid var(--nexus-border);
+  border-radius: 8px;
+  padding: 10px 16px;
+  color: var(--nexus-text-primary);
+  font-size: 15px;
+  outline: none;
+  transition: var(--nexus-transition);
+}
+
+#nexusMessageInput:focus {
+  border-color: var(--nexus-accent);
+}
+
+#nexusMessageInput::placeholder {
+  color: var(--nexus-text-muted);
+}
+
+#btnSendNexusMessage {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--nexus-accent);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+  flex-shrink: 0;
+}
+
+#btnSendNexusMessage:hover {
+  background: var(--nexus-accent-hover);
+  transform: scale(1.05);
+}
+
+#btnSendNexusMessage svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Original Input Area Styles */
+.nexus-input-area {
+  padding: 0 16px 24px;
+}
+
+.nexus-input-container {
+  background: var(--nexus-bg-tertiary);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.nexus-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--nexus-text-primary);
+  font-size: 15px;
+  resize: none;
+  max-height: 200px;
+  outline: none;
+  font-family: inherit;
+}
+
+.nexus-input::placeholder {
+  color: var(--nexus-text-muted);
+}
+
+.nexus-input-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.nexus-input-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--nexus-text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+}
+
+.nexus-input-btn:hover {
+  background: var(--nexus-bg-hover);
+  color: var(--nexus-text-primary);
+}
+
+/* ========== Member Sidebar ========== */
+.nexus-member-sidebar {
+  background: var(--nexus-bg-secondary);
+  border-left: 1px solid var(--nexus-border);
+  padding: 16px;
+}
+
+.member-list-header {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--nexus-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 12px;
+}
+
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+}
+
+.member-item:hover {
+  background: var(--nexus-bg-hover);
+}
+
+.member-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nexus-accent), var(--nexus-encrypted));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 600;
+  position: relative;
+}
+
+.member-status {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--nexus-bg-secondary);
+}
+
+.member-status.online { background: var(--nexus-success); }
+.member-status.away { background: var(--nexus-warning); }
+.member-status.dnd { background: var(--nexus-danger); }
+.member-status.offline { background: var(--nexus-text-muted); }
+
+.member-info {
+  flex: 1;
+}
+
+.member-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--nexus-text-primary);
+}
+
+.member-role {
+  font-size: 12px;
+  color: var(--nexus-text-muted);
+}
+
+/* ========== Thread Panel ========== */
+.nexus-thread-panel {
+  position: fixed;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 400px;
+  background: var(--nexus-bg-secondary);
+  border-left: 1px solid var(--nexus-border);
+  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.3);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+}
+
+.nexus-thread-panel.open {
+  transform: translateX(0);
+}
+
+.thread-header {
+  padding: 16px;
+  border-bottom: 1px solid var(--nexus-border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.thread-header h3 {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+/* ========== Voice Channel UI ========== */
+.voice-channel-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  gap: 24px;
+}
+
+.voice-participants {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.voice-participant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.voice-participant-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nexus-accent), var(--nexus-encrypted));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: 700;
+  position: relative;
+}
+
+.voice-participant-avatar.speaking {
+  box-shadow: 0 0 0 4px var(--nexus-success);
+}
+
+.voice-participant-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.voice-controls {
+  display: flex;
+  gap: 16px;
+}
+
+.voice-control-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--nexus-bg-tertiary);
+  border: none;
+  color: var(--nexus-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+}
+
+.voice-control-btn:hover {
+  background: var(--nexus-bg-hover);
+}
+
+.voice-control-btn.hangup {
+  background: var(--nexus-danger);
+}
+
+.voice-control-btn.hangup:hover {
+  background: #c0392b;
+}
+
+/* ========== Animations ========== */
+@keyframes messageAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.message-group {
+  animation: messageAppear 0.2s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px;
+}
+
+.typing-indicator span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--nexus-text-muted);
+  animation: pulse 1.4s infinite;
+}
+
+.typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+.typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+/* ========== Responsive ========== */
+@media (max-width: 1200px) {
+  .nexus-layout {
+    grid-template-columns: 72px 200px 1fr;
+  }
+  .nexus-member-sidebar {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .nexus-layout {
+    grid-template-columns: 1fr;
+  }
+  .nexus-space-sidebar,
+  .nexus-channel-sidebar {
+    display: none;
+  }
+}
+
+/* ========== Scrollbar ========== */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--nexus-bg-tertiary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--nexus-bg-hover);
+}
+
+/* ========== 新增组件样式 ==========
+
+/* Typing Indicator Bar */
+.nexus-typing-indicator {
+  padding: 4px 16px;
+  font-size: 12px;
+  color: var(--nexus-text-muted);
+  background: var(--nexus-bg-primary);
+  border-top: 1px solid var(--nexus-border);
+  min-height: 20px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.nexus-typing-indicator::before {
+  content: '';
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--nexus-accent);
+  animation: pulse 1.4s infinite;
+}
+
+/* Message Pending State */
+.message-pending {
+  opacity: 0.6;
+}
+
+.message-pending .message-text {
+  position: relative;
+}
+
+.message-pending .message-text::after {
+  content: '⏳';
+  margin-left: 8px;
+  font-size: 12px;
+}
+
+/* Voice Panel */
+.nexus-voice-panel {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 10;
+}
+
+.voice-panel {
+  background: var(--nexus-bg-secondary);
+  border-top: 1px solid var(--nexus-border);
+  padding: 12px 16px;
+}
+
+.voice-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.voice-status {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--nexus-success);
+}
+
+.btn-leave-voice {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--nexus-danger);
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+}
+
+.btn-leave-voice:hover {
+  transform: scale(1.1);
+}
+
+.btn-leave-voice svg {
+  width: 18px;
+  height: 18px;
+}
+
+.voice-participants {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.voice-participant {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  position: relative;
+}
+
+.participant-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--nexus-accent), var(--nexus-encrypted));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+  color: white;
+}
+
+.voice-participant span {
+  font-size: 11px;
+  color: var(--nexus-text-secondary);
+}
+
+.presence-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  border: 2px solid var(--nexus-bg-secondary);
+}
+
+.presence-online { background: var(--nexus-success); }
+.presence-idle { background: var(--nexus-warning); }
+.presence-dnd { background: var(--nexus-danger); }
+.presence-offline { background: var(--nexus-text-muted); }
+
+.voice-controls {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.voice-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--nexus-bg-tertiary);
+  border: none;
+  color: var(--nexus-text-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--nexus-transition);
+}
+
+.voice-btn:hover {
+  background: var(--nexus-bg-hover);
+}
+
+.voice-btn.muted {
+  background: var(--nexus-danger);
+}
+
+.voice-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Channel Item Active State */
+.channel-item.active {
+  background: var(--nexus-bg-active);
+  border-radius: 4px;
+}
+
+.channel-item:hover {
+  background: var(--nexus-bg-hover);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Empty State */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--nexus-text-muted);
+}
+
+.empty-state svg {
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 14px;
+  margin: 0;
+}
+
+/* Main area flex layout fix */
+.nexus-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  position: relative;
+}
+
+.nexus-chat-header {
+  flex-shrink: 0;
+}
+
+.nexus-message-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nexus-input-area {
+  flex-shrink: 0;
+}

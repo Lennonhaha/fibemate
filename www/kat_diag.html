@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>KAT 测试诊断</title>
+<style>
+body { font-family: system-ui; max-width: 700px; margin: 40px auto; background: #0a0a0f; color: #e8e8ed; }
+div { margin: 8px 0; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; }
+.ok { background: #0a2a1a; color: #00e5c3; }
+.err { background: #2a0a0a; color: #ff4757; }
+.info { background: #1a1a2e; color: #8a8a96; }
+button { padding: 12px 28px; border-radius: 100px; font-size: 14px; cursor: pointer; border: none; margin: 5px; }
+.btn-run { background: #00e5c3; color: #000; }
+.btn-run:disabled { opacity: 0.4; }
+#log { max-height: 400px; overflow-y: auto; margin-top: 16px; }
+</style>
+</head>
+<body>
+<h2>🔬 KAT 1000 轮测试诊断</h2>
+<p class="info" id="status">等待执行...</p>
+<button class="btn-run" id="btn1" onclick="testSingle()">测试单轮 API</button>
+<button class="btn-run" id="btn2" onclick="testBatch()">测试 10 轮并发</button>
+<button class="btn-run" id="btn3" onclick="runFull()" disabled>运行 1000 轮</button>
+<div id="log"></div>
+
+<script>
+const API = '/api/mlkem/test';
+// Also try: http://8.156.77.68/api/mlkem/test
+const APIS = ['/api/mlkem/test', 'http://8.156.77.68/api/mlkem/test'];
+
+function log(cls, msg) {
+  var d = document.createElement('div');
+  d.className = cls;
+  d.textContent = new Date().toISOString().slice(11,19) + ' ' + msg;
+  document.getElementById('log').appendChild(d);
+}
+
+async function testSingle() {
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('status').textContent = '测试中...';
+  log('info', '=== 单轮测试 ===');
+  
+  for (var api of APIS) {
+    try {
+      var t0 = performance.now();
+      var resp = await fetch(api);
+      var data = await resp.json();
+      var ms = (performance.now() - t0).toFixed(1);
+      log('ok', api + ' → ' + ms + 'ms, roundTrip=' + data.roundTrip + ', status=' + data.status);
+    } catch(e) {
+      log('err', api + ' → FAILED: ' + e.message);
+    }
+  }
+  
+  document.getElementById('status').textContent = '单轮测试完成';
+}
+
+async function testBatch() {
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('status').textContent = '10轮并发测试中...';
+  log('info', '=== 10 轮并发测试 ===');
+  
+  var api = APIS[0];
+  var t0 = performance.now();
+  var promises = [];
+  for (var i = 0; i < 10; i++) promises.push(fetch(api).then(r => r.json()));
+  
+  var ok = 0, fail = 0;
+  var results = await Promise.allSettled(promises);
+  for (var r of results) {
+    if (r.status === 'fulfilled' && r.value.roundTrip === true) ok++;
+    else fail++;
+  }
+  
+  var ms = (performance.now() - t0).toFixed(0);
+  log(ok === 10 ? 'ok' : 'err', '10轮完成: ' + ok + ' pass / ' + fail + ' fail, 总耗时 ' + ms + 'ms');
+  
+  document.getElementById('status').textContent = '10轮测试: ' + ok + '/' + 10 + ' 通过';
+  if (ok === 10) document.getElementById('btn3').disabled = false;
+}
+
+async function runFull() {
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('status').textContent = '1000轮测试运行中...';
+  log('info', '=== 1000 轮全量测试 ===');
+  
+  var TOTAL = 1000, BATCH = 20;
+  var passed = 0, failed = 0, latencies = [];
+  var api = APIS[0];
+  var start = performance.now();
+  
+  var remaining = TOTAL;
+  while (remaining > 0) {
+    var n = Math.min(BATCH, remaining);
+    var ps = [];
+    for (var i = 0; i < n; i++) {
+      ps.push((async () => {
+        var t0 = performance.now();
+        var resp = await fetch(api);
+        var data = await resp.json();
+        latencies.push(performance.now() - t0);
+        return data.roundTrip === true;
+      })());
+    }
+    
+    var results = await Promise.allSettled(ps);
+    for (var r of results) {
+      if (r.status === 'fulfilled' && r.value) passed++;
+      else failed++;
+    }
+    
+    remaining -= n;
+    document.getElementById('status').textContent = passed + '/' + TOTAL + ' (剩余 ' + remaining + ')';
+    await new Promise(r => setTimeout(r, 10));
+  }
+  
+  var totalTime = ((performance.now() - start) / 1000).toFixed(1);
+  var avg = (latencies.reduce((a,b)=>a+b,0) / latencies.length).toFixed(1);
+  log(passed === TOTAL ? 'ok' : 'err', '✅ 完成! ' + passed + '/' + TOTAL + ' 通过, 平均 ' + avg + 'ms, 总耗时 ' + totalTime + 's');
+  document.getElementById('status').textContent = passed + '/' + TOTAL + ' 通过, 平均 ' + avg + 'ms/轮';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPGA NTT/INTT 硬件验证报告 — FIBEMATE</title>
+<style>
+  :root { --bg:#0a0a0f; --card:#111118; --border:rgba(255,255,255,0.06); --text:#e2e8f0; --muted:#64748b; --accent:#00d4aa; --warn:#f59e0b; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; line-height:1.6; }
+  .container { max-width:860px; margin:0 auto; padding:40px 20px; }
+  h1 { font-size:1.8rem; margin-bottom:0.3rem; }
+  h2 { font-size:1.3rem; margin:2rem 0 0.8rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border); }
+  h3 { font-size:1.1rem; margin:1.4rem 0 0.5rem; color:var(--accent); }
+  p { margin:0.5rem 0; color:var(--muted); font-size:0.92rem; }
+  .badge { display:inline-block; padding:2px 10px; border-radius:4px; font-size:0.78rem; font-weight:600; }
+  .badge-pass { background:rgba(0,212,170,0.12); color:var(--accent); }
+  .badge-info { background:rgba(79,70,229,0.12); color:#818cf8; }
+  table { width:100%; border-collapse:collapse; margin:0.8rem 0; font-size:0.88rem; }
+  th, td { padding:8px 12px; text-align:left; border-bottom:1px solid var(--border); }
+  th { color:var(--muted); font-weight:500; font-size:0.8rem; text-transform:uppercase; }
+  td { color:var(--text); }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:18px 20px; margin:0.8rem 0; }
+  .rb { margin-bottom:0.3rem; }
+  code { background:rgba(255,255,255,0.05); padding:1px 6px; border-radius:3px; font-size:0.85rem; }
+  pre { background:rgba(0,0,0,0.3); padding:14px 16px; border-radius:6px; overflow-x:auto; font-size:0.82rem; line-height:1.5; margin:0.6rem 0; }
+  a { color:var(--accent); }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .num { font-size:1.5rem; font-weight:700; color:var(--accent); }
+  .num-label { font-size:0.78rem; color:var(--muted); }
+  .footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--border); font-size:0.8rem; color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>⚡ FPGA NTT/INTT 硬件加速器验证报告</h1>
+<p style="margin-bottom:1.5rem;">Artix-7 35T · 256/256 Round-trip 全匹配 · 时序收敛 · 2026-06-13</p>
+
+<div class="grid2">
+  <div class="card" style="text-align:center;">
+    <div class="num">256/256</div>
+    <div class="num-label">NTT Round-trip 匹配率</div>
+  </div>
+  <div class="card" style="text-align:center;">
+    <div class="num">256/256</div>
+    <div class="num-label">INTT Round-trip 匹配率</div>
+  </div>
+  <div class="card" style="text-align:center;">
+    <div class="num">NTT+INTT</div>
+    <div class="num-label" style="color:var(--accent);">双模式全链路通过</div>
+  </div>
+  <div class="card" style="text-align:center;">
+    <div class="num">49.5 MHz</div>
+    <div class="num-label">运行频率 · WNS +0.204ns</div>
+  </div>
+</div>
+
+<h2>1. 硬件平台</h2>
+<table>
+  <tr><td>FPGA 芯片</td><td>Xilinx Artix-7 xc7a35tfgg484-2</td></tr>
+  <tr><td>开发板</td><td>MicroPhase A7-Lite</td></tr>
+  <tr><td>时钟频率</td><td>49.5 MHz (周期 20.2ns)</td></tr>
+  <tr><td>综合工具</td><td>Vivado (clean synthesis, 全新项目)</td></tr>
+  <tr><td>通信接口</td><td>UART (CH340, 115200 baud)</td></tr>
+</table>
+
+<h2>2. 资源占用</h2>
+<table>
+  <thead><tr><th>资源</th><th>用量</th><th>说明</th></tr></thead>
+  <tr><td>LUT</td><td>~13,000</td><td>查找表 (含 butterfly pipeline + FSM)</td></tr>
+  <tr><td>FF</td><td>~10,000</td><td>触发器</td></tr>
+  <tr><td>DSP</td><td>2</td><td>DSP48E1 (乘法器)</td></tr>
+  <tr><td>BRAM</td><td>1</td><td>Block RAM (zeta 表存储)</td></tr>
+  <tr><td>IO</td><td>UART RX/TX + 状态 LED</td><td>CH340 USB-UART</td></tr>
+</table>
+
+<h2>3. 时序收敛</h2>
+<div class="card">
+  <table>
+    <tr><td>WNS (Worst Negative Slack)</td><td style="color:var(--accent);">+0.204 ns</td><td>✅ 通过</td></tr>
+    <tr><td>WHS (Worst Hold Slack)</td><td style="color:var(--accent);">+0.049 ns</td><td>✅ 通过</td></tr>
+    <tr><td>关键路径</td><td colspan="2">UART TX 输出路径 · 经 20.2ns 周期优化后闭合</td></tr>
+  </table>
+</div>
+
+<h2>4. 核心算法</h2>
+
+<h3>4.1 NTT (数论变换)</h3>
+<table>
+  <tr><td>模数</td><td><code>q = 3329</code> (Kyber NTT 域)</td></tr>
+  <tr><td>变换长度</td><td>n = 256</td></tr>
+  <tr><td>Butterfly</td><td>Cooley-Tukey (CT) · 5 级流水线</td></tr>
+  <tr><td>Zeta 表</td><td>Kyber 标准 128-entry zeta 表</td></tr>
+  <tr><td>模约减</td><td>Barrett 算法 (26-bit 无符号)</td></tr>
+</table>
+
+<h3>4.2 INTT (逆数论变换)</h3>
+<table>
+  <tr><td>模数</td><td><code>q = 3329</code></td></tr>
+  <tr><td>变换长度</td><td>n = 256</td></tr>
+  <tr><td>Butterfly</td><td>Gentleman-Sande (GS) · 5 级流水线</td></tr>
+  <tr><td>Zeta 表</td><td>Kyber 标准 zeta 表 (递减遍历)</td></tr>
+  <tr><td>缩放因子</td><td>×3303 (模 3329 的乘法逆元)</td></tr>
+  <tr><td>Stage 遍历</td><td>反向 (stage 7→1)</td></tr>
+</table>
+
+<h2>5. 关键 Bug 修复</h2>
+
+<div class="card">
+  <h3 class="rb" style="margin-top:0;">5.1 Barrett 模约减 · 负数输入支持</h3>
+  <p>GS butterfly 的差值 (diff) 可能为负。原 Barrett 实现仅支持正数输入。修复方案：计算 |diff| 传入 Barrett，在状态机 S5 阶段根据 <code>diff_sign</code> 修正结果。</p>
+  <p>修复前：INTT 输出全错 | 修复后：256/256 完全匹配 ✅</p>
+</div>
+
+<div class="card">
+  <h3 class="rb" style="margin-top:0;">5.2 FSM 等待信号 · ntt_busy vs ntt_done</h3>
+  <p>Wrapper FSM 的 F_WAIT 状态原先等待 <code>ntt_done</code> 信号。但 <code>ntt_done</code> 在 dout_valid 脉冲结束后才拉高，导致丢失输出数据。改为等待 <code>!ntt_busy</code>，确保 FSM 在数据仍有效时捕获全部 256 个输出值。</p>
+  <p>修复前：NTT 输出错位 | 修复后：256/256 完全匹配 ✅</p>
+</div>
+
+<div class="card">
+  <h3 class="rb" style="margin-top:0;">5.3 Zeta 表 · Stage 6 硬编码 bug</h3>
+  <p><code>ntt_top.v</code> L160-161 在 stage=6 时硬编码 zeta=1 而非从 zeta 表读取。删除 stage 判断后统一使用 <code>bf_z <= zeta_dout</code>。</p>
+</div>
+
+<div class="card">
+  <h3 class="rb" style="margin-top:0;">5.4 RESET 极性冲突</h3>
+  <p>NTT 核的 <code>.rst_n</code> 端口要求低有效复位，但顶层传入的是 ~RESET (高有效)。极性与核期望相反，导致 NTT 核永久处于复位状态。修复：统一为低有效复位信号。</p>
+</div>
+
+<div class="card">
+  <h3 class="rb" style="margin-top:0;">5.5 BRAM 推断 · 双 always 块冲突</h3>
+  <p>两个 always @(posedge clk) 块同时写同一 RAM 导致 Vivado 无法推断 BRAM。修复：合并为单一 always 块。</p>
+</div>
+
+<h2>6. 验证方法</h2>
+<div class="card">
+  <table>
+    <tr><td>参考模型</td><td>Python <code>ntt_ref.py</code> (NTT) · <code>intt_ref.py</code> (INTT) — 逐周期硬件仿真</td></tr>
+    <tr><td>Barrett 验证</td><td>Python 仿真器 59,913 随机测试全部通过</td></tr>
+    <tr><td>硬件验证</td><td>UART 回环 → 512 字节通过 → NTT/INTT 比特流烧录 → 256/256 输出比对</td></tr>
+    <tr><td>Round-trip</td><td>NTT(a) → INTT(b) → 检查 b == a (全部 256 个系数)</td></tr>
+  </table>
+</div>
+
+<h2>7. 输出文件</h2>
+<table>
+  <thead><tr><th>文件</th><th>路径</th><th>说明</th></tr></thead>
+  <tr><td>验证比特流</td><td><code>output/intt_v1_verified.bit</code></td><td>NTT+INTT 双模式通过版</td></tr>
+  <tr><td>综合比特流</td><td><code>output/ntt_intt.bit</code></td><td>时序收敛版 (A7_lite.xdc)</td></tr>
+  <tr><td>NTT 顶层</td><td><code>rtl/ntt_top.v</code></td><td>CT butterfly + FSM wrapper</td></tr>
+  <tr><td>INTT 顶层</td><td><code>rtl/a7_ntt_top.v</code></td><td>GS butterfly + INTT FSM</td></tr>
+  <tr><td>Butterfly</td><td><code>rtl/butterfly.v</code></td><td>CT/GS 双模 butterfly + Barrett 约减</td></tr>
+  <tr><td>约束文件</td><td><code>A7_lite.xdc</code></td><td>xc7a35tfgg484-2 引脚约束</td></tr>
+</table>
+
+<h2>8. 已知限制 & 后续路线</h2>
+<table>
+  <thead><tr><th>优先级</th><th>项目</th><th>状态</th></tr></thead>
+  <tr><td style="color:var(--accent);">P0 ✅</td><td>UART 修复 (CH340 物理接线)</td><td>已完成</td></tr>
+  <tr><td>P1</td><td>SHAKE-128/256 Keccak 硬件核心</td><td>规划中</td></tr>
+  <tr><td>P2</td><td>采样/编码 + AXI 总线接口</td><td>规划中</td></tr>
+  <tr><td>P3</td><td>密钥生成/封装/解封 FSM</td><td>规划中</td></tr>
+  <tr><td>P4</td><td>软硬集成 (ML-KEM 全流程)</td><td>规划中</td></tr>
+</table>
+<p>目标：单芯片 ML-KEM-768 硬件加速。A7-Lite 无 PCIe，UART 为通信瓶颈，当前方案以正确性验证和自主可控为首要目标。</p>
+
+<div class="footer">
+  <p>← <a href="/">返回首页</a> · FIBEMATE FPGA 硬件验证 · 2026-06-13 · 时间戳存证待补</p>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terms of Service - FIBEMATE</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      line-height: 1.8;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      background: rgba(255,255,255,0.03);
+      border-radius: 16px;
+      padding: 40px;
+    }
+    h1 {
+      color: #00E5C3;
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #888;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+    h2 {
+      color: #00E5C3;
+      font-size: 20px;
+      margin: 32px 0 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0,229,195,0.2);
+    }
+    p {
+      margin-bottom: 16px;
+      color: #ccc;
+    }
+    .lang-switch {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+    }
+    .lang-switch a {
+      color: #00E5C3;
+      text-decoration: none;
+      font-size: 14px;
+    }
+    .back-link {
+      display: inline-block;
+      margin-top: 32px;
+      color: #00E5C3;
+      text-decoration: none;
+    }
+    .back-link:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="lang-switch">
+    <a href="agreement.html">中文</a> | <a href="agreement-en.html">English</a>
+  </div>
+  <div class="container">
+    <h1>FIBEMATE Terms of Service</h1>
+    <p class="subtitle">Version Date: May 2026</p>
+
+    <h2>1. Acceptance of Terms</h2>
+    <p>Welcome to FIBEMATE (hereinafter referred to as "the Service"). This Service is maintained by an independent developer and is an instant messaging tool for personal users.</p>
+    <p>By using this Service, you agree to all terms of this agreement. If you do not agree, please do not use the Service.</p>
+
+    <h2>2. Service Content</h2>
+    <p>This Service provides the following features:</p>
+    <p>• User registration and account management<br>
+    • One-on-one text messaging<br>
+    • Contact management<br>
+    • End-to-end message encryption</p>
+
+    <h2>3. User Conduct</h2>
+    <p>You agree that when using this Service:</p>
+    <p>• Comply with applicable laws and regulations<br>
+    • Do not send illegal, non-compliant, or harassing content<br>
+    • Do not engage in any activities that harm network security<br>
+    • Do not abuse this Service to send spam</p>
+
+    <h2>4. Account Security</h2>
+    <p>• You are responsible for safeguarding your account password</p>
+    <p>• If you discover any account anomalies, change your password immediately</p>
+    <p>• Losses caused by your failure to properly safeguard your account are your own responsibility</p>
+
+    <h2>5. Privacy Protection</h2>
+    <p>We value your privacy. For specific protection measures, please refer to the <a href="privacy-en.html" style="color:#00E5C3;">Privacy Policy</a>.</p>
+
+    <h2>6. Service Changes and Termination</h2>
+    <p>• We reserve the right to modify or discontinue the Service at any time without prior notice</p>
+    <p>• You may stop using this Service at any time</p>
+    <p>• Long-inactive accounts may be cleaned up</p>
+
+    <h2>7. Disclaimer</h2>
+    <p>• This Service is provided "as is" without guarantee of absolute stability</p>
+    <p>• We are not responsible for service interruptions caused by force majeure</p>
+    <p>• You should back up important data yourself</p>
+
+    <h2>8. Intellectual Property</h2>
+    <p>• The Service code is open source (MIT License)</p>
+    <p>• Content you send remains your copyright</p>
+
+    <h2>9. Dispute Resolution</h2>
+    <p>This agreement is governed by applicable laws. In case of disputes, both parties should seek amicable resolution through negotiation.</p>
+
+    <h2>10. Miscellaneous</h2>
+    <p>• This agreement may be updated at any time; continued use constitutes acceptance of the updated terms</p>
+    <p>• For questions, please contact the development team</p>
+
+    <a href="login.html" class="back-link">← Back to Login</a>
+  </div>
+
+<!-- Footer -->
+<footer style="background:#111;padding:20px;text-align:center;margin-top:40px;border-top:1px solid #333;">
+  <div style="margin-bottom:10px;">
+    <a href="index.html" style="color:#00E5C3;text-decoration:none;">首页</a> |
+    <a href="terms.html" style="color:#00E5C3;text-decoration:none;">服务条款</a> |
+    <a href="privacy.html" style="color:#00E5C3;text-decoration:none;">隐私政策</a> |
+    <a href="security.html" style="color:#00E5C3;text-decoration:none;">安全披露</a> |
+    <a href="cookie.html" style="color:#00E5C3;text-decoration:none;">Cookie政策</a> |
+    <a href="dmca.html" style="color:#00E5C3;text-decoration:none;">DMCA</a> |
+    <a href="acceptable-use.html" style="color:#00E5C3;text-decoration:none;">使用规范</a>
+  </div>
+  <div style="margin-bottom:8px;">
+    <a href="terms-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Terms</a> |
+    <a href="privacy-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Privacy</a> |
+    <a href="security-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Security</a> |
+    <a href="cookie-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Cookies</a> |
+    <a href="dmca-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">DMCA</a> |
+    <a href="acceptable-use-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Acceptable Use</a>
+  </div>
+  <p style="color:#888;font-size:0.8em;">© 2026 FIBEMATE. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

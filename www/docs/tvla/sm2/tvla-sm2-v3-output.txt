@@ -1,0 +1,47 @@
+Pre-generating pools (size=100)... 
+done.
+
+╔══════════════════════════════════════════════════╗
+║  SM2 TVLA v2 — jsbn vs BigInt+wNAF+Jacobian    ║
+╠══════════════════════════════════════════════════╣
+║  N=2000  warmup=500  threshold=|t|≤4.5                    ║
+╚══════════════════════════════════════════════════╝
+
+  [jsbn] genKey... |t|=1.05 ✅
+  [jsbn] sign... |t|=2.41 ✅
+  [jsbn] verify... |t|=0.63 ✅
+  [jsbn] encrypt... |t|=0.29 ✅
+  [jsbn] decrypt... |t|=3.91 ✅
+  [BigInt] genKey... |t|=0.84 ✅
+  [BigInt] sign... |t|=2.03 ✅
+  [BigInt] verify... |t|=0.08 ✅
+  [BigInt] encrypt... |t|=0.46 ✅
+  [BigInt] decrypt... |t|=2.71 ✅
+  SHA-256... |t|=5.40 ❌
+  randomBytes(32)... |t|=0.45 ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ Results: 11/12 passed, 1 failed  (537.8s)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  jsbn (sm-crypto):
+    ✅ [jsbn] genKey            |t|=   1.05  df=  3998  cv=  8.6%
+    ✅ [jsbn] sign              |t|=   2.41  df=  3998  cv=  9.2%
+    ✅ [jsbn] verify            |t|=   0.63  df=  3996  cv= 13.1%
+    ✅ [jsbn] encrypt           |t|=   0.29  df=  3848  cv= 14.0%
+    ✅ [jsbn] decrypt           |t|=   3.91  df=  3998  cv= 10.9%
+
+  BigInt + wNAF:
+    ✅ [BigInt] genKey          |t|=   0.84  df=  3427  cv= 22.5%
+    ✅ [BigInt] sign            |t|=   2.03  df=  3967  cv= 20.1%
+    ✅ [BigInt] verify          |t|=   0.08  df=  3329  cv= 41.9%
+    ✅ [BigInt] encrypt         |t|=   0.46  df=  3992  cv= 20.9%
+    ✅ [BigInt] decrypt         |t|=   2.71  df=  3980  cv= 22.0%
+
+  Primitives:
+    ❌ SHA-256                  |t|=   5.40  df=  3983  cv=409.6%
+    ✅ randomBytes(32)          |t|=   0.45  df=  2134  cv= 80.1%
+
+📄 Report written
+
+⚠️  TVLA FAILED

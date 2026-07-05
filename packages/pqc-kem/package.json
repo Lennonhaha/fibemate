@@ -1,0 +1,10 @@
+{
+  "name": "@fibemate/pqc-kem",
+  "version": "0.1.0",
+  "description": "ML-KEM-768 (FIPS 203) - pure JS post-quantum KEM. No deps, no WASM, no NTT.",
+  "keywords": ["ml-kem", "post-quantum", "fips-203", "kem"],
+  "license": "GPL-3.0-only",
+  "main": "index.js",
+  "files": ["index.js", "src/"],
+  "scripts": { "test": "node test/basic.test.js" }
+}

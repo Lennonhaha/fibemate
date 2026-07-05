@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>免责声明 — FIBEMATE</title>
+  <style>
+    :root { --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff; --green: #3fb950; --yellow: #d29922; --red: #f85149; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); line-height: 1.9; min-height: 100vh; }
+    .container { max-width: 740px; margin: 0 auto; padding: 60px 24px; }
+    .header { text-align: center; margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+    .logo { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .logo span { color: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    h1 { font-size: 26px; color: #fff; margin: 36px 0 20px; padding-bottom: 10px; border-bottom: 2px solid var(--accent); }
+    h2 { font-size: 18px; color: var(--accent); margin: 28px 0 12px; padding: 6px 12px; background: rgba(88,166,255,.06); border-left: 3px solid var(--accent); border-radius: 0 4px 4px 0; }
+    p { margin-bottom: 14px; color: var(--text); font-size: 14.5px; }
+    strong { color: #fff; }
+    ul { margin: 8px 0 14px 20px; }
+    li { margin-bottom: 6px; color: var(--text); font-size: 14px; line-height: 1.7; }
+    .highlight { background: rgba(88,166,255,.08); border: 1px solid rgba(88,166,255,.2); border-radius: 8px; padding: 16px 20px; margin: 24px 0; }
+    .warning { background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.25); border-radius: 8px; padding: 16px 20px; margin: 24px 0; }
+    .danger { background: rgba(248,81,73,.06); border: 1px solid rgba(248,81,73,.2); border-radius: 8px; padding: 16px 20px; margin: 24px 0; }
+    .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-size: 13px; }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .back-link { display: inline-block; margin-top: 24px; color: var(--accent); text-decoration: none; }
+    .back-link:hover { text-decoration: underline; }
+    .lang-switch { text-align: right; margin-bottom: 24px; }
+    .lang-switch a { color: var(--muted); text-decoration: none; font-size: 13px; padding: 4px 8px; border: 1px solid var(--border); border-radius: 4px; }
+    .lang-switch a:hover { color: var(--text); }
+    .toc { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 16px 20px; margin: 24px 0; font-size: 13px; }
+    .toc a { color: var(--accent); text-decoration: none; }
+    .toc a:hover { text-decoration: underline; }
+    .update-date { text-align: center; color: var(--muted); font-size: 12px; margin: 8px 0 0; }
+    code { background: rgba(88,166,255,.1); padding: 1px 5px; border-radius: 3px; font-size: 13px; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="lang-switch">
+      <a href="disclaimer-en.html">English</a>
+    </div>
+    <div class="header">
+      <div class="logo">Fibe<span>Mate</span></div>
+      <p class="subtitle">后量子安全即时通讯</p>
+    </div>
+
+    <h1>⚠️ 免责声明</h1>
+    <p class="update-date">版本：v3.0.0-DRAFT · 更新日期：2026-06-25</p>
+
+    <div class="highlight">
+      <strong>⚠️ 重要提示：</strong>本文档为 FIBEMATE 开源技术项目的内部自查草案，<strong>未经执业律师审核</strong>，不构成正式法律意见。项目正式发布前，所有法律文档将由专业律师审阅并签署。在正式版本发布前，请务必咨询专业法律人士。
+    </div>
+
+    <div class="toc">
+      <strong style="color:#fff;">📑 目录</strong><br>
+      <a href="#s1">一、主体与项目定性</a><br>
+      <a href="#s2">二、非商业与非盈利声明</a><br>
+      <a href="#s3">三、开源许可与代码使用</a><br>
+      <a href="#s4">四、后量子密码学专项免责</a><br><a href="#s4a">补充：ZK 匿名登录研究声明</a><br>
+
+      <a href="#s5">五、时间戳与存证声明</a><br>
+      <a href="#s6">六、版权与知识产权</a><br>
+      <a href="#s7">七、隐私保护与数据安全</a><br>
+      <a href="#s8">八、技术服务限制</a><br>
+      <a href="#s9">九、法律适用与争议解决</a><br>
+      <a href="#s10">十、联系方式</a>
+    </div>
+
+    <h2 id="s1">一、主体与项目定性</h2>
+    <p>本网站（<code>fibemate.link</code> / <code>fibemate.net</code>）及旗下软件（<strong>FIBEMATE</strong>）为 <strong>个人独立开发的开源技术项目</strong>，核心目的是研究并实现后量子密码学（Post-Quantum Cryptography）、国密算法（SM2/SM3/SM4）及隐私保护技术。</p>
+    <p>本项目目前处于 <strong>技术验证与测试阶段（v3.0-preview）</strong>，代码待安全审计后逐步开源。本项目不构成商业实体运营，亦不代表任何企业或组织立场。</p>
+    <p>ICP 备案号：<strong>黑ICP备2026005787号-1</strong>。本备案为个人备案，项目性质为<strong>非经营性互联网信息服务</strong>。</p>
+
+    <h2 id="s2">二、非商业与非盈利声明</h2>
+    <p>本网站及 FIBEMATE 软件为 <strong>完全免费的开源项目</strong>，郑重声明以下事项：</p>
+    <ul>
+      <li>不涉及任何形式的商业运营、产品售卖或收费服务；</li>
+      <li>未通过任何渠道（包括但不限于广告、会员、电商、数据销售、API 收费等）获取直接或间接的经济利益；</li>
+      <li>本项目的开发、托管与运维均以 <strong>个人名义自费承担</strong>，不涉及任何企业实体或商业投资；</li>
+      <li>未设立任何支付通道、未接入任何支付网关、未处理任何支付卡数据；</li>
+      <li>未来若引入捐赠通道（如 GitHub Sponsors、Open Collective），将另行公告并更新本声明，且捐赠为<strong>完全自愿、无对价</strong>的行为。</li>
+    </ul>
+    <p>如您在第三方平台发现以"FIBEMATE"名义收费的产品或服务，均与我们无关，请谨慎甄别。</p>
+
+    <h2 id="s3">三、开源许可与代码使用</h2>
+    <p>FIBEMATE 核心代码将以 <strong>GPLv3（GNU General Public License v3）</strong> 开源。使用、修改、分发本软件须遵守该许可证条款，主要义务包括：</p>
+    <ul>
+      <li>任何修改版本必须以相同许可证开源；</li>
+            <li>保留原始版权声明和许可证文本；</li>
+      <li>作者不对使用本代码导致的任何后果承担责任。</li>
+    </ul>
+    <p>依赖的第三方库（如 <code>@noble/post-quantum</code>、<code>pqc-kyber</code>）均按其各自许可证使用，我们已尽合理努力遵守其许可条款。如因依赖库许可证产生争议，由依赖库作者负责。</p>
+    <p>本文档中心所有文档自身以 <strong>CC BY-NC-SA 4.0</strong> 许可，允许署名、非商业性使用、相同方式共享。</p>
+
+    <h2 id="s4">四、后量子密码学专项免责</h2>
+    <div class="warning">
+      <strong>⚠️ 专业技术免责（重要）：</strong>FIBEMATE 涉及后量子密码学（ML-KEM、ML-DSA、SLH-DSA）和国密算法（SM2、SM3、SM2-KDF）的实现，属于前沿密码学技术。请注意以下风险：
+    </div>
+    <ul>
+      <li><strong>标准化状态</strong>：ML-KEM-768/1024 和 ML-DSA-44/65/87 分别为 NIST FIPS 203/204 标准，但各实现（包括本项目的实现）可能存在未知漏洞；</li>
+      <li><strong>自实现风险</strong>：本项目中的 SM2-KDF、SM3 为自行实现（参考 GB/T 32905-2016、GB/T 32918.4-2016 标准），<strong>未经第三方密码学认证机构审计</strong>，不保证完全符合标准；</li>
+      <li><strong>侧信道攻击</strong>：SM2 实现已通过 TVLA 侧信道验证（N=5,000/10,000，|t| &lt; 4.5，1-4 阶矩 20/20 PASS），采用 Montgomery Ladder + Scalar Masking + Projective Randomization 三重防护应对<strong>时序</strong>侧信道。该验证不等同于物理攻击（功耗分析/电磁辐射）、故障注入或微架构侧信道防护；</li>
+      <li><strong>量子攻击演进</strong>：后量子密码学为活跃研究领域，未来量子计算进展可能削弱当前参数的安全性。本项目的参数选择（ML-KEM-768、ML-DSA-44）为当前（2026年）社区推荐配置，不保证长期安全；</li>
+      <li><strong>形式化验证缺失</strong>：FO（Fujisaki-Okamoto）转换等关键构造尚未完成形式化验证（EasyCrypt/Coq），存在理论漏洞风险；</li>
+      <li><strong>建议</strong>：在用于生产环境前，请委托专业密码学审计机构对代码进行完整审计。</li>
+    </ul>
+
+    <h2 id="s4a">补充：ZK 匿名登录研究声明</h2>
+    <div class="warning">
+      <strong>🔬 技术研究声明：</strong>FIBEMATE 提供的零知识证明（ZK）匿名登录功能为密码学技术演示，特作如下声明：
+    </div>
+    <ul>
+      <li><strong>技术验证性质</strong>：ZK 匿名登录仅用于展示零知识证明（Pedersen 承诺 + Schnorr ZK 证明）的技术能力，是前沿密码学技术验证，<strong>并非生产级身份验证方案</strong>；</li>
+      <li><strong>非实名替代</strong>：该功能不代表已落实法律法规要求的实名认证义务（《网络安全法》第24条、《反电信网络诈骗法》第21条）。正式使用场景中应补充符合监管要求的实名认证机制；</li>
+      <li><strong>协议局限性</strong>：当前实现基于 P-256 椭圆曲线的 Schnorr 非交互零知识证明，尚未升级到量子安全的 ZK 方案（如 zk-STARK/zk-SNARK），在量子计算威胁下不具有长期安全性；</li>
+      <li><strong>研究目的</strong>：所有 ZK 模块实现（<code>zk-auth.js</code>、<code>schnorr-prover-v2.js</code>、<code>bulletproofs.js</code>）均为密码学教育与学术研究目的，不涉及商业运营中的用户身份管理。</li>
+    </ul>
+
+<h2 id="s5">五、时间戳与存证声明</h2>
+    <p>FIBEMATE 为关键代码文件申请了可信时间戳（TSA），用于证明代码创作时间和完整性。相关说明：</p>
+    <ul>
+      <li>时间戳服务机构：联合信任时间戳服务中心（<code>tsa.cn</code>）及 DigiCert Free TSA；</li>
+      <li>时间戳文件存放于 <a href="timestamps/" style="color:var(--accent);">https://fibemate.net/timestamps/</a>，可公开下载验证；</li>
+      <li>时间戳仅证明<strong>某一时刻某文件存在且未篡改</strong>，不构成对该文件技术方案、安全性或合法性的背书或担保；</li>
+      <li>我们不对时间戳服务机构的可靠性、连续性承担责任。如 TSA 机构停止服务，已签发的时间戳原则上仍然有效（取决于具体验证方式）；</li>
+      <li>若您依赖时间戳作为法律证据，建议同时咨询专业律师，我们不对时间戳的法律效力做任何明示或暗示担保。</li>
+    </ul>
+
+    <h2 id="s6">六、版权与知识产权</h2>
+    <p>本网站所有原创内容（包括但不限于代码、文档、架构图、文章、设计素材等）的著作权归 <strong>FIBEMATE 开发者</strong> 所有。除遵循开源许可证的情形外：</p>
+    <ul>
+      <li>如需转载或引用非代码内容，请注明出处并保留原始链接；</li>
+      <li>未经书面许可，不得以任何形式将本项目代码或文档用于商业产品；</li>
+      <li>本项目的名称 "FIBEMATE"、Logo 如有注册为商标，受法律保护，未经许可不得使用；</li>
+      <li>本项目尊重第三方知识产权，如您认为本项目涉嫌侵犯您的知识产权，请按 <a href="dmca.html" style="color:var(--accent);">DMCA 政策</a> 流程通知我们。</li>
+    </ul>
+
+    <h2 id="s7">七、隐私保护与数据安全</h2>
+    <p>本网站恪守《中华人民共和国个人信息保护法》（PIPL）及相关法律法规。核心承诺：</p>
+    <ul>
+      <li>本网站 <strong>不收集任何用户隐私数据</strong>。服务器端不存储消息明文、不存储私钥、不进行内容审查；</li>
+      <li>FIBEMATE 软件采用端到端加密（Double Ratchet + PQ Hybrid X3DH），<strong>服务端无法解密用户消息</strong>；</li>
+      <li>本网站仅存储必要的技术日志（IP 地址、访问时间），保留期限不超过 30 天，仅用于安全防护；</li>
+      <li>详细信息请参阅我们的 <a href="privacy.html" style="color:var(--accent);">隐私政策</a>。</li>
+    </ul>
+    <div class="danger">
+      <strong>🔴 重要限制：</strong>尽管我们尽力保护数据安全，但互联网传输存在固有风险。我们<strong>不保证</strong>任何绝对安全性，用户应自行评估风险并采取措施（如定期更换密钥、使用最新版本客户端等）。
+    </div>
+
+    <h2 id="s8">八、技术服务限制</h2>
+    <p>本网站按 <strong>"原样"（AS IS）</strong> 提供，不提供任何明示或暗示的担保，包括但不限于：</p>
+    <ul>
+      <li>不保证服务不间断、不保证无错误、不保证与特定环境兼容；</li>
+      <li>对于因使用本软件或网站信息而引发的任何直接或间接损失（包括数据丢失、业务中断、利润损失等），开发者<strong>不承担法律责任</strong>；</li>
+      <li>本网站提供的所有技术文档、博客文章、架构说明均为个人研究心得，不构成专业建议。在用于生产环境前请自行评估或咨询专业人士；</li>
+      <li>本网站可能包含指向第三方网站的链接，我们不对第三方网站的内容、隐私实践或可用性负责；</li>
+      <li>本网站未进行 PCI-DSS、SOC 2、ISO 27001 等合规认证。如您的场景需要此类认证，请谨慎使用本项目。</li>
+    </ul>
+
+    <h2 id="s9">九、法律适用与争议解决</h2>
+    <p>本声明的订立、执行和解释均适用 <strong>中华人民共和国法律</strong>（不包括冲突法规则）。</p>
+    <p>因本声明引起的或与本声明有关的任何争议，双方应首先通过友好协商解决；协商不成的，任一方可向 <strong>开发者所在地有管辖权的人民法院</strong> 提起诉讼。</p>
+    <p>如您位于中华人民共和国境外，请注意：使用本网站即表示您同意个人信息可能被传输至中国境内处理，并承诺不违反您所在地的法律法规（包括但不限于欧盟 GDPR、美国 CCPA 等）。</p>
+
+    <h2 id="s10">十、联系方式与更新</h2>
+    <p>如对本声明有任何疑问，或需要报告安全问题，请联系：</p>
+    <ul>
+      <li>通用支持：<a href="mailto:support@fibemate.net" style="color:var(--accent);">support@fibemate.net</a></li>
+      <li>安全披露（PGP 首选）：<a href="mailto:security@fibemate.net" style="color:var(--accent);">security@fibemate.net</a></li>
+      <li>法律事务：<a href="mailto:legal@fibemate.net" style="color:var(--accent);">legal@fibemate.net</a></li>
+    </ul>
+    <p>本声明可能不时更新。重大变更将通过网站公告或邮件（如已提供）通知。最近一次更新日期见于本声明顶部。</p>
+    <p style="margin-top: 16px; font-size: 13px; color: var(--muted);">本声明中英文版本如有冲突，以<strong>中文版本</strong>为准。</p>
+
+    <a href="legal.html" class="back-link">📄 查看所有法律文档</a><br>
+    <a href="index.html" class="back-link">← 返回首页</a>
+  </div>
+
+  <div class="footer">
+    <p>© 2025–2026 FIBEMATE &nbsp;|&nbsp; <a href="terms.html">服务条款</a> &nbsp;|&nbsp; <a href="privacy.html">隐私政策</a> &nbsp;|&nbsp; <a href="disclaimer.html">免责声明</a> &nbsp;|&nbsp; <a href="legal.html">文档中心</a></p>
+    <p style="margin-top: 8px; font-size: 12px;">ICP 备案号：黑ICP备2026005787号-1 &nbsp;|&nbsp; 联系：support@fibemate.net</p>
+  </div>
+</body>
+</html>

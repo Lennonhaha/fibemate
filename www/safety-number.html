@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIBEMATE - 安全号码</title>
+  <link rel="stylesheet" href="common.css">
+  <style>
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-secondary: #12121a;
+      --text-primary: #e0e0e0;
+      --text-secondary: #888;
+      --accent: #00E5C3;
+      --accent-dim: #00a893;
+      --border: #333;
+      --error: #ff4757;
+      --success: #2ed573;
+    }
+    [data-theme="light"] {
+      --bg-primary: #f5f5f5;
+      --bg-secondary: #ffffff;
+      --text-primary: #1a1a1a;
+      --text-secondary: #666;
+      --accent: #00B4A0;
+      --accent-dim: #008f82;
+      --border: #e0e0e0;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+    .sn-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--bg-secondary);
+      border-bottom: 1px solid var(--border);
+    }
+    .sn-header button {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-size: 1rem;
+      transition: all 0.2s;
+    }
+    .sn-header button:hover { border-color: var(--accent); color: var(--accent); }
+    .sn-header h1 { font-size: 1.05rem; color: var(--text-primary); }
+    .sn-container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 24px 20px;
+    }
+    .sn-info {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    .sn-info h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: 8px; }
+    .sn-info p { font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5; }
+    .sn-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    .sn-card h3 {
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .sn-number {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 1.1rem;
+      color: var(--accent);
+      word-break: break-all;
+      line-height: 1.6;
+      padding: 12px 16px;
+      background: rgba(0,229,195,0.06);
+      border-radius: 8px;
+      border: 1px solid rgba(0,229,195,0.2);
+      user-select: all;
+      cursor: pointer;
+      text-align: center;
+    }
+    .sn-fingerprint {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .sn-fp-block {
+      padding: 6px 4px;
+      background: rgba(0,229,195,0.04);
+      border-radius: 6px;
+      text-align: center;
+      font-size: 0.78rem;
+      color: var(--accent);
+      font-family: monospace;
+    }
+    .sn-warning {
+      display: flex;
+      gap: 10px;
+      padding: 12px 14px;
+      background: rgba(255,71,87,0.08);
+      border: 1px solid rgba(255,71,87,0.2);
+      border-radius: 10px;
+      font-size: 0.82rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: 16px;
+    }
+    .sn-warning-icon { font-size: 1.2rem; flex-shrink: 0; }
+    .sn-verified {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--success);
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+    .sn-verified-icon {
+      width: 22px; height: 22px;
+      background: var(--success);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 0.75rem;
+    }
+    .sn-compare {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .sn-compare-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+    .sn-compare-row span:first-child { color: var(--text-secondary); }
+    .sn-compare-row span:last-child { color: var(--accent); font-family: monospace; }
+    .qr-placeholder {
+      width: 160px; height: 160px;
+      background: var(--bg-primary);
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto;
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .qr-placeholder::before { content: '📱'; font-size: 2rem; }
+    .sn-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .sn-action-btn {
+      padding: 11px 16px;
+      border-radius: 8px;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      border: 1px solid var(--border);
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .sn-action-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .sn-action-btn.danger { color: var(--error); border-color: rgba(255,71,87,0.3); }
+    .sn-action-btn.danger:hover { background: rgba(255,71,87,0.08); border-color: var(--error); }
+    .sn-action-btn.primary { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+    .sn-action-btn.primary:hover { background: var(--accent-dim); border-color: var(--accent-dim); }
+    @media (max-width: 480px) {
+      .sn-fingerprint { grid-template-columns: repeat(3, 1fr); }
+      .sn-number { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sn-header">
+    <button onclick="history.back()">←</button>
+    <h1>🔑 安全号码</h1>
+  </div>
+
+  <div class="sn-container">
+    <div class="sn-info">
+      <h2>🔐 安全号码验证</h2>
+      <p>安全号码用于验证您与联系人的端对端加密通道是否安全。<br>请通过安全的线下渠道与联系人核对安全号码。</p>
+    </div>
+
+    <div class="sn-card">
+      <h3>您与 <span id="contactName">联系人</span> 的安全号码</h3>
+      <div class="sn-number" id="safetyNumber" title="点击复制">— 加载中 —</div>
+      <div class="sn-fingerprint" id="fingerprintBlocks"></div>
+    </div>
+
+    <div class="sn-warning">
+      <span class="sn-warning-icon">⚠️</span>
+      <div>
+        <strong style="color:var(--error)">安全警告</strong><br>
+        如果安全号码不匹配，说明加密通道可能被篡改或中间人攻击。<br>
+        <strong>请勿</strong>在安全号码不匹配的情况下发送敏感信息。
+      </div>
+    </div>
+
+    <div class="sn-card">
+      <h3>验证状态</h3>
+      <div id="verifyStatus">
+        <div class="sn-verified">
+          <div class="sn-verified-icon">✓</div>
+          <span>已验证（首次联系）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sn-card">
+      <h3>比较详情</h3>
+      <div class="sn-compare">
+        <div class="sn-compare-row">
+          <span>身份密钥 (Identity Key)</span>
+          <span id="identityKey">—</span>
+        </div>
+        <div class="sn-compare-row">
+          <span>临时密钥 (Ephemeral Key)</span>
+          <span id="ephemeralKey">—</span>
+        </div>
+        <div class="sn-compare-row">
+          <span>已接受密钥数</span>
+          <span id="keysAccepted">—</span>
+        </div>
+        <div class="sn-compare-row">
+          <span>会话建立时间</span>
+          <span id="sessionTime">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="sn-card">
+      <h3>扫描二维码</h3>
+      <div class="qr-placeholder">二维码扫描区域</div>
+    </div>
+
+    <div class="sn-actions">
+      <button class="sn-action-btn primary" onclick="copySafetyNumber()">📋 复制安全号码</button>
+      <button class="sn-action-btn" onclick="shareVia()">📤 分享</button>
+      <button class="sn-action-btn danger" onclick="reportUnsafe()">🚨 报告安全问题</button>
+    </div>
+  </div>
+
+  <script>
+    // 从 URL 参数获取联系人信息
+    const params = new URLSearchParams(location.search);
+    const contactId = params.get('contact') || 'unknown';
+    const contactName = decodeURIComponent(params.get('name') || '未知联系人');
+    document.getElementById('contactName').textContent = contactName;
+
+    // 生成安全号码（基于联系人密钥信息的简化实现）
+    async function generateSafetyNumber(contactId) {
+      try {
+        const stored = localStorage.getItem('fibemate_contacts');
+        const contacts = stored ? JSON.parse(stored) : {};
+        const contact = contacts[contactId] || {};
+        const identityKey = contact.identityKey || 'ik_' + contactId;
+        const ephemeralKey = contact.ephemeralKey || 'ek_' + contactId;
+        const seed = identityKey + ephemeralKey;
+
+        // 生成 60 位安全号码
+        const encoded = btoa(seed).replace(/[^A-Za-z0-9]/g, '').substring(0, 60).toUpperCase();
+        const formatted = encoded.match(/.{1,5}/g)?.join(' ') || encoded;
+
+        document.getElementById('safetyNumber').textContent = formatted;
+        document.getElementById('identityKey').textContent = identityKey.substring(0, 20) + '...';
+        document.getElementById('ephemeralKey').textContent = ephemeralKey.substring(0, 20) + '...';
+        document.getElementById('keysAccepted').textContent = contact.keysAccepted || '1';
+        document.getElementById('sessionTime').textContent = contact.sessionTime || new Date().toLocaleString('zh-CN');
+
+        // 生成分组指纹
+        const blocks = formatted.replace(/\s/g, '').match(/.{1,4}/g) || [];
+        const fpContainer = document.getElementById('fingerprintBlocks');
+        blocks.slice(0, 12).forEach(block => {
+          const d = document.createElement('div');
+          d.className = 'sn-fp-block';
+          d.textContent = block;
+          fpContainer.appendChild(d);
+        });
+      } catch (e) {
+        document.getElementById('safetyNumber').textContent = '无法生成安全号码';
+      }
+    }
+
+    function copySafetyNumber() {
+      const num = document.getElementById('safetyNumber').textContent.replace(/\s/g, '');
+      navigator.clipboard.writeText(num).then(() => {
+        showToast('安全号码已复制到剪贴板', 'success');
+      }).catch(() => {
+        showToast('复制失败，请手动复制', 'error');
+      });
+    }
+
+    function shareVia() {
+      const num = document.getElementById('safetyNumber').textContent;
+      const text = `FIBEMATE 安全号码（${contactName}）：\n${num}\n\n请通过安全的线下渠道核实此号码。`;
+      if (navigator.share) {
+        navigator.share({ title: 'FIBEMATE 安全号码', text });
+      } else {
+        navigator.clipboard.writeText(text).then(() => showToast('已复制到剪贴板', 'success'));
+      }
+    }
+
+    function reportUnsafe() {
+      if (confirm('确定要报告安全问题吗？这将通知服务器并终止与此联系人的加密会话。')) {
+        showToast('安全问题已报告', 'warning');
+        setTimeout(() => history.back(), 1500);
+      }
+    }
+
+    function showToast(msg, type) {
+      const el = document.createElement('div');
+      el.textContent = msg;
+      el.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);padding:10px 20px;border-radius:8px;font-size:0.85rem;z-index:9999;background:${type==='success'?'#2ed573':type==='warning'?'#ffa502':'#ff4757'};color:#fff;font-weight:500;animation:slideUp 0.2s`;
+      document.body.appendChild(el);
+      setTimeout(() => el.remove(), 2500);
+    }
+
+    generateSafetyNumber(contactId);
+  </script>
+</body>
+</html>

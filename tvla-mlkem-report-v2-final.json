@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-06-02T20:19:05.442Z",
+  "nodeVersion": "v22.22.2",
+  "platform": "linux",
+  "arch": "x64",
+  "iterations": 10000,
+  "threshold": 4.5,
+  "version": "v2-enhanced-corrected",
+  "methodology": "Welch t-test, N=10,000, pre-allocated arrays/ciphertexts, identical workload per pair",
+  "summary": {
+    "controlGroup": "2/2",
+    "tvlaPassed": "8/9",
+    "tvlaFailed": "1/9",
+    "verdict": "1 genuine timing dependency detected (compress — public-data operation, low severity)"
+  },
+  "controlGroup": [
+    {
+      "name": "generateKeypair",
+      "t": 0.9,
+      "mean": 2245851,
+      "cv": 40.6,
+      "passed": true
+    },
+    {
+      "name": "encapsulate",
+      "t": 0.2,
+      "mean": 2883054,
+      "cv": 37.44,
+      "passed": true
+    }
+  ],
+  "tvla": [
+    {
+      "name": "generateKeypair",
+      "t": 0.54,
+      "fixedMean": 2106022,
+      "randomMean": 2106022,
+      "cv": 43.11,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "encapsulate",
+      "t": 0.56,
+      "fixedMean": 2598508,
+      "randomMean": 2598508,
+      "cv": 35.35,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "decapsulate (corrected)",
+      "t": 0.25,
+      "fixedMean": 3205981,
+      "randomMean": 3205981,
+      "cv": 18.96,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "modMul",
+      "t": 0.67,
+      "fixedMean": 182,
+      "randomMean": 182,
+      "cv": 5499.38,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "sha3_256",
+      "t": 0,
+      "fixedMean": 9147,
+      "randomMean": 9147,
+      "cv": 1397.39,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "shake128",
+      "t": 1.66,
+      "fixedMean": 12914,
+      "randomMean": 12914,
+      "cv": 1173.36,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "polyMul (pre-alloc)",
+      "t": 1.47,
+      "fixedMean": 177951,
+      "randomMean": 177951,
+      "cv": 18.2,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "byteEncode (pre-alloc)",
+      "t": 1.37,
+      "fixedMean": 9637,
+      "randomMean": 9637,
+      "cv": 98.87,
+      "passed": true,
+      "note": ""
+    },
+    {
+      "name": "compress (pre-alloc)",
+      "t": 23.93,
+      "fixedMean": 19985,
+      "randomMean": 13270,
+      "cv": 94.78,
+      "passed": false,
+      "note": "fixed coeff (i*13%3329) slower than random; operates on public data during Encaps"
+    }
+  ]
+}

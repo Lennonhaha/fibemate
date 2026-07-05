@@ -1,0 +1,254 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关于 FIBEMATE - 隐私增强即时通讯</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #0A0A0F;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+    }
+    .logo {
+      font-size: 64px;
+      margin-bottom: 20px;
+    }
+    .header h1 {
+      font-size: 36px;
+      background: linear-gradient(135deg, #00E5C3, #4488ff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+    .header p {
+      color: rgba(255,255,255,0.6);
+      font-size: 18px;
+    }
+    .section {
+      margin-bottom: 50px;
+    }
+    .section h2 {
+      font-size: 24px;
+      color: #00E5C3;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .section h2::before {
+      content: '';
+      display: inline-block;
+      width: 4px;
+      height: 24px;
+      background: #00E5C3;
+      border-radius: 2px;
+    }
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+    }
+    .feature-card {
+      background: rgba(255,255,255,0.05);
+      padding: 24px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .feature-card h3 {
+      font-size: 18px;
+      margin-bottom: 10px;
+      color: #00E5C3;
+    }
+    .feature-card p {
+      color: rgba(255,255,255,0.6);
+      font-size: 14px;
+    }
+    .architecture {
+      background: rgba(255,255,255,0.05);
+      padding: 30px;
+      border-radius: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      overflow-x: auto;
+    }
+    .compliance-list {
+      list-style: none;
+    }
+    .compliance-list li {
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .compliance-list li::before {
+      content: '✓';
+      color: #00E5C3;
+      font-weight: bold;
+    }
+    .warning-box {
+      background: rgba(255, 193, 7, 0.1);
+      border: 1px solid rgba(255, 193, 7, 0.3);
+      padding: 20px;
+      border-radius: 12px;
+      margin-top: 30px;
+    }
+    .warning-box h3 {
+      color: #ffc107;
+      margin-bottom: 10px;
+    }
+    .warning-box p {
+      color: rgba(255,255,255,0.7);
+      font-size: 14px;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 60px;
+      padding-top: 40px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.4);
+      font-size: 14px;
+    }
+    .version-badge {
+      display: inline-block;
+      background: rgba(0, 229, 195, 0.2);
+      color: #00E5C3;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #00E5C3;
+      text-decoration: none;
+      margin-bottom: 30px;
+      font-size: 14px;
+    }
+    .back-btn:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="/" class="back-btn">← 返回应用</a>
+    
+    <div class="header">
+      <div class="logo">🔒</div>
+      <h1>FIBEMATE</h1>
+      <p>隐私增强即时通讯系统</p>
+      <span class="version-badge">v2.0.0-alpha · 合规版</span>
+    </div>
+    
+    <div class="section">
+      <h2>产品定位</h2>
+      <p style="color: rgba(255,255,255,0.8); font-size: 16px;">
+        FIBEMATE 采用端到端加密技术，确保您的通信内容只有对话双方可见。
+        服务器仅作为加密数据的转发节点，无法解密任何消息内容。
+      </p>
+    </div>
+    
+    <div class="section">
+      <h2>核心功能</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>🔐 端到端加密</h3>
+          <p>所有消息在发送端加密，接收端解密。服务器仅传输密文，无法读取内容。</p>
+        </div>
+        <div class="feature-card">
+          <h3>🛡️ 前向安全</h3>
+          <p>即使密钥泄露，历史消息仍然安全。每次会话使用独立密钥。</p>
+        </div>
+        <div class="feature-card">
+          <h3>🔥 阅后即焚</h3>
+          <p>消息阅读后自动删除，不留痕迹。适合敏感信息传输。</p>
+        </div>
+        <div class="feature-card">
+          <h3>📸 截图检测</h3>
+          <p>检测并告警截图行为，增强通信安全意识。</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section">
+      <h2>技术架构</h2>
+      <div class="architecture">
+┌─────────────┐         ┌─────────────┐         ┌─────────────┐
+│   客户端 A   │ ◄─────► │   服务器    │ ◄─────► │   客户端 B   │
+│  (加密发送)  │  密文   │  (仅转发)   │  密文   │  (解密接收)  │
+└─────────────┘         └─────────────┘         └─────────────┘
+      </div>
+      <p style="margin-top: 15px; color: rgba(255,255,255,0.6);">
+        <strong>服务器零知识架构：</strong>不存储消息明文，不解密密文内容，仅验证身份和转发数据。
+      </p>
+    </div>
+    
+    <div class="section">
+      <h2>合规声明</h2>
+      <ul class="compliance-list">
+        <li>已完成 ICP 备案</li>
+        <li>遵守《网络安全法》</li>
+        <li>遵守《数据安全法》</li>
+        <li>遵守《个人信息保护法》</li>
+        <li>本节点为标准加密通讯服务，不提供匿名注册</li>
+        <li>配合合法合规的监管要求</li>
+      </ul>
+    </div>
+    
+    <div class="section">
+      <h2>使用场景</h2>
+      <div class="feature-grid">
+        <div class="feature-card">
+          <h3>✅ 个人隐私通信</h3>
+          <p>保护日常聊天隐私，防止第三方窥探。</p>
+        </div>
+        <div class="feature-card">
+          <h3>✅ 商业机密传输</h3>
+          <p>安全传输商业敏感信息，保护知识产权。</p>
+        </div>
+        <div class="feature-card">
+          <h3>✅ 学术研究交流</h3>
+          <p>保护研究成果和未公开数据。</p>
+        </div>
+        <div class="feature-card">
+          <h3>❌ 规避法律监管</h3>
+          <p>本服务不支持任何非法用途。</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="warning-box">
+      <h3>⚠️ 免责声明</h3>
+      <p>
+        本系统为学术研究项目，处于 alpha 测试阶段。不建议用于生产环境或高度敏感通信。
+        用户需遵守当地法律法规。开发者保留随时修改或终止服务的权利。
+      </p>
+    </div>
+    
+    <div class="footer">
+      <p><strong>FIBEMATE</strong> — 让隐私回归个人掌控</p>
+      <p style="margin-top: 10px;">
+        版本: 2.0.0-alpha | 作者: Anonymous | 邮箱: support@fibemate.net
+      </p>
+      <p style="margin-top: 5px; font-size: 12px;">
+        隐私增强通讯项目
+      </p>
+    </div>
+  </div>
+</body>
+</html>

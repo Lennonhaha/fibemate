@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>FIBEMATE Mobile</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#0a0a0a; color:#e6edf3; min-height:100vh; }
+.header { background:#0d1117; padding:16px 20px; border-bottom:1px solid #21262d; display:flex; align-items:center; gap:12px; }
+.avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,#00d4aa,#0066ff); display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:700; color:#fff; }
+.user-info { flex:1; }
+.user-name { font-size:15px; font-weight:600; }
+.user-status { font-size:11px; color:#00d4aa; }
+.menu-btn { background:none; border:none; color:#667; font-size:20px; cursor:pointer; padding:4px; }
+.content { padding:20px; }
+.card { background:#0d1117; border:1px solid #21262d; border-radius:12px; padding:20px; margin-bottom:16px; }
+.card h3 { font-size:14px; color:#667; margin-bottom:12px; text-transform:uppercase; letter-spacing:0.5px; }
+.status-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.status-item { background:#161b22; border-radius:8px; padding:14px; text-align:center; }
+.status-value { font-size:22px; font-weight:700; color:#00d4aa; }
+.status-label { font-size:11px; color:#667; margin-top:4px; }
+.btn-row { display:flex; gap:10px; margin-top:16px; }
+.btn { flex:1; padding:12px; border-radius:8px; border:1px solid #30363d; background:#161b22; color:#e6edf3; font-size:14px; text-align:center; cursor:pointer; transition:all .2s; }
+.btn:active { background:#21262d; transform:scale(0.97); }
+.btn-primary { background:linear-gradient(135deg,#00d4aa,#0066ff); border:none; color:#fff; font-weight:600; }
+.status-dot { display:inline-block; width:8px; height:8px; border-radius:50%; margin-right:6px; }
+.status-dot.online { background:#00d4aa; box-shadow:0 0 8px rgba(0,212,170,0.5); }
+.status-dot.offline { background:#ff5252; }
+.logout-btn { margin-top:24px; width:100%; padding:12px; background:none; border:1px solid #30363d; border-radius:8px; color:#ff5252; font-size:14px; cursor:pointer; }
+.loading { text-align:center; padding:40px; color:#667; }
+.error-msg { background:rgba(255,82,82,0.1); border:1px solid rgba(255,82,82,0.3); border-radius:8px; padding:12px; margin-bottom:16px; color:#ff5252; font-size:13px; display:none; }
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#21262d; color:#e6edf3; padding:10px 20px; border-radius:20px; font-size:13px; z-index:99; opacity:0; transition:opacity .3s; pointer-events:none; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="avatar" id="avatar">U</div>
+  <div class="user-info">
+    <div class="user-name" id="userName">Loading...</div>
+    <div class="user-status"><span class="status-dot online"></span>Secured · ML-KEM-768</div>
+  </div>
+</div>
+
+<div class="content">
+  <div id="loadingView" class="loading">验证身份...</div>
+  <div id="errorMsg" class="error-msg"></div>
+
+  <div id="mainView" style="display:none;">
+    <div class="card">
+      <h3>安全状态</h3>
+      <div class="status-grid">
+        <div class="status-item">
+          <div class="status-value">ML-KEM</div>
+          <div class="status-label">后量子密码参考实现</div>
+        </div>
+        <div class="status-item">
+          <div class="status-value" id="wsStatus">—</div>
+          <div class="status-label">连接状态</div>
+        </div>
+        <div class="status-item">
+          <div class="status-value">✓</div>
+          <div class="status-label">E2E 加密</div>
+        </div>
+        <div class="status-item">
+          <div class="status-value" id="uptimeDisplay">—</div>
+          <div class="status-label">会话时长</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>快速操作</h3>
+      <div class="btn-row">
+        <button class="btn" onclick="showToast('消息功能开发中')">💬 消息</button>
+        <button class="btn" onclick="showToast('联系人功能开发中')">👥 联系人</button>
+      </div>
+      <div class="btn-row" style="margin-top:8px;">
+        <button class="btn" onclick="showToast('文件保管箱开发中')">🔐 保管箱</button>
+        <button class="btn" onclick="showToast('设置功能开发中')">⚙️ 设置</button>
+      </div>
+    </div>
+
+    <button class="logout-btn" onclick="doLogout()">退出登录</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== Init =====
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+  const token = localStorage.getItem('fibemate_token');
+  const username = localStorage.getItem('fibemate_username') || 'User';
+  const userId = localStorage.getItem('fibemate_userId');
+
+  if (!token) {
+    showError('未登录，请重新登录');
+    setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+    return;
+  }
+
+  // Show user info
+  document.getElementById('userName').textContent = username;
+  document.getElementById('avatar').textContent = username.charAt(0).toUpperCase();
+  document.getElementById('loadingView').style.display = 'none';
+  document.getElementById('mainView').style.display = 'block';
+
+  // Verify token
+  try {
+    const res = await fetch('/api/auth/verify', {
+      headers: { 'Authorization': 'Bearer ' + token }
+    });
+    if (res.ok) {
+      document.getElementById('wsStatus').textContent = '在线';
+    } else {
+      document.getElementById('wsStatus').innerHTML = '<span style="color:#ff5252;">过期</span>';
+    }
+  } catch(e) {
+    document.getElementById('wsStatus').innerHTML = '<span style="color:#ffaa00;">离线</span>';
+  }
+
+  // Uptime counter
+  let sec = 0;
+  setInterval(() => {
+    sec++;
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    document.getElementById('uptimeDisplay').textContent = m + 'm ' + s + 's';
+  }, 1000);
+
+  // Start WebSocket (lightweight)
+  tryConnectWS(token);
+}
+
+function tryConnectWS(token) {
+  try {
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    const wsUrl = proto + '//' + window.location.host + '/ws?token=' + encodeURIComponent(token);
+    const socket = new WebSocket(wsUrl);
+    socket.onopen = () => {
+      document.getElementById('wsStatus').textContent = '在线';
+    };
+    socket.onerror = () => {
+      document.getElementById('wsStatus').innerHTML = '<span style="color:#ffaa00;">重试中</span>';
+    };
+    socket.onclose = () => {
+      document.getElementById('wsStatus').innerHTML = '<span style="color:#ffaa00;">重试中</span>';
+      setTimeout(() => tryConnectWS(token), 5000);
+    };
+  } catch(e) {
+    document.getElementById('wsStatus').innerHTML = '<span style="color:#ff5252;">不可用</span>';
+  }
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorMsg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  document.getElementById('loadingView').style.display = 'none';
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function doLogout() {
+  localStorage.removeItem('fibemate_token');
+  localStorage.removeItem('fibemate_username');
+  localStorage.removeItem('fibemate_userId');
+  window.location.href = 'login.html';
+}
+
+// Global error handler
+window.onerror = function(msg, src, line, col, err) {
+  console.error('Global error:', msg, src, line);
+  return true; // Prevent default
+};
+</script>
+</body>
+</html>

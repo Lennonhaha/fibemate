@@ -1,0 +1,351 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE - 下一代隐私通信协议</title>
+    <meta name="description" content="FIBEMATE - 基于后量子密码学的隐私增强通信协议，采用ML-KEM-768、X25519混合密钥交换和Double Ratchet算法">
+    <link rel="stylesheet" href="common.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <img src="images/fibemate-shield-logo.svg" alt="FIBEMATE" style="height:54px;">
+            </a>
+            <ul class="nav-links">
+                <li><a href="#features">产品特性</a></li>
+                <li><a href="#technology">技术架构</a></li>
+                <li><a href="#download">下载</a></li>
+                <li><a href="#docs">文档</a></li>
+                <li><a href="#contact">联系我们</a></li>
+            </ul>
+            <button class="mobile-menu-btn" aria-label="菜单">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- 英雄区域 -->
+    <section class="hero">
+        <div class="hero-background">
+            <div class="gradient-orb orb-1"></div>
+            <div class="gradient-orb orb-2"></div>
+            <div class="gradient-orb orb-3"></div>
+        </div>
+        <div class="hero-content">
+            <div class="hero-badge">
+                <span class="badge-dot"></span>
+                <span>后量子密码学就绪</span>
+            </div>
+            <h1 class="hero-title">
+                连接每一根光纤<br>
+                <span class="gradient-text">智启未来网络</span>
+            </h1>
+            <p class="hero-subtitle">
+                FIBEMATE 是基于 ML-KEM-768、X25519 混合密钥交换和 Double Ratchet 算法的
+                下一代隐私增强通信协议，为您的数据提供抗量子计算攻击的安全保障。
+            </p>
+            <div class="hero-cta">
+                <a href="#download" class="btn btn-primary">
+                    <span>立即下载</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                </a>
+                <a href="#technology" class="btn btn-secondary">
+                    <span>了解技术</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div class="stat">
+                    <span class="stat-value">256</span>
+                    <span class="stat-label">位 AES-GCM 加密</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-value">768</span>
+                    <span class="stat-label">位 ML-KEM 密钥</span>
+                </div>
+                <div class="stat-divider"></div>
+                <div class="stat">
+                    <span class="stat-value">0</span>
+                    <span class="stat-label">知识证明认证</span>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="crypto-visualization">
+                <div class="key-exchange-flow">
+                    <div class="node alice">
+                        <div class="node-icon">A</div>
+                        <div class="node-label">Alice</div>
+                    </div>
+                    <div class="connection">
+                        <div class="packet"></div>
+                        <div class="packet"></div>
+                        <div class="packet"></div>
+                    </div>
+                    <div class="node server">
+                        <div class="node-icon">S</div>
+                        <div class="node-label">Server</div>
+                    </div>
+                    <div class="connection">
+                        <div class="packet"></div>
+                        <div class="packet"></div>
+                        <div class="packet"></div>
+                    </div>
+                    <div class="node bob">
+                        <div class="node-icon">B</div>
+                        <div class="node-label">Bob</div>
+                    </div>
+                </div>
+                <div class="encryption-layers">
+                    <div class="layer layer-1">ML-KEM-768</div>
+                    <div class="layer layer-2">X25519</div>
+                    <div class="layer layer-3">Double Ratchet</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 特性区域 -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">核心特性</span>
+                <h2 class="section-title">为隐私而生的<br><span class="gradient-text">安全通信协议</span></h2>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                        </svg>
+                    </div>
+                    <h3>后量子安全</h3>
+                    <p>采用 NIST 标准化的 ML-KEM-768 密钥封装机制，抵御量子计算机的 Shor 算法攻击，确保长期数据安全。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                    </div>
+                    <h3>端到端加密</h3>
+                    <p>Double Ratchet 算法确保每条消息都有独立的加密密钥，即使长期密钥泄露，历史消息依然安全。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <h3>零知识认证</h3>
+                    <p>基于 zk-SNARKs 的零知识证明认证系统，无需暴露身份信息即可完成身份验证。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                        </svg>
+                    </div>
+                    <h3>高性能 WASM</h3>
+                    <p>核心加密算法使用 Rust 编译为 WebAssembly，在浏览器中实现接近原生的执行性能。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+                            <line x1="12" y1="22.08" x2="12" y2="12"/>
+                        </svg>
+                    </div>
+                    <h3>跨平台支持</h3>
+                    <p>支持 Web、Android、iOS 和桌面端，统一的安全协议确保跨设备通信的一致性。</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <line x1="2" y1="12" x2="22" y2="12"/>
+                            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+                        </svg>
+                    </div>
+                    <h3>透明可审计</h3>
+                    <p>核心协议接受独立安全审计，透明可验证，代码即信任。</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 技术架构 -->
+    <section id="technology" class="technology">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">技术架构</span>
+                <h2 class="section-title">三层加密<br><span class="gradient-text">纵深防御</span></h2>
+            </div>
+            <div class="tech-stack">
+                <div class="tech-layer">
+                    <div class="layer-number">01</div>
+                    <div class="layer-content">
+                        <h3>传输层安全</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">ML-KEM-768</span>
+                            <span class="tech-tag">X25519</span>
+                            <span class="tech-tag">TLS 1.3</span>
+                        </div>
+                        <p>使用 NIST 后量子密码学标准 ML-KEM-768 与 X25519 椭圆曲线进行混合密钥交换，建立抗量子计算攻击的安全通道。</p>
+                    </div>
+                </div>
+                <div class="tech-layer">
+                    <div class="layer-number">02</div>
+                    <div class="layer-content">
+                        <h3>消息层加密</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">Double Ratchet</span>
+                            <span class="tech-tag">AES-256-GCM</span>
+                            <span class="tech-tag">HKDF</span>
+                        </div>
+                        <p>Signal Protocol 的 Double Ratchet 算法确保每条消息独立加密，前向安全和后向安全双重保障。</p>
+                    </div>
+                </div>
+                <div class="tech-layer">
+                    <div class="layer-number">03</div>
+                    <div class="layer-content">
+                        <h3>身份验证</h3>
+                        <div class="tech-tags">
+                            <span class="tech-tag">zk-SNARKs</span>
+                            <span class="tech-tag">Ed25519</span>
+                            <span class="tech-tag">X3DH</span>
+                        </div>
+                        <p>零知识证明认证与扩展三重 Diffie-Hellman 密钥协商，实现无需信任第三方的去中心化身份验证。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 下载区域 -->
+    <section id="download" class="download">
+        <div class="container">
+            <div class="section-header">
+                <span class="section-tag">下载</span>
+                <h2 class="section-title">选择您的<br><span class="gradient-text">平台</span></h2>
+            </div>
+            <div class="download-grid">
+                <div class="download-card">
+                    <div class="platform-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </div>
+                    <h3>Web 应用</h3>
+                    <p>无需安装，浏览器即开即用</p>
+                    <a href="https://app.fibemate.net" class="btn btn-outline">访问应用</a>
+                </div>
+                <div class="download-card">
+                    <div class="platform-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+                            <line x1="12" y1="18" x2="12.01" y2="18"/>
+                        </svg>
+                    </div>
+                    <h3>Android</h3>
+                    <p>APK 下载，支持 Android 8+</p>
+                    <a href="#" class="btn btn-outline">下载 APK</a>
+                </div>
+                <div class="download-card">
+                    <div class="platform-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M12 2a10 10 0 0 1 10 10c0 5.523-4.477 10-10 10S2 17.523 2 12 2 2 12 2z"/>
+                            <path d="M8 12h8M12 8v8"/>
+                        </svg>
+                    </div>
+                    <h3>iOS</h3>
+                    <p>App Store 即将上架</p>
+                    <span class="btn btn-disabled">敬请期待</span>
+                </div>
+                <div class="download-card">
+                    <div class="platform-icon">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                            <line x1="8" y1="21" x2="16" y2="21"/>
+                            <line x1="12" y1="17" x2="12" y2="21"/>
+                        </svg>
+                    </div>
+                    <h3>桌面端</h3>
+                    <p>Windows / macOS / Linux</p>
+                    <span class="btn btn-disabled">开发中</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 页脚 -->
+    <footer class="footer" id="contact">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <a href="/" class="logo">
+                        <img src="images/fibemate-shield-logo.svg" alt="FIBEMATE" style="height:54px;">
+                    </a>
+                    <p>下一代隐私增强通信协议</p>
+                    <div class="social-links">
+                        
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h4>产品</h4>
+                    <ul>
+                        <li><a href="#features">特性</a></li>
+                        <li><a href="#download">下载</a></li>
+                        <li><a href="#">更新日志</a></li>
+                        <li><a href="#">路线图</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>开发者</h4>
+                    <ul>
+                        <li><a href="#">API 文档</a></li>
+                        <li><a href="#">协议规范</a></li>
+                        
+                        <li><a href="#">SDK</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>关于</h4>
+                    <ul>
+                        <li><a href="#">团队</a></li>
+                        <li><a href="#">联系我们</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                        <li><a href="#">使用条款</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p> FIBEMATE. 保留所有权利。</p>
+                <p class="icp">黑ICP备2026005787号-1</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="main.js"></script>
+</body>
+</html>

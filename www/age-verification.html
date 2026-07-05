@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>年龄确认 - FIBEMATE</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --card: #161b22;
+      --border: #30363d;
+      --text: #c9d1d9;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --danger: #f85149;
+      --success: #3fb950;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      max-width: 480px;
+      width: 100%;
+      padding: 40px;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .icon {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent), #79c0ff);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 24px;
+      font-size: 32px;
+    }
+    h1 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: #f0f6fc;
+    }
+    p {
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 12px;
+    }
+    .warning {
+      background: rgba(248, 81, 73, 0.1);
+      border: 1px solid rgba(248, 81, 73, 0.3);
+      border-radius: 8px;
+      padding: 12px;
+      margin: 20px 0;
+      color: var(--danger);
+      font-size: 14px;
+    }
+    .buttons {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    button {
+      flex: 1;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-confirm {
+      background: var(--success);
+      color: white;
+    }
+    .btn-confirm:hover {
+      background: #2ea043;
+      transform: translateY(-1px);
+    }
+    .btn-deny {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+    .btn-deny:hover {
+      background: rgba(248, 81, 73, 0.1);
+      color: var(--danger);
+      border-color: var(--danger);
+    }
+    .legal-links {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .legal-links a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+    .legal-links a:hover {
+      text-decoration: underline;
+    }
+    .hidden { display: none; }
+    
+    #denied-message {
+      padding: 40px;
+    }
+    #denied-message .icon {
+      background: linear-gradient(135deg, var(--danger), #ff7b72);
+    }
+  </style>
+</head>
+<body>
+  <div id="age-modal" class="modal">
+    <div class="icon">🔒</div>
+    <h1>年龄确认</h1>
+    <p>欢迎使用 FIBEMATE 端到端加密通信平台。</p>
+    <p>本服务涉及加密通信功能，根据相关法律法规，您必须年满 18 周岁才能使用。</p>
+    
+    <div class="warning">
+      ⚠️ 请确认您已年满 18 周岁，并同意我们的服务条款和隐私政策。
+    </div>
+    
+    <div class="buttons">
+      <button class="btn-deny" onclick="denyAccess()">未满 18 岁</button>
+      <button class="btn-confirm" onclick="confirmAge()">我已年满 18 岁</button>
+    </div>
+    
+    <div class="legal-links">
+      使用本服务即表示您同意我们的
+      <a href="/terms.html" target="_blank">使用条款</a> 和
+      <a href="/privacy.html" target="_blank">隐私政策</a>
+    </div>
+  </div>
+
+  <div id="denied-message" class="modal hidden">
+    <div class="icon">🚫</div>
+    <h1>访问受限</h1>
+    <p>很抱歉，根据相关法律法规，您必须年满 18 周岁才能使用 FIBEMATE 服务。</p>
+    <p>如果您未满 18 周岁，请在监护人陪同下使用适合的通信工具。</p>
+    <div class="buttons">
+      <button class="btn-deny" onclick="window.close()">关闭页面</button>
+      <button class="btn-confirm" onclick="location.reload()">返回确认</button>
+    </div>
+  </div>
+
+  <script>
+    // Check if already verified
+    if (localStorage.getItem('ageVerified') === 'true') {
+      window.location.href = '/';
+    }
+
+    function confirmAge() {
+      localStorage.setItem('ageVerified', 'true');
+      localStorage.setItem('ageVerifiedAt', new Date().toISOString());
+      window.location.href = '/';
+    }
+
+    function denyAccess() {
+      document.getElementById('age-modal').classList.add('hidden');
+      document.getElementById('denied-message').classList.remove('hidden');
+    }
+
+    // Prevent bypassing with keyboard
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' || e.key === 'Enter') {
+        e.preventDefault();
+      }
+    });
+  </script>
+</body>
+</html>

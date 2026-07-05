@@ -1,0 +1,47 @@
+{
+  "title": "SM2 TVLA 侧信道安全验证 — 时间戳存证清单",
+  "version": "v2",
+  "date": "2026-06-16",
+  "description": "SM2 纯 JavaScript 实现（jsbn + BigInt/wNAF）TVLA 时序侧信道安全验证存证",
+  "methodology": {
+    "framework": "TVLA (Test Vector Leakage Assessment)",
+    "test": "Welch's t-test",
+    "threshold": 4.5,
+    "sample_size": 2000,
+    "warmup": 500,
+    "duration_sec": 537.8,
+    "node_version": "v22.22.2",
+    "environment": "阿里云 ECS"
+  },
+  "results": {
+    "total_operations": 12,
+    "sm2_passed": 10,
+    "sm2_failed": 0,
+    "primitive_passed": 1,
+    "primitive_failed": 1,
+    "sha256_note": "Node.js crypto.createHash('sha256') |t|=5.40 — 系统内置实现，与 SM2 密钥安全无关"
+  },
+  "operations": [
+    {"name": "[jsbn] genKey", "t": 1.05, "passed": true},
+    {"name": "[jsbn] sign", "t": 2.41, "passed": true},
+    {"name": "[jsbn] verify", "t": 0.63, "passed": true},
+    {"name": "[jsbn] encrypt", "t": 0.29, "passed": true},
+    {"name": "[jsbn] decrypt", "t": 3.91, "passed": true},
+    {"name": "[BigInt] genKey", "t": 0.84, "passed": true},
+    {"name": "[BigInt] sign", "t": 2.03, "passed": true},
+    {"name": "[BigInt] verify", "t": 0.08, "passed": true},
+    {"name": "[BigInt] encrypt", "t": 0.46, "passed": true},
+    {"name": "[BigInt] decrypt", "t": 2.71, "passed": true},
+    {"name": "SHA-256", "t": 5.40, "passed": false, "note": "Node.js 系统库"},
+    {"name": "randomBytes(32)", "t": 0.45, "passed": true}
+  ],
+  "artifacts": [
+    {"file": "tvla-sm2-v3.js", "desc": "TVLA v2 测试框架", "tsa": "DigiCert 2026-06-16"},
+    {"file": "tvla-sm2-v3-output.txt", "desc": "原始输出数据", "tsa": "DigiCert 2026-06-16"},
+    {"file": "sm2-bigint-ec.js", "desc": "BigInt + Jacobian + wNAF SM2 实现", "tsa": "DigiCert 2026-06-16"}
+  ],
+  "reports": [
+    {"url": "/docs/sm2-tvla-analysis.html", "desc": "完整 TVLA 分析报告"},
+    {"url": "/tvla-sm2-v3-output.txt", "desc": "原始输出数据（供第三方复现）"}
+  ]
+}

@@ -1,0 +1,198 @@
+{
+  "testName": "ML-KEM-768 Known Answer Test (10,000 Rounds)",
+  "timestamp": "2026-06-03T18:58:28.612Z",
+  "configuration": {
+    "totalRounds": 10000,
+    "algorithm": "ML-KEM-768",
+    "implementation": "FIBEMATE Pure JavaScript"
+  },
+  "summary": {
+    "totalRounds": 10000,
+    "passed": 10000,
+    "failed": 0,
+    "errors": 0,
+    "passRate": "100.00%",
+    "timing": {
+      "avgUs": "7826.41",
+      "minUs": "6400.20",
+      "maxUs": "20735.20"
+    },
+    "sizeVerification": {
+      "checked": 10000,
+      "valid": 10000,
+      "invalid": 0
+    }
+  },
+  "sampleResults": [
+    {
+      "round": 1,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 1729.558,
+        "encapUs": 943058928963.956,
+        "decapUs": 10169.788,
+        "totalUs": 15545.554
+      },
+      "error": null
+    },
+    {
+      "round": 2,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 1821.818,
+        "encapUs": 943058943145.317,
+        "decapUs": 7014.924,
+        "totalUs": 10966.212
+      },
+      "error": null
+    },
+    {
+      "round": 3,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 3223.023,
+        "encapUs": 943058953387.572,
+        "decapUs": 7044.024,
+        "totalUs": 10239.761
+      },
+      "error": null
+    },
+    {
+      "round": 4,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 2254.967,
+        "encapUs": 943058963414.213,
+        "decapUs": 6435.69,
+        "totalUs": 9398.724
+      },
+      "error": null
+    },
+    {
+      "round": 5,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 2398.186,
+        "encapUs": 943058973418.997,
+        "decapUs": 6060.26,
+        "totalUs": 9606.467
+      },
+      "error": null
+    },
+    {
+      "round": 6,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 2023.508,
+        "encapUs": 943058982602.523,
+        "decapUs": 5348.631,
+        "totalUs": 8447.227
+      },
+      "error": null
+    },
+    {
+      "round": 7,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 1857.077,
+        "encapUs": 943058990423.601,
+        "decapUs": 5562.001,
+        "totalUs": 8029.366
+      },
+      "error": null
+    },
+    {
+      "round": 8,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 1827.687,
+        "encapUs": 943058998727.643,
+        "decapUs": 6015.977,
+        "totalUs": 8722.951
+      },
+      "error": null
+    },
+    {
+      "round": 9,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 1784.182,
+        "encapUs": 943059007314.479,
+        "decapUs": 5225.237,
+        "totalUs": 7892.846
+      },
+      "error": null
+    },
+    {
+      "round": 10,
+      "success": true,
+      "sizes": {
+        "pkSize": 1184,
+        "skSize": 2400,
+        "ctSize": 1088,
+        "ssSize": 32
+      },
+      "timing": {
+        "keypairUs": 1940.929,
+        "encapUs": 943059015790.506,
+        "decapUs": 5132.35,
+        "totalUs": 8250.948
+      },
+      "error": null
+    }
+  ]
+}

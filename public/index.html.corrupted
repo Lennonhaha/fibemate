@@ -1,0 +1,559 @@
+﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIBEMATE - Privacy-Enhanced Messaging</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="double-ratchet.js"></script>
+  <script src="message-crypto.js"></script>
+  <script src="crypto/ml-kem-768.js"></script>
+  <script src="crypto/pq-integration.js"></script>
+  <script src="zk-auth.js?v=10"></script>
+  <style>
+    
+    :root {
+      --bg-primary: #0a0a0f;
+      --text-secondary: #888;
+      --accent: #00E5C3;
+      --border: #333;
+    }
+    [data-theme="light"] {
+      --bg-primary: #f5f5f5;
+      --text-secondary: #666;
+      --accent: #00B4A0;
+      --border: #e0e0e0;
+    }
+    
+    .ws-status {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 12px;
+      font-size: 11px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .ws-status.show { opacity: 1; }
+    .ws-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #666;
+    }
+    .ws-status-dot.connecting { background: #FFC107; animation: pulse 1s infinite; }
+    .ws-status-dot.connected { background: #00E5C3; }
+    .ws-status-dot.disconnected { background: #FF5252; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  </style>
+</head>
+<body>
+  <!-- 调试区域 -->
+  <div id="debugLog" style="position:fixed;bottom:5px;left:5px;background:#111;background:rgba(0,0,0,0.9);color:#0f0;font-size:11px;font-family:monospace;padding:8px;max-height:200px;overflow-y:auto;z-index:99999;display:none;border:1px solid #333;max-width:400px;"></div>
+  <script>document.getElementById('debugLog').style.display='block';</script>
+
+  <!-- WebSocket 状态指示器 -->
+  <div class="ws-status" id="wsStatus">
+    <div class="ws-status-dot" id="wsStatusDot"></div>
+    <span id="wsStatusText">Disconnected<或</span>
+  </div>
+
+  <!-- 登录页面主容器 -->
+  <div class="login-wrapper">
+    <!-- 鑳屾櫙鏁堟灉 -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- 中央登录卡片 -->
+    <div class="login-card">
+      <!-- Logo 区域 - 登录注册切换 -->
+      <div class="logo-area">
+        <div class="shield-logo">
+          <svg viewBox="0 0 64 72" fill="none" xmlns="http:
+            <defs>
+              <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00E5C3"/>
+                <stop offset="100%" style="stop-color:#00B4A0"/>
+              </linearGradient>
+              <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:rgba(0,229,195,0.15)"/>
+                <stop offset="100%" style="stop-color:rgba(0,180,160,0.08)"/>
+              </linearGradient>
+            </defs>
+            <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+                  stroke="url(#shieldGrad)" stroke-width="2" fill="url(#shieldFill)"/>
+            <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z"
+                  stroke="url(#shieldGrad)" stroke-width="1" fill="none" opacity="0.4"/>
+            <circle cx="32" cy="32" r="6" stroke="url(#shieldGrad)" stroke-width="1.5" fill="none"/>
+            <path d="M32 38V48" stroke="url(#shieldGrad)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M32 8L52 17V22" stroke="url(#shieldGrad)" stroke-width="0.5" opacity="0.3"/>
+          </svg>
+        </div>
+        <h1 class="brand-name">FIBEMATE</h1>
+        <p class="brand-sub">Security-First Messaging  ·  End-to-End Encryption</p>
+      </div>
+
+      <!-- 瀹夊叏寰界珷 -->
+      <div class="security-badge">
+        <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+          <path d="M5 1L9 2.5V6C9 8.5 7 10.5 5 11.5C3 10.5 1 8.5 1 6V2.5L5 1Z"
+                stroke="currentColor" stroke-width="1" fill="none"/>
+        </svg>
+        <span>End-to-End Encryption  ·  Zero-Knowledge Proof<或</span>
+      </div>
+
+      <!-- 鐧诲綍琛ㄥ崟 -->
+      <form class="login-form" id="loginForm">
+        <div class="input-group">
+          <input
+            type="text"
+            id="username"
+            placeholder="用户名?
+            required
+          >
+        </div>
+        <div class="input-group">
+          <input
+            type="password"
+            id="password"
+            placeholder="密码"
+            required
+          >
+        </div>
+
+        <button type="submit" class="btn-primary" id="loginBtn">
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="none" style="margin-right:6px">
+            <rect x="2" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <path d="M4 7V5C4 3.34 5.34 2 7 2C8.66 2 10 3.34 10 5V7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <circle cx="7" cy="11" r="1" fill="currentColor"/>
+          </svg>
+          <span id="loginBtnText">登录 / 注册<或</span>
+        </button>
+
+        <!-- ZK 鍖垮悕鐧诲綍鎸夐挳 -->
+        <button type="button" class="btn-secondary" id="zkLoginBtn">
+          <svg width="12" height="14" viewBox="0 0 12 14" fill="none" style="margin-right:6px">
+            <path d="M6 1L11 3V7C11 10 8.5 12.5 6 13.5C3.5 12.5 1 10 1 7V3L6 1Z"
+                  stroke="currentColor" stroke-width="1" fill="none"/>
+          </svg>
+          Anonymous Login  ·  Zero-Knowledge Proof
+        </button>
+
+        <div id="loginError" class="error-msg" style="display:none"></div>
+      </form>
+
+      <!-- 鍒嗛殧绾?-->
+      <div class="divider">
+        <span><或</span>
+        <span class="divider-text">鎴?或</span>
+        <span><或</span>
+      </div>
+
+      <!-- 娉ㄥ唽鍏ュ彛 -->
+      <p class="register-link">
+        还没有账户？ <a href="#" id="goRegister">立即注册 鈫?/a>
+      </p>
+
+      <!-- 搴曢儴瀹夊叏鏍囪瘑 -->
+      <div class="footer-badge">
+        <svg width="8" height="10" viewBox="0 0 8 10" fill="none">
+          <path d="M4 1L7 2V5C7 7 5.5 8.5 4 9.5C2.5 8.5 1 7 1 5V2L4 1Z"
+                stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.5"/>
+        </svg>
+        <span>Zero-Knowledge  ·  Privacy First<或</span>
+      </div>
+    </div>
+
+    <!-- Toast 閫氱煡 -->
+    <div class="toast" id="toast" style="display:none"></div>
+  </div>
+
+  <!-- 娉ㄥ唽椤甸潰锛堥殣钘忥級 -->
+  <div class="register-wrapper" id="registerView" style="display:none">
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+    <div class="login-card">
+      <div class="logo-area">
+        <div class="shield-logo">
+          <svg viewBox="0 0 64 72" fill="none" xmlns="http:
+            <defs>
+              <linearGradient id="shieldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00E5C3"/>
+                <stop offset="100%" style="stop-color:#00B4A0"/>
+              </linearGradient>
+              <linearGradient id="shieldFill2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:rgba(0,229,195,0.15)"/>
+                <stop offset="100%" style="stop-color:rgba(0,180,160,0.08)"/>
+              </linearGradient>
+            </defs>
+            <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+                  stroke="url(#shieldGrad2)" stroke-width="2" fill="url(#shieldFill2)"/>
+            <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z"
+                  stroke="url(#shieldGrad2)" stroke-width="1" fill="none" opacity="0.4"/>
+            <circle cx="32" cy="32" r="6" stroke="url(#shieldGrad2)" stroke-width="1.5" fill="none"/>
+            <path d="M32 38V48" stroke="url(#shieldGrad2)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 class="brand-name">FIBEMATE</h1>
+        <p class="brand-sub">创建账号</p>
+      </div>
+
+      <!-- ZK 证明可视化进度条 -->
+      <div class="zk-badge" id="zkProgress" style="display:none">
+        <span class="zk-step" id="zkStep1">生成密钥中...<或</span>
+        <span class="zk-step" id="zkStep2">璁＄畻 Pedersen 鎵胯...<或</span>
+        <span class="zk-step" id="zkStep3">生成 ZK 证明 (Schnorr)...<或</span>
+        <span class="zk-step" id="zkStep4">鏈嶅姟鍣ㄩ獙璇佷腑...<或</span>
+      </div>
+
+      <!-- 娉ㄥ唽琛ㄥ崟 -->
+      <form class="login-form" id="registerForm">
+        <div class="input-group">
+          <input type="text" id="regUsername" placeholder="用户名? autocomplete="username" required>
+        </div>
+        <div class="input-group">
+          <input type="password" id="regPassword" placeholder="瀵嗙爜锛堣嚦灏?浣嶏級" autocomplete="new-password" required>
+        </div>
+        <div class="input-group">
+          <input type="password" id="regPasswordConfirm" placeholder="纭瀵嗙爜" autocomplete="new-password" required>
+        </div>
+
+        <!-- ZK 鍖垮悕娉ㄥ唽閫夐」 -->
+        <div class="zk-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" id="zkMode">
+            <span class="toggle-switch"><或</span>
+            <span>ZK 鍖垮悕娉ㄥ唽锛堟帹鑽愶級<或</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary" id="registerBtn">
+          <span id="registerBtnText">创建账号<或</span>
+        </button>
+        <div id="registerError" class="error-msg" style="display:none"></div>
+        <button type="button" class="btn-text" id="goLogin">宸叉湁璐﹀彿锛熺珛鍗崇櫥褰?鈫?/button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    
+    
+    
+
+    
+      requestNotificationPermission();
+
+      if (FIBEMATE_ZK && FIBEMATE_ZK.isLoggedIn()) {
+        window.location.href = 'main.html';
+        return;
+      }
+      initLoginForm();
+      initRegisterForm();
+    });
+
+    function initLoginForm() {
+      const form = document.getElementById('loginForm');
+      const zkBtn = document.getElementById('zkLoginBtn');
+      const errorEl = document.getElementById('loginError');
+
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) return;
+
+        setLoading('loginBtn', 'loginBtnText', true);
+        errorEl.style.display = 'none';
+
+        try {
+          const data = await FIBEMATE_ZK.doLogin(username, password);
+          if (data.displayName) {
+            localStorage.setItem('fk_displayName', data.displayName);
+          }
+          connectWebSocket();
+          showToast('鐧诲綍鎴愬姛锛屾鍦ㄨ烦杞?..', 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+        } finally {
+          setLoading('loginBtn', 'loginBtnText', false);
+        }
+      });
+
+      
+      zkBtn.addEventListener('click', async () => {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) {
+          errorEl.textContent = '璇峰厛杈撳叆鐢ㄦ埛鍚嶅拰瀵嗙爜';
+          errorEl.style.display = 'block';
+          return;
+        }
+        setLoading('zkLoginBtn', null, true);
+        errorEl.style.display = 'none';
+
+        try {
+          showToast('ZK Proof: verify identity without revealing it...', 'info');
+          await sleep(300);
+          const data = await FIBEMATE_ZK.doZKLogin();
+          if (data.displayName) {
+            localStorage.setItem('fk_displayName', data.displayName);
+          }
+          connectWebSocket();
+          showToast('娆㈣繋 ' + (data.displayName || username) + '锛孼K 璁よ瘉鎴愬姛锛?, 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+        } finally {
+          setLoading('zkLoginBtn', null, false);
+        }
+      });
+
+      
+      document.getElementById('goRegister').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelector('.login-wrapper').style.display = 'none';
+        document.getElementById('registerView').style.display = 'flex';
+      });
+    }
+
+    function initRegisterForm() {
+      const form = document.getElementById('registerForm');
+      const errorEl = document.getElementById('registerError');
+      const zkModeEl = document.getElementById('zkMode');
+
+      
+      document.getElementById('goLogin').addEventListener('click', () => {
+        document.getElementById('registerView').style.display = 'none';
+        document.querySelector('.login-wrapper').style.display = 'flex';
+      });
+
+      
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+        const zkMode = zkModeEl.checked;
+
+        errorEl.style.display = 'none';
+
+        if (!username || !password) {
+          errorEl.textContent = '璇峰～鍐欐墍鏈夊瓧娈?;
+          errorEl.style.display = 'block';
+          return;
+        }
+        if (password.length < 8) {
+          errorEl.textContent = '瀵嗙爜鑷冲皯8浣?;
+          errorEl.style.display = 'block';
+          return;
+        }
+        if (password !== passwordConfirm) {
+          errorEl.textContent = '两次密码不一致;
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        setLoading('registerBtn', 'registerBtnText', true);
+
+        
+          document.getElementById('zkProgress').style.display = 'flex';
+          await animateZkProgress();
+        }
+
+        try {
+          let data;
+          if (zkMode) {
+            document.getElementById('zkStep1').textContent = '鉁?鐢熸垚 ECDH 瀵嗛挜...';
+            await sleep(200);
+            document.getElementById('zkStep2').textContent = '鉁?璁＄畻 Pedersen 鎵胯...';
+            await sleep(200);
+            document.getElementById('zkStep3').textContent = '鉁?Generating ZK Schnorr Proof...';
+            await sleep(200);
+            document.getElementById('zkStep4').textContent = '鉁?鏈嶅姟鍣ㄩ獙璇佷腑...';
+            data = await FIBEMATE_ZK.doZKRegister(username, password);
+          } else {
+            data = await FIBEMATE_ZK.doRegister(username, password);
+          }
+
+          if (data.displayName) {
+            localStorage.setItem('fk_displayName', data.displayName);
+          }
+          connectWebSocket();
+          showToast('娆㈣繋 ' + (data.displayName || username) + '锛屾敞鍐屾垚鍔燂紒', 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+          document.getElementById('zkProgress').style.display = 'none';
+        } finally {
+          setLoading('registerBtn', 'registerBtnText', false);
+        }
+      });
+    }
+
+    async function animateZkProgress() {
+      const steps = ['zkStep1', 'zkStep2', 'zkStep3', 'zkStep4'];
+      for (const id of steps) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '鉁?' + el.textContent.slice(2);
+        await sleep(150);
+      }
+    }
+
+    function setLoading(btnId, textId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      if (textId) {
+        const textEl = document.getElementById(textId);
+        if (textEl) textEl.textContent = loading ? '处理中...' : (btnId === 'loginBtn' ? '登录 / 注册' : '创建账号');
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    
+    
+    let ws = null;
+    let wsReconnectCount = 0;
+    let wsHeartbeatTimer = null;
+    const MAX_RECONNECT = 10;
+
+    function updateWSStatus(status, text) {
+      const dot = document.getElementById('wsStatusDot');
+      const txt = document.getElementById('wsStatusText');
+      const container = document.getElementById('wsStatus');
+      if (!dot || !txt || !container) return;
+      dot.className = 'ws-status-dot ' + status;
+      txt.textContent = text;
+      container.classList.add('show');
+    }
+
+    function connectWebSocket() {
+      const token = localStorage.getItem('fk_token');
+      if (!token) return;
+
+      
+      let wsUrl;
+      if (window.electronAPI && window.electronAPI.getWSUrl) {
+        wsUrl = window.electronAPI.getWSUrl() + '?token=' + token;
+      } else {
+        wsUrl = (localStorage.getItem('fk_ws_url') || 'ws:
+      }
+
+      try {
+        updateWSStatus('connecting', '连接中...');
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log('[WS] 宸茶繛鎺?);
+          updateWSStatus('connected', '宸茶繛鎺?);
+          wsReconnectCount = 0;
+          startHeartbeat();
+          ws.send(JSON.stringify({ type: 'presence', status: 'online' }));
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            handleWSMessage(msg);
+          } catch (e) {
+            console.error('[WS] 瑙ｆ瀽閿欒:', e);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log('[WS] 已断开');
+          updateWSStatus('disconnected', '已断开');
+          stopHeartbeat();
+          if (wsReconnectCount < MAX_RECONNECT) {
+            const delay = Math.min(1000 * Math.pow(2, wsReconnectCount), 30000);
+            wsReconnectCount++;
+            setTimeout(connectWebSocket, delay);
+          }
+        };
+
+        ws.onerror = (err) => {
+          console.error('[WS] 閿欒:', err);
+          updateWSStatus('disconnected', '閿欒');
+        };
+      } catch (err) {
+        console.error('[WS] 杩炴帴澶辫触:', err);
+        updateWSStatus('disconnected', '澶辫触');
+      }
+    }
+
+    function startHeartbeat() {
+      stopHeartbeat();
+      wsHeartbeatTimer = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ping', time: Date.now() }));
+        }
+      }, 30000);
+    }
+
+    function stopHeartbeat() {
+      if (wsHeartbeatTimer) {
+        clearInterval(wsHeartbeatTimer);
+        wsHeartbeatTimer = null;
+      }
+    }
+
+    function handleWSMessage(msg) {
+      switch (msg.type) {
+        case 'pong':
+          break;
+        case 'message':
+          if (document.hidden && Notification.permission === 'granted') {
+            new Notification('FIBEMATE', {
+              body: msg.preview || '鏂版秷鎭?,
+              icon: '/icon.png'
+            });
+          }
+          break;
+        case 'presence':
+          break;
+      }
+    }
+
+    
+    function requestNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+
+    
+      stopHeartbeat();
+      if (ws) ws.close();
+    });
+  </script>
+</body>
+</html>
+

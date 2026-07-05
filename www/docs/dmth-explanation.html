@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<title>DMTH 模型说明 — FIBEMATE LookingGlass</title>
+<style>
+  :root { --bg:#0d1117; --text:#c9d1d9; --muted:#8b949e; --green:#00d4aa; --amber:#f0c040; --red:#ff6b6b; --card:#161b22; --border:#30363d; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; line-height:1.7; max-width:880px; margin:0 auto; padding:2rem 1.5rem; }
+  h1 { color:var(--green); font-size:1.8rem; margin-bottom:0.3rem; }
+  h2 { color:var(--amber); font-size:1.3rem; margin:2rem 0 0.8rem; padding-bottom:0.3rem; border-bottom:1px solid var(--border); }
+  h3 { font-size:1.1rem; margin:1.5rem 0 0.5rem; color:#e6edf3; }
+  p { margin:0.7rem 0; }
+  .subtitle { color:var(--muted); font-size:0.9rem; margin-bottom:1.5rem; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.2rem 1.5rem; margin:1rem 0; }
+  .card-amber { border-left:3px solid var(--amber); }
+  .card-green { border-left:3px solid var(--green); }
+  ul { margin:0.5rem 0 0.5rem 1.5rem; }
+  li { margin:0.3rem 0; }
+  code { background:#1c2433; padding:0.15em 0.4em; border-radius:3px; font-size:0.9em; }
+  strong { color:#e6edf3; }
+  .eq { font-family:Georgia,serif; font-style:italic; color:var(--amber); }
+  footer { margin-top:3rem; padding-top:1rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
+  footer a { color:var(--green); }
+</style>
+</head>
+<body>
+
+<h1>DMTH 模型说明</h1>
+<p class="subtitle">深度可乘性陷门硬度 — 对 LookingGlass 的安全模型修正</p>
+
+<div class="card card-amber">
+  <p><strong>一句话：</strong>DMTH 不声称 LWE 被嵌套后变"更难解"。它声称的是——即使攻击者解开了 LWE，他们面对的不是明文，而是 <strong>d−1 层需要逆向工程的 Kronecker 嵌套结构</strong>。</p>
+</div>
+
+<h2>1. DMH 原来的声称（已被修正）</h2>
+<p>DMH（Depth-Multiplicative Hardness）声称：多层 LWE 嵌套的难度随深度 <span class="eq">d</span> 指数增长——即 <span class="eq">d=2</span> 比 <span class="eq">d=1</span> 安全，<span class="eq">d=3</span> 比 <span class="eq">d=2</span> 更安全。</p>
+<p>这个声称在 BKZ 结构分析下被证明<strong>不成立</strong>：攻击者收到的公钥是一个标准 LWE 实例（<span class="eq">A, b = A·s + e</span>），无论 <span class="eq">d</span> 是多少，BKZ 攻击的复杂度由 <span class="eq">n</span> 和 <span class="eq">q</span> 决定，与 <span class="eq">d</span> 无关。</p>
+
+<h2>2. DMTH 修正了什么</h2>
+<p>DMTH（Depth-Multiplicative <em>Trapdoor</em> Hardness）将 <strong>深度</strong> 的含义从"攻击难度"重新定义为<strong>"陷门结构复杂度"</strong>——不再声称 <span class="eq">d</span> 阻止攻击者求解 LWE，而是声称 <span class="eq">d</span> 阻止攻击者在求解 LWE <em>之后</em> 恢复明文。</p>
+
+<div class="card card-green">
+  <p><strong>类比：</strong>LWE 是一把锁——攻击者可以找到钥匙（求解 LWE）。但 DMTH 是把物品放在锁后面的一叠嵌套文件夹中——即使有钥匙，你仍然需要逐层拆解嵌套的 Kronecker 结构（<span class="eq">d−1</span> 层），才能拿到里面的东西。</p>
+</div>
+
+<h2>3. 为什么这个区分很重要</h2>
+<p>如果你声称你做了一个"更安全的锁"而实际上锁没变，那是虚假宣传。但如果你说"锁后面的箱子里还有 <span class="eq">d−1</span> 个嵌套箱，即使打开锁也得继续拆箱"——这是一个不同的、诚实的主张：</p>
+<ul>
+  <li><strong>不夸大已有的安全</strong>：LWE 的安全性由标准格归约复杂度确定</li>
+  <li><strong>诚实描述叠加的防御</strong>：Kronecker 嵌套是为攻击路径增加了一层需要逆向工程的混淆</li>
+  <li><strong>在假设被证伪后仍有价值</strong>：即使 Kronecker 嵌套被证实在多项式时间内可分解，"为什么可分解"的分析与"如何修复"的论文都代表有价值的研究</li>
+</ul>
+
+<h2>4. 当前状态</h2>
+<ul>
+  <li>DMTH 的 <strong>数学定义</strong> 已闭合——深度参数 <span class="eq">d</span> 准确定义了 Kronecker 嵌套层数</li>
+  <li>BKZ 结构分析<strong>确认</strong>：公钥在攻击者眼中是标准 LWE 实例</li>
+  <li>χ² 独立性扫描<strong>通过</strong>：7 参数（n=8/16/32, σ=1/3/5），无显著层间相关性（Cohen's w ≤ 0.258）</li>
+  <li>技术文档 v2 已生成（内部归档）</li>
+  <li>LookingGlass 在 FIBEMATE 中<strong>默认关闭</strong>（<code>ENABLE_LOOKINGGLASS=false</code>）</li>
+</ul>
+
+<p style="margin-top:1rem;color:var(--muted);">DMTH 假设目前无已知反例。它不是一个承诺——它是一个公开检验中的密码学假设，完整记录在 arXiv 预印本和 DigiCert 可信时间戳中。</p>
+
+<footer>
+  <p>最后更新：2026-06-27 · <a href="/">返回首页</a> · <a href="/docs/pqc-readiness.html">PQC Readiness →</a></p>
+</footer>
+
+</body>
+</html>

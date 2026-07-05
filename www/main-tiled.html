@@ -1,0 +1,984 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIBEMATE - 隐私增强即时通讯</title>
+  <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="animations.css">
+  <script src="double-ratchet.js" defer></script>
+  <script src="message-crypto.js" defer></script>
+  <script src="main-v3.js" defer></script>
+  <!-- 科技感背景动画 -->
+  <style>
+    /* 矩阵雪花背景 */
+    .matrix-bg {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+      overflow: hidden;
+      background: var(--bg-primary);
+    }
+    .matrix-column {
+      position: absolute;
+      top: -100%;
+      font-family: 'Courier New', 'Consolas', monospace;
+      font-size: 14px;
+      line-height: 1.3;
+      color: rgba(0, 229, 195, 0.12);
+      text-shadow: 0 0 8px rgba(0, 229, 195, 0.2);
+      animation: matrix-fall linear infinite;
+      white-space: nowrap;
+      user-select: none;
+    }
+    @keyframes matrix-fall {
+      0% { transform: translateY(0); opacity: 0; }
+      5% { opacity: 1; }
+      95% { opacity: 0.2; }
+      100% { transform: translateY(120vh); opacity: 0; }
+    }
+    /* 扫描线效果 */
+    .scanline {
+      position: fixed;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 229, 195, 0.015) 2px,
+        rgba(0, 229, 195, 0.015) 4px
+      );
+    }
+    /* 粒子效果 */
+    .particle {
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(0, 229, 195, 0.3);
+      border-radius: 50%;
+      box-shadow: 0 0 6px rgba(0, 229, 195, 0.4);
+      animation: particle-float linear infinite;
+    }
+    @keyframes particle-float {
+      0%, 100% { transform: translate(0, 0); opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 0.5; }
+      100% { transform: translate(var(--tx), var(--ty)); opacity: 0; }
+    }
+    /* 内容层 */
+    .app-container {
+      position: relative;
+      z-index: 2;
+    }
+    
+    /* 平铺布局样式 */
+    .tiled-layout {
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      grid-template-rows: 60px 1fr;
+      gap: 12px;
+      padding: 12px;
+      height: 100vh;
+      box-sizing: border-box;
+    }
+    
+    .tile {
+      background: rgba(19, 19, 26, 0.85);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 229, 195, 0.1);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .tile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(0, 229, 195, 0.08);
+      background: rgba(0, 229, 195, 0.03);
+    }
+    
+    .tile-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .tile-title svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .tile-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    
+    .tile-content::-webkit-scrollbar {
+      width: 4px;
+    }
+    .tile-content::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .tile-content::-webkit-scrollbar-thumb {
+      background: var(--border-subtle);
+      border-radius: 2px;
+    }
+    
+    /* 顶部状态栏 */
+    .status-bar {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      background: rgba(19, 19, 26, 0.9);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(0, 229, 195, 0.1);
+      border-radius: 12px;
+    }
+    
+    .status-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      color: var(--text-primary);
+    }
+    
+    .status-brand svg {
+      width: 24px;
+      height: 24px;
+      color: var(--accent);
+      filter: drop-shadow(0 0 6px var(--accent-glow));
+    }
+    
+    .status-user {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
+    .status-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    
+    .status-info {
+      text-align: right;
+    }
+    
+    .status-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .status-text {
+      font-size: 11px;
+      color: var(--text-secondary);
+    }
+    
+    /* 消息区域 */
+    .messages-tile {
+      grid-row: 2;
+      grid-column: 2;
+    }
+    
+    /* 侧边栏 */
+    .sidebar-tile {
+      grid-row: 2;
+    }
+    
+    /* 设置导航 */
+    .settings-nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 13px;
+      color: var(--text-secondary);
+      background: none;
+      border: none;
+      width: 100%;
+      text-align: left;
+    }
+    .settings-nav-item:hover {
+      background: rgba(0, 229, 195, 0.08);
+      color: var(--text-primary);
+    }
+    .settings-nav-item.active {
+      background: rgba(0, 229, 195, 0.12);
+      color: var(--accent);
+    }
+    .settings-nav-item svg {
+      width: 18px;
+      height: 18px;
+      opacity: 0.7;
+    }
+    .settings-nav-item.active svg {
+      opacity: 1;
+    }
+    
+    /* 设置内容区 */
+    .settings-content {
+      display: none;
+      padding: 16px;
+      animation: fadeIn 0.2s ease;
+    }
+    .settings-content.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .settings-section {
+      margin-bottom: 20px;
+    }
+    .settings-section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid rgba(0, 229, 195, 0.08);
+    }
+    .settings-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.03);
+    }
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+    .settings-item-info {
+      flex: 1;
+    }
+    .settings-item-title {
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .settings-item-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .settings-item-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    /* 开关 */
+    .toggle-switch {
+      width: 40px;
+      height: 22px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 11px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .toggle-switch.active {
+      background: var(--accent);
+    }
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      background: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.3s;
+    }
+    .toggle-switch.active::after {
+      transform: translateX(18px);
+    }
+    /* 下拉选择 */
+    .settings-select {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0, 229, 195, 0.15);
+      border-radius: 6px;
+      padding: 6px 12px;
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+      outline: none;
+    }
+    .settings-select:focus {
+      border-color: var(--accent);
+    }
+    /* 按钮 */
+    .settings-btn {
+      background: rgba(0, 229, 195, 0.1);
+      border: 1px solid rgba(0, 229, 195, 0.2);
+      border-radius: 6px;
+      padding: 6px 14px;
+      color: var(--accent);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .settings-btn:hover {
+      background: rgba(0, 229, 195, 0.2);
+    }
+    
+    /* 响应式 */
+    @media (max-width: 1200px) {
+      .tiled-layout {
+        grid-template-columns: 260px 1fr;
+        grid-template-rows: 60px 1fr 1fr;
+      }
+      .messages-tile {
+        grid-column: 2;
+        grid-row: 2 / 4;
+      }
+      .sidebar-tile:nth-child(3) {
+        grid-column: 1;
+        grid-row: 3;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .tiled-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+      .tile {
+        min-height: 300px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- 科技感背景 -->
+  <div class="matrix-bg" id="matrixBg"></div>
+  <div class="scanline"></div>
+  
+  <div class="app-container">
+    <div class="tiled-layout">
+      <!-- 顶部状态栏 -->
+      <div class="status-bar">
+        <div class="status-brand">
+          <svg viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L20 6V11C20 16 16 20 12 22C8 20 4 16 4 11V6L12 2Z"
+                  stroke="currentColor" stroke-width="1.5" fill="none"/>
+          </svg>
+          FIBEMATE
+        </div>
+        <div class="status-user">
+          <div class="status-info">
+            <div class="status-name" id="userName">User</div>
+            <div class="status-text">
+              <span style="color: var(--success);">●</span> Online
+            </div>
+          </div>
+          <div class="status-avatar" id="userAvatar">U</div>
+          <button class="btn-exit" onclick="if(confirm('退出登录？')){localStorage.clear();window.location.href='index.html';}">退出</button>
+        </div>
+      </div>
+      
+      <!-- 联系人面板 -->
+      <div class="tile sidebar-tile">
+        <div class="tile-header">
+          <div class="tile-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            Contacts
+          </div>
+          <button class="icon-btn" title="Add contact">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
+          </button>
+        </div>
+        <div class="tile-content">
+          <div class="search-bar" style="margin-bottom: 8px;">
+            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+            </svg>
+            <input type="text" placeholder="Search contacts...">
+          </div>
+          <div id="contactList">
+            <div class="empty-state">
+              <svg viewBox="0 0 64 64" fill="none">
+                <circle cx="32" cy="24" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                <path d="M16 52c0-9 7-16 16-16s16 7 16 16" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              </svg>
+              <p>No contacts yet</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 消息面板 -->
+      <div class="tile messages-tile">
+        <div class="tile-header">
+          <div class="tile-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+            </svg>
+            Messages
+          </div>
+          <div style="display: flex; gap: 8px;">
+            <button class="icon-btn" title="Voice call">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+              </svg>
+            </button>
+            <button class="icon-btn" title="New chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="tile-content" id="messagesList">
+          <div class="chat-empty" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <div class="hex-glow">
+              <svg viewBox="0 0 64 72" fill="none">
+                <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+                      stroke="currentColor" stroke-width="1.5" fill="none"/>
+              </svg>
+            </div>
+            <h3 style="margin-top: 20px; color: var(--text-secondary);">Select a conversation</h3>
+            <p style="color: var(--text-muted); font-size: 13px;">Choose from your contacts or start a new one</p>
+          </div>
+        </div>
+        <div class="chat-input-bar" style="border-top: 1px solid rgba(0, 229, 195, 0.08); padding: 12px;">
+          <button class="icon-btn" title="Attach file">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+            </svg>
+          </button>
+          <input type="text" placeholder="Type a message..." style="flex: 1; margin: 0 8px;">
+          <button class="icon-btn send-btn" title="Send">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      <!-- 保险库面板 -->
+      <div class="tile sidebar-tile">
+        <div class="tile-header">
+          <div class="tile-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Vault
+          </div>
+          <button class="icon-btn" title="Upload">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/>
+            </svg>
+          </button>
+        </div>
+        <div class="tile-content">
+          <div class="empty-state">
+            <svg viewBox="0 0 64 64" fill="none">
+              <rect x="12" y="24" width="40" height="32" rx="4" stroke="currentColor" stroke-width="1.5" fill="none"/>
+              <path d="M12 32h40" stroke="currentColor" stroke-width="1.5"/>
+              <circle cx="32" cy="42" r="4" stroke="currentColor" stroke-width="1.5" fill="none"/>
+            </svg>
+            <p>Vault is empty</p>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 密钥面板 -->
+      <div class="tile sidebar-tile" style="grid-column: 1; grid-row: 3;">
+        <div class="tile-header">
+          <div class="tile-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+            </svg>
+            Keys
+          </div>
+        </div>
+        <div class="tile-content">
+          <div id="keyCards" style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="padding: 12px; background: rgba(0, 229, 195, 0.05); border-radius: 8px; border: 1px solid rgba(0, 229, 195, 0.1);">
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Identity Key</div>
+              <div style="font-size: 11px; color: var(--accent); font-family: monospace;">P-256 • Active</div>
+            </div>
+            <div style="padding: 12px; background: rgba(0, 229, 195, 0.05); border-radius: 8px; border: 1px solid rgba(0, 229, 195, 0.1);">
+              <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 4px;">Signed PreKey</div>
+              <div style="font-size: 11px; color: var(--accent); font-family: monospace;">P-256 • Active</div>
+            </div>
+          </div>
+          <div style="margin-top: 12px; display: flex; gap: 8px;">
+            <button class="btn-primary" style="flex: 1; padding: 8px; font-size: 12px;">Rotate</button>
+            <button class="btn-secondary" style="flex: 1; padding: 8px; font-size: 12px;">Export</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 设置面板 -->
+      <div class="tile sidebar-tile" style="grid-column: 3; grid-row: 3;">
+        <div class="tile-header">
+          <div class="tile-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="3"/>
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Settings
+          </div>
+        </div>
+        <div class="tile-content" style="padding: 0;">
+          <!-- 设置导航 -->
+          <div class="settings-nav" style="display: flex; flex-direction: column; gap: 2px; padding: 8px;">
+            <button class="settings-nav-item active" data-setting="account">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span>账号与安全</span>
+            </button>
+            <button class="settings-nav-item" data-setting="privacy">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+              <span>隐私</span>
+            </button>
+            <button class="settings-nav-item" data-setting="notifications">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span>通知</span>
+            </button>
+            <button class="settings-nav-item" data-setting="appearance">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+              <span>外观</span>
+            </button>
+            <button class="settings-nav-item" data-setting="chat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              <span>聊天</span>
+            </button>
+            <button class="settings-nav-item" data-setting="voice">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
+              <span>语音和视频</span>
+            </button>
+            <button class="settings-nav-item" data-setting="storage">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              <span>存储</span>
+            </button>
+            <button class="settings-nav-item" data-setting="help">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span>帮助</span>
+            </button>
+            <button class="settings-nav-item" data-setting="about">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              <span>关于</span>
+            </button>
+          </div>
+          
+          <!-- 设置内容区 -->
+          <div class="settings-panels" style="border-top: 1px solid rgba(0, 229, 195, 0.08);">
+            <!-- 账号与安全 -->
+            <div class="settings-content active" data-panel="account">
+              <div class="settings-section">
+                <div class="settings-section-title">账号信息</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">用户名</div>
+                    <div class="settings-item-desc">你的唯一标识</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <span id="settingUsername" style="font-size: 12px; color: var(--text-secondary);">-</span>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">显示名称</div>
+                    <div class="settings-item-desc">其他人看到的名字</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <button class="settings-btn">修改</button>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">密码</div>
+                    <div class="settings-item-desc">定期更换更安全</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <button class="settings-btn">更改</button>
+                  </div>
+                </div>
+              </div>
+              <div class="settings-section">
+                <div class="settings-section-title">安全</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">端到端加密</div>
+                    <div class="settings-item-desc">消息仅你和接收方可读</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch active" data-toggle="e2ee"></div>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">双重验证</div>
+                    <div class="settings-item-desc">登录时需要额外验证</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch" data-toggle="2fa"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 隐私 -->
+            <div class="settings-content" data-panel="privacy">
+              <div class="settings-section">
+                <div class="settings-section-title">隐私设置</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">在线状态</div>
+                    <div class="settings-item-desc">允许他人看到你是否在线</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch active" data-toggle="online"></div>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">已读回执</div>
+                    <div class="settings-item-desc">发送已读状态给联系人</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch active" data-toggle="read"></div>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">截屏检测</div>
+                    <div class="settings-item-desc">检测对方是否截屏</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch" data-toggle="screenshot"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 通知 -->
+            <div class="settings-content" data-panel="notifications">
+              <div class="settings-section">
+                <div class="settings-section-title">消息通知</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">桌面通知</div>
+                    <div class="settings-item-desc">接收新消息时显示通知</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch active" data-toggle="desktop"></div>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">声音</div>
+                    <div class="settings-item-desc">新消息提示音</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch active" data-toggle="sound"></div>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">勿扰模式</div>
+                    <div class="settings-item-desc">暂停所有通知</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch" data-toggle="dnd"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 外观 -->
+            <div class="settings-content" data-panel="appearance">
+              <div class="settings-section">
+                <div class="settings-section-title">主题</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">颜色主题</div>
+                    <div class="settings-item-desc">选择界面配色</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <select class="settings-select">
+                      <option>深色</option>
+                      <option>浅色</option>
+                      <option>跟随系统</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">强调色</div>
+                    <div class="settings-item-desc">界面高亮颜色</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <select class="settings-select">
+                      <option>青色</option>
+                      <option>蓝色</option>
+                      <option>紫色</option>
+                      <option>绿色</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 聊天 -->
+            <div class="settings-content" data-panel="chat">
+              <div class="settings-section">
+                <div class="settings-section-title">聊天设置</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">回车发送</div>
+                    <div class="settings-item-desc">按回车键发送消息</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch active" data-toggle="enter"></div>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">自动下载</div>
+                    <div class="settings-item-desc">自动下载接收的文件</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <div class="toggle-switch" data-toggle="autodl"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 语音和视频 -->
+            <div class="settings-content" data-panel="voice">
+              <div class="settings-section">
+                <div class="settings-section-title">通话设置</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">默认摄像头</div>
+                    <div class="settings-item-desc">视频通话使用的设备</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <select class="settings-select">
+                      <option>系统默认</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">默认麦克风</div>
+                    <div class="settings-item-desc">语音通话使用的设备</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <select class="settings-select">
+                      <option>系统默认</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 存储 -->
+            <div class="settings-content" data-panel="storage">
+              <div class="settings-section">
+                <div class="settings-section-title">存储管理</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">缓存大小</div>
+                    <div class="settings-item-desc">当前使用的存储空间</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <span style="font-size: 12px; color: var(--text-secondary);">12.5 MB</span>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">清理缓存</div>
+                    <div class="settings-item-desc">删除临时文件释放空间</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <button class="settings-btn">清理</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 帮助 -->
+            <div class="settings-content" data-panel="help">
+              <div class="settings-section">
+                <div class="settings-section-title">支持</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">使用文档</div>
+                    <div class="settings-item-desc">查看功能使用说明</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <button class="settings-btn">打开</button>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">反馈问题</div>
+                    <div class="settings-item-desc">向我们报告 bug 或建议</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <button class="settings-btn">反馈</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- 关于 -->
+            <div class="settings-content" data-panel="about">
+              <div class="settings-section">
+                <div class="settings-section-title">关于 FIBEMATE</div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">版本</div>
+                    <div class="settings-item-desc">当前版本号</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <span style="font-size: 12px; color: var(--text-secondary);">2.0.0</span>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">构建时间</div>
+                    <div class="settings-item-desc">版本编译日期</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <span style="font-size: 12px; color: var(--text-secondary);">2026-04-29</span>
+                  </div>
+                </div>
+                <div class="settings-item">
+                  <div class="settings-item-info">
+                    <div class="settings-item-title">使用条款</div>
+                    <div class="settings-item-desc">MIT License</div>
+                  </div>
+                  <div class="settings-item-control">
+                    <button class="settings-btn">查看</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 背景动画初始化 -->
+  <script>
+    (function() {
+      const bg = document.getElementById('matrixBg');
+      const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン!@#$%^&*()_+-=[]{}|;:,.<>?/~`ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+      const colCount = Math.floor(window.innerWidth / 20);
+      
+      // 创建矩阵列
+      for (let i = 0; i < colCount; i++) {
+        const col = document.createElement('div');
+        col.className = 'matrix-column';
+        col.style.left = (i * 20 + Math.random() * 10) + 'px';
+        col.style.animationDuration = (8 + Math.random() * 15) + 's';
+        col.style.animationDelay = (Math.random() * 10) + 's';
+        
+        let text = '';
+        const len = 20 + Math.floor(Math.random() * 30);
+        for (let j = 0; j < len; j++) {
+          text += chars[Math.floor(Math.random() * chars.length)] + '<br>';
+        }
+        col.innerHTML = text;
+        bg.appendChild(col);
+      }
+      
+      // 创建浮动粒子
+      for (let i = 0; i < 30; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = Math.random() * 100 + '%';
+        p.style.top = Math.random() * 100 + '%';
+        p.style.setProperty('--tx', (Math.random() * 200 - 100) + 'px');
+        p.style.setProperty('--ty', (Math.random() * 200 - 100) + 'px');
+        p.style.animationDuration = (10 + Math.random() * 20) + 's';
+        p.style.animationDelay = (Math.random() * 10) + 's';
+        bg.appendChild(p);
+      }
+    })();
+  </script>
+  
+  <!-- 设置面板交互 -->
+  <script>
+    (function() {
+      // 设置导航切换
+      const navItems = document.querySelectorAll('.settings-nav-item');
+      const panels = document.querySelectorAll('.settings-content');
+      
+      navItems.forEach(item => {
+        item.addEventListener('click', function() {
+          const target = this.dataset.setting;
+          
+          // 切换导航激活状态
+          navItems.forEach(n => n.classList.remove('active'));
+          this.classList.add('active');
+          
+          // 切换内容面板
+          panels.forEach(p => {
+            if (p.dataset.panel === target) {
+              p.classList.add('active');
+            } else {
+              p.classList.remove('active');
+            }
+          });
+        });
+      });
+      
+      // 开关切换
+      const toggles = document.querySelectorAll('.toggle-switch');
+      toggles.forEach(toggle => {
+        toggle.addEventListener('click', function() {
+          this.classList.toggle('active');
+        });
+      });
+      
+      // 加载用户名
+      const username = localStorage.getItem('fk_uname') || localStorage.getItem('fibemate_username') || '-';
+      const usernameEl = document.getElementById('settingUsername');
+      if (usernameEl) usernameEl.textContent = username;
+    })();
+  </script>
+</body>
+</html>

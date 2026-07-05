@@ -1,0 +1,118 @@
+{
+  "experiment": "TVLA Experiment #3: Re-run Original TVLA (Improved Method)",
+  "timestamp": "2026-06-03T17:10:33.145Z",
+  "method": "Interleaved A/B + 2000-iter warmup",
+  "params": {
+    "N": 10000,
+    "WARMUP": 2000,
+    "THRESH": 4.5
+  },
+  "results": [
+    {
+      "name": "generateKeypair",
+      "tStat": 0.40060745013077803,
+      "mA": 1801.200975799999,
+      "mB": 1803.4240487999882,
+      "vA": 151834.3323556834,
+      "vB": 156108.00709385396,
+      "cvA": 21.633302270705165,
+      "cvB": 21.9086053866482,
+      "passed": true
+    },
+    {
+      "name": "encapsulate",
+      "tStat": 0.4661195533679511,
+      "mA": 2457.516948499999,
+      "mB": 2453.1106480999915,
+      "vA": 553069.8930097739,
+      "vB": 340551.5070020356,
+      "cvA": 30.261711543395638,
+      "cvB": 23.788894792367962,
+      "passed": true
+    },
+    {
+      "name": "decapsulate",
+      "tStat": 0.44449842394662437,
+      "mA": 3222.0491127999903,
+      "mB": 3216.838970299995,
+      "vA": 1023693.8496764643,
+      "vB": 350217.63035400875,
+      "cvA": 31.401680540804723,
+      "cvB": 18.396689620156906,
+      "passed": true
+    },
+    {
+      "name": "byteEncode",
+      "tStat": 64.44542611570202,
+      "mA": 20.67999039999985,
+      "mB": 927.2999008000025,
+      "vA": 1907.2502320387139,
+      "vB": 1977186.2187918534,
+      "cvA": 211.18035003158613,
+      "cvB": 151.63643796894718,
+      "passed": false
+    },
+    {
+      "name": "byteDecode",
+      "tStat": 65.67924510773338,
+      "mA": 12.478766399999937,
+      "mB": 921.1136415999971,
+      "vA": 2618.0538872567445,
+      "vB": 1911296.29628343,
+      "cvA": 410.03189071252325,
+      "cvB": 150.0896672962512,
+      "passed": false
+    },
+    {
+      "name": "compress",
+      "tStat": 104.03424884890853,
+      "mA": 61.48101189999989,
+      "mB": 900.466780200002,
+      "vA": 111325.88888005729,
+      "vB": 539038.1452886164,
+      "cvA": 542.6965727120934,
+      "cvB": 81.53462049353062,
+      "passed": false
+    },
+    {
+      "name": "decompress",
+      "tStat": 106.27892774936772,
+      "mA": 74.01184700000017,
+      "mB": 1214.6018522999989,
+      "vA": 191086.59630390472,
+      "vB": 960680.8382952954,
+      "cvA": 590.6277799548725,
+      "cvB": 80.6966721247196,
+      "passed": false
+    },
+    {
+      "name": "polyMul",
+      "tStat": 0,
+      "mA": 0,
+      "mB": 0,
+      "vA": 0,
+      "vB": 0,
+      "cvA": null,
+      "cvB": null,
+      "passed": true
+    },
+    {
+      "name": "matVecMul",
+      "tStat": 0,
+      "mA": 0,
+      "mB": 0,
+      "vA": 0,
+      "vB": 0,
+      "cvA": null,
+      "cvB": null,
+      "passed": true
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 4,
+    "skipped": 0,
+    "total": 9
+  },
+  "conclusion": "Some operations still FAIL — see analysis (likely input-dependent but not exploitable per Exp #2/#4)"
+}

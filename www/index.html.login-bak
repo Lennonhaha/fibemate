@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIBEMATE - 安全隐私加密系统</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="double-ratchet.js"></script>
+  <script src="message-crypto.js"></script>
+  <script src="crypto/ml-kem-768.js"></script>
+  <script src="crypto/pq-integration.js"></script>
+  <script src="zk-auth.js?v=10"></script>
+  <!-- ZK-SNARKs (Groth16 + Circom) - replaces zk-auth for true ZK -->
+  <script src="https://unpkg.com/snarkjs@0.7.5/build/snarkjs.min.js"></script>
+  <script src="https://unpkg.com/circomlibjs@0.1.7/circomlib.js"></script>
+  <script src="zk-snarks.js?v=1"></script>
+  <!-- 隐私功能层 -->
+  <script src="privacy-layers/burn-after-read.js"></script>
+  <script src="privacy-layers/screenshot-detector.js"></script>
+  <script src="privacy-layers/key-rotation.js"></script>
+  <script src="privacy-layers/device-binding.js"></script>
+  <script src="privacy-layers/offline-messages.js"></script>
+  <script src="privacy-layers/encrypted-file-transfer.js"></script>
+  <script src="privacy-layers/safety-numbers.js"></script>
+  <script src="privacy-layers/mixnet-router.js"></script>
+  <script src="privacy-layers/sphinx-packet.js"></script>
+  <script src="privacy-layers/pir-search.js"></script>
+  <script src="privacy-layers/index.js"></script>
+  <style>
+    /* 主题变量（供 WebSocket / 主题切换按钮使用） */
+    :root {
+      --bg-primary: #0a0a0f;
+      --text-secondary: #888;
+      --accent: #00E5C3;
+      --border: #333;
+    }
+    [data-theme="light"] {
+      --bg-primary: #f5f5f5;
+      --text-secondary: #666;
+      --accent: #00B4A0;
+      --border: #e0e0e0;
+    }
+    /* WebSocket 状态指示器 */
+    .ws-status {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(0,0,0,0.7);
+      border-radius: 12px;
+      font-size: 11px;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    .ws-status.show { opacity: 1; }
+    .ws-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #666;
+    }
+    .ws-status-dot.connecting { background: #FFC107; animation: pulse 1s infinite; }
+    .ws-status-dot.connected { background: #00E5C3; }
+    .ws-status-dot.disconnected { background: #FF5252; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  </style>
+</head>
+<body>
+  <!-- 调试区域 -->
+  <div id="debugLog" style="position:fixed;bottom:5px;left:5px;background:#111;background:rgba(0,0,0,0.9);color:#0f0;font-size:11px;font-family:monospace;padding:8px;max-height:200px;overflow-y:auto;z-index:99999;display:none;pointer-events:none;border:1px solid #333;max-width:400px;"></div>
+  <!-- debugLog 默认隐藏，按 Ctrl+Shift+D 切换显示 -->
+
+  <!-- WebSocket 状态指示器 -->
+  <div class="ws-status" id="wsStatus">
+    <div class="ws-status-dot" id="wsStatusDot"></div>
+    <span id="wsStatusText">未连接</span>
+  </div>
+
+  <!-- 登录页面主容器 -->
+  <div class="login-wrapper">
+    <!-- 原有背景效果（暗绿色蜂窝状背景） -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+
+    <!-- 中央登录卡片 -->
+    <div class="login-card">
+      <!-- Logo 区域 - 登录注册切换 -->
+      <div class="logo-area">
+        <div class="shield-logo">
+          <svg viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00E5C3"/>
+                <stop offset="100%" style="stop-color:#00B4A0"/>
+              </linearGradient>
+              <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:rgba(0,229,195,0.15)"/>
+                <stop offset="100%" style="stop-color:rgba(0,180,160,0.08)"/>
+              </linearGradient>
+            </defs>
+            <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+                  stroke="url(#shieldGrad)" stroke-width="2" fill="url(#shieldFill)"/>
+            <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z"
+                  stroke="url(#shieldGrad)" stroke-width="1" fill="none" opacity="0.4"/>
+            <circle cx="32" cy="32" r="6" stroke="url(#shieldGrad)" stroke-width="1.5" fill="none"/>
+            <path d="M32 38V48" stroke="url(#shieldGrad)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M32 8L52 17V22" stroke="url(#shieldGrad)" stroke-width="0.5" opacity="0.3"/>
+          </svg>
+        </div>
+        <h1 class="brand-name">FIBEMATE</h1>
+        <p class="brand-sub">Security-First Messaging · End-to-End Encryption</p>
+      </div>
+
+      <!-- 安全徽章 -->
+      <div class="security-badge">
+        <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+          <path d="M5 1L9 2.5V6C9 8.5 7 10.5 5 11.5C3 10.5 1 8.5 1 6V2.5L5 1Z"
+                stroke="currentColor" stroke-width="1" fill="none"/>
+        </svg>
+        <span>端对端加密 · 零知识证明</span>
+      </div>
+
+      <!-- 登录表单 -->
+      <form class="login-form" id="loginForm">
+        <div class="input-group">
+          <input
+            type="text"
+            id="username"
+            placeholder="用户名"
+            spellcheck="false"
+            required
+          >
+        </div>
+        <div class="input-group">
+          <input
+            type="password"
+            id="password"
+            placeholder="密码"
+            required
+          >
+        </div>
+
+        <button type="submit" class="btn-primary" id="loginBtn">
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="none" style="margin-right:6px">
+            <rect x="2" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <path d="M4 7V5C4 3.34 5.34 2 7 2C8.66 2 10 3.34 10 5V7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <circle cx="7" cy="11" r="1" fill="currentColor"/>
+          </svg>
+          <span id="loginBtnText">登录 · 注册</span>
+        </button>
+
+        <!-- ZK 匿名登录按钮 -->
+        <button type="button" class="btn-secondary" id="zkLoginBtn">
+          <svg width="12" height="14" viewBox="0 0 12 14" fill="none" style="margin-right:6px">
+            <path d="M6 1L11 3V7C11 10 8.5 12.5 6 13.5C3.5 12.5 1 10 1 7V3L6 1Z"
+                  stroke="currentColor" stroke-width="1" fill="none"/>
+          </svg>
+          匿名登录 · 零知识证明
+        </button>
+
+        <div id="loginError" class="error-msg" style="display:none"></div>
+      </form>
+
+      <!-- 分隔线 -->
+      <div class="divider">
+        <span></span>
+        <span class="divider-text">或</span>
+        <span></span>
+      </div>
+
+      <!-- 注册入口 -->
+      <p class="register-link">
+        还没有账号？ <a href="#" id="goRegister">立即注册 →</a>
+      </p>
+
+      <!-- 底部安全标识 -->
+      <div class="footer-badge">
+        <svg width="8" height="10" viewBox="0 0 8 10" fill="none">
+          <path d="M4 1L7 2V5C7 7 5.5 8.5 4 9.5C2.5 8.5 1 7 1 5V2L4 1Z"
+                stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.5"/>
+        </svg>
+        <span>零知识 · 隐私至上</span>
+      </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div class="toast" id="toast" style="display:none"></div>
+  </div>
+
+  <!-- 注册页面（隐藏） -->
+  <div class="register-wrapper" id="registerView" style="display:none">
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+    <div class="login-card">
+      <div class="logo-area">
+        <div class="shield-logo">
+          <svg viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="shieldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00E5C3"/>
+                <stop offset="100%" style="stop-color:#00B4A0"/>
+              </linearGradient>
+              <linearGradient id="shieldFill2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:rgba(0,229,195,0.15)"/>
+                <stop offset="100%" style="stop-color:rgba(0,180,160,0.08)"/>
+              </linearGradient>
+            </defs>
+            <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+                  stroke="url(#shieldGrad2)" stroke-width="2" fill="url(#shieldFill2)"/>
+            <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z"
+                  stroke="url(#shieldGrad2)" stroke-width="1" fill="none" opacity="0.4"/>
+            <circle cx="32" cy="32" r="6" stroke="url(#shieldGrad2)" stroke-width="1.5" fill="none"/>
+            <path d="M32 38V48" stroke="url(#shieldGrad2)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 class="brand-name">FIBEMATE</h1>
+        <p class="brand-sub">创建账号</p>
+      </div>
+
+      <!-- ZK 证明可视化进度条 -->
+      <div class="zk-badge" id="zkProgress" style="display:none">
+        <span class="zk-step" id="zkStep1">计算 Poseidon 哈希...</span>
+        <span class="zk-step" id="zkStep2">生成 Groth16 证明中...</span>
+        <span class="zk-step" id="zkStep3">验证零知识证明...</span>
+        <span class="zk-step" id="zkStep4">服务器验证中...</span>
+      </div>
+
+      <!-- 注册表单 -->
+      <form class="login-form" id="registerForm">
+        <div class="input-group">
+          <input type="text" id="regUsername" placeholder="用户名" autocomplete="username" spellcheck="false" required>
+        </div>
+        <div class="input-group">
+          <input type="password" id="regPassword" placeholder="密码（至少8位）" autocomplete="new-password" required>
+        </div>
+        <div class="input-group">
+          <input type="password" id="regPasswordConfirm" placeholder="确认密码" autocomplete="new-password" required>
+        </div>
+
+        <!-- ZK 匿名注册选项 -->
+        <div class="zk-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" id="zkMode">
+            <span class="toggle-switch"></span>
+            <span>ZK 匿名注册（推荐）</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary" id="registerBtn">
+          <span id="registerBtnText">创建账号</span>
+        </button>
+        <div id="registerError" class="error-msg" style="display:none"></div>
+        <button type="button" class="btn-text" id="goLogin">已有账号？立即登录 →</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ================================================
+    // 登录 / 注册逻辑
+    // ================================================
+
+    // 如果已登录，则直接跳转
+    document.addEventListener('DOMContentLoaded', () => {
+      requestNotificationPermission();
+
+      // 自动跳转：已登录用户直接进入主界面
+      if (FIBEMATE_ZK && FIBEMATE_ZK.isLoggedIn()) {
+        window.location.href = 'main.html';
+        return;
+      }
+      initLoginForm();
+      initRegisterForm();
+    });
+
+    function initLoginForm() {
+      const form = document.getElementById('loginForm');
+      const zkBtn = document.getElementById('zkLoginBtn');
+      const errorEl = document.getElementById('loginError');
+
+      // 标准登录
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) return;
+
+        setLoading('loginBtn', 'loginBtnText', true);
+        errorEl.style.display = 'none';
+
+        try {
+          const data = await FIBEMATE_ZK.doLogin(username, password);
+          if (data.displayName) {
+            localStorage.setItem('fk_displayName', data.displayName);
+          }
+          connectWebSocket();
+          showToast('登录成功，正在跳转...', 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+        } finally {
+          setLoading('loginBtn', 'loginBtnText', false);
+        }
+      });
+
+      // ZK 匿名登录
+      zkBtn.addEventListener('click', async () => {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) {
+          errorEl.textContent = '请先输入用户名和密码';
+          errorEl.style.display = 'block';
+          return;
+        }
+        setLoading('zkLoginBtn', null, true);
+        errorEl.style.display = 'none';
+
+        try {
+          showToast('ZK Proof: verify identity without revealing it...', 'info');
+          await sleep(300);
+          const data = await FIBEMATE_ZK.doZKLogin();
+          if (data.displayName) {
+            localStorage.setItem('fk_displayName', data.displayName);
+          }
+          connectWebSocket();
+          showToast('欢迎 ' + (data.displayName || username) + '，ZK 认证成功！', 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+        } finally {
+          setLoading('zkLoginBtn', null, false);
+        }
+      });
+
+      // 注册入口
+      document.getElementById('goRegister').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelector('.login-wrapper').style.display = 'none';
+        document.getElementById('registerView').style.display = 'flex';
+      });
+    }
+
+    function initRegisterForm() {
+      const form = document.getElementById('registerForm');
+      const errorEl = document.getElementById('registerError');
+      const zkModeEl = document.getElementById('zkMode');
+
+      // 返回登录
+      document.getElementById('goLogin').addEventListener('click', () => {
+        document.getElementById('registerView').style.display = 'none';
+        document.querySelector('.login-wrapper').style.display = 'flex';
+      });
+
+      // 注册提交
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+        const zkMode = zkModeEl.checked;
+
+        errorEl.style.display = 'none';
+
+        if (!username || !password) {
+          errorEl.textContent = '请填写所有字段';
+          errorEl.style.display = 'block';
+          return;
+        }
+        if (password.length < 8) {
+          errorEl.textContent = '密码至少8位';
+          errorEl.style.display = 'block';
+          return;
+        }
+        if (password !== passwordConfirm) {
+          errorEl.textContent = '两次密码不一致';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        setLoading('registerBtn', 'registerBtnText', true);
+
+        // ZK 匿名化进度动画
+        if (zkMode) {
+          document.getElementById('zkProgress').style.display = 'flex';
+          await animateZkProgress();
+        }
+
+        try {
+          let data;
+          if (zkMode) {
+            document.getElementById('zkStep1').textContent = '✓ 计算 Poseidon 哈希...';
+            await sleep(200);
+            document.getElementById('zkStep2').textContent = '✓ 生成 Groth16 ZK-SNARKs 证明...';
+            await sleep(200);
+            document.getElementById('zkStep3').textContent = '✓ 验证零知识证明完整性...';
+            await sleep(200);
+            document.getElementById('zkStep4').textContent = '✓ 服务器 Groth16 验证中...';
+            data = await FIBEMATE_ZK.doZKRegister(username, password);
+          } else {
+            data = await FIBEMATE_ZK.doRegister(username, password);
+          }
+
+          if (data.displayName) {
+            localStorage.setItem('fk_displayName', data.displayName);
+          }
+          connectWebSocket();
+          showToast('欢迎 ' + (data.displayName || username) + '，注册成功！', 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+          document.getElementById('zkProgress').style.display = 'none';
+        } finally {
+          setLoading('registerBtn', 'registerBtnText', false);
+        }
+      });
+    }
+
+    async function animateZkProgress() {
+      const steps = ['zkStep1', 'zkStep2', 'zkStep3', 'zkStep4'];
+      for (const id of steps) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '✓ ' + el.textContent.slice(2);
+        await sleep(150);
+      }
+    }
+
+    function setLoading(btnId, textId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      if (textId) {
+        const textEl = document.getElementById(textId);
+        if (textEl) textEl.textContent = loading ? '处理中...' : (btnId === 'loginBtn' ? '登录 · 注册' : '创建账号');
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.className = 'toast ' + type;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    // ================================================
+    // WebSocket 连接（登录后自动连接）
+    // ================================================
+    let ws = null;
+    let wsReconnectCount = 0;
+    let wsHeartbeatTimer = null;
+    const MAX_RECONNECT = 10;
+
+    function updateWSStatus(status, text) {
+      const dot = document.getElementById('wsStatusDot');
+      const txt = document.getElementById('wsStatusText');
+      const container = document.getElementById('wsStatus');
+      if (!dot || !txt || !container) return;
+      dot.className = 'ws-status-dot ' + status;
+      txt.textContent = text;
+      container.classList.add('show');
+    }
+
+    function connectWebSocket() {
+      const token = localStorage.getItem('fk_token');
+      if (!token) return;
+
+      // 优先使用 Electron 原生 API（若可用），否则使用 WebSocket
+      let wsUrl;
+      if (window.electronAPI && window.electronAPI.getWSUrl) {
+        wsUrl = window.electronAPI.getWSUrl() + '?token=' + token;
+      } else {
+        wsUrl = (localStorage.getItem('fk_ws_url') || 'wss://fibemate.cpolar.top/ws') + '?token=' + token;
+      }
+
+      try {
+        updateWSStatus('connecting', '连接中...');
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log('[WS] 已连接');
+          updateWSStatus('connected', '已连接');
+          wsReconnectCount = 0;
+          startHeartbeat();
+          ws.send(JSON.stringify({ type: 'presence', status: 'online' }));
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            handleWSMessage(msg);
+          } catch (e) {
+            console.error('[WS] 解析错误:', e);
+          }
+        };
+
+        ws.onclose = () => {
+          console.log('[WS] 已断开');
+          updateWSStatus('disconnected', '已断开');
+          stopHeartbeat();
+          if (wsReconnectCount < MAX_RECONNECT) {
+            const delay = Math.min(1000 * Math.pow(2, wsReconnectCount), 30000);
+            wsReconnectCount++;
+            setTimeout(connectWebSocket, delay);
+          }
+        };
+
+        ws.onerror = (err) => {
+          console.error('[WS] 错误:', err);
+          updateWSStatus('disconnected', '错误');
+        };
+      } catch (err) {
+        console.error('[WS] 连接失败:', err);
+        updateWSStatus('disconnected', '失败');
+      }
+    }
+
+    function startHeartbeat() {
+      stopHeartbeat();
+      wsHeartbeatTimer = setInterval(() => {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+          ws.send(JSON.stringify({ type: 'ping', time: Date.now() }));
+        }
+      }, 30000);
+    }
+
+    function stopHeartbeat() {
+      if (wsHeartbeatTimer) {
+        clearInterval(wsHeartbeatTimer);
+        wsHeartbeatTimer = null;
+      }
+    }
+
+    function handleWSMessage(msg) {
+      switch (msg.type) {
+        case 'pong':
+          break;
+        case 'message':
+          if (document.hidden && Notification.permission === 'granted') {
+            new Notification('FIBEMATE', {
+              body: msg.preview || '新消息',
+              icon: '/icon.png'
+            });
+          }
+          break;
+        case 'presence':
+          break;
+      }
+    }
+
+    // 请求通知权限
+    function requestNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+
+    // 页面卸载时清理连接
+    window.addEventListener('beforeunload', () => {
+      stopHeartbeat();
+      if (ws) ws.close();
+    });
+  </script>
+
+  <script>
+    // ICP备案等待页面控制
+    function showIcpWaitingPage() {
+      document.getElementById('icpWaitingPage').style.display = 'block';
+      document.querySelector('.login-wrapper').style.display = 'none';
+      document.getElementById('registerView').style.display = 'none';
+    }
+    function hideIcpWaitingPage() {
+      document.getElementById('icpWaitingPage').style.display = 'none';
+      document.querySelector('.login-wrapper').style.display = 'flex';
+    }
+    // 检查URL参数或localStorage决定是否显示备案页
+    document.addEventListener('DOMContentLoaded', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('icp') === 'waiting' || localStorage.getItem('fk_show_icp') === '1') {
+        showIcpWaitingPage();
+      }
+    });
+  </script>
+
+  <!-- ICP备案等待页面 -->
+  <div id="icpWaitingPage" style="display:none;position:fixed;inset:0;background:#0a0a0f;z-index:9999;overflow-y:auto;">
+    <!-- 背景效果（暗绿色蜂窝状） -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow"></div>
+    <!-- 返回登录按钮 -->
+    <button onclick="hideIcpWaitingPage()" style="position:fixed;top:20px;left:20px;z-index:10000;padding:8px 16px;border-radius:8px;border:1px solid #333;background:#111;color:#fff;font-size:14px;cursor:pointer;transition:all 0.2s;">
+      ← 返回登录
+    </button>
+    <!-- 备案信息入口 -->
+    <button onclick="window.open('https://beian.miit.gov.cn/','_blank')" style="position:fixed;top:20px;right:20px;z-index:10000;padding:8px 16px;border-radius:8px;border:1px solid #333;background:#111;color:#fff;font-size:14px;cursor:pointer;transition:all 0.2s;">
+      备案信息 →
+    </button>
+    <div style="max-width:800px;margin:0 auto;padding:40px 20px;">
+      <!-- 头部 -->
+      <div style="text-align:center;margin-bottom:40px;">
+        <div style="width:64px;height:72px;margin:0 auto 16px;">
+          <svg viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="shieldGradIcp" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00E5C3"/>
+                <stop offset="100%" style="stop-color:#00B4A0"/>
+              </linearGradient>
+            </defs>
+            <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+                  stroke="url(#shieldGradIcp)" stroke-width="2" fill="none"/>
+            <circle cx="32" cy="32" r="6" stroke="url(#shieldGradIcp)" stroke-width="1.5" fill="none"/>
+            <path d="M32 38V48" stroke="url(#shieldGradIcp)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 style="font-size:28px;font-weight:600;color:#fff;margin-bottom:8px;">FIBEMATE</h1>
+        <p style="color:#888;font-size:14px;">安全隐私加密系统 · ICP备案中</p>
+      </div>
+
+      <!-- 备案状态 -->
+      <div style="background:rgba(0,229,195,0.05);border:1px solid rgba(0,229,195,0.2);border-radius:12px;padding:24px;margin-bottom:24px;text-align:center;">
+        <div style="width:48px;height:48px;margin:0 auto 16px;border-radius:50%;border:2px solid #00E5C3;border-top-color:transparent;animation:spin 1s linear infinite;"></div>
+        <h3 style="font-size:18px;font-weight:600;margin-bottom:8px;color:#fff;">ICP 备案审核中</h3>
+        <p style="color:#888;font-size:14px;">预计完成时间：2026年6月初</p>
+        <p style="color:#888;font-size:13px;margin-top:8px;">备案号申请中，完成后将正式启用 https://fibemate.link</p>
+      </div>
+
+      <!-- 技术社区入口 -->
+      <div style="background:#111;border:1px solid #333;border-radius:12px;padding:24px;margin-bottom:24px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;color:#fff;">技术社区</h3>
+        <p style="color:#888;font-size:14px;line-height:1.6;margin-bottom:16px;">
+          加入我们的技术社区，了解端到端加密、零知识证明、后量子密码学的最新进展。
+        </p>
+        <div style="display:flex;gap:12px;flex-wrap:wrap;">
+          <a href="https://github.com/fibemate" target="_blank" style="flex:1;min-width:120px;text-align:center;text-decoration:none;display:inline-block;padding:10px 20px;border-radius:8px;border:1px solid #333;background:transparent;color:#fff;font-size:14px;transition:all 0.2s;">GitHub</a>
+          <a href="https://t.me/fibemate" target="_blank" style="flex:1;min-width:120px;text-align:center;text-decoration:none;display:inline-block;padding:10px 20px;border-radius:8px;border:1px solid #333;background:transparent;color:#fff;font-size:14px;transition:all 0.2s;">Telegram</a>
+          <a href="mailto:contact@fibemate.link" style="flex:1;min-width:120px;text-align:center;text-decoration:none;display:inline-block;padding:10px 20px;border-radius:8px;border:1px solid #333;background:transparent;color:#fff;font-size:14px;transition:all 0.2s;">联系我们</a>
+        </div>
+        <!-- Nexus 社区入口（即将开放） -->
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid #333;">
+          <p style="color:#888;font-size:13px;margin-bottom:12px;">FIBEMATE Nexus 社区（即将开放）</p>
+          <div style="display:flex;gap:12px;align-items:center;">
+            <div style="flex:1;border-radius:12px;overflow:hidden;background:#0a0a0f;border:1px solid #333;">
+              <video autoplay muted loop playsinline poster="noir-hero-poster.jpg" style="width:100%;height:auto;display:block;max-height:200px;object-fit:cover;">
+                <source src="noir-hero.webm" type="video/webm">
+                <source src="noir-hero.mp4" type="video/mp4">
+              </video>
+            </div>
+            <div style="flex:1;">
+              <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:12px;">
+                Nexus 社区将采用零知识证明架构，支持端到端加密的群组讨论、文件共享和语音频道。
+              </p>
+              <button onclick="showToast('Nexus 社区即将开放，敬请期待！', 'info')" style="width:100%;padding:10px;border-radius:8px;border:1px solid #00E5C3;background:rgba(0,229,195,0.1);color:#00E5C3;font-size:13px;cursor:pointer;transition:all 0.2s;">
+                🚀 即将开放
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 测试成果 -->
+      <div style="background:#111;border:1px solid #333;border-radius:12px;padding:24px;margin-bottom:24px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;color:#fff;">最新测试成果</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:16px;">
+          <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;border-left:3px solid #00E5C3;">
+            <p style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;">安全评分</p>
+            <p style="font-size:28px;font-weight:bold;color:#00E5C3;">85/100</p>
+            <p style="font-size:12px;color:#666;">超过 Signal (78) 和 WhatsApp (65)</p>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;border-left:3px solid #00E5C3;">
+            <p style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;">测试覆盖</p>
+            <p style="font-size:28px;font-weight:bold;color:#00E5C3;">65项</p>
+            <p style="font-size:12px;color:#666;">端到端加密、密钥管理、隐私功能</p>
+          </div>
+          <div style="background:rgba(255,255,255,0.03);border-radius:10px;padding:16px;border-left:3px solid #00E5C3;">
+            <p style="font-size:12px;color:#888;text-transform:uppercase;letter-spacing:1px;">WebSocket</p>
+            <p style="font-size:28px;font-weight:bold;color:#00E5C3;">5项</p>
+            <p style="font-size:12px;color:#666;">重连、心跳、延迟统计全部通过</p>
+          </div>
+        </div>
+        <div style="display:flex;flex-wrap:wrap;gap:8px;">
+          <span style="background:rgba(0,229,195,0.2);color:#00E5C3;padding:4px 10px;border-radius:20px;font-size:12px;">X3DH 握手 ✓</span>
+          <span style="background:rgba(0,229,195,0.2);color:#00E5C3;padding:4px 10px;border-radius:20px;font-size:12px;">ML-KEM-768 ✓</span>
+          <span style="background:rgba(0,229,195,0.2);color:#00E5C3;padding:4px 10px;border-radius:20px;font-size:12px;">Double Ratchet ✓</span>
+          <span style="background:rgba(0,229,195,0.2);color:#00E5C3;padding:4px 10px;border-radius:20px;font-size:12px;">Safety Numbers ✓</span>
+          <span style="background:rgba(0,229,195,0.2);color:#00E5C3;padding:4px 10px;border-radius:20px;font-size:12px;">zk-SNARKs ✓</span>
+          <span style="background:rgba(255,193,7,0.2);color:#FFC107;padding:4px 10px;border-radius:20px;font-size:12px;">ProVerif 验证 进行中</span>
+          <span style="background:rgba(33,150,243,0.2);color:#2196F3;padding:4px 10px;border-radius:20px;font-size:12px;">NLnet 已申请</span>
+        </div>
+      </div>
+
+      <!-- 关于项目与开发者 -->
+      <div style="background:#111;border:1px solid #333;border-radius:12px;padding:24px;margin-bottom:24px;">
+        <h3 style="font-size:16px;font-weight:600;margin-bottom:16px;color:#fff;">关于项目与开发者</h3>
+        <p style="color:#aaa;font-size:14px;line-height:1.8;margin-bottom:12px;">
+          你好！我是这个项目的独立开发者，今年15岁，正在读高中。我对网络安全、密码学和分布式系统充满热情。
+        </p>
+        <p style="color:#aaa;font-size:14px;line-height:1.8;margin-bottom:12px;">
+          FIBEMATE 是我独立设计和开发的开源项目，目标是构建一个安全、私密、去中心化的通讯工具。项目采用端到端加密技术，确保用户通讯内容只有对话双方可以阅读，即使是服务器也无法解密。
+        </p>
+        <p style="color:#aaa;font-size:14px;line-height:1.8;margin-bottom:12px;">
+          由于中国大陆ICP备案的年龄限制（需年满16周岁），目前正在监护人协助下完成备案流程。<strong style="color:#00E5C3;">虽然年龄有限制，但对技术的热情和对隐私安全的追求没有限制。</strong>
+        </p>
+        <p style="color:#888;font-size:13px;margin-top:16px;">项目代码已开源，欢迎技术交流和合作！</p>
+      </div>
+
+      <!-- 页脚 -->
+      <div style="text-align:center;padding-top:20px;border-top:1px solid #333;">
+        <p style="color:#888;font-size:12px;">
+          &copy; 2026 FIBEMATE · 安全隐私加密系统 · 保留所有权利
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <style>
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+</body>
+</html>

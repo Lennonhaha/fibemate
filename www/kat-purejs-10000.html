@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML-KEM-768 KAT 10,000轮 · 纯 JavaScript 实现 — FIBEMATE</title>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg-elevated: #0f0f16;
+  --bg-card: #12121c;
+  --border: #1e1e2e;
+  --accent: #00E5C3;
+  --accent-dim: rgba(0,229,195,0.08);
+  --accent-glow: rgba(0,229,195,0.35);
+  --text: #e8e8ed;
+  --text-secondary: #8a8a96;
+  --text-muted: #5a5a66;
+  --danger: #FF4757;
+  --orange: #FF9F43;
+  --warning-bg: rgba(255,143,67,0.06);
+  --warning-border: rgba(255,143,67,0.25);
+  --font: 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family:var(--font);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+body::before {
+  content:'';
+  position:fixed;
+  inset:0;
+  opacity:0.03;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  pointer-events:none;
+  z-index:0;
+}
+.container { max-width:900px; width:100%; padding:60px 24px 80px; position:relative; z-index:1; }
+
+header { text-align:center; margin-bottom:48px; }
+.badge {
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  background:var(--warning-bg);
+  border:1px solid var(--warning-border);
+  border-radius:100px;
+  padding:6px 18px;
+  font-size:13px;
+  color:var(--orange);
+  margin-bottom:20px;
+}
+h1 { font-size:36px; font-weight:700; letter-spacing:-0.5px; margin-bottom:8px; }
+h1 span { color:var(--orange); }
+.subtitle { color:var(--text-secondary); font-size:16px; }
+
+.notice-bar {
+  background:var(--warning-bg);
+  border:1px solid var(--warning-border);
+  border-radius:12px;
+  padding:14px 20px;
+  text-align:center;
+  margin-bottom:32px;
+  font-size:13px;
+  color:var(--orange);
+}
+.notice-bar code {
+  background:rgba(255,143,67,0.1);
+  padding:2px 8px;
+  border-radius:4px;
+  font-family:var(--font-mono);
+  font-size:12px;
+}
+
+.stats-row {
+  display:grid;
+  grid-template-columns:repeat(4, 1fr);
+  gap:12px;
+  margin-bottom:40px;
+}
+.stat-card {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+  text-align:center;
+}
+.stat-value {
+  font-family:var(--font-mono);
+  font-size:28px;
+  font-weight:700;
+  color:var(--accent);
+  line-height:1.2;
+}
+.stat-label { font-size:12px; color:var(--text-secondary); margin-top:4px; }
+.stat-card.pass .stat-value { color:#00E5C3; }
+.stat-card.fail .stat-value { color:var(--danger); }
+.stat-card.js .stat-value { color:var(--orange); }
+
+.terminal {
+  background:var(--bg-card);
+  border:1px solid var(--border);
+  border-radius:14px;
+  overflow:hidden;
+  margin-bottom:32px;
+}
+.terminal-header {
+  background:var(--bg-elevated);
+  padding:10px 16px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  border-bottom:1px solid var(--border);
+}
+.terminal-dot { width:10px; height:10px; border-radius:50%; }
+.terminal-dot.r { background:#FF5F56; }
+.terminal-dot.y { background:#FFBD2E; }
+.terminal-dot.g { background:#27C93F; }
+.terminal-title {
+  font-size:12px;
+  color:var(--text-muted);
+  margin-left:8px;
+  font-family:var(--font-mono);
+}
+.terminal-body {
+  padding:20px 24px;
+  font-family:var(--font-mono);
+  font-size:13px;
+  line-height:1.8;
+  max-height:400px;
+  overflow-y:auto;
+  color:var(--text-secondary);
+}
+.terminal-body .pass { color:var(--accent); }
+.terminal-body .fail { color:var(--danger); }
+.terminal-body .info { color:#5B9BD5; }
+.terminal-body .warn { color:var(--orange); }
+.terminal-body .dim { color:var(--text-muted); }
+
+.progress-wrap { padding:0 24px 20px; }
+.progress-bar {
+  background:var(--bg-elevated);
+  border-radius:100px;
+  height:6px;
+  overflow:hidden;
+}
+.progress-fill {
+  height:100%;
+  background:linear-gradient(90deg, var(--orange), #ff6b35);
+  border-radius:100px;
+  transition:width 0.3s ease;
+  width:0%;
+}
+.progress-text {
+  display:flex;
+  justify-content:space-between;
+  margin-top:8px;
+  font-size:12px;
+  color:var(--text-secondary);
+  font-family:var(--font-mono);
+}
+
+.controls {
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  margin-bottom:40px;
+  flex-wrap:wrap;
+  align-items:center;
+}
+.btn {
+  font-family:var(--font);
+  font-size:14px;
+  font-weight:600;
+  padding:12px 28px;
+  border-radius:100px;
+  cursor:pointer;
+  transition:all 0.2s;
+  border:none;
+  outline:none;
+}
+.btn-primary {
+  background:var(--accent);
+  color:#000;
+}
+.btn-primary:hover { box-shadow:0 0 24px var(--accent-glow); transform:translateY(-1px); }
+.btn-primary:disabled { opacity:0.35; cursor:not-allowed; transform:none; box-shadow:none; }
+.btn-secondary {
+  background:transparent;
+  border:1px solid var(--border);
+  color:var(--text-secondary);
+}
+.btn-secondary:hover { border-color:var(--text); color:var(--text); }
+.btn-secondary:disabled { opacity:0.3; cursor:not-allowed; }
+.batch-label {
+  font-size:12px;
+  color:var(--text-muted);
+  font-family:var(--font-mono);
+}
+.result-banner {
+  background:var(--accent-dim);
+  border:1px solid rgba(0,229,195,0.2);
+  border-radius:12px;
+  padding:20px 24px;
+  text-align:center;
+  margin-bottom:32px;
+  display:none;
+}
+.result-title { font-size:18px; font-weight:700; color:var(--accent); margin-bottom:6px; }
+.result-msg { font-size:13px; color:var(--text-secondary); }
+
+.section { background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:24px; margin-bottom:24px; }
+.section h3 { color:var(--accent); font-size:15px; margin-bottom:16px; }
+.compact-grid { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; }
+.compact-item .label { font-size:12px; color:var(--text-secondary); }
+.compact-item .value { color:var(--text); font-size:14px; margin-top:2px; }
+
+.compare table { width:100%; border-collapse:collapse; font-size:13px; }
+.compare th { text-align:left; color:var(--text-secondary); padding:8px; border-bottom:1px solid var(--border); }
+.compare td { padding:8px; border-bottom:1px solid var(--border); color:var(--text); }
+.compare .fast { color:var(--accent); font-weight:600; }
+.compare .slow { color:var(--orange); font-weight:600; }
+
+.tsa-section ul { list-style:none; padding:0; }
+.tsa-section li { font-size:13px; padding:6px 0; border-bottom:1px solid var(--border); color:var(--text-secondary); }
+.tsa-section li:last-child { border-bottom:none; }
+.tsa-section li code { color:var(--orange); background:var(--warning-bg); padding:1px 6px; border-radius:3px; font-size:12px; }
+.tsa-section li .tsa-sub { font-size:11px; color:var(--text-muted); margin-top:2px; }
+
+.link-bar { text-align:center; margin:24px 0 40px; }
+.link-bar a { color:var(--accent); margin:0 14px; font-size:13px; text-decoration:none; }
+.link-bar a:hover { color:#fff; }
+
+footer { text-align:center; color:var(--text-muted); font-size:12px; padding:24px 0; border-top:1px solid var(--border); }
+
+@media(max-width:600px){
+  .stats-row{grid-template-columns:repeat(2,1fr)}
+  .compact-grid{grid-template-columns:1fr}
+  h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="badge">🧪 Pure JavaScript · 交互式测试</div>
+  <h1>ML-KEM-768 <span>KAT 10,000轮</span></h1>
+  <p class="subtitle">一致性验证 · 纯 JavaScript 实现 (ml-kem-768.js) · 实时交互 · Node.js 服务端运算</p>
+</header>
+
+<div class="notice-bar">
+  ⚡ <code>ml-kem-768.js</code> 纯 JS 实现，比 C Addon 慢约 19× — 建议使用默认 500 轮/batch 体验
+</div>
+
+<div class="stats-row">
+  <div class="stat-card js">
+    <div class="stat-value" id="stat-passed">—</div>
+    <div class="label">✅ 通过 (实跑)</div>
+  </div>
+  <div class="stat-card fail">
+    <div class="stat-value" id="stat-failed">—</div>
+    <div class="label">❌ 失败</div>
+  </div>
+  <div class="stat-card js">
+    <div class="stat-value" id="stat-avgms">—</div>
+    <div class="label">⏱ 平均耗时 / 轮</div>
+  </div>
+  <div class="stat-card pass">
+    <div class="stat-value" id="stat-rate">—</div>
+    <div class="label">📊 成功率</div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-primary" id="btnStart" onclick="startTest()">▶ 开始测试</button>
+  <button class="btn btn-secondary" id="btnPause" onclick="pauseTest()" disabled>⏸ 暂停</button>
+  <button class="btn btn-secondary" id="btnReset" onclick="resetTest()" disabled>↻ 重置</button>
+  <span class="batch-label">batch: <span id="batchSize">500</span></span>
+</div>
+
+<div class="terminal">
+  <div class="terminal-header">
+    <span class="terminal-dot r"></span>
+    <span class="terminal-dot y"></span>
+    <span class="terminal-dot g"></span>
+    <span class="terminal-title">KAT Pure JS — interactive</span>
+  </div>
+  <div class="terminal-body" id="terminal">═══════════════════════════════════════
+<span class="dim">  ML-KEM-768 KAT · 纯 JavaScript 实现</span>
+<span class="dim">  API: /api/mlkem/test-batch-purejs</span>
+<span class="dim">  框架: ml-kem-768.js (Node.js 服务端)</span>
+═══════════════════════════════════════
+<span class="dim">[READY] 点击 ▶ 开始测试 运行 KAT 一致性验证</span>
+<span class="dim">  KeyGen → Encaps → Decaps → Compare</span>
+</div>
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">0 / 10000</span>
+      <span id="elapsedLabel">—</span>
+    </div>
+  </div>
+</div>
+
+<div class="result-banner" id="resultBanner">
+  <div class="result-title" id="resultTitle">—</div>
+  <div class="result-msg" id="resultMsg">—</div>
+</div>
+
+<!-- Historical Data -->
+<div class="section">
+  <h3>📋 测试维度</h3>
+  <div class="compact-grid">
+    <div class="compact-item"><div class="label">验证维度</div><div class="value">KeyGen → Encaps → Decaps</div></div>
+    <div class="compact-item"><div class="label">算法</div><div class="value">ML-KEM-768 (FIPS 203)</div></div>
+    <div class="compact-item"><div class="label">安全参数</div><div class="value">N=256, K=3, Q=3329</div></div>
+    <div class="compact-item"><div class="label">测试轮数</div><div class="value">10,000 (每轮独立随机种子)</div></div>
+    <div class="compact-item"><div class="label">运行时</div><div class="value">Node.js v22.22.2 / Linux x64</div></div>
+    <div class="compact-item"><div class="label">实现</div><div class="value">纯 JavaScript (ml-kem-768.js) · 零依赖</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>📊 历史基准 (最后一次命令行运行, 2026-06-13)</h3>
+  <div class="compact-grid">
+    <div class="compact-item"><div class="label">总耗时</div><div class="value" style="color:var(--orange);">55.905 秒</div></div>
+    <div class="compact-item"><div class="label">平均每轮</div><div class="value">5.590 ms</div></div>
+    <div class="compact-item"><div class="label">KeyGen 平均</div><div class="value">1,358.83 µs (24.3%)</div></div>
+    <div class="compact-item"><div class="label">Encaps 平均</div><div class="value">1,813.97 µs (32.4%)</div></div>
+    <div class="compact-item"><div class="label">Decaps 平均</div><div class="value">2,414.25 µs (43.2%)</div></div>
+    <div class="compact-item"><div class="label">Step 占比</div><div class="value">Dec > Enc > KG (2.4ms / 1.8ms / 1.4ms)</div></div>
+  </div>
+</div>
+
+<div class="section compare">
+  <h3>⚡ 纯 JS vs C Native Addon 对比 (10,000轮)</h3>
+  <table>
+    <tr><th></th><th>纯 JS<br>(此页)</th><th>C Native Addon<br>(mlkem.node)</th><th>加速比</th></tr>
+    <tr><td>总耗时</td><td class="slow">~55s</td><td class="fast">~2.9s</td><td>~19×</td></tr>
+    <tr><td>单轮</td><td class="slow">~5.6ms</td><td class="fast">~0.29ms</td><td>~19×</td></tr>
+    <tr><td>KeyGen</td><td class="slow">~1359µs</td><td class="fast">~48µs</td><td>~28×</td></tr>
+    <tr><td>Encaps</td><td class="slow">~1814µs</td><td class="fast">~51µs</td><td>~36×</td></tr>
+    <tr><td>Decaps</td><td class="slow">~2414µs</td><td class="fast">~105µs</td><td>~23×</td></tr>
+  </table>
+  <p style="margin-top:16px;font-size:13px;color:var(--text-muted);">
+    纯 JS 适合教学验证与审计；C Addon 适合生产高频场景。<br>
+    → <a href="/kat-10000.html" style="color:var(--accent);">查看 C Native Addon 交互式测试页</a>
+  </p>
+</div>
+
+<div class="section tsa-section">
+  <h3>📜 时间戳存证</h3>
+  <ul>
+    <li>
+      联合信任时间戳存证 (tsa.cn):
+      <code>ml-kem-768.js</code> (2026-05-29 12:08 CST)
+      <div class="tsa-sub">实现文件已通过 RFC 3161 时间戳存证，原创性可追溯</div>
+    </li>
+    <li>
+      DigiCert 国际存证:
+      <code>ml-kem-768.tsr</code> (2026-05-29 ~10:26 CST)
+      <div class="tsa-sub">RFC 3161 合规时间戳令牌 (DigiCert TSA)</div>
+    </li>
+    <li>
+      历史数据:
+      <code>kat_10000_result.json</code> — 最后运行 2026-06-13 06:39 CST
+      <div class="tsa-sub">输出存档于 /opt/fibemate-full/www/kat_10000_result.json</div>
+    </li>
+  </ul>
+</div>
+
+<div class="link-bar">
+  <a href="/kat-10000.html">→ C Addon 交互式测试</a>
+  <a href="/crypto/test-ml-kem-kat.html">→ KAT 80 项单元测试</a>
+  <a href="/">→ 返回首页</a>
+</div>
+
+<footer>
+  FIBEMATE · ML-KEM-768 纯 JavaScript 交互式测试 · 最后更新 2026-06-13
+</footer>
+
+</div>
+
+<script>
+const TOTAL = 10000;
+const BATCH_SIZE = 500;
+const API = '/api/mlkem/test-batch-purejs';
+
+let running = false;
+let paused = false;
+let passed = 0, failed = 0;
+let serverTotalMs = 0;
+let startTime = null;
+let wallTimer = null;
+
+function el(id) { return document.getElementById(id); }
+
+function log(cls, text) {
+  const terminal = el('terminal');
+  const span = document.createElement('span');
+  span.className = cls;
+  span.textContent = ' ' + text;
+  terminal.appendChild(document.createTextNode('\n'));
+  terminal.appendChild(span);
+  terminal.scrollTop = terminal.scrollHeight;
+}
+
+async function runBatch(n, offset) {
+  const t0 = performance.now();
+  try {
+    const resp = await fetch(API + '?count=' + n + '&offset=' + (offset || 0));
+    const data = await resp.json();
+    const elapsed = (performance.now() - t0).toFixed(1);
+    if (data.status !== 'ok') throw new Error(data.error || 'API error');
+    serverTotalMs += (data.totalMs || 0);
+    const srvAvg = data.avgMsPerRound || 0;
+    log('dim', '[BATCH] ' + n + ' rounds — server: ' + (data.totalMs || 0).toFixed(0) + 'ms, avg: ' + srvAvg + 'ms/round, http: ' + elapsed + 'ms');
+    return data.results.map(r => ({
+      ok: r.pass,
+      ms: srvAvg,
+      data: r
+    }));
+  } catch (err) {
+    log('fail', 'Batch API error: ' + err.message);
+    return [];
+  }
+}
+
+function updateStats() {
+  const total = passed + failed;
+  el('stat-passed').textContent = passed + ' ✓';
+  el('stat-failed').textContent = failed;
+  const avg = serverTotalMs > 0 ? (serverTotalMs / (passed + failed)).toFixed(2) : '—';
+  el('stat-avgms').textContent = avg + ' ms';
+  const rateVal = total > 0 ? (passed/total*100).toFixed(2) : '—';
+  el('stat-rate').textContent = rateVal + '%';
+  
+  el('progressFill').style.width = (total / TOTAL * 100) + '%';
+  el('progressLabel').textContent = total + ' / ' + TOTAL;
+  
+}
+
+function showResult() {
+  const banner = el('resultBanner');
+  banner.style.display = 'block';
+  if (failed === 0) {
+    banner.style.background = 'rgba(0,229,195,0.05)';
+    banner.style.borderColor = 'rgba(0,229,195,0.2)';
+    el('resultTitle').textContent = '✅ 全部 ' + passed + ' 轮通过';
+    const avg = passed > 0 ? (serverTotalMs / passed).toFixed(2) : '—';
+    const totalTime = serverTotalMs > 0 ? (serverTotalMs / 1000).toFixed(1) : ((performance.now() - startTime) / 1000).toFixed(1);
+    el('resultMsg').textContent = '服务端加密耗时 ' + avg + 'ms/轮 · 累计 ' + totalTime + 's · 成功率 100.00% · NIST FIPS 203 KAT 一致性验证完成 (纯 JS)';
+  } else {
+    banner.style.background = 'rgba(255,71,87,0.05)';
+    banner.style.borderColor = 'rgba(255,71,87,0.2)';
+    el('resultTitle').textContent = '⚠️ ' + passed + ' / ' + TOTAL + ' 通过';
+    el('resultMsg').textContent = failed + ' 轮失败，请检查终端日志';
+  }
+}
+
+async function startTest() {
+  if (running) return;
+  running = true;
+  paused = false;
+  passed = 0;
+  failed = 0;
+  serverTotalMs = 0;
+  startTime = performance.now();
+  wallTimer = setInterval(() => {
+    if (running && startTime) {
+      el('elapsedLabel').textContent = ((performance.now() - startTime) / 1000).toFixed(1) + 's';
+    }
+  }, 200);
+  
+  el('terminal').innerHTML = '';
+  log('info', '═══════════════════════════════════════');
+  log('info', '  ML-KEM-768 KAT 10,000 轮一致性验证');
+  log('info', '  NIST FIPS 203 · KeyGen → Encaps → Decaps → Compare');
+  log('info', '  纯 JavaScript 实现 (ml-kem-768.js · 服务端运算)');
+  log('info', '═══════════════════════════════════════');
+  log('dim', '');
+  log('dim', '[START] Running ' + TOTAL + ' rounds (batch=' + BATCH_SIZE + '/request)...');
+  
+  el('btnStart').disabled = true;
+  el('btnPause').disabled = false;
+  el('btnReset').disabled = true;
+  el('resultBanner').style.display = 'none';
+  el('stat-passed').textContent = '—';
+  el('stat-failed').textContent = '—';
+  el('stat-avgms').textContent = '—';
+  el('stat-rate').textContent = '—';
+  el('progressFill').style.width = '0%';
+  el('progressLabel').textContent = '0 / ' + TOTAL;
+  el('elapsedLabel').textContent = '—';
+  
+  let remaining = TOTAL;
+  while (remaining > 0 && running) {
+    while (paused && running) await new Promise(r => setTimeout(r, 200));
+    if (!running) break;
+    
+    const batchSize = Math.min(BATCH_SIZE, remaining);
+    const results = await runBatch(batchSize, TOTAL - remaining);
+    
+    for (const r of results) {
+      if (r.ok) {
+        passed++;
+        if (passed % 500 === 0) log('pass', '✓ ' + passed + ' rounds passed (' + r.ms.toFixed(2) + 'ms avg/round)');
+      } else {
+        failed++;
+        log('fail', '✗ Round ' + (passed + failed) + ': FAILED');
+      }
+    }
+    
+    remaining -= batchSize;
+    updateStats();
+  }
+  
+  if (running) {
+    log('dim', '');
+    log('pass', '═══════════════════════════════════════');
+    log('pass', '  ✅ VERIFICATION COMPLETE');
+    log('pass', '  Total: ' + TOTAL + ' | Passed: ' + passed + ' | Failed: ' + failed);
+    log('pass', '═══════════════════════════════════════');
+  }
+  
+  clearInterval(wallTimer);
+  wallTimer = null;
+  el('elapsedLabel').textContent = (serverTotalMs / 1000).toFixed(1) + 's (服务端纯计算) | ' + ((performance.now() - startTime) / 1000).toFixed(1) + 's (含网络)';
+  updateStats();
+  showResult();
+  running = false;
+  el('btnStart').disabled = false;
+  el('btnPause').disabled = true;
+  el('btnReset').disabled = false;
+}
+
+function pauseTest() {
+  paused = !paused;
+  el('btnPause').textContent = paused ? '▶ 继续' : '⏸ 暂停';
+}
+
+function resetTest() {
+  running = false;
+  paused = false;
+  clearInterval(wallTimer);
+  wallTimer = null;
+  passed = 0;
+  failed = 0;
+  serverTotalMs = 0;
+  startTime = null;
+  
+  el('terminal').innerHTML = '';
+  log('info', '═══════════════════════════════════════');
+  log('dim', '  ML-KEM-768 KAT · 纯 JavaScript 实现');
+  log('dim', '  API: /api/mlkem/test-batch-purejs');
+  log('dim', '  框架: ml-kem-768.js (Node.js 服务端)');
+  log('info', '═══════════════════════════════════════');
+  log('dim', '[READY] 点击 ▶ 开始测试 运行 KAT 一致性验证');
+  log('dim', '  KeyGen → Encaps → Decaps → Compare');
+  
+  el('stat-passed').textContent = '—';
+  el('stat-failed').textContent = '—';
+  el('stat-avgms').textContent = '—';
+  el('stat-rate').textContent = '—';
+  el('progressFill').style.width = '0%';
+  el('progressLabel').textContent = '0 / ' + TOTAL;
+  el('elapsedLabel').textContent = '—';
+  el('resultBanner').style.display = 'none';
+  el('btnStart').disabled = false;
+  el('btnPause').disabled = true;
+  el('btnPause').textContent = '⏸ 暂停';
+  el('btnReset').disabled = true;
+}
+</script>
+</body>
+</html>

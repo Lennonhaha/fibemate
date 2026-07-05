@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>法律文档中心 — FIBEMATE</title>
+  <style>
+    :root { --bg: #0d1117; --card: #161b22; --border: #30363d; --text: #c9d1d9; --muted: #8b949e; --accent: #58a6ff; --green: #3fb950; --yellow: #d29922; --red: #f85149; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif; background: var(--bg); color: var(--text); line-height: 1.8; min-height: 100vh; }
+    .container { max-width: 800px; margin: 0 auto; padding: 60px 24px; }
+    .header { text-align: center; margin-bottom: 48px; padding-bottom: 32px; border-bottom: 1px solid var(--border); }
+    .logo { font-size: 32px; font-weight: 700; color: #fff; margin-bottom: 8px; }
+    .logo span { color: var(--accent); }
+    .subtitle { color: var(--muted); font-size: 14px; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; margin-left: 8px; vertical-align: middle; }
+    .badge-zh { background: rgba(88,166,255,.15); color: var(--accent); }
+    .badge-en { background: rgba(63,185,80,.15); color: var(--green); }
+    .badge-core { background: rgba(210,153,34,.15); color: var(--yellow); }
+    .badge-optional { background: rgba(248,81,73,.1); color: var(--muted); }
+    h1 { font-size: 24px; color: #fff; margin: 32px 0 16px; }
+    p { margin-bottom: 16px; color: var(--muted); font-size: 14px; }
+    .section-label { font-size: 13px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin: 36px 0 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+    .doc-card { display: flex; align-items: center; padding: 16px 20px; background: var(--card); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 10px; transition: border-color .2s; text-decoration: none; color: var(--text); }
+    .doc-card:hover { border-color: var(--accent); }
+    .doc-icon { font-size: 24px; margin-right: 16px; flex-shrink: 0; }
+    .doc-info { flex: 1; }
+    .doc-title { font-size: 15px; font-weight: 600; color: #fff; margin-bottom: 2px; }
+    .doc-desc { font-size: 12px; color: var(--muted); }
+    .doc-arrow { color: var(--muted); font-size: 14px; }
+    .note-box { background: rgba(210,153,34,.08); border: 1px solid rgba(210,153,34,.2); border-radius: 8px; padding: 16px 20px; margin: 24px 0; font-size: 13px; color: var(--yellow); }
+    .note-box strong { color: var(--yellow); }
+    .footer { margin-top: 48px; padding-top: 24px; border-top: 1px solid var(--border); text-align: center; color: var(--muted); font-size: 13px; }
+    .footer a { color: var(--accent); text-decoration: none; }
+    .back-link { display: inline-block; margin-top: 24px; color: var(--accent); text-decoration: none; font-size: 14px; }
+    .back-link:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">Fibe<span>Mate</span></div>
+      <p class="subtitle">法律文档中心 · Legal Documents</p>
+    </div>
+
+    <h1>📄 法律文档中心</h1>
+    <p>以下为 FIBEMATE 项目所有法律与合规文档。建议在使用前完整阅读相关条款。</p>
+
+    <div class="note-box">
+      <strong>⚠️ 重要提示：</strong>本文档中心为技术项目自查草稿（v3.0.0-DRAFT），未经执业律师审核，不构成正式法律意见。正式发布前将由专业律师审阅。
+    </div>
+
+    <!-- 核心文档 -->
+    <div class="section-label">🔑 核心文档（必读）</div>
+
+    <a href="terms.html" class="doc-card">
+      <div class="doc-icon">📋</div>
+      <div class="doc-info">
+        <div class="doc-title">服务条款 <span class="badge badge-zh">中文</span><span class="badge badge-en">EN</span></div>
+        <div class="doc-desc">Terms of Service — 使用规则、账号管理、服务中断免责</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <a href="privacy.html" class="doc-card">
+      <div class="doc-icon">🔒</div>
+      <div class="doc-info">
+        <div class="doc-title">隐私政策 <span class="badge badge-zh">中文</span><span class="badge badge-en">EN</span></div>
+        <div class="doc-desc">Privacy Policy — 数据处理方式、端到端加密声明、GDPR 合规</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <a href="disclaimer.html" class="doc-card">
+      <div class="doc-icon">⚖️</div>
+      <div class="doc-info">
+        <div class="doc-title">免责声明 <span class="badge badge-zh">中文</span><span class="badge badge-en">EN</span></div>
+        <div class="doc-desc">Disclaimer — 开源项目定性、非商业声明、技术支持限制</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <a href="agreement.html" class="doc-card">
+      <div class="doc-icon">📝</div>
+      <div class="doc-info">
+        <div class="doc-title">用户协议 <span class="badge badge-zh">中文</span><span class="badge badge-en">EN</span></div>
+        <div class="doc-desc">User Agreement — 知识产权、许可协议（GPLv3）、责任限制</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <!-- 政策文档 -->
+    <div class="section-label">📑 政策文档</div>
+
+    <a href="acceptable-use.html" class="doc-card">
+      <div class="doc-icon">✅</div>
+      <div class="doc-info">
+        <div class="doc-title">可接受使用政策 <span class="badge badge-zh">中文</span><span class="badge badge-en">EN</span></div>
+        <div class="doc-desc">Acceptable Use Policy — 禁止用途、举报机制、终止条款</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <a href="cookie.html" class="doc-card">
+      <div class="doc-icon">🍪</div>
+      <div class="doc-info">
+        <div class="doc-title">Cookie 政策 <span class="badge badge-zh">中文</span><span class="badge badge-en">EN</span></div>
+        <div class="doc-desc">Cookie Policy — 本地存储说明、非追踪承诺</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <a href="dmca.html" class="doc-card">
+      <div class="doc-icon">📛</div>
+      <div class="doc-info">
+        <div class="doc-title">DMCA 政策 <span class="badge badge-zh">中文</span><span class="badge badge-en">EN</span></div>
+        <div class="doc-desc">DMCA Policy — 版权投诉流程、反通知机制</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <!-- 专项文档 -->
+    <div class="section-label">🔐 专项文档</div>
+
+    <a href="security.html" class="doc-card">
+      <div class="doc-icon">🛡️</div>
+      <div class="doc-info">
+        <div class="doc-title">安全白皮书 <span class="badge badge-zh">中文</span><span class="badge badge-en">EN</span></div>
+        <div class="doc-desc">Security White Paper — PQ 密码学实现、后量子安全路线图、漏洞披露政策</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <a href="age-verification.html" class="doc-card">
+      <div class="doc-icon">🔞</div>
+      <div class="doc-info">
+        <div class="doc-title">年龄验证 <span class="badge badge-zh">中文</span></div>
+        <div class="doc-desc">Age Verification — COPPA / 未成年人保护声明</div>
+      </div>
+      <div class="doc-arrow">→</div>
+    </a>
+
+    <div class="note-box" style="margin-top: 32px;">
+      <strong>📌 文档版本：</strong>v3.0.0-DRAFT（2026-05-26）。所有文档将在 v3.0 正式发布前由专业律师审阅并签署。<br>
+      <strong>🌐 多语言：</strong>标注 EN 的文档提供英文版本，点击进入后可通过右上角切换语言。
+    </div>
+
+    <a href="index.html" class="back-link">← 返回首页</a>
+  </div>
+
+  <div class="footer">
+    <p>© 2025–2026 FIBEMATE &nbsp;|&nbsp; <a href="terms.html">服务条款</a> &nbsp;|&nbsp; <a href="privacy.html">隐私政策</a> &nbsp;|&nbsp; <a href="disclaimer.html">法律声明</a> &nbsp;|&nbsp; <a href="legal.html">文档中心</a></p>
+    <p style="margin-top: 8px; font-size: 12px;">ICP 备案号：黑ICP备2026005787号-1 &nbsp;|&nbsp; 联系：support@fibemate.net</p>
+  </div>
+</body>
+</html>

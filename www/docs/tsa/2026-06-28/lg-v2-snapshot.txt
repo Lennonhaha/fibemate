@@ -1,0 +1,20 @@
+===== LookingGlass v2 Mathematical Proof =====
+Time: 2026-06-27 19:44:09 UTC
+Proof: Schur's Lemma + 6 mutually inequivalent irreducible group representations
+  Layer 1: S2 (1-dim, trivial)
+  Layer 2: C5 (1-dim, ω^5=1 rotation)
+  Layer 3: S3 (2-dim, sign+perm)
+  Layer 4: D4 (2-dim, 90°rotation+reflection)
+  Layer 5: A4 (3-dim, tetrahedral rotations)
+  Layer 6: D6 (2-dim, 60°rotation+reflection)
+Conclusion: No global commuting matrix exists (nullspace dimension = 0)
+Verification: commuting_matrix_test.py → nullspace = 0 → PASS
+Roundtrip: Python 256-dim zero error → PASS; Rust 6/6 → PASS
+WASM: 17.89KB raw (wasm-opt -Oz --enable-bulk-memory)
+Version: 2.0.0 (Cargo.toml locked)
+
+--- Source Code Hash ---
+9b2b9539f637fcf0d50c98d4d9d93c07419e7a46a64861b5f6ef25c5127e4884
+
+--- WASM Binary Hash ---
+b33adeeeb3237a0bd7b7bc6d0546374b96bec06b3fd8f6a92a43d9ff71cd7bb9

@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HMAC-SM3 TVLA 侧信道安全验证 — FIBEMATE</title>
+<style>
+  :root{--bg:#0a0a0f;--card:#13131a;--border:#1e1e2a;--text:#d4d4d8;--accent:#3b82f6;--pass:#22c55e;--muted:#71717a}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,sans-serif;line-height:1.7;max-width:960px;margin:0 auto;padding:2rem 1.5rem}
+  h1{font-size:1.8rem;color:#fff;margin-bottom:.5rem}
+  h2{font-size:1.3rem;color:#fff;margin:2rem 0 1rem;padding-bottom:.5rem;border-bottom:1px solid var(--border)}
+  h3{font-size:1.05rem;color:#e4e4e7;margin:1.2rem 0 .6rem}
+  .subtitle{color:var(--muted);font-size:.95rem;margin-bottom:1.5rem}
+  .badge{display:inline-block;background:var(--pass);color:#000;font-weight:700;padding:.15rem .6rem;border-radius:4px;font-size:.85rem;margin-left:.5rem}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.5rem;margin:1rem 0}
+  table{width:100%;border-collapse:collapse;margin:1rem 0}
+  th,td{padding:.6rem .8rem;text-align:left;border-bottom:1px solid var(--border)}
+  th{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.05em}
+  .pass-icon{color:var(--pass);font-weight:700}
+  .big-number{font-size:2rem;font-weight:700;color:#fff}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:1rem 0}
+  .stat{padding:1rem;background:var(--card);border:1px solid var(--border);border-radius:8px;text-align:center}
+  .stat-label{color:var(--muted);font-size:.8rem;text-transform:uppercase;margin-bottom:.3rem}
+  .stat-value{font-size:1.5rem;font-weight:700;color:var(--pass)}
+  .note{background:#1a1a2e;border-left:3px solid var(--accent);padding:.8rem 1rem;margin:1rem 0;border-radius:0 6px 6px 0;font-size:.9rem}
+  .timeline-bar{display:flex;align-items:center;margin:1.5rem 0;gap:0}
+  .timeline-node{width:14px;height:14px;border-radius:50%;background:var(--pass);flex-shrink:0}
+  .timeline-line{flex:1;height:2px;background:var(--pass);min-width:20px}
+  .timeline-end{color:var(--muted);font-size:.8rem;white-space:nowrap}
+  code{background:#1e1e2a;padding:.15rem .4rem;border-radius:3px;font-size:.88rem}
+  pre{background:#0d0d14;border:1px solid var(--border);border-radius:6px;padding:1rem;overflow-x:auto;font-size:.85rem;line-height:1.5}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  hr{border:none;border-top:1px solid var(--border);margin:2rem 0}
+  footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:3rem;padding-top:1rem;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<h1>HMAC-SM3 TVLA 侧信道安全验证 <span class="badge">8/8 ✓</span></h1>
+<p class="subtitle">Welch's t-test · N=2,000 · |t| ≤ 4.5 · pure JS (sm-crypto) · 2026-06-16</p>
+
+<div class="grid">
+  <div class="stat"><div class="stat-label">测试总数</div><div class="stat-value">8</div></div>
+  <div class="stat"><div class="stat-label">通过</div><div class="stat-value">8/8</div></div>
+  <div class="stat"><div class="stat-label">max |t|</div><div class="stat-value">1.79</div></div>
+  <div class="stat"><div class="stat-label">阈值</div><div class="big-number" style="color:var(--muted)">4.5</div></div>
+</div>
+
+<h2>1. 测试目标</h2>
+<p>验证 <code>sm-crypto</code> 的 HMAC-SM3 纯 JavaScript 实现在运行时是否通过时序侧信道泄漏密钥信息。</p>
+
+<div class="note">
+  <strong>背景：</strong>2026 年 2 月，电子科技大学团队发表了 HMAC-SM3 <a href="https://www.mdpi.com/2076-3417/16/4/1665" target="_blank">功耗侧信道攻击</a>（91.45% 密钥恢复成功率）。但该研究需要<strong>物理接触芯片</strong>进行功耗采集，且仅覆盖攻击维度。<br><br>
+  本验证工作形成互补：<strong>纯 JS 环境下远程可测的时序 TVLA 验证</strong>，证明 sm-crypto 的 HMAC-SM3 实现不存在可远程利用的时序泄漏。
+</div>
+
+<h2>2. 测试方法</h2>
+
+<div class="card">
+  <h3>TVLA (Test Vector Leakage Assessment)</h3>
+  <table>
+    <tr><th>参数</th><th>值</th></tr>
+    <tr><td>统计方法</td><td>Welch's t-test（非等方差）</td></tr>
+    <tr><td>样本量 N</td><td>2,000（Fixed 组 + Random 组）</td></tr>
+    <tr><td>预热 (Warmup)</td><td>500 次（消除 JIT 编译噪声）</td></tr>
+    <tr><td>阈值 |t|</td><td>≤ 4.5（置信度 > 99.999%）</td></tr>
+    <tr><td>测量精度</td><td>process.hrtime() — 纳秒级</td></tr>
+    <tr><td>运行时</td><td>Node.js v22.22.2（阿里云 ECS）</td></tr>
+    <tr><td>测试耗时</td><td>~0.5 秒</td></tr>
+  </table>
+</div>
+
+<h3>2.1 Fixed-vs-Random 协议</h3>
+<p>每组测试 Compare Group A（固定输入）与 Group B（随机输入），通过 Welch's t-test 判定两组时序分布是否存在统计显著差异：</p>
+<ul style="padding-left:1.5rem;margin:.5rem 0">
+  <li><strong>Group A (Fixed)：</strong>每次迭代使用相同输入（固定密钥 + 固定消息）</li>
+  <li><strong>Group B (Random)：</strong>每次迭代使用随机输入（随机密钥 / 随机消息）</li>
+  <li>如果实现是时序恒定的，两组分布应无统计差异 → |t| &lt; 4.5</li>
+</ul>
+
+<h2>3. 测试结果</h2>
+
+<h3>3.1 HMAC-SM3 核心测试（3项）</h3>
+<table>
+  <tr><th>测试项</th><th>Fixed 组</th><th>Random 组</th><th>|t|</th><th>df</th><th>结论</th></tr>
+  <tr><td>消息保密性</td><td>fixed-key + fixed-msg</td><td>fixed-key + random-msg</td><td class="pass-icon">1.09</td><td>3,618</td><td class="pass-icon">✅ PASS</td></tr>
+  <tr><td>全随机</td><td>fixed-key + fixed-msg</td><td>random-key + random-msg</td><td class="pass-icon">1.79</td><td>3,998</td><td class="pass-icon">✅ PASS</td></tr>
+  <tr><td>密钥保密性</td><td>random-key + fixed-msg</td><td>fixed-key + fixed-msg</td><td class="pass-icon">1.01</td><td>3,992</td><td class="pass-icon">✅ PASS</td></tr>
+</table>
+
+<h3>3.2 完整测试清单（8项）</h3>
+<table>
+  <tr><th>#</th><th>测试项</th><th>类型</th><th>|t|</th><th>结论</th></tr>
+  <tr><td>1</td><td>HMAC-SM3: fixed-key + random-msg</td><td>Core</td><td class="pass-icon">1.09</td><td class="pass-icon">✅</td></tr>
+  <tr><td>2</td><td>HMAC-SM3: all-fixed vs all-random</td><td>Core</td><td class="pass-icon">1.79</td><td class="pass-icon">✅</td></tr>
+  <tr><td>3</td><td>HMAC-SM3: random-key + fixed-msg</td><td>Core</td><td class="pass-icon">1.01</td><td class="pass-icon">✅</td></tr>
+  <tr><td>4</td><td>SM3 pure hash: fixed vs random</td><td>Baseline</td><td class="pass-icon">1.27</td><td class="pass-icon">✅</td></tr>
+  <tr><td>5</td><td>CONTROL: HMAC identical vs identical</td><td>Control</td><td class="pass-icon">0.07</td><td class="pass-icon">✅</td></tr>
+  <tr><td>6</td><td>CONTROL: SM3 identical vs identical</td><td>Control</td><td class="pass-icon">1.56</td><td class="pass-icon">✅</td></tr>
+  <tr><td>7</td><td>Node HMAC-SHA256: fixed vs random</td><td>System</td><td class="pass-icon">0.46</td><td class="pass-icon">✅</td></tr>
+  <tr><td>8</td><td>Node SHA-256: fixed vs random</td><td>System</td><td class="pass-icon">3.20</td><td class="pass-icon">✅</td></tr>
+</table>
+
+<div class="note">
+  <strong>⚠️ SM3 纯哈希假阳性说明：</strong>初次测试时 SM3 pure hash |t|=7.30（❌ FAIL），经排查发现是 <code>randomBytes().toString()</code> 产生变长 UTF-8 字符串导致输入长度不同。修正为固定长度 hex 输入后正常通过（|t|=1.27）。<strong>这不是 SM3 实现的泄漏，而是测试脚本的输入格式问题。</strong>
+</div>
+
+<h3>3.3 对照组验证</h3>
+<p>两项 CONTROL 测试（相同操作重复测量）的 |t| 分别为 0.07 和 1.56，均远低于 4.5。这证实：</p>
+<ul style="padding-left:1.5rem;margin:.5rem 0">
+  <li>测试环境噪声水平可控（JIT 充分预热后时序稳定）</li>
+  <li>无系统性测量偏差导致假阳性</li>
+</ul>
+
+<h2>4. 核心结论</h2>
+
+<div class="card" style="border-color:var(--pass)">
+  <p style="font-size:1.1rem;font-weight:700;color:var(--pass);margin-bottom:.5rem">✅ HMAC-SM3 8/8 全部通过 (N=2,000, max|t|=1.79 &lt; 4.5)</p>
+  <p><code>sm-crypto</code> 的 HMAC-SM3 纯 JavaScript 实现<strong>未检测到时序侧信道泄漏</strong>。3 项核心 HMAC-SM3 测试（消息保密性、全随机、密钥保密性）的 |t| 值均低于 1.8，远低于 4.5 阈值。</p>
+  <br>
+  <p style="color:var(--muted);font-size:.9rem">注：sm-crypto 的 HMAC-SM3 未做刻意恒定时间设计，实证结果说明其纯 JS 实现在 V8 引擎上天然不产生可检测的时序侧信道。这是 TVLA 方法论的核心价值——用实验数据验证安全假设，不依赖实现声明。</p>
+</div>
+
+<h2>5. 国密算法 TVLA 总览</h2>
+<table>
+  <tr><th>算法</th><th>实现</th><th>样本量</th><th>通过</th><th>max|t|</th><th>日期</th></tr>
+  <tr><td>SM2</td><td>jsbn (sm-crypto)</td><td>N=2,000</td><td class="pass-icon">5/5</td><td class="pass-icon">3.91</td><td>2026-05-30</td></tr>
+  <tr><td>SM2</td><td>BigInt + wNAF + Jacobian</td><td>N=2,000</td><td class="pass-icon">10/10</td><td class="pass-icon">2.71</td><td>2026-06-16</td></tr>
+  <tr><td style="font-weight:700">HMAC-SM3</td><td style="font-weight:700">sm-crypto</td><td style="font-weight:700">N=2,000</td><td class="pass-icon" style="font-weight:700">8/8</td><td class="pass-icon" style="font-weight:700">1.79</td><td style="font-weight:700">2026-06-16</td></tr>
+  <tr><td>SM4</td><td>—</td><td>—</td><td style="color:var(--muted)">待测</td><td style="color:var(--muted)">—</td><td style="color:var(--muted)">—</td></tr>
+</table>
+
+<h2>6. 时间戳存证</h2>
+<div class="card">
+  <table>
+    <tr><th>文件</th><th>SHA-256</th><th>TSA</th><th>状态</th></tr>
+    <tr><td><code>tvla-hmac-sm3.js</code></td><td style="font-size:.8rem;font-family:monospace">59b4e87c42cd28b3af49ec14f575f4669b48ae6cebc825b9dcb605ff02ba0f83</td><td>DigiCert</td><td class="pass-icon">✅</td></tr>
+    <tr><td><code>tvla-hmac-sm3-v1-report.json</code></td><td style="font-size:.8rem;font-family:monospace">2da907dd3682306e00ee42d62c0f9ac894071a2bfa9005d1e5a6f2f647223b70</td><td>DigiCert</td><td class="pass-icon">✅</td></tr>
+  </table>
+</div>
+
+<h2>7. 复现指南</h2>
+<pre># 测试脚本
+node /opt/fibemate-full/tvla-hmac-sm3.js
+
+# 依赖
+npm install sm-crypto   # sm-crypto >= 0.3.11
+
+# 验证时间戳
+openssl ts -verify -data tvla-hmac-sm3.js -in timestamps/digicert/tvla-hmac-sm3-v1.tsr -CAfile digicert-ca.pem
+</pre>
+
+<hr>
+
+<footer>
+  <p>FIBEMATE · HMAC-SM3 TVLA v1 · 2026-06-16</p>
+  <p>SM2 密钥协商 + SM4-伪GCM 认证加密 · ML-KEM-768 后量子增强</p>
+  <p style="margin-top:.3rem;font-size:.75rem">
+    <a href="/docs/timestamp-manifest.json">timestamp manifest</a> ·
+    <a href="/tvla-hmac-sm3-v1-report.json">raw data</a> ·
+    <a href="https://fibemate.net">fibemate.net</a>
+  </p>
+</footer>
+
+</body>
+</html>

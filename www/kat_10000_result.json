@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-06-25T23:29:02.954Z",
+  "nodeVersion": "v22.22.2",
+  "platform": "linux",
+  "arch": "x64",
+  "totalRounds": 10000,
+  "passed": 10000,
+  "failed": 0,
+  "totalTimeSec": 74.814,
+  "avgPerRoundMs": 7.481,
+  "keygenTotalSec": 18.007,
+  "encapsTotalSec": 24.095,
+  "decapsTotalSec": 32.588,
+  "keygenAvgUs": 1800.74,
+  "encapsAvgUs": 2409.47,
+  "decapsAvgUs": 3258.75
+}

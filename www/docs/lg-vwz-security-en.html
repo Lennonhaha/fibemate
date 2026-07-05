@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LookingGlass / VWZ — Security Assessment (English)</title>
+<link rel="stylesheet" href="../main.css">
+</head>
+<body>
+<main>
+<h1>LookingGlass / VWZ — Security Assessment</h1>
+<p class="subtitle">FIBEMATE Technical Documentation · 2026-06-30 · Public Transparency</p>
+
+<hr>
+
+<h2>LookingGlass v2</h2>
+
+<p>LookingGlass v2 is an algebraic isolation lattice-hardening architecture built on finite group representation theory. It constructs a seven-layer direct-sum system of pairwise orthogonal, inequivalent irreducible representations. By Schur's lemma, no non-trivial inter-layer linear mapping exists, fundamentally eliminating sublattice decomposition and divide-and-conquer BKZ shortcuts. Both classical and quantum lattice decomposition cannot bypass the layer isolation. The multi-factor verification chain resists progressive brute-force exploration and resets iterative attack progress.</p>
+
+<h2>VWZ</h2>
+
+<p>VWZ is an original Vandermonde-structured rank-1 tensor lattice signature with security assumptions orthogonal to standard LWE. Its highly sparse structured public key achieves 8.5x compression with a current computational hardness beyond 2<sup>2000</sup>, providing independent post-quantum redundancy even if conventional LWE assumptions are broken. The design avoids ring ideal leakage and offers minimal signature size with strong algebraic simplification resistance.</p>
+
+<h2>Scope &amp; Limitations</h2>
+
+<p>Both modules are experimental deep-defense layers and do not replace standardized FIPS 203/205 primitives. They eliminate known algebraic shortcut attacks but do not defeat full-dimensional lattice reduction or runtime side-channel leakage. In independent researcher PQC innovation, the LookingGlass algebraic isolation framework and VWZ Vandermonde-structured rank-1 tensor lattice signature represent world-leading original work with complete theoretical construction, software implementation, FPGA verification, and timestamped traceable records.</p>
+
+<hr>
+
+<p style="font-size:0.8rem;color:var(--muted);">DigiCert / FreeTSA Timestamped · TSR lg-001~050 · 2026-06-30</p>
+<p><a href="/docs/pqc-readiness.html">← PQC Readiness (Chinese)</a> · <a href="/">← Home</a></p>
+</main>
+</body>
+</html>

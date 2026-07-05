@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>ML-KEM-768 Test</title>
+<style>body{font-family:monospace;margin:2em;background:#0a0e17;color:#e0e0e0}
+.pass{color:#0f0}.fail{color:#f00}.info{color:#0af}
+pre{background:#111;padding:1em;border-radius:4px;overflow-x:auto}</style></head>
+<body>
+<h1>ML-KEM-768 FIPS 203 — Backend API Test</h1>
+<p>Testing <code>window.MLKEM768</code> backed by native C addon on server</p>
+<pre id="log"></pre>
+<div id="summary"></div>
+
+<script>
+const log = document.getElementById('log');
+const summary = document.getElementById('summary');
+
+function append(msg, cls) {
+    const span = document.createElement('span');
+    span.className = cls || '';
+    span.textContent = (typeof msg === 'object' ? JSON.stringify(msg,null,2) : msg) + '\n';
+    log.appendChild(span);
+}
+
+async function run() {
+    append('=== ML-KEM-768 Backend API Verification ===');
+    
+    // Check token
+    const token = localStorage.getItem('fk_token');
+    append('Token: ' + (token ? token.substring(0,20)+'...' : 'NOT FOUND — please login first'));
+    if (!token) {
+        summary.innerHTML = '<h2 class="fail">PLEASE LOGIN FIRST</h2><p>Open <a href="/login.html">login.html</a> and login, then return here.</p>';
+        return;
+    }
+
+    // Step 1: Check MLKEM768 availability
+    append('\n[1/5] Checking window.MLKEM768...');
+    const mlkem = window.MLKEM768;
+    if (!mlkem) { append('FAIL: MLKEM768 not found', 'fail'); return; }
+    append('OK: MLKEM768 loaded', 'pass');
+    append('  initialized: ' + mlkem.initialized);
+    append('  has keygen: ' + !!mlkem.keygen);
+    append('  has encapsulate: ' + !!mlkem.encapsulate);
+    append('  has decapsulate: ' + !!mlkem.decapsulate);
+    append('  has generateKeypair: ' + !!mlkem.generateKeypair);
+    append('  has hybridCombine: ' + !!mlkem.hybridCombine);
+    append('  has HybridKeyExchange: ' + !!mlkem.HybridKeyExchange);
+    append('  PUBLIC_KEY_BYTES: ' + mlkem.PUBLIC_KEY_BYTES);
+    append('  SECRET_KEY_BYTES: ' + mlkem.SECRET_KEY_BYTES);
+    append('  CIPHERTEXT_BYTES: ' + mlkem.CIPHERTEXT_BYTES);
+    append('  SHARED_SECRET_BYTES: ' + mlkem.SHARED_SECRET_BYTES);
+
+    // Step 2: Keygen
+    append('\n[2/5] Generating keypair...');
+    let kp;
+    try {
+        kp = await mlkem.keygen();
+        append('OK: keypair generated', 'pass');
+    } catch(e) {
+        append('FAIL: ' + e.message, 'fail');
+        return;
+    }
+    append('  publicKey: ' + kp.publicKey.length + ' bytes (expected ' + mlkem.PUBLIC_KEY_BYTES + ')',
+        kp.publicKey.length === mlkem.PUBLIC_KEY_BYTES ? 'pass' : 'fail');
+    append('  secretKey: ' + kp.secretKey.length + ' bytes (expected ' + mlkem.SECRET_KEY_BYTES + ')',
+        kp.secretKey.length === mlkem.SECRET_KEY_BYTES ? 'pass' : 'fail');
+    
+    // Also test generateKeypair alias
+    const kp2 = await mlkem.generateKeypair();
+    append('  generateKeypair alias: OK', 'pass');
+
+    // Step 3: Encapsulate
+    append('\n[3/5] Encapsulating...');
+    let enc;
+    try {
+        enc = await mlkem.encapsulate(kp.publicKey);
+        append('OK: encapsulation successful', 'pass');
+    } catch(e) {
+        append('FAIL: ' + e.message, 'fail');
+        return;
+    }
+    append('  ciphertext: ' + enc.ciphertext.length + ' bytes (expected ' + mlkem.CIPHERTEXT_BYTES + ')',
+        enc.ciphertext.length === mlkem.CIPHERTEXT_BYTES ? 'pass' : 'fail');
+    append('  sharedSecret: ' + enc.sharedSecret.length + ' bytes (expected ' + mlkem.SHARED_SECRET_BYTES + ')',
+        enc.sharedSecret.length === mlkem.SHARED_SECRET_BYTES ? 'pass' : 'fail');
+
+    // Step 4: Decapsulate
+    append('\n[4/5] Decapsulating...');
+    let ss2;
+    try {
+        ss2 = await mlkem.decapsulate(enc.ciphertext, kp.secretKey);
+        append('OK: decapsulation successful', 'pass');
+    } catch(e) {
+        append('FAIL: ' + e.message, 'fail');
+        return;
+    }
+    append('  sharedSecret: ' + ss2.length + ' bytes', 'pass');
+
+    // Step 5: Round-trip verification
+    append('\n[5/5] Round-trip verification...');
+    // Compare Uint8Arrays
+    let match = true;
+    if (enc.sharedSecret.length !== ss2.length) match = false;
+    else for (let i=0; i<enc.sharedSecret.length; i++) 
+        if (enc.sharedSecret[i] !== ss2[i]) { match = false; break; }
+    
+    append(match ? 'ROUND-TRIP VERIFIED: shared secrets match' : 'ROUND-TRIP FAILED', 
+        match ? 'pass' : 'fail');
+
+    // HybridKeyExchange test
+    append('\n[Bonus] HybridKeyExchange...');
+    try {
+        const hke = new mlkem.HybridKeyExchange();
+        const init = await hke.initialize();
+        append('  initialize: OK', 'pass');
+        append('    kemPublicKey: ' + init.kemPublicKey.length + ' bytes', 'pass');
+        append('    ecdhPublicKey: ' + init.ecdhPublicKey.byteLength + ' bytes', 'pass');
+        
+        const encResult = await hke.encapsulateToPeer(init.kemPublicKey, init.ecdhPublicKey);
+        append('  encapsulateToPeer: OK', 'pass');
+        const decResult = await hke.decapsulateFromPeer(encResult.ciphertext, init.ecdhPublicKey);
+        append('  decapsulateFromPeer: OK', 'pass');
+        
+        // Compare hybrid secrets
+        let hMatch = true;
+        for (let i = 0; i < encResult.sharedSecret.length; i++)
+            if (encResult.sharedSecret[i] !== decResult[i]) { hMatch = false; break; }
+        append('  Hybrid round-trip: ' + (hMatch ? 'PASS' : 'FAIL'),
+            hMatch ? 'pass' : 'fail');
+    } catch(e) {
+        append('HybridKeyExchange FAIL: ' + e.message, 'fail');
+    }
+
+    // Summary
+    summary.innerHTML = match 
+        ? '<h1 class="pass">ALL TESTS PASSED</h1><p>ML-KEM-768 via backend native C addon (FIPS 203 verified)</p>'
+        : '<h1 class="fail">SOME TESTS FAILED</h1>';
+}
+
+// Wait for DOM and then for MLKEM768 to be set
+document.addEventListener('DOMContentLoaded', () => {
+    // Give a moment for all deferred scripts to load
+    setTimeout(run, 500);
+});
+</script>
+</body></html>

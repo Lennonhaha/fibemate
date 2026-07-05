@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>可接受使用政策 - FIBEMATE</title>
+<link rel="stylesheet" href="styles.css">
+<style>
+  body{background:#0a0a0f;color:#e0e0e0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:0;padding:0}
+  .container{max-width:800px;margin:0 auto;padding:40px 20px}
+  h1{color:#00E5C3;font-size:2em;margin-bottom:10px}
+  h2{color:#00E5C3;font-size:1.4em;margin-top:30px;border-bottom:1px solid #333;padding-bottom:8px}
+  p{line-height:1.8;margin:12px 0}
+  a{color:#00E5C3;text-decoration:none}
+  a:hover{text-decoration:underline}
+  .last-updated{color:#888;font-size:0.9em;margin-bottom:30px}
+  .nav-back{display:inline-block;margin-bottom:20px;color:#00E5C3;text-decoration:none}
+  ul{line-height:2}
+  code{background:#1a1a2e;padding:2px 6px;border-radius:3px;font-size:0.9em}
+  .warning{background:#1a1a2e;border-left:3px solid #FF5252;padding:12px 16px;margin:16px 0;border-radius:4px}
+</style>
+</head>
+<body>
+<div class="container">
+  <a href="index.html" class="nav-back">← 返回首页</a>
+  <h1>可接受使用政策</h1>
+  <p class="last-updated">最后更新：2026年5月</p>
+
+  <h2>1. 概述</h2>
+  <p>本政策规定了使用 FIBEMATE 平台和服务的可接受行为准则。使用 FIBEMATE 即表示您同意遵守本政策。</p>
+
+  <h2>2. 禁止行为</h2>
+  <div class="warning">
+    <strong>⚠ 以下行为将被严厉禁止，违规者将被立即封禁：</strong>
+  </div>
+  <ul>
+    <li><strong>非法内容</strong>：传播违反适用法律的内容，包括但不限于儿童剥削、恐怖主义、毒品交易</li>
+    <li><strong>骚扰与威胁</strong>：对他人进行骚扰、恐吓、威胁或跟踪</li>
+    <li><strong>仇恨言论</strong>：基于种族、民族、宗教、性别、性取向、残疾或其他受保护特征煽动仇恨或歧视</li>
+    <li><strong>欺诈</strong>：冒充他人、实施钓鱼攻击或欺骗行为</li>
+    <li><strong>垃圾信息</strong>：大规模发送未经请求的消息或广告</li>
+    <li><strong>恶意软件</strong>：传播病毒、木马或其他恶意软件</li>
+    <li><strong>侵犯隐私</strong>：未经同意分享他人私密信息（人肉搜索）</li>
+    <li><strong>知识产权侵权</strong>：侵犯他人版权、商标或专利（详见 <a href="dmca.html">DMCA 政策</a>）</li>
+  </ul>
+
+  <h2>3. 加密服务的特殊规定</h2>
+  <p>FIBEMATE 提供端到端加密通信服务。请注意：</p>
+  <ul>
+    <li>端到端加密不赋予用户传播非法内容的权利</li>
+    <li>我们可能会在技术可行的范围内配合执法部门的合法请求</li>
+    <li>我们保留对可疑活动进行元数据分析的权利（不涉及消息内容）</li>
+    <li>使用 FIBEMATE 规避法律监督是严格禁止的</li>
+  </ul>
+
+  <h2>4. 账户安全</h2>
+  <ul>
+    <li>您有责任保护自己的账户凭据</li>
+    <li>禁止与他人共享账户</li>
+    <li>禁止使用自动化工具批量创建账户</li>
+    <li>发现账户被盗应立即通知我们</li>
+  </ul>
+
+  <h2>5. 执法措施</h2>
+  <p>违反本政策可能导致：</p>
+  <ul>
+    <li>内容删除（在技术可行的情况下）</li>
+    <li>临时账户限制</li>
+    <li>永久账户封禁</li>
+    <li>向执法部门报告</li>
+  </ul>
+
+  <h2>6. 举报</h2>
+  <p>如发现违反本政策的行为，请联系：</p>
+  <p><code>abuse@fibemate.net</code></p>
+
+  <h2>7. 政策更新</h2>
+  <p>FIBEMATE 保留随时修改本政策的权利。重大变更将通过应用内通知或电子邮件告知用户。</p>
+</div>
+
+<!-- Footer -->
+<footer style="background:#111;padding:20px;text-align:center;margin-top:40px;border-top:1px solid #333;">
+  <div style="margin-bottom:10px;">
+    <a href="index.html" style="color:#00E5C3;text-decoration:none;">首页</a> |
+    <a href="terms.html" style="color:#00E5C3;text-decoration:none;">服务条款</a> |
+    <a href="privacy.html" style="color:#00E5C3;text-decoration:none;">隐私政策</a> |
+    <a href="security.html" style="color:#00E5C3;text-decoration:none;">安全披露</a> |
+    <a href="cookie.html" style="color:#00E5C3;text-decoration:none;">Cookie政策</a> |
+    <a href="dmca.html" style="color:#00E5C3;text-decoration:none;">DMCA</a> |
+    <a href="acceptable-use.html" style="color:#00E5C3;text-decoration:none;">使用规范</a>
+  </div>
+  <div style="margin-bottom:8px;">
+    <a href="terms-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Terms</a> |
+    <a href="privacy-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Privacy</a> |
+    <a href="security-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Security</a> |
+    <a href="cookie-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Cookies</a> |
+    <a href="dmca-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">DMCA</a> |
+    <a href="acceptable-use-en.html" style="color:#00E5C3;text-decoration:none;font-size:0.85em;">Acceptable Use</a>
+  </div>
+  <p style="color:#888;font-size:0.8em;">© 2026 FIBEMATE. All rights reserved.</p>
+</footer>
+
+</body>
+</html>

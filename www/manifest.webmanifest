@@ -1,0 +1,27 @@
+{
+  "name": "FIBEMATE",
+  "short_name": "FIBEMATE",
+  "description": "后量子隐私通信 - 基于 ML-KEM-768 的端到端加密即时通讯",
+  "start_url": "/login.html",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#0a0a0f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "images/fibemate-logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "images/fibemate-logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["social", "communication"],
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "scope": "/",
+  "prefer_related_applications": false
+}

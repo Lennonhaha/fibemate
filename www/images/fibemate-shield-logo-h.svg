@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 60" width="220" height="60">
+  <defs>
+    <linearGradient id="sg2" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#00E5C3"/>
+      <stop offset="100%" style="stop-color:#7C4DFF"/>
+    </linearGradient>
+    <linearGradient id="sb2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0D1627"/>
+      <stop offset="100%" style="stop-color:#080C14"/>
+    </linearGradient>
+    <linearGradient id="fg2" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#00E5C3"/>
+      <stop offset="100%" style="stop-color:#7C4DFF"/>
+    </linearGradient>
+    <filter id="glow2" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Shield: 48x54 viewBox equivalent, positioned left -->
+  <g transform="translate(4, 3)">
+    <!-- Shield body -->
+    <path d="M24 2 L44 9 V27 C44 37.5 35 45 24 50 C13 45 4 37.5 4 27 V9 Z"
+          fill="url(#sb2)" stroke="url(#sg2)" stroke-width="2"/>
+    <!-- Inner glow border -->
+    <path d="M24 5 L41.5 11 V27 C41.5 36 33.5 42.5 24 47 C14.5 42.5 6.5 36 6.5 27 V11 Z"
+          fill="none" stroke="rgba(0,229,195,0.12)" stroke-width="0.8"/>
+    <!-- Circuit lines -->
+    <line x1="6" y1="17" x2="42" y2="17" stroke="rgba(0,229,195,0.15)" stroke-width="0.8"/>
+    <line x1="6" y1="24" x2="42" y2="24" stroke="rgba(0,229,195,0.10)" stroke-width="0.8"/>
+    <line x1="6" y1="31" x2="42" y2="31" stroke="rgba(0,229,195,0.08)" stroke-width="0.8"/>
+    <!-- F letter -->
+    <text x="24" y="26"
+          font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+          font-size="17" font-weight="800" text-anchor="middle"
+          dominant-baseline="middle"
+          fill="url(#fg2)"
+          filter="url(#glow2)">F</text>
+    <!-- Node dots -->
+    <circle cx="6" cy="9" r="1.2" fill="#00E5C3" opacity="0.5"/>
+    <circle cx="42" cy="9" r="1.2" fill="#7C4DFF" opacity="0.5"/>
+    <circle cx="24" cy="48" r="1.5" fill="#00E5C3" opacity="0.3"/>
+  </g>
+
+  <!-- FIBEMATE text -->
+  <text x="62" y="33"
+        font-family="Inter, -apple-system, BlinkMacSystemFont, sans-serif"
+        font-size="22" font-weight="800" letter-spacing="3"
+        fill="#FFFFFF">FIBEMATE</text>
+
+  <!-- Accent underline -->
+  <line x1="62" y1="42" x2="195" y2="42" stroke="url(#sg2)" stroke-width="1.2" opacity="0.5"/>
+</svg>

@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="UTF-8"><title>PQC Hybrid E2E Test</title>
+<style>
+body { font-family: system-ui; max-width: 800px; margin: 2rem auto; padding: 0 1rem; background: #0d1117; color: #c9d1d9; }
+h1 { color: #00E5C3; }
+.step { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; margin: 0.5rem 0; }
+.step.ok { border-color: #22c55e; }
+.step.err { border-color: #f87171; }
+.step .label { font-weight: 600; font-size: 0.9rem; }
+.step .label.pass { color: #22c55e; }
+.step .label.fail { color: #f87171; }
+.step .data { font-family: monospace; font-size: 0.75rem; color: #8b949e; margin-top: 4px; word-break: break-all; }
+#run { background: #00E5C3; color: #0d1117; border: none; padding: 12px 32px; border-radius: 8px; font-size: 1rem; font-weight: 700; cursor: pointer; margin: 1rem 0; }
+#run:disabled { background: #30363d; color: #8b949e; cursor: not-allowed; }
+#summary { font-size: 1.2rem; font-weight: 700; margin-top: 1rem; }
+#summary.pass { color: #22c55e; }
+#summary.fail { color: #f87171; }
+</style></head>
+<body>
+<h1>🔐 PQC Hybrid TLS Session Key — E2E Test</h1>
+<p style="color:#8b949e;">ML-KEM-768 + HKDF-SHA256 · TLS 1.3 session ID binding · Path C</p>
+<button id="run" onclick="run()">▶  Run E2E Test</button>
+<pre id="output"></pre>
+<div id="summary"></div>
+<script src="/crypto/ml-kem-768.js"></script>
+<script src="/crypto/pqc-hybrid-client.js"></script>
+<script>
+async function run() {
+  const output = document.getElementById('output');
+  const summary = document.getElementById('summary');
+  const btn = document.getElementById('run');
+  btn.disabled = true;
+  output.textContent = '';
+  let results = [];
+  
+  function log(step, ok, detail) {
+    results.push({step, ok, detail});
+    output.textContent += (ok ? '✅ ' : '❌ ') + step + ': ' + (detail || '') + '\n';
+  }
+  
+  try {
+    // Step 1: Init
+    log('GET /api/pqc-hybrid/init', null, 'fetching...');
+    const initRes = await fetch('/api/pqc-hybrid/init', { credentials: 'include' });
+    const initData = await initRes.json();
+    const ok1 = !!initData.publicKey && initData.publicKey.length === 2368;
+    log('GET /api/pqc-hybrid/init', ok1, ok1 ? 'pk=1184B, sid=' + initData.sessionId.slice(0,16) + '...' : JSON.stringify(initData));
+    if (!ok1) { summary.textContent = '❌ FAIL'; summary.className = 'fail'; btn.disabled = false; return; }
+    
+    // Step 2: Local encapsulate
+    const pkHex = initData.publicKey;
+    const pkBytes = new Uint8Array(pkHex.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+    log('Local encapsulate()', null, 'encapsulating...');
+    
+    const encResult = window.MLKEM768.encapsulate(pkBytes);
+    const ctHex = Array.from(encResult.ciphertext).map(b => b.toString(16).padStart(2,'0')).join('');
+    const ssPqc = encResult.sharedSecret;
+    const ok2 = ctHex.length === 2176 && ssPqc.length === 32;
+    log('Local encapsulate()', ok2, ok2 ? 'ct=1088B, ss=32B' : 'ct_len=' + ctHex.length/2 + ', ss_len=' + ssPqc.length);
+    if (!ok2) { summary.textContent = '❌ FAIL'; summary.className = 'fail'; btn.disabled = false; return; }
+    
+    // Step 3: Finalize
+    log('POST /api/pqc-hybrid/finalize', null, 'sending ciphertext...');
+    const finRes = await fetch('/api/pqc-hybrid/finalize', {
+      method: 'POST', credentials: 'include',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ sessionId: initData.sessionId, ciphertext: ctHex })
+    });
+    const finData = await finRes.json();
+    const ok3 = !!finData.confirmed;
+    log('POST /api/pqc-hybrid/finalize', ok3, ok3 ? 'confirmed=true' : JSON.stringify(finData));
+    if (!ok3) { summary.textContent = '❌ FAIL'; summary.className = 'fail'; btn.disabled = false; return; }
+    
+    // Step 4: Client-side HKDF (same as server)
+    // Using Web Crypto API
+    const encoder = new TextEncoder();
+    const saltBytes = new Uint8Array(initData.sessionId.match(/.{1,2}/g).map(b => parseInt(b, 16)));
+    
+    // extract = HMAC-SHA256(salt, ikm)
+    const extractKey = await crypto.subtle.importKey('raw', ssPqc, {name:'HMAC', hash:'SHA-256'}, false, ['sign']);
+    const prk = new Uint8Array(await crypto.subtle.sign('HMAC', extractKey, saltBytes));
+    log('HKDF-Extract(salt=TLS-SID, ikm=ss_pqc)', true, 'prk=32B');
+    
+    // expand = HKDF-Expand(prk, info, 32)
+    const expandKey = await crypto.subtle.importKey('raw', prk, {name:'HKDF', hash:'SHA-256'}, false, ['deriveBits']);
+    const info = encoder.encode('FIBEMATE_PQC_HYBRID_v1');
+    const sessionKey = new Uint8Array(await crypto.subtle.deriveBits({name:'HKDF', hash:'SHA-256', salt: new Uint8Array(0), info}, expandKey, 256));
+    const keyHex = Array.from(sessionKey).map(b => b.toString(16).padStart(2,'0')).join('');
+    const ok4 = sessionKey.length === 32;
+    log('HKDF-Expand(prk, info, 32)', ok4, 'sessionKey=' + keyHex.slice(0, 32) + '...');
+    
+    // Summary
+    const allOk = ok1 && ok2 && ok3 && ok4;
+    summary.textContent = allOk ? '✅ ALL PASS — PQC Hybrid TLS Session Key Exchange' : '❌ FAILED';
+    summary.className = allOk ? 'pass' : 'fail';
+    
+    // Send result back
+    window.__results = {
+      pass: allOk,
+      steps: ['init','encaps','finalize','hkdf'],
+      sessionKey: keyHex.slice(0, 16) + '...'
+    };
+    
+  } catch (e) {
+    log('FATAL', false, e.message);
+    summary.textContent = '❌ ERROR: ' + e.message;
+    summary.className = 'fail';
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>

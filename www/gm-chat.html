@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head><meta charset="utf-8"><title>GM Chat Real-API Test</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font:13px/1.5 'Segoe UI',system-ui;background:#0d1117;color:#c9d1d9;height:100vh;display:flex;flex-direction:column}
+h1{font-size:16px;color:#58a6ff;padding:12px 20px;border-bottom:1px solid #30363d;display:flex;align-items:center;gap:10px}
+h1 .dot{display:inline-block;width:8px;height:8px;border-radius:50%}
+.dot.on{background:#3fb950}.dot.off{background:#f85149}.dot.warn{background:#d29922}
+#topbar{display:flex;gap:10px;padding:10px 20px;border-bottom:1px solid #30363d;align-items:center;flex-wrap:wrap}
+#topbar label{color:#8b949e;font-size:12px}
+#topbar input{background:#161b22;border:1px solid #30363d;color:#c9d1d9;padding:4px 8px;border-radius:4px;font:12px monospace;width:300px}
+button{background:#238636;color:white;border:none;padding:6px 14px;border-radius:4px;cursor:pointer;font:12px inherit}
+button:hover{background:#2ea043}
+button:disabled{opacity:0.4;cursor:default}
+button.small{padding:3px 8px;font-size:11px}
+#chat-wrap{display:flex;flex:1;overflow:hidden}
+.panel{flex:1;display:flex;flex-direction:column;border-right:1px solid #30363d;min-width:0}
+.panel:last-child{border-right:none}
+.panel-header{padding:8px 14px;background:#161b22;border-bottom:1px solid #30363d;display:flex;justify-content:space-between;align-items:center}
+.panel-header .name{font-weight:600;color:#58a6ff}
+.panel-header .status{font-size:11px}
+.msg-list{flex:1;overflow-y:auto;padding:8px;display:flex;flex-direction:column;gap:4px}
+.msg{border-radius:8px;padding:6px 12px;max-width:85%;word-break:break-all;position:relative}
+.msg.sent{background:#1f6feb;align-self:flex-end}
+.msg.recv{background:#30363d;align-self:flex-start}
+.msg .body{font-size:13px}
+.msg .meta{font-size:10px;color:#8b949e;margin-top:2px}
+.msg .crypto{font-size:10px;font-family:monospace;color:#d29922;margin-top:2px;max-height:40px;overflow:hidden}
+.input-area{display:flex;padding:8px;gap:6px;border-top:1px solid #30363d;background:#161b22}
+.input-area input{flex:1;background:#0d1117;border:1px solid #30363d;color:#c9d1d9;padding:6px 10px;border-radius:4px;font:13px inherit}
+#log-panel{height:120px;overflow-y:auto;background:#0d1117;border-top:1px solid #30363d;padding:8px 20px;font:11px monospace}
+#log-panel .ok{color:#3fb950} #log-panel .err{color:#f85149} #log-panel .warn{color:#d29922} #log-panel .info{color:#8b949e}
+.spin{animation:spin 0.8s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head><body>
+<h1>🔐 GM Chat Real-API Test <span style="font-size:11px;color:#8b949e">fibemate.net → SM4-GCM</span><span id="conn-dot" class="dot off"></span></h1>
+
+<div id="topbar">
+  <label>Alice Token</label><input id="tok-a" placeholder="eyJ...">
+  <label>Bob Token</label><input id="tok-b" placeholder="eyJ...">
+  <label>User IDs</label><input id="uid-a" placeholder="alice uuid" size="30"><input id="uid-b" placeholder="bob uuid" size="30">
+  <button id="btn-connect" onclick="doConnect()">🔗 Connect & Start</button>
+  <button id="btn-poll" onclick="doPoll()" disabled style="background:#30363d">🔄 Poll</button>
+  <span id="poll-status" style="font-size:11px;color:#8b949e">Not started</span>
+</div>
+
+<div id="chat-wrap">
+  <div class="panel" id="panel-a">
+    <div class="panel-header"><span class="name">👤 Alice</span><span class="status" id="status-a">—</span></div>
+    <div class="msg-list" id="msgs-a"></div>
+    <div class="input-area">
+      <input id="input-a" placeholder="GM encrypted message..." onkeydown="if(event.key==='Enter')doSend('a')">
+      <button onclick="doSend('a')">Send →</button>
+    </div>
+  </div>
+  <div class="panel" id="panel-b">
+    <div class="panel-header"><span class="name">👤 Bob</span><span class="status" id="status-b">—</span></div>
+    <div class="msg-list" id="msgs-b"></div>
+    <div class="input-area">
+      <input id="input-b" placeholder="GM encrypted message..." onkeydown="if(event.key==='Enter')doSend('b')">
+      <button onclick="doSend('b')">Send →</button>
+    </div>
+  </div>
+</div>
+<div id="log-panel"></div>
+
+<script>
+const API = 'https://fibemate.net/api';
+const SM4_SHARED_KEY = 'b1a2c3d4e5f60718293a4b5c6d7e8f90'; // 16-byte PSK for testing
+let state = { convId: null, tokens: { a: '', b: '' }, userIds: { a: '', b: '' }, polling: false };
+
+function log(msg, cls) {
+  const el = document.getElementById('log-panel');
+  const t = new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  el.innerHTML += `<span class="${cls||''}">[${t}] ${msg}</span>\n`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function setStatus(panel, text, cls) {
+  const el = document.getElementById('status-'+panel);
+  el.textContent = text;
+  el.style.color = cls === 'ok' ? '#3fb950' : cls === 'err' ? '#f85149' : '#d29922';
+}
+
+async function api(method, path, body, token) {
+  const opts = { method, headers: { 'Content-Type': 'application/json' } };
+  if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(API + path, opts);
+  const data = await r.json().catch(() => ({}));
+  return { ok: r.ok, status: r.status, data };
+}
+
+function addMsg(panel, text, side, encrypted) {
+  const list = document.getElementById('msgs-'+panel);
+  const div = document.createElement('div');
+  div.className = 'msg ' + (side === 'sent' ? 'sent' : 'recv');
+  div.innerHTML = `<div class="body">${text}</div>` +
+    (encrypted ? `<div class="crypto">🔒 ${encrypted.substring(0,80)}…</div>` : '') +
+    `<div class="meta">${new Date().toLocaleTimeString('zh-CN',{hour12:false})} ${side==='sent'?'→':'←'}</div>`;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+function showToast(panel, msg) {
+  const list = document.getElementById('msgs-'+panel);
+  const div = document.createElement('div');
+  div.className = 'msg recv';
+  div.innerHTML = `<div class="body" style="color:#d29922;font-style:italic">${msg}</div>`;
+  list.appendChild(div);
+  list.scrollTop = list.scrollHeight;
+}
+
+// ============ CONNECT ============
+async function doConnect() {
+  const tokA = document.getElementById('tok-a').value.trim();
+  const tokB = document.getElementById('tok-b').value.trim();
+  const uidA = document.getElementById('uid-a').value.trim();
+  const uidB = document.getElementById('uid-b').value.trim();
+
+  if (!tokA || !tokB || !uidA || !uidB) {
+    log('请输入两边的 Token 和 User ID', 'err');
+    return;
+  }
+
+  state.tokens = { a: tokA, b: tokB };
+  state.userIds = { a: uidA, b: uidB };
+
+  log('Step 1: find-or-create conversation...', 'info');
+
+  // Alice initiates conversation with Bob
+  const r1 = await api('POST', '/conversations/find-or-create', { userId: uidB }, tokA);
+  if (!r1.ok) { log('Conversation FAIL: ' + JSON.stringify(r1.data), 'err'); return; }
+  state.convId = r1.data.conversationId;
+  log(`Conversation ID: ${state.convId}`, 'ok');
+  log(`Other user: ${r1.data.otherUser?.username}`, 'info');
+
+  // Load existing messages for both sides
+  await loadMessages('a', tokA);
+  await loadMessages('b', tokB);
+
+  document.getElementById('btn-poll').disabled = false;
+  document.getElementById('btn-connect').disabled = true;
+  document.getElementById('conn-dot').className = 'dot on';
+  setStatus('a', 'Ready', 'ok');
+  setStatus('b', 'Ready', 'ok');
+  
+  // Auto-poll
+  state.polling = true;
+  doPoll();
+  log('✅ Connected. Auto-polling started.', 'ok');
+}
+
+// ============ LOAD MESSAGES ============
+async function loadMessages(panel, token) {
+  if (!state.convId) return;
+  const r = await api('GET', `/conversations/${state.convId}/messages?limit=50`, null, token);
+  if (!r.ok) return;
+  const panelEl = document.getElementById('msgs-'+panel);
+  panelEl.innerHTML = '';
+  for (const m of (r.data.messages || [])) {
+    const isMe = m.senderUserId === state.userIds[panel];
+    try {
+      const dec = SM4GCM.decrypt(m.ciphertext, SM4_SHARED_KEY, m.iv, m.authTag);
+      addMsg(panel, dec, isMe ? 'sent' : 'recv', m.ciphertext);
+    } catch(e) {
+      addMsg(panel, `[解密失败] ${m.ciphertext.substring(0,40)}...`, isMe ? 'sent' : 'recv', m.ciphertext);
+    }
+  }
+}
+
+// ============ SEND ============
+async function doSend(panel) {
+  if (!state.convId) { log('Not connected', 'err'); return; }
+  const input = document.getElementById('input-'+panel);
+  const text = input.value.trim();
+  if (!text) return;
+
+  const token = state.tokens[panel];
+  const otherPanel = panel === 'a' ? 'b' : 'a';
+
+  // Encrypt with SM4-GCM using shared key
+  let encrypted;
+  try {
+    encrypted = SM4GCM.encrypt(text, SM4_SHARED_KEY);
+  } catch(e) {
+    log('Encrypt error: ' + e.message, 'err');
+    showToast(panel, '❌ SM4 加密失败: ' + e.message);
+    return;
+  }
+
+  // Combine ciphertext + IV + authTag into single field
+  const envelope = JSON.stringify({ ct: encrypted.ciphertext, iv: encrypted.iv, tag: encrypted.authTag, algo: 'sm4-gcm' });
+
+  log(`${panel.toUpperCase()} → sending: "${text.substring(0,30)}" (ctx=${encrypted.ciphertext.substring(0,20)}...)`, 'info');
+  
+  const r = await api('POST', '/messages', {
+    conversationId: state.convId,
+    ciphertext: envelope,
+    messageType: 'text'
+  }, token);
+
+  if (r.ok) {
+    addMsg(panel, text, 'sent', encrypted.ciphertext);
+    input.value = '';
+    log(`✅ Message ${r.data.messageId.substring(0,8)}... delivered`, 'ok');
+    // Poll immediately for Bob to receive
+    setTimeout(() => doPoll(), 500);
+  } else {
+    log(`Send FAIL: ${JSON.stringify(r.data)}`, 'err');
+    showToast(panel, '❌ 发送失败');
+  }
+}
+
+// ============ POLL ============
+async function doPoll() {
+  if (!state.convId || !state.polling) return;
+  const el = document.getElementById('poll-status');
+
+  for (const panel of ['a', 'b']) {
+    const token = state.tokens[panel];
+    if (!token) continue;
+    try {
+      const r = await api('GET', `/conversations/${state.convId}/messages?limit=30`, null, token);
+      if (!r.ok) continue;
+      
+      const list = document.getElementById('msgs-'+panel);
+      const existingIds = new Set(Array.from(list.querySelectorAll('.msg')).map(d => d.dataset?.msgId).filter(Boolean));
+      
+      for (const m of (r.data.messages || [])) {
+        if (existingIds.has(m.id)) continue;
+        
+        const isMe = m.senderUserId === state.userIds[panel];
+        let body, encPreview;
+        try {
+          // Parse envelope
+          let ct, iv, tag;
+          try {
+            const env = JSON.parse(m.ciphertext);
+            ct = env.ct; iv = env.iv; tag = env.tag;
+          } catch { ct = m.ciphertext; }
+          
+          const dec = SM4GCM.decrypt(ct || '', SM4_SHARED_KEY, iv, tag);
+          body = dec;
+          encPreview = ct;
+        } catch(e) {
+          body = `[SM4解密失败]`;
+          encPreview = m.ciphertext;
+        }
+
+        const div = document.createElement('div');
+        div.className = 'msg ' + (isMe ? 'sent' : 'recv');
+        div.dataset.msgId = m.id;
+        div.innerHTML = `<div class="body">${body}</div>` +
+          (encPreview ? `<div class="crypto">🔒 ${encPreview.substring(0,60)}…</div>` : '') +
+          `<div class="meta">${new Date(m.createdAt).toLocaleTimeString('zh-CN',{hour12:false})} ${isMe?'→':'←'}</div>`;
+        list.appendChild(div);
+      }
+      list.scrollTop = list.scrollHeight;
+    } catch(e) {
+      // ignore poll errors
+    }
+  }
+
+  el.textContent = 'Polled @ ' + new Date().toLocaleTimeString('zh-CN', { hour12: false });
+  setTimeout(doPoll, 3000);
+}
+
+// ============ INIT ============
+window.addEventListener('DOMContentLoaded', () => {
+  // Load crypto bundles
+  const bundles = [
+    '/crypto/sm3-browser.js',
+    '/crypto/sm4-browser.js',
+    '/crypto/sm2-browser.bundle.js'
+  ];
+  let loaded = 0;
+  for (const src of bundles) {
+    const s = document.createElement('script');
+    s.src = src;
+    s.onload = () => {
+      loaded++;
+      if (loaded === bundles.length) {
+        log('✅ 3 GM crypto bundles loaded', 'ok');
+        log('SM4-GCM PSK: ' + SM4_SHARED_KEY, 'info');
+        log('Ready. Paste tokens & user IDs, then click Connect.', 'info');
+        document.getElementById('conn-dot').className = 'dot warn';
+      }
+    };
+    s.onerror = () => log('💥 Failed to load: ' + src, 'err');
+    document.head.appendChild(s);
+  }
+
+  // Auto-fill from localStorage if available
+  const saved = localStorage.getItem('gmchat_test');
+  if (saved) {
+    try {
+      const cfg = JSON.parse(saved);
+      document.getElementById('tok-a').value = cfg.tokA || '';
+      document.getElementById('tok-b').value = cfg.tokB || '';
+      document.getElementById('uid-a').value = cfg.uidA || '';
+      document.getElementById('uid-b').value = cfg.uidB || '';
+    } catch {}
+  }
+});
+
+// Save config on change
+['tok-a','tok-b','uid-a','uid-b'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', () => {
+    const cfg = {
+      tokA: document.getElementById('tok-a').value,
+      tokB: document.getElementById('tok-b').value,
+      uidA: document.getElementById('uid-a').value,
+      uidB: document.getElementById('uid-b').value
+    };
+    localStorage.setItem('gmchat_test', JSON.stringify(cfg));
+  });
+});
+</script>
+</body></html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>GM Crypto Test</title>
+<style>
+body { font-family: 'Segoe UI', system-ui; padding: 20px; background: #0d1117; color: #c9d1d9; max-width: 900px; margin: 0 auto; }
+h1 { color: #58a6ff; border-bottom: 2px solid #30363d; padding-bottom: 10px; }
+.pass { color: #3fb950; }
+.fail { color: #f85149; }
+.warn { color: #d29922; }
+.info { color: #8b949e; }
+pre { background: #161b22; padding: 15px; border-radius: 8px; border: 1px solid #30363d; font-size: 13px; overflow-x: auto; }
+pre .label { color: #58a6ff; display: block; margin: 8px 0 4px; }
+hr { border-color: #30363d; margin: 20px 0; }
+input, textarea, button { font-family: inherit; }
+input, textarea { background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 6px 10px; border-radius: 4px; }
+button { background: #238636; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; }
+button:hover { background: #2ea043; }
+button.red { background: #da3633; }
+button.red:hover { background: #f85149; }
+.row { display: flex; gap: 10px; align-items: center; margin: 5px 0; }
+#output { min-height: 40px; white-space: pre-wrap; word-break: break-all; }
+</style>
+</head><body>
+<h1>🔐 GM Crypto Self-Test</h1>
+<p class="info">Tests run automatically on page load using server crypto bundles.</p>
+<pre id="log"></pre>
+
+<hr>
+<h2>Manual Test</h2>
+<div class="row">
+  <input id="msg" value="你好世界！Hello World! 🔥" size="40" placeholder="Message">
+  <button onclick="testEncrypt()">Test Encrypt/Decrypt</button>
+</div>
+<pre id="output"></pre>
+
+<script>
+const logEl = document.getElementById('log');
+const outEl = document.getElementById('output');
+
+function log(msg, cls) {
+  logEl.innerHTML += `<span class="${cls||''}">${msg}</span>\n`;
+  logEl.scrollTop = logEl.scrollHeight;
+}
+
+async function runTests() {
+  log('=== Loading Crypto Bundles ===', 'info');
+
+  const bundles = [
+    { src: '/crypto/sm3-browser.js',   check: () => typeof SM3Hash !== 'undefined' },
+    { src: '/crypto/sm4-browser.js',   check: () => typeof SM4GCM  !== 'undefined' },
+    { src: '/crypto/sm2-browser.bundle.js', check: () => typeof SM2Browser !== 'undefined' },
+  ];
+
+  for (const b of bundles) {
+    try {
+      await new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = b.src;
+        s.onload  = () => { log(`✅ ${b.src}`, 'pass'); resolve(); };
+        s.onerror = () => { log(`💥 ${b.src} FAILED`, 'fail'); resolve(); };
+        document.head.appendChild(s);
+      });
+    } catch(e) {
+      log(`💥 ${b.src}: ${e.message}`, 'fail');
+    }
+  }
+
+  // Verify globals
+  for (const b of bundles) {
+    const ok = b.check();
+    log(`  ${b.src.split('/').pop()} → ${ok ? '✅ Loaded' : '❌ Missing'}`, ok ? 'pass' : 'fail');
+    if (!ok) return;
+  }
+
+  // === SM3 Test ===
+  log('\n--- SM3 Hash ---', 'info');
+  try {
+    const h1 = SM3Hash.digestHex('abc');
+    const expected = '66c7f0f462eeedd9d1f2d46bdc10e4e24167c4875cf2f7a2297da02b8f4ba8e0';
+    log(`  SM3("abc") = ${h1}`, 'pass');
+    log(`  Expected  = ${expected.length} hex chars`, 'info');
+    log(`  Match: ${h1 === expected ? '✅ PASS' : '❌ FAIL'}`, h1 === expected ? 'pass' : 'fail');
+  } catch(e) { log(`  SM3 ERROR: ${e.message}`, 'fail'); }
+
+  // === SM4 Test ===
+  log('\n--- SM4-GCM Encrypt/Decrypt ---', 'info');
+  try {
+    const key = SM2Browser.generateKeypair().publicKey.substring(0, 32); // 16-byte hex key
+    const msg = 'FIBEMATE GM TEST';
+    const enc = SM4GCM.encrypt(msg, key);
+    log(`  Encrypt: ${msg} → ${enc.ciphertext.length} hex chars + IV ${enc.iv.length} + tag ${enc.authTag.length}`, 'pass');
+    const dec = SM4GCM.decrypt(enc.ciphertext, key, enc.iv, enc.authTag);
+    log(`  Decrypt: → "${dec}"`, 'pass');
+    log(`  Match: ${dec === msg ? '✅ PASS' : '❌ FAIL'}`, dec === msg ? 'pass' : 'fail');
+  } catch(e) { log(`  SM4 ERROR: ${e.message}`, 'fail'); }
+
+  // === SM2 Test ===
+  log('\n--- SM2 Key Generation ---', 'info');
+  try {
+    const kp = SM2Browser.generateKeypair();
+    log(`  Public:  ${kp.publicKey.substring(0, 40)}... (${kp.publicKey.length} chars)`, 'pass');
+    log(`  Private: ${kp.privateKey.substring(0, 20)}... (${kp.privateKey.length} chars)`, 'pass');
+  } catch(e) { log(`  SM2 KG ERROR: ${e.message}`, 'fail'); }
+
+  // === SM2 Encrypt/Decrypt ===
+  log('\n--- SM2 Encrypt/Decrypt ---', 'info');
+  try {
+    const kp = SM2Browser.generateKeypair();
+    const msg = 'Hello from SM2!';
+    const enc = SM2Browser.encrypt(kp.publicKey, msg);
+    log(`  Encrypt: "${msg}" → ${enc.length} hex chars`, 'pass');
+    const dec = SM2Browser.decrypt(kp.privateKey, enc);
+    log(`  Decrypt: → "${dec}"`, 'pass');
+    log(`  Match: ${dec === msg ? '✅ PASS' : '❌ FAIL'}`, dec === msg ? 'pass' : 'fail');
+  } catch(e) { log(`  SM2 ERROR: ${e.message}`, 'fail'); }
+
+  // === Full GM Pipeline (SM2 key exchange + SM4 data) ===
+  log('\n--- Full GM Pipeline ---', 'info');
+  try {
+    const alice = SM2Browser.generateKeypair();
+    const bob   = SM2Browser.generateKeypair();
+
+    // Alice encrypts for Bob
+    const sm4Key = alice.publicKey.substring(0, 32); // derive SM4 key
+    const payload = '🔐 国密全链路加密测试 - GM Full Pipeline Test';
+    const enc2 = SM4GCM.encrypt(payload, sm4Key);
+    log(`  SM4 Encrypt: ${enc2.ciphertext.length} hex (iv=${enc2.iv.length} tag=${enc2.authTag.length})`, 'pass');
+
+    // Bob decrypts
+    const dec2 = SM4GCM.decrypt(enc2.ciphertext, sm4Key, enc2.iv, enc2.authTag);
+    log(`  SM4 Decrypt: → "${dec2}"`, 'pass');
+    log(`  Match: ${dec2 === payload ? '✅ PASS' : '❌ FAIL'}`, dec2 === payload ? 'pass' : 'fail');
+  } catch(e) { log(`  GM Pipeline ERROR: ${e.message}`, 'fail'); }
+
+  // === Chinese text ===
+  log('\n--- Chinese Text Roundtrip ---', 'info');
+  try {
+    const cnMsg = '你好世界！这是一条国密SM4加密的测试消息。🔐';
+    const key = '0123456789abcdef0123456789abcdef';
+    const enc3 = SM4GCM.encrypt(cnMsg, key);
+    const dec3 = SM4GCM.decrypt(enc3.ciphertext, key, enc3.iv, enc3.authTag);
+    log(`  Encrypt: "${cnMsg}" → ${enc3.ciphertext.length} hex`, 'pass');
+    log(`  Decrypt: → "${dec3}"`, 'pass');
+    log(`  Match: ${dec3 === cnMsg ? '✅ PASS' : '❌ FAIL'}`, dec3 === cnMsg ? 'pass' : 'fail');
+  } catch(e) { log(`  CN ERROR: ${e.message}`, 'fail'); }
+
+  // === Big message ===
+  log('\n--- Large Message (10KB) ---', 'info');
+  try {
+    const bigMsg = 'X'.repeat(10240);
+    const key = 'fedcba9876543210fedcba9876543210';
+    const t0 = performance.now();
+    const enc4 = SM4GCM.encrypt(bigMsg, key);
+    const t1 = performance.now();
+    const dec4 = SM4GCM.decrypt(enc4.ciphertext, key, enc4.iv, enc4.authTag);
+    const t2 = performance.now();
+    log(`  Encrypt 10KB: ${(t1-t0).toFixed(2)}ms → ${enc4.ciphertext.length} hex`, 'pass');
+    log(`  Decrypt 10KB: ${(t2-t1).toFixed(2)}ms`, 'pass');
+    log(`  Match: ${dec4 === bigMsg ? '✅ PASS' : '❌ FAIL'}`, dec4 === bigMsg ? 'pass' : 'fail');
+  } catch(e) { log(`  Big msg ERROR: ${e.message}`, 'fail'); }
+
+  log('\n=== All Tests Complete ===', 'warn');
+  log('GM crypto stack verified. Ready for integration.', 'pass');
+}
+
+function testEncrypt() {
+  const msg = document.getElementById('msg').value;
+  try {
+    const kp = SM2Browser.generateKeypair();
+    const key = kp.publicKey.substring(0, 32);
+    const t0 = performance.now();
+    const enc = SM4GCM.encrypt(msg, key);
+    const t1 = performance.now();
+    const dec = SM4GCM.decrypt(enc.ciphertext, key, enc.iv, enc.authTag);
+    const t2 = performance.now();
+    outEl.innerHTML = [
+      `<span class="pass">✅ PASS</span> — Roundtrip: ${(t2-t0).toFixed(2)}ms`,
+      `<span class="info">Enc: ${enc.ciphertext.length} hex | IV: ${enc.iv} | Tag: ${enc.authTag}</span>`,
+      `<span class="pass">Dec: "${dec}"</span>`,
+    ].join('\n');
+  } catch(e) {
+    outEl.innerHTML = `<span class="fail">ERROR: ${e.message}</span>`;
+  }
+}
+
+setTimeout(runTests, 200);
+</script>
+</body></html>

@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIBEMATE PQ 模块诊断</title>
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; max-width: 900px; margin: 40px auto; padding: 20px; background: #1a1a2e; color: #eee; }
+    h1 { color: #e94560; }
+    .section { background: #16213e; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .ok { color: #4ecca3; }
+    .fail { color: #ff6b6b; }
+    .warn { color: #ffd93d; }
+    .log { font-family: monospace; background: #0f0f23; padding: 10px; border-radius: 4px; max-height: 300px; overflow-y: auto; }
+    .log-entry { margin: 5px 0; padding: 5px; border-left: 3px solid #4ecca3; }
+    .log-entry.error { border-left-color: #ff6b6b; }
+    .log-entry.warn { border-left-color: #ffd93d; }
+    pre { background: #0f0f23; padding: 15px; border-radius: 4px; overflow-x: auto; }
+    button { background: #e94560; color: white; border: none; padding: 12px 24px; border-radius: 6px; cursor: pointer; font-size: 16px; }
+    button:hover { background: #ff6b8a; }
+    .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .status-card { background: #0f3460; padding: 15px; border-radius: 8px; text-align: center; }
+    .status-card .icon { font-size: 32px; margin-bottom: 10px; }
+    .status-card .label { font-size: 12px; color: #aaa; }
+    .status-card .value { font-size: 18px; font-weight: bold; margin-top: 5px; }
+  </style>
+</head>
+<body>
+  <h1>🔬 FIBEMATE PQ 模块诊断</h1>
+  
+  <div class="section">
+    <h2>诊断控制台</h2>
+    <div id="console" class="log"></div>
+    <br>
+    <button onclick="runAllTests()">🔄 重新诊断</button>
+  </div>
+
+  <div class="section">
+    <h2>模块加载状态</h2>
+    <div class="status-grid">
+      <div class="status-card">
+        <div class="icon" id="icon-webcrypto">⏳</div>
+        <div class="label">WebCrypto API</div>
+        <div class="value" id="val-webcrypto">检测中...</div>
+      </div>
+      <div class="status-card">
+        <div class="icon" id="icon-noble">⏳</div>
+        <div class="label">@noble/post-quantum</div>
+        <div class="value" id="val-noble">检测中...</div>
+      </div>
+      <div class="status-card">
+        <div class="icon" id="icon-pqengine">⏳</div>
+        <div class="label">PQSignatureEngine</div>
+        <div class="value" id="val-pqengine">检测中...</div>
+      </div>
+      <div class="status-card">
+        <div class="icon" id="icon-signature">⏳</div>
+        <div class="label">signature.js</div>
+        <div class="value" id="val-signature">检测中...</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h2>Script 标签检查</h2>
+    <div id="script-list"></div>
+  </div>
+
+  <div class="section">
+    <h2>全局对象检查</h2>
+    <pre id="global-objects"></pre>
+  </div>
+
+  <div class="section">
+    <h2>Network 请求检查</h2>
+    <div id="network-status"></div>
+  </div>
+
+  <!-- PQ Module Dependencies -->
+  <script src="noble-pq-bundle/unified.js"></script>
+  <script src="privacy-layers/signature.v2.js?v=3"></script>
+  
+  <script>
+    const logDiv = document.getElementById('console');
+    
+    function log(msg, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = 'log-entry ' + type;
+      const time = new Date().toLocaleTimeString();
+      entry.textContent = `[${time}] ${msg}`;
+      logDiv.appendChild(entry);
+      logDiv.scrollTop = logDiv.scrollHeight;
+    }
+
+    function setStatus(id, icon, value, type) {
+      document.getElementById('icon-' + id).textContent = icon;
+      document.getElementById('val-' + id).textContent = value;
+      document.getElementById('val-' + id).className = 'value ' + type;
+    }
+
+    function checkWebCrypto() {
+      if (window.crypto && window.crypto.subtle) {
+        log('✅ WebCrypto API 可用', 'info');
+        setStatus('webcrypto', '✅', '可用', 'ok');
+        return true;
+      } else if (window.crypto) {
+        log('⚠️ window.crypto 存在但 subtle 不可用', 'warn');
+        setStatus('webcrypto', '⚠️', '部分可用', 'warn');
+        return false;
+      } else {
+        log('❌ WebCrypto API 不可用 (需要 HTTPS 或 localhost)', 'error');
+        setStatus('webcrypto', '❌', '不可用', 'fail');
+        return false;
+      }
+    }
+
+    function checkNoblePQ() {
+      // unified.js exports to window.__NOBLE_PQ__
+      const noblePQ = window.__NOBLE_PQ__;
+      if (noblePQ) {
+        const keys = Object.keys(noblePQ);
+        log(`✅ @noble/post-quantum 已加载，导出 ${keys.length} 个接口`, 'info');
+        keys.forEach(k => {
+          log(`   - ${k}: ${typeof noblePQ[k]}`, 'info');
+        });
+        setStatus('noble', '✅', `${keys.length} 接口`, 'ok');
+        
+        // 检查签名相关
+        if (noblePQ.ml_dsa44 || noblePQ.ml_dsa65) {
+          log('✅ ML-DSA (FIPS 204) 可用', 'info');
+        }
+        if (noblePQ.slh_dsa_sha2_128s || noblePQ.slh_dsa_sha2_256s) {
+          log('✅ SLH-DSA (FIPS 205) 可用', 'info');
+        }
+        return true;
+      } else {
+        log('❌ window.__NOBLE_PQ__ 未找到，@noble/post-quantum 未正确加载', 'error');
+        setStatus('noble', '❌', '未加载', 'fail');
+        return false;
+      }
+    }
+
+    function checkPQSignatureEngine() {
+      if (typeof PQSignatureEngine !== 'undefined') {
+        log('✅ PQSignatureEngine 类已定义', 'info');
+        setStatus('pqengine', '✅', '已定义', 'ok');
+        return true;
+      } else if (window.PQSignatureEngine) {
+        log('✅ window.PQSignatureEngine 已定义', 'info');
+        setStatus('pqengine', '✅', 'window.PQSignatureEngine', 'ok');
+        return true;
+      } else {
+        log('❌ PQSignatureEngine 未定义', 'error');
+        setStatus('pqengine', '❌', '未定义', 'fail');
+        return false;
+      }
+    }
+
+    function checkSignatureJS() {
+      // 检查 signature.js 是否被加载
+      const scripts = document.querySelectorAll('script[src]');
+      let sigFound = false;
+      let sigSrc = '';
+      
+      scripts.forEach(script => {
+        const src = script.src || '';
+        if (src.includes('signature')) {
+          sigFound = true;
+          sigSrc = src;
+          log(`✅ 找到 signature script: ${src}`, 'info');
+        }
+      });
+      
+      if (sigFound) {
+        setStatus('signature', '✅', '已加载', 'ok');
+        return true;
+      } else {
+        log('❌ 未找到 signature.js script 标签', 'error');
+        setStatus('signature', '❌', '未加载', 'fail');
+        return false;
+      }
+    }
+
+    function checkScriptTags() {
+      const scripts = document.querySelectorAll('script[src]');
+      const div = document.getElementById('script-list');
+      div.innerHTML = '<pre>' + 
+        Array.from(scripts).map(s => s.src || '(inline)').join('\n') + 
+        '</pre>';
+    }
+
+    function checkGlobalObjects() {
+      const important = [
+        'PQSignatureEngine', 'MessageCrypto', 'DoubleRatchet', 
+        'SignalProtocol', 'BackendRouter', 'MLKEMHybridIntegration',
+        'nobleSECP256R1', 'noble_ml_kem768', 'kyber768',
+        'crypto', 'SubtleCrypto', 'crypto.subtle'
+      ];
+      
+      const results = {};
+      important.forEach(name => {
+        try {
+          results[name] = typeof eval(name);
+        } catch {
+          results[name] = 'undefined';
+        }
+      });
+      
+      document.getElementById('global-objects').textContent = JSON.stringify(results, null, 2);
+    }
+
+    function checkNetwork() {
+      const urls = [
+        '/noble-pq-bundle/unified.js',
+        '/privacy-layers/signature.js',
+        '/privacy-layers/signature.v2.js',
+        '/js/message-crypto-v2.js'
+      ];
+      
+      const div = document.getElementById('network-status');
+      div.innerHTML = '';
+      
+      urls.forEach(url => {
+        fetch(url, { method: 'HEAD' })
+          .then(r => {
+            const status = r.ok ? '✅' : '❌';
+            const text = r.statusText || (r.ok ? 'OK' : 'FAIL');
+            div.innerHTML += `<div class="${r.ok ? 'ok' : 'fail'}">${status} ${url} - ${r.status} ${text}</div>`;
+          })
+          .catch(e => {
+            div.innerHTML += `<div class="fail">❌ ${url} - ${e.message}</div>`;
+          });
+      });
+    }
+
+    async function testSignatureEngine() {
+      if (typeof PQSignatureEngine === 'undefined') {
+        log('❌ 无法测试: PQSignatureEngine 未定义', 'error');
+        return;
+      }
+      
+      try {
+        log('🔧 尝试初始化 PQSignatureEngine...', 'info');
+        const engine = new PQSignatureEngine({ enabled: true });
+        log(`✅ PQSignatureEngine 实例化成功`, 'info');
+        log(`   - enabled: ${engine.enabled}`, 'info');
+        log(`   - _initialized: ${engine._initialized}`, 'info');
+        
+        // 尝试初始化
+        if (typeof engine.init === 'function') {
+          log('🔧 调用 engine.init()...', 'info');
+          await engine.init();
+          log(`✅ init() 完成`, 'info');
+        } else {
+          log('⚠️ engine.init() 不存在', 'warn');
+        }
+      } catch (e) {
+        log(`❌ PQSignatureEngine 错误: ${e.message}`, 'error');
+        console.error(e);
+      }
+    }
+
+    async function runAllTests() {
+      logDiv.innerHTML = '';
+      log('🔬 开始 PQ 模块诊断...', 'info');
+      
+      log('--- 1. WebCrypto API ---', 'info');
+      checkWebCrypto();
+      
+      log('--- 2. @noble/post-quantum ---', 'info');
+      checkNoblePQ();
+      
+      log('--- 3. PQSignatureEngine ---', 'info');
+      checkPQSignatureEngine();
+      
+      log('--- 4. signature.js 加载 ---', 'info');
+      checkSignatureJS();
+      
+      log('--- 5. 全局对象 ---', 'info');
+      checkGlobalObjects();
+      
+      log('--- 6. Script 标签 ---', 'info');
+      checkScriptTags();
+      
+      log('--- 7. Network 检查 ---', 'info');
+      checkNetwork();
+      
+      log('--- 8. 引擎功能测试 ---', 'info');
+      await testSignatureEngine();
+      
+      log('🏁 诊断完成', 'info');
+    }
+
+    // 自动运行
+    window.addEventListener('load', () => {
+      setTimeout(runAllTests, 500);
+    });
+  </script>
+</body>
+</html>

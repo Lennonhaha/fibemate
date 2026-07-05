@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>技术架构 - FIBEMATE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --primary: #00E5C3; --primary-dim: #00b894; --bg-dark: #0a0e17;
+            --bg-card: #111827; --bg-card-hover: #1a2332; --text: #e2e8f0;
+            --text-dim: #94a3b8; --accent-purple: #8b5cf6; --accent-blue: #3b82f6;
+            --accent-pink: #ec4899; --accent-orange: #f97316; --accent-green: #22c55e;
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.7; }
+        a { color: var(--primary); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
+        
+        /* Nav */
+        nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: rgba(17,24,39,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 100; }
+        .nav-logo { font-size: 1.25rem; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
+        .nav-back { font-size: 0.9rem; color: var(--text-dim); }
+        .nav-back:hover { color: var(--primary); }
+
+        /* Sections */
+        h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
+        h1 .gradient { background: linear-gradient(135deg, var(--primary), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid rgba(0,229,195,0.15); }
+        h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--primary); }
+        .subtitle { color: var(--text-dim); font-size: 1.05rem; margin-bottom: 2rem; }
+
+        /* Architecture Diagram */
+        .arch-diagram { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; margin: 1.5rem 0; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.6; overflow-x: auto; white-space: pre; color: var(--text-dim); }
+        .arch-diagram .hl { color: var(--primary); }
+        .arch-diagram .dim { color: #646c78; }
+
+        /* Comparison Table */
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; font-size: 0.92rem; }
+        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
+        th { color: var(--text-dim); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; background: rgba(17,24,39,0.6); }
+        tr:hover td { background: rgba(255,255,255,0.02); }
+        td:first-child { font-weight: 600; color: var(--text); white-space: nowrap; }
+
+        /* Badges */
+        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
+        .badge-stable { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+        .badge-experimental { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3); color: #f97316; }
+        .badge-done { background: rgba(0,229,195,0.1); border: 1px solid rgba(0,229,195,0.2); color: #00d4aa; }
+        .badge-wip { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.2); color: #8b949e; }
+
+        /* Code block */
+        code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: var(--primary); }
+        pre { background: rgba(0,0,0,0.3); padding: 1.2rem; border-radius: 8px; overflow-x: auto; margin: 0.75rem 0; font-size: 0.85rem; }
+        pre code { padding: 0; background: none; }
+
+        /* Warning box */
+        .warning { background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.2); border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; font-size: 0.9rem; }
+        .warning::before { content: '⚠️ '; }
+
+        /* Flow */
+        .flow-steps { counter-reset: flow; list-style: none; padding: 0; }
+        .flow-steps li { counter-increment: flow; padding: 0.75rem 0 0.75rem 2.5rem; position: relative; }
+        .flow-steps li::before { content: counter(flow); position: absolute; left: 0; top: 0.7rem; width: 1.6rem; height: 1.6rem; background: var(--bg-card); border: 1px solid var(--primary); border-radius: 50%; text-align: center; font-size: 0.78rem; line-height: 1.55rem; color: var(--primary); }
+
+        /* Footer */
+        footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.82rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 3rem; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="nav-logo">FIBEMATE</a>
+        <a href="/" class="nav-back">← 返回首页</a>
+    </nav>
+
+    <div class="container">
+        <h1>技术<span class="gradient">架构</span></h1>
+        <p class="subtitle">FIBEMATE 采用双后端架构：Node.js 生产稳定版 + Rust 高性能实验版。两个后端 API 兼容，可无缝切换。</p>
+
+        <!-- Architecture Diagram -->
+        <h2>系统架构总览</h2>
+        <div class="arch-diagram">
+┌──────────────────────────────────────────────────────────┐
+│                    <span class="hl">fibemate.net</span>                              │
+│                 <span class="dim">(Nginx Reverse Proxy)</span>                       │
+│  <span class="dim">TLS 1.3 · HSTS · OCSP Stapling · Let's Encrypt</span>           │
+└──────────────────────┬───────────────────────────────────┘
+                       │
+         ┌─────────────┼─────────────────────────────┐
+         │             │                             │
+         ▼             ▼                             ▼
+  ┌────────────┐ ┌────────────┐              ┌────────────┐
+  │ <span class="hl">稳定通道</span>   │ │ <span class="dim">实验通道</span>   │              │ <span class="dim">静态资源</span>   │
+  │ <span class="dim">:3001</span>      │ │ <span class="dim">:8080*</span>     │              │ <span class="dim">:80/443</span>    │
+  └─────┬──────┘ └─────┬──────┘              └─────┬──────┘
+        │              │                           │
+        ▼              ▼                           ▼
+  ┌────────────┐ ┌────────────┐              ┌────────────┐
+  │ <span class="hl">Node.js</span>   │ │ <span style="color:var(--accent-orange);">Rust</span>      │              │ <span class="dim">www/</span>       │
+  │ <span class="hl">v2.21-pq</span>  │ │ <span style="color:var(--accent-orange);">v0.2-e2ee</span> │              │ <span class="dim">HTML/JS/CSS</span> │
+  │ <span class="badge" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#22c55e;padding:1px 8px;font-size:0.7rem;">PRODUCTION</span> │ │ <span class="badge" style="background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:#f97316;padding:1px 8px;font-size:0.7rem;">EXPERIMENTAL</span> │              │            │
+  └────────────┘ └────────────┘              └────────────┘
+        </div>
+
+        <!-- Version Comparison -->
+        <h2>版本对比</h2>
+        <table>
+            <tr>
+                <th>特性</th>
+                <th>Node.js 生产版</th>
+                <th>Rust 实验版</th>
+            </tr>
+            <tr>
+                <td>状态</td>
+                <td><span class="badge badge-stable">✅ 稳定运行</span></td>
+                <td><span class="badge badge-experimental">🔬 开发中</span></td>
+            </tr>
+            <tr>
+                <td>版本</td>
+                <td>v2.21-pq</td>
+                <td>v0.2-e2ee</td>
+            </tr>
+            <tr>
+                <td>端口</td>
+                <td>3001 (PM2 管理)</td>
+                <td>8080* (Cargo)</td>
+            </tr>
+            <tr>
+                <td>E2EE</td>
+                <td><span class="badge badge-done">PQ + X3DH + Double Ratchet</span></td>
+                <td><span class="badge badge-done">PQ + X3DH + Double Ratchet</span></td>
+            </tr>
+            <tr>
+                <td>ZK / Bulletproofs</td>
+                <td><span class="badge badge-done">已集成</span></td>
+                <td><span class="badge badge-wip">待迁移</span></td>
+            </tr>
+            <tr>
+                <td>WebSocket</td>
+                <td><span class="badge badge-done">完整支持</span></td>
+                <td><span class="badge badge-done">已打通</span></td>
+            </tr>
+            <tr>
+                <td>SessionManager</td>
+                <td><span class="badge badge-done">事件驱动架构</span></td>
+                <td><span class="badge badge-wip">待实现</span></td>
+            </tr>
+            <tr>
+                <td>性能</td>
+                <td>基准</td>
+                <td>预期提升 3-5x</td>
+            </tr>
+            <tr>
+                <td>代码量</td>
+                <td>~3,100 行 main.js</td>
+                <td>模块化架构</td>
+            </tr>
+            <tr>
+                <td>访问方式</td>
+                <td>默认</td>
+                <td>需手动切换</td>
+            </tr>
+        </table>
+
+        <!-- How to Switch -->
+        <h2>如何测试 Rust 实验版</h2>
+        <p>Rust 后端正在积极开发中，欢迎技术爱好者提前体验：</p>
+        <ol class="flow-steps" style="margin: 1rem 0;">
+            <li>打开浏览器开发者工具 (<code>F12</code>)</li>
+            <li>在 Console 中执行：<pre><code>localStorage.setItem('backend', 'rust')</code></pre></li>
+            <li>刷新页面，响应头中将出现 <code>X-Backend: rust</code></li>
+            <li>体验后可通过以下命令切回：<pre><code>localStorage.removeItem('backend')</code></pre></li>
+        </ol>
+
+        <div class="warning">
+            Rust 实验版仍在测试中，请勿用于重要通信。部分功能可能不稳定。
+        </div>
+
+        <!-- Response Headers -->
+        <h2>响应头标识</h2>
+        <p>开发者可通过浏览器 DevTools → Network 查看当前使用的后端：</p>
+        <table>
+            <tr>
+                <th>响应头</th>
+                <th>Node.js 生产版</th>
+                <th>Rust 实验版</th>
+            </tr>
+            <tr>
+                <td><code>X-Backend</code></td>
+                <td><code>nodejs/2.21-pq</code></td>
+                <td><code>rust/0.2-e2ee</code></td>
+            </tr>
+            <tr>
+                <td><code>X-Backend-Status</code></td>
+                <td><code>stable</code></td>
+                <td><code>experimental</code></td>
+            </tr>
+        </table>
+
+        <!-- Security Stack -->
+        <h2>安全技术栈</h2>
+        <table>
+            <tr><th>层级</th><th>技术</th><th>状态</th></tr>
+            <tr><td>传输层</td><td>TLS 1.3 · HSTS · Let's Encrypt</td><td><span class="badge badge-done">✅</span></td></tr>
+            <tr><td>密钥交换</td><td>ML-KEM-768 Hybrid X3DH</td><td><span class="badge badge-done">✅</span></td></tr>
+            <tr><td>连续加密</td><td>Double Ratchet (PQ optimized)</td><td><span class="badge badge-done">✅</span></td></tr>
+            <tr><td>身份认证</td><td>ZK-SNARKs (Bulletproofs Range Proof)</td><td><span class="badge badge-done">✅</span></td></tr>
+            <tr><td>流量混淆</td><td>Sphinx Packet Format + Mixnet</td><td><span class="badge badge-wip">WIP</span></td></tr>
+            <tr><td>会话管理</td><td>SessionManager (Event-Driven)</td><td><span class="badge badge-done">✅</span></td></tr>
+            <tr><td>国密</td><td>SM2 / SM3 (GM/T 0003)</td><td><span class="badge badge-done">✅</span></td></tr>
+            <tr><td>可信时间戳</td><td>RFC 3161 (TSA — 联合信任 (tsa.cn))</td><td><span class="badge badge-done">12/12 Files 100%</span></td></tr>
+        </table>
+
+        <!-- ===== PQC Hybrid (Path C) ===== -->
+        <h2>PQC 混合密钥交换（路径 C）</h2>
+        <p>不改 Nginx/OpenSSL，在 TLS 1.3 ECDHE-SM2 握手之上叠加 ML-KEM-768：</p>
+        <table>
+            <tr><th>端点</th><th>方法</th><th>说明</th></tr>
+            <tr><td><code>/api/pqc-hybrid/init</code></td><td>GET</td><td>获取服务端 ML-KEM-768 公钥 + TLS Session ID</td></tr>
+            <tr><td><code>/api/pqc-hybrid/finalize</code></td><td>POST</td><td>提交密文，双方 HKDF 派生共享密钥</td></tr>
+            <tr><td><code>/api/pqc-hybrid/status</code></td><td>GET</td><td>服务状态 + 活跃会话数</td></tr>
+        </table>
+        <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-dim);">
+            高压验证：900/900 会话全部通过（p95=78.5ms），零 session 泄漏。
+            详见 <a href="/docs/pqc-readiness.html">PQC 就绪度报告</a> 和
+            <a href="/docs/API.html">API 文档 §7</a>。
+        </p>
+
+        <!-- ===== Multi-Platform ===== -->
+        <h2>多平台架构</h2>
+        <table>
+            <tr><th>平台</th><th>运行时</th><th>密码模块</th><th>状态</th></tr>
+            <tr><td>Tauri 桌面端</td><td>Node.js v22 + Rust</td><td>ML-KEM-768 · SM2 · SM3 · SM4-GCM · SLH-DSA WASM</td><td><span class="badge badge-done">v3.0-preview</span></td></tr>
+            <tr><td>React Native 移动端</td><td>Node.js v20 · RN 0.76+</td><td>SM3Hash · SM4GCM · ML-KEM-768 · SM2 EC · Hybrid（需 polyfill）</td><td><span class="badge badge-done">C2/C3 49/49 通过</span></td></tr>
+            <tr><td>Web 浏览器</td><td>Web Crypto API + WASM</td><td>PQC Hybrid Client · OPK Client · SM2 Bridge · SLH-DSA WASM</td><td><span class="badge badge-done">全部就绪</span></td></tr>
+            <tr><td>FPGA 硬件</td><td>Xilinx Artix-7 XC7A35T</td><td>NTT Pipeline v1.3（7 级流水线 · B=32 Barrett · 2 DSP48E1）</td><td><span class="badge badge-done">256/256 全匹配</span></td></tr>
+        </table>
+
+        <!-- ===== SLH-DSA ===== -->
+        <h2>SLH-DSA WASM 后量子签名</h2>
+        <p>基于 <code>pqc_sphincsplus</code> (Argyle-Software) 编译为 WASM，提供 stateless hash-based 签名方案作为 ML-KEM 的互补原语：</p>
+        <table>
+            <tr><th>指标</th><th>数值</th></tr>
+            <tr><td>WASM 体积</td><td>~107KB (gzip ~51KB)</td></tr>
+            <tr><td>签名耗时</td><td>~500ms (Web Worker 异步)</td></tr>
+            <tr><td>验签耗时</td><td>~10ms (主线程可行)</td></tr>
+            <tr><td>公钥 / 签名</td><td>32B / 7,856B</td></tr>
+            <tr><td>安全等级</td><td>NIST SL 5 (256-bit)</td></tr>
+        </table>
+        <p style="font-size:0.85rem;color:var(--text-dim);">
+            SLH-DSA 不依赖格假设，与 ML-KEM 形成异构冗余：即使某一数学假设被攻破，另一原语仍保持安全。
+            详见 <a href="/docs/API.html">API 文档 §6</a>。
+        </p>
+
+
+
+        <p style="margin-top:1rem;font-size:0.85rem;color:var(--text-dim);">
+            <a href="/">返回首页</a> · 更新时间 2026-06-30 · 代码待审计后开源
+        </p>
+    </div>
+
+    <footer>
+        © 2026 FIBEMATE · Post-Quantum Ready · 独立技术研究
+    </footer>
+</body>
+</html>

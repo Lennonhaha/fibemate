@@ -1,0 +1,45 @@
+{
+  "timestamp": "2026-05-30T19:04:47.690Z",
+  "nodeVersion": "v22.22.2",
+  "method": "Welch t-test fixed-vs-random (polyMul WASM, compress/decompress JS)",
+  "threshold": 4.5,
+  "note": "compress/decompress not replaced — WASM fuses byte-encoding, API mismatch with coefficient-level JS functions",
+  "iterations": {
+    "bridge": 500,
+    "mlkemHigh": 300
+  },
+  "results": [
+    {
+      "name": "WASM polyMul",
+      "t": 4.79,
+      "df": 806.2721459778402,
+      "fixedMean": 161996,
+      "fixedCV": 11.359063002734556,
+      "passed": false
+    },
+    {
+      "name": "MLKEM+W generateKeypair",
+      "t": 0.81,
+      "df": 577.3687001647228,
+      "fixedMean": 1862549,
+      "fixedCV": 14.287755363832366,
+      "passed": true
+    },
+    {
+      "name": "MLKEM+W encapsulate",
+      "t": 63.8,
+      "df": 538.2177220756773,
+      "fixedMean": 2493927,
+      "fixedCV": 11.417177794066784,
+      "passed": false
+    },
+    {
+      "name": "MLKEM+W decapsulate",
+      "t": 115.11,
+      "df": 579.0469265371943,
+      "fixedMean": 3226627,
+      "fixedCV": 15.14270400355594,
+      "passed": false
+    }
+  ]
+}

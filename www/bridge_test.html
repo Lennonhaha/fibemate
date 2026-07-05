@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html><head><meta charset=" utf-8\><title>Bridge Test v3</title></head>
+<body>
+<h1>Bridge Test v3</h1>
+<div id=\status\></div>
+<script>
+function log(msg) {
+ document.getElementById('status').innerHTML += '<br>' + msg;
+ console.log(msg);
+}
+</script>
+<script src=\kyber_nt_v3.js?nocache=3\></script>
+<script src=\double-ratchet.js?nocache=3\></script>
+<script src=\sm-v12.js?nocache=3\></script>
+<script src=\legacy-crypto-bridge.js?nocache=3\></script>
+<script>
+log('=== Test Results ===');
+log('window.SessionManager: ' + (!!window.SessionManager));
+log('window.MessageCrypto: ' + (!!window.MessageCrypto));
+if (window.MessageCrypto) {
+ log('MessageCrypto keys: ' + Object.keys(window.MessageCrypto).join(', '));
+} else {
+ log('ERROR: MessageCrypto not defined!');
+}
+if (window.SessionManager) {
+ log('SessionManager keys: ' + Object.keys(window.SessionManager).join(', '));
+}
+</script>
+</body></html>

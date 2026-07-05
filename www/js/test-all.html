@@ -1,0 +1,20 @@
+<script type=module>
+const modules = [
+  ['backend-router', 'core'],
+  ['ws-handler', 'core'],
+  ['message-controller', 'core'],
+  ['chat-ui', 'ui'],
+  ['contacts', 'ui'],
+  ['e2ee-status', 'ui'],
+];
+const results = [];
+for (const [name, dir] of modules) {
+  try {
+    await import(`./${dir}/${name}.js`);
+    results.push(name + ': PASS');
+  } catch (e) {
+    results.push(name + ': FAIL - ' + e.message);
+  }
+}
+document.body.textContent = results.join('\n');
+</script>

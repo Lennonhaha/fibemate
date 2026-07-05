@@ -1,0 +1,400 @@
+/** FIBEMATE Community Styles */
+
+/* ========== 社区布局 ========== */
+.community-container {
+  display: flex;
+  height: 100%;
+  background: var(--bg-primary, #0f172a);
+  color: var(--text-primary, #e2e8f0);
+}
+
+.community-sidebar {
+  width: 280px;
+  border-right: 1px solid var(--border-color, #1e293b);
+  display: flex;
+  flex-direction: column;
+}
+
+.community-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ========== 频道列表 ========== */
+.channel-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.channel-item {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  border-radius: 12px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: var(--bg-secondary, #1e293b);
+}
+
+.channel-item:hover {
+  background: var(--bg-hover, #334155);
+  transform: translateX(4px);
+}
+
+.channel-item.active {
+  background: var(--accent-primary, #3b82f6);
+}
+
+.channel-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+.channel-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.channel-name {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.badge-encrypted {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.channel-desc {
+  font-size: 13px;
+  color: var(--text-secondary, #94a3b8);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.channel-meta {
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  margin-top: 4px;
+  display: flex;
+  gap: 12px;
+}
+
+.btn-join {
+  padding: 6px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--accent-primary, #3b82f6);
+  background: transparent;
+  color: var(--accent-primary, #3b82f6);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-join:hover {
+  background: var(--accent-primary, #3b82f6);
+  color: white;
+}
+
+.btn-join.joined {
+  background: var(--success, #10b981);
+  border-color: var(--success, #10b981);
+  color: white;
+}
+
+/* ========== 搜索栏 ========== */
+.community-search {
+  padding: 12px;
+  border-bottom: 1px solid var(--border-color, #1e293b);
+}
+
+.community-search input {
+  width: 100%;
+  padding: 10px 16px;
+  border-radius: 24px;
+  border: 1px solid var(--border-color, #1e293b);
+  background: var(--bg-secondary, #1e293b);
+  color: var(--text-primary, #e2e8f0);
+  font-size: 14px;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.community-search input:focus {
+  border-color: var(--accent-primary, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* ========== 帖子列表 ========== */
+.post-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.post-card {
+  background: var(--bg-secondary, #1e293b);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  border: 1px solid var(--border-color, #1e293b);
+  transition: all 0.2s;
+}
+
+.post-card:hover {
+  border-color: var(--border-hover, #334155);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.post-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.post-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.post-author .avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.post-time {
+  font-size: 13px;
+  color: var(--text-muted, #64748b);
+}
+
+.post-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  line-height: 1.4;
+}
+
+.post-content {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-secondary, #94a3b8);
+  margin-bottom: 16px;
+}
+
+.post-actions {
+  display: flex;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border-color, #1e293b);
+}
+
+.post-actions button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background: var(--bg-tertiary, #0f172a);
+  color: var(--text-secondary, #94a3b8);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.post-actions button:hover {
+  background: var(--bg-hover, #334155);
+  color: var(--text-primary, #e2e8f0);
+}
+
+/* ========== 创建帖子 ========== */
+.create-post {
+  padding: 20px;
+  border-bottom: 1px solid var(--border-color, #1e293b);
+}
+
+.create-post textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #1e293b);
+  background: var(--bg-secondary, #1e293b);
+  color: var(--text-primary, #e2e8f0);
+  font-size: 15px;
+  resize: vertical;
+  min-height: 100px;
+  outline: none;
+}
+
+.create-post textarea:focus {
+  border-color: var(--accent-primary, #3b82f6);
+}
+
+/* ========== 模态框 ========== */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.modal-content {
+  background: var(--bg-secondary, #1e293b);
+  border-radius: 20px;
+  padding: 32px;
+  width: 90%;
+  max-width: 480px;
+  border: 1px solid var(--border-color, #1e293b);
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+  font-size: 24px;
+}
+
+.modal-content input,
+.modal-content textarea {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 1px solid var(--border-color, #1e293b);
+  background: var(--bg-primary, #0f172a);
+  color: var(--text-primary, #e2e8f0);
+  font-size: 15px;
+  outline: none;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.modal-actions button {
+  padding: 10px 24px;
+  border-radius: 12px;
+  border: none;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.modal-actions button:first-child {
+  background: transparent;
+  color: var(--text-secondary, #94a3b8);
+}
+
+.modal-actions button:last-child {
+  background: var(--accent-primary, #3b82f6);
+  color: white;
+}
+
+.modal-actions button:last-child:hover {
+  background: var(--accent-hover, #2563eb);
+}
+
+/* ========== 切换开关 ========== */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.toggle input[type="checkbox"] {
+  width: 44px;
+  height: 24px;
+  appearance: none;
+  background: var(--bg-tertiary, #0f172a);
+  border-radius: 12px;
+  position: relative;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.toggle input[type="checkbox"]::after {
+  content: '';
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: white;
+  top: 2px;
+  left: 2px;
+  transition: all 0.2s;
+}
+
+.toggle input[type="checkbox"]:checked {
+  background: var(--accent-primary, #3b82f6);
+}
+
+.toggle input[type="checkbox"]:checked::after {
+  left: 22px;
+}
+
+/* ========== 响应式 ========== */
+@media (max-width: 768px) {
+  .community-sidebar {
+    width: 100%;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: auto;
+    max-height: 60vh;
+    border-right: none;
+    border-top: 1px solid var(--border-color, #1e293b);
+    z-index: 100;
+  }
+  
+  .channel-list {
+    display: flex;
+    overflow-x: auto;
+    padding: 8px;
+    gap: 8px;
+  }
+  
+  .channel-item {
+    min-width: 200px;
+    margin-bottom: 0;
+  }
+}

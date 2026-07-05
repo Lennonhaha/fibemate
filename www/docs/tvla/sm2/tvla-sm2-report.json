@@ -1,0 +1,80 @@
+{
+  "timestamp": "2026-05-30T18:22:02.323Z",
+  "nodeVersion": "v22.22.2",
+  "iterations": 2000,
+  "threshold": 4.5,
+  "results": [
+    {
+      "name": "SM2 generateKeypair",
+      "t": 0.18,
+      "df": 3979.3536084068687,
+      "fixedMean": 22540319,
+      "randomMean": 22583980.2265,
+      "fixedCV": 35.26437018143027,
+      "passed": true
+    },
+    {
+      "name": "SM2 sign",
+      "t": 0.24,
+      "df": 3983.0617152714535,
+      "fixedMean": 45617473,
+      "randomMean": 45724366.4235,
+      "fixedCV": 31.969051134371867,
+      "passed": true
+    },
+    {
+      "name": "SM2 verify",
+      "t": 0.85,
+      "df": 3990.624728370726,
+      "fixedMean": 42742164,
+      "randomMean": 42398534.4845,
+      "fixedCV": 30.557198819162274,
+      "passed": true
+    },
+    {
+      "name": "SM2 encrypt",
+      "t": 1.3,
+      "df": 3975.004310437063,
+      "fixedMean": 29747971,
+      "randomMean": 29955662.721,
+      "fixedCV": 17.667946386587772,
+      "passed": true
+    },
+    {
+      "name": "SM2 decrypt",
+      "t": 0.19,
+      "df": 3511.8155106039944,
+      "fixedMean": 14581338,
+      "randomMean": 14571627.948,
+      "fixedCV": 13.048690770871286,
+      "passed": true
+    },
+    {
+      "name": "timingSafeEqual",
+      "t": 0.99,
+      "df": 2020.5043507849841,
+      "fixedMean": 217,
+      "randomMean": 211.154,
+      "fixedCV": 122.08014608105712,
+      "passed": true
+    },
+    {
+      "name": "SHA-256",
+      "t": 3.98,
+      "df": 2192.7950982466295,
+      "fixedMean": 8693,
+      "randomMean": 26694.077,
+      "fixedCV": 501.25722466438407,
+      "passed": true
+    },
+    {
+      "name": "randomBytes(32)",
+      "t": 0.99,
+      "df": 2636.492326334957,
+      "fixedMean": 4423,
+      "randomMean": 6581.0555,
+      "fixedCV": 826.0364246431225,
+      "passed": true
+    }
+  ]
+}

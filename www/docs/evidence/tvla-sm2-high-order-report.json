@@ -1,0 +1,149 @@
+{
+  "version": "high-order v1.0",
+  "implementation": "sm2-bigint-ec v1.3 (Montgomery Ladder + Scalar Masking + Projective Randomization)",
+  "N": 5000,
+  "threshold": 4.5,
+  "timestamp": "2026-06-20T21:02:38.925Z",
+  "results": [
+    {
+      "operation": "genKey",
+      "meanFixedUs": 6530.632999999995,
+      "meanRandomUs": 6551.964459999997,
+      "orders": [
+        {
+          "order": 1,
+          "|t|": 0,
+          "pass": true
+        },
+        {
+          "order": 2,
+          "|t|": 0.1484,
+          "pass": true
+        },
+        {
+          "order": 3,
+          "|t|": 0.2414,
+          "pass": true
+        },
+        {
+          "order": 4,
+          "|t|": 0.4849,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "operation": "sign",
+      "meanFixedUs": 10508.053540000015,
+      "meanRandomUs": 10466.932299999979,
+      "orders": [
+        {
+          "order": 1,
+          "|t|": 0,
+          "pass": true
+        },
+        {
+          "order": 2,
+          "|t|": 0.4183,
+          "pass": true
+        },
+        {
+          "order": 3,
+          "|t|": 0.5523,
+          "pass": true
+        },
+        {
+          "order": 4,
+          "|t|": 0.7042,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "operation": "verify",
+      "meanFixedUs": 12991.192499999934,
+      "meanRandomUs": 13030.640780000005,
+      "orders": [
+        {
+          "order": 1,
+          "|t|": 0,
+          "pass": true
+        },
+        {
+          "order": 2,
+          "|t|": 0.686,
+          "pass": true
+        },
+        {
+          "order": 3,
+          "|t|": 0.7341,
+          "pass": true
+        },
+        {
+          "order": 4,
+          "|t|": 0.7601,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "operation": "encrypt",
+      "meanFixedUs": 14849.74202,
+      "meanRandomUs": 14822.797659999993,
+      "orders": [
+        {
+          "order": 1,
+          "|t|": 0,
+          "pass": true
+        },
+        {
+          "order": 2,
+          "|t|": 0.6938,
+          "pass": true
+        },
+        {
+          "order": 3,
+          "|t|": 1.1206,
+          "pass": true
+        },
+        {
+          "order": 4,
+          "|t|": 1.2427,
+          "pass": true
+        }
+      ]
+    },
+    {
+      "operation": "decrypt",
+      "meanFixedUs": 7065.283719999993,
+      "meanRandomUs": 7049.955300000013,
+      "orders": [
+        {
+          "order": 1,
+          "|t|": 0,
+          "pass": true
+        },
+        {
+          "order": 2,
+          "|t|": 0.4489,
+          "pass": true
+        },
+        {
+          "order": 3,
+          "|t|": 0.6117,
+          "pass": true
+        },
+        {
+          "order": 4,
+          "|t|": 0.7358,
+          "pass": true
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "passed": 20,
+    "total": 20,
+    "elapsedSeconds": 571.7
+  }
+}

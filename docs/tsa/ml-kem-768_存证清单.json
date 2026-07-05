@@ -1,0 +1,44 @@
+{
+  "version": "2026-06-12",
+  "generated_at": "2026-06-12T04:40:00Z",
+  "files": [
+    {
+      "file": "ml-kem-768.js",
+      "path": "/crypto/ml-kem-768.js",
+      "version": "final (KAT 20/20 PASS)",
+      "sha256": "4ee3d9b3948e45d6db87b56f24af05ef53590bf33eabc1b9698ac6d8d155ffd3",
+      "kat_status": "20/20 PASS",
+      "kat_note": "FIPS 203 compliant, 8 bugs fixed, round-trip verified",
+      "timestamps": [
+        {
+          "provider": "联合信任",
+          "full_name": "联合信任可信时间戳 (CFCA 根证书)",
+          "file": "ml-kem-768.tsq_可信时间戳.tsa",
+          "cert_file": "ml-kem-768.tsq_可信时间戳认证证书.pdf",
+          "timestamp_utc": "2026-05-29T02:26:18Z",
+          "local_time": "2026-05-29 10:26:18 CST",
+          "path": "/docs/tsa/cfca/20260529_102618/",
+          "type": "PKCS#7 SignedData (RFC 3161 TSA)",
+          "verified": true
+        },
+        {
+          "provider": "联合信任",
+          "full_name": "联合信任可信时间戳 (CFCA 根证书)",
+          "file": "ml-kem-768.tsq_可信时间戳.tsa",
+          "cert_file": "ml-kem-768.tsq_可信时间戳认证证书.pdf",
+          "timestamp_utc": "2026-05-29T04:08:33Z",
+          "local_time": "2026-05-29 12:08:33 CST",
+          "path": "/docs/tsa/cfca/20260529_120833/",
+          "type": "PKCS#7 SignedData (RFC 3161 TSA)",
+          "verified": true
+        }
+      ]
+    }
+  ],
+  "notes": [
+    "ml-kem-768.js: 8 bugs fixed (slice param, polyMul Int16Array overflow, keccak ROL64, keccak padding, FO transform ctMask, polyToMsg threshold, compress BigInt, msgToPoly 1-bit encoding)",
+    "KAT 20/20 PASS: FIPS 203 compliant round-trip test passed 2026-05-29",
+    "联合信任可信时间戳（CFCA 根证书）双批次存证，格式为 PKCS#7 SignedData (RFC 3161 TSA 标准)",
+    "DigiCert RFC 3161 .tsr 备份文件未留存，待补签"
+  ]
+}

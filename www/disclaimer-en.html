@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Disclaimer — FIBEMATE</title>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e; --accent:#00E5C3; --amber:#f59e0b; --red:#f87171; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.75; padding:0 1rem 4rem; }
+  .container { max-width:900px; margin:0 auto; }
+  header { padding:3rem 0 2rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+  header h1 { font-size:2rem; color:#f0f6fc; line-height:1.3; margin-bottom:0.5rem; }
+  header .meta { color:var(--muted); font-size:0.9rem; }
+  strong { color:#f0f6fc; }
+  h2 { font-size:1.35rem; color:#f0f6fc; margin:2.5rem 0 1rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border); }
+  h3 { font-size:1.1rem; color:#e6edf3; margin:1.8rem 0 0.8rem; }
+  p, li { margin:0.5rem 0; }
+  ul, ol { margin:0.5rem 0 0.5rem 1.5rem; }
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  hr { border:none; border-top:1px solid var(--border); margin:2rem 0; }
+  .note { background:rgba(245,158,11,0.1); border-left:3px solid var(--amber); padding:0.8rem 1rem; margin:1rem 0; border-radius:0 6px 6px 0; font-size:0.9rem; }
+  footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
+  footer a { color:var(--muted); }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>⚠️ Disclaimer</h1>
+  <p class="meta"><a href="disclaimer.html">中文</a> · Version: v3.0.0-DRAFT · Updated: 2026-06-25</p>
+</header>
+
+<div class="note">
+  <strong>⚠️ Important Notice</strong>: This document is an internal self-review draft for the FIBEMATE open-source technology project. It has <strong>not</strong> been reviewed by a licensed attorney and does <strong>not</strong> constitute formal legal advice. All legal documents will be reviewed and signed by professional legal counsel before the project's formal release. Until the final version is published, please consult a qualified legal professional.
+</div>
+
+<h2>1. Project Nature</h2>
+<p>This website (fibemate.link / fibemate.net) and its associated software (FIBEMATE) constitute a <strong>personal, independently-developed, open-source technology project</strong>. Its core purpose is the research and implementation of post-quantum cryptography (ML-KEM, ML-DSA, SLH-DSA), Chinese national cryptographic algorithms (SM2/SM3/SM4), and privacy-preserving technologies.</p>
+<p>This project is currently in the <strong>technical verification and testing phase (v3.0-preview)</strong>. Source code will be progressively open-sourced after security audits. This project does <strong>not</strong> constitute a commercial entity and does not represent any enterprise or organization.</p>
+<p>ICP Filing: 黑ICP备2026005787号-1 (personal filing, non-commercial internet information service).</p>
+
+<h2>2. Non-Commercial &amp; Non-Profit Declaration</h2>
+<p>This website and the FIBEMATE software are <strong>completely free, open-source projects</strong>. We expressly declare:</p>
+<ul>
+  <li>No commercial operations, product sales, or paid services of any kind</li>
+  <li>No direct or indirect economic benefit through any channel (including but not limited to advertising, memberships, e-commerce, data sales, or API fees)</li>
+  <li>All development, hosting, and maintenance costs are borne by the developer personally</li>
+  <li>No payment channels, payment gateways, or payment card data processing</li>
+  <li>If donation channels (e.g., GitHub Sponsors, Open Collective) are introduced in the future, separate notice will be given and donations will be entirely voluntary with no consideration</li>
+</ul>
+
+<h2>3. Open-Source License</h2>
+<p>FIBEMATE core code will be open-sourced under <strong>GNU General Public License v3.0 (GPLv3)</strong>, planned for <strong>2026-08-31</strong>. Use, modification, and distribution of this software must comply with the license terms.</p>
+<p>Third-party dependencies (e.g., @noble/post-quantum, pqc-kyber) are used under their respective licenses. All documentation in this document center is licensed under <strong>CC BY-NC-SA 4.0</strong>.</p>
+
+<h2>4. Post-Quantum Cryptography Disclaimer</h2>
+<ul>
+  <li><strong>Standardization Status</strong>: ML-KEM-768/1024 (FIPS 203) and ML-DSA-44/65/87 (FIPS 204) are NIST standards, but individual implementations (including this project's) may contain unknown vulnerabilities</li>
+  <li><strong>Self-Implementation Risk</strong>: SM2-KDF, SM3, and related Chinese national cryptographic algorithms are self-implemented (referencing GB/T 32905-2016, GB/T 32918.4-2016) and have <strong>not</strong> been audited by a third-party cryptographic certification body</li>
+  <li><strong>Side-Channel Attacks</strong>: SM2 implementation has passed TVLA side-channel verification (N=5,000/10,000, |t| &lt; 4.5, 1st–4th order moments 20/20 PASS) with Montgomery Ladder triple protection against <strong>timing</strong> side-channels. This does <strong>not</strong> constitute resistance to physical attacks (power analysis, EM emanations), fault injection, or microarchitectural side-channels</li>
+  <li><strong>Quantum Attack Evolution</strong>: Post-quantum cryptography is an active research field. Future advances in quantum computing may weaken current parameter security</li>
+  <li><strong>Formal Verification Gap</strong>: Key constructions such as the Fujisaki-Okamoto (FO) transform have not undergone formal verification (EasyCrypt/Coq)</li>
+</ul>
+
+<h2>5. ZK Anonymous Login Research Statement</h2>
+<p>The zero-knowledge proof (ZK) anonymous login functionality is a <strong>cryptographic technology demonstration</strong> (Pedersen commitments + Schnorr ZK proofs). It does <strong>not</strong> fulfill legal real-name authentication requirements under the Cybersecurity Law of the People's Republic of China and is not a production-grade identity verification solution.</p>
+
+<h2>6. Timestamp &amp; Attestation</h2>
+<p>All key documents (TVLA reports, verification reports, technical documentation) are timestamped via <strong>FreeTSA RFC 3161 + DigiCert dual-source timestamps</strong>. Timestamps serve only to record code integrity at a specific point in time and do <strong>not</strong> constitute third-party endorsement or guarantee of code security.</p>
+
+<h2>7. Copyright &amp; Intellectual Property</h2>
+<p>FIBEMATE source code and documentation are owned by the project author. Third-party dependencies retain their original copyrights and licenses. The "FIBEMATE" name and logo are project identifiers and are not registered trademarks.</p>
+
+<h2>8. Privacy &amp; Data Security</h2>
+<p>FIBEMATE implements end-to-end encryption with zero server-side plaintext access. Key material is not persisted to disk. The project does <strong>not</strong> collect, store, or process personal data for commercial purposes. See the <a href="privacy.html">Privacy Policy</a> for full details.</p>
+
+<h2>9. Technical Service Limitations</h2>
+<p>This project is provided <strong>"AS IS"</strong> without warranty of any kind, express or implied. The author is not liable for any damages arising from the use of this software. The service may be interrupted, modified, or discontinued at any time without prior notice.</p>
+
+<h2>10. Governing Law</h2>
+<p>This disclaimer is governed by the laws of the People's Republic of China. Any disputes shall be resolved through amicable negotiation; failing that, through the competent court in the developer's jurisdiction.</p>
+
+<h2>Contact</h2>
+<p>Email: <a href="mailto:support@fibemate.net">support@fibemate.net</a></p>
+
+<footer>
+  <p>Last updated: 2026-06-25 · <a href="/">Home</a> · <a href="disclaimer.html">中文</a> · <a href="/legal.html">Document Center</a></p>
+  <p style="margin-top:0.5rem;">© 2026 FIBEMATE · Independent Technology Research Project · Non-Commercial</p>
+</footer>
+
+</div>
+</body>
+</html>

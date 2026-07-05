@@ -1,0 +1,121 @@
+{
+  "timestamp": "2026-06-02T20:16:12.300Z",
+  "nodeVersion": "v22.22.2",
+  "platform": "linux",
+  "arch": "x64",
+  "iterations": 30000,
+  "controlIterations": 30000,
+  "threshold": 4.5,
+  "target": "ML-KEM-768 (FIPS 203)",
+  "version": "v2-enhanced",
+  "totalDurationSec": 1035.2,
+  "controlGroup": {
+    "count": 4,
+    "passed": 4,
+    "results": [
+      {
+        "name": "[CTRL] generateKeypair → generateKeypair",
+        "t": "0.99",
+        "mean": 1746130,
+        "cv": "24.68"
+      },
+      {
+        "name": "[CTRL] encapsulate",
+        "t": "0.33",
+        "mean": 2498106,
+        "cv": "21.92"
+      },
+      {
+        "name": "[CTRL] decapsulate",
+        "t": "0.50",
+        "mean": 3140387,
+        "cv": "19.93"
+      },
+      {
+        "name": "[CTRL] polyMul",
+        "t": "0.20",
+        "mean": 139058,
+        "cv": "62.19"
+      }
+    ]
+  },
+  "tvla": {
+    "count": 9,
+    "passed": 5,
+    "allPassed": false,
+    "results": [
+      {
+        "name": "generateKeypair",
+        "t": "0.15",
+        "fixedMean": 1936075,
+        "randomMean": 1937174,
+        "cv": "45.73",
+        "passed": true
+      },
+      {
+        "name": "encapsulate",
+        "t": "0.37",
+        "fixedMean": 2691132,
+        "randomMean": 2687873,
+        "cv": "40.33",
+        "passed": true
+      },
+      {
+        "name": "decapsulate",
+        "t": "271.95",
+        "fixedMean": 3304242,
+        "randomMean": 5807423,
+        "cv": "25.13",
+        "passed": false
+      },
+      {
+        "name": "modMul",
+        "t": "3.77",
+        "fixedMean": 46,
+        "randomMean": 102,
+        "cv": "1633.10",
+        "passed": true
+      },
+      {
+        "name": "compress",
+        "t": "127.03",
+        "fixedMean": 9354,
+        "randomMean": 22488,
+        "cv": "136.95",
+        "passed": false
+      },
+      {
+        "name": "polyMul",
+        "t": "89.32",
+        "fixedMean": 138253,
+        "randomMean": 160681,
+        "cv": "25.21",
+        "passed": false
+      },
+      {
+        "name": "sha3_256",
+        "t": "2.39",
+        "fixedMean": 5829,
+        "randomMean": 4577,
+        "cv": "1509.11",
+        "passed": true
+      },
+      {
+        "name": "shake128",
+        "t": "0.40",
+        "fixedMean": 7777,
+        "randomMean": 8181,
+        "cv": "1576.07",
+        "passed": true
+      },
+      {
+        "name": "byteEncode",
+        "t": "123.71",
+        "fixedMean": 9423,
+        "randomMean": 18183,
+        "cv": "104.84",
+        "passed": false
+      }
+    ]
+  }
+}

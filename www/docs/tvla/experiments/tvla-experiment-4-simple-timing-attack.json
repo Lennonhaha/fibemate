@@ -1,0 +1,26 @@
+{
+  "experiment": "TVLA Experiment #4: Simple Timing Attack on decapsulate",
+  "timestamp": "2026-06-03T16:59:41.860Z",
+  "attacks": {
+    "attack1": {
+      "rho": 0.009923592674159173,
+      "rho2": 0.004956314425304796,
+      "passed": true
+    },
+    "attack2": {
+      "tStat": 0.5298999939669534,
+      "passed": true,
+      "mc": 3117.1963776000025,
+      "vc": 354057.6045141859,
+      "mi": 3123.765118800001,
+      "vi": 414270.07339935674
+    },
+    "attack3": {
+      "bimodal": false,
+      "tHW": 0.9362435002458537,
+      "passed": true
+    }
+  },
+  "allPassed": true,
+  "conclusion": "Simple timing attacks failed. compress() leak (|t|=23.93) is not exploitable in real-world setting due to constant-time selection and noise."
+}

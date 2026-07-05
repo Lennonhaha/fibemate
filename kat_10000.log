@@ -1,0 +1,72 @@
+============================================================
+ML-KEM-768 Known Answer Test (KAT) - Extended to 10,000 Rounds
+============================================================
+Total Rounds: 10,000
+Save Interval: Every 500 rounds
+Output Directory: ./kat_results
+
+Warming up (10 rounds)...
+Warmup complete.
+
+Starting 10,000 rounds...
+
+  Round 100/10,000 | Pass: 100 | Fail: 0 | Rate: 121.8 rounds/sec | ETA: 1.4 min      Round 200/10,000 | Pass: 200 | Fail: 0 | Rate: 122.8 rounds/sec | ETA: 1.3 min      Round 300/10,000 | Pass: 300 | Fail: 0 | Rate: 116.9 rounds/sec | ETA: 1.4 min      Round 400/10,000 | Pass: 400 | Fail: 0 | Rate: 109.9 rounds/sec | ETA: 1.5 min      Round 500/10,000 | Pass: 500 | Fail: 0 | Rate: 107.8 rounds/sec | ETA: 1.5 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round500.json (500/10000)
+  Round 600/10,000 | Pass: 600 | Fail: 0 | Rate: 109.5 rounds/sec | ETA: 1.4 min      Round 700/10,000 | Pass: 700 | Fail: 0 | Rate: 109.4 rounds/sec | ETA: 1.4 min      Round 800/10,000 | Pass: 800 | Fail: 0 | Rate: 112.6 rounds/sec | ETA: 1.4 min      Round 900/10,000 | Pass: 900 | Fail: 0 | Rate: 114.4 rounds/sec | ETA: 1.3 min      Round 1,000/10,000 | Pass: 1000 | Fail: 0 | Rate: 115.9 rounds/sec | ETA: 1.3 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round1000.json (1000/10000)
+  Round 1,100/10,000 | Pass: 1100 | Fail: 0 | Rate: 115.1 rounds/sec | ETA: 1.3 min      Round 1,200/10,000 | Pass: 1200 | Fail: 0 | Rate: 114.9 rounds/sec | ETA: 1.3 min      Round 1,300/10,000 | Pass: 1300 | Fail: 0 | Rate: 116.0 rounds/sec | ETA: 1.2 min      Round 1,400/10,000 | Pass: 1400 | Fail: 0 | Rate: 116.5 rounds/sec | ETA: 1.2 min      Round 1,500/10,000 | Pass: 1500 | Fail: 0 | Rate: 116.8 rounds/sec | ETA: 1.2 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round1500.json (1500/10000)
+  Round 1,600/10,000 | Pass: 1600 | Fail: 0 | Rate: 117.6 rounds/sec | ETA: 1.2 min      Round 1,700/10,000 | Pass: 1700 | Fail: 0 | Rate: 118.0 rounds/sec | ETA: 1.2 min      Round 1,800/10,000 | Pass: 1800 | Fail: 0 | Rate: 118.4 rounds/sec | ETA: 1.2 min      Round 1,900/10,000 | Pass: 1900 | Fail: 0 | Rate: 118.7 rounds/sec | ETA: 1.1 min      Round 2,000/10,000 | Pass: 2000 | Fail: 0 | Rate: 118.0 rounds/sec | ETA: 1.1 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round2000.json (2000/10000)
+  Round 2,100/10,000 | Pass: 2100 | Fail: 0 | Rate: 117.4 rounds/sec | ETA: 1.1 min      Round 2,200/10,000 | Pass: 2200 | Fail: 0 | Rate: 117.8 rounds/sec | ETA: 1.1 min      Round 2,300/10,000 | Pass: 2300 | Fail: 0 | Rate: 118.6 rounds/sec | ETA: 1.1 min      Round 2,400/10,000 | Pass: 2400 | Fail: 0 | Rate: 119.4 rounds/sec | ETA: 1.1 min      Round 2,500/10,000 | Pass: 2500 | Fail: 0 | Rate: 120.1 rounds/sec | ETA: 1.0 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round2500.json (2500/10000)
+  Round 2,600/10,000 | Pass: 2600 | Fail: 0 | Rate: 120.0 rounds/sec | ETA: 1.0 min      Round 2,700/10,000 | Pass: 2700 | Fail: 0 | Rate: 120.3 rounds/sec | ETA: 1.0 min      Round 2,800/10,000 | Pass: 2800 | Fail: 0 | Rate: 120.8 rounds/sec | ETA: 1.0 min      Round 2,900/10,000 | Pass: 2900 | Fail: 0 | Rate: 120.2 rounds/sec | ETA: 1.0 min      Round 3,000/10,000 | Pass: 3000 | Fail: 0 | Rate: 119.7 rounds/sec | ETA: 1.0 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round3000.json (3000/10000)
+  Round 3,100/10,000 | Pass: 3100 | Fail: 0 | Rate: 119.8 rounds/sec | ETA: 1.0 min      Round 3,200/10,000 | Pass: 3200 | Fail: 0 | Rate: 119.4 rounds/sec | ETA: 0.9 min      Round 3,300/10,000 | Pass: 3300 | Fail: 0 | Rate: 118.8 rounds/sec | ETA: 0.9 min      Round 3,400/10,000 | Pass: 3400 | Fail: 0 | Rate: 118.7 rounds/sec | ETA: 0.9 min      Round 3,500/10,000 | Pass: 3500 | Fail: 0 | Rate: 119.1 rounds/sec | ETA: 0.9 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round3500.json (3500/10000)
+  Round 3,600/10,000 | Pass: 3600 | Fail: 0 | Rate: 119.7 rounds/sec | ETA: 0.9 min      Round 3,700/10,000 | Pass: 3700 | Fail: 0 | Rate: 120.2 rounds/sec | ETA: 0.9 min      Round 3,800/10,000 | Pass: 3800 | Fail: 0 | Rate: 120.7 rounds/sec | ETA: 0.9 min      Round 3,900/10,000 | Pass: 3900 | Fail: 0 | Rate: 121.2 rounds/sec | ETA: 0.8 min      Round 4,000/10,000 | Pass: 4000 | Fail: 0 | Rate: 121.6 rounds/sec | ETA: 0.8 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round4000.json (4000/10000)
+  Round 4,100/10,000 | Pass: 4100 | Fail: 0 | Rate: 121.9 rounds/sec | ETA: 0.8 min      Round 4,200/10,000 | Pass: 4200 | Fail: 0 | Rate: 122.3 rounds/sec | ETA: 0.8 min      Round 4,300/10,000 | Pass: 4300 | Fail: 0 | Rate: 122.7 rounds/sec | ETA: 0.8 min      Round 4,400/10,000 | Pass: 4400 | Fail: 0 | Rate: 123.0 rounds/sec | ETA: 0.8 min      Round 4,500/10,000 | Pass: 4500 | Fail: 0 | Rate: 123.2 rounds/sec | ETA: 0.7 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round4500.json (4500/10000)
+  Round 4,600/10,000 | Pass: 4600 | Fail: 0 | Rate: 123.1 rounds/sec | ETA: 0.7 min      Round 4,700/10,000 | Pass: 4700 | Fail: 0 | Rate: 122.0 rounds/sec | ETA: 0.7 min      Round 4,800/10,000 | Pass: 4800 | Fail: 0 | Rate: 121.6 rounds/sec | ETA: 0.7 min      Round 4,900/10,000 | Pass: 4900 | Fail: 0 | Rate: 121.4 rounds/sec | ETA: 0.7 min      Round 5,000/10,000 | Pass: 5000 | Fail: 0 | Rate: 121.5 rounds/sec | ETA: 0.7 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round5000.json (5000/10000)
+  Round 5,100/10,000 | Pass: 5100 | Fail: 0 | Rate: 121.9 rounds/sec | ETA: 0.7 min      Round 5,200/10,000 | Pass: 5200 | Fail: 0 | Rate: 122.3 rounds/sec | ETA: 0.7 min      Round 5,300/10,000 | Pass: 5300 | Fail: 0 | Rate: 122.4 rounds/sec | ETA: 0.6 min      Round 5,400/10,000 | Pass: 5400 | Fail: 0 | Rate: 122.5 rounds/sec | ETA: 0.6 min      Round 5,500/10,000 | Pass: 5500 | Fail: 0 | Rate: 122.5 rounds/sec | ETA: 0.6 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round5500.json (5500/10000)
+  Round 5,600/10,000 | Pass: 5600 | Fail: 0 | Rate: 122.7 rounds/sec | ETA: 0.6 min      Round 5,700/10,000 | Pass: 5700 | Fail: 0 | Rate: 123.1 rounds/sec | ETA: 0.6 min      Round 5,800/10,000 | Pass: 5800 | Fail: 0 | Rate: 123.3 rounds/sec | ETA: 0.6 min      Round 5,900/10,000 | Pass: 5900 | Fail: 0 | Rate: 123.6 rounds/sec | ETA: 0.6 min      Round 6,000/10,000 | Pass: 6000 | Fail: 0 | Rate: 123.9 rounds/sec | ETA: 0.5 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round6000.json (6000/10000)
+  Round 6,100/10,000 | Pass: 6100 | Fail: 0 | Rate: 123.9 rounds/sec | ETA: 0.5 min      Round 6,200/10,000 | Pass: 6200 | Fail: 0 | Rate: 124.0 rounds/sec | ETA: 0.5 min      Round 6,300/10,000 | Pass: 6300 | Fail: 0 | Rate: 124.1 rounds/sec | ETA: 0.5 min      Round 6,400/10,000 | Pass: 6400 | Fail: 0 | Rate: 124.3 rounds/sec | ETA: 0.5 min      Round 6,500/10,000 | Pass: 6500 | Fail: 0 | Rate: 124.5 rounds/sec | ETA: 0.5 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round6500.json (6500/10000)
+  Round 6,600/10,000 | Pass: 6600 | Fail: 0 | Rate: 124.7 rounds/sec | ETA: 0.5 min      Round 6,700/10,000 | Pass: 6700 | Fail: 0 | Rate: 124.9 rounds/sec | ETA: 0.4 min      Round 6,800/10,000 | Pass: 6800 | Fail: 0 | Rate: 125.1 rounds/sec | ETA: 0.4 min      Round 6,900/10,000 | Pass: 6900 | Fail: 0 | Rate: 125.3 rounds/sec | ETA: 0.4 min      Round 7,000/10,000 | Pass: 7000 | Fail: 0 | Rate: 125.6 rounds/sec | ETA: 0.4 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round7000.json (7000/10000)
+  Round 7,100/10,000 | Pass: 7100 | Fail: 0 | Rate: 125.7 rounds/sec | ETA: 0.4 min      Round 7,200/10,000 | Pass: 7200 | Fail: 0 | Rate: 125.4 rounds/sec | ETA: 0.4 min      Round 7,300/10,000 | Pass: 7300 | Fail: 0 | Rate: 125.2 rounds/sec | ETA: 0.4 min      Round 7,400/10,000 | Pass: 7400 | Fail: 0 | Rate: 125.0 rounds/sec | ETA: 0.3 min      Round 7,500/10,000 | Pass: 7500 | Fail: 0 | Rate: 124.8 rounds/sec | ETA: 0.3 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round7500.json (7500/10000)
+  Round 7,600/10,000 | Pass: 7600 | Fail: 0 | Rate: 124.9 rounds/sec | ETA: 0.3 min      Round 7,700/10,000 | Pass: 7700 | Fail: 0 | Rate: 124.9 rounds/sec | ETA: 0.3 min      Round 7,800/10,000 | Pass: 7800 | Fail: 0 | Rate: 125.1 rounds/sec | ETA: 0.3 min      Round 7,900/10,000 | Pass: 7900 | Fail: 0 | Rate: 125.2 rounds/sec | ETA: 0.3 min      Round 8,000/10,000 | Pass: 8000 | Fail: 0 | Rate: 125.4 rounds/sec | ETA: 0.3 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round8000.json (8000/10000)
+  Round 8,100/10,000 | Pass: 8100 | Fail: 0 | Rate: 125.6 rounds/sec | ETA: 0.3 min      Round 8,200/10,000 | Pass: 8200 | Fail: 0 | Rate: 125.8 rounds/sec | ETA: 0.2 min      Round 8,300/10,000 | Pass: 8300 | Fail: 0 | Rate: 126.0 rounds/sec | ETA: 0.2 min      Round 8,400/10,000 | Pass: 8400 | Fail: 0 | Rate: 126.2 rounds/sec | ETA: 0.2 min      Round 8,500/10,000 | Pass: 8500 | Fail: 0 | Rate: 126.3 rounds/sec | ETA: 0.2 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round8500.json (8500/10000)
+  Round 8,600/10,000 | Pass: 8600 | Fail: 0 | Rate: 126.4 rounds/sec | ETA: 0.2 min      Round 8,700/10,000 | Pass: 8700 | Fail: 0 | Rate: 126.6 rounds/sec | ETA: 0.2 min      Round 8,800/10,000 | Pass: 8800 | Fail: 0 | Rate: 126.7 rounds/sec | ETA: 0.2 min      Round 8,900/10,000 | Pass: 8900 | Fail: 0 | Rate: 126.9 rounds/sec | ETA: 0.1 min      Round 9,000/10,000 | Pass: 9000 | Fail: 0 | Rate: 127.0 rounds/sec | ETA: 0.1 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round9000.json (9000/10000)
+  Round 9,100/10,000 | Pass: 9100 | Fail: 0 | Rate: 127.2 rounds/sec | ETA: 0.1 min      Round 9,200/10,000 | Pass: 9200 | Fail: 0 | Rate: 127.3 rounds/sec | ETA: 0.1 min      Round 9,300/10,000 | Pass: 9300 | Fail: 0 | Rate: 127.4 rounds/sec | ETA: 0.1 min      Round 9,400/10,000 | Pass: 9400 | Fail: 0 | Rate: 127.5 rounds/sec | ETA: 0.1 min      Round 9,500/10,000 | Pass: 9500 | Fail: 0 | Rate: 127.3 rounds/sec | ETA: 0.1 min    
+  💾 Progress saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_round9500.json (9500/10000)
+  Round 9,600/10,000 | Pass: 9600 | Fail: 0 | Rate: 127.3 rounds/sec | ETA: 0.1 min      Round 9,700/10,000 | Pass: 9700 | Fail: 0 | Rate: 127.2 rounds/sec | ETA: 0.0 min      Round 9,800/10,000 | Pass: 9800 | Fail: 0 | Rate: 127.3 rounds/sec | ETA: 0.0 min      Round 9,900/10,000 | Pass: 9900 | Fail: 0 | Rate: 127.4 rounds/sec | ETA: 0.0 min      Round 10,000/10,000 | Pass: 10000 | Fail: 0 | Rate: 127.2 rounds/sec | ETA: 0.0 min    
+
+
+📄 Final report saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_FINAL.json
+📄 Text summary saved: kat_results/kat_10000rounds_2026-06-03T18-57-09-936Z_FINAL.txt
+============================================================
+TEST COMPLETE
+============================================================
+Total Rounds: 10000
+Passed:       10000 (100.00%)
+Failed:       0
+Errors:        0
+
+Timing (μs):
+  Average: 7826.41
+  Min:     6400.20
+  Max:     20735.20
+
+Output Sizes:
+  Valid:   10000/10000
+  Invalid: 0/10000
+============================================================
