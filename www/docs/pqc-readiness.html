@@ -105,7 +105,7 @@
   <li><strong>TLS 1.3 握手层集成</strong>：ML-KEM-768 尚未接入 Nginx、Node.js 系统 TLS 栈</li>
   <li><strong>ClientHello 握手扩展</strong>：未在握手报文中携带 #4590 命名组</li>
   <li><strong>全链路端到端测试</strong>：OpenSSL s_client/s_server 内网验证通过；Chrome 133+ 客户端兼容性待确认</li>
-  <li><strong>生产环境切换</strong>：fibemate.net 当前运行 TLS 1.3 经典 X25519（ECDH）；oqs-provider + liboqs 编译链已于 2026-07-06 就绪，nginx 原生接入待完成</li>
+  <li><strong>生产环境切换</strong>：fibemate.net 当前运行 TLS 1.3 经典 X25519（ECDH）；oqs-provider + liboqs 编译链已于 2026-07-06 就绪，nginx 原生接入已搁置（2026-07-07 路径 A 正式评估为不可行）</li>
 </ol>
 
 <div class="note"><strong>一句话总结：</strong>后量子密码零部件全部开发验收完毕，还没有组装进 TLS 通信引擎。</div>
@@ -171,7 +171,7 @@
   <div class="timeline-step"><div class="step-marker shelved">2</div><div class="step-body"><div class="step-title">开发 ClientHello 扩展</div><div class="step-desc">在握手报文 supported_groups 字段写入 4590，并附带约 1184 字节 ML-KEM-768 公钥。</div></div></div>
   <div class="timeline-step"><div class="step-marker shelved">3</div><div class="step-body"><div class="step-title">网络边界测试</div><div class="step-desc">验证 1249 字节左右的握手首包不会被防火墙、CGNAT、中间网关截断。</div></div></div>
   <div class="timeline-step"><div class="step-marker shelved">4</div><div class="step-body"><div class="step-title">实现服务端混合密钥协商</div><div class="step-desc">服务端回复 ML-KEM 密文，两端分别导出密钥材料，将 SM2 与 ML-KEM 输出做密钥混合。</div></div></div>
-  <div class="timeline-step"><div class="step-marker shelved">5</div><div class="step-body"><div class="step-title">TLS 混合握手编译链就绪</div><div class="step-desc">liboqs 0.12.0 + oqs-provider 0.12.0-dev 编译通过；nginx 原生接入待完成；内网 s_client/s_server 验证待执行。</div></div></div>
+  <div class="timeline-step"><div class="step-marker shelved">5</div><div class="step-body"><div class="step-title">TLS 混合握手编译链就绪</div><div class="step-desc">liboqs 0.12.0 + oqs-provider 0.12.0-dev 编译通过；nginx 原生接入已搁置（2026-07-07 路径 A 正式评估为不可行）；内网 s_client/s_server 验证待执行。</div></div></div>
   <div class="timeline-step"><div class="step-marker shelved">6</div><div class="step-body"><div class="step-title">Chrome 客户端兼容性验证 + 性能基准</div><div class="step-desc">确认 Chrome 133+ ClientHello 正确发送 X25519MLKEM768 命名组；对比纯 X25519 与 X25519+ML-KEM 握手耗时。</div></div></div>
   <div class="timeline-step"><div class="step-marker shelved">7</div><div class="step-body"><div class="step-title">正式上线与长期观测</div><div class="step-desc">切换 fibemate.net 证书与握手策略，持续监测全网浏览器兼容性与延迟指标。</div></div></div>
 </div>

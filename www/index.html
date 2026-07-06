@@ -877,7 +877,7 @@
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <div class="feature-title">后量子安全</div>
-                <div class="feature-desc">ML-KEM-768/1024 参考实现，FIPS 203 合规 · KAT 10,000/10,000 通过 · 路径 A (X25519MLKEM768 NamedGroup)：oqs-provider + liboqs 编译链就绪 🔧，nginx 原生接入待上线；路径 C-2 (SM2+ML-KEM-768)：应用层混合密钥交换（IANA #4590 应用层实现，5/5 验证通过，lg-053）；兼顾经典高性能与抗量子安全性 · 联合信任 ✓ + DigiCert ✓ 双源存证 · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
+                <div class="feature-desc">ML-KEM-768/1024 参考实现，FIPS 203 合规 · KAT 10,000/10,000 通过 · 路径 A (X25519MLKEM768 NamedGroup)：已于 2026-07-07 搁置（浏览器/nginx 技术阻断）；路径 C-2 (SM2+ML-KEM-768)：应用层混合密钥交换已上线（IANA #4590 应用层实现，5/5 验证通过，lg-053，p95=78.5ms）；兼顾经典高性能与抗量子安全性 · 联合信任 ✓ + DigiCert ✓ 双源存证 · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
             </div>
 
             <div class="feature-card">
@@ -1096,8 +1096,8 @@
         </div>
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-07-07 &nbsp;|&nbsp; PQC 混合握手路径 A 编译链就绪 🔧 &nbsp;|&nbsp; 路径 C-2 5/5 验证通过 ✅ &nbsp;|&nbsp; FPGA v5 硬件防护 &nbsp;|&nbsp; VWZ WASM 7/7 &nbsp;|&nbsp; SM2 11/11 &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; TSR 55 份 ✓<br>
-            后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + oqs-provider 编译链就绪 (nginx 接入待上线) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
+            最后更新：2026-07-07 &nbsp;|&nbsp; 路径 A 已搁置 · 路径 C-2 已上线 ✅ &nbsp;|&nbsp; 路径 C-2 5/5 验证通过 ✅ &nbsp;|&nbsp; FPGA v5 硬件防护 &nbsp;|&nbsp; VWZ WASM 7/7 &nbsp;|&nbsp; SM2 11/11 &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; TSR 55 份 ✓<br>
+            后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + oqs-provider 编译链就绪 (路径 A 已搁置，保留编译产出供参考) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
             <p style="margin:0 0 6px;font-size:0.85rem;color:#00d4aa;"><strong>&#x1F4DC; 开源计划</strong></p>
