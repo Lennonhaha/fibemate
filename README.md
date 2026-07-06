@@ -1,7 +1,7 @@
 # FIBEMATE — 下一代后量子密码通信协议
 
 **v3.1-preview** | 2026-07-06  
-TSR 序列: lg-001 ~ lg-055 | 许可证: MIT  
+TSR 序列: lg-001 ~ lg-055 | 许可证: GNU GPLv3  
 [fibemate.net](https://fibemate.net) | [PQC 就绪状态](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
@@ -128,7 +128,7 @@ fibemate/
 ├── experimental/         # 实验模块
 ├── package.json
 ├── ecosystem.config.js
-├── LICENSE               # MIT
+├── LICENSE               # GPLv3
 ├── README.md             # 本文件
 └── BUILD.md              # 构建与部署指南
 ```
