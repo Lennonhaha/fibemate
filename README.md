@@ -1,7 +1,7 @@
 # FIBEMATE — 下一代后量子密码通信协议
 
 **v3.1-preview** | 2026-07-06  
-TSR 序列: lg-001 ~ lg-053 | 许可证: GNU GPLv3  
+TSR 序列: lg-001 ~ lg-055 | 许可证: MIT  
 [fibemate.net](https://fibemate.net) | [PQC 就绪状态](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
@@ -18,7 +18,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 
 ### 生产环境
 
-- **TLS 1.3 混合后量子握手** — 路径 A (X25519MLKEM768, NamedGroup) 编译链就绪 🔧 待上线 · 路径 C-2 (SM2+ML-KEM-768) 应用层 5/5, lg-053
+- **TLS 1.3 混合后量子握手** — 路径 A (X25519MLKEM768, NamedGroup) 已于 2026-07-07 搁置（浏览器/nginx 技术阻断） · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ 5/5, p95=78.5ms, lg-053
 - **路径 C-2** — SM2+ML-KEM-768 混合密钥交换 (IANA #4590 应用层验证)
 - **双轨道互不干扰** — 普通客户端自动降级至经典 ECDH
 
@@ -33,7 +33,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 | **SM2 ECDH** | BigInt 标量掩码 + 射影随机化，常量时间 | TVLA 5/5 PASS (N=10,000) |
 | **SM4-αGCM** | α=7.5 认证加密，自动选择 λ₂C 或 SM4 | 10/10 PASS |
 | **SM3 哈希** | GB/T 32905 合规 | KAT 通过 |
-| **TLS 1.3 混合** | 路径 A (X25519MLKEM768, NamedGroup) 编译链就绪 🔧 + 路径 C-2 (SM2+ML-KEM) 应用层 ✅ | 双轨道并行 |
+| **TLS 1.3 混合** | 路径 A 已搁置 · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ | 路径 C-2 独立运行 |
 | **OPK 预密钥** | X3DH 异步握手，7/7 全绿 | 端到端闭环 |
 | **LookingGlass** | DMTH 多层递归逆向混淆 (d=3)，36/36 TVLA | 默认关闭 |
 | **VWZ 签名** | Vandermonde-Wang-Zhang 格-张量方案 (k=8) | WASM 7/7 |
@@ -128,7 +128,7 @@ fibemate/
 ├── experimental/         # 实验模块
 ├── package.json
 ├── ecosystem.config.js
-├── LICENSE               # GPLv3
+├── LICENSE               # MIT
 ├── README.md             # 本文件
 └── BUILD.md              # 构建与部署指南
 ```
@@ -155,7 +155,7 @@ FIBEMATE 遵循纵深防御 (defense-in-depth) 三层架构：
 
 FIBEMATE 完成了 SM2+ML-KEM-768 混合方案的工程验证：
 
-- **TLS 层** (路径 A): X25519MLKEM768 — oqs-provider 编译链就绪，nginx 接线待完成，lg-052 草稿存证
+- **TLS 层** (路径 A): X25519MLKEM768 — 已于 2026-07-07 搁置（浏览器/nginx 技术阻断），编译产出保留供参考
 - **应用层** (路径 C-2): SM2+ML-KEM-768 — HTTP 层混合密钥交换，lg-053 存证
 
 详见 [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/)。
