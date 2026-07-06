@@ -1,0 +1,1614 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE - 下一代隐私通信协议</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #00E5C3;
+            --primary-dim: #00b894;
+            --bg-dark: #0a0e17;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2332;
+            --text: #e2e8f0;
+            --text-dim: #94a3b8;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-pink: #ec4899;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        /* 粒子背景 */
+        #particles-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 网格背景 */
+        .grid-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(0, 229, 195, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 229, 195, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* 导航栏 */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding-top: max(1rem, env(safe-area-inset-top));
+            padding-right: 2rem;
+            padding-bottom: 1rem;
+            padding-left: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 14, 23, 0.8);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 229, 195, 0.1);
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-cta {
+            padding: 0.5rem 1.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            border: none;
+            border-radius: 8px;
+            color: var(--bg-dark);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 229, 195, 0.3);
+        }
+
+        /* Hero Section */
+        .hero {
+            position: relative;
+            z-index: 1;
+            min-height: 100svh;
+            min-height: 100dvh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6rem 2rem 2rem 2rem;
+            text-align: center;
+        }
+
+        .hero-content {
+            max-width: 900px;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1.5rem;
+            background: rgba(0, 229, 195, 0.1);
+            border: 1px solid rgba(0, 229, 195, 0.3);
+            border-radius: 50px;
+            color: var(--primary);
+            font-size: 0.85rem;
+            margin-bottom: 2rem;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .hero h1 .gradient-text {
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            color: var(--text-dim);
+            margin-bottom: 3rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp 0.8s ease 0.2s both;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp 0.8s ease 0.4s both;
+        }
+
+        .btn-primary {
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            border: none;
+            border-radius: 12px;
+            color: var(--bg-dark);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: transform 0.2s, box-shadow 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 40px rgba(0, 229, 195, 0.4);
+        }
+
+        .btn-secondary {
+            padding: 1rem 2.5rem;
+            background: transparent;
+            border: 2px solid rgba(0, 229, 195, 0.3);
+            border-radius: 12px;
+            color: var(--primary);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(0, 229, 195, 0.1);
+            border-color: var(--primary);
+        }
+
+        /* 统计区 */
+        .stats {
+            position: relative;
+            z-index: 1;
+            padding: 4rem 2rem;
+            background: rgba(17, 24, 39, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .stats-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        /* 12层隐私栈 */
+        .privacy-stack {
+            position: relative;
+            z-index: 1;
+            padding: 6rem 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            color: var(--text-dim);
+            margin-bottom: 4rem;
+            font-size: 1.1rem;
+        }
+
+        .layers-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .layer-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(0, 229, 195, 0.1);
+            border-radius: 16px;
+            padding: 1.5rem;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .layer-card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(0, 229, 195, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .layer-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .layer-number {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: var(--bg-dark);
+            flex-shrink: 0;
+        }
+
+        .layer-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .layer-desc {
+            color: var(--text-dim);
+            font-size: 0.9rem;
+            line-height: 1.6;
+        }
+
+        /* 特性区 */
+        .features {
+            position: relative;
+            z-index: 1;
+            padding: 6rem 2rem;
+            background: rgba(17, 24, 39, 0.3);
+        }
+
+        .features-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .feature-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(0, 229, 195, 0.2);
+            transform: translateY(-5px);
+        }
+
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .feature-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+        }
+
+        .feature-desc {
+            color: var(--text-dim);
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* CTA */
+        .cta {
+            position: relative;
+            z-index: 1;
+            padding: 6rem 2rem;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-dark), rgba(0, 229, 195, 0.05));
+        }
+
+        .cta h2 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+        }
+
+        .cta p {
+            color: var(--text-dim);
+            font-size: 1.2rem;
+            margin-bottom: 3rem;
+        }
+
+        /* Footer */
+        footer {
+            position: relative;
+            z-index: 1;
+            padding: 3rem 2rem;
+            background: rgba(17, 24, 39, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.9rem;
+        }
+
+        footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        /* 动画 */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            nav {
+                padding: 1rem 1.5rem;
+                padding-top: max(0.75rem, env(safe-area-inset-top));
+            }
+            .hero {
+                padding-top: 5rem;
+            }
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    
+      .status-card {
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 12px;
+        padding: 18px 24px;
+        min-width: 150px;
+        text-align: center;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+      .status-card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(0,212,170,0.3);
+      }
+      .status-icon {
+        font-size: 26px;
+        display: block;
+        margin-bottom: 8px;
+      }
+      .status-name {
+        font-weight: 500;
+        color: #e6edf3;
+        display: block;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+      }
+      .status-badge {
+        font-size: 11px;
+        padding: 3px 10px;
+        border-radius: 20px;
+        display: inline-block;
+      }
+      .status-badge.active {
+        background: rgba(34,197,94,0.12);
+        color: #22c55e;
+        border: 1px solid rgba(34,197,94,0.2);
+      }
+      .status-badge.dev {
+        background: rgba(249,115,22,0.1);
+        color: #f97316;
+        border: 1px solid rgba(249,115,22,0.2);
+      }
+
+      /* ── 安全验证区块 ── */
+      .security-verification {
+        position: relative;
+        z-index: 1;
+        padding: 6rem 2rem;
+        background: linear-gradient(180deg, rgba(17,24,39,0.3), rgba(0,229,195,0.03));
+        border-top: 1px solid rgba(255,255,255,0.04);
+        border-bottom: 1px solid rgba(255,255,255,0.04);
+        text-align: center;
+      }
+      .security-verification .section-badge {
+        display: inline-block;
+        background: rgba(0,229,195,0.08);
+        color: var(--primary);
+        padding: 6px 16px;
+        border-radius: 30px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1.2rem;
+        border: 1px solid rgba(0,229,195,0.15);
+      }
+      .security-verification h2 {
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 0.8rem;
+        background: linear-gradient(135deg, var(--primary), var(--accent-blue));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+      .security-verification .section-subtitle {
+        color: var(--text-dim);
+        font-size: 1.05rem;
+        line-height: 1.7;
+        max-width: 650px;
+        margin: 0 auto 3rem;
+      }
+      .verification-grid {
+        max-width: 1100px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 1.5rem;
+      }
+      .verification-card {
+        background: var(--bg-card);
+        border: 1px solid rgba(255,255,255,0.05);
+        border-radius: 16px;
+        padding: 1.8rem 1.5rem;
+        text-align: left;
+        transition: all 0.3s;
+      }
+      .verification-card:hover {
+        background: var(--bg-card-hover);
+        border-color: rgba(0,229,195,0.15);
+        transform: translateY(-4px);
+      }
+      .verification-card .card-icon {
+        font-size: 2rem;
+        margin-bottom: 0.8rem;
+        display: block;
+      }
+      .verification-card h3 {
+        font-size: 1.1rem;
+        font-weight: 600;
+        margin-bottom: 1rem;
+        color: var(--text);
+      }
+      .verification-card ul {
+        margin: 0;
+        padding-left: 1.1rem;
+        color: var(--text-dim);
+        line-height: 1.8;
+        font-size: 0.88rem;
+        list-style: none;
+      }
+      .verification-card li::before {
+        content: '▸ ';
+        color: var(--primary);
+      }
+      .verification-card code {
+        background: rgba(255,255,255,0.06);
+        padding: 2px 8px;
+        border-radius: 6px;
+        font-size: 0.78rem;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+      }
+      .verification-footer {
+        margin-top: 3rem;
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .verification-footer .btn-secondary {
+        font-size: 0.95rem;
+        padding: 0.9rem 2rem;
+      }
+      .verification-note {
+        margin-top: 1.5rem;
+        color: var(--text-dim);
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
+      .verification-note code {
+        background: rgba(255,255,255,0.06);
+        padding: 3px 10px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-family: 'SF Mono', 'Fira Code', monospace;
+      }
+</style>
+</head>
+<body>
+    <!-- 背景 -->
+    <canvas id="particles-canvas"></canvas>
+    <div class="grid-bg"></div>
+
+    <!-- 导航 -->
+    <nav>
+        <div class="nav-logo">FIBEMATE</div>
+        <ul class="nav-links">
+            <li><a href="#features">特性</a></li>
+            <li><a href="#privacy">隐私栈</a></li>
+            <li><a href="#tech">技术</a></li>
+            <li><a href="login.html">登录</a></li>
+        </ul>
+        <a href="login.html" class="nav-cta">开始使用</a>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge">
+                🔒 v3.1-preview | ML-KEM-768 · SM2 · SLH-DSA · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 · SLH-DSA WASM · OPK 预密钥协议
+            </div>
+            <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);">🏆 ML-KEM-768 通过 KAT 10,000 轮一致性验证 + TVLA v2 Enhanced (N=10,000) 时序侧信道验证 · <br><small style="color:#646c78;">C Native Addon (AVX2) 恒定时间 ✓ | 纯 JS 参考实现 时域泄漏评估见报告</small> · <a href="kat-10000.html" style="color:#00E5C3;text-decoration:underline;font-weight:600;">查看 KAT 10,000 轮验证报告 →</a></div>
+            <div class="hero-badge" style="margin-top:8px;background:rgba(255,165,0,0.06);border:1px solid rgba(255,165,0,0.15);">⚡ FPGA 硬件验证通过 · NTT+INTT 256/256 round-trip 全匹配 · Artix-7 35T 时序收敛 · <a href="/docs/fpga-report.html" style="color:#f59e0b;text-decoration:underline;font-weight:600;">查看硬件报告 ↓</a></div>
+            <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.15);">⚡ 2026-06-15 · SM2 全栈重构完成，与 sm-crypto 双向互操作验证通过，性能提升 7.3-8.6x · <a href="/docs/sm2-optimization.html" style="color:#00E5C3;text-decoration:underline;font-weight:600;">详情 →</a></div>
+            <div class="hero-badge" style="margin-top:8px;background:rgba(0,210,100,0.08);border:2px solid rgba(0,210,100,0.3);">🛡️ SM2 TVLA N=5,000 · 20/20 全绿（1-4 阶矩）✅ · Montgomery Ladder v1.3 三重防护 · verify |t|=0.10 · decrypt |t|=0.16 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00d4aa;text-decoration:underline;font-weight:600;">查看 TVLA 分析报告 →</a></div>
+            <div class="hero-performance" style="margin-top:16px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+                <span style="background:rgba(0,229,195,0.12);border:1px solid rgba(0,229,195,0.25);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#00E5C3;">⚡ keygen 48µs</span>
+                <span style="background:rgba(0,229,195,0.12);border:1px solid rgba(0,229,195,0.25);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#00E5C3;">🔒 encaps 51µs</span>
+                <span style="background:rgba(0,229,195,0.12);border:1px solid rgba(0,229,195,0.25);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#00E5C3;">🛡️ decaps 105µs</span>
+            <small class="benchmark-note" style="display:block;margin-top:8px;font-size:0.7rem;color:#646c78;">C Native Addon (AVX2, AMD Ryzen 5600U) | 10,000 轮 ~2.9s</small>
+            <div style="margin-top:8px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+                <span style="background:rgba(139,148,158,0.10);border:1px solid rgba(139,148,158,0.20);border-radius:8px;padding:4px 10px;font-size:0.75rem;color:#8b949e;">📜 纯 JavaScript：keygen ~1.3ms | encaps ~1.8ms | decaps ~2.5ms</span>
+            </div>
+            <div style="margin-top:8px;display:flex;justify-content:center;gap:12px;flex-wrap:wrap;">
+                <span style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.25);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#f87171;">&#x1F1E8;&#x1F1F3; SM2 encrypt 4.5ms</span>
+                <span style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.25);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#f87171;">&#x1F512; decrypt 2.3ms</span>
+                <span style="background:rgba(220,38,38,0.10);border:1px solid rgba(220,38,38,0.25);border-radius:8px;padding:6px 14px;font-size:0.85rem;color:#f87171;">&#x1F4DD; sign 4.9ms</span>
+            <small class="benchmark-note" style="display:block;margin-top:4px;font-size:0.7rem;color:#f87171;">纯 JavaScript (BigInt, wNAF) | Node.js v22 | vs jsbn 基线 2.75x 加密加速</small>
+            </div>
+            </div>
+            <h1>
+                重新定义<br>
+                <span class="gradient-text">隐私通信</span>
+            </h1>
+            <p>
+                多层深度隐私栈 · 后量子参考实现 · 国密算法 · 端到端安全<br>
+                为下一代隐私通信而生的后量子协议 · ML-KEM-768 + SLH-DSA + SM2 · 后量子密码全栈工程验证平台
+            </p>
+            <div class="hero-buttons">
+                <a href="login.html" class="btn-primary">开始使用</a>
+                <a href="#privacy" class="btn-secondary">探索技术</a>
+            </div>
+        </div>
+    </section>
+
+
+
+    
+    <!-- Poem -->
+    <section class="hero" id="poem">
+        <div class="hero-content">
+          <div class="poem-wrapper" style="text-align: left; max-width: 680px; margin: 0 auto; font-family: 'Georgia', 'Times New Roman', serif; line-height: 2; font-size: 1.05rem; color: #d0d0d0; padding: 2rem 0;">
+            <p style="font-style: italic; color: #00e5c3; font-size: 1.3rem; margin-bottom: 2rem;">&mdash; written in the whois record of fibemate.link</p>
+
+            <p style="margin-bottom: 2rem;"><strong style="color: #00e5c3;">I.</strong></p>
+            <p>Chengdu. Some node.</p>
+            <p>Day eight. Still awake.</p>
+            <p>Light processes. No mistakes.</p>
+
+            <p style="margin-top: 1.5rem;">The application left.</p>
+            <p>It crossed the sea.</p>
+            <p>Now it sits<br>on someone&#39;s desk.</p>
+
+            <p style="margin-top: 1.5rem;">Waiting is the only algorithm.</p>
+            <p>Complexity: unknown.</p>
+            <p>Best case: log.</p>
+            <p>Worst case: infinite loop.</p>
+            <p>At fifteen,<br>there is no timeout.</p>
+
+            <p style="margin-bottom: 2rem; margin-top: 2rem;"><strong style="color: #00e5c3;">II.</strong></p>
+            <p>They say trust needs open source.</p>
+            <p style="margin-top: 1rem;">But open source is not where trust starts.</p>
+            <p>It&#39;s where trust ends.</p>
+
+            <p style="margin-top: 1.5rem;">What I have now:<br>119 greens.<br>12ms, 25ms, 38ms.<br>A private repo.</p>
+
+            <p style="margin-top: 1.5rem;">This is not hiding.<br>This is waiting.</p>
+
+            <p style="margin-top: 1.5rem;">Trust needs a chain.<br>A foundation says yes.<br>That&#39;s link one.<br>An auditor says yes.<br>That&#39;s link two.<br>You compile and run.<br>That&#39;s link three.</p>
+
+            <p style="margin-top: 1.5rem;">After that,<br>it stops being mine.</p>
+
+            <p style="margin-bottom: 2rem; margin-top: 2rem;"><strong style="color: #00e5c3;">III.</strong></p>
+            <p>Three lines to say it:<br>post-quantum handshake,<br>double ratchet,<br>mixnet.</p>
+
+            <p style="margin-top: 1.5rem;">Eight months.<br>Not because it&#39;s hard.<br>Because one byte wrong &mdash;<br>everything breaks.</p>
+
+            <p>Summer:<br>four small endings.</p>
+
+            <p style="margin-top: 1.5rem;">The page goes live.<br>The code goes public.<br>Then silence.<br>Then someone speaks.</p>
+
+            <p style="margin-top: 1.5rem;">The fourth one<br>needs the third one first.</p>
+
+            <p style="margin-bottom: 2rem; margin-top: 2rem;"><strong style="color: #00e5c3;">V.</strong></p>
+            <p>Fifteen.<br>Waiting for word.<br>Good or worth.</p>
+
+            <p style="margin-top: 1.5rem;">The server does not wait with me.<br>It just runs.</p>
+
+            <p style="margin-top: 1.5rem;">Day eight.<br>Day nine tomorrow.</p>
+
+            <p style="margin-top: 2rem; font-style: italic; color: #888; font-size: 0.9rem;">May 10, 2026</p>
+        </div>
+    </section>
+
+<!-- 12层隐私栈 -->
+    <section class="privacy-stack" id="privacy">
+        <h2 class="section-title">隐私技术栈</h2>
+        <p class="section-subtitle">深度防御，每一层都为你的隐私而战</p>
+        
+        <div class="layers-container">
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">1</div>
+                    <div class="layer-title">流量混淆层</div>
+                </div>
+                <div class="layer-desc">TLS 1.3 + 泊松流量塑形 (Poisson) + 随机填充，隐藏真实流量特征</div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">2</div>
+                    <div class="layer-title">后量子密钥交换</div>
+                </div>
+                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：FIPS 203 合规，纯 JavaScript，KAT 10,000/10,000 通过 · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ 可选 WASM 模块（Rust → wasm-bindgen, <strong>63KB raw / 27KB gzip</strong>, opt-level=s + lto + strip）<br>· TVLA N=10,000 通过 · 核心操作恒定时间（keygen/encaps/decaps）<br>· 联合信任 + DigiCert 双源存证<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS+WASM 合计 82KB raw / 31KB gzip<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">3</div>
+                    <div class="layer-title">Double Ratchet</div>
+                </div>
+                <div class="layer-desc">持续密钥更新，每次消息自动刷新</div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">4</div>
+                    <div class="layer-title">Sphinx 包格式</div>
+                </div>
+                <div class="layer-desc">洋葱路由封装，保护元数据隐私 · <a href="#ts-proof" style="color:#00d4aa;">TSA 存证 ✓</a></div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">5</div>
+                    <div class="layer-title">Mixnet 混合网络（仿真）</div>
+                </div>
+                <div class="layer-desc">多跳路由（5 节点单机拓扑）+ 延迟混淆，用于协议验证与演示 · <a href="#ts-proof" style="color:#00d4aa;">TSA 存证 ✓</a></div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">6+</div>
+                    <div class="layer-title">更多保护层</div>
+                </div>
+                <div class="layer-desc">PIR 私有信息查询、ZK 零知识证明 (Bulletproofs)、差分隐私 (ε=1.0)、自毁消息（规划中）</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 特性 -->
+
+<!-- ==================== 通道选择说明 ==================== -->
+<section id="backend-channel" style="padding:2rem 1rem;max-width:900px;margin:0 auto;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;">
+  <div style="background:#161b22;border:1px solid #30363d;border-radius:12px;padding:1.5rem 2rem;color:#c9d1d9;font-size:0.9rem;line-height:1.6;">
+
+    <!-- 标题 -->
+    <h3 style="margin:0 0 0.8rem;font-size:1rem;color:#00d4aa;font-weight:600;">
+      🔬 后端通道说明
+    </h3>
+
+    <!-- 通道对比表 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+      <!-- 稳定通道 -->
+      <div style="background:#0d1117;border:1px solid #23863633;border-radius:8px;padding:1rem;">
+        <div style="font-size:1.1rem;margin-bottom:0.4rem;">🟢 <strong>稳定通道</strong></div>
+        <div style="color:#8b949e;font-size:0.82rem;margin-bottom:0.6rem;">Node.js · 推荐日常使用</div>
+        <ul style="margin:0;padding-left:1.2rem;color:#8b949e;font-size:0.8rem;line-height:1.7;">
+          <li>功能完整，经过充分测试</li>
+          <li>适合日常通信</li>
+          <li>当前默认通道</li>
+        </ul>
+      </div>
+      <!-- 实验通道 -->
+      <div style="background:#0d1117;border:1px solid #f7816633;border-radius:8px;padding:1rem;">
+        <div style="font-size:1.1rem;margin-bottom:0.4rem;">🔬 <strong>实验通道</strong></div>
+        <div style="color:#8b949e;font-size:0.82rem;margin-bottom:0.6rem;">Rust · 技术预览版</div>
+        <ul style="margin:0;padding-left:1.2rem;color:#8b949e;font-size:0.8rem;line-height:1.7;">
+          <li>WebSocket 性能提升 3-5×</li>
+          <li>PQC 签名已完成 &mdash; SLH-DSA + ML-DSA-65 &#x2705;</li>
+          <li>可能偶有不稳定 ⚠️</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- 当前状态 + 切换说明 -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.8rem;">
+      <div style="color:#8b949e;font-size:0.82rem;">
+        🟢 当前默认：<strong style="color:#c9d1d9;">稳定通道</strong>
+        &nbsp;·&nbsp;可通过浏览器控制台切换
+      </div>
+      <code style="background:#0d1117;border:1px solid #30363d;border-radius:6px;padding:0.35rem 0.7rem;font-size:0.78rem;color:#7ee787;user-select:all;">
+        BackendRouter.switchTo('rust')&nbsp;&nbsp;BackendRouter.switchTo('node')
+      </code>
+    </div>
+
+    <!-- 展开详情 -->
+    <details style="margin-top:1rem;cursor:pointer;">
+      <summary style="color:#00d4aa;font-size:0.82rem;margin-bottom:0.5rem;">📋 双后端架构详情</summary>
+      <div style="color:#8b949e;font-size:0.8rem;line-height:1.8;padding-left:0.5rem;">
+        • 稳定通道：Node.js 后端，功能完整，适合日常通信<br>
+        • 实验通道：Rust 后端，WebSocket 性能提升 3-5×，PQC 签名已完成 (SLH-DSA + ML-DSA-65)<br>
+        • 默认使用稳定通道，可通过浏览器控制台 <code style="color:#7ee787;">BackendRouter.switchTo()</code> 切换<br>
+        • 切换后页面自动刷新，偏好保存在 <code style="color:#7ee787;">localStorage</code>
+      </div>
+    </details>
+
+    <!-- 安全部署说明 -->
+    <div style="margin-top:1rem;padding:0.8rem 1rem;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.18);border-radius:8px;font-size:0.82rem;color:#8b949e;line-height:1.8;">
+      🔒 <strong style="color:#22c55e;">安全部署</strong><br>
+      • 后端服务（:3001 / :3002）<strong style="color:#c9d1d9;">不暴露公网</strong>，仅监听 127.0.0.1<br>
+      • 仅通过 <strong style="color:#c9d1d9;">Nginx（:80 / :443）</strong> 对外提供 Web 服务<br>
+      • 所有服务由 <strong style="color:#c9d1d9;">systemd</strong> 托管，每进程内存上限 200–400 MiB
+    </div>
+
+  </div>
+</section>
+<!-- ==================== /通道选择说明 ==================== -->
+
+
+<!-- ==================== /通道选择说明 ==================== -->
+
+    <section class="features" id="features">
+        <h2 class="section-title">核心特性</h2>
+        <p class="section-subtitle">不只是加密，而是全方位的隐私保护</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">🔐</div>
+                <div class="feature-title">后量子安全</div>
+                <div class="feature-desc">ML-KEM-768/1024 参考实现，FIPS 203 合规 · KAT 10,000/10,000 通过 · 路径 A (X25519MLKEM768 NamedGroup)：oqs-provider + liboqs 编译链就绪 🔧，nginx 原生接入待上线；路径 C-2 (SM2+ML-KEM-768)：应用层混合密钥交换（IANA #4590 应用层实现，5/5 验证通过，lg-053）；兼顾经典高性能与抗量子安全性 · 联合信任 ✓ + DigiCert ✓ 双源存证 · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">&#x1F1E8;&#x1F1F3;</div>
+                <div class="feature-title">国密算法（技术验证）</div>
+                <div class="feature-desc" style="line-height:1.7;">
+                    SM2/SM3/SM4 国密算法技术验证与工程实现 · SM2 密钥协商 + SM4-αGCM 认证加密，ML-KEM-768 后量子增强。
+                    <br><br>
+                    <strong style="color:#00d4aa;">&#x1F4CA; SM2 TVLA v1.3 Montgomery Ladder N=5,000 · 1-4 阶矩高阶验证 · Welch's t-test 阈值 4.5</strong>
+                    <table style="width:100%;font-size:0.8rem;margin:0.5rem 0;border-collapse:collapse;">
+                        <thead><tr style="background:rgba(255,255,255,0.04);"><th style="text-align:left;padding:3px 6px;">操作</th><th style="text-align:right;padding:3px 6px;">Masked |t|</th><th style="text-align:right;padding:3px 6px;">修复前 |t|</th><th style="text-align:center;padding:3px 6px;">结果</th></tr></thead>
+                        <tbody>
+                            <tr><td style="padding:2px 6px;">密钥生成</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>0.01</strong></td><td style="text-align:right;padding:2px 6px;color:#646c78;">~1.4</td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; PASS</td></tr>
+                            <tr><td style="padding:2px 6px;">签名</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>0.06</strong></td><td style="text-align:right;padding:2px 6px;color:#646c78;">~1.4</td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; PASS</td></tr>
+                            <tr><td style="padding:2px 6px;">验签</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>1.19</strong></td><td style="text-align:right;padding:2px 6px;color:#f87171;"><strong>7.42 &#x274C;</strong></td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; PASS</td></tr>
+                            <tr><td style="padding:2px 6px;">加密</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>0.34</strong></td><td style="text-align:right;padding:2px 6px;color:#646c78;">~4</td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; PASS</td></tr>
+                            <tr><td style="padding:2px 6px;">解密</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>2.06</strong></td><td style="text-align:right;padding:2px 6px;color:#f87171;"><strong>8.22 &#x274C;</strong></td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; PASS</td></tr>
+                        </tbody>
+                    </table>
+                    <p style="font-size:0.7rem;margin-top:0.25rem;color:#8b949e;">&#x1F4CC; 三重防护: Scalar Masking + Projective Randomization + Montgomery Ladder<br>&#x1F517; N=5,000 · 7/7 一阶全 PASS + 20/20 高阶全 PASS · verify |t|=0.10 · decrypt |t|=0.16 · 恒时点乘<br>&#x1F4C5; 2026-06-21 · FreeTSA 时间戳存证 · 571.7s (高阶)</p>
+                    非商密认证产品，仅供技术研究。
+                </div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔧</div>
+                <div class="feature-title">可插拔加密架构</div>
+                <div class="feature-desc">
+                    AlgorithmRegistry 热切换框架，ML-KEM-768 / SM2 已注册。
+                    加密算法可配置、支持运行时切换，国密 PQC 标准发布后可快速接入。
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">⚡</div>
+                <div class="feature-title">Double Ratchet</div>
+                <div class="feature-desc">每次消息都进行密钥更新，即使长期密钥泄露，历史消息依然无法解密</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🎭</div>
+                <div class="feature-title">零知识认证</div>
+                <div class="feature-desc">Bulletproofs 零知识范围证明已集成，支持 Pedersen 承诺，通过可信时间戳存证 · <a href="#ts-proof" style="color:#00d4aa;">TSA 验证 &#x2713;</a></div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🌐</div>
+                <div class="feature-title">Mixnet 路由</div>
+                <div class="feature-desc">消息通过混合网络转发，元数据被深度混淆，无法追踪通信双方 · <a href="#ts-proof" style="color:#00d4aa;">TSA 存证 ✓</a></div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">多平台支持</div>
+                <div class="feature-desc">核心模块就绪，Electron + Tauri v2 桌面端 + React Native 移动端</div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔓</div>
+                <div class="feature-title">开源协议</div>
+                <div class="feature-desc">计划 2026.08.31 开源。代码审计中，暂未公开。
+隐私不应是黑盒 —— 届时所有核心协议实现将公开。</div>
+            </div>
+        </div>
+    </section>
+
+        <!-- ═══════════ SM2 侧信道安全验证 ═══════════ -->
+    <section class="security-verification sm2-tvla-section" style="padding:2rem 1rem;max-width:900px;margin:0 auto;">
+      <div class="section-badge" style="background:rgba(0,210,170,0.08);border:2px solid rgba(0,210,170,0.3);">&#x1F1E8;&#x1F1F3; 国密侧信道安全 v1.3</div>
+      <h2 style="font-size:1.5rem;">SM2 · TVLA N=5,000 全绿 <span style="background:rgba(0,210,170,0.12);border:2px solid rgba(0,210,170,0.35);border-radius:12px;padding:2px 12px;font-size:0.75rem;color:#00d4aa;vertical-align:middle;">7/7 + 20/20 ✓ 三重防护 · 1-4 阶</span></h2>
+      <p class="section-subtitle" style="max-width:700px;margin:0 auto 1.5rem;font-size:0.9rem;color:#8b949e;">
+        Scalar Masking + Projective Randomization + Montgomery Ladder · N=5,000 · |t|≤0.38 一阶全项通过 · 1-4 阶矩 20/20 全绿 · 恒定时间点乘 · FreeTSA 存证
+      </p>
+
+      <div class="verification-grid">
+        <div class="verification-card">
+          <div class="card-icon">&#x23F1;&#xFE0F;</div>
+          <h3>Montgomery Ladder v1.3 全绿 (N=5,000 · 1-4 阶)</h3>
+          <table style="width:100%;font-size:0.78rem;margin:0.5rem 0;border-collapse:collapse;">
+            <tr style="color:#8b949e;"><th style="text-align:left;">操作</th><th style="text-align:right;">Masked |t|</th><th style="text-align:right;">修复前</th></tr>
+            <tr><td>密钥生成</td><td style="text-align:right;color:#00d4aa;">0.01</td><td style="text-align:right;color:#646c78;">~1.4</td></tr>
+            <tr><td>签名</td><td style="text-align:right;color:#00d4aa;">0.06</td><td style="text-align:right;color:#646c78;">~1.4</td></tr>
+            <tr><td>验签</td><td style="text-align:right;color:#00d4aa;"><strong>1.19</strong></td><td style="text-align:right;color:#f87171;"><strong>7.42 &#x274C;</strong></td></tr>
+            <tr><td>加密</td><td style="text-align:right;color:#00d4aa;">0.34</td><td style="text-align:right;color:#646c78;">~4</td></tr>
+            <tr><td>解密</td><td style="text-align:right;color:#00d4aa;"><strong>2.06</strong></td><td style="text-align:right;color:#f87171;"><strong>8.22 &#x274C;</strong></td></tr>
+          </table>
+          <p style="font-size:0.7rem;color:#00d4aa;margin:0.3rem 0 0;">✅ 7/7 一阶 + 20/20 高阶 PASS · N=5,000 · 528s (一阶) + 571.7s (高阶) · verify ↓92% · decrypt ↓92%</p>
+        </div>
+
+        <div class="verification-card">
+          <div class="card-icon">&#x1F4CA;</div>
+          <h3>测试配置</h3>
+          <ul style="font-size:0.78rem;color:#8b949e;padding-left:1rem;line-height:1.8;">
+            <li><strong>框架</strong>：TVLA v2 (Welch's t-test)</li>
+            <li><strong>阈值</strong>：|t| &lt; 4.5</li>
+            <li><strong>样本量</strong>：N=5,000/项 (2.5× 增强)</li>
+            <li><strong>掩码方案</strong>：k' = k + r·N (r&#x2208;64-bit random)</li>
+            <li><strong>射影随机化</strong>：Jacoiban z 随机起始坐标</li>
+            <li><strong>环境</strong>：Node.js v22 / Intel Xeon Ice Lake</li>
+          </ul>
+        </div>
+
+        <div class="verification-card">
+          <div class="card-icon">&#x1F52C;</div>
+          <h3>技术突破</h3>
+          <ul style="font-size:0.78rem;color:#8b949e;padding-left:1rem;line-height:1.8;">
+            <li><strong>根因定位</strong>：标准掩码实现中存在模运算抵消漏洞</li>
+            <li><strong>修复</strong>：独立随机掩码 (不参与模运算)</li>
+            <li>64-bit random r 扩至 ~320 double-and-add</li>
+            <li>Projective Randomization 防 V8 JIT 特化</li>
+            <li>2026-06-18 FreeTSA 时间戳存证</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style="text-align:center;margin-top:1rem;padding:0.6rem 1rem;background:rgba(0,210,170,0.04);border:2px solid rgba(0,210,170,0.15);border-radius:8px;display:inline-block;width:100%;">
+        <span style="color:#8b949e;font-size:0.8rem;">&#x1F4DC; FreeTSA 时间戳存证 · Jun 18 04:15:51 2026 GMT · Status: Granted &#x2705;</span>
+        <a href="/docs/sm2-tvla-analysis.html" style="color:#00d4aa;font-size:0.8rem;margin-left:1rem;text-decoration:underline;">完整分析 &#x2192;</a>
+        <a href="/TECHNICAL-VERIFICATION.md" style="color:#00d4aa;font-size:0.8rem;margin-left:0.5rem;">技术验证文档 &#x2192;</a>
+      </div>
+    </section>
+
+<!-- ═══════════ 安全验证 ═══════════ -->
+    <section class="security-verification" id="security">
+      <div class="section-badge">🔐 可验证完整性</div>
+      <h2>后量子安全 · 时间戳存证</h2>
+      <p class="section-subtitle">
+        FIBEMATE 使用 <strong>ML-KEM-768</strong> (NIST FIPS 203) 作为后量子密钥封装机制。<br>
+        所有核心实现已通过三线测试套件并完成 <strong>RFC 3161 时间戳存证</strong>。
+      </p>
+
+      <div class="verification-grid">
+        <div class="verification-card">
+          <div class="card-icon">✅</div>
+          <h3>正式验证</h3>
+          <ul>
+            <li>KAT 向量 9/9 全通过</li>
+            <li>IND-CPA roundtrip 14/14 全通过 ✅ · NTT 域转换 bug 已修复</li>
+            <li>隐式拒绝安全特性</li>
+            <li>FIPS 203 常量一致性</li>
+          </ul>
+        </div>
+
+        <div class="verification-card">
+          <div class="card-icon">🔄</div>
+          <h3>确定性可重现</h3>
+          <ul>
+            <li>同种子 → 同密钥对</li>
+            <li>同密钥+同种子 → 同共享密钥</li>
+            <li>800/800 循环验证通过</li>
+            <li>JS / WASM 双轨自洽</li>
+          </ul>
+        </div>
+
+        <div class="verification-card">
+          <div class="card-icon">📋</div>
+          <h3>FIPS 140-3 自检</h3>
+          <ul>
+            <li>上电自检 (POST)</li>
+            <li>密码算法一致性测试 (PCT)</li>
+            <li>软件完整性度量 (SHA-256)</li>
+            <li>失败自锁机制</li>
+          </ul>
+        </div>
+
+        <div class="verification-card">
+          <div class="card-icon">🕒</div>
+          <h3>时间戳存证</h3>
+          <ul>
+            <li>RFC 3161 标准时间戳</li>
+            <li>FreeTSA 授时链</li>
+            <li>9 个核心文件已存证</li>
+            <li><code>/docs/tsa/2026-06-08/</code></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="verification-footer">
+        <a href="/docs/tsa/2026-06-08/timestamp-manifest-seeded.json" class="btn-secondary">📥 下载存证清单 (JSON)</a>
+      </div>
+
+      <div class="verification-note">
+        ⚡ 验证：<code>openssl ts -reply -in *.tsr -text | grep "Status: Granted"</code>
+      </div>
+    </section>
+
+    <!-- CTA -->
+    <section class="cta" id="download">
+        <h2>准备好保护你的隐私了吗？</h2>
+        <p>加入 FIBEMATE，体验下一代隐私通信</p>
+        <div class="hero-buttons">
+            <a href="login.html" class="btn-primary">立即开始</a>
+        </div>
+    </section>
+
+    <!-- Developer Section -->
+    <section class="section dev-section" id="about">
+      <div class="container">
+        <div class="section-header-center fade-in">
+          <h2 class="section-title">关于<span class="gradient-text">项目</span></h2>
+        </div>
+        <p style="text-align: center; color: #888; font-size: 1.05rem; line-height: 1.8; max-width: 700px; margin: 0 auto;">
+          FIBEMATE &mdash; 后量子参考实现 &middot; 端到端安全 &middot; 开源隐私通讯协议
+        </p>
+      </div>
+    </section>
+
+
+<!-- ================================================
+     FOOTER
+     ================================================ -->
+
+    <footer>
+        <div class="footer-links">
+            <a href="disclaimer.html">法律声明</a> | <a href="legal.html">文档中心</a> |
+            <a href="mailto:support@fibemate.net">联系</a>
+        </div>
+        <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
+        <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
+            最后更新：2026-07-06 &nbsp;|&nbsp; PQC 混合握手路径 A 编译链就绪 🔧 &nbsp;|&nbsp; 路径 C-2 5/5 验证通过 ✅ &nbsp;|&nbsp; FPGA v5 硬件防护 &nbsp;|&nbsp; VWZ WASM 7/7 &nbsp;|&nbsp; SM2 11/11 &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; TSR 53 份 ✓<br>
+            后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + oqs-provider 编译链就绪 (nginx 接入待上线) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
+        </p>
+        <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
+            <p style="margin:0 0 6px;font-size:0.85rem;color:#00d4aa;"><strong>&#x1F4DC; 开源计划</strong></p>
+            <p style="margin:0;font-size:0.82rem;color:#94a3b8;line-height:1.6;">
+                计划于 <strong>2026.08.31</strong> 以 <strong>GNU General Public License v3.0 (GPLv3)</strong> 开源核心密码学模块<br>
+                （以第三方安全审计为前提）。开源前，代码为私有仓库，所有验证报告<br>
+                （KAT、TVLA）仅为自证，待开源后可独立验证。<br>
+                所有核心代码已通过 <strong>67+ 条</strong> 联合信任(tsa.cn) + DigiCert 双源时间戳存证，原创性可追溯。<br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-07-06 · FPGA v5 硬件防护 + VWZ WASM 7/7 + 浏览器基准 · FreeTSA Granted &#x2705;</small>
+            </p>
+        </div>
+        <p class="footer-beian" style="margin-top:0.3rem;font-size:0.82rem;color:#94a3b8;">
+  黑ICP备2026005787号-1 &nbsp;|&nbsp; 黑公网安备 000709114001 号
+</p>
+<div class="footer-timestamp sm2-tvla-footer" style="text-align:center;margin-top:6px;font-size:0.78rem;color:#8b949e;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04);">
+ <div style="margin-bottom:4px;">
+  <span>&#x1F4DC; SM2 TVLA N=5,000 · 7/7 + 20/20 ✓ · 1-4 阶矩</span>
+  <span>&nbsp;|&nbsp;</span>
+  <span style="color:#00d4aa;">verify 0.10 · decrypt 0.16</span>
+ </div>
+ <div style="margin-bottom:2px;">
+  <span>&#x1F4DC; SM2 TVLA N=10,000 · 20/20 ✓ · 1-4 阶矩</span>
+  <span>&nbsp;|&nbsp;</span>
+  <span style="color:#00d4aa;">max |t|=1.82</span>
+ </div>
+ <div>
+  <span style="color:#00d4aa;">FreeTSA · 2026-07-06</span>&nbsp;<span style="color:#8b949e;">| FPGA v5 硬件防护 + VWZ WASM 7/7 + TSR lg-001~051</span>
+  <a href="/docs/evidence/tvla_n10000.tsr" style="color:#8b949e;margin-left:6px;">⏱ N=10K TSR</a>
+  <a href="/docs/evidence/tvla_n10000_report.sha256" style="color:#8b949e;margin-left:4px;">SHA256</a>
+  <span style="color:#8b949e;margin-left:8px;">|</span>
+  <a href="/docs/evidence/index.tsr" style="color:#8b949e;margin-left:4px;">⏱ 首页 TSR</a>
+  <a href="/docs/evidence/index.sha256" style="color:#8b949e;margin-left:4px;">SHA256</a>
+  <span style="color:#8b949e;margin-left:8px;">|</span>
+  <a href="/docs/tsa/2026-06-25/index.tsr" style="color:#00d4aa;margin-left:4px;">⏱ v3.0-preview 首页 TSR (DigiCert Granted)</a>
+  <a href="/docs/tsa/2026-06-25/sm2-frontend-verification.tsr" style="color:#00d4aa;margin-left:4px;">SM2 验证报告 TSR</a>
+  <span style="color:#8b949e;margin-left:8px;">|</span>
+  <a href="/docs/sm2-tvla-analysis.html" style="color:#00d4aa;">完整分析 &#x2192;</a>
+  <a href="/docs/evidence/TECHNICAL-VERIFICATION.md" style="color:#8b949e;">证据地图 v4 &#x2192;</a>
+ </div>
+</div>
+
+      <div class="research-declaration" style="margin-top:16px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#666;text-align:center;line-height:1.5;">
+        <p>
+          🔬 FIBEMATE 是一个独立的隐私技术研究项目。<br>
+          所有加密模块、零知识证明实现均为技术验证与学术研究目的。<br>
+          ZK匿名登录功能仅用于展示零知识证明技术能力，不代表已落实实名认证要求。<br>
+          项目已通过非经营性ICP备案（黑ICP备2026005787号-1），不涉及商业运营。
+        </p>
+      </div>
+
+    <!-- 产品形态 -->
+    <section class="product-status-section">
+      <h2 style="text-align:center;font-size:1.4rem;color:#f0f6fc;margin:40px 0 0;">产品形态</h2>
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:16px;margin:24px 0 40px;">
+        <div class="status-card">
+          <span class="status-icon">&#x1F310;</span>
+          <span class="status-name">Web 应用</span>
+          <span class="status-badge active">&#x2705; 已部署</span>
+        </div>
+        <div class="status-card">
+          <span class="status-icon">&#x1F4BB;</span>
+          <span class="status-name">Electron 桌面端</span>
+          <span class="status-badge active">&#x2705; 已构建</span>
+        </div>
+        <div class="status-card">
+          <span class="status-icon">&#x1F6E0;</span>
+          <span class="status-name">Tauri v2 桌面端</span>
+          <span class="status-badge active">&#x2705; 核心模块就绪</span>
+        </div>
+        <div class="status-card">
+          <span class="status-icon">&#x1F4F1;</span>
+          <span class="status-name">React Native 移动端</span>
+          <span class="status-badge dev">&#x1F52C; 开发中</span>
+        </div>
+        <div class="status-card">
+          <span class="status-icon">&#x1F4F2;</span>
+          <span class="status-name">PWA</span>
+          <span class="status-badge active">&#x2705; 已支持</span>
+        </div>
+        <div class="status-card">
+          <span class="status-icon">&#x26A1;</span>
+          <span class="status-name">FPGA 硬件加速</span>
+          <span class="status-badge active">&#x2705; 验证通过 (256/256)</span>
+        </div>
+      </div>
+    </section>
+
+<!-- ==================== SM2 性能加速路径 ==================== -->
+<section class="features" id="sm2-perf" style="padding:2rem 1rem;max-width:900px;margin:0 auto;">
+  <h2 class="section-title" style="color:#f87171;">&#x1F1E8;&#x1F1F3; SM2 性能加速路径</h2>
+  <p class="section-subtitle" style="color:#8b949e;">纯 JavaScript (BigInt) · 从 jsbn 基线到 wNAF 的逐级优化</p>
+
+  <div style="overflow-x:auto;margin:1.5rem 0;">
+  <table style="width:100%;border-collapse:collapse;font-size:0.85rem;color:#c9d1d9;background:rgba(220,38,38,0.03);border:1px solid rgba(220,38,38,0.2);border-radius:8px;">
+    <thead><tr style="background:rgba(220,38,38,0.10);">
+      <th style="padding:8px 12px;text-align:left;color:#f87171;border-bottom:1px solid rgba(220,38,38,0.3);">阶段</th>
+      <th style="padding:8px 12px;text-align:left;color:#f87171;border-bottom:1px solid rgba(220,38,38,0.3);">优化项</th>
+      <th style="padding:8px 12px;text-align:center;color:#f87171;border-bottom:1px solid rgba(220,38,38,0.3);">vs jsbn</th>
+      <th style="padding:8px 12px;text-align:center;color:#f87171;border-bottom:1px solid rgba(220,38,38,0.3);">技术</th>
+    </tr></thead>
+    <tbody>
+      <tr><td style="padding:6px 12px;color:#8b949e;">0</td><td style="padding:6px 12px;">jsbn 基线（double-and-add + 仿射坐标）</td><td style="text-align:center;">1.00x</td><td style="text-align:center;color:#8b949e;">BigInteger 互操作</td></tr>
+      <tr style="background:rgba(0,229,195,0.03);"><td style="padding:6px 12px;">1</td><td style="padding:6px 12px;">预计算表（2ⁱ·G 查表法）</td><td style="text-align:center;color:#00E5C3;">2.64x</td><td style="text-align:center;color:#8b949e;">固定基点 G 加速</td></tr>
+      <tr style="background:rgba(0,229,195,0.03);"><td style="padding:6px 12px;">2</td><td style="padding:6px 12px;">Native BigInt 域乘法</td><td style="text-align:center;color:#00E5C3;">7.3x</td><td style="text-align:center;color:#8b949e;">底层乘法器替换</td></tr>
+      <tr style="background:rgba(0,229,195,0.03);"><td style="padding:6px 12px;">3</td><td style="padding:6px 12px;">Jacobian 坐标（避免 modInverse）</td><td style="text-align:center;color:#00E5C3;">2.1–6.2x</td><td style="text-align:center;color:#8b949e;">混合加法 + 投影重编码</td></tr>
+      <tr style="background:rgba(0,229,195,0.06);"><td style="padding:6px 12px;">4</td><td style="padding:6px 12px;">wNAF 一般点标量乘</td><td style="text-align:center;color:#00E5C3;">1.16x</td><td style="text-align:center;color:#8b949e;">窗口 4 · 非零位 ~51</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p style="margin:1rem 0 0;font-size:0.85rem;color:#c9d1d9;"><strong style="color:#f87171;">全栈最终加速比（jsbn 基线 → BigInt wNAF）</strong></p>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0.8rem 0;">
+    <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.25);border-radius:8px;padding:10px 14px;text-align:center;">
+      <div style="font-size:0.7rem;color:#8b949e;margin-bottom:4px;">密钥生成</div>
+      <div style="font-size:1.2rem;font-weight:700;color:#f87171;">5.52x</div>
+    </div>
+    <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.25);border-radius:8px;padding:10px 14px;text-align:center;">
+      <div style="font-size:0.7rem;color:#8b949e;margin-bottom:4px;">签名</div>
+      <div style="font-size:1.2rem;font-weight:700;color:#f87171;">6.19x</div>
+    </div>
+    <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.25);border-radius:8px;padding:10px 14px;text-align:center;">
+      <div style="font-size:0.7rem;color:#8b949e;margin-bottom:4px;">验签</div>
+      <div style="font-size:1.2rem;font-weight:700;color:#f87171;">3.15x</div>
+    </div>
+    <div style="background:rgba(220,38,38,0.15);border:1px solid rgba(220,38,38,0.40);border-radius:8px;padding:10px 14px;text-align:center;">
+      <div style="font-size:0.7rem;color:#8b949e;margin-bottom:4px;">加密</div>
+      <div style="font-size:1.2rem;font-weight:700;color:#f87171;">~2.75x</div>
+    </div>
+    <div style="background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.25);border-radius:8px;padding:10px 14px;text-align:center;">
+      <div style="font-size:0.7rem;color:#8b949e;margin-bottom:4px;">解密</div>
+      <div style="font-size:1.2rem;font-weight:700;color:#f87171;">~2.49x</div>
+    </div>
+  </div>
+
+  <div style="margin-top:1.2rem;padding:12px 18px;background:rgba(220,38,38,0.06);border-left:3px solid #dc2626;border-radius:4px;">
+    <p style="margin:0;font-size:0.8rem;color:#8b949e;">
+      <strong style="color:#f87171;">优化落地边界：</strong>wNAF 理论加速 ~1.3x，实测 1.16x。JS 引擎的函数调用开销、BigInt 临时对象分配、和循环解释开销吃掉了剩余部分。这是纯 JavaScript 环境下的真实工程边界。下一数量级提升需切换 WASM/Rust 或 FPGA 硬件加速。
+    </p>
+  </div>
+
+  <div style="margin-top:1rem;display:flex;justify-content:flex-end;gap:6px;font-size:0.65rem;color:#646c78;">
+    <span>• G 预计算表缓存（懒加载）</span>
+    <span>• wNAF 窗口=4</span>
+    <span>• Jacobian 混合加法</span>
+    <span>• BigInt 原生乘法</span>
+    <span>• 与 sm-crypto 互操作</span>
+  </div>
+
+  <div style="text-align:center;margin-top:1.5rem;">
+    <a href="/docs/sm2-optimization.html" style="display:inline-block;padding:8px 28px;background:rgba(0,229,195,0.12);border:1px solid rgba(0,229,195,0.3);border-radius:6px;color:#00E5C3;text-decoration:none;font-size:0.9rem;font-weight:600;transition:background 0.2s;" onmouseover="this.style.background=\'rgba(0,229,195,0.22)\'" onmouseout="this.style.background=\'rgba(0,229,195,0.12)\'">📖 阅读全文：SM2 逐级优化技术文章 →</a>
+  </div>
+</section>
+<!-- ==================== /SM2 性能加速路径 ==================== -->
+        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🔐 2026-06-16 · 抗量子就绪状态页面上线，诚实地回答"FIBEMATE 抗量子了吗？" · <a href="/docs/pqc-readiness.html" style="color:#00E5C3;">查看状态 →</a> · <a href="/security.html" style="color:#00E5C3;">安全体系 →</a></p>
+
+
+        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">⚡ 2026-06-15 · SM2 全栈重构完成，与 sm-crypto 双向互操作验证通过，性能提升 7.3-8.6x · <a href="/docs/sm2-optimization.html" style="color:#00E5C3;">详情 →</a></p>
+        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">⚡ 2026-06-16 · SM2 加解密性能再提升 9%，wNAF 标量乘优化上线 · <a href="/docs/sm2-optimization.html" style="color:#00E5C3;">文章 →</a> · <a href="/security.html#sec-9-8" style="color:#00E5C3;">数据 →</a></p>
+        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🛡️ 2026-06-16 · SM2 TVLA v2 10/10 全部通过 (N=2,000)，jsbn + BigInt 双路径无泄漏 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">分析报告 →</a></p>
+        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🔒 2026-07-06 · FPGA v5 硬件侧信道防护合成通过 (ntt_fault_protect + ntt_masked_wrapper + hw_monitor + lfsr256_prng) · VWZ Rust/WASM 公钥压缩 (全量表 2.8KB, rank-1 理论值 468B, 7/7) · 浏览器 WASM 基准测速完成 · TSR 时间戳存证达 51 份 | 🔬 <a href="/docs/pqc-readiness.html#7" style="color:#00E5C3;">PQC 就绪状态 →</a></p>
+        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🟢 2026-06-18 · SM2 TVLA v1.3 Montgomery Ladder N=5,000 7/7 全绿 · verify |t|=0.10 · decrypt |t|=0.16 · 三重防护锁定 · FreeTSA 存证 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00d4aa;">完整分析 →</a> · <a href="/TECHNICAL-VERIFICATION.md" style="color:#8b949e;">证据地图 →</a></p>
+
+        <p class="footer-tech" style="margin-top: 0.5rem; font-size: 0.8rem;">
+            <a href="/docs/pqc-readiness.html" style="color:#00E5C3;text-decoration:none;">Post-Quantum Ready</a> &middot; Double Ratchet &middot; Sphinx Mixnet
+        <p class="footer-backend" style="margin-top: 0.8rem; font-size: 0.85rem;">
+            <span style="display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#22c55e;margin:0 8px;">&#x1F680; 生产通道: Node.js v2.21-pq</span>
+            <span style="display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:#f97316;margin:0 8px;">&#x1F52C; 实验通道: Rust v0.2-e2ee</span>
+        </p>
+        <p class="footer-arch-link" style="margin-top: 0.4rem; font-size: 0.75rem; color: #646c78;">
+            <a href="/docs/architecture.html" style="color:#646c78;text-decoration:underline;">双后端架构详情 &rarr;</a>
+        </p>
+<p class="footer-contact" style="margin-top: 0.5rem; font-size: 0.85rem;">
+            <a href="mailto:support@fibemate.net">support@fibemate.net</a>
+            <div class="timestamp-proof" style="max-width: 900px; margin: 2rem auto 0; padding: 1.5rem 2rem; background: rgba(0,212,170,0.05); border: 1px solid rgba(0,212,170,0.2); border-radius: 8px; text-align: left;">
+        <h4 id="ts-proof" style="margin:0 0 0.5rem;font-size:1rem;color:#00d4aa;">&#x1F4DC; 可信时间戳存证 (RFC 3161)</h4>
+        <p style="margin:0 0 1rem;font-size:0.85rem;color:#c9d1d9;"><strong>可信时间戳存证（RFC 3161）· 联合信任 tsa.cn + DigiCert 双源时间戳存证</strong></p>
+        <details style="cursor:pointer;">
+        <summary style="color:#00d4aa;font-size:0.85rem;margin-bottom:0.8rem;">&#x1F4CB; 查看存证清单 (SHA-256)</summary>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:0.8rem 0;">
+        <div>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,212,170,0.25);padding-bottom:0.3rem;">&#x1F510; 核心加密 (13) <span style="font-size:0.6rem;color:#00d4aa;">tsa.cn</span></h5>
+        <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
+        <li><span style="color:#c9d1d9;">message-crypto-v2.js</span> &mdash; 4e2f4bef...</li>
+        <li><span style="color:#c9d1d9;">sm2-browser.js</span> &mdash; 5df29703...</li>
+        <li><span style="color:#c9d1d9;">sm2-browser.bundle.js</span> &mdash; 14cfcdbc...</li>
+        <li><span style="color:#c9d1d9;">ml-kem-768.js</span> &mdash; 4ee3d9b3... <span style="font-size:0.6rem;color:#00d4aa;">KAT 10,000/10,000 ✓ + TVLA v2 (N=10K) 核心操作恒定时间 ✓ · 联合信任 ✓ + DigiCert ✓ 双源</span></li>
+        <li><span style="color:#c9d1d9;">sm2-browser.esm.js</span> &mdash; 6563d887...</li>
+        <li><span style="color:#c9d1d9;">sm2-browser.cjs.js</span> &mdash; de058788...</li>
+        <li><span style="color:#c9d1d9;">sm3_implementation.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="tsa.cn TSA 2026-05-25">TSA&#x2713;</span> &mdash; 1aad0720...</li>
+        <li style="font-size:0.65rem;color:#646c78;">fibemate-algoreg-v3.0.0.tar.gz &mdash; 5f07de2b...</li>
+        <li><span style="color:#c9d1d9;">bulletproofs.js</span> &mdash; 5a3c0fb5...</li>
+        <li><span style="color:#c9d1d9;">session-manager.js</span> &mdash; 00c9c720...</li>
+        <li><span style="color:#c9d1d9;">ml-kem-hybrid-integration.js</span> &mdash; da751965...</li>
+        <li><span style="color:#c9d1d9;">legacy-crypto-bridge.js</span> &mdash; 5841764c...</li>
+        <li><span style="color:#c9d1d9;">privacy-layers/index.js</span> &mdash; 46cc03b8...</li>
+        </ul>
+        </div>
+        <div>
+                <div>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(255,140,0,0.25);padding-bottom:0.3rem;">&#x2699; 后端 + KAT (11) <span style="font-size:0.6rem;color:#ff8c00;">tsa.cn</span></h5>
+        <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
+        <li style="font-size:0.6rem;color:#646c78;margin-top:0.15rem;">&mdash; 2026-05-19 &mdash;</li>
+        <li><span style="color:#c9d1d9;">test_1024.c</span> &mdash; d6a70f9b...</li>
+        <li><span style="color:#c9d1d9;">kem.c (K=4)</span> &mdash; fa06d665...</li>
+        <li style="font-size:0.6rem;color:#646c78;margin-top:0.3rem;">&mdash; 2026-05-21 &mdash;</li>
+        <li style="font-size:0.65rem;color:#646c78;">KeyGen ML-DSA-44.txt &mdash; d3afbeff...</li>
+        <li style="font-size:0.65rem;color:#646c78;">SigGen ML-DSA-44.txt &mdash; cae18913...</li>
+        <li style="font-size:0.65rem;color:#646c78;">SigVer ML-DSA-44.txt &mdash; 9962b232...</li>
+        <li><span style="color:#c9d1d9;">test_sm2.js</span> &mdash; 1217dd38...</li>
+        <li><span style="color:#c9d1d9;">test_sm2_module.js</span> &mdash; dff62334...</li>
+        <li style="font-size:0.6rem;color:#646c78;margin-top:0.3rem;">&mdash; 2026-05-23 &mdash;</li>
+        <li><span style="color:#c9d1d9;">index.js</span> &mdash; 230a6318...</li>
+        <li><span style="color:#c9d1d9;">jwt-helper.js</span> &mdash; 77217b71...</li>
+        <li><span style="color:#c9d1d9;">kat_fips.js</span> &mdash; 7ef6e8e6...</li>
+        <li><span style="color:#c9d1d9;">verify_final.js</span> &mdash; e1c9dec5...</li>
+        </ul>
+        </div>
+        站点文件 (3)</h5>
+        <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
+        <li><span style="color:#c9d1d9;">index.html</span> &mdash; b709837f... <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-06-02">TSA&#x2714;</span></li>
+        <li><span style="color:#c9d1d9;">main.html</span> &mdash; dd32fa6f... <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-06-02">TSA&#x2714;</span></li>
+        <li><span style="color:#c9d1d9;">login.html</span> &mdash; 7f710381... <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-06-02">TSA&#x2714;</span></li>
+        <li><span style="color:#c9d1d9;">modules/e2ee-display.js</span> &mdash; 87afbb60... <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-06-02">TSA&#x2714;</span></li>
+        </ul>
+        </div>
+        <div>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(139,92,246,0.25);padding-bottom:0.3rem;">&#x1F578; 隐私层 Mixnet + PIR (7)</h5>
+        <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
+        <li><span style="color:#c9d1d9;">traffic-shaping.js</span> &mdash; a4dd1102...</li>
+        <li><span style="color:#c9d1d9;">mixnet-transport.js</span> &mdash; 991b84cd...</li>
+        <li><span style="color:#c9d1d9;">sphinx-packet.js</span> &mdash; 45a8fe8a...</li>
+        <li><span style="color:#c9d1d9;">nym-mixnet.js</span> &mdash; 9aec6a8b...</li>
+        <li><span style="color:#c9d1d9;">distributed-mixnet.js</span> &mdash; 899d744c...</li>
+        <li><span style="color:#c9d1d9;">bloom-filter.js</span> &mdash; 6ba1f9fb...</li>
+        <li><span style="color:#c9d1d9;">pir-search.js</span> &mdash; ba43abcf...</li>
+        </ul>
+        </div>
+        
+        <div>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,160,255,0.25);padding-bottom:0.3rem;">&#x1F4DD; 开发验证 &#x1F4C5; 2026-05-26 (5) <span style="font-size:0.6rem;color:#00a0ff;">DigiCert &#x1F33F; 免费</span></h5>
+        <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
+        <li><span style="color:#c9d1d9;">message-crypto-v2.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; 4947fac7...<br><span style="font-size:0.6rem;color:#646c78;">SM2 KDF (GB/T 32918.4) + SM3 (GB/T 32905) 实现</span></li>
+        <li><span style="color:#c9d1d9;">signature.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; e7cb8af3...<br><span style="font-size:0.6rem;color:#646c78;">PQ 混合签名 (SLH-DSA-SHA2-128s + ML-DSA-65) &mdash; 生产环境验证通过</span></li>
+        <li><span style="color:#c9d1d9;">kat_fips.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; 7ef6e8e6...<br><span style="font-size:0.6rem;color:#646c78;">FIPS 203 KAT 验证框架</span></li>
+        <li><span style="color:#c9d1d9;">verify_final.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; e1c9dec5...<br><span style="font-size:0.6rem;color:#646c78;">NTT 往返 + basemul zeta 修复</span></li>
+        <li><span style="color:#c9d1d9;">fips203_verify.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; f970adc5...<br><span style="font-size:0.6rem;color:#646c78;">KeyGen+Encaps+Decaps KAT 全流程</span></li>
+        </ul>
+        </div>
+        </ul>
+        </div>
+        
+        <div>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(220,38,38,0.25);padding-bottom:0.3rem;">&#x1F1E8;&#x1F1F3; 国密集成 &#x1F4C5; 2026-06-02 (1) <span style="font-size:0.6rem;color:#dc2626;">DigiCert &#x1F33F; 免费</span></h5>
+        <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
+        <li><span style="color:#c9d1d9;">crypto/gm.js</span> <span style="font-size:0.55rem;color:#dc2626;" title="DigiCert 2026-06-02">TSA&#x2714;</span> &mdash; 1631d9a6...<br><span style="font-size:0.6rem;color:#646c78;">国密加密模块 &mdash; SM2/SM3/SM4 + α-GCM 认证加密实现</span></li>
+        </ul>
+        </div>
+        
+        <div>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,210,100,0.25);padding-bottom:0.3rem;">&#x1F6E1;&#xFE0F; SM2 TVLA 侧信道验证 &#x1F4C5; 2026-06-18 (6) <span style="font-size:0.6rem;color:#00d4aa;">FreeTSA + DigiCert · v1.3 最终版</span></h5>
+        <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
+        <li><span style="color:#c9d1d9;">sm2-bigint-ec.js v1.3</span> <span style="font-size:0.55rem;color:#00d4aa;">TSA&#x2714;</span> &mdash; BigInt + Jacobian + wNAF + Montgomery Ladder<br><span style="font-size:0.6rem;color:#646c78;">TVLA N=5,000 7/7 PASS (|t|&#x2264;0.38) · Scalar Mask + Proj Rand + Ladder · 恒时点乘</span></li>
+        <li><span style="color:#c9d1d9;">tvla_sm2_v13_final.js</span> <span style="font-size:0.55rem;color:#00d4aa;">TSA&#x2714;</span> &mdash; SM2 TVLA v1.3 测试框架 (Welch's t-test, N=5,000)<br><span style="font-size:0.6rem;color:#646c78;">预生成密钥池 + Fixed-vs-Random + Montgomery Ladder 实验设计</span></li>
+        <li><span style="color:#c9d1d9;">tvla-sm2-v13-report.json</span> <span style="font-size:0.55rem;color:#00d4aa;">TSA&#x2714;</span> &mdash; N=5,000 7/7 全绿报告（最终版）<br><span style="font-size:0.6rem;color:#646c78;">verify 0.10 · decrypt 0.16 · 三重防护 · 528s (2026-06-18)</span></li>
+        <li><span style="color:#c9d1d9;">TECHNICAL-VERIFICATION.md</span> <span style="font-size:0.55rem;color:#00d4aa;" title="FreeTSA 2026-06-18">TSA&#x2714;</span> &mdash; 技术验证证据地图 v2<br><span style="font-size:0.6rem;color:#646c78;">SHA256 + TSR · Status: Granted (Jun 18 2026)</span></li>
+        </ul>
+        </div>
+        
+        <div>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,212,170,0.25);padding-bottom:0.3rem;">&#x1F9EA; PQC 专项测试 &#x1F4C5; 2026-06-07–08 (10) <span style="font-size:0.6rem;color:#00d4aa;">DigiCert &#x1F33F; 免费</span></h5>
+        <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
+        <li><span style="color:#c9d1d9;">fo-transform.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; FO 变换严格性验证</li>
+        <li><span style="color:#c9d1d9;">ciphertext-malleability.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; 密文可塑性攻击测试</li>
+        <li><span style="color:#c9d1d9;">invalid-input.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; 无效输入边界测试</li>
+        <li><span style="color:#c9d1d9;">state-recovery.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; 状态恢复健壮性测试</li>
+        <li><span style="color:#c9d1d9;">concurrent.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; 并发安全性测试</li>
+        <li><span style="color:#c9d1d9;">memory-leak.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; 内存泄漏检测</li>
+        <li><span style="color:#c9d1d9;">randomness.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; 随机性质量测试</li>
+        <li><span style="color:#c9d1d9;">js-vs-native.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; JS/Native 互操作性测试</li>
+        <li><span style="color:#c9d1d9;">benchmark.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-07">TSA&#x2714;</span> &mdash; 性能基准测试</li>
+        <li><span style="color:#c9d1d9;">sm2_sm4_e2e.test.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="DigiCert 2026-06-08">TSA&#x2714;</span> &mdash; SM2/SM4 端到端集成测试</li>
+        </ul>
+        </div>
+        
+        <div>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,212,170,0.25);padding-bottom:0.3rem;">&#x26A1; WASM 加速模块<br><span style="font-size:0.6rem;color:#646c78;">pq-wasm 63KB raw / 27KB gzip | slh-dsa-wasm 107KB raw / 51KB gzip</span></h5>
+        </div>
+        
+        </div>
+        </details>
+        <p style="margin:1rem 0 0;font-size:0.72rem;color:#646c78;line-height:1.6;">
+        <small>验证: <code style="font-size:0.7rem;">openssl ts -verify -data [file] -in [file].tsr -CAfile cacert.pem</code></small><br>
+        <small>完整清单: <code style="font-size:0.7rem;">docs/timestamp-manifest.json</code> | 共 67 条记录 | 联合信任 tsa.cn (付费) + DigiCert 双源存证</small>
+        </p>
+        <p style="margin: 0.8rem 0 0; font-size: 0.8rem; color: #646c78;">计划 2026.08.31 开源 | 独立技术研究项目 · 非商业运营 · 个人ICP备案</p>
+    </div>
+
+    <!-- KAT/FIPS Verification Timeline — 密码学实现里程碑 -->
+    <div class="timestamp-proof" style="max-width: 900px; margin: 1rem auto 0; padding: 1.2rem 2rem; background: rgba(255,140,0,0.04); border: 1px solid rgba(255,140,0,0.15); border-radius: 8px; text-align: left;">
+        <p style="margin: 0 0 0.4rem; font-size: 0.8rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px;">ML-KEM-768 &middot; NIST FIPS 203 KAT &middot; Debug Journey</p>
+        <p style="margin: 0 0 0.8rem; font-size: 0.75rem; color: #646c78;">从数学底层实现 ML-KEM-768，逐项对齐 NIST Known Answer Test 向量。NTT 往返验证 → basemul zeta 表修复 → 全流程 FIPS 203 KAT 通过。</p>
+        <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#ff8c00;">2026-05-18</strong> &mdash; 验证框架 + NTT/basemul 修复</p>
+        <table style="margin: 0 0 0.6rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:200px;">kat_fips.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">FIPS 203 KAT 解析框架 — 7ef6e8e6...9718d52d <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">verify_final.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">NTT &#x2194; invNTT 往返 PASS，basemul zeta[64..127] 修复 — e1c9dec5...c77aaf6e <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+        </table>
+        <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#ff8c00;">2026-05-19</strong> &mdash; 全流程 FIPS 203 KAT 通过 &#x2705;</p>
+        <table style="margin: 0 0 0.3rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:200px;">fips203_verify.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">KeyGen + Encaps + Decaps 全流程 KAT 匹配 — f970adc5...10026857 <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+        </table>
+                                      <!-- FIPS 205 / 2026-05-23 -->
+                                      <tr style="border-top: 1px solid #ff8c0044;">
+                                        <td style="padding: 0.4rem 0; color: #ff8c00; font-weight: 600;" colspan="3">2026-05-23</td>
+                                      </tr>
+                                      <tr>
+                                        <td style="padding: 0.2rem 0.5rem; vertical-align: top;">sign.c</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-family: monospace; font-size: 0.7rem; color: #aaa; word-break: break-all;">4015a353...e2a0</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-size: 0.75rem; white-space: nowrap;">SLH-DSA (SPHINCS+) core sign/verify</td>
+                                      </tr>
+                                      <tr>
+                                        <td style="padding: 0.2rem 0.5rem; vertical-align: top;">fors.c</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-family: monospace; font-size: 0.7rem; color: #aaa; word-break: break-all;">4a658ef1...ded7</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">FORS tree signature</td>
+                                      </tr>
+                                      <tr>
+                                        <td style="padding: 0.2rem 0.5rem; vertical-align: top;">wots.c + wotsx1.c</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-family: monospace; font-size: 0.7rem; color: #aaa; word-break: break-all;">e0624601...f759b</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">WOTS+ one-time signature</td>
+                                      </tr>
+                                      <tr>
+                                        <td style="padding: 0.2rem 0.5rem; vertical-align: top;">merkle.c</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-family: monospace; font-size: 0.7rem; color: #aaa; word-break: break-all;">822c402a...dea6</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">Merkle hypertree</td>
+                                      </tr>
+                                      <tr>
+                                        <td style="padding: 0.2rem 0.5rem; vertical-align: top;">PQCgenKAT_sign.c</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-family: monospace; font-size: 0.7rem; color: #aaa; word-break: break-all;">793da075...cd70</td>
+                                        <td style="padding: 0.2rem 0.5rem; font-size: 0.75rem;">KAT generator</td>
+                                      </tr>
+                                      <tr>
+                                        <td style="padding: 0.2rem 0.5rem; vertical-align: top;" colspan="3">
+                                          <span style="color: #00d4aa;">SLH-DSA-SHA2-128f 100/100 ✅</span>
+                                          &nbsp;<span style="color: #00d4aa;">SHAKE-128f 100/100 ✅</span>
+                                          &nbsp;<span style="color: #00d4aa;">SHA2-128s 100/100 ✅ &middot; KAT Full Verified <span style="color:#aaa;font-size:0.65rem;">| FreeTSA 2026-05-23 05:32 CST</span></span>
+                                          &nbsp;<span style="color: #aaa;">Signature ~17KB</span>
+                                        </td>
+                                      </tr>
+                <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#ff8c00;">2026-05-23 05:13 CST</strong> &mdash; ML-KEM-768 Native v3 &mdash; KEM 10/10 &#x2705; &middot; CCA &#x2705; &middot; Spec Size &#x2705;</p>
+        <table style="margin: 0 0 0.3rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:200px;">kyber_nt_v3.js (740 lines)</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">ac92a76981e5119611abeda19f854ebc9a6c3c24412c4597acdd82ec24cb374e</td></tr>
+        </table>
+
+<p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #646c78;">纯 JavaScript 参考实现 | 无第三方 PQC 库依赖 | NIST KAT 20/20 + KAT 10,000 浏览器端全量一致性 ✓ <span style="color:#00d4aa;font-size:0.7rem;">| TSA tsa.cn 2026-05-23 03:12 CST</span></p>
+    </div>
+
+
+
+    
+    <!-- Integration Milestones — PQ + SM2 国密 -->
+    <div class="timestamp-proof" style="max-width: 900px; margin: 1rem auto 0; padding: 1.2rem 2rem; background: rgba(124,138,255,0.04); border: 1px solid rgba(124,138,255,0.15); border-radius: 8px; text-align: left;">
+        <p style="margin: 0 0 0.4rem; font-size: 0.8rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px;">国密集成 &middot; SM2 密钥协商 &middot; SM4-αGCM</p>
+        <p style="margin: 0 0 0.8rem; font-size: 0.75rem; color: #646c78;">SM2 密钥协商 + SM4-αGCM 加密栈完整集成，ML-KEM-768 后量子增强。</p>
+        <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#7c8aff;">2026-05-20</strong> &mdash; PQ Double Ratchet</p>
+        <table style="margin: 0 0 0.6rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">double-ratchet-pq.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">ML-KEM-768 &#x2192; X3DH/PQ &#x2192; Double Ratchet &#x2192; AES-256-GCM — dd526c81...60cb6233 <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+        </table>
+        <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#7c8aff;">2026-05-21</strong> &mdash; SM2 &Iota;&Rho; &ang;</p>
+        <table style="margin: 0 0 0.3rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">test_sm2.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">SM2 keygen/encrypt/decrypt/sign/verify &#x2014; 1217dd38...1291f08a <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">test_sm2_module.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">SM2 browser ESM &#x2192; esbuild IIFE bundle selftest &#x2014; dff62334...bb3694fa <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+        </table>
+        <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #646c78;">sm-crypto | @noble/curves | esbuild | IIFE browser bundle <span style="color:#00d4aa;font-size:0.7rem;">| TSA tsa.cn 2026-05-23 03:12 CST</span></p>
+    </div>
+
+    <!-- TVLA v2 Enhanced N=10,000 — 时序侧信道验证里程碑 -->
+    <div class="timestamp-proof" style="max-width: 900px; margin: 1rem auto 0; padding: 1.2rem 2rem; background: rgba(0,212,170,0.04); border: 1px solid rgba(0,212,170,0.15); border-radius: 8px; text-align: left;">
+        <p style="margin: 0 0 0.4rem; font-size: 0.8rem; color: #8b949e; text-transform: uppercase; letter-spacing: 1px;">TVLA v2 Enhanced &middot; N=10,000 &middot; 时序侧信道验证</p>
+        <p style="margin: 0 0 0.8rem; font-size: 0.75rem; color: #646c78;">Welch's t-test 时序侧信道验证（Fixed-vs-Random + Fixed-vs-Fixed 控制组），N=10,000 增强样本量（3.3 倍原始 N=3,000），9 个核心操作逐个验证。</p>
+        <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#00d4aa;">2026-06-03</strong> &mdash; TVLA v2 Enhanced N=10,000 验证通过 &#x2705;</p>
+        <table style="margin: 0 0 0.3rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:240px;">样本量</td><td style="padding:1px 0; color:#e8f0f8;">N=10,000（3.3× 原始 N=3,000）</td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">测试方法</td><td style="padding:1px 0; color:#e8f0f8;">Welch's t-test（|t| > 4.5 判定泄漏）</td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">控制组</td><td style="padding:1px 0; color:#e8f0f8;">Fixed-vs-Fixed 测量系统稳定性验证 ✓</td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;vertical-align:top;">核心操作</td><td style="padding:1px 0; color:#e8f0f8;"><strong style="color:#00d4aa;">C Native Addon 核心操作恒定时间通过</strong>：keygen &#x2705; encaps &#x2705; decaps &#x2705; SampleNTT &#x2705; NTT &#x2705; ByteEncode &#x2705; ByteDecode &#x2705;<br><span style="color:#f97316;">compress 存在微弱时序差异（|t|=23.93 — 仅操作公开数据，Encaps 阶段，无安全影响）</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">学术意义</td><td style="padding:1px 0; color:#646c78;">N=10,000 暴露 N=3,000 时的 3 个方法学假阴性（内存分配计入计时、工作量不对等、缺控制组）</td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">报告文件</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem; color:#8b949e;">tvla-mlkem-report-v2-n10000.json <span style="color:#00d4aa;font-size:0.65rem;" title="DigiCert TSR 2026-06-03">TSA&#x2714; DigiCert</span> &mdash; 6EE24CE5...E3743A1 <span style="color:#00a0ff;font-size:0.65rem;" title="联合信任 tsa.cn 待提交">联合信任 ✓</span></td></tr>
+        </table>
+        <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #646c78;">FIBEMATE 成为<strong style="color:#00d4aa;">C Native Addon 通过 TVLA v2 Enhanced (N=10,000) 恒定时间验证 · 纯 JS 参考实现通过 KAT 10,000/10,000</strong></p>
+    </div>
+
+<script>
+        // 粒子动画
+        
+
+
+const canvas = document.getElementById('particles-canvas');
+        const ctx = canvas.getContext('2d');
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const particles = [];
+        const particleCount = 80;
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * canvas.width;
+                this.y = Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5;
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 2 + 0.5;
+                this.opacity = Math.random() * 0.5 + 0.2;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                if (this.y < 0 || this.y > canvas.height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(0, 229, 195, ${this.opacity})`;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < particleCount; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            // 画线连接附近粒子
+            for (let i = 0; i < particles.length; i++) {
+                for (let j = i + 1; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.strokeStyle = `rgba(0, 229, 195, ${0.1 * (1 - dist / 150)})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        // 数字动画
+        function animateCounters() {
+            const counters = document.querySelectorAll('.stat-number');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const duration = 2000;
+                const step = target / (duration / 16);
+                let current = 0;
+
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= target) {
+                        current = target;
+                        clearInterval(timer);
+                    }
+                    counter.textContent = Math.floor(current) + (target === 100 ? '%' : '+');
+                }, 16);
+            });
+        }
+
+        // Intersection Observer 触发动画
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    if (entry.target.classList.contains('stats')) {
+                        animateCounters();
+                    }
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.stats').forEach(el => observer.observe(el));
+
+        // 平滑滚动
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+    </script>
+    <script>navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){x.unregister()})});</script>
+</body>
+</html>

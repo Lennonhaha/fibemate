@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <title>TVLA 验证归档 | FIBEMATE</title>
+ <style>
+ * { margin: 0; padding: 0; box-sizing: border-box; }
+ body {
+ background: #0a0f1a;
+ color: #e8edf5;
+ font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+ line-height: 1.6;
+ padding: 2rem;
+ }
+ .container {
+ max-width: 1400px;
+ margin: 0 auto;
+ }
+ h1 {
+ font-size: 2.5rem;
+ font-weight: 600;
+ margin-bottom: 0.5rem;
+ background: linear-gradient(135deg, #fff, #7aa2f7);
+ -webkit-background-clip: text;
+ background-clip: text;
+ color: transparent;
+ }
+ .subtitle {
+ color: #8b9cb0;
+ margin-bottom: 2rem;
+ border-left: 3px solid #2d6a4f;
+ padding-left: 1rem;
+ }
+ .grid {
+ display: grid;
+ grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+ gap: 1.5rem;
+ margin-bottom: 2rem;
+ }
+ .card {
+ background: #11161f;
+ border-radius: 1rem;
+ padding: 1.5rem;
+ border: 1px solid #1e2a3a;
+ transition: all 0.2s ease;
+ }
+ .card:hover {
+ border-color: #2d6a4f;
+ transform: translateY(-2px);
+ }
+ .algorithm {
+ font-size: 1.5rem;
+ font-weight: 600;
+ margin-bottom: 0.25rem;
+ }
+ .version {
+ font-size: 0.8rem;
+ color: #6a8cff;
+ font-family: monospace;
+ margin-bottom: 1rem;
+ }
+ .badge {
+ display: inline-block;
+ background: #1e2a3a;
+ padding: 0.2rem 0.6rem;
+ border-radius: 20px;
+ font-size: 0.75rem;
+ font-weight: 500;
+ margin-bottom: 1rem;
+ }
+ .badge.pass {
+ background: #0f3b2c;
+ color: #6fcf97;
+ }
+ .stats {
+ background: #0c1119;
+ padding: 0.75rem;
+ border-radius: 8px;
+ font-size: 0.85rem;
+ margin: 1rem 0;
+ }
+ .stats div {
+ margin: 0.25rem 0;
+ }
+ .links {
+ display: flex;
+ flex-wrap: wrap;
+ gap: 0.75rem;
+ margin-top: 1rem;
+ }
+ .links a {
+ color: #6a8cff;
+ text-decoration: none;
+ font-size: 0.85rem;
+ }
+ .links a:hover {
+ text-decoration: underline;
+ color: #8aacff;
+ }
+ hr {
+ border-color: #1e2a3a;
+ margin: 2rem 0;
+ }
+ .footer {
+ text-align: center;
+ color: #5a6e8a;
+ font-size: 0.8rem;
+ margin-top: 2rem;
+ }
+ .note {
+ background: #1a1f2a;
+ padding: 0.6rem 0.8rem;
+ border-radius: 6px;
+ font-size: 0.8rem;
+ color: #8b9cb0;
+ margin-top: 0.75rem;
+ }
+ .na {
+ background: #1e1a2a;
+ color: #8b8cb0;
+ }
+ @media (max-width: 700px) {
+ body { padding: 1rem; }
+ .grid { grid-template-columns: 1fr; }
+ }
+ </style>
+</head>
+<body>
+<div class="container">
+ <h1>&#x1f4ca; TVLA &#x6d4b;&#x8bd5;&#x5f52;&#x6863;</h1>
+ <div class="subtitle">
+ Welch's t-test &#xb7; &#x9608;&#x503c; |t| &lt; 4.5 &#xb7; N=2,000 &#x521d;&#x7b5b; &#xb7; &#x65f6;&#x5e8f;&#x4fa7;&#x4fe1;&#x9053;&#x9a8c;&#x8bc1;<br>
+ &#x6240;&#x6709;&#x62a5;&#x544a;&#x5747;&#x7ecf; DigiCert / &#x8054;&#x5408;&#x4fe1;&#x4efb; RFC 3161 &#x65f6;&#x95f4;&#x6233;&#x5b58;&#x8bc1;
+ </div>
+
+ <div class="grid">
+ <!-- ML-KEM-768 -->
+ <div class="card">
+ <div class="algorithm">&#x1f510; ML-KEM&#x2011;768</div>
+ <div class="version">FIPS 203 / C Native Addon + WASM</div>
+ <div class="badge pass">&#x2705; TVLA v2 Enhanced &#x901a;&#x8fc7;</div>
+ <div class="stats">
+ <div>&#x1f4ca; &#x6700;&#x5927; |t|: <strong>23.93</strong> (compress &#x516c;&#x5f00;&#x6570;&#x636e;&#xff0c;&#x4f4e;&#x4e25;&#x91cd;&#x5ea6;)</div>
+ <div>&#x2705; &#x6838;&#x5fc3;&#x64cd;&#x4f5c;&#x6052;&#x5b9a;&#x65f6;&#x95f4;: keygen / encaps / decaps / NTT / EncodeDecode</div>
+ <div>&#x1f4d0; &#x6837;&#x672c;&#x91cf;: N=10,000 | &#x9608;&#x503c; 4.5 | Welch's t-test</div>
+ <div>&#x1f517; &#x53cc;&#x6e90;&#x5b58;&#x8bc1;: &#x8054;&#x5408;&#x4fe1;&#x4efb; + DigiCert</div>
+ </div>
+ <div class="links">
+ <a href="/docs/tvla/ml-kem-768/tvla-mlkem-report-v2-final.json">&#x1f4c4; JSON &#x62a5;&#x544a;</a>
+ <a href="/timestamps/">&#x1f552; &#x65f6;&#x95f4;&#x6233;</a>
+ </div>
+ <div class="note">FIPS 203 &#x7ebf;&#x4e0a;&#x5168;&#x7ec4;&#x4ef6;&#x65f6;&#x5e8f;&#x5b89;&#x5168;&#x6027;&#x7b2c;&#x4e09;&#x65b9;&#x9a8c;&#x8bc1;</div>
+ </div>
+
+ <!-- SM2 (BigInt + wNAF) -->
+ <div class="card">
+ <div class="algorithm">&#x1f1e8;&#x1f1f3; SM2</div>
+ <div class="version">BigInt + Jacobian + wNAF &#xb7; &#x7eaf; JavaScript</div>
+ <div class="badge pass">&#x2705; TVLA v2 10/10 &#x901a;&#x8fc7;</div>
+ <div class="stats">
+ <div>&#x1f4ca; &#x6700;&#x5927; |t|: <strong>2.71</strong> (&#x89e3;&#x5bc6;) &#xb7; &#x7b7e;&#x540d; |t|=2.03</div>
+ <div>&#x2705; genKey / sign / verify / encrypt / decrypt &#x5168;&#x90e8;&#x901a;&#x8fc7;</div>
+ <div>&#x1f4d0; &#x6837;&#x672c;&#x91cf;: N=2,000 | &#x9608;&#x503c; 4.5 | &#x9884;&#x751f;&#x6210;&#x5bc6;&#x94a5;&#x6c60;&#x6d88;&#x9664;&#x5047;&#x9633;&#x6027;</div>
+ <div>&#x26a1; &#x6027;&#x80fd;: 6.19x &#x7b7e;&#x540d;&#x52a0;&#x901f; / 7.98x &#x5bc6;&#x94a5;&#x751f;&#x6210;</div>
+ </div>
+ <div class="links">
+ <a href="/docs/tvla/sm2/tvla-sm2-v3-report.json">&#x1f4c4; JSON &#x62a5;&#x544a;</a>
+ <a href="/docs/tvla/sm2/tvla-sm2-v3-output.txt">&#x1f4dc; &#x539f;&#x59cb;&#x8f93;&#x51fa;</a>
+ <a href="/docs/sm2-tvla-analysis.html">&#x1f50d; &#x5206;&#x6790;&#x9875;&#x9762;</a>
+ </div>
+ <div class="note">&#x9996;&#x4e2a;&#x7eaf; JS SM2 TVLA &#x516c;&#x5f00;&#x5b9e;&#x73b0;&#xff0c;&#x586b;&#x8865; Web &#x7aef;&#x56fd;&#x5bc6;&#x65f6;&#x5e8f;&#x5b89;&#x5168;&#x9a8c;&#x8bc1;&#x7a7a;&#x767d;</div>
+ </div>
+
+ <!-- HMAC-SM3 -->
+ <div class="card">
+ <div class="algorithm">&#x1f1e8;&#x1f1f3; HMAC&#x2011;SM3</div>
+ <div class="version">sm-crypto &#x5185;&#x6838; &#xb7; &#x7eaf; JavaScript</div>
+ <div class="badge pass">&#x2705; TVLA v1 8/8 &#x901a;&#x8fc7;</div>
+ <div class="stats">
+ <div>&#x1f4ca; &#x6700;&#x5927; |t|: <strong>1.79</strong> (&#x5168;&#x56fa;&#x5b9a; vs &#x5168;&#x968f;&#x673a;)</div>
+ <div>&#x2705; &#x56fa;&#x5b9a;&#x5bc6;&#x94a5;+&#x968f;&#x673a;&#x6d88;&#x606f; (1.09) / &#x968f;&#x673a;&#x5bc6;&#x94a5;+&#x56fa;&#x5b9a;&#x6d88;&#x606f; (1.01)</div>
+ <div>&#x1f4d0; &#x6837;&#x672c;&#x91cf;: N=2,000 | &#x9608;&#x503c; 4.5 | Welch's t-test</div>
+ <div>&#x1f4a1; &#x8bf4;&#x660e;: &#x5b9e;&#x73b0;&#x672a;&#x523b;&#x610f;&#x6052;&#x5b9a;&#x65f6;&#x95f4;&#xff0c;&#x5b9e;&#x6d4b;&#x8bc1;&#x660e;&#x65e0;&#x6cc4;&#x6f0f;</div>
+ </div>
+ <div class="links">
+ <a href="/docs/tvla/hmac-sm3/tvla-hmac-sm3-v1-report.json">&#x1f4c4; JSON &#x62a5;&#x544a;</a>
+ <a href="/docs/tvla/hmac-sm3/tvla-hmac-sm3.js">&#x1f4dd; &#x6d4b;&#x8bd5;&#x811a;&#x672c;</a>
+ </div>
+ <div class="note">HMAC-SM3 &#x65f6;&#x5e8f;&#x5b89;&#x5168;&#x6027;&#x9a8c;&#x8bc1;&#xff0c;&#x586b;&#x8865; SM2 TVLA &#x672a;&#x8986;&#x76d6;&#x7684;&#x5bf9;&#x79f0; MAC &#x573a;&#x666f;</div>
+ </div>
+ </div>
+
+ <!-- Future: SM4 placeholder -->
+ <div class="grid" style="grid-template-columns: 1fr;">
+ <div class="card na">
+ <div class="algorithm">&#x1f1e8;&#x1f1f3; SM4 &#x6052;&#x5b9a;&#x65f6;&#x95f4; TVLA</div>
+ <div class="version">&#x5f85;&#x5b9e;&#x73b0; &#xb7; ISO/IEC 17825:2016 &#xb7; GM/T 0083-2020</div>
+ <div class="badge">&#x23f3; &#x8ba1;&#x5212; Q3 2026</div>
+ <div class="stats">
+ <div>&#x4e2d;&#x79d1;&#x9662;&#x4fe1;&#x5de5;&#x6240; 2026 &#x5df2;&#x5728;&#x786c;&#x4ef6;&#x5c42;&#x9a8c;&#x8bc1; SM4 &#x95e8;&#x9650;&#x5b9e;&#x73b0;&#xff08;10M &#x529f;&#x8017;&#x66f2;&#x7ebf;&#xff09;&#x3002;FIBEMATE &#x8ba1;&#x5212;&#x5728;&#x7eaf; JS &#x73af;&#x5883;&#x4e0b;&#x5b9e;&#x73b0;&#x6052;&#x5b9a;&#x65f6;&#x95f4; SM4&#xff0c;&#x5e76;&#x8fdb;&#x884c; TVLA-1 + TVLA-2 &#x53cc;&#x91cd;&#x6d4b;&#x8bd5;&#xff0c;&#x586b;&#x8865; Web &#x7aef;&#x56fd;&#x5bc6;&#x5206;&#x7ec4;&#x5bc6;&#x7801;&#x65f6;&#x5e8f;&#x5b89;&#x5168;&#x9a8c;&#x8bc1;&#x7684;&#x7a7a;&#x767d;&#x3002;</div>
+ <div style="margin-top:0.5rem;font-size:0.82rem;color:#7a8a9a;">&#x53c2;&#x8003;: &#x4e2d;&#x79d1;&#x9662;&#x4fe1;&#x5de5;&#x6240; 2026 &#xb7; &#x6e05;&#x534e;&#x5927;&#x5b66; 2019 (SM3-MAC) &#xb7; ISO/IEC 17825:2016</div>
+ </div>
+ <div class="links">
+ <a href="/security.html#sec-10">&#x1f9f1; &#x5b9e;&#x65bd;&#x8def;&#x7ebf;&#x56fe;</a>
+ <a href="/security.html#sec-9-10">&#x1f50d; &#x7814;&#x7a76;&#x8c03;&#x7814;</a>
+ </div>
+ </div>
+ </div>
+
+ <!-- Historical experiments -->
+ <hr>
+ <h3 style="margin-bottom: 1rem; color: #8b9cb0;">&#x1f4c1; &#x5386;&#x53f2;&#x5b9e;&#x9a8c;&#x9644;&#x5f55; (exploratory)</h3>
+ <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+ <div class="card" style="opacity: 0.85;">
+ <div class="algorithm">&#x1f9ea; Experiment 1&#x2013;5</div>
+ <div class="version">ML-KEM &#x4e2d;&#x95f4;&#x8c03;&#x8bd5; / wNAF &#x9884;&#x7814;</div>
+ <div class="stats" style="font-size: 0.8rem;">
+ <div>&#x56fa;&#x5b9a;&#x5bf9;&#x7167; &#xb7; &#x538b;&#x7f29;&#x8fb9;&#x754c; &#xb7; &#x53ef;&#x9884;&#x6d4b;&#x6027; &#xb7; &#x7f13;&#x5b58;&#x6548;&#x5e94; &#xb7; polyMul &#x653b;&#x51fb;</div>
+ </div>
+ <div class="links">
+ <a href="/docs/tvla/experiments/">&#x1f4c2; &#x67e5;&#x770b;&#x5168;&#x90e8; (8 files)</a>
+ </div>
+ </div>
+ <div class="card" style="opacity: 0.85;">
+ <div class="algorithm">&#x2699;&#xfe0f; WASM &#x62a5;&#x544a;</div>
+ <div class="version">ML-KEM WASM &#x4e92;&#x64cd;&#x4f5c;</div>
+ <div class="stats" style="font-size: 0.8rem;">
+ <div>&#x8de8;&#x8bed;&#x8a00;&#x4e00;&#x81f4;&#x6027;&#x9a8c;&#x8bc1;</div>
+ </div>
+ <div class="links">
+ <a href="/docs/tvla/experiments/tvla-wasm-report.json">&#x1f4c4; JSON</a>
+ </div>
+ </div>
+ </div>
+
+ <div class="footer">
+ &#x1f512; &#x6240;&#x6709;&#x6838;&#x5fc3;&#x6587;&#x4ef6;&#x5747;&#x5df2; RFC 3161 &#x65f6;&#x95f4;&#x6233;&#x5b58;&#x8bc1; (DigiCert / &#x8054;&#x5408;&#x4fe1;&#x4efb;)<br>
+ FIBEMATE &#xb7; &#x53ef;&#x9a8c;&#x8bc1;&#x4f18;&#x5148; &#xb7; &#x5f00;&#x6e90;&#x8ba1;&#x5212; 2026.08.31
+ </div>
+</div>
+</body>
+</html>

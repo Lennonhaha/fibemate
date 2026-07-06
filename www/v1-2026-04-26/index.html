@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIBEMATE - Secure Messaging</title>
+  <link rel="stylesheet" href="common.css">
+  <script src="zk-auth.js" defer></script>
+  <script type="module" src="main.js" defer></script>
+</head>
+<body>
+  <div class="login-wrapper">
+    <!-- 背景光效 -->
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+
+    <!-- 主登录卡片 -->
+    <div class="login-card">
+      <!-- Logo 区域 - 盾牌设计 -->
+      <div class="logo-area">
+        <div class="shield-logo">
+          <svg viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00E5C3"/>
+                <stop offset="100%" style="stop-color:#00B4A0"/>
+              </linearGradient>
+              <linearGradient id="shieldFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:rgba(0,229,195,0.15)"/>
+                <stop offset="100%" style="stop-color:rgba(0,180,160,0.08)"/>
+              </linearGradient>
+            </defs>
+            <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+                  stroke="url(#shieldGrad)" stroke-width="2" fill="url(#shieldFill)"/>
+            <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z"
+                  stroke="url(#shieldGrad)" stroke-width="1" fill="none" opacity="0.4"/>
+            <circle cx="32" cy="32" r="6" stroke="url(#shieldGrad)" stroke-width="1.5" fill="none"/>
+            <path d="M32 38V48" stroke="url(#shieldGrad)" stroke-width="2" stroke-linecap="round"/>
+            <path d="M32 8L52 17V22" stroke="url(#shieldGrad)" stroke-width="0.5" opacity="0.3"/>
+          </svg>
+        </div>
+        <h1 class="brand-name">FIBEMATE</h1>
+        <p class="brand-sub">Secure Messaging · E2E Encrypted</p>
+      </div>
+
+      <!-- 安全徽章 -->
+      <div class="security-badge">
+        <svg width="10" height="12" viewBox="0 0 10 12" fill="none">
+          <path d="M5 1L9 2.5V6C9 8.5 7 10.5 5 11.5C3 10.5 1 8.5 1 6V2.5L5 1Z"
+                stroke="currentColor" stroke-width="1" fill="none"/>
+        </svg>
+        <span>E2E Encrypted · Zero Knowledge</span>
+      </div>
+
+      <!-- 登录表单 -->
+      <form class="login-form" id="loginForm">
+        <div class="input-group">
+          <input
+            type="text"
+            id="username"
+            placeholder="Username"
+            autocomplete="username"
+            spellcheck="false"
+            required
+          >
+        </div>
+        <div class="input-group">
+          <input
+            type="password"
+            id="password"
+            placeholder="Password"
+            autocomplete="current-password"
+            required
+          >
+        </div>
+
+        <button type="submit" class="btn-primary" id="loginBtn">
+          <svg width="14" height="16" viewBox="0 0 14 16" fill="none" style="margin-right:6px">
+            <rect x="2" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
+            <path d="M4 7V5C4 3.34 5.34 2 7 2C8.66 2 10 3.34 10 5V7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+            <circle cx="7" cy="11" r="1" fill="currentColor"/>
+          </svg>
+          <span id="loginBtnText">UNLOCK · LOGIN</span>
+        </button>
+
+        <!-- ZK 匿名登录 -->
+        <button type="button" class="btn-secondary" id="zkLoginBtn">
+          <svg width="12" height="14" viewBox="0 0 12 14" fill="none" style="margin-right:6px">
+            <path d="M6 1L11 3V7C11 10 8.5 12.5 6 13.5C3.5 12.5 1 10 1 7V3L6 1Z"
+                  stroke="currentColor" stroke-width="1" fill="none"/>
+          </svg>
+          Anonymous · ZK Proof
+        </button>
+
+        <div id="loginError" class="error-msg" style="display:none"></div>
+      </form>
+
+      <!-- 分隔线 -->
+      <div class="divider">
+        <span></span>
+        <span class="divider-text">OR</span>
+        <span></span>
+      </div>
+
+      <!-- 注册入口 -->
+      <p class="register-link">
+        Don't have an account? <a href="#" id="goRegister">Sign up →</a>
+      </p>
+
+      <!-- 底部安全标识 -->
+      <div class="footer-badge">
+        <svg width="8" height="10" viewBox="0 0 8 10" fill="none">
+          <path d="M4 1L7 2V5C7 7 5.5 8.5 4 9.5C2.5 8.5 1 7 1 5V2L4 1Z"
+                stroke="currentColor" stroke-width="0.8" fill="none" opacity="0.5"/>
+        </svg>
+        <span>Zero Knowledge · Privacy First</span>
+      </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast" style="display:none"></div>
+  </div>
+
+  <!-- 注册界面（隐藏） -->
+  <div class="register-wrapper" id="registerView" style="display:none">
+    <div class="bg-glow"></div>
+    <div class="bg-grid"></div>
+    <div class="login-card">
+      <div class="logo-area">
+        <div class="shield-logo">
+          <svg viewBox="0 0 64 72" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="shieldGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#00E5C3"/>
+                <stop offset="100%" style="stop-color:#00B4A0"/>
+              </linearGradient>
+              <linearGradient id="shieldFill2" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:rgba(0,229,195,0.15)"/>
+                <stop offset="100%" style="stop-color:rgba(0,180,160,0.08)"/>
+              </linearGradient>
+            </defs>
+            <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
+                  stroke="url(#shieldGrad2)" stroke-width="2" fill="url(#shieldFill2)"/>
+            <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z"
+                  stroke="url(#shieldGrad2)" stroke-width="1" fill="none" opacity="0.4"/>
+            <circle cx="32" cy="32" r="6" stroke="url(#shieldGrad2)" stroke-width="1.5" fill="none"/>
+            <path d="M32 38V48" stroke="url(#shieldGrad2)" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <h1 class="brand-name">FIBEMATE</h1>
+        <p class="brand-sub">Create Your Account</p>
+      </div>
+
+      <!-- ZK 证明可视化 -->
+      <div class="zk-badge" id="zkProgress" style="display:none">
+        <span class="zk-step" id="zkStep1">□ Generating key pair...</span>
+        <span class="zk-step" id="zkStep2">□ Pedersen commitment...</span>
+        <span class="zk-step" id="zkStep3">□ ZK proof (Schnorr)...</span>
+        <span class="zk-step" id="zkStep4">□ Verifying on chain...</span>
+      </div>
+
+      <form class="login-form" id="registerForm">
+        <div class="input-group">
+          <input type="text" id="regUsername" placeholder="Username" autocomplete="username" spellcheck="false" required>
+        </div>
+        <div class="input-group">
+          <input type="password" id="regPassword" placeholder="Password (min 8 chars)" autocomplete="new-password" required>
+        </div>
+        <div class="input-group">
+          <input type="password" id="regPasswordConfirm" placeholder="Confirm Password" autocomplete="new-password" required>
+        </div>
+
+        <!-- ZK 注册选项 -->
+        <div class="zk-toggle">
+          <label class="toggle-label">
+            <input type="checkbox" id="zkMode" checked>
+            <span class="toggle-switch"></span>
+            <span>ZK Anonymous Registration (recommended)</span>
+          </label>
+        </div>
+
+        <button type="submit" class="btn-primary" id="registerBtn">
+          <span id="registerBtnText">CREATE ACCOUNT</span>
+        </button>
+        <div id="registerError" class="error-msg" style="display:none"></div>
+        <button type="button" class="btn-text" id="goLogin">Already have an account? Login →</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // ================================================
+    // Login / Register Logic
+    // ================================================
+
+    // 如果已登录，直接跳转
+    document.addEventListener('DOMContentLoaded', () => {
+      if (FIBEMATE_ZK && FIBEMATE_ZK.isLoggedIn()) {
+        window.location.href = 'main.html';
+        return;
+      }
+      initLoginForm();
+      initRegisterForm();
+    });
+
+    function initLoginForm() {
+      const form = document.getElementById('loginForm');
+      const zkBtn = document.getElementById('zkLoginBtn');
+      const errorEl = document.getElementById('loginError');
+
+      // 标准登录
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) return;
+
+        setLoading('loginBtn', 'loginBtnText', true);
+        errorEl.style.display = 'none';
+
+        try {
+          const data = await FIBEMATE_ZK.login(username, password);
+          showToast('Login successful! Redirecting...', 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+        } finally {
+          setLoading('loginBtn', 'loginBtnText', false);
+        }
+      });
+
+      // ZK 匿名登录
+      zkBtn.addEventListener('click', async () => {
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value;
+        if (!username || !password) {
+          errorEl.textContent = 'Please enter username and password first';
+          errorEl.style.display = 'block';
+          return;
+        }
+        setLoading('zkLoginBtn', null, true);
+        errorEl.style.display = 'none';
+
+        try {
+          showToast('ZK Proof: Proving identity without revealing username...', 'info');
+          await sleep(300);
+          const data = await FIBEMATE_ZK.registerAnonymous(username, password);
+          showToast(`Welcome ${data.displayName}! (ZK Authenticated)`, 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+        } finally {
+          setLoading('zkLoginBtn', null, false);
+        }
+      });
+
+      // 注册入口
+      document.getElementById('goRegister').addEventListener('click', (e) => {
+        e.preventDefault();
+        document.querySelector('.login-wrapper').style.display = 'none';
+        document.getElementById('registerView').style.display = 'flex';
+      });
+    }
+
+    function initRegisterForm() {
+      const form = document.getElementById('registerForm');
+      const errorEl = document.getElementById('registerError');
+      const zkModeEl = document.getElementById('zkMode');
+
+      // 返回登录
+      document.getElementById('goLogin').addEventListener('click', () => {
+        document.getElementById('registerView').style.display = 'none';
+        document.querySelector('.login-wrapper').style.display = 'flex';
+      });
+
+      // 注册提交
+      form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const username = document.getElementById('regUsername').value.trim();
+        const password = document.getElementById('regPassword').value;
+        const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+        const zkMode = zkModeEl.checked;
+
+        errorEl.style.display = 'none';
+
+        if (!username || !password) {
+          errorEl.textContent = 'Please fill in all fields';
+          errorEl.style.display = 'block';
+          return;
+        }
+        if (password.length < 8) {
+          errorEl.textContent = 'Password must be at least 8 characters';
+          errorEl.style.display = 'block';
+          return;
+        }
+        if (password !== passwordConfirm) {
+          errorEl.textContent = 'Passwords do not match';
+          errorEl.style.display = 'block';
+          return;
+        }
+
+        setLoading('registerBtn', 'registerBtnText', true);
+
+        // ZK 可视化进度
+        if (zkMode) {
+          document.getElementById('zkProgress').style.display = 'flex';
+          await animateZkProgress();
+        }
+
+        try {
+          let data;
+          if (zkMode) {
+            document.getElementById('zkStep1').textContent = '☑ Generating ECDH key pair...';
+            await sleep(200);
+            document.getElementById('zkStep2').textContent = '☑ Pedersen commitment computed...';
+            await sleep(200);
+            document.getElementById('zkStep3').textContent = '☑ ZK Schnorr proof generated...';
+            await sleep(200);
+            document.getElementById('zkStep4').textContent = '☑ Verifying on server...';
+            data = await FIBEMATE_ZK.registerAnonymous(username, password);
+          } else {
+            data = await FIBEMATE_ZK.registerStandard(username, password);
+          }
+
+          showToast(`Welcome ${data.displayName || username}!`, 'success');
+          setTimeout(() => { window.location.href = 'main.html'; }, 500);
+        } catch (err) {
+          errorEl.textContent = err.message;
+          errorEl.style.display = 'block';
+          document.getElementById('zkProgress').style.display = 'none';
+        } finally {
+          setLoading('registerBtn', 'registerBtnText', false);
+        }
+      });
+    }
+
+    async function animateZkProgress() {
+      const steps = ['zkStep1', 'zkStep2', 'zkStep3', 'zkStep4'];
+      for (const id of steps) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '☑ ' + el.textContent.slice(2);
+        await sleep(150);
+      }
+    }
+
+    function setLoading(btnId, textId, loading) {
+      const btn = document.getElementById(btnId);
+      if (!btn) return;
+      btn.disabled = loading;
+      if (textId) {
+        const textEl = document.getElementById(textId);
+        if (textEl) textEl.textContent = loading ? 'PROCESSING...' : (btnId === 'loginBtn' ? 'UNLOCK · LOGIN' : 'CREATE ACCOUNT');
+      }
+    }
+
+    function showToast(message, type = 'info') {
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        document.body.appendChild(toast);
+      }
+      toast.textContent = message;
+      toast.className = `toast ${type}`;
+      toast.style.display = 'block';
+      setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+  </script>
+  <!-- Auto-login for demo -->
+  <script>
+    (function() {
+      const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMmI1OTNiNS04NDM5LTQyZTUtYWUxZC00MDkxOTU1ODVlYzYiLCJ1c2VybmFtZSI6ImxpdXhpdSIsImlhdCI6MTc3NzIxNzMzOSwiZXhwIjoxNzc3MzAzNzM5LCJkZXZpY2UiOm51bGx9.0TP0aEtHXhmuP9VSOqBIathyb41uItFnUlhWbU7tMDw';
+      localStorage.setItem('fibemate_token', token);
+      localStorage.setItem('fibemate_username', 'liuxiu');
+      localStorage.setItem('fibemate_userId', '12b593b5-8439-42e5-ae1d-409195585ec6');
+      window.location.href = 'main.html';
+    })();
+  </script>
+</body>
+</html>

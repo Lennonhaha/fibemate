@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>可信时间戳存证 - FIBEMATE</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #0d1117; color: #c9d1d9; line-height: 1.6; padding: 20px; }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 { color: #58a6ff; border-bottom: 2px solid #21262d; padding-bottom: 10px; margin-bottom: 30px; }
+        .intro { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 20px; margin-bottom: 30px; }
+        .intro p { margin-bottom: 10px; }
+        .intro code { background: #0d1117; padding: 2px 6px; border-radius: 3px; color: #79c0ff; }
+        .file-list { background: #161b22; border: 1px solid #30363d; border-radius: 6px; overflow: hidden; }
+        .file-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 20px; border-bottom: 1px solid #21262d; }
+        .file-item:last-child { border-bottom: none; }
+        .file-item:hover { background: #1c2128; }
+        .file-name { color: #c9d1d9; font-family: monospace; flex: 1; }
+        .file-size { color: #8b949e; font-size: 14px; margin-right: 20px; }
+        .download-btn { background: #238636; color: #fff; padding: 6px 16px; border-radius: 4px; text-decoration: none; font-size: 14px; transition: background 0.2s; }
+        .download-btn:hover { background: #2ea043; }
+        .warning { background: #161b22; border-left: 4px solid #d29922; padding: 15px; margin-top: 30px; border-radius: 0 6px 6px 0; }
+        .warning h3 { color: #d29922; margin-bottom: 10px; }
+        .verify-section { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 20px; margin-top: 30px; }
+        .verify-section h2 { color: #58a6ff; margin-bottom: 15px; }
+        code-block { display: block; background: #0d1117; padding: 15px; border-radius: 6px; margin: 10px 0; overflow-x: auto; }
+        code-block code { color: #79c0ff; }
+        .footer { text-align: center; margin-top: 40px; color: #8b949e; font-size: 14px; }
+        a { color: #58a6ff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .badge-new { background: #1f6feb; color: #fff; font-size: 11px; padding: 2px 6px; border-radius: 3px; margin-left: 8px; vertical-align: middle; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 可信时间戳存证</h1>
+        
+        <div class="intro">
+            <p><strong>什么是可信时间戳？</strong></p>
+            <p>本项目使用<strong>联合信任时间戳服务中心 (tsa.cn)</strong> 提供的可信时间戳服务，为核心代码文件提供<strong>法律效力的时间证明</strong>。</p>
+            <p>时间戳遵循 <strong>RFC 3161</strong> 标准，服务器端补充 <strong>DigiCert TSA</strong> 作为辅助存证。符合《电子签名法》第 5 条。</p>
+            <p>📜 <strong>法律效力</strong>：可作为软件著作权、代码原创性的法律证据。</p>
+            <p>🔗 <strong>在线验证</strong>：<a href="https://www.tsa.cn/verify" target="_blank" rel="noopener">tsa.cn/verify</a>（联合信任官方验证平台）</p>
+            <p>⚠️ <strong>说明</strong>：联合信任 (tsa.cn) 与 CFCA（中国金融认证中心）为不同机构。本项目使用前者。</p>
+        </div>
+
+        <div class="file-list">
+            <div class="file-item" style="background: #1c2128; font-weight: bold;">
+                <span class="file-name">文件名</span>
+                <span class="file-size">大小</span>
+                <span>下载</span>
+            </div>
+            <div class="file-item">
+                <span class="file-name">sm3_implementation.js_可信时间戳.tsa <span class="badge-new">NEW</span></span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/sm3_implementation.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">FIBEMATE_Architecture_20260523.zip_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/FIBEMATE_Architecture_20260523.zip_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">index.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/index.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">message-crypto-v2.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/message-crypto-v2.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">sm2-browser.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/sm2-browser.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">sm2-browser.bundle.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/sm2-browser.bundle.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">jwt-helper.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/jwt-helper.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">01_0518_kat_fips.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/01_0518_kat_fips.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">02_0518_verify_final.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/02_0518_verify_final.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">03_0519_fips203_verify.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/03_0519_fips203_verify.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">04_0520_double_ratchet_pq.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/04_0520_double_ratchet_pq.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">05_0521_test_sm2.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/05_0521_test_sm2.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+            <div class="file-item">
+                <span class="file-name">06_0521_test_sm2_module.js_可信时间戳.tsa</span>
+                <span class="file-size">2.6K</span>
+                <a href="../timestamps/cfca/06_0521_test_sm2_module.js_可信时间戳.tsa" class="download-btn" download>下载</a>
+            </div>
+        </div>
+
+        <div class="warning">
+            <h3>⚠️ 重要提示</h3>
+            <p>1. <strong>.tsa 文件是 PKCS#7/CMS 封装的时间戳令牌</strong>，含 TSA 签名，需使用验证工具解析。</p>
+            <p>2. 在线验证请访问 <a href="https://www.tsa.cn/verify" target="_blank" rel="noopener">tsa.cn/verify</a> 上传 .tsa 文件。</p>
+            <p>3. 时间戳仅证明"某文件在某时刻已存在"，<strong>不证明代码质量或安全性</strong>。</p>
+        </div>
+
+        <div class="verify-section">
+            <h2>🔍 如何验证时间戳？</h2>
+            <p><strong>方法1：tsa.cn 在线验证（推荐）</strong></p>
+            <p>访问 <a href="https://www.tsa.cn/verify" target="_blank" rel="noopener">https://www.tsa.cn/verify</a>，上传 .tsa 文件即可查看完整时间戳信息。</p>
+            
+            <p style="margin-top: 20px;"><strong>方法2：使用 OpenSSL（命令行）</strong></p>
+            <code-block><code>openssl ts -reply -in 文件名.tsa -text</code></code-block>
+            <p>输出将显示：</p>
+            <ul style="margin-left: 20px; margin-top: 10px;">
+                <li>时间戳权威机构（TSA）: 联合信任时间戳服务中心 (tsa.cn)</li>
+                <li>时间戳创建时间: 2026-05-23 12:34:56 CST</li>
+                <li>消息摘要算法: SHA-256</li>
+                <li>签名算法: SM2 + SM3（国密）</li>
+            </ul>
+            
+            <p style="margin-top: 20px;"><strong>方法3：DigiCert 辅助存证</strong></p>
+            <p>部分开发日志文件通过 DigiCert TSA 存证，可使用 RFC 3161 标准工具验证。</p>
+        </div>
+
+        <div class="footer">
+            <p>FIBEMATE v3.0-preview | 可信时间戳服务提供方：联合信任时间戳服务中心 (tsa.cn)</p>
+            <p>辅助存证：DigiCert TSA | 在线验证：<a href="https://www.tsa.cn/verify" target="_blank" rel="noopener">tsa.cn/verify</a></p>
+            <p>问题反馈：<a href="mailto:timestamp@fibemate.net">timestamp@fibemate.net</a></p>
+            <p><a href="../index.html">← 返回首页</a></p>
+        </div>
+    </div>
+</body>
+</html>

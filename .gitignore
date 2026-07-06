@@ -101,7 +101,7 @@ main-v3.js
 main.css
 main.html
 main.js
-index.html
+/index.html
 message-crypto-*.js
 double-ratchet.js
 styles.css
