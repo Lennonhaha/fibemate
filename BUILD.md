@@ -24,7 +24,7 @@
 ### 1.1 克隆
 
 ```bash
-git clone https://github.com/YOUR_ORG/fibemate.git
+git clone https://github.com/Lennonhaha/fibemate.git
 cd fibemate
 ```
 

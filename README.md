@@ -54,7 +54,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 
 ```bash
 # 克隆仓库
-git clone https://github.com/YOUR_ORG/fibemate.git
+git clone https://github.com/Lennonhaha/fibemate.git
 cd fibemate
 
 # 安装 Node.js 依赖
