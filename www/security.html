@@ -163,7 +163,7 @@
  <p>所有核心实现文件已通过 <strong>FreeTSA</strong> 打 RFC 3161 时间戳，确保代码在特定时间点的完整性可被第三方验证。</p>
  <ul>
  <li><strong>存证位置</strong>：<code>/docs/tsa/</code></li>
- <li><strong>已存证文件</strong>：11 份时间戳（含 lib.rs/Cargo.toml/JS 实现/WASM 产物/测试文件，以及 <strong>PQC Hybrid 混合握手 3 份 + NTT v1.3 硬件 2 份</strong>）</li>
+<li><strong>已存证文件</strong>：55 份时间戳（含全站 PQC 实现、硬件 RTL、官网文档、FPGA v5、VWZ WASM、混合 KEM 全链路验证）</li>
  <li><strong>验证命令</strong>：<code>openssl ts -reply -in *.tsr -text | grep "Status: Granted"</code></li>
  </ul>
  <p style="color:#8b949e;font-size:0.85rem;">📥 存证清单已归档至 <a href="/docs/tsa/">/docs/tsa/</a></p>
