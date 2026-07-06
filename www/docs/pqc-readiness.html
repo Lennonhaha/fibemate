@@ -104,7 +104,7 @@
   <li><strong>TLS 1.3 握手层集成</strong>：ML-KEM-768 尚未接入 Nginx、Node.js 系统 TLS 栈</li>
   <li><strong>ClientHello 握手扩展</strong>：未在握手报文中携带 #4590 命名组</li>
   <li><strong>全链路端到端测试</strong>：OpenSSL s_client/s_server 内网验证通过；Chrome 133+ 客户端兼容性待确认</li>
-  <li><strong>生产环境切换</strong>：fibemate.net 已启用 TLS 1.3 X25519MLKEM768 混合 KEM；Let’s Encrypt ECDSA 证书 + oqs-provider 0.12.0-dev 协同工作</li>
+  <li><strong>生产环境切换</strong>：fibemate.net 当前运行 TLS 1.3 经典 X25519（ECDH）；oqs-provider + liboqs 编译链已于 2026-07-06 就绪，nginx 原生接入待完成</li>
 </ol>
 
 <div class="note"><strong>一句话总结：</strong>后量子密码零部件全部开发验收完毕，还没有组装进 TLS 通信引擎。</div>
