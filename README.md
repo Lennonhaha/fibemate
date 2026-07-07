@@ -138,7 +138,7 @@ fibemate/
 
 ## 安全模型
 
-FIBEMATE 遵循纵深防御 (defense-in-depth) 三层架构：
+FIBEMATE 遵循纵深防御 (defense-in-depth) 三层架构（不包含 LookingGlass 实验分支）：
 
 | 层 | 内容 | 安全水平 |
 |----|------|---------|
