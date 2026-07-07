@@ -311,3 +311,25 @@ node -e "console.log(require('./www/crypto/ml-kem-768.js').version)"
 ---
 
 *更多技术细节见项目 README.md 及各模块源码注释。*
+
+
+## 开源前置脱敏扫描
+
+在每次公开推送前执行：
+
+```bash
+# 1. 检查是否有真实生产配置被 track
+git ls-files ecosystem.config.js nginx.conf .env
+
+# 2. 硬编码内网 IP / 端口
+grep -rn '8\.156\.77\.68\|3001\|3443' src/ --include='*.js'
+
+# 3. 绝对路径泄露
+grep -rn 'E:/fpga\|D:/FIBEMATE\|C:/Users' src/ www/docs/ --include='*.js' --include='*.md'
+
+# 4. 秘密/密钥字段
+grep -rni 'password\|secret\|api\.key\|auth\.token' src/ --include='*.js' --include='*.json'
+
+# 5. PM2 真实配置
+grep -c 'ecosystem\.config\.js' .gitignore  # 应为 1
+```
