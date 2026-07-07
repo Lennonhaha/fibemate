@@ -1,9 +1,9 @@
 # FIBEMATE 项目进度 & 工作计划
 
-> **更新日期**：2026-07-07  
+> **更新日期**：2026-07-07 09:45
 > **目标**：2026.08.31 开源  
 > **TSR 时间戳**：lg-001 ~ lg-055（双源：DigiCert + FreeTSA）  
-> **GitHub**：Lennonhaha/fibemate — master 3ea726c
+> **GitHub**：Lennonhaha/fibemate — master c26b0c3 (902 files, 190MB)
 
 ---
 
@@ -14,13 +14,13 @@
 | 核心密码学 (ML-KEM-768) | ✅ | KAT 10k / TVLA 10k / C+WASM+JS 三实现 |
 | SLH-DSA (FIPS 205) | ✅ | pqc_sphincsplus WASM 集成 |
 | SM2 国密 | ✅ | 5 阶段加速 / TVLA 10/10 / SM2-SM4 Hybrid 10/10 |
-| PQC 混合握手 | ✅ | 路径 C-2 (SM2+ML-KEM-768) 900/900 全绿上线 |
-| LookingGlass (DMTH) | 🔬 | 36/36 TVLA / 默认关闭 / lg-001~041 存证 |
-| VWZ 签名 | 🔬 | Rust WASM 7/7 / k=8 / 默认关闭 |
+| PQC 混合握手 | ⏳ | 路径 C-2 E2E 5/5 验证通过 / TLS Record 层仍为经典 ECDHE / oqs-provider 编译链就绪 |
+| LookingGlass v1/v2 | 🔬 | v1 已归档 / v2 定位修正为群表示代数实验+逆向混淆工具 / 默认关闭 / lg-001~041 存证 |
+| VWZ 签名 | 🔬 | Rust WASM 7/7 / k=8 / 安全性待同行评议 / 默认关闭 |
 | FPGA 硬件加速 | ⏳ | v5 合成通过 (WNS=7.96ns) / pipe2 仿真收敛中 / CH340G 烧毁 |
-| 官网 & 文档 | ✅ | 4 页 P0 修正 / 路径 A 全站搁置标注 / TSR 55 一致 |
+| 官网 & 文档 | ✅ | 全站合规修正完成 / 路径 A 搁置标注 / LG 安全宣称全量剥离 / TSR 55 一致 |
 | 后端服务 | ✅ | systemd 托管 / Nginx 反向代理 / 全线上 |
-| GitHub 开源仓库 | ✅ | 893 文件 / BUILD.md + CONTRIBUTING.md / README 自洽 |
+| GitHub 开源仓库 | ✅ | 902 文件 190MB / BUILD+CONTRIBUTING / TVLA 证据已恢复 / dead code 已清理 |
 | npm 发布 | 🔒 | CCF 双盲冻结中 |
 | NLnet 资助 | ⏳ | 审核队列（预计 9-10 月出结果） |
 | 第三方审计 | ⏳ | 待开源前启动 |
@@ -54,6 +54,22 @@
 - [x] liboqs 0.12.0 + oqs-provider 0.11.0 编译安装就绪
 - [x] IETF I-D draft-yang-tls-hybrid-sm2-mlkem 升级至 -04
 
+
+### 2.5 2026-07-07 — 文档合规审计 + 代码清理 + LookingGlass 定位修正
+
+- [x] **全站 LG 安全宣称剥离**：pqc-readiness §7 / README / index.html 全量重写
+  - "锁死格分解捷径"→"纯无损线性变换，无法提升 LWE 硬度"
+  - "从根源封锁子格分解"→"攻击者可整体消去"
+  - "可封堵所有捷径类代数攻击"→删除，改为"探索性研究实验"
+  - 爱丽丝镜中棋盘叙事 → 诚实揭示"高斯消元可一步剥离"
+- [x] **路径 C-2 措辞修正**：不再宣称"已上线 ✅"，改为"E2E 验证通过，TLS Record 层仍为经典 ECDHE"
+- [x] **LG v2 定位转型**：从"等变 LWE wreath 递归纵深防御"→"群表示代数实验 + 逆向混淆工具"
+- [x] **外部专业审阅接收**：四条核心批判 80% 完全成立，舒尔引理误用、纯线性无安全增益、BKZ 透明穿透
+- [x] **死代码清理**：41 Git 文件 + ~570MB 磁盘垃圾 (.bak/target/wasm/gz)
+- [x] **TVLA 证据恢复**：7 个测试脚本 (N=5k/10k masked) + 23 份 TSR 报告从初始提交归档
+- [x] **LG v1 代码归档**：从 D 盘恢复到 www/crypto/lgv1/
+- [x] **全站零违禁词验证**："纵深防御/镜面防御/封堵/锁死/代数捷径/结构安全空白" 全站清零
+- [x] **GitHub 推送**：5d1ae97 → c26b0c3 (8 commits), 902 files, 190MB
 ### 2.4 前沿研究 (LookingGlass + VWZ)
 
 - [x] LookingGlass DMTH：36/36 TVLA 全绿, d=2~3, 默认关闭
@@ -158,7 +174,7 @@
 | 路径 A 正式搁置 | TLS NamedGroup 浏览器/nginx 双重阻断 | ✅ 全站标注 |
 | CH340G 模块烧毁 | 板上串口调试阻塞 | ⏳ 转 FT4232H |
 | FPGA v5.2 RTL 丢失 | Set-Content 破坏后 v5.1 覆盖 | ⏳ 待恢复 |
-| LookingGlass/VWZ 默认关闭 | 实验模块不污染生产基线 | ✅ 已关闭 |
+| LookingGlass v2 定位修正 | 拆卸所有安全宣称，转为群表示代数实验+逆向混淆工具 | ✅ 全站修正完成 |
 | E 盘 SMART Warning | 数据丢失风险 | ⚠️ 已备份 |
 | CCF 双盲冻结至 2026.08 | npm publish / 公开讨论受限 | ⏳ 等待 |
 | Nginx `.link`/`.net` OCSP 警告 | 不影响功能 | 🟡 低优 |
@@ -193,9 +209,12 @@
 ---
 
 > 📌 **下一步行动**（推荐顺序）：
-> 1. FPGA v5.2 RTL 恢复 → pipe2 仿真收敛
-> 2. FT4232H UART 验证
-> 3. wasm-opt WASM 优化
-> 4. PROGRESS.md 英文化
-> 5. CCF 解冻 → npm publish + GitHub README 英文化
-> 6. 第三方审计启动
+> 📌 **下一步行动**（更新于 2026-07-07 09:45）：
+> 1. **FPGA v5.2 RTL 恢复** → pipe2 仿真收敛（最高优先）
+> 2. FT4232H UART 验证 → 硬件调试通路
+> 3. LG v2 逆向混淆工具独立仓库建仓
+> 4. LG v2 L8/L9 反调试陷阱改造
+> 5. wasm-opt WASM 优化 → 体积裁剪
+> 6. VWZ 签名安全性外部评审
+> 7. CCF 解冻 → npm publish + GitHub README 英文化
+> 8. 第三方审计启动
