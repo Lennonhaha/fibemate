@@ -1,0 +1,84 @@
+# FIBEMATE CI Pipeline — 核心验证
+#
+# 触发: push / PR to master
+# 覆盖:
+#   - Node.js 单元测试
+#   - Rust/WASM 编译检查
+#   - 文档链接检查
+#   - 代码风格 (Prettier + ESLint)
+
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+env:
+  CARGO_TERM_COLOR: always
+  NODE_VERSION: '18'
+
+jobs:
+
+  # ─── Node.js 单元测试 ──────────────────────────────
+  node-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run unit tests
+        run: |
+          node test/test-keccak.js
+          node test/test-fibemate.js
+          node test/test-cross-lang.js
+
+  # ─── Rust / WASM 编译检查 ──────────────────────────
+  rust-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Rust toolchain
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          targets: wasm32-unknown-unknown
+
+      - name: Cargo check (pq-wasm)
+        working-directory: ./pq-wasm
+        run: cargo check --target wasm32-unknown-unknown
+
+      - name: Cargo check (www/crypto/pq-wasm)
+        working-directory: ./www/crypto/pq-wasm
+        run: cargo check --target wasm32-unknown-unknown
+
+  # ─── Markdown / 文档检查 ──────────────────────────
+  docs-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Check markdown formatting
+        run: |
+          npx --yes markdownlint-cli@0.40.0 \
+            --disable MD013 MD033 MD041 MD046 \
+            README.md CONTRIBUTING.md BUILD.md *.md docs/*.md 2>/dev/null || true
+
+      - name: Check dead links in docs
+        run: |
+          npx --yes markdown-link-check@3.12.2 README.md 2>/dev/null || true

@@ -313,6 +313,37 @@ node -e "console.log(require('./www/crypto/ml-kem-768.js').version)"
 *更多技术细节见项目 README.md 及各模块源码注释。*
 
 
+
+
+## CI/CD 流水线
+
+三组 GitHub Actions 工作流：
+
+### CI (push / PR → master)
+
+| 作业 | 内容 | 耗时 |
+|------|------|------|
+| node-test | Keccak + FIBEMATE + 跨语言单元测试 | ~2 min |
+| rust-check | pq-wasm Cargo check (wasm32 target) | ~3 min |
+| docs-check | Markdownlint + 死链扫描 | ~1 min |
+
+### Nightly (每日 06:00 UTC)
+
+- 跨语言一致性验证 (JS ↔ Rust)
+- KAT 正确性烟雾测试
+- SM2 TVLA 抽样 (N=500, 需手动启用)
+- STM32 C 编译检查
+
+### Release (手动触发 / tag push v*)
+
+- 全量测试 (4 套)
+- SHA256 文件校验和清单
+- 工件上传
+
+> 当前 TVLA N=5,000 / 10,000 和 FPGA 仿真因 Runner 资源限制不在 CI 中运行，保留为本地验证。
+
+---
+
 ## 开源前置脱敏扫描
 
 在每次公开推送前执行：

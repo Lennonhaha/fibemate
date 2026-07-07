@@ -1,0 +1,69 @@
+# FIBEMATE Release — 验证 + 打包
+#
+# 触发: 手动 (workflow_dispatch) 或 tag push v*
+# 覆盖:
+#   - 全量测试
+#   - WASM 构建
+#   - npm package 验证
+#   - 生成校验和
+
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*'
+
+env:
+  NODE_VERSION: '18'
+  CARGO_TERM_COLOR: always
+
+jobs:
+
+  release-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install deps
+        run: npm ci --ignore-scripts
+
+      - name: Run full test battery
+        run: |
+          node test/test-keccak.js
+          node test/test-fibemate.js
+          node test/test-cross-lang.js
+          node test/test-cross-lang-seeded.js
+
+      - name: Verify key modules load
+        run: |
+          node -e "
+            const m = require('./www/crypto/ml-kem-768.js');
+            const kp = m.keygen();
+            const ct = m.encaps(kp[0]);
+            const ss = m.decaps(ct, kp[1]);
+            console.log('ML-KEM-768: ✅', kp[0].length+'B pk |', ss.length+'B shared');
+          "
+
+      - name: Generate SHA256 manifest
+        run: |
+          find . -type f \
+            ! -path './.git/*' \
+            ! -path './node_modules/*' \
+            ! -path './target/*' \
+            ! -name '*.tsr' \
+            | sort | xargs sha256sum > RELEASE_CHECKSUMS.txt 2>/dev/null
+          cat RELEASE_CHECKSUMS.txt | head -5
+          echo "... $(wc -l < RELEASE_CHECKSUMS.txt) files checksummed"
+
+      - name: Upload release checksums
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-checksums
+          path: RELEASE_CHECKSUMS.txt
