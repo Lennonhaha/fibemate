@@ -14,7 +14,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 |------|------|------|
 | **标准 PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) — KAT、WASM、TLS 1.3 混合握手 | ✅ 生产就绪 |
 | **国密混合** | SM2/SM3/SM4 + ML-KEM — IANA #4590 应用层验证 | ✅ 双轨道上线 |
-| **前沿研究** | LookingGlass (DMTH 逆向混淆), VWZ 格-张量签名, FPGA v5 硬件防护 | 🔬 实验分支 |
+| **前沿研究** | LookingGlass (DMTH v1 + 等变 LWE v2), VWZ 格-张量签名, FPGA v5 硬件防护 | 🔬 实验分支 |
 
 ### 生产环境
 
@@ -35,7 +35,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 | **SM3 哈希** | GB/T 32905 合规 | KAT 通过 |
 | **TLS 1.3 混合** | 路径 A 已搁置 · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ | 路径 C-2 独立运行 |
 | **OPK 预密钥** | X3DH 异步握手，7/7 全绿 | 端到端闭环 |
-| **LookingGlass** | DMTH 多层递归逆向混淆 (d=3)，36/36 TVLA | 默认关闭 |
+| **LookingGlass** | DMTH v1 📦 + 等变 LWE v2 🔬 (wreath 递归, 6 层不可约群) | v1 36/36 TVLA · v2 WASM 6/6 圆整 |
 | **VWZ 签名** | Vandermonde-Wang-Zhang 格-张量方案 (k=8) | WASM 7/7 |
 | **FPGA v5** | NTT 流水线 + LFSR PRNG + 故障保护 | Artix-7 合成通过 |
 
@@ -118,6 +118,7 @@ fibemate/
 │   │   ├── pqc-readiness.html
 │   │   ├── lg-vwz-security-en.html
 │   │   └── tsa/          # lg-001~053 TSR 文件
+│   ├── lgv1/             # LookingGlass v1 (DMTH) 📦 Archived
 │   └── lgv2/             # LookingGlass v2 WASM
 ├── rtl/                  # FPGA RTL (Verilog)
 │   ├── ntt_core_pipe2.v
@@ -145,7 +146,7 @@ FIBEMATE 遵循纵深防御 (defense-in-depth) 三层架构：
 | **L8** | 运行时检测器 (43/43 PASS) | 逻辑完整性 |
 | **L9** | 硬件故障保护 (FPGA v5) | 物理攻击面 |
 
-**LookingGlass (DMTH)**: 实验性逆向混淆层，仅增加私钥逆向工程成本。不提升 LWE 格硬度，默认关闭。
+**LookingGlass (v1 DMTH 📦 + v2 等变 LWE 🔬)**: 实验性逆向混淆层，仅增加私钥逆向工程成本。不提升 LWE 格硬度，默认关闭。v1 已归档至 `www/crypto/lgv1/`，v2 为当前活跃实验线。
 
 **VWZ**: 自研张量签名方案，保留在研究分支。不部署生产环境。
 
