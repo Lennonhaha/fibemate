@@ -1,0 +1,124 @@
+{
+  "timestamp": "2026-06-18T01:41:01.822Z",
+  "nodeVersion": "v22.22.2",
+  "versions": {
+    "jsbn": "sm-crypto (jsbn 28-bit limb)",
+    "bigint": "Native BigInt + Jacobian + Precomp + wNAF"
+  },
+  "iterations": 5000,
+  "threshold": 4.5,
+  "elapsedSec": 1099.2,
+  "allPassed": false,
+  "jsbnPassed": false,
+  "bigintPassed": false,
+  "results": [
+    {
+      "name": "[jsbn] genKey",
+      "t": 0.02276495029117644,
+      "df": 9981.105327380268,
+      "fixedMean": 11099.06006979998,
+      "randomMean": 11099.428799199977,
+      "fixedCV": 7.144996282714226,
+      "passed": true
+    },
+    {
+      "name": "[jsbn] sign",
+      "t": 2.474939989972259,
+      "df": 9965.226969298974,
+      "fixedMean": 22713.721814599998,
+      "randomMean": 22639.751968800014,
+      "fixedCV": 6.387744658465347,
+      "passed": true
+    },
+    {
+      "name": "[jsbn] verify",
+      "t": 6.173876102906601,
+      "df": 9992.234176516155,
+      "fixedMean": 22351.022668800015,
+      "randomMean": 22568.554386599975,
+      "fixedCV": 7.786771298961452,
+      "passed": false
+    },
+    {
+      "name": "[jsbn] encrypt",
+      "t": 0.10116525414681361,
+      "df": 9992.332251900152,
+      "fixedMean": 22432.359867199968,
+      "randomMean": 22429.62430120004,
+      "fixedCV": 5.954930087086454,
+      "passed": true
+    },
+    {
+      "name": "[jsbn] decrypt",
+      "t": 8.218265039174725,
+      "df": 9997.745253469322,
+      "fixedMean": 11447.793291799977,
+      "randomMean": 11310.060650800004,
+      "fixedCV": 7.30139868383379,
+      "passed": false
+    },
+    {
+      "name": "[BigInt] genKey",
+      "t": 0.3588778714151465,
+      "df": 9996.7066005091,
+      "fixedMean": 1369.8195816000014,
+      "randomMean": 1368.4400611999972,
+      "fixedCV": 14.110555520584663,
+      "passed": true
+    },
+    {
+      "name": "[BigInt] sign",
+      "t": 1.3700323926772877,
+      "df": 9993.522541001106,
+      "fixedMean": 1416.046783999999,
+      "randomMean": 1421.4680818000036,
+      "fixedCV": 13.823536469796727,
+      "passed": true
+    },
+    {
+      "name": "[BigInt] verify",
+      "t": 7.418746522006896,
+      "df": 9417.42533589256,
+      "fixedMean": 2836.454790000001,
+      "randomMean": 2777.5762986,
+      "fixedCV": 12.12955392150276,
+      "passed": false
+    },
+    {
+      "name": "[BigInt] encrypt",
+      "t": 0.23586903608916204,
+      "df": 9997.88595105052,
+      "fixedMean": 2812.538305999991,
+      "randomMean": 2814.5347622000063,
+      "fixedCV": 15.02193100488979,
+      "passed": true
+    },
+    {
+      "name": "[BigInt] decrypt",
+      "t": 3.798064740438976,
+      "df": 9984.714859413823,
+      "fixedMean": 1369.650820200004,
+      "randomMean": 1385.9906559999968,
+      "fixedCV": 15.416173285671992,
+      "passed": true
+    },
+    {
+      "name": "SHA-256",
+      "t": 2.2936549078983397,
+      "df": 5461.402503705381,
+      "fixedMean": 3.198360199999978,
+      "randomMean": 7.580169600000016,
+      "fixedCV": 888.9232907381338,
+      "passed": true
+    },
+    {
+      "name": "randomBytes(32)",
+      "t": 2.0572742319738064,
+      "df": 7335.899534941591,
+      "fixedMean": 2.977462400000004,
+      "randomMean": 2.743470799999989,
+      "fixedCV": 241.77833049554084,
+      "passed": true
+    }
+  ]
+}

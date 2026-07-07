@@ -1,0 +1,107 @@
+{
+  "timestamp": "2026-06-02T20:13:21.664Z",
+  "nodeVersion": "v22.22.2",
+  "platform": "linux",
+  "arch": "x64",
+  "iterations": 10000,
+  "threshold": 4.5,
+  "target": "ML-KEM-768 (FIPS 203)",
+  "version": "v2-enhanced-staged",
+  "controlGroup": {
+    "count": 2,
+    "passed": 2,
+    "results": [
+      {
+        "name": "[CTRL] generateKeypair",
+        "t": 0.9,
+        "mean": 2245851,
+        "cv": 40.6
+      },
+      {
+        "name": "[CTRL] encapsulate",
+        "t": 0.2,
+        "mean": 2883054,
+        "cv": 37.44
+      }
+    ]
+  },
+  "tvla": {
+    "count": 9,
+    "passed": 5,
+    "allPassed": false,
+    "results": [
+      {
+        "name": "generateKeypair",
+        "phase": "tvla",
+        "t": 0.54,
+        "fixedMean": 2106022,
+        "cv": 43.11,
+        "passed": true
+      },
+      {
+        "name": "encapsulate",
+        "phase": "tvla",
+        "t": 0.56,
+        "fixedMean": 2598508,
+        "cv": 35.35,
+        "passed": true
+      },
+      {
+        "name": "decapsulate",
+        "phase": "tvla",
+        "t": 107.69,
+        "fixedMean": 3532033,
+        "cv": 36.89,
+        "passed": false
+      },
+      {
+        "name": "modMul",
+        "phase": "tvla",
+        "t": 0.67,
+        "fixedMean": 182,
+        "cv": 5499.38,
+        "passed": true
+      },
+      {
+        "name": "compress",
+        "phase": "tvla",
+        "t": 6.61,
+        "fixedMean": 13631,
+        "cv": 200.4,
+        "passed": false
+      },
+      {
+        "name": "polyMul",
+        "phase": "tvla",
+        "t": 48.85,
+        "fixedMean": 159188,
+        "cv": 20.04,
+        "passed": false
+      },
+      {
+        "name": "sha3_256",
+        "phase": "tvla",
+        "t": 0,
+        "fixedMean": 9147,
+        "cv": 1397.39,
+        "passed": true
+      },
+      {
+        "name": "shake128",
+        "phase": "tvla",
+        "t": 1.66,
+        "fixedMean": 12914,
+        "cv": 1173.36,
+        "passed": true
+      },
+      {
+        "name": "byteEncode",
+        "phase": "tvla",
+        "t": 16.72,
+        "fixedMean": 9143,
+        "cv": 186.89,
+        "passed": false
+      }
+    ]
+  }
+}
