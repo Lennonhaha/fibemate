@@ -175,6 +175,7 @@ GNU General Public License v3.0 — 详见 [LICENSE](./LICENSE)
 
 - **NIST PQC 标准化项目** — ML-KEM (FIPS 203), SLH-DSA (FIPS 205)
 - **Open Quantum Safe** — liboqs, oqs-provider
+- **中国国家密码管理局 (OSCCA)** — SM2/SM3/SM4 国家密码标准 (GB/T 32918, GB/T 32905, GB/T 32907)
 - **FreeTSA / 联合信任** — 时间戳存证
 
 ---
