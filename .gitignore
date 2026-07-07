@@ -102,7 +102,7 @@ main-v3.js
 main.css
 main.html
 main.js
-/index.html
+#/index.html
 message-crypto-*.js
 double-ratchet.js
 styles.css
@@ -159,3 +159,6 @@ docs/TECH_DEBT.md
 *.cache/
 
 *.gz
+
+# PM2 real config - DO NOT COMMIT
+ecosystem.config.js
