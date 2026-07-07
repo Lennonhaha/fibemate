@@ -84,6 +84,7 @@ Thumbs.db
 Desktop.ini
 
 # Build artifacts
+!www/crypto/lgv2/*.wasm
 *.wasm
 *.woff2
 
