@@ -112,7 +112,7 @@ function computeModuleHash(modulePath) {
 // ============================================================
 group('加载实现');
 
-const MLKEM_TD_PATH = 'C:/01_源码/fibemate-electron/src/crypto/crypto/ml-kem-768-td.js';
+const MLKEM_TD_PATH = '../www/crypto/ml-kem-768.js';
 assert(fs.existsSync(MLKEM_TD_PATH), 'ml-kem-768-td.js 存在');
 
 const mlkemHash = computeModuleHash(MLKEM_TD_PATH);
@@ -435,7 +435,7 @@ const integrityManifest = {
     standard: 'FIPS 140-3 Section 11.9'
 };
 
-const manifestPath = 'C:/01_源码/fibemate-electron/src/crypto/crypto/INTEGRITY-MANIFEST.json';
+const manifestPath = './INTEGRITY-MANIFEST.json';
 fs.writeFileSync(manifestPath, JSON.stringify(integrityManifest, null, 2));
 console.log(`  ✓ 完整性清单已保存: INTEGRITY-MANIFEST.json`);
 stats.passed++;
