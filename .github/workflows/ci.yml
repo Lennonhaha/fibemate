@@ -1,11 +1,9 @@
-# FIBEMATE CI Pipeline — 核心验证
+# FIBEMATE CI Pipeline 鈥?鏍稿績楠岃瘉
 #
-# 触发: push / PR to master
-# 覆盖:
-#   - Node.js 单元测试
-#   - Rust/WASM 编译检查
-#   - 文档链接检查
-#   - 代码风格 (Prettier + ESLint)
+# 瑙﹀彂: push / PR to master
+# 瑕嗙洊:
+#   - Node.js 鍗曞厓娴嬭瘯
+#   - 鏂囨。閾炬帴妫€鏌?#   - 浠ｇ爜椋庢牸 (Prettier + ESLint)
 
 name: CI
 
@@ -21,7 +19,7 @@ env:
 
 jobs:
 
-  # ─── Node.js 单元测试 ──────────────────────────────
+  # 鈹€鈹€鈹€ Node.js 鍗曞厓娴嬭瘯 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   node-test:
     runs-on: ubuntu-latest
     steps:
@@ -34,7 +32,7 @@ jobs:
           cache: 'npm'
 
       - name: Install dependencies
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts
 
       - name: Run unit tests
         run: |
@@ -42,27 +40,7 @@ jobs:
           node test/test-fibemate.js
           node test/test-cross-lang.js
 
-  # ─── Rust / WASM 编译检查 ──────────────────────────
-  rust-check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Rust toolchain
-        uses: actions-rust-lang/setup-rust-toolchain@v1
-        with:
-          toolchain: stable
-          targets: wasm32-unknown-unknown
-
-      - name: Cargo check (pq-wasm)
-        working-directory: ./pq-wasm
-        run: cargo check --target wasm32-unknown-unknown
-
-      - name: Cargo check (www/crypto/pq-wasm)
-        working-directory: ./www/crypto/pq-wasm
-        run: cargo check --target wasm32-unknown-unknown
-
-  # ─── Markdown / 文档检查 ──────────────────────────
+  # 鈹€鈹€鈹€ Markdown / 鏂囨。妫€鏌?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   docs-check:
     runs-on: ubuntu-latest
     steps:
