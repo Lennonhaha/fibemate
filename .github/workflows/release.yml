@@ -32,7 +32,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install deps
-        run: npm ci --ignore-scripts
+        run: npm install --ignore-scripts
 
       - name: Run full test battery
         run: |
