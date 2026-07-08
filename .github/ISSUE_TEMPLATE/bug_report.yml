@@ -1,0 +1,50 @@
+name: Bug Report
+description: 报告一个bug或异常行为
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## 编译/运行环境
+  - type: dropdown
+    id: platform
+    attributes:
+      label: 平台
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Web (Chrome/Firefox)
+        - Mobile (Android)
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: FIBEMATE 版本
+      description: 例如 v3.2-preview 或 git commit hash
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: 描述
+      description: 清晰的bug描述
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤
+      description: 如何复现？
+      placeholder: 1. 调用 xxx.keygen() ... 
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志/错误信息
+      render: shell
