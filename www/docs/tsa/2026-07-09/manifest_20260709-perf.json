@@ -1,0 +1,12 @@
+{
+  "id": "lg-058",
+  "label": "perf-patch-bundle-v1.3-v2.0",
+  "date": "2026-07-09",
+  "tsa": "FreeTSA",
+  "files": [
+    { "path": "sm2-bigint-ec.js", "version": "v1.3 (wNAF w=4 + Comb G-table)" },
+    { "path": "www/js/crypto/sm3.js", "version": "v2.0 (inline compression)" },
+    { "path": "www/index.html", "version": "perf update" }
+  ],
+  "manifest_sha256": "c029469c372d279f7d519884c4e8351c9416cd4d38633e851da12b8af889a765"
+}

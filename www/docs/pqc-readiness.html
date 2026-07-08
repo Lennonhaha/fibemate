@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -64,7 +64,7 @@
 
 <header>
   <h1>抗量子就绪状态 (Post-Quantum Readiness)</h1>
-  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-06 · 公开透明 · 持续更新</p>
+  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-07 · 公开透明 · 持续更新</p>
 </header>
 
 <!-- ====== Status Banner ====== -->
@@ -94,7 +94,7 @@
   <li><strong>KAT 一致性测试</strong><br>完成 10,000 轮已知答案测试，全覆盖密钥生成、封装、解封装流程，结果零偏差、全量通过。</li>
   <li><strong>运行性能数据</strong><br>纯 JavaScript：至强 Ice Lake 处理器下，单次运算耗时 5.75ms<br>WASM 编译产物：原始体积 63KB，gzip 压缩后仅 27KB；Node.js v22、阿里云 ECS 环境下单次运算压缩至 1.87ms</li>
   <li><strong>SM2-MLKEM-768 混合密钥交换方案</strong><br>协议架构定稿，FIBEMATE 引用 IANA 公开编号 #4590（基于 Informational I-D draft-yang-tls-hybrid-sm2-mlkem-03, DTLS-OK=N, Recommended=N），对应的技术文档已内部归档。</li>
-  <li><strong>SM2 国密性能调优</strong><br>采用 w=4 窗口型 wNAF 标量乘算法，对比 jsbn 基线版本，提速区间达到 2.1×–8.6×。</li>
+  <li><strong>SM2 国密性能调优</strong><br>v1.3 wNAF(w=4) + Comb 固定基点 G 缓存 — wNAF 窗口表+Montgomery 批量求逆，sign 加速 ≥3×、verify ≥2×、enc/dec ≥3×。Comb G 表全局缓存，首次构建后零成本。TVLA 防护（scalar masking + projective randomization）完整保留。</li>
   <li><strong>FPGA 硬件协同原型</strong><br>完成 NTT 运算单元硬件设计，ML-KEM 与 SM2 可以复用同一套 NTT 计算电路。</li>
   <li><strong>技术成果时间戳存证</strong><br>核心代码与方案在后量子国家标准定稿前完成第三方可信存证。</li>
   <li><strong>PQC 混合密钥交换 (路径 C) 已上线</strong><br>TLS Exporter 后握手混合：ML-KEM-768 Encaps/Decaps + HKDF-SHA256，Session Key 绑定 TLS 1.3 Session ID，零风险部署。</li>
@@ -119,7 +119,9 @@
 <tr><td>10,000 轮 KAT 一致性测试</td><td><span style="color:var(--green);">✅ 完成</span></td><td>三函数全覆盖，100% 匹配官方向量</td></tr>
 <tr><td>SM2-MLKEM-768 混合协议</td><td><span style="color:var(--green);">✅ 设计定稿</span></td><td>IANA #4590 公开编号（Informational I-D, DTLS-OK=N, Recommended=N），FIBEMATE 协议架构定稿</td></tr>
 <tr><td>SM2 国密性能多级优化</td><td><span style="color:var(--green);">✅ 完成</span></td><td>五轮迭代优化，wNAF(w=4) 已合并主干</td></tr>
-<tr><td>FPGA NTT 硬件运算单元</td><td><span style="color:var(--green);">✅ v5.2 合成通过</span></td><td>SM2/ML-KEM 共享 NTT 硬件算力 · 加法掩码双通路 (masked_wrapper + lfsr256_prng) · REMO 双蝶形实时比对 (bf_mismatch) · RAM 奇偶校验 + 周期看门狗 (fault_protect + hw_monitor) · bitstream 551KB · 时序 MET (WNS=7.96ns)</td></tr>
+<tr><td>SM3 哈希 （内联压缩 v2.0）</td><td><span style="color:var(--green);">✅ 完成</span></td><td>64 轮完全内联（leftRotate/FF/GG/P0 展开为表达式）· T_j 常量预计算表消除 %32 运行时移位 · W&#39; 流式无 W1[64] 分配 · 1KB 哈希 ~0.2ms（纯 JS，无 WASM/asm.js）· GB/T 32905-2016 完全兼容</td></tr>
+<tr><td>SM3 哈希 （内联压缩 v2.0）</td><td><span style="color:var(--green);">✅ 完成</span></td><td>64 轮完全内联（leftRotate/FF/GG/P0 展开为表达式）· T_j 常量预计算表消除 %32 运行时移位 · W&#39; 流式无 W1[64] 分配 · 1KB 哈希 ~0.2ms（纯 JS，无 WASM/asm.js）· GB/T 32905-2016 完全兼容</td></tr>
+<tr><td>FPGA NTT 硬件运算单元</td><td><span style="color:var(--green);">✅ v5.3 合成通过 ✅ pipe2 256/256 零误差</span></td><td>SM2/ML-KEM 共享 NTT 硬件算力 · 加法掩码双通路 (masked_wrapper + lfsr256_prng) · REMO 双蝶形实时比对 (bf_mismatch) · RAM 奇偶校验 + 周期看门狗 (fault_protect + hw_monitor) · bitstream 522KB · 时序 MET (WNS=8.14ns)</td></tr>
 <tr><td>pq-wasm 编译产物</td><td><span style="color:var(--green);">✅ 完成</span></td><td>Rust 编译，优化等级 s+LTO+精简剥离，压缩后 27KB，单次运算 1.87ms</td></tr>
 <tr style="border-top:2px solid var(--green);">
   <td>应用层 PQC 混合密钥交换<br/><span style="font-size:0.8rem;color:var(--muted);">路径 C: TLS Exporter + ML-KEM-768 + HKDF</span></td>
@@ -344,7 +346,7 @@
   <p style="margin:0.5rem 0 0;color:var(--muted);">DMTH 假设无已知反例。LookingGlass 默认关闭，不影响生产加密。VWZ 签名方案已完成全链路 Rust→WASM→前端部署→研究端 API 集成。技术文档已内部归档。</p>
 </div>
 
-<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>55 份 DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-055 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-07</p>
+<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>57 份 DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-057 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-07</p>
 
 <hr>
 
@@ -384,6 +386,7 @@
 <tr><td>Python roundtrip</td><td>256 维正向→逆向循环验证</td><td><span style="color:var(--green);">零误差</span></td><td>lg-042</td></tr>
 <tr><td>无公共交换矩阵证明</td><td>commuting_matrix_test.py 构建对易方程 → 零空间维度</td><td><span style="color:var(--green);">零空间 = 0 ✅</span></td><td>lg-042</td></tr>
 <tr><td>WASM 编译</td><td>wasm-pack build --target web --release, wasm-opt -Oz</td><td><span style="color:var(--green);">17.89KB (gzip &lt;5KB)</span></td><td>lg-042</td></tr>
+                  <tr><td>LG v2.1 三层壁垒</td><td>方案1: 全局仿射偏移(Q^256) + 方案2: 5040种层序随机化 + 方案3: 48维稀疏子空间偏移</td><td><span style="color:var(--green);">77/77 全绿</span></td><td>lg-057</td></tr>
 <tr><td>线上部署</td><td>fibemate.net/wasm/lookingglass_v2_bg.wasm</td><td><span style="color:var(--green);">HTTP 200, application/wasm</span></td><td>lg-042</td></tr>
 <tr><td>时间戳存证</td><td>数学证明 + 源码哈希 + WASM 哈希 → FreeTSA (RFC 3161)</td><td><span style="color:var(--green);">✅ Verified OK</span></td><td>lg-043</td></tr>
 <tr><td>第七层本地验证</td><td>Rust 7/7 + Python roundtrip + commuting_matrix_test.py 4/4</td><td><span style="color:var(--green);">✅ 本地闭环</span></td><td>lg-044</td></tr>
@@ -403,6 +406,15 @@
 
 <div class="note"><strong>不可逾越上限：</strong>v2 不改变底层 LWE 硬度（BKZ 仍破内层格），不提升抗量子位数，仅增加后解密逆向工程成本。面对国家级持续密码分析，攻击者依然可以逐层完成剥离；该模块只提升逆向拆解的工程成本，无法改变底层 LWE 的计算复杂度，不存在无条件理论不可破解性。定位为<strong>"代数实验中的逆向混淆载体"</strong>，不具备加密防护能力。</div>
   <p style="margin:0.8rem 0 0;font-size:0.85rem;color:var(--muted);"><em>LookingGlass v2 由刘天赫设计并实现，是 FIBEMATE 项目研究线的组成部分。</em></p>
+
+<h4>v2.1 — 三层逆向壁垒加固</h4>
+<p><strong>定位：</strong>在 v2 数学不可并层基础上叠加三层工程加固，提升静态逆向工程成本 5-12 倍。仍为纯线性变换，不提升 LWE 格硬度。</p>
+<ul>
+<li><strong>方案1 全局仿射偏移</strong> — 随机 Q²⁵⁶ 仿射变换，验证 66/66 全绿</li>
+<li><strong>方案2 层序随机化</strong> — 7! = 5,040 种排列，每会话随机选取（72/72 全绿，WASM 48.8KB）</li>
+<li><strong>方案3 稀疏偏移加固</strong> — 前 48 维活跃子空间添随机偏移，后 208 维纯线性传递（77/77 全绿，WASM 48.5KB，9 exports 含 <code>get_active_dim</code>）</li>
+</ul>
+<p style="font-size:0.85rem;color:var(--muted);">三重壁垒无法统一建模：全局仿射打破系数分布 → 随机层断序 → 稀疏偏移制造局部不可逆区段。WASM 已部署至 <code>www/crypto/lgv2/</code>，lg-056/057 存证。默认关闭。</p>
 
 <hr>
 
@@ -503,10 +515,10 @@
 
 <p style="font-size:0.85rem;color:var(--muted);">本页面属于 FIBEMATE 透明度公开承诺，状态发生变更将即时修订正文。</p>
 
-<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-06 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
+<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-07 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
 
 <footer>
-  <p>最后更新：2026-07-06 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
+  <p>最后更新：2026-07-07 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
 </footer>
 
 </div>
