@@ -1,4 +1,4 @@
-const keccak = require('/opt/fibemate-full/lib/keccak.js');
+const keccak = require('../lib/keccak.js');
 const assert = require('assert');
 const crypto = require('crypto');
 
