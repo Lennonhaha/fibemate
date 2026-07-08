@@ -112,8 +112,8 @@ function computeModuleHash(modulePath) {
 // ============================================================
 group('加载实现');
 
-const MLKEM_TD_PATH = '../www/crypto/ml-kem-768.js';
-assert(fs.existsSync(MLKEM_TD_PATH), 'ml-kem-768-td.js 存在');
+const MLKEM_TD_PATH = path.join(__dirname, '../www/crypto/ml-kem-768.js');
+assert(fs.existsSync(MLKEM_TD_PATH) || fs.existsSync(path.join(__dirname, '../www/crypto/ml-kem-768.js')), 'ml-kem-768.js 在仓库中');
 
 const mlkemHash = computeModuleHash(MLKEM_TD_PATH);
 console.log(`  integrity(ml-kem-768-td.js): ${mlkemHash.substring(0, 16)}...`);
@@ -135,7 +135,7 @@ try {
     }
 }
 
-const mlkemTD = require(MLKEM_TD_PATH);
+const mlkemTD = require(path.join(__dirname, '../www/crypto/ml-kem-768.js'));
 assert(mlkemTD !== undefined, 'ml-kem-768-td.js 加载成功');
 
 // ============================================================
@@ -435,7 +435,7 @@ const integrityManifest = {
     standard: 'FIPS 140-3 Section 11.9'
 };
 
-const manifestPath = './INTEGRITY-MANIFEST.json';
+const manifestPath = '../INTEGRITY-MANIFEST.json';
 fs.writeFileSync(manifestPath, JSON.stringify(integrityManifest, null, 2));
 console.log(`  ✓ 完整性清单已保存: INTEGRITY-MANIFEST.json`);
 stats.passed++;
