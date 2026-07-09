@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TSR lg-058 — SM2 ECC v1.3 + SM3 v2.0 性能补丁存证</title>
+<style>
+  :root{--bg:#0d1117;--bg2:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--cyan:#00E5C3;--green:#3fb950;--red:#f85149;--orange:#d29922}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);max-width:860px;margin:0 auto;padding:2rem 1rem;line-height:1.6}
+  h1{font-size:1.4rem;margin:0 0 .4rem;border-bottom:1px solid var(--border);padding-bottom:.6rem}
+  h2{font-size:1.1rem;margin:1.4rem 0 .5rem;color:var(--cyan)}
+  h3{font-size:.95rem;margin:.8rem 0 .3rem}
+  .badge{display:inline-block;padding:.1rem .5rem;border-radius:6px;font-size:.75rem;font-weight:600}
+  .badge-green{background:rgba(63,185,80,.15);color:var(--green);border:1px solid rgba(63,185,80,.3)}
+  .badge-cyan{background:rgba(0,229,195,.1);color:var(--cyan);border:1px solid rgba(0,229,195,.25)}
+  .meta{font-size:.8rem;color:var(--muted);margin:.2rem 0}
+  table{width:100%;border-collapse:collapse;margin:.5rem 0;font-size:.85rem}
+  th,td{padding:.45rem .75rem;border:1px solid var(--border);text-align:left}
+  th{background:var(--bg2);color:var(--cyan);font-weight:600}
+  tr:nth-child(even){background:rgba(255,255,255,.02)}
+  .mono{font-family:'SFMono-Regular',Consolas,'Liberation Mono',Menlo,monospace;font-size:.82rem;word-break:break-all}
+  .ok{color:var(--green)}
+  pre{background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:.8rem;overflow-x:auto;font-size:.8rem}
+  code{background:var(--bg2);padding:.1rem .35rem;border-radius:3px;font-size:.85em}
+  .card{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:1rem;margin:.6rem 0}
+  .card p{margin:.4rem 0}
+  a{color:var(--cyan);text-decoration:none}
+  a:hover{text-decoration:underline}
+  footer{border-top:1px solid var(--border);margin-top:2rem;padding-top:.8rem;font-size:.78rem;color:var(--muted)}
+  .status-row{display:flex;gap:.5rem;flex-wrap:wrap;margin:.3rem 0}
+  .tsr-file{background:rgba(0,229,195,.06);border:1px solid rgba(0,229,195,.2);border-radius:6px;padding:.6rem .8rem;margin:.3rem 0}
+</style>
+</head>
+<body>
+
+<p style="margin:0 0 .6rem;font-size:.82rem;color:var(--muted);">
+  <a href="/docs/tsa/">← 时间戳存证总览</a>
+</p>
+
+<h1>
+  📜 TSR <span class="badge badge-cyan">lg-058</span>
+  <span style="font-size:.9rem;font-weight:400;color:var(--muted);margin-left:.5rem">SM2 ECC v1.3 + SM3 v2.0 性能补丁</span>
+</h1>
+
+<div class="status-row">
+  <span class="badge badge-green">✅ FreeTSA Granted</span>
+  <span class="badge badge-cyan">2026-07-09</span>
+</div>
+
+<div class="meta">
+  Serial: <code>0x060E31C9</code> · Precision: seconds · Algorithm: SHA-256<br>
+  Time: 2026-07-08 21:35:58 GMT · TSA: FreeTSA (www.freetsa.org, Wuerzburg, Germany)<br>
+  Certificate: CN=Free TSA, OU=http://www.freetsa.org, O=Uwe Rohlicek厉
+</div>
+
+<h2>存证内容</h2>
+<table>
+  <thead><tr><th>文件</th><th>版本</th><th>SHA256</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><code>sm2-bigint-ec.js</code></td>
+      <td>v1.3 (wNAF w=4 + Comb G-table)</td>
+      <td class="mono">1351a55e6534f0d570ba09cacbc92bba3379ee85e3ad89509ea71b27f248e7d7</td>
+    </tr>
+    <tr>
+      <td><code>www/js/crypto/sm3.js</code></td>
+      <td>v2.0 (inline compression)</td>
+      <td class="mono">7bbd4e8d5fe2817e62515a6f9ec6357f63af14b27a4200a0ef7ce6e68f0d3785</td>
+    </tr>
+    <tr>
+      <td><code>www/index.html</code></td>
+      <td>perf update (2026-07-09)</td>
+      <td class="mono">35699f7498206ed9251d34f930961f1bf5a0d8b3633d5c08085e07fa18ae4758</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="meta" style="margin-top:.5rem;">
+  Manifest SHA-256: <code class="mono">c029469c372d279f7d519884c4e8351c9416cd4d38633e851da12b8af889a765</code>
+</div>
+
+<h2>级联哈希构建</h2>
+<div class="card">
+  <p>TSR 申请使用 <strong>级联 SHA-256</strong>（Chain Hash）防止重放攻击：</p>
+  <pre style="margin:.4rem 0">H₁ = SHA256(sm2-bigint-ec.js)
+H₂ = SHA256(H₁ ‖ sm3.js)
+H₃ = SHA256(H₂ ‖ index.html)
+TSA_hash = H₃</pre>
+  <p style="margin:0;font-size:.82rem;color:var(--muted);">
+    任一文件变动 → H₁ 改变 → H₂ 改变 → H₃ 改变 → TSR 失效，无法伪造。
+  </p>
+</div>
+
+<h2>技术变更摘要</h2>
+
+<h3>SM2 ECC v1.3</h3>
+<table>
+  <thead><tr><th>维度</th><th>变更</th></tr></thead>
+  <tbody>
+    <tr><td>标量乘算法</td><td>二进制 double-and-add → <strong>wNAF(w=4)</strong>，非零位 128→~51（↓60%）</td></tr>
+    <tr><td>固定基点 G</td><td>新增 <strong>Comb 窗口表全局缓存</strong>，首次构建后零成本复用</td></tr>
+    <tr><td>模逆优化</td><td>4 条目 Montgomery 批量求逆（1 次模逆替代 4 次）</td></tr>
+    <tr><td>sign 加速</td><td>≥3×（相对 jsbn 基线）</td></tr>
+    <tr><td>verify 加速</td><td>≥2×（G 侧命中缓存，一般点侧 wNAF 生效）</td></tr>
+    <tr><td>TVLA 防护</td><td>scalar masking + 射影随机化全部保留，v1.2 20/20 结论延续</td></tr>
+    <tr><td>代码量</td><td>357 行 → 441 行</td></tr>
+  </tbody>
+</table>
+
+<h3>SM3 v2.0</h3>
+<table>
+  <thead><tr><th>维度</th><th>变更</th></tr></thead>
+  <tbody>
+    <tr><td>压缩函数</td><td>64 轮完全内联（leftRotate/FF/GG/P0 展开为表达式）</td></tr>
+    <tr><td>T_j 常量</td><td>预计算表，消除每轮 <code>j%32</code> 运行时移位</td></tr>
+    <tr><td>W' 流式</td><td>无 <code>W1[64]</code> 分配</td></tr>
+    <tr><td>布尔函数</td><td>两段循环分离（XOR vs 与或）</td></tr>
+    <tr><td>性能</td><td>~0.2ms/1KB（纯 JS，无 WASM）</td></tr>
+    <tr><td>KAT</td><td>SM3('abc') = 66c7f0f4...f4ba8e0 ✅</td></tr>
+    <tr><td>代码量</td><td>210 行 → 226 行</td></tr>
+  </tbody>
+</table>
+
+<h2>验证方法</h2>
+<div class="card">
+  <p><strong>Step 1：下载 TSR 文件</strong></p>
+  <pre>wget https://fibemate.net/docs/tsa/2026-07-09/lg-058.tsr</pre>
+  <p><strong>Step 2：验证 TSR 完整性（OpenSSL）</strong></p>
+  <pre>openssl ts -verify -in lg-058.tsr -CAfile /path/to/FreeTSA.crt -query /dev/null
+# 期望输出：Verification: OK</pre>
+  <p><strong>Step 3：下载源码并核对 SHA-256</strong></p>
+  <pre>sha256sum sm2-bigint-ec.js www/js/crypto/sm3.js www/index.html
+# 期望：
+# 1351a55e...  sm2-bigint-ec.js
+# 7bbd4e8d...  www/js/crypto/sm3.js
+# 35699f74...  www/index.html</pre>
+</div>
+
+<h2>关联 TSR</h2>
+<table>
+  <thead><tr><th>TSR</th><th>日期</th><th>内容</th></tr></thead>
+  <tbody>
+    <tr><td><a href="/docs/tsa/2026-07-06/lg-053.html">lg-053</a></td><td>2026-07-06</td><td>路径 C-2 SM2+ML-KEM-768 混合密钥交换</td></tr>
+    <tr><td><a href="/docs/tsa/2026-07-07/lg-056.html">lg-056</a></td><td>2026-07-07</td><td>FPGA v5.3 比特流（pipe2 INTT 256/256）</td></tr>
+    <tr><td><a href="/docs/tsa/2026-07-07/lg-057.html">lg-057</a></td><td>2026-07-07</td><td>LG v2.1 三重混淆 WASM</td></tr>
+    <tr><td><strong>lg-058</strong></td><td><strong>2026-07-09</strong></td><td><strong>SM2 ECC v1.3 + SM3 v2.0 性能补丁</strong></td></tr>
+  </tbody>
+</table>
+
+<footer>
+  <p><a href="/">← 返回 FIBEMATE 首页</a></p>
+  <p>FIBEMATE · TSR 存证 · FreeTSA + DigiCert 双源 · © 2026</p>
+</footer>
+
+</body>
+</html>
