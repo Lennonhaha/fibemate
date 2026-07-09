@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -35,7 +35,7 @@
 <div class="container">
 
 <h1>⚡ FPGA NTT/INTT 硬件加速器验证报告</h1>
-<p style="margin-bottom:1.5rem;">Artix-7 35T · 合成通过 · 时序收敛 · pipe2 仿真收敛中 · 2026-06-13</p>
+<p style="margin-bottom:1.5rem;">Artix-7 35T · 合成通过 · 时序收敛 · pipe2 round-trip 256/256 通过 ✅ · 2026-07-09</p>
 
 <div class="grid2">
   <div class="card" style="text-align:center;">
@@ -43,7 +43,7 @@
     <div class="num-label">NTT Round-trip 匹配率</div>
   </div>
   <div class="card" style="text-align:center;">
-    <div class="num">仿真中</div>
+    <div class="num">256/256 ✅</div>
     <div class="num-label">INTT Round-trip 匹配率</div>
   </div>
   <div class="card" style="text-align:center;">
@@ -110,13 +110,13 @@
 <div class="card">
   <h3 class="rb" style="margin-top:0;">5.1 Barrett 模约减 · 负数输入支持</h3>
   <p>GS butterfly 的差值 (diff) 可能为负。原 Barrett 实现仅支持正数输入。修复方案：计算 |diff| 传入 Barrett，在状态机 S5 阶段根据 <code>diff_sign</code> 修正结果。</p>
-  <p>修复前：INTT 输出全错 | 修复后：合成通过 ✅ （仿真收敛中） ✅</p>
+  <p>修复前：INTT 输出全错 | 修复后：合成通过 ✅ · round-trip 256/256 零误差 ✅</p>
 </div>
 
 <div class="card">
   <h3 class="rb" style="margin-top:0;">5.2 FSM 等待信号 · ntt_busy vs ntt_done</h3>
   <p>Wrapper FSM 的 F_WAIT 状态原先等待 <code>ntt_done</code> 信号。但 <code>ntt_done</code> 在 dout_valid 脉冲结束后才拉高，导致丢失输出数据。改为等待 <code>!ntt_busy</code>，确保 FSM 在数据仍有效时捕获全部 256 个输出值。</p>
-  <p>修复前：NTT 输出错位 | 修复后：合成通过 ✅ （仿真收敛中） ✅</p>
+  <p>修复前：NTT 输出错位 | 修复后：合成通过 ✅ · round-trip 256/256 零误差 ✅</p>
 </div>
 
 <div class="card">
@@ -139,7 +139,7 @@
   <table>
     <tr><td>参考模型</td><td>Python <code>ntt_ref.py</code> (NTT) · <code>intt_ref.py</code> (INTT) — 逐周期硬件仿真</td></tr>
     <tr><td>Barrett 验证</td><td>Python 仿真器 59,913 随机测试全部通过</td></tr>
-    <tr><td>硬件验证</td><td>合成通过 (WNS=7.96ns) → 比特流烧录成功 → pipe2 仿真收敛中</td></tr>
+    <tr><td>硬件验证</td><td>合成通过 (WNS=8.14ns) → 比特流烧录成功 ✅ → pipe2 round-trip 256/256 零误差 ✅</td></tr>
     <tr><td>Round-trip</td><td>NTT(a) → INTT(b) → 检查 b == a (全部 256 个系数)</td></tr>
   </table>
 </div>
@@ -158,6 +158,7 @@
 <h2>8. 已知限制 & 后续路线</h2>
 <table>
   <thead><tr><th>优先级</th><th>项目</th><th>状态</th></tr></thead>
+  <tr><td style="color:var(--accent);">P0 ✅</td><td>pipe2 round-trip 256/256</td><td>已完成 (2026-07-09)</td></tr>
   <tr><td style="color:var(--accent);">P0 ✅</td><td>UART 修复 (CH340 物理接线)</td><td>已完成</td></tr>
   <tr><td>P1</td><td>SHAKE-128/256 Keccak 硬件核心</td><td>规划中</td></tr>
   <tr><td>P2</td><td>采样/编码 + AXI 总线接口</td><td>规划中</td></tr>
