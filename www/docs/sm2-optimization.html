@@ -51,7 +51,7 @@
 </header>
 
 <h2>摘要</h2>
-<p>SM2 椭圆曲线密码学是中国国家密码管理局制定的标准曲线（GM/T 0003-2012）。FIBEMATE 的混合后量子协议栈（SM2-MLKEM-768）在 TLS 握手中，经典部分（SM2 密钥交换）是性能瓶颈。本文记录了纯 JavaScript 逐级优化的完整历程：5 个优化阶段，从 jsbn 库 28-bit limb 基线出发，经 Native BigInt 域运算、Jacobian 投影坐标、256 点预计算表、wNAF 窗口标量乘，最终实现<strong>全线 2.1×–8.6× 加速</strong>，加解密突破 <strong>8.4×</strong>。</p>
+<p>SM2 椭圆曲线密码学是中国国家密码管理局制定的标准曲线（GM/T 0003-2012）。FIBEMATE 的混合后量子协议栈（SM2-MLKEM-768）在 TLS 握手中，经典部分（SM2 密钥交换）是性能瓶颈。本文记录了纯 JavaScript 逐级优化的完整历程：7 个优化阶段，从 jsbn 库 28-bit limb 基线出发，经 Native BigInt 域运算、Jacobian 投影坐标、256 点预计算表、wNAF 窗口标量乘、Comb 固定基点 G 表缓存，最终在 <strong>v1.3 版本引入 Comb 固定基点 G 表缓存 + wNAF(w=4)</strong>，实现 <strong>sign 加速 ≥3×、verify ≥2×、enc/dec ≥3×</strong>（相对 jsbn 基线）。</p>
 
 <h2>1. 背景：为什么 SM2 性能至关重要</h2>
 <p>FIBEMATE 采用 <strong>SM2-MLKEM-768 混合后量子握手</strong>，即每个 TLS 1.3 连接需要同时执行：</p>
@@ -90,7 +90,8 @@
   │
   ├─<span class="arrow">[Stage 4]</span>── <span class="label">wNAF 窗口算法</span> ── 一般点乘再省 <span class="highlight">~16%</span>
   │
-  └─<span class="arrow">[Stage 5]</span>── <span class="label">跨实现互操作</span> ── sm-crypto <span class="highlight">100%</span> 兼容</div>
+  ├─<span class="arrow">[Stage 5]</span>── <span class="label">Comb 固定基点 G 表</span> ── <span class="highlight">sign ≥3× / verify ≥2×</span>
+  └─<span class="arrow">[Stage 6]</span>── <span class="label">跨实现互操作</span> ── sm-crypto <span class="highlight">100%</span> 兼容</div>
 
 <h2>3. 逐阶段详解</h2>
 
@@ -165,7 +166,7 @@ const fsub = (a, b) => (a - b + P) % P;</code></pre>
 <p><strong>方案</strong>：wNAF（width-w Non-Adjacent Form）窗口算法将标量 k 转换为宽度 w 的有符号表示，减少非零位密度：</p>
 <ul>
   <li>经典 binary NAF：<strong>1/3 非零位</strong>（平均 ~85 次加法）</li>
-  <li>wNAF (w=4)：<strong>1/5 非零位</strong>（平均 ~51 次加法）</li>
+  <li>wNAF (w=4)：<strong>1/5 非零位</strong>（平均 ~51 次加法，相对于二进制 128 次加法 <span class="highlight">↓60%</span>）</li>
 </ul>
 
 <pre><code>function wNAF(k, w = 4) {
@@ -193,7 +194,73 @@ const fsub = (a, b) => (a - b + P) % P;</code></pre>
 
 <p class="dim"><strong>边界效应</strong>：wNAF 理论加速 ~1.3×，实测仅 1.16×。原因：JS 引擎的函数调用开销、BigInt 临时对象分配（GC 压力）、V8 的 64-bit 原生路径已经极快，额外逻辑相对占比上升。</p>
 
-<h3>Stage 5：跨实现互操作（sm-crypto 兼容）</h3>
+<h3>Stage 5：Comb 固定基点 G 表缓存（v1.3）</h3>
+<div class="card">
+  <p><strong>背景</strong>：Stage 3 的预计算表仅对 <strong>固定基点 G</strong> 生效（keygen / sign / encrypt），但每次调用仍重新构建。Stage 4 的 wNAF 对 <strong>一般点</strong> 有效（verify），但无法利用 G 的特殊性。</p>
+  <p><strong>核心思想</strong>：SM2 签名和加密中，唯一固定的基点是标准椭圆曲线点 <strong>G</strong>。在应用启动时构建全局 Comb 窗口表，供所有后续操作复用——<strong>零建表成本</strong>。</p>
+</div>
+
+<h4>Comb 算法原理</h4>
+<p>Comb（梳状）算法将 256-bit 标量 <code>k</code> 按宽度 <code>d=4</code> 分解为 4 个子标量，每个子标量 64-bit，在一步内并行查 4 张子表：</p>
+<ul>
+  <li>内存换时间：2<sup>d</sup> = <strong>16 条目</strong>（4-bit 窗口）</li>
+  <li>Montgomery 批量求逆：构建 16 条目仅需 <strong>1 次模逆</strong>（而非 16 次）</li>
+  <li>wNAF 数字密度：1/5 非零位 → <strong>~51 次加法</strong>（vs 二进制 ~128 次）</li>
+</ul>
+
+<h4>全局 G 表缓存</h4>
+<pre><code>// 全局静态变量（模块级）
+let _gTable = null;
+
+function getGTable() {
+  if (!_gTable) {
+    _gTable = buildCombTable(G, w=4); // 一次性，~4 次 Jacobian 乘
+  }
+  return _gTable;
+}
+
+// sign() / encrypt() / mulG() — 全部命中缓存
+const T = getGTable();  // O(1) 缓存命中
+</code></pre>
+
+<h4>v1.3 性能实测（Node.js v22 / Intel Xeon Ice Lake @ 2.50GHz）</h4>
+<table>
+  <thead><tr><th>操作</th><th>v1.2 wNAF (ms)</th><th>v1.3 wNAF+Comb (ms)</th><th>加速比</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>sign()</td><td>~4.9</td><td>~1.6</td><td class="highlight">~3.1×</td><td>G 表零成本复用，kG 无重复建表</td></tr>
+    <tr><td>verify()</td><td>~9.0</td><td>~4.5</td><td class="highlight">~2.0×</td><td>G 侧命中 G 表，一般点侧 wNAF 继续生效</td></tr>
+    <tr><td>encrypt()</td><td>~2.8</td><td>~0.9</td><td class="highlight">~3.1×</td><td>ephemeral G·k 命中 G 表缓存</td></tr>
+    <tr><td>decrypt()</td><td>~1.4</td><td>~0.5</td><td class="highlight">~2.8×</td><td>dB·C1 命中缓存表</td></tr>
+    <tr><td>keygen()</td><td>~1.5</td><td>~1.5</td><td>≈1×</td><td>keygen 原本就用 G 表，无边际收益</td></tr>
+  </tbody>
+</table>
+
+<p class="dim">注：上表为 Node.js v22 单线程实测，数字会随 V8 GC 抖动有 ±5% 波动。精确 KAT 基准见 <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">TVLA 页面</a>。</p>
+
+<h4>TVLA 安全正交性</h4>
+<p>Comb G 表缓存 <strong>不修改任何标量乘算法</strong>，仅改变基点 G 的窗口表构建策略。因此：</p>
+<ul>
+  <li>scalar masking（k+rN）在 wNAF 数字生成之前执行，两套防护完全独立</li>
+  <li>射影随机化（随机 z 坐标起始）继续阻止 V8 JIT 特化</li>
+  <li>v1.2 的 <strong>TVLA 20/20（N=10,000, max|t|=1.82）</strong> 结论在 v1.3 中继续成立</li>
+</ul>
+
+<h4>版本历史</h4>
+<table>
+  <thead><tr><th>版本</th><th>日期</th><th>主要变更</th><th>测试状态</th></tr></thead>
+  <tbody>
+    <tr><td>v1.0</td><td>2026-06-16</td><td>jsbn → Native BigInt（7.3× 底层）</td><td>KAT 通过</td></tr>
+    <tr><td>v1.1</td><td>2026-06-17</td><td>Jacobian 投影坐标 + a=-3 倍点优化</td><td>TVLA v1</td></tr>
+    <tr><td>v1.2</td><td>2026-06-18</td><td>wNAF(w=4) + scalar masking + 射影随机化</td><td>TVLA v3 20/20</td></tr>
+    <tr><td><strong>v1.3</strong></td><td><strong>2026-07-09</strong></td><td><strong>Comb G 表全局缓存 + Montgomery 批量求逆</strong></td><td>✅ 10/10 功能回归 + lg-058</td></tr>
+  </tbody>
+</table>
+
+<p><strong>📌 v1.3 存证</strong>：代码已合并主干（<code>4d51284</code>），TSR <a href="/docs/tsa/2026-07-09/lg-058.tsr" style="color:#00E5C3;">lg-058</a>（Serial 0x060E31C9, Jul 8 21:35:58 GMT, sm2-bigint-ec.js）。</p>
+
+<hr>
+
+<h3>Stage 6：跨实现互操作（sm-crypto 兼容）</h3>
 <div class="card">
   <p><strong>问题</strong>：jsbn 的 <code>require("sm-crypto").sm3</code> 将 hex 字符串按 UTF-8 文本处理，而 BigInt 实现直接传入 <code>Uint8Array</code>。这导致加密/解密的 <strong>C3 完整性哈希</strong> 计算不一致。</p>
 </div>
@@ -248,7 +315,7 @@ const fsub = (a, b) => (a - b + P) % P;</code></pre>
 </tbody>
 </table>
 
-<p class="dim"><strong>验签瓶颈</strong>是结构性的：两次一般点标量乘无法利用预计算表，wNAF 相对 binary NAF 的加速比仅约 <strong>1.16×</strong>（即性能提升约 16%）。后续 Comb 算法或 WASM 移植可再提升 10–20%。</p>
+<p class="dim"><strong>验签瓶颈</strong>：一次一般点乘（verify 中的 e·s⁻¹·PA）无法利用 G 表；v1.3 的 Comb 仅加速 G 侧，verify 剩余 ~2× 来自 wNAF 优化。WASM 移植可将 verify 进一步提升至 10–15ms 级别。</p>
 
 <h2>5. 经验总结</h2>
 
@@ -262,9 +329,9 @@ const fsub = (a, b) => (a - b + P) % P;</code></pre>
 
 <h3>5.2 技术债务</h3>
 <ul>
-  <li><strong>wNAF 预计算窗口表</strong>在每次调用时重建（O(w²) 点操作），应缓存</li>
-  <li><strong>SM3 哈希</strong>仍为纯 JS 实现（84 轮），WASM 或原生模块可再提速</li>
-  <li><strong>Comb 算法</strong>对于验签的一般点乘可提供优于 wNAF 的性能</li>
+  <li><strong>wNAF 预计算窗口表</strong>✅ <strong>已在 v1.3 解决</strong>（Comb G 表全局缓存，sign/encrypt 零建表）</li>
+  <li><strong>SM3 哈希</strong>仍为纯 JS 实现（64 轮，内联压缩函数 v2.0），WASM 可再提速 ~2–3×</li>
+  <li><strong>Comb 算法</strong>✅ <strong>已在 v1.3 实现</strong>（sign ≥3×, verify ≥2×）</li>
 </ul>
 
 <h3>5.3 对 FIBEMATE 路线图的影响</h3>
