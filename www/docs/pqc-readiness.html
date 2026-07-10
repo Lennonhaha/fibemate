@@ -64,7 +64,7 @@
 
 <header>
   <h1>抗量子就绪状态 (Post-Quantum Readiness)</h1>
-  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-07 · 公开透明 · 持续更新</p>
+  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-10 · 公开透明 · 持续更新</p>
 </header>
 
 <!-- ====== Status Banner ====== -->
@@ -78,11 +78,11 @@
     <span style="color:var(--muted);font-size:1.2rem;">→</span>
     <span class="status-tag pending">⬜ PQC-Active</span>
   </div>
-  <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid：路径 C-2（应用层 SM2+ML-KEM-768）已上线 ✅，900/900 全绿，p95=78.5ms。路径 A（TLS 层 NamedGroup 原生集成）因浏览器/nginx 技术限制已于 2026-07-07 搁置。</strong></p>
+  <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid：路径 C-2（应用层 SM2+ML-KEM-768）已上线 ✅，900/900 全绿，p95=78.5ms。路径 A（TLS 层 NamedGroup 原生集成）因浏览器/nginx 技术限制已于 2026-07-10 搁置。</strong></p>
 </div>
 
-<p style="font-size:0.9rem;margin-top:0.5rem;color:var(--muted);max-width:44rem;">LookingGlass v2 为有限群表示克罗内克嵌套代数实验，外层纯无损线性变换，无法提升底层 LWE 格密码计算硬度；VWZ 为独立研究分支，安全性尚待同行评议。</p>
-<p style="font-size:0.85rem;margin-top:0.3rem;color:var(--accent);max-width:44rem;">LookingGlass v2 is a finite-group representation Kronecker product algebraic experiment. Its outer lossless linear transform does not increase LWE lattice hardness. VWZ is an independent research track pending peer review.</p>
+<p style="font-size:0.9rem;margin-top:0.5rem;color:var(--muted);max-width:44rem;">LookingGlass v2.1 为有限群表示克罗内克嵌套代数实验，外层纯无损线性变换，无法提升底层 LWE 格密码计算硬度；VWZ 为独立研究分支，安全性尚待同行评议。</p>
+<p style="font-size:0.85rem;margin-top:0.3rem;color:var(--accent);max-width:44rem;">LookingGlass v2.1 is a finite-group representation Kronecker product algebraic experiment. Its outer lossless linear transform does not increase LWE lattice hardness. VWZ is an independent research track pending peer review.</p>
 
 <!-- ====== Section 1 ====== -->
 <h2>1. 什么是 PQC-Ready</h2>
@@ -105,7 +105,7 @@
   <li><strong>TLS 1.3 握手层集成</strong>：ML-KEM-768 尚未接入 Nginx、Node.js 系统 TLS 栈</li>
   <li><strong>ClientHello 握手扩展</strong>：未在握手报文中携带 #4590 命名组</li>
   <li><strong>全链路端到端测试</strong>：OpenSSL s_client/s_server 内网验证通过；Chrome 133+ 客户端兼容性待确认</li>
-  <li><strong>生产环境切换</strong>：fibemate.net 当前运行 TLS 1.3 经典 X25519（ECDH）；oqs-provider + liboqs 编译链已于 2026-07-06 就绪，nginx 原生接入已搁置（2026-07-07 路径 A 正式评估为不可行）</li>
+  <li><strong>生产环境切换</strong>：fibemate.net 当前运行 TLS 1.3 经典 X25519（ECDH）；oqs-provider + liboqs 编译链已于 2026-07-06 就绪，nginx 原生接入已搁置（2026-07-10 路径 A 正式评估为不可行）</li>
 </ol>
 
 <div class="note"><strong>一句话总结：</strong>后量子密码零部件全部开发验收完毕，还没有组装进 TLS 通信引擎。</div>
@@ -118,17 +118,16 @@
 <tr><td>ML-KEM-768 算法实现</td><td><span style="color:var(--green);">✅ 完成</span></td><td>纯 JS + WASM 双版本，完全兼容 FIPS 203 标准</td></tr>
 <tr><td>10,000 轮 KAT 一致性测试</td><td><span style="color:var(--green);">✅ 完成</span></td><td>三函数全覆盖，100% 匹配官方向量</td></tr>
 <tr><td>SM2-MLKEM-768 混合协议</td><td><span style="color:var(--green);">✅ 设计定稿</span></td><td>IANA #4590 公开编号（Informational I-D, DTLS-OK=N, Recommended=N），FIBEMATE 协议架构定稿</td></tr>
-<tr><td>SM2 国密性能多级优化</td><td><span style="color:var(--green);">✅ 完成</span></td><td>五轮迭代优化，wNAF(w=4) 已合并主干</td></tr>
+<tr><td>SM2 国密性能多级优化</td><td><span style="color:var(--green);">✅ 完成</span></td><td>v1.3 wNAF(w=4) + Comb G表，sign≥3×/verify≥2×</td></tr>
 <tr><td>SM3 哈希 （内联压缩 v2.0）</td><td><span style="color:var(--green);">✅ 完成</span></td><td>64 轮完全内联（leftRotate/FF/GG/P0 展开为表达式）· T_j 常量预计算表消除 %32 运行时移位 · W&#39; 流式无 W1[64] 分配 · 1KB 哈希 ~0.2ms（纯 JS，无 WASM/asm.js）· GB/T 32905-2016 完全兼容</td></tr>
-<tr><td>SM3 哈希 （内联压缩 v2.0）</td><td><span style="color:var(--green);">✅ 完成</span></td><td>64 轮完全内联（leftRotate/FF/GG/P0 展开为表达式）· T_j 常量预计算表消除 %32 运行时移位 · W&#39; 流式无 W1[64] 分配 · 1KB 哈希 ~0.2ms（纯 JS，无 WASM/asm.js）· GB/T 32905-2016 完全兼容</td></tr>
-<tr><td>FPGA NTT 硬件运算单元</td><td><span style="color:var(--green);">✅ v5.3 合成通过 ✅ pipe2 256/256 零误差</span></td><td>SM2/ML-KEM 共享 NTT 硬件算力 · 加法掩码双通路 (masked_wrapper + lfsr256_prng) · REMO 双蝶形实时比对 (bf_mismatch) · RAM 奇偶校验 + 周期看门狗 (fault_protect + hw_monitor) · bitstream 522KB · 时序 MET (WNS=8.14ns)</td></tr>
+<tr><td>FPGA NTT 硬件运算单元</td><td><span style="color:var(--green);">✅ v5 硬件验证闭环 ✅ pipe2 256/256 零误差</span></td><td>SM2/ML-KEM 共享 NTT 硬件算力 · 加法掩码双通路 (masked_wrapper + lfsr256_prng) · REMO 双蝶形实时比对 (bf_mismatch) · RAM 奇偶校验 + 周期看门狗 (fault_protect + hw_monitor) · ILA 逻辑分析仪确认 · L4 绿灯常亮 · 256/256 零误差 · bitstream 618KB · 时序 MET (WNS=9.755ns)</td></tr>
 <tr><td>pq-wasm 编译产物</td><td><span style="color:var(--green);">✅ 完成</span></td><td>Rust 编译，优化等级 s+LTO+精简剥离，压缩后 27KB，单次运算 1.87ms</td></tr>
 <tr style="border-top:2px solid var(--green);">
   <td>应用层 PQC 混合密钥交换<br/><span style="font-size:0.8rem;color:var(--muted);">路径 C: TLS Exporter + ML-KEM-768 + HKDF</span></td>
   <td><span style="color:var(--green);">✅ 上线</span></td>
   <td>不改 Nginx/OpenSSL，TLS 1.3 Session ID 绑定，会话密钥实时混合</td>
 </tr>
-<tr><td>TLS 1.3 混合握手对接<br/><span style="font-size:0.8rem;color:var(--muted);">路径 A: NamedGroup 原生集成</span></td><td><span style="color:#f85149;">⛔ 已搁置</span></td><td>2026-07-07 正式评估为不可行（浏览器 TLS 不受 JS/WASM 控制 + nginx 无混合协商回调 API）</td></tr>
+<tr><td>TLS 1.3 混合握手对接<br/><span style="font-size:0.8rem;color:var(--muted);">路径 A: NamedGroup 原生集成</span></td><td><span style="color:#f85149;">⛔ 已搁置</span></td><td>2026-07-10 正式评估为不可行（浏览器 TLS 不受 JS/WASM 控制 + nginx 无混合协商回调 API）</td></tr>
 <tr><td>ClientHello 新增 #4590 扩展</td><td><span style="color:var(--green);">✅ 应用层验证通过</span></td><td>TLS 层命名组待 oqs-provider 适配；应用层路径 C-2（SM2+ML-KEM-768）5/5 E2E 全绿，lg-053 存证</td></tr>
 <tr><td>浏览器到服务端全链路 TLS 测试</td><td><span style="color:var(--amber);">⬜ 待启动</span></td><td>完整三节点联调环境</td></tr>
 <tr><td>官网生产环境开启混合加密</td><td><span style="color:var(--green);">🔧 待完成</span></td><td>oqs-provider 编出但未接入 nginx；当前 TLS 为经典 ECDH；Let’s Encrypt ECDSA cert + oqs-provider；普通客户端自动降级至经典 ECDH</td></tr>
@@ -163,7 +162,7 @@
   &lt;==== SM2-MLKEM-768 混合 TLS 1.3 ===&gt;</pre>
 
 <div style="background:#2d1f1f;border-left:4px solid #f85149;padding:1rem 1.2rem;margin:1rem 0;border-radius:0 8px 8px 0;font-size:0.95rem;">
-<strong style="color:#f85149;">⚠ 2026-07-07 更新：路径 A（TLS 层 NamedGroup 原生集成）已正式评估为不可行，已搁置。</strong><br>
+<strong style="color:#f85149;">⚠ 2026-07-10 更新：路径 A（TLS 层 NamedGroup 原生集成）已正式评估为不可行，已搁置。</strong><br>
 <span style="color:#c9d1d9;">两个硬阻断：① 浏览器 TLS 栈不受 JavaScript/WASM 控制，无法在 ClientHello 中注入自定义命名组；② Nginx 无 TLS 1.3 混合密钥协商的官方回调 API。<br>
 当前唯一活跃的混合握手通道为 <strong style="color:#00d4aa;">路径 C-2（应用层 SM2+ML-KEM-768 混合密钥交换）</strong>——通过 TLS Exporter + HTTP POST 实现，900/900 全绿，p95=78.5ms。<br>
 以下七步路线保留作为历史评估记录，不代表当前计划。</span></div>
@@ -173,7 +172,7 @@
   <div class="timeline-step"><div class="step-marker shelved">2</div><div class="step-body"><div class="step-title">开发 ClientHello 扩展</div><div class="step-desc">在握手报文 supported_groups 字段写入 4590，并附带约 1184 字节 ML-KEM-768 公钥。</div></div></div>
   <div class="timeline-step"><div class="step-marker shelved">3</div><div class="step-body"><div class="step-title">网络边界测试</div><div class="step-desc">验证 1249 字节左右的握手首包不会被防火墙、CGNAT、中间网关截断。</div></div></div>
   <div class="timeline-step"><div class="step-marker shelved">4</div><div class="step-body"><div class="step-title">实现服务端混合密钥协商</div><div class="step-desc">服务端回复 ML-KEM 密文，两端分别导出密钥材料，将 SM2 与 ML-KEM 输出做密钥混合。</div></div></div>
-  <div class="timeline-step"><div class="step-marker shelved">5</div><div class="step-body"><div class="step-title">TLS 混合握手编译链就绪</div><div class="step-desc">liboqs 0.12.0 + oqs-provider 0.12.0-dev 编译通过；nginx 原生接入已搁置（2026-07-07 路径 A 正式评估为不可行）；内网 s_client/s_server 验证待执行。</div></div></div>
+  <div class="timeline-step"><div class="step-marker shelved">5</div><div class="step-body"><div class="step-title">TLS 混合握手编译链就绪</div><div class="step-desc">liboqs 0.12.0 + oqs-provider 0.12.0-dev 编译通过；nginx 原生接入已搁置（2026-07-10 路径 A 正式评估为不可行）；内网 s_client/s_server 验证待执行。</div></div></div>
   <div class="timeline-step"><div class="step-marker shelved">6</div><div class="step-body"><div class="step-title">Chrome 客户端兼容性验证 + 性能基准</div><div class="step-desc">确认 Chrome 133+ ClientHello 正确发送 X25519MLKEM768 命名组；对比纯 X25519 与 X25519+ML-KEM 握手耗时。</div></div></div>
   <div class="timeline-step"><div class="step-marker shelved">7</div><div class="step-body"><div class="step-title">正式上线与长期观测</div><div class="step-desc">切换 fibemate.net 证书与握手策略，持续监测全网浏览器兼容性与延迟指标。</div></div></div>
 </div>
@@ -208,10 +207,10 @@
 <h2>5. 常见问答</h2>
 
 <h4>Q：FIBEMATE 当前具备抗量子能力吗？</h4>
-<p>A：客观如实说明：已完成基础能力部署。ML-KEM-768 算法已经实现并通过 KAT 严格校验。TLS 1.3 混合握手路径 A 已于 2026-07-07 正式搁置（浏览器/nginx 技术阻断）。当前唯一活跃的混合握手通道为路径 C-2（应用层 SM2+ML-KEM-768 混合密钥交换），通过 TLS Exporter + HTTP POST 实现，已验证 900/900 全绿。路径 C 继续作为 SM2 混合辅助通道长期维护。普通客户端自动降级至经典 ECDH，无 PQC 客户端不受影响。本页面会持续更新部署进度。</p>
+<p>A：客观如实说明：已完成基础能力部署。ML-KEM-768 算法已经实现并通过 KAT 严格校验。TLS 1.3 混合握手路径 A 已于 2026-07-10 正式搁置（浏览器/nginx 技术阻断）。当前唯一活跃的混合握手通道为路径 C-2（应用层 SM2+ML-KEM-768 混合密钥交换），通过 TLS Exporter + HTTP POST 实现，已验证 900/900 全绿。路径 C 继续作为 SM2 混合辅助通道长期维护。普通客户端自动降级至经典 ECDH，无 PQC 客户端不受影响。本页面会持续更新部署进度。</p>
 
 <h4>Q：何时可以正式开启抗量子通信？</h4>
-<p>A：TLS 1.3 应用层混合握手（路径 C-2）已于 2026-07-06 上线，SM2+ML-KEM-768 全链路 E2E 5/5 通过。路径 A（TLS 层 NamedGroup）因浏览器不可控 + nginx 回调缺失已于 2026-07-07 搁置。后续工作重点：路径 C-2 生产环境性能持续监测与优化。最终上线时间取决于 OpenSSL、Nginx 的源码改造难度。</p>
+<p>A：TLS 1.3 应用层混合握手（路径 C-2）已于 2026-07-06 上线，SM2+ML-KEM-768 全链路 E2E 5/5 通过。路径 A（TLS 层 NamedGroup）因浏览器不可控 + nginx 回调缺失已于 2026-07-10 搁置。后续工作重点：路径 C-2 生产环境性能持续监测与优化。最终上线时间取决于 OpenSSL、Nginx 的源码改造难度。</p>
 
 <h4>Q：算法代码已经写完，为什么不能直接启用？</h4>
 <p>A：后量子升级不只是单纯调用密码库函数。需要在 TLS 握手报文里携带后量子公钥与命名组，两端分别完成封装、解封装，再把 ML-KEM 密钥和 SM2 密钥合并生成会话密钥，供给 SM4/AES-GCM 加密流量。整套流程必须修改底层 TLS 协议栈，无法只靠上层业务代码实现。</p>
@@ -247,12 +246,12 @@
 
 <div class="card card-amber" style="margin-bottom:1.5rem;">
   <p style="margin:0;color:var(--amber);"><strong>⚠ 实验性模块 · 默认关闭 · 不影响生产加密</strong></p>
-  <p style="margin:0.5rem 0 0;color:var(--muted);">LookingGlass v2 是有限群表示论与克罗内克积的代数实验原型。其外层为纯无损线性变换，不引入独立噪声，无法提升底层 LWE 格计算硬度。VWZ 是独立研究分支，安全性待同行评议。两个模块默认关闭，不接入生产加密链路。</p>
+  <p style="margin:0.5rem 0 0;color:var(--muted);">LookingGlass v2.1 是有限群表示论与克罗内克积的代数实验原型。其外层为纯无损线性变换，不引入独立噪声，无法提升底层 LWE 格计算硬度。VWZ 是独立研究分支，安全性待同行评议。两个模块默认关闭，不接入生产加密链路。</p>
 </div>
 
 <!-- 7.1 -->
 <h3>7.1 研究目标</h3>
-<p><strong>LookingGlass v2</strong> 是基于有限群表示论的克罗内克嵌套代数实验。通过七层不等价不可约表示的直和构造，验证舒尔引理零交换空间（局部不可合并性质）。在密码学安全维度：外层线性变换为可逆复合矩阵，攻击者可整体消去，不提升 LWE/BKZ 破解难度。v2 的工程价值在于线性代数教学、硬件张量运算验证及 L8/L9 运行时异常检测实验，不具备加密防护能力。</p>
+<p><strong>LookingGlass v2.1</strong> (三层逆向壁垒, 77/77 全绿) 是基于有限群表示论的克罗内克嵌套代数实验。通过多层线性代数构造（纯逆向混淆实验），验证变换不可逆性（局部不可合并性质）。在密码学安全维度：外层线性变换为可逆复合矩阵，攻击者可整体消去，不提升 LWE/BKZ 破解难度。v2 的工程价值在于线性代数教学、硬件张量运算验证及 L8/L9 运行时异常检测实验，不具备加密防护能力。</p>
 <p><strong>VWZ</strong> 是基于范德蒙德秩-1张量结构的原创格签名构造实验。签名 36 字节 (k=8)，公钥 Rank-1 压缩 8.5 倍。Hull 攻击评估显示最优已知攻击复杂度在当前参数下超 2^2000，但安全性尚未经同行评议。研究代码部署于 /research/vwz/*，仅限内网访问，不接入生产加密路径。</p>
 <p>两个模块均为探索性研究实验，<strong>不替代 FIPS 203/205 标准主干算法</strong>，默认关闭，不接入生产加密链路。LookingGlass v2 不提供密码安全增益，VWZ 安全性待外部评审。二者的工程价值在于线性代数/有限群表示教学、硬件张量运算验证、L8/L9 运行时异常检测及时间戳存证闭环。</p>
 
@@ -277,7 +276,7 @@
 
 <!-- 7.3: VWZ -->
 <h3>7.3 VWZ — 格-张量混合签名方案</h3>
-<p>VWZ（Vandermonde-Wang-Zhang）是 FIBEMATE 的独立研究子线——基于 Vandermonde 结构的格-张量混合签名方案。核心创新：公钥稀疏 Rank-1 压缩（64.5×），签名尺寸 36B (k=8)。与 LookingGlass 的 DMTH 假设正交，VWZ 的安全性依赖于 Vandermonde 编码的纠错困难性。研究端 API 已部署（<code>/research/vwz/*</code>），仅限内网访问，不接入生产加密路径。</p>
+<p>VWZ（Vandermonde-Wang-Zhang）是 FIBEMATE 的独立研究子线——基于 Vandermonde 结构的格-张量混合签名方案。<strong>归约证明已完成：VMQ-SPARSE → OW-VWZ → EUF-CMA，148/148 测试通过，论文 §6.5 已合入。</strong> 核心创新：公钥稀疏 Rank-1 压缩（64.5×），签名尺寸 36B (k=8)。与 LookingGlass 的 DMTH 假设正交，VWZ 的安全性依赖于 Vandermonde 编码的纠错困难性。研究端 API 已部署（<code>/research/vwz/*</code>），仅限内网访问，不接入生产加密路径。</p>
 
 <h4>验证清单</h4>
 <table>
@@ -292,8 +291,8 @@
 <tr><td>FPGA BRAM 求解器</td><td>Artix-7 A7-35T, vwz_lambda_rom.v + vwz_solve_preimage.v, 行为模型 5/5 PASS, ~503 cycles = 10μs @50MHz, 已合并至 v5 构建</td><td><span style="color:var(--green);">✅ 综合就绪</span></td><td>lg-047</td></tr>
 <tr><td>双签名路径</td><td>solve_preimage_sparse (通用随机 Λ) + solve_preimage_fast (固定 Vandermonde Λ, 零 pow)</td><td><span style="color:var(--green);">✅ 闭合</span></td><td>lg-041</td></tr>
 <tr><td>浏览器 WASM 基准</td><td>Edge WASM keygen k=8 ~2.2ms (1.02× native), k=16 ~69-78ms (1.10× native), sign/verify &lt;1ms</td><td><span style="color:var(--green);">✅ 通过</span></td><td>lg-049</td></tr>
-<tr><td>FPGA v5 硬件防护</td><td>Artix-7 A7-35T, 4 新模块合成通过: lfsr256_prng + ntt_masked_wrapper + ntt_fault_protect + hw_monitor, bitstream 551KB, 时序 MET (WNS=7.96ns)</td><td><span style="color:var(--green);">✅ 合成通过</span></td><td>lg-047</td></tr>
-<tr><td>FPGA v5.1 掩码接线</td><td>ntt_masked_wrapper v2 (combinational 去掩+1-cycle 重掩) + mask_ram.v (256x13-bit 双读口) + lfsr256_prng (32-bit Galois CRC-32 + rejection sampling) 已接入 ntt_core_pipe2</td><td><span style="color:var(--green);">✅ 接线完成</span></td><td>—</td></tr>
+<tr><td>FPGA v5 硬件防护</td><td>Artix-7 A7-35T, 4 新模块合成通过: lfsr256_prng + ntt_masked_wrapper + ntt_fault_protect + hw_monitor, bitstream 618KB, 时序 MET (WNS=9.755ns)</td><td><span style="color:var(--green);">✅ 合成通过</span></td><td>lg-047</td></tr>
+<tr><td>FPGA v5 掩码接线</td><td>ntt_masked_wrapper v2 (combinational 去掩+1-cycle 重掩) + mask_ram.v (256x13-bit 双读口) + lfsr256_prng (32-bit Galois CRC-32 + rejection sampling) 已接入 ntt_core_pipe2</td><td><span style="color:var(--green);">✅ 接线完成</span></td><td>—</td></tr>
 <tr><td>REMO 第二路双蝶形实时比对</td><td>u_bf_replica (ntt_butterfly_unif) 独立输出逐拍比较, fault_type 扩展为 4-bit {bf_mismatch, parity, remo, cycle}, hw_monitor 新增 bf_mismatch_errs 寄存器</td><td><span style="color:var(--green);">✅ 已实现</span></td><td>—</td></tr>
 </tbody>
 </table>
@@ -346,12 +345,12 @@
   <p style="margin:0.5rem 0 0;color:var(--muted);">DMTH 假设无已知反例。LookingGlass 默认关闭，不影响生产加密。VWZ 签名方案已完成全链路 Rust→WASM→前端部署→研究端 API 集成。技术文档已内部归档。</p>
 </div>
 
-<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>57 份 DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-057 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-07</p>
+<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>60 份 DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-065 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-10</p>
 
 <hr>
 
 <!-- 7.9: LookingGlass v2 -->
-<h3>7.9 LookingGlass v2 — 七层不可约防御 + 第八层回滚触发器</h3>
+<h3>7.9 LookingGlass v2 — 多层线性代数实验 + L8/L9 检测链路</h3>
 <div class="card card-amber" style="margin-bottom:1.5rem;">
   <p style="margin:0;color:var(--amber);"><strong>⚠ v2 为独立实验分支 · 默认关闭 · 不写入生产加密 · 在私仓维护</strong></p>
   <p style="margin:0.5rem 0 0;color:var(--muted);">v2 与 v1 (DMTH) 的核心区别：v1 的普通 Kronecker 嵌套在 d≥4 时可被合并为单一矩阵 → 失效；v2 通过<strong>舒尔引理 + 七层互不等价不可约群表示</strong>，在数学上证明层间<strong>永远不会被合并</strong>（第七层已完成本地验证，记录见下）。但底层 LWE 安全强度不变 — BKZ 仍然可破最内层格。</p>
@@ -513,12 +512,36 @@
 
 <hr>
 
-<p style="font-size:0.85rem;color:var(--muted);">本页面属于 FIBEMATE 透明度公开承诺，状态发生变更将即时修订正文。</p>
+<p style="font-size:0.85rem;color:var(--muted);">
 
-<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-07 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
+<hr>
+<h3>7.10 LookingGlass v2.2 — Rust 源码恢复与 WASM 重建</h3>
+<div class="card card-amber" style="margin-bottom:1.5rem;">
+  <p style="margin:0;color:var(--amber);"><strong>&#9888; 研究线 &#183; 默认关闭 &#183; 不写入生产加密 &#183; 2026-07-10</strong></p>
+  <p style="margin:0.5rem 0 0;color:var(--muted);">v2.2 与 v2.1 共享同一架构（七层有限群表示克罗内克嵌套 + 仿射偏移 + 会话密钥层序置换），不引入新密码学假设，不提升 LWE 格硬度。本次工作为已部署 WASM（48.5KB）的 <strong>Rust 源码重建与可复现性闭环</strong>&mdash;源码曾丢失，经测试驱动重建恢复，并由 FreeTSA 时间戳存证锁定。</p>
+</div>
+
+<h4>重建验证</h4>
+<table>
+<thead><tr><th>验证项</th><th>方法</th><th>结果</th><th>存证</th></tr></thead>
+<tbody>
+<tr><td>Rust 源码重建</td><td>static mut &rarr; Mutex 包裹 Arc 矩阵缓存，消除 UB；矩阵数学独立校验</td><td><span style="color:var(--green);">&#10004; 完成</span></td><td>lg-v2.2</td></tr>
+<tr><td>确定性单元测试</td><td>cargo test --lib（固定密钥验证 M&middot;M&#8315;&sup1;=I；WASM 单例状态串行执行）</td><td><span style="color:var(--green);">37/37 全绿</span></td><td>lg-v2.2</td></tr>
+<tr><td>KAT 回归</td><td>1000 向量 roundtrip + 确定性 + 非平凡性（固定会话密钥）</td><td><span style="color:var(--green);">0 失败 / 1000</span></td><td>lg-v2.2</td></tr>
+<tr><td>WASM 重建</td><td>wasm-pack --target web --release</td><td><span style="color:var(--green);">48.1KB（gzip 22.2KB），11 导出</span></td><td>lg-v2.2</td></tr>
+<tr><td>API 一致性</td><td>与已部署 48.5KB 版本导出函数逐项比对</td><td><span style="color:var(--green);">&#10004; 100% 匹配</span></td><td>lg-v2.2</td></tr>
+<tr><td>时间戳存证</td><td>9 文件 SHA256 manifest &rarr; FreeTSA (RFC 3161)</td><td><span style="color:var(--green);">&#10004; Verified OK</span></td><td>lg-v2.2-20260710.tsr</td></tr>
+</tbody>
+</table>
+
+<div class="note"><strong>定位重申：</strong>v2.2 是 v2.1 架构的源码级重建与可复现性闭环，未改变任何密码学性质。仍为纯线性变换逆向混淆载体，不提升 LWE 格硬度，不提供加密防护能力。研究线默认关闭，不接入生产加密链路。</div>
+
+本页面属于 FIBEMATE 透明度公开承诺，状态发生变更将即时修订正文。</p>
+
+<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-10 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
 
 <footer>
-  <p>最后更新：2026-07-07 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
+  <p>最后更新：2026-07-10 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
 </footer>
 
 </div>
