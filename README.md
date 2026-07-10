@@ -1,7 +1,7 @@
 # FIBEMATE — 下一代后量子密码通信协议
 
 **v3.3-preview** | 2026-07-10  
-TSR 序列: lg-001 ~ lg-065 | 许可证: GNU GPLv3  
+TSR 序列: lg-001 ~ lg-068 | 许可证: GNU GPLv3  
 [fibemate.net](https://fibemate.net) | [PQC 就绪状态](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
@@ -14,7 +14,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 |------|------|------|
 | **标准 PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) — KAT、WASM、TLS 1.3 混合握手 | ✅ 生产就绪 |
 | **国密混合** | SM2/SM3/SM4 + ML-KEM — IANA #4590 应用层验证 | ✅ 双轨道上线 |
-| **前沿研究** | LookingGlass v1/v2 (群表示代数实验), VWZ 格-张量签名 (归约证明: VMQ-SPARSE→EUF-CMA, 148/148), FPGA v5 硬件防护 (WNS 9.755ns, ILA+L4 确认) | 🔬 实验分支 |
+| **前沿研究** | LookingGlass v1/v2/v2.2 (群表示代数实验; v2.2 Rust源码重建可复现性闭环, 37/37+1000/1000 KAT), VWZ 格-张量签名 (归约证明: VMQ-SPARSE→EUF-CMA, 148/148), FPGA v5 硬件防护 (WNS 9.755ns, ILA+L4 确认) | 🔬 实验分支 |
 
 ### 生产环境
 
@@ -35,7 +35,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 | **SM3 哈希** | GB/T 32905 合规 | KAT 通过 |
 | **TLS 1.3 混合** | 路径 A 已搁置 · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ | 路径 C-2 独立运行 |
 | **OPK 预密钥** | X3DH 异步握手，7/7 全绿 | 端到端闭环 |
-| **LookingGlass** | v1 DMTH 📦 (已归档) + v2 群表示代数实验 🔬 | v1 36/36 TVLA · v2 WASM 线性变换 |
+| **LookingGlass** | v1 DMTH 📦 (已归档) + v2 群表示代数实验 🔬 + v2.2 Rust源码重建 🔬 | v1 36/36 TVLA · v2/v2.2 WASM 线性变换 · v2.2 37/37 单测 + 1000/1000 KAT |
 | **VWZ 签名** | Vandermonde-Wang-Zhang 格-张量方案 (k=8, 归约证明 §6.5) | WASM 7/7 · 归约 148/148 |
 | **FPGA v5** | NTT 流水线 + LFSR PRNG + 故障保护 | Artix-7 合成通过 · WNS 9.755ns · ILA+L4 硬件验证闭环 ✅ |
 
@@ -146,7 +146,7 @@ FIBEMATE 遵循纵深防御 (defense-in-depth) 三层架构（不包含 LookingG
 | **L8** | 运行时检测器 (43/43 PASS) | 逻辑完整性 |
 | **L9** | 硬件故障保护 (FPGA v5) | 物理攻击面 |
 
-**LookingGlass (v1 DMTH 📦 已归档 + v2 群表示代数实验 🔬)**: 有限群表示克罗内克嵌套代数实验。外层为纯无损线性变换，不提升 LWE 格硬度。默认关闭，不接入生产加密链路。v1 已归档，v2 仅用于群论教学、硬件容错自检及 L8/L9 运行监测实验。
+**LookingGlass (v1 DMTH 📦 已归档 + v2 群表示代数实验 🔬 + v2.2 Rust源码重建 🔬)**: 有限群表示克罗内克嵌套代数实验。外层为纯无损线性变换，不提升 LWE 格硬度。默认关闭，不接入生产加密链路。v1 已归档；v2 仅用于群论教学、硬件容错自检及 L8/L9 运行监测实验；v2.2 为 v2 的 Rust 源码重建与可复现性闭环 (37/37 单测 + 1000/1000 KAT, 48.1KB WASM / gzip 22.2KB, 11 导出)，代数结构等同 v2.1，不引入新密码学假设、不提升 LWE 格硬度，详见 pqc-readiness.html §7.10。
 
 **VWZ**: 自研张量签名方案，保留在研究分支。不部署生产环境。
 
