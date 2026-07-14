@@ -1,7 +1,7 @@
 # FIBEMATE — Post-Quantum Cryptography Full-Stack Platform
 
-**v3.2-preview** | 2026-07-09  
-TSR: lg-001 ~ lg-058 | License: GNU GPLv3  
+**v3.3-preview** | 2026-07-14  
+TSR: lg-001 ~ lg-069 | License: GNU GPLv3  
 [fibemate.net](https://fibemate.net) | [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 ---

@@ -1,7 +1,7 @@
 # FIBEMATE — 下一代后量子密码通信协议
 
-**v3.3-preview** | 2026-07-10  
-TSR 序列: lg-001 ~ lg-068 | 许可证: GNU GPLv3  
+**v3.3-preview** | 2026-07-14  
+TSR 序列: lg-001 ~ lg-069 | 许可证: GNU GPLv3  
 [fibemate.net](https://fibemate.net) | [PQC 就绪状态](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
@@ -38,6 +38,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 | **LookingGlass** | v1 DMTH 📦 (已归档) + v2 群表示代数实验 🔬 + v2.2 Rust源码重建 🔬 | v1 36/36 TVLA · v2/v2.2 WASM 线性变换 · v2.2 37/37 单测 + 1000/1000 KAT |
 | **VWZ 签名** | Vandermonde-Wang-Zhang 格-张量方案 (k=8, 归约证明 §6.5) | WASM 7/7 · 归约 148/148 |
 | **FPGA v5** | NTT 流水线 + LFSR PRNG + 故障保护 | Artix-7 合成通过 · WNS 9.755ns · ILA+L4 硬件验证闭环 ✅ |
+| **L4 形式化验证** | TLA+ 状态机 · Path C-2 (SM2+ML-KEM-768) · 7 不变式 · 101,467 states · TLC EXIT 0 · DigiCert TSR lg-069 | ✅ 工程验证 |
 
 ---
 
