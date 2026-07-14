@@ -1,0 +1,38 @@
+﻿[
+    {
+        "path":  "E:\\fpga\\fibemate\\reports\\fibemate_fpga_v5_3.bit",
+        "sha256":  "850723CAD3DB0F3A1635D603534B404CE322A12AF32C9AF03C4D88F64295AAA7",
+        "file":  "fibemate_fpga_v5_3.bit",
+        "size":  522423
+    },
+    {
+        "path":  "E:\\fpga\\fibemate\\rtl\\ntt\\ntt_core_pipe2.v",
+        "sha256":  "0137AA8334ADECF91E63A048C7DB3730E131B714362B00A44BD2820F683D40B9",
+        "file":  "ntt_core_pipe2.v",
+        "size":  11270
+    },
+    {
+        "path":  "E:\\fpga\\fibemate\\rtl\\fibemate_fpga_top.v",
+        "sha256":  "369E80172B22ED3CDC758AB370A4D8B35E3FA0E544634590495368BB87D56F8C",
+        "file":  "fibemate_fpga_top.v",
+        "size":  16916
+    },
+    {
+        "path":  "E:\\fpga\\fibemate\\constraints\\a7lite_35t.xdc",
+        "sha256":  "49B2A565BA2965A328A5D9BE78C3C767351B9CD159CC2422D4FA6D01775269D2",
+        "file":  "a7lite_35t.xdc",
+        "size":  6089
+    },
+    {
+        "path":  "D:\\FIBEMATE\\rust\\lookingglass_v2\\src\\lib.rs",
+        "sha256":  "791A57F0AF1F2CE7B2A24BD61814A5CA8AF430714B8005C34F8B99CB23F65DCC",
+        "file":  "lib.rs",
+        "size":  11763
+    },
+    {
+        "path":  "D:\\FIBEMATE\\rust\\lookingglass_v2\\pkg\\lookingglass_v2_bg.wasm",
+        "sha256":  "149ABC8C15A46F3EB6F9096228112C8DEFCAE94B02A89BC5A9063B13FFB0B92C",
+        "file":  "lookingglass_v2_bg.wasm",
+        "size":  49674
+    }
+]

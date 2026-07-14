@@ -1,0 +1,11 @@
+{
+  "name": "fibemate-reg-server",
+  "version": "0.1.0",
+  "description": "FIBEMATE Minimal Registration Backend",
+  "main": "server.js",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

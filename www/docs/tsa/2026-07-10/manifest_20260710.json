@@ -1,0 +1,5 @@
+{
+  "date": "2026-07-10",
+  "description": "FPGA HW closure + index.html restore + v3.3-preview site update + fpga-report refresh",
+  "files": ["www/index.html", "www/docs/fpga-report.html", "README.md"]
+}

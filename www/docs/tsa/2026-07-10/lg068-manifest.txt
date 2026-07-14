@@ -1,0 +1,30 @@
+FIBEMATE Registration Backend + Mobile Skeleton — E2E Closed
+================================================================
+Date: 2026-07-10
+Services:
+  - reg-server: Node.js + WebSocket + in-memory storage
+  - Endpoint: wss://fibemate.net/reg/ws (Nginx proxy → PM2)
+  - Health: http://127.0.0.1:3083/health
+
+Test Results:
+  - wss:// endpoint: TLS WebSocket handshake OK
+  - E2E test (11/11 PASS): register, duplicate reject, OPK upload/fetch/consume, send, poll/drain
+  - PM2 managed: fibemate-reg, 16MB, restart OK
+
+Mobile Status:
+  - 59 source files, ML-KEM-768 + SM2 dual keygen
+  - OPK pool (X25519, 100 keys), SM2 E2E encryption UI
+  - Expo Web build: 907KB
+  - Skeleton closed; E2E now unblocked with reg-server
+
+Previous TSRs:
+  - lg-067b: mobile source manifest (59 files SHA256)
+  - lg-054~067: prior coverage
+
+SHA256 Manifest:
+
+--- Files ---
+2695426e9872947cc1fa382d40afaf4098c2898e76ca9d0486d22c09ab2fecda  /opt/fibemate-full/reg-server/server.js
+8cd6bc8604ad8f0b99c9c89adb56319eac247978a731031402d4c337cdaa1c23  /opt/fibemate-full/reg-server/package.json
+a49b09655af7add71f2bdf4a3b9421d911c1ecc818aca20be7e8ec6da29b0fd6  /opt/fibemate-full/reg-server/e2e-test.js
+81d9e502a686e5d0354b29cf07d038d9ecbe5db85eea376958ce9fb5d940ab1b  /opt/fibemate-full/reg-server/wss-test.js
