@@ -162,3 +162,8 @@ docs/TECH_DEBT.md
 
 # PM2 real config - DO NOT COMMIT
 ecosystem.config.js
+
+# TLA+ trace files
+docs/tla/C2_TTrace_*.bin
+docs/tla/C2_TTrace_*.tla
+docs/tla/states/
