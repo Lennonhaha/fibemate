@@ -293,7 +293,7 @@
 <tr><td>浏览器 WASM 基准</td><td>Edge WASM keygen k=8 ~2.2ms (1.02× native), k=16 ~69-78ms (1.10× native), sign/verify &lt;1ms</td><td><span style="color:var(--green);">✅ 通过</span></td><td>lg-049</td></tr>
 <tr><td>FPGA v5 硬件防护</td><td>Artix-7 A7-35T, 4 新模块合成通过: lfsr256_prng + ntt_masked_wrapper + ntt_fault_protect + hw_monitor, bitstream 618KB, 时序 MET (WNS=9.755ns)</td><td><span style="color:var(--green);">✅ 合成通过</span></td><td>lg-047</td></tr>
 <tr><td>FPGA v5 掩码接线</td><td>ntt_masked_wrapper v2 (combinational 去掩+1-cycle 重掩) + mask_ram.v (256x13-bit 双读口) + lfsr256_prng (32-bit Galois CRC-32 + rejection sampling) 已接入 ntt_core_pipe2</td><td><span style="color:var(--green);">✅ 接线完成</span></td><td>—</td></tr>
-<tr><td>REMO 第二路双蝶形实时比对</td><td>u_bf_replica (ntt_butterfly_unif) 独立输出逐拍比较, fault_type 扩展为 4-bit {bf_mismatch, parity, remo, cycle}, hw_monitor 新增 bf_mismatch_errs 寄存器</td><td><span style="color:var(--green);">✅ 已实现</span></td><td>—</td></tr>
+<tr><td>REMO 第二路双蝶形实时比对</td><td>u_bf_replica (ntt_butterfly_unif) 独立输出逐拍比较, fault_type 扩展为 4-bit {bf_mismatch, parity, remo, cycle}, hw_monitor 新增 bf_mismatch_errs 寄存器</td><td><span style="color:var(--green);">✅ 已实现</span></td><td>—</td></tr><tr><td>L4 形式化验证 (Path C-2)</td><td>TLA+ 状态机 (C2.tla): 引入 cKeyValue[i]/sKeyValue[i] 变量, 7 条不变量 (TypeOK, K1~K5, K3_StrongKeyIndependence, K3p_StrongKeyIndependence); TLC: 101,467 states / 26,115 distinct / 0 violation; 局限: lossy network 死锁绕过 (真实 TCP 重传)、K3 强形式基于 session ID 而非密码级独立采样、EasyCrypt 密码学证明未做</td><td><span style="color:var(--green);">&#10004; 7 invariants PASS</span></td><td>lg-069</td></tr>
 </tbody>
 </table>
 
