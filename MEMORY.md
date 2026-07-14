@@ -1,5 +1,10 @@
 # MEMORY.md
 
+## 2026-07-14：文档全面同步完成（v3.3-preview）
+
+### 文档一致性同步（22:00 完成）
+全站文档版本/TSR 计数/日期同步至 2026-07-14：README.md+BUILD.md+README.en.md+PROGRESS.md+index.html+pqc-readiness.html，已提交 3f328bc 并推送 GitHub。
+
 ## 2026-07-14：TLA+ K3 强形式验证完成 + git 提交归档
 
 ### L4 形式化验证 — K3 强形式（21:15 完成）
