@@ -252,7 +252,7 @@
 <!-- 7.1 -->
 <h3>7.1 研究目标</h3>
 <p><strong>LookingGlass v2.1</strong> (三层逆向壁垒, 77/77 全绿) 是基于有限群表示论的克罗内克嵌套代数实验。通过多层线性代数构造（纯逆向混淆实验），验证变换不可逆性（局部不可合并性质）。在密码学安全维度：外层线性变换为可逆复合矩阵，攻击者可整体消去，不提升 LWE/BKZ 破解难度。v2 的工程价值在于线性代数教学、硬件张量运算验证及 L8/L9 运行时异常检测实验，不具备加密防护能力。</p>
-<p><strong>VWZ</strong> 是基于范德蒙德秩-1张量结构的原创格签名构造实验。签名 36 字节 (k=8)，公钥 Rank-1 压缩 8.5 倍。Hull 攻击评估显示最优已知攻击复杂度在当前参数下超 2^2000，但安全性尚未经同行评议。研究代码部署于 /research/vwz/*，仅限内网访问，不接入生产加密路径。</p>
+<p><strong>VWZ</strong> 是基于范德蒙德秩-1张量结构的原创格签名构造实验。签名 68 字节 (k=16, NIST-1 128-bit)，公钥 Rank-1 压缩 8.5 倍。Hull 攻击评估显示最优已知攻击复杂度在当前参数下超 2^2000，但安全性尚未经同行评议。研究代码部署于 /research/vwz/*，仅限内网访问，不接入生产加密路径。</p>
 <p>两个模块均为探索性研究实验，<strong>不替代 FIPS 203/205 标准主干算法</strong>，默认关闭，不接入生产加密链路。LookingGlass v2 不提供密码安全增益，VWZ 安全性待外部评审。二者的工程价值在于线性代数/有限群表示教学、硬件张量运算验证、L8/L9 运行时异常检测及时间戳存证闭环。</p>
 
 <!-- 7.2: LookingGlass v1 -->
@@ -276,13 +276,13 @@
 
 <!-- 7.3: VWZ -->
 <h3>7.3 VWZ — 格-张量混合签名方案</h3>
-<p>VWZ（Vandermonde-Wang-Zhang）是 FIBEMATE 的独立研究子线——基于 Vandermonde 结构的格-张量混合签名方案。<strong>归约证明已完成：VMQ-SPARSE → OW-VWZ → EUF-CMA，148/148 测试通过，论文 §6.5 已合入。</strong> 核心创新：公钥稀疏 Rank-1 压缩（64.5×），签名尺寸 36B (k=8)。与 LookingGlass 的 DMTH 假设正交，VWZ 的安全性依赖于 Vandermonde 编码的纠错困难性。研究端 API 已部署（<code>/research/vwz/*</code>），仅限内网访问，不接入生产加密路径。</p>
+<p>VWZ（Vandermonde-Wang-Zhang）是 FIBEMATE 的独立研究子线——基于 Vandermonde 结构的格-张量混合签名方案。<strong>归约证明已完成：VMQ-SPARSE → OW-VWZ → EUF-CMA，148/148 测试通过，论文 §6.5 已合入。</strong> 核心创新：公钥稀疏 Rank-1 压缩（64.5×），签名尺寸 68B (k=16, NIST-1 128-bit)。与 LookingGlass 的 DMTH 假设正交，VWZ 的安全性依赖于 Vandermonde 编码的纠错困难性。研究端 API 已部署（<code>/research/vwz/*</code>），仅限内网访问，不接入生产加密路径。</p>
 
 <h4>验证清单</h4>
 <table>
 <thead><tr><th>验证项</th><th>方法</th><th>结果</th><th>存证</th></tr></thead>
 <tbody>
-<tr><td>Hash-and-Sign 原型</td><td>Python 参考实现, k=8 公钥 468B/签名 36B, k=16 公钥 1.7KB/签名 68B, k=32 公钥 6.3KB/签名 132B</td><td><span style="color:var(--green);">6/6 全绿</span></td><td>lg-039</td></tr>
+<tr><td>Hash-and-Sign 原型</td><td>Python 参考实现, k=16 公钥 1.7KB/签名 68B (NIST-1 primary), k=32 公钥 6.3KB/签名 132B</td><td><span style="color:var(--green);">6/6 全绿</span></td><td>lg-039</td></tr>
 <tr><td>VWZ 常数表预计算</td><td>Vandermonde 全局常数表 (k=2/4/8/16/32), k=32 崩溃修复 (col3 平方碰撞, safe_alphas() 拒绝 ± 对)</td><td><span style="color:var(--green);">14/14 全绿</span></td><td>lg-039</td></tr>
 <tr><td>Rust/WASM 双轨实现</td><td>constants.rs 345行 + structured.rs 128行, cargo test 29/29, wasm-pack build 96.9KB (gzip ~46KB)</td><td><span style="color:var(--green);">✅ 编译通过</span></td><td>lg-039</td></tr>
 <tr><td>Rank-1 稀疏压缩 (Rust/WASM)</td><td>Rust 原型 7/7 PASS, k=16 压缩 8.5× (19,074B→2,244B), wasm-pack 编译通过 (96.9KB / ~46KB gzip)</td><td><span style="color:var(--green);">✅ 7/7 全绿</span></td><td>lg-049</td></tr>

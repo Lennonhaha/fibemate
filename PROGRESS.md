@@ -16,7 +16,7 @@
 | SM2 国密 | ✅ | v1.3 wNAF+Comb 性能升级 / TVLA 10/10 / SM2-SM4 Hybrid 10/10 |
 | PQC 混合握手 | ⏳ | 路径 C-2 E2E 5/5 验证通过 / TLS Record 层仍为经典 ECDHE / oqs-provider 编译链就绪 |
 | LookingGlass v1/v2 | 🔬 | v1 已归档 / v2 定位修正为群表示代数实验+逆向混淆工具 / 默认关闭 / lg-001~041 存证 |
-| VWZ 签名 | 🔬 | Rust WASM 7/7 / k=8 / 安全性待同行评议 / 默认关闭 |
+| VWZ 签名 | 🔬 | Rust WASM 7/7 / k=16 (NIST-1) / 安全性待同行评议 / 默认关闭 |
 | FPGA 硬件加速 | ⏳ | v5.3 合成+烧录通过 (WNS=8.14ns) / pipe2 256/256 零误差 / UART 物理层待 CP2102 替换 |
 | 官网 & 文档 | ✅ | 全站合规修正完成 / 路径 A 搁置标注 / LG 安全宣称全量剥离 / TSR 69 一致 |
 | 后端服务 | ✅ | systemd 托管 / Nginx 反向代理 / 全线上 |
@@ -82,7 +82,7 @@
 - [x] LookingGlass DMTH：36/36 TVLA 全绿, d=2~3, 默认关闭
 - [x] DMH→DMTH 术语修正 + 安全结论修正 (dmh→dmth-correction.md)
 - [x] LookingGlass v2 (等变 LWE wreath 递归): 代数层面闭环, WASM 编译 6/6
-- [x] VWZ Hash-and-Sign：Rust WASM 23/23 全绿, k=8
+- [x] VWZ Hash-and-Sign：Rust WASM 23/23 全绿, k=16 (NIST-1)
 - [x] VWZ Rank-1 公钥压缩：Rust WASM 7/7, 8.5× 压缩
 - [x] Hull 攻击评估：Õ(q¹³⁰) ≥ 2²⁰⁸⁰ 不可行
 - [x] BKZ 安全估计 ≥128-bit
