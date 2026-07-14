@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 /* ============================================================
- * LG v3.0 娣锋穯寮曟搸锛圕 瀹炵幇锛夆€?鍖归厤 Python lgv2_nonlinear.py
+ * LG v2.1/v2.2 娣锋穯寮曟搸锛圕 瀹炵幇锛夆€?鍖归厤 Python lgv2_nonlinear.py
  *
  * 姣忓眰瀵规暣涓?chunk 鎵ц锛歑OR(off1) 鈫?缃崲(Fisher-Yates) 鈫?XOR(off2) 鈫?SBOX
  * 杈撳叆 鈮?BLOCK_SIZE锛氱洿鎺ュ叏 7 灞? * 杈撳叆 > BLOCK_SIZE锛氭寜 BLOCK_SIZE 鍒嗗潡锛屾瘡鍧楃嫭绔嬫贩娣? * off1/off2 涓?64-bit 绉嶅瓙锛屾瘡灞傚姩鎬佸睍寮€涓?chunk_size 瀛楄妭

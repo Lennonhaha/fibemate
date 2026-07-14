@@ -9,7 +9,7 @@ extern "C" {
 #endif
 
 /*
- * LG v3.0 混淆引擎（C 头文件）
+ * LG v2.1/v2.2 混淆引擎（C 头文件）
  *
  * 7 层全块 Fisher-Yates 置换 + XOR offsets + AES S-box 非线性
  * 匹配 Python lgv2_nonlinear.py 参考实现

@@ -1,11 +1,11 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 """
-LG v2.1 -> v3.0 非线性版验证
+LG v2.1 -> v2.2 闈炵嚎鎬х増楠岃瘉
 =============================
-七层线性群表示之间插入 AES S-box 非线性层。
-每层对整个输入进行操作（置换 + XOR）。
-结构:  L1 -> SBOX -> L2 -> SBOX -> ... -> L7 -> SBOX
-逆序:  SBOX_INV -> L7_INV -> ... -> SBOX_INV -> L1_INV
+涓冨眰绾挎€х兢琛ㄧず涔嬮棿鎻掑叆 AES S-box 闈炵嚎鎬у眰銆?
+姣忓眰瀵规暣涓緭鍏ヨ繘琛屾搷浣滐紙缃崲 + XOR锛夈€?
+缁撴瀯:  L1 -> SBOX -> L2 -> SBOX -> ... -> L7 -> SBOX
+閫嗗簭:  SBOX_INV -> L7_INV -> ... -> SBOX_INV -> L1_INV
 """
 
 import sys
@@ -128,7 +128,7 @@ def invert_permutation(perm: list) -> list:
 
 
 class LGV2Nonlinear:
-    """LG v2.1 v3.0 Nonlinear Confusion Engine
+    """LG v2.1/v2.2 Nonlinear Confusion Engine
     
     Simple implementation: each layer applies a permutation and XOR offset
     to the ENTIRE input. Layers are chained, with S-box between each.
@@ -312,7 +312,7 @@ def test_seed_sensitivity() -> bool:
 
 def main():
     print("=" * 50)
-    print("LG v2.1 -> v3.0 Nonlinear Validation")
+    print("LG v2.1 -> v2.2 Nonlinear Validation")
     print("=" * 50)
     print()
 

@@ -1,7 +1,7 @@
-//-----------------------------------------------------------------------------
-// nonlinear_layer.v — LG v2.1 v3.0 非线性层
-// 功能：LFSR + S-box 混合非线性变换
-// 8-bit 数据通路，可综合，无行为级构造
+﻿//-----------------------------------------------------------------------------
+// nonlinear_layer.v 鈥?LG v2.1/v2.2 闈炵嚎鎬у眰
+// 鍔熻兘锛歀FSR + S-box 娣峰悎闈炵嚎鎬у彉鎹?
+// 8-bit 鏁版嵁閫氳矾锛屽彲缁煎悎锛屾棤琛屼负绾ф瀯閫?
 //-----------------------------------------------------------------------------
 
 module nonlinear_layer (
@@ -12,16 +12,16 @@ module nonlinear_layer (
     input  wire [63:0] seed,
     input  wire        valid_in,
     output reg         valid_out,
-    input  wire        bypass_linear   // 1: 直通线性路径, 0: 经过 S-box
+    input  wire        bypass_linear   // 1: 鐩撮€氱嚎鎬ц矾寰? 0: 缁忚繃 S-box
 );
 
 //=============================================================================
-// 参数定义
+// 鍙傛暟瀹氫箟
 //=============================================================================
 localparam PIPELINE_STAGES = 3;
 
 //=============================================================================
-// 内部信号
+// 鍐呴儴淇″彿
 //=============================================================================
 reg [7:0]  sbox_out;
 reg [7:0]  lfsr_state;
@@ -31,7 +31,7 @@ reg [7:0]  pipeline_data [0:PIPELINE_STAGES-1];
 reg        pipeline_valid [0:PIPELINE_STAGES-1];
 reg [2:0]  stage_idx;
 
-// LFSR 用于从 seed 生成 S-box 选择偏移
+// LFSR 鐢ㄤ簬浠?seed 鐢熸垚 S-box 閫夋嫨鍋忕Щ
 reg [15:0] lfsr_16bit;
 wire [7:0] lfsr_derived_offset;
 
@@ -41,7 +41,7 @@ wire [7:0] lfsr_derived_offset;
 reg [7:0] sbox_lookup [0:255];
 
 initial begin
-    // AES 标准 S-box
+    // AES 鏍囧噯 S-box
     sbox_lookup[0]   = 8'h63; sbox_lookup[1]   = 8'h7c; sbox_lookup[2]   = 8'h77; sbox_lookup[3]   = 8'h7b;
     sbox_lookup[4]   = 8'hf2; sbox_lookup[5]   = 8'h6b; sbox_lookup[6]   = 8'h6f; sbox_lookup[7]   = 8'hc5;
     sbox_lookup[8]   = 8'h30; sbox_lookup[9]   = 8'h01; sbox_lookup[10]  = 8'h67; sbox_lookup[11]  = 8'h2b;
@@ -109,14 +109,14 @@ initial begin
 end
 
 //=============================================================================
-// LFSR 初始化与更新
-// 从 seed 中提取初始状态，每个周期推进 LFSR
+// LFSR 鍒濆鍖栦笌鏇存柊
+// 浠?seed 涓彁鍙栧垵濮嬬姸鎬侊紝姣忎釜鍛ㄦ湡鎺ㄨ繘 LFSR
 //=============================================================================
 assign lfsr_derived_offset = lfsr_16bit[7:0];
 
 always @(posedge clk or negedge rst_n) begin
     if (!rst_n) begin
-        // 从 seed 初始化 LFSR
+        // 浠?seed 鍒濆鍖?LFSR
         lfsr_16bit <= seed[15:0];
         offset_reg <= seed[23:16];
     end else begin
@@ -141,17 +141,17 @@ always @(posedge clk or negedge rst_n) begin
 end
 
 //=============================================================================
-// S-box 组合逻辑查找
+// S-box 缁勫悎閫昏緫鏌ユ壘
 //=============================================================================
 always @(*) begin
     sbox_out = sbox_lookup[data_in];
 end
 
 //=============================================================================
-// 流水线处理
-// Stage 0: S-box 查找
+// 娴佹按绾垮鐞?
+// Stage 0: S-box 鏌ユ壘
 // Stage 1: XOR offset
-// Stage 2: 输出 MUX
+// Stage 2: 杈撳嚭 MUX
 //=============================================================================
 integer i;
 
@@ -164,7 +164,7 @@ always @(posedge clk or negedge rst_n) begin
         valid_out <= 1'b0;
         data_out  <= 8'h00;
     end else begin
-        // Stage 0: S-box 查找
+        // Stage 0: S-box 鏌ユ壘
         pipeline_data[0]  <= sbox_out;
         pipeline_valid[0] <= valid_in;
         
@@ -172,15 +172,15 @@ always @(posedge clk or negedge rst_n) begin
         pipeline_data[1]  <= pipeline_data[0] ^ lfsr_derived_offset;
         pipeline_valid[1] <= pipeline_valid[0];
         
-        // Stage 2: 输出 MUX (线性/非线性选择)
+        // Stage 2: 杈撳嚭 MUX (绾挎€?闈炵嚎鎬ч€夋嫨)
         if (bypass_linear) begin
-            pipeline_data[2]  <= data_in;  // 直通模式
+            pipeline_data[2]  <= data_in;  // 鐩撮€氭ā寮?
         end else begin
-            pipeline_data[2]  <= pipeline_data[1];  // 经过 S-box
+            pipeline_data[2]  <= pipeline_data[1];  // 缁忚繃 S-box
         end
         pipeline_valid[2] <= pipeline_valid[1];
         
-        // 输出寄存
+        // 杈撳嚭瀵勫瓨
         data_out  <= pipeline_data[2];
         valid_out <= pipeline_valid[2];
     end

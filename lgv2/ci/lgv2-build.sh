@@ -1,6 +1,6 @@
-#!/bin/bash
-# LG v2.1 → v3.0 统一构建脚本
-# 用法: ./lgv2-build.sh [c|rust|wasm|all]
+﻿#!/bin/bash
+# LG v2.1/v2.2 缁熶竴鏋勫缓鑴氭湰
+# 鐢ㄦ硶: ./lgv2-build.sh [c|rust|wasm|all]
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
@@ -8,12 +8,12 @@ BUILD_LOG="$ROOT_DIR/ci/build.log"
 PASS=0
 FAIL=0
 
-ok()   { PASS=$((PASS+1)); echo "  ✅ $1"; }
-fail() { FAIL=$((FAIL+1)); echo "  ❌ $1"; }
+ok()   { PASS=$((PASS+1)); echo "  鉁?$1"; }
+fail() { FAIL=$((FAIL+1)); echo "  鉂?$1"; }
 
 mkdir -p "$(dirname "$BUILD_LOG")"
 
-echo "=== LG v2.1 → v3.0 Build ===" | tee "$BUILD_LOG"
+echo "=== LG v2.1/v2.2 Build ===" | tee "$BUILD_LOG"
 echo "Root: $ROOT_DIR" | tee -a "$BUILD_LOG"
 echo "" | tee -a "$BUILD_LOG"
 

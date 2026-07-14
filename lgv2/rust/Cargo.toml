@@ -1,8 +1,8 @@
-[package]
+﻿[package]
 name = "lgv2"
-version = "3.0.0"
+version = "2.2.0"
 edition = "2021"
-description = "LG v2.1 鈫?v3.0 7-layer irreducible group representation confusion engine"
+description = "LG v2.1/v2.2 7-layer irreducible group representation confusion engine"
 
 [lib]
 path = "lib.rs"
@@ -16,4 +16,3 @@ getrandom = { version = "0.2", features = ["js"] }
 opt-level = 3
 lto = true
 codegen-units = 1
-

@@ -1,6 +1,6 @@
 use wasm_bindgen::prelude::*;
 
-/// LG v3.0 混淆引擎 (Rust/C/WASM)
+/// LG v2.1/v2.2 混淆引擎 (Rust/C/WASM)
 /// 匹配 Python lgv2_nonlinear.py 参考实现：
 ///   - 输入 ≤ BLOCK_SIZE：直接对原始长度执行全 7 层
 ///   - 输入 > BLOCK_SIZE：分割为 BLOCK_SIZE 块，每块独立混淆
