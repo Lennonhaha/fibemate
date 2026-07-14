@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>常见问题 — FIBEMATE</title>
+<title>甯歌闂 鈥?FIBEMATE</title>
 <style>
   :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e; --accent:#00E5C3; --amber:#f59e0b; --red:#f87171; --green:#22c55e; }
   * { box-sizing:border-box; margin:0; padding:0; }
@@ -38,177 +38,177 @@
 <body>
 <div class="container">
 <header>
-  <h1>❓ FIBEMATE 常见问题</h1>
-  <p class="meta">更新于 <strong>2026-06-25</strong> · <a href="/">← 返回首页</a></p>
+  <h1>鉂?FIBEMATE 甯歌闂</h1>
+  <p class="meta">鏇存柊浜?<strong>2026-06-25</strong> 路 <a href="/">鈫?杩斿洖棣栭〉</a></p>
 </header>
 
-<h2>基础</h2>
+<h2>鍩虹</h2>
 
-<h3>Q1: FIBEMATE 是什么？</h3>
-<p>一个<strong>端到端加密即时通讯技术研究项目</strong>，核心技术特点：</p>
+<h3>Q1: FIBEMATE 鏄粈涔堬紵</h3>
+<p>涓€涓?strong>绔埌绔姞瀵嗗嵆鏃堕€氳鎶€鏈爺绌堕」鐩?/strong>锛屾牳蹇冩妧鏈壒鐐癸細</p>
 <ul>
-  <li><strong>后量子密码学</strong>：ML-KEM-768（FIPS 203 标准）抵抗量子计算机攻击</li>
-  <li><strong>Double Ratchet</strong>：每条消息独立密钥，历史消息不可回溯解密</li>
-  <li><strong>国密支持</strong>：SM2/SM3/SM4 全套国密算法，TVLA 侧信道全通过</li>
-  <li><strong>桌面优先</strong>：Tauri v2 跨平台桌面应用（Windows/macOS/Linux）</li>
+  <li><strong>鍚庨噺瀛愬瘑鐮佸</strong>锛歁L-KEM-768锛團IPS 203 鏍囧噯锛夋姷鎶楅噺瀛愯绠楁満鏀诲嚮</li>
+  <li><strong>Double Ratchet</strong>锛氭瘡鏉℃秷鎭嫭绔嬪瘑閽ワ紝鍘嗗彶娑堟伅涓嶅彲鍥炴函瑙ｅ瘑</li>
+  <li><strong>鍥藉瘑鏀寔</strong>锛歋M2/SM3/SM4 鍏ㄥ鍥藉瘑绠楁硶锛孴VLA 渚т俊閬撳叏閫氳繃</li>
+  <li><strong>妗岄潰浼樺厛</strong>锛歍auri v2 璺ㄥ钩鍙版闈㈠簲鐢紙Windows/macOS/Linux锛?/li>
 </ul>
 
-<h3>Q2: 和 Signal / WhatsApp 有什么区别？</h3>
+<h3>Q2: 鍜?Signal / WhatsApp 鏈変粈涔堝尯鍒紵</h3>
 <table>
-<tr><th>维度</th><th>Signal</th><th>FIBEMATE</th></tr>
-<tr><td>密钥封装</td><td>ECDH (X25519)</td><td><strong>ML-KEM-768</strong> (后量子)</td></tr>
-<tr><td>量子安全</td><td>❌ 不抵抗</td><td>✅ 抵抗</td></tr>
-<tr><td>国密支持</td><td>❌</td><td>✅ SM2/SM3/SM4</td></tr>
-<tr><td>侧信道审计</td><td>部分</td><td><strong>TVLA 10k+ 全通过</strong></td></tr>
+<tr><th>缁村害</th><th>Signal</th><th>FIBEMATE</th></tr>
+<tr><td>瀵嗛挜灏佽</td><td>ECDH (X25519)</td><td><strong>ML-KEM-768</strong> (鍚庨噺瀛?</td></tr>
+<tr><td>閲忓瓙瀹夊叏</td><td>鉂?涓嶆姷鎶?/td><td>鉁?鎶垫姉</td></tr>
+<tr><td>鍥藉瘑鏀寔</td><td>鉂?/td><td>鉁?SM2/SM3/SM4</td></tr>
+<tr><td>渚т俊閬撳璁?/td><td>閮ㄥ垎</td><td><strong>TVLA 10k+ 鍏ㄩ€氳繃</strong></td></tr>
 </table>
-<p>Signal 使用经典的 X25519 ECDH，在量子计算机下不保证安全。FIBEMATE 的 ML-KEM-768 基于格密码（Kyber），理论上抵抗 Shor 算法。</p>
+<p>Signal 浣跨敤缁忓吀鐨?X25519 ECDH锛屽湪閲忓瓙璁＄畻鏈轰笅涓嶄繚璇佸畨鍏ㄣ€侳IBEMATE 鐨?ML-KEM-768 鍩轰簬鏍煎瘑鐮侊紙Kyber锛夛紝鐞嗚涓婃姷鎶?Shor 绠楁硶銆?/p>
 
-<h2>密码学</h2>
+<h2>瀵嗙爜瀛?/h2>
 
-<h3>Q3: 私钥存在哪里？会被盗吗？</h3>
-<p><strong>私钥不落盘</strong>。ML-KEM-768 私钥始终存在于 WebView 内存，不写入 <code>localStorage</code>、文件系统或服务器。</p>
-<p>ECDH 身份密钥存储在 IndexedDB，但标记为 <strong><code>extractable: false</code></strong>（WebCrypto non-extractable），无法导出原始密钥材料。攻击者即使获得文件系统访问权，也无法提取私钥。</p>
+<h3>Q3: 绉侀挜瀛樺湪鍝噷锛熶細琚洍鍚楋紵</h3>
+<p><strong>绉侀挜涓嶈惤鐩?/strong>銆侻L-KEM-768 绉侀挜濮嬬粓瀛樺湪浜?WebView 鍐呭瓨锛屼笉鍐欏叆 <code>localStorage</code>銆佹枃浠剁郴缁熸垨鏈嶅姟鍣ㄣ€?/p>
+<p>ECDH 韬唤瀵嗛挜瀛樺偍鍦?IndexedDB锛屼絾鏍囪涓?<strong><code>extractable: false</code></strong>锛圵ebCrypto non-extractable锛夛紝鏃犳硶瀵煎嚭鍘熷瀵嗛挜鏉愭枡銆傛敾鍑昏€呭嵆浣胯幏寰楁枃浠剁郴缁熻闂潈锛屼篃鏃犳硶鎻愬彇绉侀挜銆?/p>
 
-<h3>Q4: ML-KEM-768 安全吗？NIST 批准了吗？</h3>
-<p>ML-KEM-768 基于 <strong>Kyber-768</strong>，NIST 于 2024 年 8 月正式标准化为 <strong>FIPS 203</strong>。它是：</p>
+<h3>Q4: ML-KEM-768 瀹夊叏鍚楋紵NIST 鎵瑰噯浜嗗悧锛?/h3>
+<p>ML-KEM-768 鍩轰簬 <strong>Kyber-768</strong>锛孨IST 浜?2024 骞?8 鏈堟寮忔爣鍑嗗寲涓?<strong>FIPS 203</strong>銆傚畠鏄細</p>
 <ul>
-  <li>NIST 安全等级 3（等效于 AES-192）</li>
-  <li>全球首个标准化后量子 KEM</li>
-  <li>算法本身已被 NSA、BSI、ANSSI 等机构采纳或推荐使用（注：被认可的为 NIST FIPS 203 标准算法，非本项目的具体实现）</li>
+  <li>NIST 瀹夊叏绛夌骇 3锛堢瓑鏁堜簬 AES-192锛?/li>
+  <li>鍏ㄧ悆棣栦釜鏍囧噯鍖栧悗閲忓瓙 KEM</li>
+  <li>绠楁硶鏈韩宸茶 NSA銆丅SI銆丄NSSI 绛夋満鏋勯噰绾虫垨鎺ㄨ崘浣跨敤锛堟敞锛氳璁ゅ彲鐨勪负 NIST FIPS 203 鏍囧噯绠楁硶锛岄潪鏈」鐩殑鍏蜂綋瀹炵幇锛?/li>
 </ul>
-<p>FIBEMATE 的实现通过了 <strong>KAT 10,000/10,000</strong>（已知答案测试）和 <strong>TVLA 10,000</strong>（侧信道验证）。</p>
+<p>FIBEMATE 鐨勫疄鐜伴€氳繃浜?<strong>KAT 10,000/10,000</strong>锛堝凡鐭ョ瓟妗堟祴璇曪級鍜?<strong>TVLA 10,000</strong>锛堜晶淇￠亾楠岃瘉锛夈€?/p>
 
-<h3>Q5: Double Ratchet 是什么？为什么需要它？</h3>
-<p>Double Ratchet 是 Signal 协议的核心机制，确保：</p>
+<h3>Q5: Double Ratchet 鏄粈涔堬紵涓轰粈涔堥渶瑕佸畠锛?/h3>
+<p>Double Ratchet 鏄?Signal 鍗忚鐨勬牳蹇冩満鍒讹紝纭繚锛?/p>
 <ol>
-  <li><strong>Forward Secrecy（前向安全）</strong>：即使长期密钥泄露，历史消息仍无法解密</li>
-  <li><strong>Post-Compromise Security（后泄露安全）</strong>：攻击者停止窃听后，未来消息自动恢复安全</li>
-  <li><strong>每条消息独立密钥</strong>：不存在"主密钥"，单条密钥泄露不影响其他消息</li>
+  <li><strong>Forward Secrecy锛堝墠鍚戝畨鍏級</strong>锛氬嵆浣块暱鏈熷瘑閽ユ硠闇诧紝鍘嗗彶娑堟伅浠嶆棤娉曡В瀵?/li>
+  <li><strong>Post-Compromise Security锛堝悗娉勯湶瀹夊叏锛?/strong>锛氭敾鍑昏€呭仠姝㈢獌鍚悗锛屾湭鏉ユ秷鎭嚜鍔ㄦ仮澶嶅畨鍏?/li>
+  <li><strong>姣忔潯娑堟伅鐙珛瀵嗛挜</strong>锛氫笉瀛樺湪"涓诲瘑閽?锛屽崟鏉″瘑閽ユ硠闇蹭笉褰卞搷鍏朵粬娑堟伅</li>
 </ol>
-<p>FIBEMATE 将 ML-KEM-768 作为 Ratchet 的初始密钥交换（替代 X3DH），后续消息使用 Double Ratchet 轮转。</p>
+<p>FIBEMATE 灏?ML-KEM-768 浣滀负 Ratchet 鐨勫垵濮嬪瘑閽ヤ氦鎹紙鏇夸唬 X3DH锛夛紝鍚庣画娑堟伅浣跨敤 Double Ratchet 杞浆銆?/p>
 
-<h3>Q6: 什么是 TVLA？结果怎么看？</h3>
-<p>TVLA（Test Vector Leakage Assessment）是侧信道安全的标准评估方法（Goodwill et al. 2011, NIST NIAT Workshop）。用 Welch's t-test 检测密码学操作是否泄漏密钥信息：</p>
+<h3>Q6: 浠€涔堟槸 TVLA锛熺粨鏋滄€庝箞鐪嬶紵</h3>
+<p>TVLA锛圱est Vector Leakage Assessment锛夋槸渚т俊閬撳畨鍏ㄧ殑鏍囧噯璇勪及鏂规硶锛圙oodwill et al. 2011, NIST NIAT Workshop锛夈€傜敤 Welch's t-test 妫€娴嬪瘑鐮佸鎿嶄綔鏄惁娉勬紡瀵嗛挜淇℃伅锛?/p>
 <ul>
-  <li><strong>|t| &lt; 4.5</strong>：无统计显著泄漏（通过 ✅）</li>
-  <li><strong>|t| ≥ 4.5</strong>：存在侧信道泄漏（不通过 ⚠️）</li>
+  <li><strong>|t| &lt; 4.5</strong>锛氭棤缁熻鏄捐憲娉勬紡锛堥€氳繃 鉁咃級</li>
+  <li><strong>|t| 鈮?4.5</strong>锛氬瓨鍦ㄤ晶淇￠亾娉勬紡锛堜笉閫氳繃 鈿狅笍锛?/li>
 </ul>
-<p>FIBEMATE SM2 实现经过 3 轮 TVLA 测试：</p>
+<p>FIBEMATE SM2 瀹炵幇缁忚繃 3 杞?TVLA 娴嬭瘯锛?/p>
 <table>
-<tr><th>版本</th><th>N</th><th>结果</th><th>关键改进</th></tr>
-<tr><td>v1.0 wNAF</td><td>2,000</td><td>10/10 ✓</td><td>基线实现</td></tr>
-<tr><td>v1.2 Masked</td><td>5,000</td><td>5/5 ✓</td><td>Scalar Masking + Projective Randomization</td></tr>
-<tr><td>v1.3 Montgomery</td><td>5,000</td><td><strong>7/7 ✓</strong></td><td>Montgomery Ladder 恒定时间点乘</td></tr>
-<tr><td>高阶 TVLA</td><td>5,000</td><td><strong>20/20 ✓</strong></td><td>1–4 阶矩全通过</td></tr>
+<tr><th>鐗堟湰</th><th>N</th><th>缁撴灉</th><th>鍏抽敭鏀硅繘</th></tr>
+<tr><td>v1.0 wNAF</td><td>2,000</td><td>10/10 鉁?/td><td>鍩虹嚎瀹炵幇</td></tr>
+<tr><td>v1.2 Masked</td><td>5,000</td><td>5/5 鉁?/td><td>Scalar Masking + Projective Randomization</td></tr>
+<tr><td>v1.3 Montgomery</td><td>5,000</td><td><strong>7/7 鉁?/strong></td><td>Montgomery Ladder 鎭掑畾鏃堕棿鐐逛箻</td></tr>
+<tr><td>楂橀樁 TVLA</td><td>5,000</td><td><strong>20/20 鉁?/strong></td><td>1鈥? 闃剁煩鍏ㄩ€氳繃</td></tr>
 </table>
-<p>完整报告：<a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 侧信道分析</a></p>
+<p>瀹屾暣鎶ュ憡锛?a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 渚т俊閬撳垎鏋?/a></p>
 
 <div class="note">
-  <strong>⚠️ 重要说明</strong>：TVLA 验证的是时序侧信道泄露（Timing Side-Channel），是密码工程的安全基线，但<strong>不等于</strong>形式化安全证明。TVLA 通过不表示实现能抵抗物理/电磁/故障注入等主动攻击。攻击论文（如模板攻击、格攻击、故障注入）研究的攻击方法与 TVLA 验证的是不同威胁模型，不应混为一谈。
+  <strong>鈿狅笍 閲嶈璇存槑</strong>锛歍VLA 楠岃瘉鐨勬槸鏃跺簭渚т俊閬撴硠闇诧紙Timing Side-Channel锛夛紝鏄瘑鐮佸伐绋嬬殑瀹夊叏鍩虹嚎锛屼絾<strong>涓嶇瓑浜?/strong>褰㈠紡鍖栧畨鍏ㄨ瘉鏄庛€俆VLA 閫氳繃涓嶈〃绀哄疄鐜拌兘鎶垫姉鐗╃悊/鐢电/鏁呴殰娉ㄥ叆绛変富鍔ㄦ敾鍑汇€傛敾鍑昏鏂囷紙濡傛ā鏉挎敾鍑汇€佹牸鏀诲嚮銆佹晠闅滄敞鍏ワ級鐮旂┒鐨勬敾鍑绘柟娉曚笌 TVLA 楠岃瘉鐨勬槸涓嶅悓濞佽儊妯″瀷锛屼笉搴旀贩涓轰竴璋堛€?
 </div>
 
-<h2>开发</h2>
+<h2>寮€鍙?/h2>
 
-<h3>Q7: 为什么不用 Electron，选 Tauri？</h3>
+<h3>Q7: 涓轰粈涔堜笉鐢?Electron锛岄€?Tauri锛?/h3>
 <table>
-<tr><th>维度</th><th>Electron</th><th>Tauri v2</th></tr>
-<tr><td>打包体积</td><td>~150 MB</td><td><strong>~10 MB</strong></td></tr>
-<tr><td>内存占用</td><td>~300 MB</td><td><strong>~50 MB</strong></td></tr>
-<tr><td>后端语言</td><td>Node.js</td><td><strong>Rust</strong> (零成本抽象)</td></tr>
-<tr><td>原生性能</td><td>JS 引擎</td><td>Rust 原生编译</td></tr>
-<tr><td>WebView</td><td>Chromium 内嵌</td><td>系统 WebView（Edge/WebKit）</td></tr>
+<tr><th>缁村害</th><th>Electron</th><th>Tauri v2</th></tr>
+<tr><td>鎵撳寘浣撶Н</td><td>~150 MB</td><td><strong>~10 MB</strong></td></tr>
+<tr><td>鍐呭瓨鍗犵敤</td><td>~300 MB</td><td><strong>~50 MB</strong></td></tr>
+<tr><td>鍚庣璇█</td><td>Node.js</td><td><strong>Rust</strong> (闆舵垚鏈娊璞?</td></tr>
+<tr><td>鍘熺敓鎬ц兘</td><td>JS 寮曟搸</td><td>Rust 鍘熺敓缂栬瘧</td></tr>
+<tr><td>WebView</td><td>Chromium 鍐呭祵</td><td>绯荤粺 WebView锛圗dge/WebKit锛?/td></tr>
 </table>
-<p>Tauri 用 Rust 写后端、系统 WebView 做前端，体积小 15 倍，内存省 6 倍，且 Rust 的密码学实现更安全（无 GC 时序、确定性内存管理）。</p>
+<p>Tauri 鐢?Rust 鍐欏悗绔€佺郴缁?WebView 鍋氬墠绔紝浣撶Н灏?15 鍊嶏紝鍐呭瓨鐪?6 鍊嶏紝涓?Rust 鐨勫瘑鐮佸瀹炵幇鏇村畨鍏紙鏃?GC 鏃跺簭銆佺‘瀹氭€у唴瀛樼鐞嗭級銆?/p>
 
-<h3>Q8: 怎么能看到我的代码在做什么？</h3>
-<p>打开 DevTools：</p>
+<h3>Q8: 鎬庝箞鑳界湅鍒版垜鐨勪唬鐮佸湪鍋氫粈涔堬紵</h3>
+<p>鎵撳紑 DevTools锛?/p>
 <ol>
-  <li>右键 FIBEMATE 窗口 → <strong>Inspect</strong>（或 F12）</li>
-  <li>Console 中运行 <code>window.MLKEM768.keygen()</code> 等测试命令</li>
-  <li>Network 标签可查看 WebSocket 连接</li>
+  <li>鍙抽敭 FIBEMATE 绐楀彛 鈫?<strong>Inspect</strong>锛堟垨 F12锛?/li>
+  <li>Console 涓繍琛?<code>window.MLKEM768.keygen()</code> 绛夋祴璇曞懡浠?/li>
+  <li>Network 鏍囩鍙煡鐪?WebSocket 杩炴帴</li>
 </ol>
 
-<h3>Q9: 怎么验证构建是否安全？</h3>
-<pre># 1. 运行全部测试
+<h3>Q9: 鎬庝箞楠岃瘉鏋勫缓鏄惁瀹夊叏锛?/h3>
+<pre># 1. 杩愯鍏ㄩ儴娴嬭瘯
 cargo test
 
-# 2. 运行 KAT（已知答案测试）
+# 2. 杩愯 KAT锛堝凡鐭ョ瓟妗堟祴璇曪級
 node scripts/kat-check.js
 
-# 3. 运行 TVLA 快速检查（N=100）
+# 3. 杩愯 TVLA 蹇€熸鏌ワ紙N=100锛?
 node scripts/tvla-quick-check.js --n=100
 
-# 4. 验证构建完整性
+# 4. 楠岃瘉鏋勫缓瀹屾暣鎬?
 sha256sum src-tauri/target/release/fibemate-tauri.exe</pre>
 
-<h2>部署 &amp; 运维</h2>
+<h2>閮ㄧ讲 &amp; 杩愮淮</h2>
 
-<h3>Q10: FIBEMATE 可以自部署吗？</h3>
-<p>可以。计划于 2026.08.31 以 GPLv3 开源：</p>
+<h3>Q10: FIBEMATE 鍙互鑷儴缃插悧锛?/h3>
+<p>鍙互銆傝鍒掍簬 2026.08.31 浠?GPLv3 寮€婧愶細</p>
 <ol>
-  <li>部署自己的信令服务器（<code>backend/</code> 目录）</li>
-  <li>修改 CSP 配置指向你的域名</li>
-  <li>打包自定义应用</li>
+  <li>閮ㄧ讲鑷繁鐨勪俊浠ゆ湇鍔″櫒锛?code>backend/</code> 鐩綍锛?/li>
+  <li>淇敼 CSP 閰嶇疆鎸囧悜浣犵殑鍩熷悕</li>
+  <li>鎵撳寘鑷畾涔夊簲鐢?/li>
 </ol>
-<p>后端基于 Node.js + Express + WebSocket，轻量部署在 1 核 1G 服务器即可。</p>
+<p>鍚庣鍩轰簬 Node.js + Express + WebSocket锛岃交閲忛儴缃插湪 1 鏍?1G 鏈嶅姟鍣ㄥ嵆鍙€?/p>
 
-<h3>Q11: 时间戳存证是什么？</h3>
-<p>FIBEMATE 所有关键文档（TVLA 报告、验证报告、技术文档）通过 <strong>FreeTSA RFC 3161 + DigiCert 双源时间戳</strong> 存证。这提供了：</p>
+<h3>Q11: 鏃堕棿鎴冲瓨璇佹槸浠€涔堬紵</h3>
+<p>FIBEMATE 鎵€鏈夊叧閿枃妗ｏ紙TVLA 鎶ュ憡銆侀獙璇佹姤鍛娿€佹妧鏈枃妗ｏ級閫氳繃 <strong>FreeTSA RFC 3161 + DigiCert 鍙屾簮鏃堕棿鎴?/strong> 瀛樿瘉銆傝繖鎻愪緵浜嗭細</p>
 <ul>
-  <li><strong>不可篡改性</strong>：任何修改都会破坏时间戳签名</li>
-  <li><strong>时间证明</strong>：第三方证明文档在某个时间点已存在</li>
-  <li><strong>审计追溯</strong>：完整证据链（TECHNICAL-VERIFICATION.md → .tsr 时间戳文件）</li>
+  <li><strong>涓嶅彲绡℃敼鎬?/strong>锛氫换浣曚慨鏀归兘浼氱牬鍧忔椂闂存埑绛惧悕</li>
+  <li><strong>鏃堕棿璇佹槑</strong>锛氱涓夋柟璇佹槑鏂囨。鍦ㄦ煇涓椂闂寸偣宸插瓨鍦?/li>
+  <li><strong>瀹¤杩芥函</strong>锛氬畬鏁磋瘉鎹摼锛圱ECHNICAL-VERIFICATION.md 鈫?.tsr 鏃堕棿鎴虫枃浠讹級</li>
 </ul>
 
-<h3>Q12: PQC 混合握手是什么？和纯 ML-KEM 有什么区别？</h3>
-<p><strong>PQC 混合握手（路径 C）</strong> 是 FIBEMATE 当前采用的密钥交换方案：</p>
+<h3>Q12: PQC 娣峰悎鎻℃墜鏄粈涔堬紵鍜岀函 ML-KEM 鏈変粈涔堝尯鍒紵</h3>
+<p><strong>PQC 娣峰悎鎻℃墜锛堣矾寰?C锛?/strong> 鏄?FIBEMATE 褰撳墠閲囩敤鐨勫瘑閽ヤ氦鎹㈡柟妗堬細</p>
 <ul>
-  <li><strong>TLS 1.3 ECDHE-SM2</strong> 先完成经典握手 → 浏览器通过 <code>GET /api/pqc-hybrid/init</code> 获取服务端 ML-KEM-768 公钥</li>
-  <li>浏览器执行 <code>ML-KEM-768.Encaps(pk)</code> → 密文通过 <code>POST /api/pqc-hybrid/finalize</code> 发送 → 双方 HKDF 派生相同 sessionKey</li>
-  <li><strong>不修改 Nginx/OpenSSL</strong>：纯应用层实现，零侵入</li>
-  <li><strong>高压验证</strong>：900/900 会话全部通过（p95=78.5ms），零 session 泄漏</li>
+  <li><strong>TLS 1.3 ECDHE-SM2</strong> 鍏堝畬鎴愮粡鍏告彙鎵?鈫?娴忚鍣ㄩ€氳繃 <code>GET /api/pqc-hybrid/init</code> 鑾峰彇鏈嶅姟绔?ML-KEM-768 鍏挜</li>
+  <li>娴忚鍣ㄦ墽琛?<code>ML-KEM-768.Encaps(pk)</code> 鈫?瀵嗘枃閫氳繃 <code>POST /api/pqc-hybrid/finalize</code> 鍙戦€?鈫?鍙屾柟 HKDF 娲剧敓鐩稿悓 sessionKey</li>
+  <li><strong>涓嶄慨鏀?Nginx/OpenSSL</strong>锛氱函搴旂敤灞傚疄鐜帮紝闆朵镜鍏?/li>
+  <li><strong>楂樺帇楠岃瘉</strong>锛?00/900 浼氳瘽鍏ㄩ儴閫氳繃锛坧95=78.5ms锛夛紝闆?session 娉勬紡</li>
 </ul>
-<p><strong>与纯 ML-KEM 的区别</strong>：纯 ML-KEM（如路径 A 的 NamedGroup 原生集成）性能更好但需改造 TLS 栈；路径 C 是实用主义折中——不改基础设施，把 PQC 安全增量叠加在现有 TLS 之上。详见 <a href="/docs/pqc-readiness.html">PQC 就绪度报告</a>。</p>
-<h2>已知限制</h2>
+<p><strong>涓庣函 ML-KEM 鐨勫尯鍒?/strong>锛氱函 ML-KEM锛堝璺緞 A 鐨?NamedGroup 鍘熺敓闆嗘垚锛夋€ц兘鏇村ソ浣嗛渶鏀归€?TLS 鏍堬紱璺緞 C 鏄疄鐢ㄤ富涔夋姌涓€斺€斾笉鏀瑰熀纭€璁炬柦锛屾妸 PQC 瀹夊叏澧為噺鍙犲姞鍦ㄧ幇鏈?TLS 涔嬩笂銆傝瑙?<a href="/docs/pqc-readiness.html">PQC 灏辩华搴︽姤鍛?/a>銆?/p>
+<h2>宸茬煡闄愬埗</h2>
 <table>
-<tr><th>限制</th><th>状态</th><th>计划</th></tr>
-<tr><td>TVLA 仅检测时序泄露（非物理/电磁攻击）</td><td>已说明</td><td>FAQ Q6 明确标注</td></tr>
-<tr><td>前端 SM2 加密集成</td><td><span class="badge badge-green">✅ 已上线</span></td><td>v3.0-preview 前端桥接 11/11 通过</td></tr>
-<tr><td>ECDH 非后量子（身份层）</td><td>使用中</td><td>计划升级 ML-DSA</td></tr>
-<tr><td>PWA 离线消息队列</td><td>部分支持</td><td>v1.2 完善</td></tr>
-<tr><td>移动端</td><td><span class="badge badge-amber">开发中</span></td><td>React Native 先行</td></tr>
+<tr><th>闄愬埗</th><th>鐘舵€?/th><th>璁″垝</th></tr>
+<tr><td>TVLA 浠呮娴嬫椂搴忔硠闇诧紙闈炵墿鐞?鐢电鏀诲嚮锛?/td><td>宸茶鏄?/td><td>FAQ Q6 鏄庣‘鏍囨敞</td></tr>
+<tr><td>鍓嶇 SM2 鍔犲瘑闆嗘垚</td><td><span class="badge badge-green">鉁?宸蹭笂绾?/span></td><td>v3.3-preview 鍓嶇妗ユ帴 11/11 閫氳繃</td></tr>
+<tr><td>ECDH 闈炲悗閲忓瓙锛堣韩浠藉眰锛?/td><td>浣跨敤涓?/td><td>璁″垝鍗囩骇 ML-DSA</td></tr>
+<tr><td>PWA 绂荤嚎娑堟伅闃熷垪</td><td>閮ㄥ垎鏀寔</td><td>v1.2 瀹屽杽</td></tr>
+<tr><td>绉诲姩绔?/td><td><span class="badge badge-amber">寮€鍙戜腑</span></td><td>React Native 鍏堣</td></tr>
 </table>
 
-<h2>更多资源</h2>
+<h2>鏇村璧勬簮</h2>
 <table>
-<tr><th>资源</th><th>链接</th></tr>
-<tr><td>官网</td><td><a href="https://fibemate.net">fibemate.net</a></td></tr>
-<tr><td>API 文档</td><td><a href="/docs/API.html">docs/API.html</a></td></tr>
-<tr><td>架构设计</td><td><a href="/docs/architecture.html">docs/architecture.html</a></td></tr>
-<tr><td>SM2 TVLA 报告</td><td><a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 侧信道分析</a></td></tr>
-<tr><td>证据地图</td><td><a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md</a></td></tr>
-<tr><td>PQC 就绪状态</td><td><a href="/docs/pqc-readiness.html">抗量子就绪状态</a></td></tr>
+<tr><th>璧勬簮</th><th>閾炬帴</th></tr>
+<tr><td>瀹樼綉</td><td><a href="https://fibemate.net">fibemate.net</a></td></tr>
+<tr><td>API 鏂囨。</td><td><a href="/docs/API.html">docs/API.html</a></td></tr>
+<tr><td>鏋舵瀯璁捐</td><td><a href="/docs/architecture.html">docs/architecture.html</a></td></tr>
+<tr><td>SM2 TVLA 鎶ュ憡</td><td><a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 渚т俊閬撳垎鏋?/a></td></tr>
+<tr><td>璇佹嵁鍦板浘</td><td><a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md</a></td></tr>
+<tr><td>PQC 灏辩华鐘舵€?/td><td><a href="/docs/pqc-readiness.html">鎶楅噺瀛愬氨缁姸鎬?/a></td></tr>
 </table>
 
 <hr>
 
-<h2>免责声明</h2>
+<h2>鍏嶈矗澹版槑</h2>
 
 <ol>
-  <li><strong>关于 TVLA 验证</strong>：本项目的 SM2 实现已完成 Test Vector Leakage Assessment (TVLA) 验证（Welch's t-test，N=5,000/10,000，阈值 |t| &lt; 4.5）。该测试用于检测实现中是否存在可被利用的<strong>时序侧信道泄露（Timing Side-Channel）</strong>，是评估密码实现侧信道抵抗能力的行业通用方法，但<strong>不能等同于形式化安全证明</strong>。TVLA 通过不表示实现能抵抗物理攻击（功耗分析、电磁辐射分析）、故障注入攻击（激光、电压毛刺）、或微架构侧信道攻击（缓存、分支预测）等不同威胁模型下的攻击。</li>
+  <li><strong>鍏充簬 TVLA 楠岃瘉</strong>锛氭湰椤圭洰鐨?SM2 瀹炵幇宸插畬鎴?Test Vector Leakage Assessment (TVLA) 楠岃瘉锛圵elch's t-test锛孨=5,000/10,000锛岄槇鍊?|t| &lt; 4.5锛夈€傝娴嬭瘯鐢ㄤ簬妫€娴嬪疄鐜颁腑鏄惁瀛樺湪鍙鍒╃敤鐨?strong>鏃跺簭渚т俊閬撴硠闇诧紙Timing Side-Channel锛?/strong>锛屾槸璇勪及瀵嗙爜瀹炵幇渚т俊閬撴姷鎶楄兘鍔涚殑琛屼笟閫氱敤鏂规硶锛屼絾<strong>涓嶈兘绛夊悓浜庡舰寮忓寲瀹夊叏璇佹槑</strong>銆俆VLA 閫氳繃涓嶈〃绀哄疄鐜拌兘鎶垫姉鐗╃悊鏀诲嚮锛堝姛鑰楀垎鏋愩€佺數纾佽緪灏勫垎鏋愶級銆佹晠闅滄敞鍏ユ敾鍑伙紙婵€鍏夈€佺數鍘嬫瘺鍒猴級銆佹垨寰灦鏋勪晶淇￠亾鏀诲嚮锛堢紦瀛樸€佸垎鏀娴嬶級绛変笉鍚屽▉鑳佹ā鍨嬩笅鐨勬敾鍑汇€?/li>
 
-  <li><strong>关于后量子与国密集成</strong>：ML-KEM-768 与 SM2 的实现均基于 NIST FIPS 203 与 GM/T 标准进行技术验证。KAT 向量验证和 TVLA 验证结果仅代表参考实现在特定测试条件下的正确性与侧信道抵抗能力，不代表任何商业产品的合规认证。</li>
+  <li><strong>鍏充簬鍚庨噺瀛愪笌鍥藉瘑闆嗘垚</strong>锛歁L-KEM-768 涓?SM2 鐨勫疄鐜板潎鍩轰簬 NIST FIPS 203 涓?GM/T 鏍囧噯杩涜鎶€鏈獙璇併€侹AT 鍚戦噺楠岃瘉鍜?TVLA 楠岃瘉缁撴灉浠呬唬琛ㄥ弬鑰冨疄鐜板湪鐗瑰畾娴嬭瘯鏉′欢涓嬬殑姝ｇ‘鎬т笌渚т俊閬撴姷鎶楄兘鍔涳紝涓嶄唬琛ㄤ换浣曞晢涓氫骇鍝佺殑鍚堣璁よ瘉銆?/li>
 
-  <li><strong>非商密认证说明</strong>：本项目中 SM2/SM3/SM4 国密算法的实现仅为技术研究与验证目的，<strong>未经过国家密码管理局商用密码产品认证</strong>，不适用于需要国密认证的商业或政务场景。</li>
+  <li><strong>闈炲晢瀵嗚璇佽鏄?/strong>锛氭湰椤圭洰涓?SM2/SM3/SM4 鍥藉瘑绠楁硶鐨勫疄鐜颁粎涓烘妧鏈爺绌朵笌楠岃瘉鐩殑锛?strong>鏈粡杩囧浗瀹跺瘑鐮佺鐞嗗眬鍟嗙敤瀵嗙爜浜у搧璁よ瘉</strong>锛屼笉閫傜敤浜庨渶瑕佸浗瀵嗚璇佺殑鍟嗕笟鎴栨斂鍔″満鏅€?/li>
 
-  <li><strong>第三方存证声明</strong>：代码已通过 DigiCert 与联合信任（tsa.cn）进行时间戳存证。存证仅用于记录代码在特定时间点的完整性，<strong>不构成对代码安全性的第三方背书或担保</strong>。</li>
+  <li><strong>绗笁鏂瑰瓨璇佸０鏄?/strong>锛氫唬鐮佸凡閫氳繃 DigiCert 涓庤仈鍚堜俊浠伙紙tsa.cn锛夎繘琛屾椂闂存埑瀛樿瘉銆傚瓨璇佷粎鐢ㄤ簬璁板綍浠ｇ爜鍦ㄧ壒瀹氭椂闂寸偣鐨勫畬鏁存€э紝<strong>涓嶆瀯鎴愬浠ｇ爜瀹夊叏鎬х殑绗笁鏂硅儗涔︽垨鎷呬繚</strong>銆?/li>
 
-  <li><strong>参考文献与攻击论文的区别</strong>：本文档中引用的参考文献均为 TVLA 方法论和侧信道工程实践的基础文献。密码学文献中存在大量针对 ECDSA/SM2 的理论攻击论文（如格攻击、模板攻击、故障注入攻击），这些攻击方法与 TVLA 验证属于不同的威胁模型和安全评估范畴，不应混为一谈，也不宜作为 TVLA 验证的佐证引用。</li>
+  <li><strong>鍙傝€冩枃鐚笌鏀诲嚮璁烘枃鐨勫尯鍒?/strong>锛氭湰鏂囨。涓紩鐢ㄧ殑鍙傝€冩枃鐚潎涓?TVLA 鏂规硶璁哄拰渚т俊閬撳伐绋嬪疄璺电殑鍩虹鏂囩尞銆傚瘑鐮佸鏂囩尞涓瓨鍦ㄥぇ閲忛拡瀵?ECDSA/SM2 鐨勭悊璁烘敾鍑昏鏂囷紙濡傛牸鏀诲嚮銆佹ā鏉挎敾鍑汇€佹晠闅滄敞鍏ユ敾鍑伙級锛岃繖浜涙敾鍑绘柟娉曚笌 TVLA 楠岃瘉灞炰簬涓嶅悓鐨勫▉鑳佹ā鍨嬪拰瀹夊叏璇勪及鑼冪暣锛屼笉搴旀贩涓轰竴璋堬紝涔熶笉瀹滀綔涓?TVLA 楠岃瘉鐨勪綈璇佸紩鐢ㄣ€?/li>
 </ol>
 
 <footer>
-  <p>最后更新：2026-06-25 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a> · <a href="/legal.html">文档中心</a></p>
-  <p style="margin-top:0.5rem;">© 2026 FIBEMATE · 独立技术研究项目 · 非商业运营</p>
+  <p>鏈€鍚庢洿鏂帮細2026-06-25 路 <a href="/">杩斿洖棣栭〉</a> 路 <a href="/docs/architecture.html">绯荤粺鏋舵瀯</a> 路 <a href="/legal.html">鏂囨。涓績</a></p>
+  <p style="margin-top:0.5rem;">漏 2026 FIBEMATE 路 鐙珛鎶€鏈爺绌堕」鐩?路 闈炲晢涓氳繍钀?/p>
 </footer>
 
 </div>
