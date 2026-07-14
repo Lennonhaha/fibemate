@@ -64,7 +64,7 @@
 
 <header>
   <h1>抗量子就绪状态 (Post-Quantum Readiness)</h1>
-  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-10 · 公开透明 · 持续更新</p>
+  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-15 · 公开透明 · 持续更新</p>
 </header>
 
 <!-- ====== Status Banner ====== -->
@@ -252,7 +252,7 @@
 <!-- 7.1 -->
 <h3>7.1 研究目标</h3>
 <p><strong>LookingGlass v2.1</strong> (三层逆向壁垒, 77/77 全绿) 是基于有限群表示论的克罗内克嵌套代数实验。通过多层线性代数构造（纯逆向混淆实验），验证变换不可逆性（局部不可合并性质）。在密码学安全维度：外层线性变换为可逆复合矩阵，攻击者可整体消去，不提升 LWE/BKZ 破解难度。v2 的工程价值在于线性代数教学、硬件张量运算验证及 L8/L9 运行时异常检测实验，不具备加密防护能力。</p>
-<p><strong>VWZ</strong> 是基于范德蒙德秩-1张量结构的原创格签名构造实验。签名 68 字节 (k=16, NIST-1 128-bit)，公钥 Rank-1 压缩 8.5 倍。Hull 攻击评估显示最优已知攻击复杂度在当前参数下超 2^2000，但安全性尚未经同行评议。研究代码部署于 /research/vwz/*，仅限内网访问，不接入生产加密路径。</p>
+<p><strong>VWZ</strong> 是基于范德蒙德秩-1张量结构的原创格签名构造实验。签名 68 字节 (k=16, NIST-1 128-bit)，公钥 Rank-1 稀疏压缩 64.5 倍。Hull 攻击评估显示最优已知攻击复杂度在当前参数下超 2^2000，但安全性尚未经同行评议。研究代码部署于 /research/vwz/*，仅限内网访问，不接入生产加密路径。</p>
 <p>两个模块均为探索性研究实验，<strong>不替代 FIPS 203/205 标准主干算法</strong>，默认关闭，不接入生产加密链路。LookingGlass v2 不提供密码安全增益，VWZ 安全性待外部评审。二者的工程价值在于线性代数/有限群表示教学、硬件张量运算验证、L8/L9 运行时异常检测及时间戳存证闭环。</p>
 
 <!-- 7.2: LookingGlass v1 -->
@@ -285,7 +285,7 @@
 <tr><td>Hash-and-Sign 原型</td><td>Python 参考实现, k=16 公钥 1.7KB/签名 68B (NIST-1 primary), k=32 公钥 6.3KB/签名 132B</td><td><span style="color:var(--green);">6/6 全绿</span></td><td>lg-039</td></tr>
 <tr><td>VWZ 常数表预计算</td><td>Vandermonde 全局常数表 (k=2/4/8/16/32), k=32 崩溃修复 (col3 平方碰撞, safe_alphas() 拒绝 ± 对)</td><td><span style="color:var(--green);">14/14 全绿</span></td><td>lg-039</td></tr>
 <tr><td>Rust/WASM 双轨实现</td><td>constants.rs 345行 + structured.rs 128行, cargo test 29/29, wasm-pack build 96.9KB (gzip ~46KB)</td><td><span style="color:var(--green);">✅ 编译通过</span></td><td>lg-039</td></tr>
-<tr><td>Rank-1 稀疏压缩 (Rust/WASM)</td><td>Rust 原型 7/7 PASS, k=16 压缩 8.5× (19,074B→2,244B), wasm-pack 编译通过 (96.9KB / ~46KB gzip)</td><td><span style="color:var(--green);">✅ 7/7 全绿</span></td><td>lg-049</td></tr>
+<tr><td>Rank-1 稀疏压缩 (Rust/WASM)</td><td>Rust 原型 7/7 PASS, k=16 压缩 64.5× (19,074B→296B), wasm-pack 编译通过 (96.9KB / ~46KB gzip)</td><td><span style="color:var(--green);">✅ 7/7 全绿</span></td><td>lg-049</td></tr>
 <tr><td>Hull 攻击评估</td><td>Couvreur &amp; Levrat (Inria 2025/596), 对 VWZ κ=128: Õ(q¹³⁰) ≥ 2²⁰⁸⁰</td><td><span style="color:var(--green);">✅ 不可行</span></td><td>lg-041</td></tr>
 <tr><td>服务端 API 集成</td><td>Node.js Express 路由, /research/vwz/* (内网隔离), JSON REST: keygen/sign/verify/status, WASM 懒加载, 外层 Nginx return 403, 内层 IP 守卫</td><td><span style="color:var(--green);">✅ 6/6 PASS</span></td><td>lg-046</td></tr>
 <tr><td>FPGA BRAM 求解器</td><td>Artix-7 A7-35T, vwz_lambda_rom.v + vwz_solve_preimage.v, 行为模型 5/5 PASS, ~503 cycles = 10μs @50MHz, 已合并至 v5 构建</td><td><span style="color:var(--green);">✅ 综合就绪</span></td><td>lg-047</td></tr>
@@ -345,7 +345,7 @@
   <p style="margin:0.5rem 0 0;color:var(--muted);">DMTH 假设无已知反例。LookingGlass 默认关闭，不影响生产加密。VWZ 签名方案已完成全链路 Rust→WASM→前端部署→研究端 API 集成。技术文档已内部归档。</p>
 </div>
 
-<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>60+ 份 DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-069 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-14</p>
+<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>69 份（lg-001~lg-069）DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-069 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-14</p>
 
 <hr>
 
@@ -530,7 +530,7 @@
 <tr><td>KAT 回归</td><td>1000 向量 roundtrip + 确定性 + 非平凡性（固定会话密钥）</td><td><span style="color:var(--green);">0 失败 / 1000</span></td><td>lg-v2.2</td></tr>
 <tr><td>WASM 重建</td><td>wasm-pack --target web --release</td><td><span style="color:var(--green);">48.1KB（gzip 22.2KB），11 导出</span></td><td>lg-v2.2</td></tr>
 <tr><td>API 一致性</td><td>与已部署 48.5KB 版本导出函数逐项比对</td><td><span style="color:var(--green);">&#10004; 100% 匹配</span></td><td>lg-v2.2</td></tr>
-<tr><td>时间戳存证</td><td>9 文件 SHA256 manifest &rarr; FreeTSA (RFC 3161)</td><td><span style="color:var(--green);">&#10004; Verified OK</span></td><td>lg-v2.2-20260710.tsr</td></tr>
+<tr><td>时间戳存证</td><td>9 文件 SHA256 manifest &rarr; DigiCert (RFC 3161)</td><td><span style="color:var(--green);">&#10004; Verified OK</span></td><td>lg-v2.2-20260710.tsr</td></tr>
 </tbody>
 </table>
 
@@ -538,7 +538,7 @@
 
 本页面属于 FIBEMATE 透明度公开承诺，状态发生变更将即时修订正文。</p>
 
-<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-10 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
+<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-15 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
 
 <footer>
   <p>最后更新：2026-07-10 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
