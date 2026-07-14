@@ -18,9 +18,15 @@
 | 3e1e467 | formal-verification-L4 里程碑记录 |
 | 552c9d1 | 初版 C2.tla + C2.cfg |
 
+### TSR lg-069
+- DigiCert timestamp: Jul 14 13:24:42 2026 GMT, Serial 0x87C1CFDC28565E9839A6D61468A75A51
+- Hash: C2.tla (8e1a6d4...) + C2.cfg (e12ed10...)
+- 文件: lg-069-formal-verification-k3-20260714.{sha256,tsq,tsr}
+- **GitHub 已推送 (local→server→GitHub)**：d73a5b9
+
 ### 下一步 P1
 - Liveness 不变式（`<>(cState[i]="active" /\ sState[i]="active")`）
-- 提交 git remote push（当前为干净 local 仓库，无 remote）
+- GitHub master 已推送 (d73a5b9)
 
 ## 2026-07-14：待处理清理完成 + 项目综合自评归档
 
