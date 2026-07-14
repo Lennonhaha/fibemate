@@ -37,9 +37,9 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 | **TLS 1.3 Hybrid** | Path C-2 (SM2+ML-KEM-768) application-layer ✅ | Path C-2 5/5 |
 | **OPK Pre-Keys** | X3DH async handshake, 7/7 PASS | E2E closed |
 | **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 |
-| **VWZ Signature** | Vandermonde-Wang-Zhang lattice-tensor scheme (k=16, NIST-1 128-bit) | WASM 7/7 |
-| **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | Artix-7 synthesized · WNS=8.14ns ✅ |
-
+| **VWZ Signature** | Vandermonde-Wang-Zhang lattice-tensor scheme (k=16, NIST-1 128-bit) | WASM 7/7 · reduction 148/148 |
+| **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | Artix-7 synthesized · WNS=9.755ns ✅ · ILA+L4 closed |
+| **L4 Formal Verification** | TLA+ state machine 路 Path C-2 (SM2+ML-KEM-768) 路 7 invariants 路 101,467 states 路 TLC EXIT 0 路 DigiCert TSR lg-069 | ✅ Engineering validation |
 ---
 
 ## Quick Start
