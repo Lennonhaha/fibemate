@@ -1,0 +1,18 @@
+[
+  {
+    "file": "tls-hybrid-extension.js",
+    "size": 15326,
+    "sha256": "de41dc9ddf9026dce9fe16483f9c75c7fa8332667972e61e603c5fd274b0894d",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-07-15T16:08:55+08:00"
+  }
+
+,
+  {
+    "file": "test-tls-hybrid-extension.js",
+    "size": 10311,
+    "sha256": "941f1f16222a701873b8096bca9bd217ced6bcd512d17770e98fd613dafe7548",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-07-15T16:08:58+08:00"
+  }
+]
