@@ -867,3 +867,10 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 双方 deriveshared_secret = HKDF(SM2_ECDH || MLKEM_SS)
 ### 教训
 *t.js gitignore模式(第23行)误杀测试文件, 需 git add -f
+
+### TSR lg-070~lg-073 + 官网同步
+- DigiCert TSR 4份: server.js, hybrid-kem-client.js, reg-e2e-test.js, www/crypto/hybrid-kem-client.js
+- pqc-readiness.html: Path C-2 reg-server 集成, TSR计数69→73, 日期07-14→07-15
+- 官网已生效: https://fibemate.net/docs/pqc-readiness.html
+- GitHub: 4e42f7c (服务端推送)
+- 教训: FreeTSA 404/403改DigiCert; 服务端PTY输出干扰二进制文件需RequestTTY=no; *t.js gitignore模式重复踩
