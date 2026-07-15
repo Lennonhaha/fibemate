@@ -898,3 +898,39 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 - **SHA256**：6d80c92cf70dfb47124f533dcdb7f9cedcea436f6e24b303c6602978aab10a57
 - **路径**：E:\fpga\fibemate\docs\
 - **无需官网更新**（文档内部归档）
+
+## 2026-07-15 深夜：LG v2.2 DynamicPathSelector 数学错误修复完成
+
+### 根因：动态路径数学上不可逆
+- `confuse_with_dynamic_path` / `deconfuse_with_dynamic_path` 试图每层动态选择 Standard/Substitute 模式
+- SUB_i 单层自逆（SUB_i * SUB_i = identity）但 SUB_i 不是 SUB_j 的逆（i ≠ j）
+- 7 层动态路径下，confuse/deconfuse 操作序列不对应，roundtrip 必然失败
+- XorShift64 `u64::wrapping_mul` 与 Python 任意精度整数在溢出点分歧
+
+### 修复方案
+- 公共 API（`lgv2_confuse_ex` / `lgv2_deconfuse_ex` / `lgv2_confuse_full`）改用固定路径 `confuse_chunk`/`deconfuse_chunk`
+- combined_seed = seed ^ session_key，实现 session 级别差异化
+- `DynamicPathSelector` 标记为废弃（`#[ignore]` 测试 + 源码注释）
+
+### 交付物
+- WASM：21.4 KB raw / 9.7 KB gzip，9 导出函数，版本 `LG v2.2.1`
+- Rust 测试：30 passed / 0 failed / 2 ignored
+- Python KAT 验证：100-byte roundtrip 与 Rust 一致
+- 完整文档：`lgv2_v222_close_2026-07-15.md`
+
+### 阻塞项
+- **GitHub 推送**：SSH 不可用（网络限制）+ HTTPS 无认证 Token
+- 用户 GitHub: 27202998@qq.com
+- 需要用户提供 GitHub PAT（Personal Access Token）
+- **WASM 部署**：`C:\Users\maivs\lgv2_v222\pkg\` 待部署到 fibemate.net
+- **lgv2_v222 独立仓库**：`C:\Users\maivs\lgv2_v222\` 非 Git 仓库，需 git init
+
+### 关键文件
+- 源码：`C:\Users\maivs\lgv2_v222\src\lib.rs`（30 导出公共 API）
+- 废弃研究：`C:\Users\maivs\lgv2_v222\src\dynamic_path.rs`
+- WASM 产物：`C:\Users\maivs\lgv2_v222\pkg\lgv2_bg.wasm`
+- 归档：`lgv2_v222_close_2026-07-15.md`
+
+### 教训
+- 数学上不可逆的算法不能用「修复 bug」的方式拯救，必须重新设计或放弃
+- 定位方法：分离测试（单层✓ / 2层✗）→ 数学追溯 → Python 对比 → 设计决策
