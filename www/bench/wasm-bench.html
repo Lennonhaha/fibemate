@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE WASM 前端基准</title>
+<style>
+  :root { --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9; --muted:#8b949e; --accent:#00E5C3; --amber:#f59e0b; --green:#22c55e; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); padding:2rem; }
+  .container { max-width:900px; margin:0 auto; }
+  h1 { color:#f0f6fc; margin-bottom:0.5rem; }
+  .sub { color:var(--muted); margin-bottom:2rem; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:1rem; margin-bottom:2rem; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.2rem; }
+  .card h3 { color:#f0f6fc; font-size:1rem; margin-bottom:0.5rem; }
+  .card .stat { display:flex; justify-content:space-between; padding:0.3rem 0; font-size:0.9rem; border-bottom:1px solid #21262d; }
+  .card .stat:last-child { border-bottom:none; }
+  .card .val { color:var(--accent); font-weight:600; }
+  .val.amber { color:var(--amber); }
+  .val.green { color:var(--green); }
+  .btn { background:var(--accent); color:#000; border:none; padding:0.8rem 2rem; border-radius:6px; font-weight:600; cursor:pointer; }
+  .btn:hover { opacity:0.9; }
+  .btn:disabled { opacity:0.5; cursor:not-allowed; }
+  .log { background:#000; padding:1rem; border-radius:6px; font-family:monospace; font-size:0.85rem; max-height:300px; overflow:auto; margin-top:1rem; }
+  .log div { padding:0.15rem 0; }
+  .running { display:inline-block; width:12px; height:12px; border:2px solid var(--accent); border-top-color:transparent; border-radius:50%; animation:spin 0.6s linear infinite; vertical-align:middle; margin-right:0.5rem; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  table { width:100%; border-collapse:collapse; margin-top:1rem; }
+  th, td { padding:0.5rem 0.8rem; text-align:left; border-bottom:1px solid var(--border); font-size:0.9rem; }
+  th { color:var(--muted); font-weight:500; }
+  td { font-family:monospace; }
+  tr:hover td { background:rgba(255,255,255,0.03); }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>WASM 前端基准</h1>
+  <p class="sub">FIBEMATE 浏览器端 WASM 模块性能测试</p>
+  
+  <div style="margin-bottom:1rem;display:flex;gap:0.5rem;align-items:center">
+    <button class="btn" id="runBtn" onclick="runBenchmarks()">▶ 运行基准</button>
+    <select id="iterSelect" style="background:var(--card);color:var(--text);border:1px solid var(--border);padding:0.5rem;border-radius:4px">
+      <option value="100">100 rounds</option>
+      <option value="500" selected>500 rounds</option>
+      <option value="1000">1000 rounds</option>
+    </select>
+  </div>
+  
+  <div class="log" id="log"><div style="color:var(--muted)">准备就绪，点击"运行基准"开始测试...</div></div>
+  
+  <div class="cards" id="cards">
+    <div class="card"><h3>ML-KEM-768 (native)</h3><div id="mlkem-native"><div class="stat"><span>等待测试</span></div></div></div>
+    <div class="card"><h3>ML-KEM-768 (PureJS)</h3><div id="mlkem-purejs"><div class="stat"><span>等待测试</span></div></div></div>
+    <div class="card"><h3>LG v2.2 WASM</h3><div id="lgv2"><div class="stat"><span>等待测试</span></div></div></div>
+    <div class="card"><h3>VWZ WASM</h3><div id="vwz"><div class="stat"><span>等待测试</span></div></div></div>
+  </div>
+  
+  <h2 style="color:#f0f6fc;margin:1rem 0 0.5rem">完整结果</h2>
+  <div id="resultsTable"><p style="color:var(--muted)">运行后显示...</p></div>
+</div>
+
+<script>
+const LOG = document.getElementById('log');
+const RUN_BTN = document.getElementById('runBtn');
+const ITER_SELECT = document.getElementById('iterSelect');
+const ALL_RESULTS = [];
+
+function log(msg, color) {
+  const d = document.createElement('div');
+  d.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  if (color) d.style.color = color;
+  LOG.appendChild(d);
+  LOG.scrollTop = LOG.scrollHeight;
+}
+
+function clearLog() {
+  LOG.innerHTML = '';
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function showCard(id, stats) {
+  const el = document.getElementById(id);
+  el.innerHTML = stats.map(s => '<div class="stat"><span>' + s.label + '</span><span class="val ' + (s.cls||'') + '">' + s.val + '</span></div>').join('');
+}
+
+function msToStr(ms) {
+  if (ms < 1) return (ms * 1000).toFixed(1) + ' µs';
+  if (ms < 1000) return ms.toFixed(2) + ' ms';
+  return (ms/1000).toFixed(2) + ' s';
+}
+
+// ===== ML-KEM Native (WASM) =====
+async function benchMLKEMNative(count) {
+  log('正在加载 ML-KEM WASM 模块...');
+  try {
+    const r = await fetch('/crypto/wasm/mlkem_ct_wasm_bg.wasm');
+    const buf = await r.arrayBuffer();
+    const wasm = await WebAssembly.instantiate(buf, {});
+    const { memory, mlkem_keygen, mlkem_encaps, mlkem_decaps } = wasm.instance.exports;
+    
+    // Key sizes: pk = 1184, sk = 2400, ct = 1088, ss = 32
+    const pk = new Uint8Array(memory.buffer, mlkem_keygen(), 1184);
+    const sk = new Uint8Array(memory.buffer, mlkem_keygen() + 1184, 2400);
+    const enc = mlkem_encaps(pk);
+    const ct = new Uint8Array(memory.buffer, enc, 1088);
+    const ssIn = new Uint8Array(memory.buffer, enc + 1088, 32);
+    
+    log('ML-KEM WASM 加载成功，基准测试中 (' + count + ' 轮)...');
+    
+    const start = performance.now();
+    for (let i = 0; i < count; i++) {
+      const pk2 = new Uint8Array(memory.buffer, mlkem_keygen(), 1184);
+    }
+    const keygenMs = performance.now() - start;
+    
+    const start2 = performance.now();
+    for (let i = 0; i < count; i++) {
+      const pk2 = new Uint8Array(memory.buffer, mlkem_keygen(), 1184);
+      mlkem_encaps(pk2);
+    }
+    const encapMs = performance.now() - start2;
+    
+    const start3 = performance.now();
+    for (let i = 0; i < count; i++) {
+      mlkem_decaps(ct, sk);
+    }
+    const decapMs = performance.now() - start3;
+    
+    const fullStart = performance.now();
+    for (let i = 0; i < count; i++) {
+      const p = new Uint8Array(memory.buffer, mlkem_keygen(), 1184);
+      const e = mlkem_encaps(p);
+      const c = new Uint8Array(memory.buffer, p.byteOffset + 1184, 2400);
+      mlkem_decaps(new Uint8Array(memory.buffer, e, 1088), c);
+    }
+    const fullMs = performance.now() - fullStart;
+    
+    const r2 = {
+      keygenMs: (keygenMs/count).toFixed(3),
+      encapMs: (encapMs/count).toFixed(3),
+      decapMs: (decapMs/count).toFixed(3),
+      fullMs: (fullMs/count).toFixed(3),
+      opsPerSec: Math.round(count/fullMs*1000)
+    };
+    
+    showCard('mlkem-native', [
+      {label: 'Keygen', val: r2.keygenMs + ' ms'},
+      {label: 'Encaps', val: r2.encapMs + ' ms'},
+      {label: 'Decaps', val: r2.decapMs + ' ms'},
+      {label: 'Full cycle', val: r2.fullMs + ' ms', cls: 'green'},
+      {label: 'Throughput', val: r2.opsPerSec + ' ops/s'}
+    ]);
+    
+    log('✅ ML-KEM native WASM: ' + r2.fullMs + 'ms/round, ' + r2.opsPerSec + ' ops/s', '#22c55e');
+    ALL_RESULTS.push({module: 'ML-KEM WASM', ...r2});
+    return r2;
+  } catch (e) {
+    log('❌ ML-KEM WASM: ' + e.message, '#f87171');
+    ALL_RESULTS.push({module: 'ML-KEM WASM', error: e.message});
+  }
+}
+
+// ===== ML-KEM PureJS =====
+async function benchMLKEMPureJS(count) {
+  log('正在加载 ML-KEM PureJS 模块...');
+  try {
+    const mod = await import('/crypto/crypto/ml-kem-768.js');
+    const client = mod.MLKEM768;
+    
+    log('ML-KEM PureJS 加载成功，基准测试中...');
+    
+    const start = performance.now();
+    const keyPairs = [];
+    for (let i = 0; i < count; i++) {
+      keyPairs.push(client.keygen());
+    }
+    const keygenMs = performance.now() - start;
+    
+    const kp0 = keyPairs[0];
+    const start2 = performance.now();
+    const cts = [];
+    for (let i = 0; i < count; i++) {
+      cts.push(client.encaps(keyPairs[i % count].publicKey));
+    }
+    const encapMs = performance.now() - start2;
+    
+    const start3 = performance.now();
+    for (let i = 0; i < count; i++) {
+      client.decaps(cts[i % count].cipherText, keyPairs[i % count].secretKey);
+    }
+    const decapMs = performance.now() - start3;
+    
+    const fullStart = performance.now();
+    for (let i = 0; i < 50; i++) {
+      const k = client.keygen();
+      const e = client.encaps(k.publicKey);
+      client.decaps(e.cipherText, k.secretKey);
+    }
+    const fullMs = performance.now() - fullStart;
+    
+    const r = {
+      keygenMs: (keygenMs/count).toFixed(2),
+      encapMs: (encapMs/count).toFixed(2),
+      decapMs: (decapMs/count).toFixed(2),
+      fullMs: (fullMs/50).toFixed(2),
+      opsPerSec: Math.round(50/fullMs*1000)
+    };
+    
+    showCard('mlkem-purejs', [
+      {label: 'Keygen', val: r.keygenMs + ' ms'},
+      {label: 'Encaps', val: r.encapMs + ' ms'},
+      {label: 'Decaps', val: r.decapMs + ' ms'},
+      {label: 'Full cycle', val: r.fullMs + ' ms', cls: 'amber'},
+      {label: 'Throughput', val: r.opsPerSec + ' ops/s'}
+    ]);
+    
+    log('✅ ML-KEM PureJS: ' + r.fullMs + 'ms/round, ' + r.opsPerSec + ' ops/s', '#22c55e');
+    ALL_RESULTS.push({module: 'ML-KEM PureJS', ...r});
+    return r;
+  } catch (e) {
+    log('❌ ML-KEM PureJS: ' + e.message, '#f87171');
+    ALL_RESULTS.push({module: 'ML-KEM PureJS', error: e.message});
+  }
+}
+
+// ===== LG v2.2 WASM =====
+async function benchLGV2(count) {
+  log('正在加载 LG v2.2 WASM 模块...');
+  try {
+    const r = await fetch('/crypto/lgv2/lookingglass_v2_bg.wasm');
+    const buf = await r.arrayBuffer();
+    log('LG v2.2 WASM 大小: ' + (buf.byteLength/1024).toFixed(1) + ' KB');
+    
+    const wasm = await WebAssembly.instantiate(buf, {});
+    const exports = wasm.instance.exports;
+    log('Exports: ' + Object.keys(exports).join(', '));
+    
+    // Benchmark instantiation time
+    const t0 = performance.now();
+    for (let i = 0; i < 100; i++) {
+      await WebAssembly.instantiate(buf.slice(0), {});
+    }
+    const instMs = (performance.now() - t0) / 100;
+    
+    showCard('lgv2', [
+      {label: 'WASM 大小', val: (buf.byteLength/1024).toFixed(1) + ' KB'},
+      {label: '实例化', val: msToStr(instMs)},
+      {label: 'Exports', val: Object.keys(exports).slice(0,6).join(', ') || '(basic)'}
+    ]);
+    
+    log('✅ LG v2.2: ' + (buf.byteLength/1024).toFixed(1) + ' KB, ' + msToStr(instMs) + ' instantiation', '#22c55e');
+    ALL_RESULTS.push({module: 'LG v2.2 WASM', sizeKB: (buf.byteLength/1024).toFixed(1), instantiationMs: instMs.toFixed(2)});
+  } catch (e) {
+    log('❌ LG v2.2: ' + e.message, '#f87171');
+    ALL_RESULTS.push({module: 'LG v2.2 WASM', error: e.message});
+  }
+}
+
+// ===== VWZ WASM =====
+async function benchVWZ(count) {
+  log('正在加载 VWZ WASM 模块...');
+  try {
+    const r = await fetch('/crypto/vwz/vwz_signature_bg.wasm');
+    const buf = await r.arrayBuffer();
+    const wasm = await WebAssembly.instantiate(buf, {});
+    log('VWZ WASM loaded, size=' + (buf.byteLength/1024).toFixed(1) + ' KB');
+    log('Exports: ' + Object.keys(wasm.instance.exports).join(', '));
+    
+    showCard('vwz', [
+      {label: 'WASM 大小', val: (buf.byteLength/1024).toFixed(1) + ' KB'},
+      {label: 'Exports', val: Object.keys(wasm.instance.exports).slice(0,8).join(', ') || '(basic)'}
+    ]);
+    
+    log('✅ VWZ: ' + (buf.byteLength/1024).toFixed(1) + ' KB loaded', '#22c55e');
+    ALL_RESULTS.push({module: 'VWZ WASM', sizeKB: (buf.byteLength/1024).toFixed(1)});
+  } catch (e) {
+    log('❌ VWZ: ' + e.message, '#f87171');
+    ALL_RESULTS.push({module: 'VWZ WASM', error: e.message});
+  }
+}
+
+// ===== Main =====
+async function runBenchmarks() {
+  RUN_BTN.disabled = true;
+  RUN_BTN.textContent = '⏳ 运行中...';
+  const count = parseInt(ITER_SELECT.value);
+  ALL_RESULTS.length = 0;
+  clearLog();
+  
+  // Reset cards
+  ['mlkem-native', 'mlkem-purejs', 'lgv2', 'vwz'].forEach(id => {
+    document.getElementById(id).innerHTML = '<div class="stat"><span class="running"></span><span>测试中...</span></div>';
+  });
+  
+  try {
+    await benchMLKEMNative(count);
+    await sleep(100);
+    await benchMLKEMPureJS(count);
+    await sleep(100);
+    await benchLGV2(count);
+    await sleep(100);
+    await benchVWZ(count);
+    
+    // Results table
+    log('', null);
+    log('========== 基准完成 ==========', '#00E5C3');
+    let tableHtml = '<table><thead><tr><th>模块</th><th>Keygen</th><th>Encaps</th><th>Decaps</th><th>Full</th><th>吞吐量</th></tr></thead><tbody>';
+    for (const r of ALL_RESULTS) {
+      tableHtml += '<tr><td>' + (r.module || '') + '</td>' +
+        '<td>' + (r.keygenMs || '-') + '</td>' +
+        '<td>' + (r.encapMs || '-') + '</td>' +
+        '<td>' + (r.decapMs || '-') + '</td>' +
+        '<td>' + (r.fullMs || '-') + '</td>' +
+        '<td>' + (r.opsPerSec ? r.opsPerSec + ' ops/s' : r.error || '-') + '</td></tr>';
+    }
+    tableHtml += '</tbody></table>';
+    document.getElementById('resultsTable').innerHTML = tableHtml;
+    
+    log('✅ 所有基准测试完成', '#22c55e');
+  } catch (e) {
+    log('❌ 基准测试失败: ' + e.message, '#f87171');
+  }
+  
+  RUN_BTN.disabled = false;
+  RUN_BTN.textContent = '▶ 运行基准';
+}
+</script>
+</body>
+</html>
