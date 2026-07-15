@@ -826,3 +826,31 @@ This continuous geometric scheme is archived as theoretical exploratory research
 - **根因**：Vivado 报告无时钟约束警告，但综合结果可能将计数器放在非时钟网络上；或时钟管理器（BUFG/MMCM）缺失导致时钟异常
 - **决策**：放弃 UART 物理层调试（不影响功能结论）。NTT/INTT 功能已通过仿真+ILA 确认；硬件完整性已通过板载 LED（L4）确认。UART 是"锦上添花"的调试接口，不是硬件功能必要条件。
 - **文件清理**：保留所有诊断 bitstream（E:\fpga\fibemate\diag\），不删除，供后续参考
+
+## 2026-07-15 下午：IANA #4590 TLS 混合扩展 18/18 测试全绿 + Bug 修复
+
+### 根因定位
+- 完整握手共享秘密不匹配（1/18 测试失败），DEBUG 追踪发现 ML-KEM-768 原生 addon `mlkem.node` 的 `encaps`/`decaps` 返回不一致的共享秘密
+- 独立 roundtrip 测试验证：`ML.encaps(pk)[1]` ≠ `ML.decaps(sk, ct)` → `match=false`
+- JS 实现 `src/crypto/ml-kem-768-td.js` 验证正常：`encapsulate`/`decapsulate` → `match=true`
+
+### 修复方案
+- 新增完整性验证：encaps/decaps roundtrip 检查，验证失败时自动回退到 JS 实现
+- 修复后握手共享秘密完全一致：`MATCH: true`
+- 测试套件 **18/18 全部通过** ✅
+
+### 交付物
+| 文件 | 说明 |
+|------|------|
+| `src/tls-hybrid-extension.js` | IANA #4590 SM2+MLKEM768 混合 KEM，491 行 |
+| `test-tls-hybrid-extension.js` | 280 行，18 项测试 |
+| `docs/tsa/2026-07-15/` | lg-072 TSR（FreeTSA） |
+
+### Git 提交
+- `cf5433a`：修复 + 新增文件
+- `2445f81`：TSR lg-072 存证
+- **GitHub master**: `2445f81` ✅
+
+### 教训
+- 原生 addon 在集成前必须做完整性验证（encaps ↔ decaps roundtrip）
+- 不可假设 native 实现正确；JS 实现作为 fallback 的重要性
