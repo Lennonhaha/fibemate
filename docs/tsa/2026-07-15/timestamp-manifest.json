@@ -1,18 +1,30 @@
-[
-  {
-    "file": "tls-hybrid-extension.js",
-    "size": 15326,
-    "sha256": "de41dc9ddf9026dce9fe16483f9c75c7fa8332667972e61e603c5fd274b0894d",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-07-15T16:08:55+08:00"
-  }
-
-,
-  {
-    "file": "test-tls-hybrid-extension.js",
-    "size": 10311,
-    "sha256": "941f1f16222a701873b8096bca9bd217ced6bcd512d17770e98fd613dafe7548",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-07-15T16:08:58+08:00"
-  }
-]
+{
+  "date": "2026-07-15",
+  "tsa": "DigiCert (http://timestamp.digicert.com)",
+  "files": [
+    {
+      "file": "../../../reg-server/server.js",
+      "sha256": "9218965e23a8a5cf9602553930bdb11237f5471da441cbfe0ee0505af98fc868",
+      "tsr": "server.js.tsr",
+      "tsr_bytes": 1070
+    },
+    {
+      "file": "../../../reg-server/hybrid-kem-client.js",
+      "sha256": "fc77476729c3f35c901562b31a5331ec3af892297fb4b5c2361a8136b16d7338",
+      "tsr": "hybrid-kem-client.js.tsr",
+      "tsr_bytes": 1069
+    },
+    {
+      "file": "../../../reg-server/reg-e2e-test.js",
+      "sha256": "f71d9e7e2e9fb8dc260b2f99e4d027dcec658a0d4f388d2cd7bb432342cf291a",
+      "tsr": "reg-e2e-test.js.tsr",
+      "tsr_bytes": 1069
+    },
+    {
+      "file": "../../../www/crypto/hybrid-kem-client.js",
+      "sha256": "46a5f78f9fe7117fa5f6ddeefd3871fec5425bfa73f53c2028956f00ddd047c7",
+      "tsr": "www-crypto-hybrid-kem-client.js.tsr",
+      "tsr_bytes": 1070
+    }
+  ]
+}
