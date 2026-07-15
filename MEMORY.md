@@ -874,3 +874,27 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 - 官网已生效: https://fibemate.net/docs/pqc-readiness.html
 - GitHub: 4e42f7c (服务端推送)
 - 教训: FreeTSA 404/403改DigiCert; 服务端PTY输出干扰二进制文件需RequestTTY=no; *t.js gitignore模式重复踩
+
+## 2026-07-15 17:17-17:27: P1-1 密钥生命周期管理完成 + L8/L9 43/43 测试清单
+
+### P1-1 密钥生命周期管理（14/14 测试全绿）
+- **交付件**：secure-key-storage-v2.js（存储格式 v2）、key-lifecycle-manager.js（生命周期管理器）、opk-server.js（过期清理增强）
+- **生命周期策略**：identity_sm2/identity_mlkem=180d, signed_prekey=7d/1000次, opk=7d/1次, ephemeral=1h/1次
+- **核心功能**：启动自检、每分钟健康检查、过期预警（24h）、自动轮换、优雅旧密钥保留+grace period
+- **OPK 服务端**：startExpiryCron 每小时清理 + /check-expiry 端点 + 启动时自动清理
+- 工单文件：p1-1-key-lifecycle_2026-07-15.md
+
+### L8/L9 FPGA 43/43 测试清单定义
+- L8 4 大类 27 项：故障计数器（12）、状态寄存器（6）、告警/LED（6）、边缘情况（3）
+- L9 3 大类 16 项：FSM 迁移（10）、响应输出（3）、RECOVER 完整性（3）
+- 输出：fpga-l8l9-43-tests_2026-07-15.md → 同步至 E:\fpga\fibemate\docs\
+- 缺口标注：CDC（可接受）、sw_irq软件清除（P1）、WARN LED4x时序（P2）
+
+### TSR lg-074 存证完成
+- **文件**：fpga-l8l9-43-tests_2026-07-15.md
+- **TSR**：lg-074-l8l9-43-tests-20260715.tsr（DigiCert, 6006 bytes）
+- **时间戳**：Jul 15 09:37:11 2026 GMT
+- **Serial**：0x140DC12321B106EDA7CB959D89454888
+- **SHA256**：6d80c92cf70dfb47124f533dcdb7f9cedcea436f6e24b303c6602978aab10a57
+- **路径**：E:\fpga\fibemate\docs\
+- **无需官网更新**（文档内部归档）
