@@ -854,3 +854,16 @@ This continuous geometric scheme is archived as theoretical exploratory research
 ### 教训
 - 原生 addon 在集成前必须做完整性验证（encaps ↔ decaps roundtrip）
 - 不可假设 native 实现正确；JS 实现作为 fallback 的重要性
+
+## 2026-07-15 16:33-16:52: IANA #4590 E2E hybrid KEX reg-server
+### 交付
+reg-server/server.js 扩展 e2e-init/e2e-respond/e2e-poll/e2e-msg/e2e-fetch 5类消息
+hybrid-kem-client.js 浏览器端 SM2+MLKEM768 混合KEM库
+reg-e2e-test.js 集成测试 10/10 通过生产环境 ws://:3082
+GitHub: 11ed581
+### 协议
+Alice->Bob: e2e-init (key_share 1253B)
+Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
+双方 deriveshared_secret = HKDF(SM2_ECDH || MLKEM_SS)
+### 教训
+*t.js gitignore模式(第23行)误杀测试文件, 需 git add -f
