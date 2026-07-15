@@ -612,7 +612,7 @@ eval document.head.appendChild(Object.assign(document.createElement(`script`),{s
 ### 涓撳埄鐩戞帶锛堟瘡瀛ｅ害锛?
 - **ML-KEM 涓撳埄**锛欳rystals-Kyber NIST 澹版槑鏃犲凡鐭ヤ笓鍒╋紝浣嗛渶鎸佺画鍏虫敞 IETF/ETSI 鏍囧噯鍖栦腑鐨勪笓鍒╁０鏄?- **SLH-DSA 涓撳埄**锛歋phincs+ 涓撳埄鐘舵€侊紙2017-2024 鏃忥級
 - **SM2 涓撳埄**锛氫腑鍥藉浗瀵嗘爣鍑?GB/T 32918锛屽啗浜?鏀垮簻鍚堣鎬у彉鍔?- **VWZ 鏍?寮犻噺**锛氳嚜鐮旀柟妗?arXiv 鎻愪氦鍓?PVP 鉀?(璁烘枃涓嶅彂)
-- **IETF PQUIP WG 鍔ㄦ€?*锛氭瘡瀛ｅ害妫€鏌?draft 杩涘睍鍜屽▉鑳佹ā鍨嬪彉鍖?- **NIST PQC 绗洓杞?/ SP 800-208 鏇存柊**锛氬叧娉ㄦ爣鍑嗗寲杩涘睍鍜岃繃娓℃椂闂磋〃
+- IETF PQUIP WG + IANA #4590 SM2+MLKEM768 混合 KEM 扩展（491 行源码，18 项测试，TSR lg-072）已上线并 E2E 集成 reg-server
 
 ## 2026-06-30锛欶PGA 纭欢闃叉姢涓庢湭瀹屾垚椤圭洰娓呭崟
 
@@ -934,3 +934,51 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 ### 教训
 - 数学上不可逆的算法不能用「修复 bug」的方式拯救，必须重新设计或放弃
 - 定位方法：分离测试（单层✓ / 2层✗）→ 数学追溯 → Python 对比 → 设计决策
+
+## 经验与决策
+
+- FT2232H JTAG 芯片进入 CM_PROB_PHANTOM 状态，pnputil 无法修复，唯一解决是重启电脑重新 USB 枚举
+- Vivado 2021.1 启动失败（exit -1073741515），根因 XILINX_LICENSE_FILE 未设置且许可证文件全 0 字节；hw_server (24MB) 无需许可证可独立运行
+- FreeTSA 404/403 需改用 DigiCert TSR；服务端 PTY 输出干扰二进制文件需 RequestTTY=no
+
+## 当前项目与关注
+
+- L8/L9 FPGA 43/43 测试清单定义完成（L8 4大类27项 + L9 3大类16项），TSR lg-074 DigiCert 存证；缺口 CDC 可接受、sw_irq 软件清除 P1、WARN LED4x 时序 P2
+- CH340G 串口调试：M18 电压固定 0.76V，T19 LED 常亮，CP2102 始终收到 1 byte 0x00 非连续数据；根因时钟/计数器异常而非接线问题
+
+## 用户身份与偏好
+
+- 用户偏好固定引脚（rx=M18, gnd=N25），不愿意频繁换引脚或量电压
+- 用户偏好快速推进，要求反复测试直到通过，不希望被频繁询问
+
+## 2026-07-16 凌晨：LG v2 独立仓库 + GitHub Release + 依赖锁定报告完成
+
+### LG v2 独立仓库
+- GitHub repo Lennonhaha/lookingglass-v2 创建成功（Invoke-RestMethod PowerShell）
+- 清理 60+ 调试脚本，只保留 14 个干净文件（5 Rust源 + 6 WASM产物 + Cargo.toml/lock/.gitignore）
+- 推送成功：commit 86cfd93，HEAD main
+- **教训**：curl.exe 多流输出混合导致 API 400；Invoke-RestMethod 走代理正常
+
+### GitHub Release
+- Tag 3.3.0 推送成功
+- Release 创建成功：https://github.com/Lennonhaha/fibemate/releases/tag/v3.3.0 ✅
+
+### 依赖版本锁定报告
+- 文件：docs/dependency-pinning-report_2026-07-16.md
+- npm audit：**0 vulnerabilities** ✅
+- **P0**: bcryptjs ^2.4.3 → latest 3.0.3（主版本升级，需测试）
+- **P0**: www/reg-server 缺 package-lock.json
+- **P1**: ws → 精确锁定 8.21.0；express → 4.21.2（勿升 5.x breaking）
+- **P1**: @noble/* 建议统一 1.x 系列
+- **P2**: engines 字段、devDependencies 分离
+- Cargo.lock（lgv2）✅ 正确；wasm-bindgen  .2.126，getrandom  .2.17
+- Git commit 6216edd，已推送 GitHub
+
+### GitHub token
+- `[GITHUB_OAUTH_TOKEN]`（用户 GitHub OAuth，设备码授权，会话级临时使用）
+- 用途：repo 创建、release、push（绕过封禁的 SSH 22 端口）
+- 存储：仅本次会话使用，未持久化
+
+### IETF draft -04
+- 文件已推送 GitHub（SHA b5ee74c）
+- **手动提交**：需 2026-07-19 05:59 CST 之后到 datatracker.ietf.org/submit/ 上传
