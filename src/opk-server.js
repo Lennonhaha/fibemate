@@ -2,12 +2,24 @@
  * FIBEMATE OPK Server — One-Time Pre-Key 服务端
  * ==============================================
  * 职责:
- * 1. POST /api/keys/opk/upload     — 上传 OPK 公钥批次
- * 2. GET  /api/keys/opk/count      — 查询可用 OPK 数量
- * 3. POST /api/keys/opk/consume    — 消耗一个 OPK（返回 peer 的公钥）
+ * 1. POST /api/keys/opk/upload       — 上传 OPK 公钥批次
+ * 2. GET  /api/keys/opk/count        — 查询可用 OPK 数量
+ * 3. POST /api/keys/opk/consume      — 消耗一个 OPK（返回 peer 的公钥）
+ * 4. GET  /api/keys/opk/check-expiry — 管理员端点: 清理过期 OPK
  *
  * X3DH 协议: 每个 OPK 一次性使用，消耗后标记 used 不可复用
  * 存储: SQLite one_time_prekeys 表 + 内存缓存
+ *
+ * 生命周期:
+ *   - OPK TTL = 7 天 (OPK_TTL_MS)
+ *   - 过期自动清理: 启动时 + 每隔 1 小时
+ *   - 低供应触发: OPK 数量 < 20 时通知客户端补充
+ */
+
+// OPK TTL: 7 天，覆盖标准 OPK 批次生命周期
+const OPK_TTL_MS = 7 * 86400000;
+// 低供应阈值
+const LOW_SUPPLY_THRESHOLD = 20;
  */
 
 // 内存缓存 { userId → [{keyId, publicKey, status, createdAt}] }
@@ -148,9 +160,22 @@ function init(expressApp, db, authMiddleware) {
   });
 
   // ============================================================
+  // GET /check-expiry — 清理过期 OPK
+  // ============================================================
+  router.get('/check-expiry', (req, res) => {
+    try {
+      const result = expireOldOPKs(db, opkCache);
+      res.json({ success: true, ...result });
+    } catch (e) {
+      res.status(500).json({ error: e.message });
+    }
+  });
+
+  // ============================================================
   // 从 SQLite 恢复 OPK 缓存 (启动时调用)
   // ============================================================
   try {
+
     const rows = db._db.prepare(`
       SELECT userId, keyId, publicKey, status, created_at
       FROM one_time_prekeys ORDER BY created_at ASC
@@ -175,7 +200,58 @@ function init(expressApp, db, authMiddleware) {
 
   // 注册路由
   expressApp.use('/api/keys/opk', router);
-  console.log('[OPK-Server] 路由已注册: /api/keys/opk/{upload,count,consume}');
+  console.log('[OPK-Server] 路由已注册: /api/keys/opk/{upload,count,consume,check-expiry}');
+
+  // 启动定时过期检查
+  startExpiryCron(db, opkCache);
 }
 
-module.exports = { init, opkCache };
+// ============================================================
+// 过期清理函数
+// ============================================================
+function expireOldOPKs(db, cache) {
+  const now = Date.now();
+  const cutoff = now - OPK_TTL_MS;
+  let expired = 0;
+
+  for (const userId of Object.keys(cache)) {
+    const before = cache[userId].length;
+    cache[userId] = cache[userId].filter(k => {
+      // 保留 used (历史记录) 和未过期的 available
+      if (k.status === 'available' && k.createdAt < cutoff) {
+        expired++;
+        return false;
+      }
+      return true;
+    });
+  }
+
+  // SQLite 清理
+  if (db && db._db) {
+    try {
+      db._db.prepare(`
+        DELETE FROM one_time_prekeys
+        WHERE status = 'available' AND created_at < ?
+      `).run(cutoff);
+    } catch (e) {
+      console.warn('[OPK-Server] SQLite 过期清理失败:', e.message);
+    }
+  }
+
+  if (expired > 0) {
+    console.log(`[OPK-Server] 过期清理: ${expired} 个 OPK`);
+  }
+
+  return { expired, cutoff: new Date(cutoff).toISOString() };
+}
+
+// 定时过期检查 (每小时)
+function startExpiryCron(db, cache) {
+  // 启动时清理一次
+  expireOldOPKs(db, cache);
+  // 每小时自动清理
+  setInterval(() => expireOldOPKs(db, cache), 3600000);
+  console.log('[OPK-Server] 过期检查已启动 (每 1 小时)');
+}
+
+module.exports = { init, opkCache, expireOldOPKs, startExpiryCron };
