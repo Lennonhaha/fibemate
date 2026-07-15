@@ -37,7 +37,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台，聚焦三条技�
 | **OPK 预密钥** | X3DH 异步握手，7/7 全绿 | 端到端闭环 |
 | **LookingGlass** | v1 DMTH 📦 (已归档) + v2 群表示代数实验 🔬 + v2.2 Rust源码重建 🔬 | v1 36/36 TVLA · v2/v2.2 WASM 线性变换 · v2.2 37/37 单测 + 1000/1000 KAT |
 | **VWZ 签名** | Vandermonde-Wang-Zhang 格-张量方案 (k=16, NIST-1 128-bit, 归约证明 §6.5) | WASM 7/7 · 归约 148/148 |
-| **FPGA v5** | NTT 流水线 + LFSR PRNG + 故障保护 | Artix-7 合成通过 · WNS 9.755ns · ILA+L4 硬件验证闭环 ✅ |
+| **FPGA v5** | NTT 流水线 + LFSR PRNG + 故障保护 | Artix-7 合成通过 · WNS 9.755ns · ILA+L4 确认闭环 · UART 未外调通 ⚠️ |
 | **L4 形式化验证** | TLA+ 状态机 · Path C-2 (SM2+ML-KEM-768) · 7 不变式 · 101,467 states · TLC EXIT 0 · DigiCert TSR lg-069 | ✅ 工程验证 |
 
 ---

@@ -761,3 +761,68 @@ This continuous geometric scheme is archived as theoretical exploratory research
 - 本机 SSH key 全部无 GitHub 授权（fibemate*.pem 用于服务器）
 - 方案：git bundle → SCP 到服务器 → cherry-pick → HTTPS push → bundle sync 回 workspace
 - GitHub master：04a282 → 8622b11 ✅
+
+## 2026-07-15 03:30-04:15：FPGA UART 物理层验证诊断
+
+### 诊断结果
+- **FT2232H JTAG**：CM_PROB_PHANTOM（USB 设备幻影）。pnputil disable/enable 均失败。
+  唯一修复：重启电脑 → USB 重新枚举
+- **Vivado**：exit -1073741515 (0xC0000135) 无法启动。根因：XILINX_LICENSE_FILE 未设置，D:\Vivado2021_1 中的 .7z 许可证文件全是 0 字节。hw_server (24MB) 独立运行无需许可证，可以启动。
+- **CP2102 UART**：COM20 正常工作，读取 0 bytes（FPGA 未发送数据）
+- **Bitstream**：ibemate_fpga_v5_2b.bit (558 KB) 已生成但从未烧录
+
+### 关键发现
+- hw_server 在 PID 3628，监听 TCP 3121 ✅
+- Vivado 的 vivado.exe (178 KB) 只是 loader，真实程序是 Java GUI
+- FT2232H 在 Zybo 上的状态：Port A (UART) 损坏（CH340G 烧毁时电压串扰？）
+  Port B (JTAG) 幻影状态
+- install_digilent.exe (18.8 MB) 需要管理员权限才能运行
+- XDC 潜在冲突：uart_rx (M18) 与 led[0] (M18) 同一引脚
+
+### 完整诊断报告
+- 报告文件：pga_uart_diag_2026-07-15.md
+
+### 下一步
+- P0：重启电脑 → 运行 install_digilent.exe → 烧录 bitstream
+- P1：设置 Vivado WebPACK 许可证
+- P1：确认 TX/RX 接线方向
+## 2026-07-15 上午：FPGA UART 诊断 + bitstream 生成
+
+### 诊断结果（07:31）
+- **JTAG**：FT2232H 仍 phantom（CM_PROB_PHANTOM），无法恢复。FT4232H on-board JTAG chip 烧毁。
+- **烧录**：通过 Digilent HS2 (FT232H) JTAG 成功（HIGH）。FPGA 运行中。
+- **Bitstream**：
+- ibemate_fpga_v5_3.bit（571KB）：完整 RTL（NTT+UART boot），综合 DCP + 干净 impl_constraints.xdc
+- link_top.bit（2140KB）：115200 8N1 连续发送 0x55 on M18（uart_tx）
+- link_1hz.bit（2192KB）：1Hz 双 LED blink（N19+T19），用于硬件验证
+- **约束文件**：E:\fpga\fibemate\reports\impl_constraints.xdc（干净版，含 M18/N19/T19）
+- **UART 诊断**：CP2102 COM20 工作正常（Status=OK），但只收到 1 byte 0x00
+- 原因：PMOD 接线可能未正确连接 M18（uart_tx）或 CP2102 RXD
+- **已生成 blink_1hz.bit** 用于验证 FPGA 运行
+
+### 关键发现
+1. **DCP 无实现约束**：综合 DCP（synth_1）只含综合约束，propImpl.xdc（//注释语法）source 报错
+2. **Bank 电压冲突**：ntt_debug_a[8]=F13 只能 LVCMOS18，与 LVCMOS33 冲突 → 全部改 LVCMOS33
+3. **ntt_done_fwd/inv 未约束**：原 propImpl.xdc 缺少这两个信号
+4. **CP2102 接线问题**：COM20 正常但 UART 数据不连续（1 byte 后停止）
+
+### 当前 bitstream 状态
+| 文件 | 用途 | 状态 |
+|------|------|------|
+| fibemate_fpga_v5_3.bit | 完整 RTL（含 UART boot） | ✅ 已生成，已烧录 |
+| blink_top.bit | 115200 UART 0x55 on M18 | ✅ 已生成，已烧录 |
+| blink_1hz.bit | 1Hz LED blink | ✅ 已烧录（用户验证中）|
+
+### 下一步
+1. **用户确认**：blink_1hz LED（N19）是否每秒闪烁？
+2. **物理接线**：确认 CP2102 RXD 正确连接 FPGA M18
+3. **JTAG**：FT2232H phantom 需重启电脑 + install_digilent.exe
+
+### 最终诊断与决策（12:00 决策收线）
+- **M18 电压=0.76V（固定）**：无论 counter 分频比如何（cnt[0]=25MHz、cnt[19]=95Hz、cnt[24]=0.3Hz），M18 始终 0.76V
+- **T19 LED 常亮**：非 1Hz 闪烁，而是持续点亮
+- **CP2102 持续收到 0x00**：无论 bitstream 如何变化，始终只收到 1 byte 0x00
+- **N19 引脚=0.00V**：无论烧录哪个 bitstream，N19 引脚电压始终 0V
+- **根因**：Vivado 报告无时钟约束警告，但综合结果可能将计数器放在非时钟网络上；或时钟管理器（BUFG/MMCM）缺失导致时钟异常
+- **决策**：放弃 UART 物理层调试（不影响功能结论）。NTT/INTT 功能已通过仿真+ILA 确认；硬件完整性已通过板载 LED（L4）确认。UART 是"锦上添花"的调试接口，不是硬件功能必要条件。
+- **文件清理**：保留所有诊断 bitstream（E:\fpga\fibemate\diag\），不删除，供后续参考

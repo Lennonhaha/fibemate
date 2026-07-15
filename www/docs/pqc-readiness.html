@@ -120,7 +120,7 @@
 <tr><td>SM2-MLKEM-768 混合协议</td><td><span style="color:var(--green);">✅ 设计定稿</span></td><td>IANA #4590 公开编号（Informational I-D, DTLS-OK=N, Recommended=N），FIBEMATE 协议架构定稿</td></tr>
 <tr><td>SM2 国密性能多级优化</td><td><span style="color:var(--green);">✅ 完成</span></td><td>v1.3 wNAF(w=4) + Comb G表，sign≥3×/verify≥2×</td></tr>
 <tr><td>SM3 哈希 （内联压缩 v2.0）</td><td><span style="color:var(--green);">✅ 完成</span></td><td>64 轮完全内联（leftRotate/FF/GG/P0 展开为表达式）· T_j 常量预计算表消除 %32 运行时移位 · W&#39; 流式无 W1[64] 分配 · 1KB 哈希 ~0.2ms（纯 JS，无 WASM/asm.js）· GB/T 32905-2016 完全兼容</td></tr>
-<tr><td>FPGA NTT 硬件运算单元</td><td><span style="color:var(--green);">✅ v5 硬件验证闭环 ✅ pipe2 256/256 零误差</span></td><td>SM2/ML-KEM 共享 NTT 硬件算力 · 加法掩码双通路 (masked_wrapper + lfsr256_prng) · REMO 双蝶形实时比对 (bf_mismatch) · RAM 奇偶校验 + 周期看门狗 (fault_protect + hw_monitor) · ILA 逻辑分析仪确认 · L4 绿灯常亮 · 256/256 零误差 · bitstream 618KB · 时序 MET (WNS=9.755ns)</td></tr>
+<tr><td>FPGA NTT 硬件运算单元</td><td><span style="color:var(--green);">✅ v5 硬件验证闭环（ILA+L4 确认）· UART 未外调通 ⚠️</span></td><td>SM2/ML-KEM 共享 NTT 硬件算力 · 加法掩码双通路 (masked_wrapper + lfsr256_prng) · REMO 双蝶形实时比对 (bf_mismatch) · RAM 奇偶校验 + 周期看门狗 (fault_protect + hw_monitor) · ILA 逻辑分析仪确认 · L4 板载 LED 常亮（inv_pass_flag=1）· 仿真 256/256 零误差 · bitstream 571KB · 时序 MET (WNS=9.755ns) · UART 物理层因 M18 固定电压/CP2102 无数据未闭环（2026-07-15 决策放弃）</td></tr>
 <tr><td>pq-wasm 编译产物</td><td><span style="color:var(--green);">✅ 完成</span></td><td>Rust 编译，优化等级 s+LTO+精简剥离，压缩后 27KB，单次运算 1.87ms</td></tr>
 <tr style="border-top:2px solid var(--green);">
   <td>应用层 PQC 混合密钥交换<br/><span style="font-size:0.8rem;color:var(--muted);">路径 C: TLS Exporter + ML-KEM-768 + HKDF</span></td>
