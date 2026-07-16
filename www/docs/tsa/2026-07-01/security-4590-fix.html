@@ -162,11 +162,11 @@
  <div class="security-card">
  <p>所有核心实现文件已通过 <strong>FreeTSA</strong> 打 RFC 3161 时间戳，确保代码在特定时间点的完整性可被第三方验证。</p>
  <ul>
- <li><strong>存证位置</strong>：<code>/docs/tsa/2026-06-25/</code></li>
- <li><strong>已存证文件</strong>：11 份时间戳（含 lib.rs/Cargo.toml/JS 实现/WASM 产物/测试文件，以及 <strong>PQC Hybrid 混合握手 3 份 + NTT v1.3 硬件 2 份</strong>）</li>
+ <li><strong>存证位置</strong>：<code>/docs/tsa/</code>（12 个子目录，最新 2026-07-16）</li>
+ <li><strong>已存证文件</strong>：122 份 .tsr 文件覆盖 ML-KEM/SM2/SM3/SM4/LG v2.2/FPGA NTT/混合握手/TLA+ 形式化验证/OPK 全栈</li>
  <li><strong>验证命令</strong>：<code>openssl ts -reply -in *.tsr -text | grep "Status: Granted"</code></li>
  </ul>
- <p style="color:#8b949e;font-size:0.85rem;">📥 存证清单已归档至 <a href="/docs/tsa/2026-06-25/">/docs/tsa/2026-06-25/</a></p>
+ <p style="color:#8b949e;font-size:0.85rem;">📥 存证清单已归档至 <a href="/docs/tsa/">/docs/tsa/</a></p>
  </div>
 
  <!-- ========== 6. 开源验证 ========== -->
@@ -178,7 +178,7 @@
  <li>验证时间戳存证与源码哈希的匹配性</li>
  <li>审计所有密码学实现</li>
  </ol>
- <pre><code>git clone https://github.com/fibemate/fibemate
+ <pre><code>git clone https://github.com/Lennonhaha/fibemate
 npm install
 npm run test:formal # Track 1
 npm run test:cross-lang # Track 2
@@ -668,7 +668,7 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
 
  
 <div class="footer-links">
- <p>← <a href="/">返回首页</a> | <a href="https://github.com/fibemate/fibemate">GitHub (8 月开放)</a></p>
+ <p>← <a href="/">返回首页</a> | <a href="https://github.com/Lennonhaha/fibemate">GitHub (8 月开放)</a></p>
  </div>
 
 <!-- ====== DMTH 安全模型 (LookingGlass) ====== -->
@@ -714,7 +714,7 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
   <p style="margin:0.5rem 0 0;color:#8b949e;">LookingGlass 是 FIBEMATE 的<strong>「默认关闭、按需开启」实验性模块</strong>。它独立于 SM2/ML-KEM/Cheshire Cat 底盘运行。</p>
 </div>
 
-<p style="font-size:0.85rem;color:#8b949e;">LookingGlass 全系列 38 份 DigiCert TSR · 2026-06-26 · 全部 Granted &#x2705; · 详见 <a href="/docs/pqc-readiness.html#7">抗量子就绪状态 §7</a></p>
+<p style="font-size:0.85rem;color:#8b949e;">LookingGlass 全系列 78 份 DigiCert TSR · 2026-07-16 · 全部 Granted &#x2705; · 详见 <a href="/docs/pqc-readiness.html#7">抗量子就绪状态 §7</a></p>
 
 </body>
 </html>

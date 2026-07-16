@@ -10,7 +10,7 @@ const fs = require('fs');
 const path = require('path');
 
 const BASE = 'http://127.0.0.1:3001';
-const REG = 'http://127.0.0.1:3082';
+const REG = 'http://127.0.0.1:3080';
 const RESULTS = [];
 
 // ===================== Utility =====================
