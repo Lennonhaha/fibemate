@@ -13,7 +13,7 @@
     "@alicloud/openapi-client": "^0.4.15",
     "@noble/curves": "^2.2.0",
     "@noble/post-quantum": "^0.6.1",
-    "bcryptjs": "^2.4.3",
+    "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.10.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
