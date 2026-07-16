@@ -1,184 +1,205 @@
-# FIBEMATE - 下一代后量子密码通信协议
+# FIBEMATE - Next-Generation Post-Quantum Cryptographic Communication Protocol
 
-**v3.3-preview** | 2026-07-16
-TSR 序列: lg-001 ~ lg-076 | 许可证: GNU GPLv3
-[fibemate.net](https://fibemate.net) | [PQC 就绪状态](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3-preview** | 2026-07-16 | TSR Sequence: lg-001 ~ lg-078 | License: GNU GPLv3
 
----
-
-## 项目概述
-
-FIBEMATE 是一个全栈后量子密码学工程验证平台,聚焦三条技术线:
-
-| 线路 | 内容 | 状态 |
-|------|------|------|
-| **标准 PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT、WASM、TLS 1.3 混合握手 | ✅ 生产就绪 |
-| **国密混合** | SM2/SM3/SM4 + ML-KEM - IANA #4590 应用层验证 | ✅ 双轨道上线 |
-| **前沿研究** | LookingGlass v1/v2/v2.2 (群表示代数实验; v2.2 Rust源码重建可复现性闭环, 37/37+1000/1000 KAT), VWZ 格-张量签名 (归约证明: VMQ-SPARSE→EUF-CMA, 148/148), FPGA v5 硬件防护 (WNS 9.755ns, ILA+L4 确认) | 🔬 实验分支 |
-
-### 生产环境
-
-- **TLS 1.3 混合后量子握手** - 路径 A (X25519MLKEM768, NamedGroup) 已于 2026-07-10 搁置(浏览器/nginx 技术阻断) · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ 5/5, p95=78.5ms, lg-053/lg-057
-- **路径 C-2** - SM2+ML-KEM-768 混合密钥交换 (IANA #4590 应用层验证)
-- **双轨道互不干扰** - 普通客户端自动降级至经典 ECDH
+[fibemate.net](https://fibemate.net) | [PQC Readiness Status](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
 
-## 核心特性
+## Project Overview
 
-| 模块 | 说明 | 验证 |
-|------|------|------|
-| **ML-KEM-768** | C Native + WASM 双实现,FIPS 203 合规 | KAT 10,000/10,000 |
-| **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205),签名 7,856B | WASM 集成 |
-| **SM2 ECDH** | BigInt 标量掩码 + 射影随机化,常量时间 | TVLA 5/5 PASS (N=10,000) |
-| **SM4-αGCM** | α=7.5 认证加密,自动选择 λ2C 或 SM4 | 10/10 PASS |
-| **SM3 哈希** | GB/T 32905 合规 | KAT 通过 |
-| **TLS 1.3 混合** | 路径 A 已搁置 · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ | 路径 C-2 独立运行 |
-| **OPK 预密钥** | X3DH 异步握手,7/7 全绿 | 端到端闭环 |
-| **LookingGlass** | v1 DMTH 📦 (已归档) + v2 群表示代数实验 🔬 + v2.2 Rust源码重建 🔬 | v1 36/36 TVLA · v2/v2.2 WASM 线性变换 · v2.2 37/37 单测 + 1000/1000 KAT |
-| **VWZ 签名** | Vandermonde-Wang-Zhang 格-张量方案 (k=16, NIST-1 128-bit, 归约证明 §6.5) | WASM 7/7 · 归约 148/148 |
-| **FPGA v5** | NTT 流水线 + LFSR PRNG + 故障保护 | Artix-7 合成通过 · WNS 9.755ns · ILA+L4 确认闭环 · UART 未外调通 ⚠️ |
-| **L4 形式化验证** | TLA+ 状态机 · Path C-2 (SM2+ML-KEM-768) · 7 不变式 · 101,467 states · TLC EXIT 0 · DigiCert TSR lg-069 | ✅ 工程验证 |
+FIBEMATE is a full-stack post-quantum cryptography engineering verification platform with three technical tracks:
+
+| Track | Content | Status |
+|-------|---------|--------|
+| **Standard PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) — KAT, WASM, TLS 1.3 Hybrid Handshake | ✅ Production Ready |
+| **National Crypto Mixing** | SM2/SM3/SM4 + ML-KEM — IANA #4590 Application Layer Verification | ✅ Dual-track Launched |
+| **Cutting-edge Research** | LookingGlass v1/v2/v2.2, VWZ Lattice-Tensor Signature, FPGA v5 Hardware Protection | 🔬 Experimental |
 
 ---
 
-## 快速开始
+## Production Deployment Status
 
-### 前置要求
+### Current State
+
+| Layer | Protocol | Status |
+|-------|----------|--------|
+| **TLS Transport Layer** | Classic ECDHE X25519 | ✅ Industry Standard |
+| **TLS Hybrid Handshake** | Path A (X25519MLKEM768 NamedGroup) | ⚠️ Shelved 2026-07-10 (browser/nginx technical blockers) |
+| **Application Layer (E2E)** | Path C-2 (SM2+ML-KEM-768) | ✅ Verified 5/5, p95=78.5ms |
+
+**Key Points**:
+- Path C-2 runs independently via IANA #4590 application layer verification
+- Dual-track non-interference: regular clients auto-downgrade to classic ECDH
+- Path A compiled output retained for reference
+
+---
+
+## Core Features
+
+| Module | Description | Verification |
+|--------|-------------|--------------|
+| **ML-KEM-768** | C Native + WASM, FIPS 203 compliant | KAT 10,000/10,000 ✅ |
+| **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM Integrated ✅ |
+| **SM2 ECDH** | BigInt scalar masking + projective randomization + Montgomery Ladder | TVLA N=10,000 20/20 ✅ |
+| **SM4-αGCM** | α=7.5 authenticated encryption | 10/10 PASS ✅ |
+| **SM3 Hash** | GB/T 32905 compliant | KAT PASS ✅ |
+| **TLS 1.3 Hybrid** | Path A shelved · Path C-2 application layer ✅ | Path C-2 Independent ✅ |
+| **OPK Pre-key** | X3DH Asynchronous Handshake, 7/7 All Green | End-to-end Closed Loop ✅ |
+| **LookingGlass** | v1 DMTH 📦 Archived · v2/v2.2 Group Algebra Experiment 🔬 | v1 36/36 TVLA · v2.2 37/37 Unit Tests + 1000/1000 KAT |
+| **VWZ Signature** | Vandermonde-Wang-Zhang Lattice-Tensor Scheme (k=16, NIST-1 128-bit) | WASM 7/7 · Reduction 148/148 |
+| **FPGA v5** | NTT Pipeline + LFSR PRNG + Fault Protection | Artix-7 Synthesized · WNS 9.755ns · ILA+L4 Confirmed · ⚠️ UART In Progress |
+| **L4 Formal Verification** | TLA+ State Machine · Path C-2 · 7 Invariants · 101,467 states · TLC EXIT 0 | ✅ Engineering Verified |
+
+---
+
+## Getting Started
+
+### Prerequisites
 
 - Node.js ≥ 18
 - npm ≥ 9
 - Git
-- (可选) OpenSSL ≥ 3.0, Rust ≥ 1.70, Vivado 2023+
+- (Optional) OpenSSL ≥ 3.0, Rust ≥ 1.70, Vivado 2023+
 
-### 编译
+### Build
 
 ```bash
-# 克隆仓库
+# Clone the repository
 git clone https://github.com/Lennonhaha/fibemate.git
 cd fibemate
 
-# 安装 Node.js 依赖
+# Install Node.js dependencies
 npm install
 
-# 编译 C Native 插件 (ML-KEM-768, NTT)
+# Build C Native addon (ML-KEM-768, NTT)
 cd addon && npm install && cd ..
 
-# 验证核心密码模块
+# Verify core crypto module
 node -e "const m=require('./addon/build/Release/mlkem.node'); const kp=m.keygen(); console.log('ML-KEM-768 OK:', kp[0].length+'B pk')"
 ```
 
-### 启动服务
+### Run
 
 ```bash
-# 开发模式
+# Development mode
 npm start
 
-# 生产模式
+# Production mode
 pm2 start ecosystem.config.js
 
-# 服务默认监听 http://localhost:3001
-# Nginx 反向代理示例见 BUILD.md
+# Service default: http://localhost:3001
+# Nginx reverse proxy example: BUILD.md
 ```
 
-### 测试
+### Test
 
 ```bash
-# 运行所有核心测试
+# Run all core tests
 node test/test-all.js
 
-# 分模块测试
-node crypto/ml-kem-768-kat.js    # ML-KEM KAT 10000
-node crypto/sm2-tvla-suite.js    # SM2 TVLA
-node crypto/pqc-hybrid-test.js   # 混合握手
+# Module-specific tests
+node test/ml-kem-768-kat.js # ML-KEM KAT 10,000
+node test/sm2-tvla-suite.js # SM2 TVLA
+node test/pqc-hybrid-test.js # Hybrid handshake
 ```
 
 ---
 
-## 项目结构
+## Project Structure
 
 ```
 fibemate/
-├── src/                  # 服务端源码
-│   ├── index.js          # Express 主入口
-│   ├── pqc-hybrid-server.js  # 路径 C-2 混合握手
-│   ├── opk-server.js     # X3DH 预密钥协议
-│   ├── vwz-research-api.js   # VWZ 研究端 API
-│   └── crypto/           # 混淆/填充/过滤器
-├── addon/                # C Native 插件 (ML-KEM-768, NTT)
+├── src/ # Server source
+│   ├── index.js # Express main entry
+│   ├── pqc-hybrid-server.js # Path C-2 hybrid handshake
+│   ├── opk-server.js # X3DH pre-key protocol
+│   ├── vwz-research-api.js # VWZ research API
+│   └── crypto/ # Padding/filters
+├── addon/ # C Native addon (ML-KEM-768, NTT)
 │   ├── build/Release/mlkem.node
-│   └── ntt/              # FPGA NTT C 参考
-├── www/                  # 前端资源
-│   ├── index.html        # 主站
-│   ├── crypto/           # 浏览器密码模块
+│   └── ntt/ # FPGA NTT C reference
+├── www/ # Frontend assets
+│   ├── index.html # Main site
+│   ├── crypto/ # Browser crypto modules
 │   │   ├── ml-kem-768.js
-│   │   ├── sm2-bigint-ec.js (v1.2, TVLA 5/5)
+│   │   ├── sm2-bigint-ec.js (v1.3, TVLA N=10,000 20/20)
 │   │   ├── sm4-alpha-gcm.js
 │   │   └── pqc-hybrid-client.js
-│   ├── docs/             # 文档 + TSA 存证
+│   ├── docs/ # Documentation + TSA proofs
 │   │   ├── pqc-readiness.html
 │   │   ├── lg-vwz-security-en.html
-│   │   └── tsa/          # lg-001~076 TSR 文件
-│   ├── lgv1/             # LookingGlass v1 (DMTH) 📦 已归档
-│   └── lgv2/             # LookingGlass v2 群表示代数实验 WASM
-├── rtl/                  # FPGA RTL (Verilog)
+│   │   └── tsa/ # lg-001~078 TSR files
+│   ├── lgv1/ # LookingGlass v1 (DMTH) 📦 Archived
+│   └── lgv2/ # LookingGlass v2 WASM
+├── rtl/ # FPGA RTL (Verilog)
 │   ├── ntt_core_pipe2.v
 │   ├── vwz/
 │   └── hw_monitor.v
-├── c-stm32/              # STM32 C 框架
-├── scripts/              # CI/构建/TVLA 脚本
-├── experimental/         # 实验模块
+├── c-stm32/ # STM32 C framework
+├── scripts/ # CI/Build/TVLA scripts
+├── experimental/ # Experimental modules
 ├── package.json
 ├── ecosystem.config.js
-├── LICENSE               # GPLv3
-├── README.md             # 本文件
-└── BUILD.md              # 构建与部署指南
+├── LICENSE # GPLv3
+├── README.md
+└── BUILD.md # Build & deployment guide
 ```
 
 ---
 
-## 安全模型
+## Security Model
 
-FIBEMATE 遵循纵深防御 (defense-in-depth) 三层架构(不包含 LookingGlass 实验分支):
+FIBEMATE follows a **defense-in-depth** three-layer architecture (excluding LookingGlass experimental branch):
 
-| 层 | 内容 | 安全水平 |
-|----|------|---------|
-| **L1-L7** | 标准 ML-KEM-768 + SLH-DSA + SM2 ECDH | 128-bit 经典 + 128-bit PQC |
-| **L8** | 运行时检测器 (43/43 PASS) | 逻辑完整性 |
-| **L9** | 硬件故障保护 (FPGA v5) | 物理攻击面 |
+| Layer | Content | Security Level |
+|-------|---------|----------------|
+| **L1-L7** | ML-KEM-768 + SLH-DSA + SM2 ECDH | 128-bit Classical + 128-bit PQC |
+| **L8** | Runtime Detector (43/43 PASS) | Logical Integrity |
+| **L9** | Hardware Fault Protection (FPGA v5) | Physical Attack Surface |
 
-**LookingGlass (v1 DMTH 📦 已归档 + v2 群表示代数实验 🔬 + v2.2 Rust源码重建 🔬)**: 有限群表示克罗内克嵌套代数实验。外层为纯无损线性变换,不提升 LWE 格硬度。默认关闭,不接入生产加密链路。v1 已归档;v2 仅用于群论教学、硬件容错自检及 L8/L9 运行监测实验;v2.2 为 v2 的 Rust 源码重建与可复现性闭环 (37/37 单测 + 1000/1000 KAT, 48.1KB WASM / gzip 22.2KB, 11 导出),代数结构等同 v2.1,不引入新密码学假设、不提升 LWE 格硬度,详见 pqc-readiness.html §7.10。
+### LookingGlass
 
-**VWZ**: 自研张量签名方案,保留在研究分支。不部署生产环境。
+> 🔬 **Experimental Module** — Default OFF, not connected to production encryption.
+>
+> LookingGlass is a finite group representation Kronecker nested algebra experiment. v1 archived; v2/v2.2 used only for group theory teaching, hardware fault tolerance self-check, and L8/L9 operational monitoring experiments. v2.2: Rust source reconstruction with reproducibility closed loop (37/37 unit tests + 1000/1000 KAT, 48.1KB WASM / gzip 22.2KB, 11 exports). Algebraically equivalent to v2.1 — introduces no new cryptographic assumptions, does not increase LWE lattice hardness.
+>
+> See [pqc-readiness.html §7.10](https://fibemate.net/docs/pqc-readiness.html) for details.
+
+### VWZ
+
+> 🔬 **Research Branch** — Self-developed tensor signature scheme. Not deployed in production.
 
 ---
 
 ## IANA #4590
 
-FIBEMATE 完成了 SM2+ML-KEM-768 混合方案的工程验证:
+FIBEMATE has completed engineering validation of the **SM2+ML-KEM-768** hybrid scheme:
 
-- **TLS 层** (路径 A): X25519MLKEM768 - 已于 2026-07-10 搁置(浏览器/nginx 技术阻断),编译产出保留供参考
-- **应用层** (路径 C-2): SM2+ML-KEM-768 - HTTP 层混合密钥交换,lg-053/lg-057 存证
+| Path | Protocol | Status |
+|------|----------|--------|
+| **Path A (TLS Layer)** | X25519MLKEM768 | ⚠️ Shelved 2026-07-10 (browser/nginx technical blockers) |
+| **Path C-2 (Application Layer)** | SM2+ML-KEM-768 | ✅ HTTP Layer Hybrid Key Exchange, TSR lg-053/lg-057 |
 
-详见 [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/)。
-
----
-
-## 许可证
-
-GNU General Public License v3.0 - 详见 [LICENSE](./LICENSE)
-
-本项目的 ML-KEM-768 和 SLH-DSA 实现基于 NIST FIPS 203/205 标准。SM2/SM3/SM4 实现参考 GB/T 32918/32905/32907 国家标准。
+See [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/) for details.
 
 ---
 
-## 致谢
+## License
 
-- **NIST PQC 标准化项目** - ML-KEM (FIPS 203), SLH-DSA (FIPS 205)
-- **Open Quantum Safe** - liboqs, oqs-provider
-- **中国国家密码管理局 (OSCCA)** - SM2/SM3/SM4 国家密码标准 (GB/T 32918, GB/T 32905, GB/T 32907)
-- **FreeTSA / 联合信任** - 时间戳存证
+**GNU General Public License v3.0** — See [LICENSE](LICENSE)
+
+The ML-KEM-768 and SLH-DSA implementations in this project are based on NIST FIPS 203/205 standards. SM2/SM3/SM4 implementations reference GB/T 32918/32905/32907 national standards.
 
 ---
 
-*FIBEMATE - Post-Quantum Cryptography, Engineered.*
+## Acknowledgments
+
+- **NIST PQC Standardization Project** — ML-KEM (FIPS 203), SLH-DSA (FIPS 205)
+- **Open Quantum Safe** — liboqs, oqs-provider
+- **China National Cryptography Administration (OSCCA)** — SM2/SM3/SM4 National Standards (GB/T 32918, GB/T 32905, GB/T 32907)
+- **FreeTSA / United Trust** — Timestamp Evidence
+
+---
+
+**FIBEMATE — Post-Quantum Cryptography, Engineered.**
