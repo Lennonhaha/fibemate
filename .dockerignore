@@ -1,0 +1,41 @@
+# 依赖与构建产物（容器内重新安装）
+node_modules
+**/node_modules
+npm-debug.log
+addon/build
+
+# 巨型/非部署目录
+archives
+**/Vivado-*
+fibemate-repo-snapshot.tar.gz
+fibemate-tsr-recovery-*.tar.gz
+remedial-tsr-*.tar.gz
+*.tar.gz
+p0_evidence_*
+
+# 研究/硬件/调试（非生产）
+research
+c-stm32
+fips205
+fpga*
+mixnet
+opk-audit
+sm2-versions
+Vivado*
+
+# 本地调试脚本与诊断残留
+debug_*.js
+*_diag*.md
+*_fix*.py
+security_raw.bin
+security_*_current.html
+
+# git / CI
+.git
+.github
+ISSUE_TEMPLATE
+
+# OS / 编辑器
+.DS_Store
+Thumbs.db
+*.swp

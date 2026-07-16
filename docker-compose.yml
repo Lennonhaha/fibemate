@@ -1,0 +1,36 @@
+version: '3.8'
+
+# FIBEMATE 基础容器编排
+# 用法:
+#   docker compose build
+#   docker compose up -d
+#   # 查看日志
+#   docker compose logs -f fibemate
+# 端口: 8080 = HTTP 静态+反代, 8443 = HTTPS(需挂载证书或前置 TLS 终结)
+services:
+  fibemate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # 如需构建原生 ML-KEM 插件，取消下一行注释并提供本地 addon 源码路径
+      # args:
+      #   ADDON_DIR: ./addon-src
+    image: ghcr.io/lennonhaha/fibemate:latest
+    container_name: fibemate
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    environment:
+      - NODE_ENV=production
+      - PORT_API=3001
+      - PORT_WEB=3002
+      - PORT_REG=3080
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/health", "||", "exit", "1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    # 如需持久化（数据库/上传），挂载卷：
+    # volumes:
+    #   - ./data:/opt/fibemate-full/data
