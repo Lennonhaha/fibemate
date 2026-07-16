@@ -13,7 +13,7 @@
 #   require 原生插件失败会令进程退出。如需 3001，请在 ADDON_DIR 提供源码
 #   并在构建期执行 addon 构建（见下方注释）。
 # =============================================================================
-FROM node:22-bookworm AS build
+FROM node:20.18.1-bookworm AS build
 
 # 构建期工具（better-sqlite3 / 原生插件需要）
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -36,7 +36,7 @@ RUN [ -f reg-server/package.json ] && (cd reg-server && npm ci --ignore-scripts 
 #     fi
 
 # ---- 运行时 ----
-FROM node:22-bookworm AS runtime
+FROM node:20.18.1-bookworm AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx \
     && rm -rf /var/lib/apt/lists/* \

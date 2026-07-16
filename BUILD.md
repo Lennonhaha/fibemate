@@ -423,3 +423,60 @@ digicert-certs/digicert-tsa-chain.pem 含 DigiCert 2025 TSA 完整链（leaf + �
 
 ### 已知可复现性缺口
 - 部分 .tsr 的 .sha256 清单所引用的原始文件，在后续提交中被修改过，导致「文件完整性」校验 FAIL（例如 lg-074 对应的 pga-l8l9-43-tests_2026-07-15.md）。时间戳本身有效且精确绑定到生成时的哈希；该 FAIL 仅说明**当前仓库中的文件已非被时间戳的字节**。如需严格字节级复现，应冻结被时间戳文件或将其纳入存证归档目录随仓库分发。
+
+## 可复现构建与版本锁定（消除隐性版本差异）
+
+本项目通过以下手段消除「隐性版本差异」（npm 浮动版本、未锁版本、Node/Rust/Vivado 差异、全局依赖、原生编译环境、WASM 构建环境等）：
+
+### 1. Node.js 版本固定
+- `.nvmrc` 固定为 `20`（LTS）。CI 通过 `actions/setup-node` 的 `node-version-file: .nvmrc` 读取，确保本地/CI 一致。
+- 所有 `package.json` 的 `engines` 约束（mixnet `>=20`、www `>=16`）均被 Node 20 满足。
+
+### 2. npm 依赖精确锁定
+- 所有 `dependencies` / `devDependencies` / `overrides` 均已去除 `^` / `~`，钉为**精确版本**（不再自动升级补丁/小版本）。
+- `package-lock.json` 已提交到 git（root / www / reg-server / mixnet / mixnet/{entry,exit,middle}）。
+- 安装统一使用 `npm ci`（严格按 lock 安装，不做版本推断）。**禁止** `npm install` 用于 CI/生产。
+- 顶层 `overrides` 已精确钉定（`jsonpath`、`bfj`），用于约束传递依赖。
+- 审计：`npm audit --production`（CI 归档为 artifact）。
+
+### 3. lockfile 同步强制校验
+- `scripts/reproduce-build.sh` 对每个子项目执行 `npm ci --dry-run`，一旦 lock 与 package.json 不一致立即报错退出。
+- CI（`.github/workflows/ci.yml`）在每次 push/PR 强制跑该校验，从机制上阻断「改了 package.json 却忘了更新 lock」导致的隐性漂移。
+
+### 4. Rust / 原生插件锁定
+- `research/lgv2/rust/Cargo.lock` 已提交；构建用 `cargo build --locked` 强制遵循 lock。
+- 原生 C 插件（better-sqlite3 / node-addon-api / ML-KEM addon）需 Linux 编译工具链（build-essential + python3），Dockerfile 与 CI 均已预装。
+
+### 5. WASM 构建产物校验
+- WASM 工具链版本固定（wasm-pack / emscripten 固定版本，写入构建脚本）。
+- 产物 sha256 存于 `docs/wasm-checksums.txt`，`scripts/reproduce-build.sh` 通过 `sha256sum -c` 比对，发现差异即报错。
+- 当前归档：`www/crypto/lgv2/lookingglass_v2_bg.wasm`。
+
+### 6. Docker 全环境锁定
+- `Dockerfile` 基础镜像钉为 `node:20.18.1-bookworm`（精确 tag，不用 `node:latest`）。
+- 多阶段构建：`npm ci` 安装 → 拷贝产物 → nginx 提供静态站 + 反代子服务。
+- 建议部署镜像打固定 tag（如 `fibemate:v3.3.0`）并推送到 `ghcr.io`，后续部署直接用镜像，不在本地重新编译。
+
+### 7. FPGA / Vivado 环境锁定
+- Vivado 版本固定并记录于 FPGA 文档；综合/仿真/约束脚本（`.tcl`）与 `impl_constraints.xdc` 全部提交，保证可复现综合与时序报告，不依赖图形界面工程文件。
+
+### 8. 操作系统 & 全局环境
+- 不依赖全局 npm 包 / 全局工具（pm2、vivado 全局脚本），改用 npx / 本地 `node_modules/.bin`。
+- `.gitattributes` 统一换行符（`* text=auto eol=lf`），所有文本 UTF-8 无 BOM。
+- 避免硬编码绝对路径/本机用户名（已用 `__dirname` 修复）。
+- CI 固定 `ubuntu-22.04`，避免跨系统差异。
+
+### 9. 钉定时的已知决策（偏离「统一降级」模板之处）
+- **mixnet/{entry,exit,middle} 保留 `express@5.2.1`**（express 5.x 为这些组件有意采用；强制降到 4.x 属破坏性变更，会使 mixnet 编译/运行失败）。root/www/mixnet 主包钉 `express@4.21.2`。
+- **`@noble/*` 保留 2.x**（`@noble/curves@2.2.0`、`@noble/post-quantum@0.6.1`、`@noble/hashes@2.2.0`）。1.x → 2.x 是破坏性 API 变更，强降会导致 ZK/PQC 代码编译失败。
+- 以上两者均为「保代码可用」的有意决策，非遗漏。
+
+### 10. 验证方法
+在两台干净环境（新 Ubuntu 容器 + 本地）执行：
+```bash
+node -v            # 应为 v20.x（与 .nvmrc 一致）
+bash scripts/reproduce-build.sh   # lock 同步 + WASM 校验和
+npm ci && npm test               # 安装并跑测试
+```
+- ✅ 全部通过、校验和一致 = 无隐性版本差异。
+- ❌ 失败/校验和不一致 = 仍存在浮动依赖或环境差异，需先 `npm install --package-lock-only` 重建 lock 再提交。

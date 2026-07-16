@@ -6,6 +6,6 @@
   "private": true,
   "license": "GPL-3.0-only",
   "dependencies": {
-    "ws": "^8.18.0"
+    "ws": "8.21.0"
   }
 }
