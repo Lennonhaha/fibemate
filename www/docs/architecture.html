@@ -3,264 +3,362 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鎶€鏈灦鏋?- FIBEMATE</title>
+    <title>System Architecture - FIBEMATE v3.3</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --primary: #00E5C3; --primary-dim: #00b894; --bg-dark: #0a0e17;
-            --bg-card: #111827; --bg-card-hover: #1a2332; --text: #e2e8f0;
-            --text-dim: #94a3b8; --accent-purple: #8b5cf6; --accent-blue: #3b82f6;
-            --accent-pink: #ec4899; --accent-orange: #f97316; --accent-green: #22c55e;
+            --primary: #00E5C3;
+            --primary-dim: #00b894;
+            --bg-dark: #0a0e17;
+            --bg-card: #111827;
+            --bg-card-hover: #1a2332;
+            --text: #e2e8f0;
+            --text-dim: #94a3b8;
+            --accent-purple: #8b5cf6;
+            --accent-blue: #3b82f6;
+            --accent-orange: #f97316;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-yellow: #eab308;
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.7; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            line-height: 1.7;
+        }
         a { color: var(--primary); text-decoration: none; }
         a:hover { text-decoration: underline; }
-        .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
-        
+
         /* Nav */
-        nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: rgba(17,24,39,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 100; }
+        nav {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 1rem 2rem;
+            background: rgba(17,24,39,0.9);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+            position: sticky; top: 0; z-index: 100;
+        }
         .nav-logo { font-size: 1.25rem; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
-        .nav-back { font-size: 0.9rem; color: var(--text-dim); }
-        .nav-back:hover { color: var(--primary); }
+        .nav-links { display: flex; gap: 1.5rem; font-size: 0.9rem; }
+        .nav-links a { color: var(--text-dim); }
+        .nav-links a:hover { color: var(--primary); text-decoration: none; }
 
-        /* Sections */
+        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
+
+        /* Header */
         h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
-        h1 .gradient { background: linear-gradient(135deg, var(--primary), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid rgba(0,229,195,0.15); }
-        h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--primary); }
-        .subtitle { color: var(--text-dim); font-size: 1.05rem; margin-bottom: 2rem; }
+        h1 .g { background: linear-gradient(135deg, var(--primary), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .subtitle { color: var(--text-dim); font-size: 1rem; margin-bottom: 2rem; }
+        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .badge-green { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
+        .badge-orange { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3); color: #f97316; }
+        .badge-blue { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); color: #60a5fa; }
+        .badge-gray { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.2); color: #8b949e; }
+        .badge-purple { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; }
 
-        /* Architecture Diagram */
-        .arch-diagram { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; margin: 1.5rem 0; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.6; overflow-x: auto; white-space: pre; color: var(--text-dim); }
-        .arch-diagram .hl { color: var(--primary); }
-        .arch-diagram .dim { color: #646c78; }
+        h2 { font-size: 1.4rem; font-weight: 700; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid rgba(0,229,195,0.12); }
+        h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.6rem; color: var(--primary); }
+        p { margin: 0.5rem 0; color: var(--text-dim); font-size: 0.95rem; }
+        p.meta { font-size: 0.82rem; color: var(--text-dim); margin-top: 0.3rem; }
 
-        /* Comparison Table */
-        table { width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; font-size: 0.92rem; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
-        th { color: var(--text-dim); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; background: rgba(17,24,39,0.6); }
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+        .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text); }
+        .card-sub { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1rem; }
+
+        /* Grid */
+        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1rem 0; }
+        @media (max-width: 768px) {
+            .grid-3 { grid-template-columns: 1fr; }
+            .grid-2 { grid-template-columns: 1fr; }
+        }
+
+        /* Architecture diagram */
+        .arch-box {
+            background: rgba(0,0,0,0.25);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+            font-size: 0.82rem;
+            line-height: 1.7;
+            overflow-x: auto;
+            white-space: pre;
+            margin: 1rem 0;
+        }
+        .hl { color: var(--primary); }
+        .hl2 { color: var(--accent-blue); }
+        .dim { color: #646c78; }
+        .orange { color: var(--accent-orange); }
+        .green { color: var(--accent-green); }
+        .purple { color: var(--accent-purple); }
+        .yellow { color: var(--accent-yellow); }
+
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; font-size: 0.88rem; }
+        th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        th { color: var(--text-dim); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; background: rgba(17,24,39,0.5); }
         tr:hover td { background: rgba(255,255,255,0.02); }
         td:first-child { font-weight: 600; color: var(--text); white-space: nowrap; }
+        code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.82rem; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px; color: var(--primary); }
 
-        /* Badges */
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
-        .badge-stable { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
-        .badge-experimental { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3); color: #f97316; }
-        .badge-done { background: rgba(0,229,195,0.1); border: 1px solid rgba(0,229,195,0.2); color: #00d4aa; }
-        .badge-wip { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.2); color: #8b949e; }
-
-        /* Code block */
-        code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: var(--primary); }
-        pre { background: rgba(0,0,0,0.3); padding: 1.2rem; border-radius: 8px; overflow-x: auto; margin: 0.75rem 0; font-size: 0.85rem; }
-        pre code { padding: 0; background: none; }
-
-        /* Warning box */
-        .warning { background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.2); border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; font-size: 0.9rem; }
-        .warning::before { content: '鈿狅笍 '; }
-
-        /* Flow */
-        .flow-steps { counter-reset: flow; list-style: none; padding: 0; }
-        .flow-steps li { counter-increment: flow; padding: 0.75rem 0 0.75rem 2.5rem; position: relative; }
-        .flow-steps li::before { content: counter(flow); position: absolute; left: 0; top: 0.7rem; width: 1.6rem; height: 1.6rem; background: var(--bg-card); border: 1px solid var(--primary); border-radius: 50%; text-align: center; font-size: 0.78rem; line-height: 1.55rem; color: var(--primary); }
+        /* Timeline */
+        .timeline { position: relative; padding-left: 2rem; margin: 1rem 0; }
+        .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: rgba(0,229,195,0.15); }
+        .timeline-item { position: relative; margin-bottom: 1.5rem; }
+        .timeline-item::before { content: ''; position: absolute; left: -2rem; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid var(--bg-dark); }
+        .timeline-date { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.2rem; }
 
         /* Footer */
         footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.82rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 3rem; }
+        .footer-note { background: rgba(0,229,195,0.05); border: 1px solid rgba(0,229,195,0.12); border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; font-size: 0.88rem; color: var(--text-dim); }
     </style>
 </head>
 <body>
     <nav>
         <a href="/" class="nav-logo">FIBEMATE</a>
-        <a href="/" class="nav-back">鈫?杩斿洖棣栭〉</a>
+        <div class="nav-links">
+            <a href="/docs/pqc-readiness.html">PQC Readiness</a>
+            <a href="/docs/API.html">API</a>
+            <a href="/">Home</a>
+        </div>
     </nav>
 
     <div class="container">
-        <h1>鎶€鏈?span class="gradient">鏋舵瀯</span></h1>
-        <p class="subtitle">FIBEMATE 閲囩敤鍙屽悗绔灦鏋勶細Node.js 鐢熶骇绋冲畾鐗?+ Rust 楂樻€ц兘瀹為獙鐗堛€備袱涓悗绔?API 鍏煎锛屽彲鏃犵紳鍒囨崲銆?/p>
+        <h1>System <span class="g">Architecture</span></h1>
+        <p class="subtitle">FIBEMATE v3.3 &middot; PQC-Hybrid &middot; TLS Exporter Path C-2 &middot; 76 DigiCert TSRs</p>
 
-        <!-- Architecture Diagram -->
-        <h2>绯荤粺鏋舵瀯鎬昏</h2>
-        <div class="arch-diagram">
-鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-鈹?                   <span class="hl">fibemate.net</span>                              鈹?
-鈹?                <span class="dim">(Nginx Reverse Proxy)</span>                       鈹?
-鈹? <span class="dim">TLS 1.3 路 HSTS 路 OCSP Stapling 路 Let's Encrypt</span>           鈹?
-鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-                       鈹?
-         鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-         鈹?            鈹?                            鈹?
-         鈻?            鈻?                            鈻?
-  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-  鈹?<span class="hl">绋冲畾閫氶亾</span>   鈹?鈹?<span class="dim">瀹為獙閫氶亾</span>   鈹?             鈹?<span class="dim">闈欐€佽祫婧?/span>   鈹?
-  鈹?<span class="dim">:3001</span>      鈹?鈹?<span class="dim">:8080*</span>     鈹?             鈹?<span class="dim">:80/443</span>    鈹?
-  鈹斺攢鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹?
-        鈹?             鈹?                          鈹?
-        鈻?             鈻?                          鈻?
-  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-  鈹?<span class="hl">Node.js</span>   鈹?鈹?<span style="color:var(--accent-orange);">Rust</span>      鈹?             鈹?<span class="dim">www/</span>       鈹?
-  鈹?<span class="hl">v2.21-pq</span>  鈹?鈹?<span style="color:var(--accent-orange);">v0.2-e2ee</span> 鈹?             鈹?<span class="dim">HTML/JS/CSS</span> 鈹?
-  鈹?<span class="badge" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#22c55e;padding:1px 8px;font-size:0.7rem;">PRODUCTION</span> 鈹?鈹?<span class="badge" style="background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:#f97316;padding:1px 8px;font-size:0.7rem;">EXPERIMENTAL</span> 鈹?             鈹?           鈹?
-  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
+        <!-- ===== Architecture Diagram ===== -->
+        <h2>System Overview</h2>
+        <div class="arch-box">                                    <span class="hl">fibemate.net</span>
+                               (Nginx TLS 1.3 &middot; HSTS &middot; Let's Encrypt)
+                                       <span class="dim">&darr;</span>
+         <span class="hl">:3001</span>  <span class="hl">:3080/3081</span>  <span class="hl">:3082</span>  <span class="hl">:3002</span>  <span class="hl">:80/443</span>
+         <span class="dim">Node.js</span>   <span class="dim">reg-server</span>  <span class="dim">WS Bridge</span>  <span class="dim">Rust WASM</span>  <span class="dim">Static</span>
+          (PM2)        (WS+Health)      (WS Proxy)      (lgv2/Crypto)    (www/)
+         <span class="green">PRODUCTION</span>  <span class="green">IANA #4590</span>  <span class="green">E2E 10/10</span>  <span class="purple">EXPERIMENTAL</span>  <span class="dim">HTML/JS/CSS</span></div>
+
+        <!-- ===== Key Numbers ===== -->
+        <h2>Key Metrics</h2>
+        <div class="grid-3">
+            <div class="card">
+                <div class="card-title">TSR存证</div>
+                <div style="font-size:1.8rem;font-weight:800;color:var(--primary);">76</div>
+                <div class="card-sub">DigiCert TSRs (lg-001 ~ lg-076)<br>lg-077~078 最新归档</div>
+                <span class="badge badge-green">100% Granted</span>
+            </div>
+            <div class="card">
+                <div class="card-title">E2E集成测试</div>
+                <div style="font-size:1.8rem;font-weight:800;color:var(--primary);">10/10</div>
+                <div class="card-sub">reg-server IANA #4590<br>Hybrid KEM端到端全绿</div>
+                <span class="badge badge-green">Path C-2 Live</span>
+            </div>
+            <div class="card">
+                <div class="card-title">FPGA验证</div>
+                <div style="font-size:1.8rem;font-weight:800;color:var(--primary);">43/43</div>
+                <div class="card-sub">L8+L9 全量回归<br>NTT 256/256 通过，WNS=9.755ns</div>
+                <span class="badge badge-green">Hardware Closed</span>
+            </div>
         </div>
 
-        <!-- Version Comparison -->
-        <h2>鐗堟湰瀵规瘮</h2>
+        <!-- ===== Layer Architecture ===== -->
+        <h2>Security Layer Architecture</h2>
         <table>
+            <tr><th>Layer</th><th>Component</th><th>Status</th><th>Reference</th></tr>
             <tr>
-                <th>鐗规€?/th>
-                <th>Node.js 鐢熶骇鐗?/th>
-                <th>Rust 瀹為獙鐗?/th>
+                <td>L1</td><td>TLS 1.3 &middot; HSTS &middot; Let's Encrypt E8</td>
+                <td><span class="badge badge-green">LIVE</span></td>
+                <td>-</td>
             </tr>
             <tr>
-                <td>鐘舵€?/td>
-                <td><span class="badge badge-stable">鉁?绋冲畾杩愯</span></td>
-                <td><span class="badge badge-experimental">馃敩 寮€鍙戜腑</span></td>
+                <td>L2</td><td>ML-KEM-768 Hybrid X3DH &middot; IANA #4590</td>
+                <td><span class="badge badge-green">LIVE</span></td>
+                <td>Path C-2, PQC-Ready &rarr; PQC-Hybrid</td>
             </tr>
             <tr>
-                <td>鐗堟湰</td>
-                <td>v2.21-pq</td>
-                <td>v0.2-e2ee</td>
+                <td>L3</td><td>SM2 / SM3 / SM4-GCM (GM/T 0003)</td>
+                <td><span class="badge badge-green">LIVE</span></td>
+                <td>TVLA 36/36, C2/C3 RN 49/49</td>
             </tr>
             <tr>
-                <td>绔彛</td>
-                <td>3001 (PM2 绠＄悊)</td>
-                <td>8080* (Cargo)</td>
+                <td>L4</td><td>TLA+ Formal Verification (Path C-2)</td>
+                <td><span class="badge badge-green">DONE</span></td>
+                <td>C2.tla, K3 Strong Form, 0 violations</td>
             </tr>
             <tr>
-                <td>E2EE</td>
-                <td><span class="badge badge-done">PQ + X3DH + Double Ratchet</span></td>
-                <td><span class="badge badge-done">PQ + X3DH + Double Ratchet</span></td>
+                <td>L5</td><td>SLH-DSA WASM (stateless hash-based sign)</td>
+                <td><span class="badge badge-blue">WASM Built</span></td>
+                <td>~107KB, gzip ~51KB, NIST SL 5</td>
             </tr>
             <tr>
-                <td>ZK / Bulletproofs</td>
-                <td><span class="badge badge-done">宸查泦鎴?/span></td>
-                <td><span class="badge badge-wip">寰呰縼绉?/span></td>
+                <td>L6</td><td>LookingGlass v2.2 WASM (4 defense modules)</td>
+                <td><span class="badge badge-purple">RESEARCH</span></td>
+                <td>25.7KB, 11 exports, KAT 1000/1000</td>
             </tr>
             <tr>
-                <td>WebSocket</td>
-                <td><span class="badge badge-done">瀹屾暣鏀寔</span></td>
-                <td><span class="badge badge-done">宸叉墦閫?/span></td>
+                <td>L7</td><td>VWZ Hash-and-Sign (k=8, rank-1 compression)</td>
+                <td><span class="badge badge-purple">RESEARCH</span></td>
+                <td>8.5x compression, Hull attack proof</td>
             </tr>
             <tr>
-                <td>SessionManager</td>
-                <td><span class="badge badge-done">浜嬩欢椹卞姩鏋舵瀯</span></td>
-                <td><span class="badge badge-wip">寰呭疄鐜?/span></td>
+                <td>L8</td><td>Crypto-Binding (PQC+Classic key binding)</td>
+                <td><span class="badge badge-green">DONE</span></td>
+                <td>lg-076</td>
             </tr>
             <tr>
-                <td>鎬ц兘</td>
-                <td>鍩哄噯</td>
-                <td>棰勬湡鎻愬崌 3-5x</td>
-            </tr>
-            <tr>
-                <td>浠ｇ爜閲?/td>
-                <td>~3,100 琛?main.js</td>
-                <td>妯″潡鍖栨灦鏋?/td>
-            </tr>
-            <tr>
-                <td>璁块棶鏂瑰紡</td>
-                <td>榛樿</td>
-                <td>闇€鎵嬪姩鍒囨崲</td>
+                <td>L9</td><td>Secure Cleanup (volatile+mlock zeroization)</td>
+                <td><span class="badge badge-green">DONE</span></td>
+                <td>lg-076</td>
             </tr>
         </table>
 
-        <!-- How to Switch -->
-        <h2>濡備綍娴嬭瘯 Rust 瀹為獙鐗?/h2>
-        <p>Rust 鍚庣姝ｅ湪绉瀬寮€鍙戜腑锛屾杩庢妧鏈埍濂借€呮彁鍓嶄綋楠岋細</p>
-        <ol class="flow-steps" style="margin: 1rem 0;">
-            <li>鎵撳紑娴忚鍣ㄥ紑鍙戣€呭伐鍏?(<code>F12</code>)</li>
-            <li>鍦?Console 涓墽琛岋細<pre><code>localStorage.setItem('backend', 'rust')</code></pre></li>
-            <li>鍒锋柊椤甸潰锛屽搷搴斿ご涓皢鍑虹幇 <code>X-Backend: rust</code></li>
-            <li>浣撻獙鍚庡彲閫氳繃浠ヤ笅鍛戒护鍒囧洖锛?pre><code>localStorage.removeItem('backend')</code></pre></li>
-        </ol>
-
-        <div class="warning">
-            Rust 瀹為獙鐗堜粛鍦ㄦ祴璇曚腑锛岃鍕跨敤浜庨噸瑕侀€氫俊銆傞儴鍒嗗姛鑳藉彲鑳戒笉绋冲畾銆?
+        <!-- ===== Protocol Stack ===== -->
+        <h2>Protocol Stack</h2>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">PQC Hybrid Key Exchange (Path C-2)</div>
+                <div class="card-sub">Application-layer SM2 + ML-KEM-768, no Nginx/OpenSSL changes</div>
+                <table style="margin:0.5rem 0 0;font-size:0.85rem;">
+                    <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
+                    <tr><td><code>/api/pqc-hybrid/init</code></td><td>GET</td><td>Get server ML-KEM-768 public key + TLS Session ID</td></tr>
+                    <tr><td><code>/api/pqc-hybrid/finalize</code></td><td>POST</td><td>Submit ciphertext, both sides HKDF derive shared secret</td></tr>
+                    <tr><td><code>/api/pqc-hybrid/status</code></td><td>GET</td><td>Server status + active session count</td></tr>
+                </table>
+                <p class="meta">Stress: 900/900 sessions green, p95=78.5ms &middot; See <a href="/docs/pqc-readiness.html">PQC Readiness &sect;7</a></p>
+            </div>
+            <div class="card">
+                <div class="card-title">Registration Server</div>
+                <div class="card-sub">Asynchronous X3DH key exchange, OPK + signed_prekey lifecycle</div>
+                <table style="margin:0.5rem 0 0;font-size:0.85rem;">
+                    <tr><th>Endpoint</th><th>Port</th><th>Description</th></tr>
+                    <tr><td>WS Bridge</td><td>:3082</td><td>WebSocket upgrade proxy to reg-server</td></tr>
+                    <tr><td>WebSocket</td><td>:3080</td><td>OPK/signed_prekey registration &amp; retrieval</td></tr>
+                    <tr><td>Health</td><td>:3081</td><td>Health check + session count</td></tr>
+                    <tr><td>IANA</td><td>#4590</td><td>TLS Hybrid Extension registered</td></tr>
+                </table>
+                <p class="meta">Strategy: identity 180d, signed_prekey 7d/1000x, opk 7d/1x &middot; See <a href="/docs/pqc-readiness.html">&sect;7 PQC</a></p>
+            </div>
         </div>
-
-        <!-- Response Headers -->
-        <h2>鍝嶅簲澶存爣璇?/h2>
-        <p>寮€鍙戣€呭彲閫氳繃娴忚鍣?DevTools 鈫?Network 鏌ョ湅褰撳墠浣跨敤鐨勫悗绔細</p>
-        <table>
-            <tr>
-                <th>鍝嶅簲澶?/th>
-                <th>Node.js 鐢熶骇鐗?/th>
-                <th>Rust 瀹為獙鐗?/th>
-            </tr>
-            <tr>
-                <td><code>X-Backend</code></td>
-                <td><code>nodejs/2.21-pq</code></td>
-                <td><code>rust/0.2-e2ee</code></td>
-            </tr>
-            <tr>
-                <td><code>X-Backend-Status</code></td>
-                <td><code>stable</code></td>
-                <td><code>experimental</code></td>
-            </tr>
-        </table>
-
-        <!-- Security Stack -->
-        <h2>瀹夊叏鎶€鏈爤</h2>
-        <table>
-            <tr><th>灞傜骇</th><th>鎶€鏈?/th><th>鐘舵€?/th></tr>
-            <tr><td>浼犺緭灞?/td><td>TLS 1.3 路 HSTS 路 Let's Encrypt</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>瀵嗛挜浜ゆ崲</td><td>ML-KEM-768 Hybrid X3DH</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>杩炵画鍔犲瘑</td><td>Double Ratchet (PQ optimized)</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>韬唤璁よ瘉</td><td>ZK-SNARKs (Bulletproofs Range Proof)</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>娴侀噺娣锋穯</td><td>Sphinx Packet Format + Mixnet</td><td><span class="badge badge-wip">WIP</span></td></tr>
-            <tr><td>浼氳瘽绠＄悊</td><td>SessionManager (Event-Driven)</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>鍥藉瘑</td><td>SM2 / SM3 (GM/T 0003)</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>鍙俊鏃堕棿鎴?/td><td>RFC 3161 (TSA 鈥?鑱斿悎淇′换 (tsa.cn))</td><td><span class="badge badge-done">12/12 Files 100%</span></td></tr>
-        </table>
-
-        <!-- ===== PQC Hybrid (Path C) ===== -->
-        <h2>PQC 娣峰悎瀵嗛挜浜ゆ崲锛堣矾寰?C锛?/h2>
-        <p>涓嶆敼 Nginx/OpenSSL锛屽湪 TLS 1.3 ECDHE-SM2 鎻℃墜涔嬩笂鍙犲姞 ML-KEM-768锛?/p>
-        <table>
-            <tr><th>绔偣</th><th>鏂规硶</th><th>璇存槑</th></tr>
-            <tr><td><code>/api/pqc-hybrid/init</code></td><td>GET</td><td>鑾峰彇鏈嶅姟绔?ML-KEM-768 鍏挜 + TLS Session ID</td></tr>
-            <tr><td><code>/api/pqc-hybrid/finalize</code></td><td>POST</td><td>鎻愪氦瀵嗘枃锛屽弻鏂?HKDF 娲剧敓鍏变韩瀵嗛挜</td></tr>
-            <tr><td><code>/api/pqc-hybrid/status</code></td><td>GET</td><td>鏈嶅姟鐘舵€?+ 娲昏穬浼氳瘽鏁?/td></tr>
-        </table>
-        <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-dim);">
-            楂樺帇楠岃瘉锛?00/900 浼氳瘽鍏ㄩ儴閫氳繃锛坧95=78.5ms锛夛紝闆?session 娉勬紡銆?
-            璇﹁ <a href="/docs/pqc-readiness.html">PQC 灏辩华搴︽姤鍛?/a> 鍜?
-            <a href="/docs/API.html">API 鏂囨。 搂7</a>銆?
-        </p>
 
         <!-- ===== Multi-Platform ===== -->
-        <h2>澶氬钩鍙版灦鏋?/h2>
+        <h2>Multi-Platform Stack</h2>
         <table>
-            <tr><th>骞冲彴</th><th>杩愯鏃?/th><th>瀵嗙爜妯″潡</th><th>鐘舵€?/th></tr>
-            <tr><td>Tauri 妗岄潰绔?/td><td>Node.js v22 + Rust</td><td>ML-KEM-768 路 SM2 路 SM3 路 SM4-GCM 路 SLH-DSA WASM</td><td><span class="badge badge-done">v3.3-preview</span></td></tr>
-            <tr><td>React Native 绉诲姩绔?/td><td>Node.js v20 路 RN 0.76+</td><td>SM3Hash 路 SM4GCM 路 ML-KEM-768 路 SM2 EC 路 Hybrid锛堥渶 polyfill锛?/td><td><span class="badge badge-done">C2/C3 49/49 閫氳繃</span></td></tr>
-            <tr><td>Web 娴忚鍣?/td><td>Web Crypto API + WASM</td><td>PQC Hybrid Client 路 OPK Client 路 SM2 Bridge 路 SLH-DSA WASM</td><td><span class="badge badge-done">鍏ㄩ儴灏辩华</span></td></tr>
-            <tr><td>FPGA 纭欢</td><td>Xilinx Artix-7 XC7A35T</td><td>NTT Pipeline v1.3锛? 绾ф祦姘寸嚎 路 B=32 Barrett 路 2 DSP48E1锛?/td><td><span class="badge badge-done">256/256 鍏ㄥ尮閰?/span></td></tr>
+            <tr><th>Platform</th><th>Runtime</th><th>Crypto Modules</th><th>Status</th></tr>
+            <tr>
+                <td>Web Browser</td>
+                <td>Web Crypto API + WASM</td>
+                <td>PQC Hybrid Client &middot; OPK Client &middot; SM2 Bridge &middot; SLH-DSA WASM</td>
+                <td><span class="badge badge-green">Full Stack</span></td>
+            </tr>
+            <tr>
+                <td>Tauri Desktop</td>
+                <td>Node.js v22 + Rust</td>
+                <td>ML-KEM-768 &middot; SM2 &middot; SM3 &middot; SM4-GCM &middot; SLH-DSA WASM</td>
+                <td><span class="badge badge-green">v3.3-preview</span></td>
+            </tr>
+            <tr>
+                <td>React Native</td>
+                <td>Node.js v20 + RN 0.76+</td>
+                <td>SM3Hash &middot; SM4GCM &middot; ML-KEM-768 &middot; SM2 EC &middot; Hybrid (polyfill)</td>
+                <td><span class="badge badge-green">C2/C3 49/49 Pass</span></td>
+            </tr>
+            <tr>
+                <td>FPGA</td>
+                <td>Xilinx Artix-7 XC7A35T</td>
+                <td>NTT Pipeline v1.3 &middot; Barret reduction &middot; 2x DSP48E1</td>
+                <td><span class="badge badge-green">256/256 Pass, WNS=9.755ns</span></td>
+            </tr>
         </table>
 
-        <!-- ===== SLH-DSA ===== -->
-        <h2>SLH-DSA WASM 鍚庨噺瀛愮鍚?/h2>
-        <p>鍩轰簬 <code>pqc_sphincsplus</code> (Argyle-Software) 缂栬瘧涓?WASM锛屾彁渚?stateless hash-based 绛惧悕鏂规浣滀负 ML-KEM 鐨勪簰琛ュ師璇細</p>
+        <!-- ===== Security Stack ===== -->
+        <h2>Security Technology Stack</h2>
         <table>
-            <tr><th>鎸囨爣</th><th>鏁板€?/th></tr>
-            <tr><td>WASM 浣撶Н</td><td>~107KB (gzip ~51KB)</td></tr>
-            <tr><td>绛惧悕鑰楁椂</td><td>~500ms (Web Worker 寮傛)</td></tr>
-            <tr><td>楠岀鑰楁椂</td><td>~10ms (涓荤嚎绋嬪彲琛?</td></tr>
-            <tr><td>鍏挜 / 绛惧悕</td><td>32B / 7,856B</td></tr>
-            <tr><td>瀹夊叏绛夌骇</td><td>NIST SL 5 (256-bit)</td></tr>
+            <tr><th>Layer</th><th>Technology</th><th>Status</th></tr>
+            <tr><td>Transport</td><td>TLS 1.3 &middot; HSTS &middot; OCSP Stapling &middot; Let's Encrypt</td><td><span class="badge badge-green">LIVE</span></td></tr>
+            <tr><td>Key Exchange</td><td>ML-KEM-768 Hybrid + SM2 ECDH (Path C-2)</td><td><span class="badge badge-green">LIVE</span></td></tr>
+            <tr><td>Symmetric</td><td>SM4-GCM (GM/T 0003) + AES-GCM fallback</td><td><span class="badge badge-green">LIVE</span></td></tr>
+            <tr><td>Hash / MAC</td><td>SM3 + HMAC-SM3 + HKDF</td><td><span class="badge badge-green">LIVE</span></td></tr>
+            <tr><td>Continuity</td><td>Double Ratchet (PQ optimized) + X3DH</td><td><span class="badge badge-green">LIVE</span></td></tr>
+            <tr><td>Identity</td><td>SM2 ECDSA (GM/T 0003) + ZK Range Proofs</td><td><span class="badge badge-green">LIVE</span></td></tr>
+            <tr><td>Timestamping</td><td>RFC 3161 &middot; DigiCert TSA &middot; FreeTSA</td><td><span class="badge badge-green">76 TSRs</span></td></tr>
+            <tr><td>LookingGlass</td><td>7-layer wreath group representation (v2.2)</td><td><span class="badge badge-purple">Research</span></td></tr>
+            <tr><td>VWZ Sign</td><td>Vandermonde rank-1 compression + Hull-proof security</td><td><span class="badge badge-purple">Research</span></td></tr>
         </table>
-        <p style="font-size:0.85rem;color:var(--text-dim);">
-            SLH-DSA 涓嶄緷璧栨牸鍋囪锛屼笌 ML-KEM 褰㈡垚寮傛瀯鍐椾綑锛氬嵆浣挎煇涓€鏁板鍋囪琚敾鐮达紝鍙︿竴鍘熻浠嶄繚鎸佸畨鍏ㄣ€?
-            璇﹁ <a href="/docs/API.html">API 鏂囨。 搂6</a>銆?
-        </p>
 
+        <!-- ===== Development Timeline ===== -->
+        <h2>Development Timeline</h2>
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-date">2026-07-16 &middot; TODAY</div>
+                <div><strong>Path C-2 Live</strong> &mdash; IANA #4590 E2E 10/10, reg-server :3080/:3081, bcryptjs 3.0.3, TSR lg-076~078, v3.3-preview</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2026-07-14</div>
+                <div><strong>TLA+ L4 Formal Verification</strong> &mdash; C2.tla Path C-2, 7 invariants, 101,467 states, 0 violations, K3 strong form (key[i]&ne;key[j])</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2026-07-11</div>
+                <div><strong>PR #6 Merged</strong> &mdash; LG v2.2 WASM synced to GitHub Lennonhaha/fibemate</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2026-07-10</div>
+                <div><strong>FPGA v5 Synthesized</strong> &mdash; NTT 256/256, WNS=9.755ns, L8/L9 43/43 all green</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2026-07-07</div>
+                <div><strong>External Audit</strong> &mdash; Security claims downgraded, NLnet proposal redirected to pure NIST standards (ML-KEM-768/SLH-DSA)</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2026-06-28</div>
+                <div><strong>Paper Submission Cancelled</strong> &mdash; All conference submissions stopped, LaTeX preserved but not advanced. Research line default-off.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-date">2026-06-25</div>
+                <div><strong>PQC-Ready Milestone</strong> &mdash; Path C 900/900 stress green, p95=78.5ms, SM2 TVLA 11/11, OPK X3DH 7/7</div>
+            </div>
+        </div>
 
+        <!-- ===== Research Lines ===== -->
+        <h2>Research Lines (Default Off)</h2>
+        <div class="grid-2">
+            <div class="card">
+                <div class="card-title">LookingGlass v2.2</div>
+                <div class="card-sub">7-layer wreath group representation &middot; Pure software obfuscation</div>
+                <p>Mathematically closed system. Do NOT deploy as primary security. Only as research artifact.</p>
+                <p style="margin-top:0.5rem;"><strong>WASM:</strong> 25.7KB, 11 exports, 4 defense modules (dynamic_path / control_flow / crypto_binding / secure_cleanup)</p>
+                <p><strong>Rejection criteria:</strong>克莱姆法则 (Cramer's rule) non-polynomial blowup makes it infeasible as anti-debug.</p>
+            </div>
+            <div class="card">
+                <div class="card-title">VWZ Hash-and-Sign</div>
+                <div class="card-sub">Vandermonde-Wang-Zhang rank-1 signature &middot; Hull-attack proof</div>
+                <p>Hull attack complexity: &Theta;(q<sup>130</sup>) &ge; 2<sup>2080</sup> &mdash; computationally infeasible.</p>
+                <p style="margin-top:0.5rem;"><strong>Parameters:</strong> k=8, 468B pubkey, 36B signature, 8.5x rank-1 compression</p>
+                <p><strong>Status:</strong> Rust WASM prototype 7/7 green. Do NOT deploy as production crypto.</p>
+            </div>
+        </div>
 
-        <p style="margin-top:1rem;font-size:0.85rem;color:var(--text-dim);">
-            <a href="/">杩斿洖棣栭〉</a> 路 鏇存柊鏃堕棿 2026-06-30 路 浠ｇ爜寰呭璁″悗寮€婧?
+        <!-- ===== Notes ===== -->
+        <div class="footer-note">
+            <strong>Note on Security Claims:</strong> FIBEMATE is a post-quantum hybrid communication platform built around NIST-standard PQC (ML-KEM-768, SLH-DSA, SM2/3/4 GM/T 0003). 
+            Research artifacts (LookingGlass, VWZ) are <em>not</em> part of the production security boundary. 
+            The sole production security foundation is ML-KEM-768 + SLH-DSA + SM2 (authenticated encryption).
+        </div>
+
+        <p style="margin-top:1.5rem;font-size:0.85rem;color:var(--text-dim);">
+            <a href="/">Back to Home</a> &middot; Last updated 2026-07-16 &middot; <a href="/docs/pqc-readiness.html">PQC Readiness Report</a>
         </p>
     </div>
 
     <footer>
-        漏 2026 FIBEMATE 路 Post-Quantum Ready 路 鐙珛鎶€鏈爺绌?
+        &copy; 2026 FIBEMATE &middot; Post-Quantum Hybrid &middot; Independent Technical Research
     </footer>
 </body>
 </html>
