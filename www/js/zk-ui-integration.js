@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ZK UI Integration - Connects ZK authentication with UI flow
  * Features: State management, progress visualization, graceful fallback
  */
