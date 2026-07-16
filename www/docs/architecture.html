@@ -1,364 +1,198 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>System Architecture - FIBEMATE v3.3</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #00E5C3;
-            --primary-dim: #00b894;
-            --bg-dark: #0a0e17;
-            --bg-card: #111827;
-            --bg-card-hover: #1a2332;
-            --text: #e2e8f0;
-            --text-dim: #94a3b8;
-            --accent-purple: #8b5cf6;
-            --accent-blue: #3b82f6;
-            --accent-orange: #f97316;
-            --accent-green: #22c55e;
-            --accent-red: #ef4444;
-            --accent-yellow: #eab308;
-        }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-            background: var(--bg-dark);
-            color: var(--text);
-            line-height: 1.7;
-        }
-        a { color: var(--primary); text-decoration: none; }
-        a:hover { text-decoration: underline; }
-
-        /* Nav */
-        nav {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 1rem 2rem;
-            background: rgba(17,24,39,0.9);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(255,255,255,0.06);
-            position: sticky; top: 0; z-index: 100;
-        }
-        .nav-logo { font-size: 1.25rem; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
-        .nav-links { display: flex; gap: 1.5rem; font-size: 0.9rem; }
-        .nav-links a { color: var(--text-dim); }
-        .nav-links a:hover { color: var(--primary); text-decoration: none; }
-
-        .container { max-width: 1100px; margin: 0 auto; padding: 2rem; }
-
-        /* Header */
-        h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
-        h1 .g { background: linear-gradient(135deg, var(--primary), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .subtitle { color: var(--text-dim); font-size: 1rem; margin-bottom: 2rem; }
-        .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
-        .badge-green { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
-        .badge-orange { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3); color: #f97316; }
-        .badge-blue { background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.3); color: #60a5fa; }
-        .badge-gray { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.2); color: #8b949e; }
-        .badge-purple { background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.3); color: #a78bfa; }
-
-        h2 { font-size: 1.4rem; font-weight: 700; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid rgba(0,229,195,0.12); }
-        h3 { font-size: 1.1rem; font-weight: 600; margin: 1.5rem 0 0.6rem; color: var(--primary); }
-        p { margin: 0.5rem 0; color: var(--text-dim); font-size: 0.95rem; }
-        p.meta { font-size: 0.82rem; color: var(--text-dim); margin-top: 0.3rem; }
-
-        /* Cards */
-        .card {
-            background: var(--bg-card);
-            border: 1px solid rgba(255,255,255,0.07);
-            border-radius: 12px;
-            padding: 1.5rem;
-            margin: 1rem 0;
-        }
-        .card-title { font-size: 1rem; font-weight: 700; margin-bottom: 0.75rem; color: var(--text); }
-        .card-sub { font-size: 0.82rem; color: var(--text-dim); margin-bottom: 1rem; }
-
-        /* Grid */
-        .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin: 1rem 0; }
-        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; margin: 1rem 0; }
-        @media (max-width: 768px) {
-            .grid-3 { grid-template-columns: 1fr; }
-            .grid-2 { grid-template-columns: 1fr; }
-        }
-
-        /* Architecture diagram */
-        .arch-box {
-            background: rgba(0,0,0,0.25);
-            border: 1px solid rgba(255,255,255,0.06);
-            border-radius: 8px;
-            padding: 1rem 1.25rem;
-            font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
-            font-size: 0.82rem;
-            line-height: 1.7;
-            overflow-x: auto;
-            white-space: pre;
-            margin: 1rem 0;
-        }
-        .hl { color: var(--primary); }
-        .hl2 { color: var(--accent-blue); }
-        .dim { color: #646c78; }
-        .orange { color: var(--accent-orange); }
-        .green { color: var(--accent-green); }
-        .purple { color: var(--accent-purple); }
-        .yellow { color: var(--accent-yellow); }
-
-        /* Tables */
-        table { width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; font-size: 0.88rem; }
-        th, td { padding: 10px 14px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.05); }
-        th { color: var(--text-dim); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 1px; background: rgba(17,24,39,0.5); }
-        tr:hover td { background: rgba(255,255,255,0.02); }
-        td:first-child { font-weight: 600; color: var(--text); white-space: nowrap; }
-        code { font-family: 'Cascadia Code', 'Consolas', monospace; font-size: 0.82rem; background: rgba(0,0,0,0.35); padding: 1px 5px; border-radius: 4px; color: var(--primary); }
-
-        /* Timeline */
-        .timeline { position: relative; padding-left: 2rem; margin: 1rem 0; }
-        .timeline::before { content: ''; position: absolute; left: 7px; top: 0; bottom: 0; width: 2px; background: rgba(0,229,195,0.15); }
-        .timeline-item { position: relative; margin-bottom: 1.5rem; }
-        .timeline-item::before { content: ''; position: absolute; left: -2rem; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--primary); border: 2px solid var(--bg-dark); }
-        .timeline-date { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 0.2rem; }
-
-        /* Footer */
-        footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.82rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 3rem; }
-        .footer-note { background: rgba(0,229,195,0.05); border: 1px solid rgba(0,229,195,0.12); border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; font-size: 0.88rem; color: var(--text-dim); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统架构 - FIBEMATE</title>
+<style>
+:root {
+  --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9;
+  --muted:#8b949e; --accent:#00E5C3; --green:#22c55e; --amber:#f59e0b;
+  --red:#f87171; --blue:#58a6ff; --purple:#bc8cff;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.75; padding:0 1rem 4rem; }
+.container { max-width:960px; margin:0 auto; }
+header { padding:3rem 0 2rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+header h1 { font-size:2rem; color:#f0f6fc; }
+header h1 .gradient { background:linear-gradient(135deg,var(--accent),var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+header .meta { color:var(--muted); font-size:0.9rem; margin-top:0.5rem; }
+h2 { font-size:1.3rem; color:#f0f6fc; margin:2.5rem 0 1rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border); }
+h3 { font-size:1.08rem; color:#e6edf3; margin:1.8rem 0 0.8rem; }
+p { margin:0.8rem 0; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.2rem 1.5rem; margin:1rem 0; }
+.card h3 { margin-top:0; }
+.green { color:var(--green); }
+.amber { color:var(--amber); }
+.red { color:var(--red); }
+.blue { color:var(--blue); }
+.accent { color:var(--accent); }
+.muted { color:var(--muted); }
+code { background:rgba(110,118,129,0.2); padding:0.15em 0.4em; border-radius:4px; font-size:0.9em; font-family:"SF Mono",Consolas,monospace; }
+pre { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:1rem 1.2rem; overflow-x:auto; margin:1rem 0; font-size:0.85rem; line-height:1.6; }
+pre code { background:none; padding:0; }
+table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.9rem; }
+th, td { padding:0.55rem 0.8rem; text-align:left; border:1px solid var(--border); }
+th { background:rgba(0,229,195,0.08); color:#f0f6fc; font-weight:600; }
+tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+.tag { display:inline-block; padding:0.1em 0.5em; border-radius:4px; font-size:0.8rem; font-weight:600; }
+.tag-green { background:rgba(34,197,94,0.15); color:var(--green); }
+.tag-amber { background:rgba(245,158,11,0.15); color:var(--amber); }
+.tag-blue { background:rgba(88,166,255,0.15); color:var(--blue); }
+.tag-purple { background:rgba(188,140,255,0.15); color:var(--purple); }
+.arch-box { font-family:"SF Mono",Consolas,monospace; font-size:0.82rem; line-height:1.4; color:var(--accent); white-space:pre; }
+.arch-box .dim { color:var(--muted); }
+.arch-box .hl { color:var(--blue); }
+.pipeline { display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0; align-items:center; }
+.pipeline .step { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:0.6rem 1rem; text-align:center; min-width:100px; }
+.pipeline .step .label { font-size:0.75rem; color:var(--muted); }
+.pipeline .step .value { font-size:1rem; color:#f0f6fc; font-weight:600; }
+.pipeline .arrow { color:var(--accent); font-size:1.2rem; }
+footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+</style>
 </head>
 <body>
-    <nav>
-        <a href="/" class="nav-logo">FIBEMATE</a>
-        <div class="nav-links">
-            <a href="/docs/pqc-readiness.html">PQC Readiness</a>
-            <a href="/docs/API.html">API</a>
-            <a href="/">Home</a>
-        </div>
-    </nav>
+<div class="container">
 
-    <div class="container">
-        <h1>System <span class="g">Architecture</span></h1>
-        <p class="subtitle">FIBEMATE v3.3 &middot; PQC-Hybrid &middot; TLS Exporter Path C-2 &middot; 76 DigiCert TSRs</p>
+<header>
+  <h1>系统<span class="gradient">架构</span></h1>
+  <p class="meta">FIBEMATE 技术架构文档 &middot; 2026-07-17 &middot; <span class="green">双路径 Active</span></p>
+</header>
 
-        <!-- ===== Architecture Diagram ===== -->
-        <h2>System Overview</h2>
-        <div class="arch-box">                                    <span class="hl">fibemate.net</span>
-                               (Nginx TLS 1.3 &middot; HSTS &middot; Let's Encrypt)
-                                       <span class="dim">&darr;</span>
-         <span class="hl">:3001</span>  <span class="hl">:3080/3081</span>  <span class="hl">:3082</span>  <span class="hl">:3002</span>  <span class="hl">:80/443</span>
-         <span class="dim">Node.js</span>   <span class="dim">reg-server</span>  <span class="dim">WS Bridge</span>  <span class="dim">Rust WASM</span>  <span class="dim">Static</span>
-          (PM2)        (WS+Health)      (WS Proxy)      (lgv2/Crypto)    (www/)
-         <span class="green">PRODUCTION</span>  <span class="green">IANA #4590</span>  <span class="green">E2E 10/10</span>  <span class="purple">EXPERIMENTAL</span>  <span class="dim">HTML/JS/CSS</span></div>
+<!-- Architecture Overview -->
+<h2>系统架构总览</h2>
 
-        <!-- ===== Key Numbers ===== -->
-        <h2>Key Metrics</h2>
-        <div class="grid-3">
-            <div class="card">
-                <div class="card-title">TSR存证</div>
-                <div style="font-size:1.8rem;font-weight:800;color:var(--primary);">76</div>
-                <div class="card-sub">DigiCert TSRs lg-001~071 + lg-074~078（76 份）</div>
-                <span class="badge badge-green">100% Granted</span>
-            </div>
-            <div class="card">
-                <div class="card-title">E2E集成测试</div>
-                <div style="font-size:1.8rem;font-weight:800;color:var(--primary);">10/10</div>
-                <div class="card-sub">reg-server IANA #4590<br>Hybrid KEM端到端全绿</div>
-                <span class="badge badge-green">Path C-2 Live</span>
-            </div>
-            <div class="card">
-                <div class="card-title">FPGA验证</div>
-                <div style="font-size:1.8rem;font-weight:800;color:var(--primary);">43/43</div>
-                <div class="card-sub">L8+L9 全量回归<br>NTT 256/256 通过，WNS=9.755ns</div>
-                <span class="badge badge-green">Hardware Closed</span>
-            </div>
-        </div>
+<div class="card">
+  <h3>请求入口 → 服务分发</h3>
+  <pre class="arch-box">
+                      fibemate.net
+                 (Nginx Reverse Proxy)
+              TLS 1.3 . HSTS . OCSP Stapling
+    <span class="dim">+--------------------------------------------------+</span>
+    <span class="dim">|</span>                                                  <span class="dim">|</span>
+    <span class="hl">[Path A: TLS Hybrid]</span>     <span class="hl">[Path C-2: App Hybrid]</span>     <span class="dim">[Static Assets]</span>
+    X25519MLKEM768            SM2+ML-KEM-768         www/ (HTML/JS/CSS)
+    via oqs-provider           via TLS Exporter       :80 / :443
+    <span class="dim">|</span>                          <span class="dim">|</span>                     <span class="dim">|</span>
+    <span class="hl">Active 2026-07-17</span>        <span class="hl">Active 2026-07-06</span>      <span class="dim">Always On</span>
+    <span class="dim">+--------------------------------------------------+</span>
+                      <span class="dim">|</span>
+          <span class="dim">+-----------+-----------+</span>
+          <span class="dim">|</span>                       <span class="dim">|</span>
+    <span class="dim">[Stable: Node.js]</span>      <span class="dim">[Experimental: Rust]</span>
+    <span class="dim">:3001 (PM2)</span>            <span class="dim">:8080 (Cargo)</span>
+    <span class="dim">v2.21-pq PRODUCTION</span>    <span class="dim">v0.2-e2ee</span>
+  </pre>
+</div>
 
-        <!-- ===== Layer Architecture ===== -->
-        <h2>Security Layer Architecture</h2>
-        <table>
-            <tr><th>Layer</th><th>Component</th><th>Status</th><th>Reference</th></tr>
-            <tr>
-                <td>L1</td><td>TLS 1.3 &middot; HSTS &middot; Let's Encrypt E8</td>
-                <td><span class="badge badge-green">LIVE</span></td>
-                <td>-</td>
-            </tr>
-            <tr>
-                <td>L2</td><td>ML-KEM-768 Hybrid X3DH &middot; IANA #4590</td>
-                <td><span class="badge badge-green">LIVE</span></td>
-                <td>Path C-2, PQC-Ready &rarr; PQC-Hybrid</td>
-            </tr>
-            <tr>
-                <td>L3</td><td>SM2 / SM3 / SM4-GCM (GM/T 0003)</td>
-                <td><span class="badge badge-green">LIVE</span></td>
-                <td>TVLA 36/36, C2/C3 RN 49/49</td>
-            </tr>
-            <tr>
-                <td>L4</td><td>TLA+ Formal Verification (Path C-2)</td>
-                <td><span class="badge badge-green">DONE</span></td>
-                <td>C2.tla, K3 Strong Form, 0 violations</td>
-            </tr>
-            <tr>
-                <td>L5</td><td>SLH-DSA WASM (stateless hash-based sign)</td>
-                <td><span class="badge badge-blue">WASM Built</span></td>
-                <td>~107KB, gzip ~51KB, NIST SL 5</td>
-            </tr>
-            <tr>
-                <td>L6</td><td>LookingGlass v2.2 WASM (4 defense modules)</td>
-                <td><span class="badge badge-purple">RESEARCH</span></td>
-                <td>25.7KB, 11 exports, KAT 1000/1000</td>
-            </tr>
-            <tr>
-                <td>L7</td><td>VWZ Hash-and-Sign (k=8, rank-1 compression)</td>
-                <td><span class="badge badge-purple">RESEARCH</span></td>
-                <td>8.5x compression, Hull attack proof</td>
-            </tr>
-            <tr>
-                <td>L8</td><td>Crypto-Binding (PQC+Classic key binding)</td>
-                <td><span class="badge badge-green">DONE</span></td>
-                <td>lg-076</td>
-            </tr>
-            <tr>
-                <td>L9</td><td>Secure Cleanup (volatile+mlock zeroization)</td>
-                <td><span class="badge badge-green">DONE</span></td>
-                <td>lg-076</td>
-            </tr>
-        </table>
+<!-- Dual Path KEX -->
+<h2>双路径混合密钥交换</h2>
 
-        <!-- ===== Protocol Stack ===== -->
-        <h2>Protocol Stack</h2>
-        <div class="grid-2">
-            <div class="card">
-                <div class="card-title">PQC Hybrid Key Exchange (Path C-2)</div>
-                <div class="card-sub">Application-layer SM2 + ML-KEM-768, no Nginx/OpenSSL changes</div>
-                <table style="margin:0.5rem 0 0;font-size:0.85rem;">
-                    <tr><th>Endpoint</th><th>Method</th><th>Description</th></tr>
-                    <tr><td><code>/api/pqc-hybrid/init</code></td><td>GET</td><td>Get server ML-KEM-768 public key + TLS Session ID</td></tr>
-                    <tr><td><code>/api/pqc-hybrid/finalize</code></td><td>POST</td><td>Submit ciphertext, both sides HKDF derive shared secret</td></tr>
-                    <tr><td><code>/api/pqc-hybrid/status</code></td><td>GET</td><td>Server status + active session count</td></tr>
-                </table>
-                <p class="meta">Stress: 900/900 sessions green, p95=78.5ms &middot; See <a href="/docs/pqc-readiness.html">PQC Readiness &sect;7</a></p>
-            </div>
-            <div class="card">
-                <div class="card-title">Registration Server</div>
-                <div class="card-sub">Asynchronous X3DH key exchange, OPK + signed_prekey lifecycle</div>
-                <table style="margin:0.5rem 0 0;font-size:0.85rem;">
-                    <tr><th>Endpoint</th><th>Port</th><th>Description</th></tr>
-                    <tr><td>WS Bridge</td><td>:3082</td><td>WebSocket upgrade proxy to reg-server</td></tr>
-                    <tr><td>WebSocket</td><td>:3080</td><td>OPK/signed_prekey registration &amp; retrieval</td></tr>
-                    <tr><td>Health</td><td>:3081</td><td>Health check + session count</td></tr>
-                    <tr><td>IANA</td><td>#4590</td><td>TLS Hybrid Extension registered</td></tr>
-                </table>
-                <p class="meta">Strategy: identity 180d, signed_prekey 7d/1000x, opk 7d/1x &middot; See <a href="/docs/pqc-readiness.html">&sect;7 PQC</a></p>
-            </div>
-        </div>
+<div class="card">
+  <h3>Path A &mdash; TLS 1.3 混合握手 <span class="tag tag-green">Active</span></h3>
+  <p>X25519MLKEM768 NamedGroup 通过 <strong>oqs-provider + systemd override</strong> 激活（2026-07-17）。</p>
+  <p class="muted">nginx 原生 NamedGroup 接入已于 2026-07-10 评估不可行（浏览器 TLS 栈不受 JS/WASM 控制 + nginx 无混合协商回调 API），搁置部分为 nginx 原生接入，非 Path A 整体。</p>
+</div>
 
-        <!-- ===== Multi-Platform ===== -->
-        <h2>Multi-Platform Stack</h2>
-        <table>
-            <tr><th>Platform</th><th>Runtime</th><th>Crypto Modules</th><th>Status</th></tr>
-            <tr>
-                <td>Web Browser</td>
-                <td>Web Crypto API + WASM</td>
-                <td>PQC Hybrid Client &middot; OPK Client &middot; SM2 Bridge &middot; SLH-DSA WASM</td>
-                <td><span class="badge badge-green">Full Stack</span></td>
-            </tr>
-            <tr>
-                <td>Tauri Desktop</td>
-                <td>Node.js v22 + Rust</td>
-                <td>ML-KEM-768 &middot; SM2 &middot; SM3 &middot; SM4-GCM &middot; SLH-DSA WASM</td>
-                <td><span class="badge badge-green">v3.3-preview</span></td>
-            </tr>
-            <tr>
-                <td>React Native</td>
-                <td>Node.js v20 + RN 0.76+</td>
-                <td>SM3Hash &middot; SM4GCM &middot; ML-KEM-768 &middot; SM2 EC &middot; Hybrid (polyfill)</td>
-                <td><span class="badge badge-green">C2/C3 49/49 Pass</span></td>
-            </tr>
-            <tr>
-                <td>FPGA</td>
-                <td>Xilinx Artix-7 XC7A35T</td>
-                <td>NTT Pipeline v1.3 &middot; Barret reduction &middot; 2x DSP48E1</td>
-                <td><span class="badge badge-green">256/256 Pass, WNS=9.755ns</span></td>
-            </tr>
-        </table>
+<div class="card">
+  <h3>Path C-2 &mdash; 应用层混合加密 <span class="tag tag-green">Active</span></h3>
+  <p>SM2 + ML-KEM-768 应用层 KEX（IANA #4590），通过 TLS Exporter + HTTP POST 实现。</p>
+  <p>E2E 5/5 验证通过，p95=78.5ms。reg-server :3080 (WS) / :3081 (HTTP)。</p>
+</div>
 
-        <!-- ===== Security Stack ===== -->
-        <h2>Security Technology Stack</h2>
-        <table>
-            <tr><th>Layer</th><th>Technology</th><th>Status</th></tr>
-            <tr><td>Transport</td><td>TLS 1.3 &middot; HSTS &middot; OCSP Stapling &middot; Let's Encrypt</td><td><span class="badge badge-green">LIVE</span></td></tr>
-            <tr><td>Key Exchange</td><td>ML-KEM-768 Hybrid + SM2 ECDH (Path C-2)</td><td><span class="badge badge-green">LIVE</span></td></tr>
-            <tr><td>Symmetric</td><td>SM4-GCM (GM/T 0003) + AES-GCM fallback</td><td><span class="badge badge-green">LIVE</span></td></tr>
-            <tr><td>Hash / MAC</td><td>SM3 + HMAC-SM3 + HKDF</td><td><span class="badge badge-green">LIVE</span></td></tr>
-            <tr><td>Continuity</td><td>Double Ratchet (PQ optimized) + X3DH</td><td><span class="badge badge-green">LIVE</span></td></tr>
-            <tr><td>Identity</td><td>SM2 ECDSA (GM/T 0003) + ZK Range Proofs</td><td><span class="badge badge-green">LIVE</span></td></tr>
-            <tr><td>Timestamping</td><td>RFC 3161 &middot; DigiCert TSA &middot; FreeTSA</td><td><span class="badge badge-green">76 TSRs</span></td></tr>
-            <tr><td>LookingGlass</td><td>7-layer wreath group representation (v2.2)</td><td><span class="badge badge-purple">Research</span></td></tr>
-            <tr><td>VWZ Sign</td><td>Vandermonde rank-1 compression + Hull-proof security</td><td><span class="badge badge-purple">Research</span></td></tr>
-        </table>
+<!-- Security Stack -->
+<h2>密码安全技术栈</h2>
 
-        <!-- ===== Development Timeline ===== -->
-        <h2>Development Timeline</h2>
-        <div class="timeline">
-            <div class="timeline-item">
-                <div class="timeline-date">2026-07-16 &middot; TODAY</div>
-                <div><strong>Path C-2 Live</strong> &mdash; IANA #4590 E2E 10/10, reg-server :3080/:3081, bcryptjs 3.0.3, TSR lg-001~071 + lg-074~078, v3.3-preview</div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2026-07-14</div>
-                <div><strong>TLA+ L4 Formal Verification</strong> &mdash; C2.tla Path C-2, 7 invariants, 101,467 states, 0 violations, K3 strong form (key[i]&ne;key[j])</div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2026-07-11</div>
-                <div><strong>PR #6 Merged</strong> &mdash; LG v2.2 WASM synced to GitHub Lennonhaha/fibemate</div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2026-07-10</div>
-                <div><strong>FPGA v5 Synthesized</strong> &mdash; NTT 256/256, WNS=9.755ns, L8/L9 43/43 all green</div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2026-07-07</div>
-                <div><strong>External Audit</strong> &mdash; Security claims downgraded, NLnet proposal redirected to pure NIST standards (ML-KEM-768/SLH-DSA)</div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2026-06-28</div>
-                <div><strong>Paper Submission Cancelled</strong> &mdash; All conference submissions stopped, LaTeX preserved but not advanced. Research line default-off.</div>
-            </div>
-            <div class="timeline-item">
-                <div class="timeline-date">2026-06-25</div>
-                <div><strong>PQC-Ready Milestone</strong> &mdash; Path C 900/900 stress green, p95=78.5ms, SM2 TVLA 11/11, OPK X3DH 7/7</div>
-            </div>
-        </div>
+<table>
+  <tr><th>层级</th><th>技术</th><th>状态</th></tr>
+  <tr><td>传输层</td><td>TLS 1.3 &middot; HSTS &middot; Let's Encrypt</td><td><span class="green">Active</span></td></tr>
+  <tr><td>Path A 混合 KEX</td><td>X25519MLKEM768 (oqs-provider)</td><td><span class="green">Active 2026-07-17</span></td></tr>
+  <tr><td>Path C-2 混合 KEX</td><td>SM2+ML-KEM-768 (IANA #4590)</td><td><span class="green">Active 2026-07-06</span></td></tr>
+  <tr><td>密钥交换</td><td>ML-KEM-768 Hybrid X3DH</td><td><span class="green">Active</span></td></tr>
+  <tr><td>PQC KEM</td><td>ML-KEM-768 (FIPS 203) &middot; SLH-DSA (FIPS 205)</td><td><span class="green">Implemented</span></td></tr>
+  <tr><td>国密算法</td><td>SM2/SM3/SM4</td><td><span class="green">Implemented</span></td></tr>
+  <tr><td>侧信道防护</td><td>SM2 TVLA N=10,000 (20/20 PASS)</td><td><span class="green">Verified</span></td></tr>
+  <tr><td>FPGA 加速</td><td>NTT 256/256 &middot; WNS +0.204ns</td><td><span class="green">v5 Verified</span></td></tr>
+  <tr><td>纵深防御</td><td>LookingGlass v2.2 L1-L9</td><td><span class="amber">Research (off by default)</span></td></tr>
+  <tr><td>形式化验证</td><td>TLA+ Path C-2 K3 Strong (7/7 invariants)</td><td><span class="green">Verified</span></td></tr>
+  <tr><td>时间戳存证</td><td>76 RFC 3161 TSR (lg-001~071 + lg-074~078)</td><td><span class="green">Granted</span></td></tr>
+</table>
 
-        <!-- ===== Research Lines ===== -->
-        <h2>Research Lines (Default Off)</h2>
-        <div class="grid-2">
-            <div class="card">
-                <div class="card-title">LookingGlass v2.2</div>
-                <div class="card-sub">7-layer wreath group representation &middot; Pure software obfuscation</div>
-                <p>Mathematically closed system. Do NOT deploy as primary security. Only as research artifact.</p>
-                <p style="margin-top:0.5rem;"><strong>WASM:</strong> 25.7KB, 11 exports, 4 defense modules (dynamic_path / control_flow / crypto_binding / secure_cleanup)</p>
-                <p><strong>Rejection criteria:</strong>克莱姆法则 (Cramer's rule) non-polynomial blowup makes it infeasible as anti-debug.</p>
-            </div>
-            <div class="card">
-                <div class="card-title">VWZ Hash-and-Sign</div>
-                <div class="card-sub">Vandermonde-Wang-Zhang rank-1 signature &middot; Hull-attack proof</div>
-                <p>Hull attack complexity: &Theta;(q<sup>130</sup>) &ge; 2<sup>2080</sup> &mdash; computationally infeasible.</p>
-                <p style="margin-top:0.5rem;"><strong>Parameters:</strong> k=8, 468B pubkey, 36B signature, 8.5x rank-1 compression</p>
-                <p><strong>Status:</strong> Rust WASM prototype 7/7 green. Do NOT deploy as production crypto.</p>
-            </div>
-        </div>
+<!-- Version Comparison -->
+<h2>后端版本对比</h2>
 
-        <!-- ===== Notes ===== -->
-        <div class="footer-note">
-            <strong>Note on Security Claims:</strong> FIBEMATE is a post-quantum hybrid communication platform built around NIST-standard PQC (ML-KEM-768, SLH-DSA, SM2/3/4 GM/T 0003). 
-            Research artifacts (LookingGlass, VWZ) are <em>not</em> part of the production security boundary. 
-            The sole production security foundation is ML-KEM-768 + SLH-DSA + SM2 (authenticated encryption).
-        </div>
+<table>
+  <tr><th>特性</th><th>Node.js 生产版</th><th>Rust 实验版</th></tr>
+  <tr><td>状态</td><td><span class="green">稳定运行</span></td><td><span class="amber">开发中</span></td></tr>
+  <tr><td>版本</td><td>v2.21-pq</td><td>v0.2-e2ee</td></tr>
+  <tr><td>端口</td><td>3001 (PM2)</td><td>8080 (Cargo)</td></tr>
+  <tr><td>E2EE</td><td>PQ + X3DH + Double Ratchet</td><td>PQ + X3DH + Double Ratchet</td></tr>
+  <tr><td>ZK / Bulletproofs</td><td>已集成</td><td>待迁移</td></tr>
+  <tr><td>WebSocket</td><td>完整支持</td><td>已打通</td></tr>
+  <tr><td>性能</td><td>基准 (3,236 rps ML-KEM)</td><td>预期提升 3-5x</td></tr>
+  <tr><td>代码量</td><td>~3,100 行 main.js</td><td>模块化架构</td></tr>
+  <tr><td>访问方式</td><td>默认</td><td>需手动切换</td></tr>
+</table>
 
-        <p style="margin-top:1.5rem;font-size:0.85rem;color:var(--text-dim);">
-            <a href="/">Back to Home</a> &middot; Last updated 2026-07-16 &middot; <a href="/docs/pqc-readiness.html">PQC Readiness Report</a>
-        </p>
-    </div>
+<!-- Data Flow -->
+<h2>数据流全景</h2>
 
-    <footer>
-        &copy; 2026 FIBEMATE &middot; Post-Quantum Hybrid &middot; Independent Technical Research
-    </footer>
+<div class="card">
+  <div class="pipeline">
+    <div class="step"><div class="label">Browser</div><div class="value">HTTPS</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">Nginx</div><div class="value">TLS 1.3</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">Path A</div><div class="value">X25519MLKEM768</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">Node.js</div><div class="value">:3001</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">KEX</div><div class="value">ML-KEM-768</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">Session</div><div class="value">SM4-GCM</div></div>
+  </div>
+  <p class="muted" style="margin-top:1rem;">Path C-2 并行链路：Browser &rarr; TLS Exporter &rarr; SM2+ML-KEM-768 KEX &rarr; reg-server :3080</p>
+</div>
+
+<!-- Infrastructure -->
+<h2>基础设施</h2>
+<table>
+  <tr><th>组件</th><th>详情</th><th>状态</th></tr>
+  <tr><td>Nginx</td><td>Reverse Proxy + TLS 1.3 Termination</td><td><span class="green">Running</span></td></tr>
+  <tr><td>oqs-provider</td><td>liboqs 0.12.0 + oqs-provider 0.12.0-dev</td><td><span class="green">Active (systemd override)</span></td></tr>
+  <tr><td>Node.js</td><td>v2.21-pq (PM2 managed, :3001)</td><td><span class="green">Stable</span></td></tr>
+  <tr><td>reg-server</td><td>:3080 (WS) / :3081 (HTTP)</td><td><span class="green">Running</span></td></tr>
+  <tr><td>Rust Backend</td><td>v0.2-e2ee (:8080, experimental)</td><td><span class="amber">Dev</span></td></tr>
+  <tr><td>SSL Cert</td><td>Let's Encrypt ECDSA + certbot auto-renewal</td><td><span class="green">Valid</span></td></tr>
+  <tr><td>Server</td><td>Aliyun ECS (8.156.77.68)</td><td><span class="green">Online</span></td></tr>
+</table>
+
+<!-- TSR -->
+<h2>TSR 时间戳存证体系</h2>
+<div class="card">
+  <p><strong>76</strong> 份 RFC 3161 时间戳（DigiCert + FreeTSA 双源）</p>
+  <p>序列：<code>lg-001~071 + lg-074~078</code></p>
+  <p>全量 Manifest：<a href="/docs/timestamp-manifest.json">timestamp-manifest.json</a> (v3, 126 条)</p>
+  <p class="muted">lg-072/073/075 从未生成</p>
+</div>
+
+<!-- Quick Links -->
+<h2>关联文档</h2>
+<ul>
+  <li><a href="/docs/pqc-readiness.html">抗量子就绪状态 (PQC Readiness)</a></li>
+  <li><a href="/docs/TECHNICAL-VERIFICATION.md">证据地图 v5 (Evidence Map)</a></li>
+  <li><a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 侧信道检测报告</a></li>
+  <li><a href="/docs/fpga-report.html">FPGA 硬件加速报告</a></li>
+  <li><a href="https://github.com/Lennonhaha/fibemate">GitHub</a></li>
+</ul>
+
+<footer>
+  <p>最后更新：2026-07-17 &middot; <a href="/">返回首页</a></p>
+  <p>FIBEMATE &mdash; Post-Quantum Cryptography Full-Stack Verification Platform</p>
+</footer>
+
+</div>
 </body>
 </html>
