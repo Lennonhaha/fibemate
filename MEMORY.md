@@ -997,3 +997,42 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 ### 直播网站更新
 - 服务器 SSH 端口 22 封锁，无法直接推送
 - GitHub 已更新，服务器需手动: cd /opt/fibemate-repo && git pull origin master
+
+## 2026-07-17 凌晨：社区基础设施全量上线
+
+### 三端同步完成
+- GitHub: bac2e2e (main branch)
+- 服务器: bac2e2e (checked out master)
+- 本地: bac2e2e
+- 未推送改动: 0
+
+### 社区文件已上线 (5 个 200 OK)
+- discussions-architecture.md (架构讨论)
+- discussions-quickstart.md (快速开始)
+- discussions-welcome.md (欢迎页)
+- good-first-issues.md (任务清单)
+- FUNDING.yml (资助页面)
+
+### 关键教训
+- core.autocrlf=true + .gitattributes text 产生 CRLF phantom
+- 解决：git add --renormalize + 一次归一化 commit
+- ECS 团队 CRLF 归一化在 a4cba6，通过 bundle 合并
+- GitHub OAuth token 缺 workflow scope 导致含 ci.yml 的提交被拒（基于已上线的 ci.yml 绕过）
+
+### GitHub OAuth Token
+- [GITHUB_OAUTH_TOKEN] (会话级，未持久化)
+- 缺 workflow scope，无法推送含 .github/workflows/ 的提交
+
+### 当前交付状态
+| 交付项 | 状态 |
+|--------|------|
+| .nvmrc / Dockerfile | ✅ |
+| 依赖精确钉定 (7 个 lockfile) | ✅ |
+| 可复现构建 (scripts/reproduce-build.sh) | ✅ |
+| TSR 验证 (scripts/verify-tsr.sh/js) | ✅ |
+| Community: FUNDING.yml | ✅ |
+| Community: Good First Issue Template | ✅ |
+| Community: 3x Discussions | ✅ |
+| Community: good-first-issues.md | ✅ |
+| CRLF 归一化 | ✅ |
+| 线上: fibemate.net/docs/* | ✅ |
