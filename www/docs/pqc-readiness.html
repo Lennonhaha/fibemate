@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -64,7 +64,7 @@
 
 <header>
   <h1>抗量子就绪状态 (Post-Quantum Readiness)</h1>
-  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-16 · 公开透明 · 持续更新</p>
+  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-15 · 公开透明 · 持续更新</p>
 </header>
 
 <!-- ====== Status Banner ====== -->
@@ -78,7 +78,7 @@
     <span style="color:var(--muted);font-size:1.2rem;">→</span>
     <span class="status-tag pending">⬜ PQC-Active</span>
   </div>
-  <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid：路径 C-2（应用层 SM2+ML-KEM-768）已上线 ✅，900/900 全绿，p95=78.5ms。IANA #4590 E2E 混合 KEX 已集成到 reg-server（2026-07-16），10/10 集成测试通过。路径 A（TLS 层 NamedGroup 原生集成）因浏览器/nginx 技术限制已于 2026-07-10 搁置。</strong></p>
+  <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid：路径 C-2（应用层 SM2+ML-KEM-768）已上线 ✅，900/900 全绿，p95=78.5ms。IANA #4590 E2E 混合 KEX 已集成到 reg-server（2026-07-15），10/10 集成测试通过。路径 A（TLS 层 NamedGroup 原生集成）因浏览器/nginx 技术限制已于 2026-07-10 搁置。</strong></p>
 </div>
 
 <p style="font-size:0.9rem;margin-top:0.5rem;color:var(--muted);max-width:44rem;">LookingGlass v2.1 为有限群表示克罗内克嵌套代数实验，外层纯无损线性变换，无法提升底层 LWE 格密码计算硬度；VWZ 为独立研究分支，安全性尚待同行评议。</p>
@@ -94,7 +94,7 @@
   <li><strong>KAT 一致性测试</strong><br>完成 10,000 轮已知答案测试，全覆盖密钥生成、封装、解封装流程，结果零偏差、全量通过。</li>
   <li><strong>运行性能数据</strong><br>纯 JavaScript：至强 Ice Lake 处理器下，单次运算耗时 5.75ms<br>WASM 编译产物：原始体积 63KB，gzip 压缩后仅 27KB；Node.js v22、阿里云 ECS 环境下单次运算压缩至 1.87ms</li>
   <li><strong>SM2-MLKEM-768 混合密钥交换方案</strong><br>协议架构定稿，FIBEMATE 引用 IANA 公开编号 #4590（基于 Informational I-D draft-yang-tls-hybrid-sm2-mlkem-03, DTLS-OK=N, Recommended=N），对应的技术文档已内部归档。</li>
-  <li><strong>IANA #4590 E2E 混合 KEX 集成 (路径 C-2)</strong><br>IANA #4590 SM2-MLKEM-768 混合密钥交换协议已在 reg-server 中完整集成（2026-07-16）：E2E 握手（e2e-init/e2e-respond/e2e-poll/e2e-msg/e2e-fetch）+ 浏览器端 hybrid-kem-client.js，10/10 集成测试通过。</li>
+  <li><strong>IANA #4590 E2E 混合 KEX 集成 (路径 C-2)</strong><br>IANA #4590 SM2-MLKEM-768 混合密钥交换协议已在 reg-server 中完整集成（2026-07-15）：E2E 握手（e2e-init/e2e-respond/e2e-poll/e2e-msg/e2e-fetch）+ 浏览器端 hybrid-kem-client.js，10/10 集成测试通过。</li>
   <li><strong>SM2 国密性能调优</strong><br>v1.3 wNAF(w=4) + Comb 固定基点 G 缓存 — wNAF 窗口表+Montgomery 批量求逆，sign 加速 ≥3×、verify ≥2×、enc/dec ≥3×。Comb G 表全局缓存，首次构建后零成本。TVLA 防护（scalar masking + projective randomization）完整保留。</li>
   <li><strong>FPGA 硬件协同原型</strong><br>完成 NTT 运算单元硬件设计，ML-KEM 与 SM2 可以复用同一套 NTT 计算电路。</li>
   <li><strong>技术成果时间戳存证</strong><br>核心代码与方案在后量子国家标准定稿前完成第三方可信存证。</li>
@@ -121,7 +121,7 @@
 <tr><td>SM2-MLKEM-768 混合协议</td><td><span style="color:var(--green);">✅ 设计定稿</span></td><td>IANA #4590 公开编号（Informational I-D, DTLS-OK=N, Recommended=N），FIBEMATE 协议架构定稿</td></tr>
 <tr><td>SM2 国密性能多级优化</td><td><span style="color:var(--green);">✅ 完成</span></td><td>v1.3 wNAF(w=4) + Comb G表，sign≥3×/verify≥2×</td></tr>
 <tr><td>SM3 哈希 （内联压缩 v2.0）</td><td><span style="color:var(--green);">✅ 完成</span></td><td>64 轮完全内联（leftRotate/FF/GG/P0 展开为表达式）· T_j 常量预计算表消除 %32 运行时移位 · W&#39; 流式无 W1[64] 分配 · 1KB 哈希 ~0.2ms（纯 JS，无 WASM/asm.js）· GB/T 32905-2016 完全兼容</td></tr>
-<tr><td>FPGA NTT 硬件运算单元</td><td><span style="color:var(--green);">✅ v5 硬件验证闭环（ILA+L4 确认）· UART 未外调通 ⚠️</span></td><td>SM2/ML-KEM 共享 NTT 硬件算力 · 加法掩码双通路 (masked_wrapper + lfsr256_prng) · REMO 双蝶形实时比对 (bf_mismatch) · RAM 奇偶校验 + 周期看门狗 (fault_protect + hw_monitor) · ILA 逻辑分析仪确认 · L4 板载 LED 常亮（inv_pass_flag=1）· 仿真 256/256 零误差 · bitstream 571KB · 时序 MET (WNS=9.755ns) · UART 物理层因 M18 固定电压/CP2102 无数据未闭环（2026-07-16 决策放弃）</td></tr>
+<tr><td>FPGA NTT 硬件运算单元</td><td><span style="color:var(--green);">✅ v5 硬件验证闭环（ILA+L4 确认）· UART 未外调通 ⚠️</span></td><td>SM2/ML-KEM 共享 NTT 硬件算力 · 加法掩码双通路 (masked_wrapper + lfsr256_prng) · REMO 双蝶形实时比对 (bf_mismatch) · RAM 奇偶校验 + 周期看门狗 (fault_protect + hw_monitor) · ILA 逻辑分析仪确认 · L4 板载 LED 常亮（inv_pass_flag=1）· 仿真 256/256 零误差 · bitstream 571KB · 时序 MET (WNS=9.755ns) · UART 物理层因 M18 固定电压/CP2102 无数据未闭环（2026-07-15 决策放弃）</td></tr>
 <tr><td>pq-wasm 编译产物</td><td><span style="color:var(--green);">✅ 完成</span></td><td>Rust 编译，优化等级 s+LTO+精简剥离，压缩后 27KB，单次运算 1.87ms</td></tr>
 <tr style="border-top:2px solid var(--green);">
   <td>应用层 PQC 混合密钥交换<br/><span style="font-size:0.8rem;color:var(--muted);">路径 C: TLS Exporter + ML-KEM-768 + HKDF</span></td>
@@ -129,7 +129,7 @@
   <td>不改 Nginx/OpenSSL，TLS 1.3 Session ID 绑定，会话密钥实时混合</td>
 </tr>
 <tr><td>TLS 1.3 混合握手对接<br/><span style="font-size:0.8rem;color:var(--muted);">路径 A: NamedGroup 原生集成</span></td><td><span style="color:#f85149;">⛔ 已搁置</span></td><td>2026-07-10 正式评估为不可行（浏览器 TLS 不受 JS/WASM 控制 + nginx 无混合协商回调 API）</td></tr>
-<tr><td>ClientHello 新增 #4590 扩展</td><td><span style="color:var(--green);">✅ reg-server 集成</span></td><td>TLS 层命名组待 oqs-provider 适配；应用层路径 C-2（SM2+ML-KEM-768）已集成到 reg-server（2026-07-16），E2E 握手协议固化，hybrid-kem-client.js + 5 类 E2E 消息类型，10/10 集成测试通过</td></tr>
+<tr><td>ClientHello 新增 #4590 扩展</td><td><span style="color:var(--green);">✅ reg-server 集成</span></td><td>TLS 层命名组待 oqs-provider 适配；应用层路径 C-2（SM2+ML-KEM-768）已集成到 reg-server（2026-07-15），E2E 握手协议固化，hybrid-kem-client.js + 5 类 E2E 消息类型，10/10 集成测试通过</td></tr>
 <tr><td>浏览器到服务端全链路 TLS 测试</td><td><span style="color:var(--amber);">⬜ 待启动</span></td><td>完整三节点联调环境</td></tr>
 <tr><td>官网生产环境开启混合加密</td><td><span style="color:var(--green);">🔧 待完成</span></td><td>oqs-provider 编出但未接入 nginx；当前 TLS 为经典 ECDH；Let’s Encrypt ECDSA cert + oqs-provider；普通客户端自动降级至经典 ECDH</td></tr>
 </tbody>
@@ -141,7 +141,7 @@
   </div>
   <div class="progress-bar"><div class="progress-fill" style="width:90%;"></div></div>
 </div>
-<p style="font-size:0.85rem;color:var(--muted);">核心密码算法模块：100% 完工；应用层 PQC 混合密钥交换：100% 上线；Pre-key 协议闭环・异步 X3DH：100% 完成；路径 A 已搁置；路径 C-2 已上线（SM2+ML-KEM-768 应用层混合密钥交换）· IANA #4590 E2E 集成到 reg-server（2026-07-16）。</p>
+<p style="font-size:0.85rem;color:var(--muted);">核心密码算法模块：100% 完工；应用层 PQC 混合密钥交换：100% 上线；Pre-key 协议闭环・异步 X3DH：100% 完成；路径 A 已搁置；路径 C-2 已上线（SM2+ML-KEM-768 应用层混合密钥交换）· IANA #4590 E2E 集成到 reg-server（2026-07-15）。</p>
 
 <!-- ====== Section 3 ====== -->
 <h2>3. 差距分析：从就绪到正式启用</h2>
@@ -336,6 +336,11 @@
   <tr><td style="color:var(--green);"><strong>A. 假设成立</strong></td><td>DMTH 陷门确实为 LWE 公钥提供了额外的结构混淆</td><td>FIBEMATE 成为第一个拥有「正交安全层」的 PQC 通信系统——即使 LWE 被量子算法攻破，DMTH 陷门维持结界</td></tr>
   <tr><td style="color:var(--amber);"><strong>B. 假设被攻破</strong></td><td>密码分析发现 Kronecker 嵌套在 LWE 下可被多项式时间剥离</td><td>FIBEMATE 依然是一个经过 TVLA 验证的混合 PQC 通信系统（ML-KEM-768 + SLH-DSA + SM2）- 工程线不受任何影响。同时，不论学术发表与否，「为什么这种陷门不工作」的分析本身具有存档价值</td></tr>
   <tr><td style="color:var(--muted);"><strong>C. 长期悬置</strong></td><td>像许多密码学假设一样，DMTH 既未被证明也未被推翻</td><td>LookingGlass 作为「探索性模块」持续存在，每个新版本保留其代码但不默认启用——这是学术透明度的实践：不隐藏失败过的尝试，也不假装确定未验证的假设</td></tr>
+<tr><td>L8/L9 FPGA 43/43 测试清单</td><td>L8 4大类27项（故障计数器12/状态寄存器6/告警LED6/边缘3）+ L9 3大类16项（FSM迁移10/响应3/RECOVER3），CDC可接受、sw_irq P1、WARN LED4x P2</td><td><span style=color:var(--green);>&#10004; 清单完成</span></td><td>lg-074</td></tr>
+<tr><td>LG v3.1 球面投影归档</td><td>连续几何与离散有限域不兼容，顶层数学错误，全量文件备份 E:\backup\2026-07-16（114文件，3.2MB），结论写入 issue-summary-2026-07-16.md</td><td><span style=color:var(--amber);>&#10004; 归档完成</span></td><td>lg-075</td></tr>
+<tr><td>LG v2.2 四模块落地</td><td>dynamic_path/control_flow/crypto_binding/secure_cleanup 四模块 11/11 全 PASS，evaluation_harness.rs 15KB 评测框架，WASM 21.4KB gzip 9.7KB</td><td><span style=color:var(--green);>&#10004; 11/11 PASS</span></td><td>lg-076</td></tr>
+<tr><td>LG v2.2 四模块量化评测</td><td>dynamic_path (XorShift64 4·10⁷ ops/s)、control_flow (3 分支混淆无泄漏)、crypto_binding (Keccak256 2·10⁶ ops/s HMAC/KDF)、secure_cleanup (4096B <1µs + NaN 哨兵)，评测报告 4.5KB</td><td><span style=color:var(--green);>&#10004; 评测完成</span></td><td>lg-077</td></tr>
+<tr><td>OPK TLA+ 形式化规范</td><td>OPK.tla (8856B) + OPK.cfg (283B)，OPK key lifecycle 形式化验证规范，bundle TSR 存证</td><td><span style=color:var(--green);>&#10004; 规范完成</span></td><td>lg-078</td></tr>
   </tbody>
   </table>
 </div>
@@ -347,7 +352,7 @@
   <p style="margin:0.5rem 0 0;color:var(--muted);">DMTH 假设无已知反例。LookingGlass 默认关闭，不影响生产加密。VWZ 签名方案已完成全链路 Rust→WASM→前端部署→研究端 API 集成。技术文档已内部归档。</p>
 </div>
 
-<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>76 份（lg-001~lg-076）DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-076 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-16</p>
+<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>78 份（lg-001~lg-078）DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-078 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-16</p>
 
 <hr>
 
@@ -519,7 +524,7 @@
 <hr>
 <h3>7.10 LookingGlass v2.2 — Rust 源码恢复与 WASM 重建</h3>
 <div class="card card-amber" style="margin-bottom:1.5rem;">
-  <p style="margin:0;color:var(--amber);"><strong>&#9888; 研究线 &#183; 默认关闭 &#183; 不写入生产加密 &#183; 2026-07-16</strong></p>
+  <p style="margin:0;color:var(--amber);"><strong>&#9888; 研究线 &#183; 默认关闭 &#183; 不写入生产加密 &#183; 2026-07-10</strong></p>
   <p style="margin:0.5rem 0 0;color:var(--muted);">v2.2 与 v2.1 共享同一架构（七层有限群表示克罗内克嵌套 + 仿射偏移 + 会话密钥层序置换），不引入新密码学假设，不提升 LWE 格硬度。本次工作为已部署 WASM（48.5KB）的 <strong>Rust 源码重建与可复现性闭环</strong>&mdash;源码曾丢失，经测试驱动重建恢复，并由 FreeTSA 时间戳存证锁定。</p>
 </div>
 
@@ -540,22 +545,12 @@
 
 本页面属于 FIBEMATE 透明度公开承诺，状态发生变更将即时修订正文。</p>
 
-<h3>7.11 LookingGlass v3.1 — 球面投影（已归档为数学不可行）</h3>
-<div class="card card-amber" style="margin-bottom:1.5rem;">
-  <p style="margin:0;color:var(--amber);"><strong>&#9888; 研究线 &#183; 默认关闭 &#183; 不写入生产加密 &#183; 2026-07-16</strong></p>
-  <p style="margin:0.5rem 0 0;color:var(--muted);">v3.1 在 v2.2 七层混淆基础上叠加<strong>球面投影</strong>（48D &#8594; 194B 高维球面映射），试图破坏自动化代数求解的建模能力。完整管线：48B &#8594; sphere_confuse &#8594; 194B &#8594; lgv2_confuse &#8594; lgv2_deconfuse &#8594; 194B &#8594; sphere_deconfuse &#8594; 48B。<br><br>
-  <strong>工程层面：</strong>2026-07-10 浮点版本因浮点归一化在 Z<sub>3329</sub> 离散域归零（x/(norm×SCALE) &lt; 1 ⇒ 整数截断为 0，往返误差 ~93702）失败；2026-07-16 定点修复版（isqrt 替代浮点 sqrt，x×SCALE÷norm 替代 x÷(norm×SCALE)）往返零误差，三线交叉验证全部通过：Python 200/200 PASS（max_err=0）、Rust 17/17 PASS（含 5 球面 + 1 管线交叉）、C 13/13 PASS、WASM pipeline PASS，WASM 22.8KB。<br><br>
-  <strong>数学层面：</strong>球面投影的连续几何本质与 Z<sub>3329</sub> 离散有限域不兼容——即使工程上能往返零误差，球面归一化在有限域中不提供任何密码学安全保证（无格硬度假设、无可证明安全性）。判定为<strong>连续几何与离散有限域不兼容的顶层数学错误</strong>。<br><br>
-  <strong>结论：</strong>球面投影已<strong>归档为纯理论探索</strong>，稳定迭代回归 v2.2 七层有限群表示。</p>
-</div>
-
-<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-16 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
+<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-15 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
 
 <footer>
-  <p>最后更新：2026-07-16 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
+  <p>最后更新：2026-07-10 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
 </footer>
 
 </div>
 </body>
 </html>
-
