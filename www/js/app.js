@@ -1,4 +1,4 @@
-﻿/**
+/**
  * FIBEMATE v2.21-zk-ts — Application Entry Point
  *
  * Refactored from main.js (1111 lines → ~650 lines).
