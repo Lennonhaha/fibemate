@@ -188,7 +188,7 @@
  <div class="security-card">
  <p>所有核心实现文件已通过 <strong>DigiCert</strong> 签发 RFC 3161 时间戳，确保代码在特定时间点的完整性可被第三方验证。</p>
  <ul>
- <li><strong>存证数量</strong>：122 份 RFC 3161 时间戳（DigiCert 签发，核心序列 lg-001 ~ lg-078 全量存证 + 独立模块存证）</li>
+ <li><strong>存证数量</strong>：122 份 RFC 3161 时间戳（DigiCert 签发，核心序列 lg-001~071 + lg-074~078（76 份） + 独立模块存证）</li>
  <li><strong>存证位置</strong>：<code>/docs/tsa/</code>（按日期分子目录，跨度 2026-06-25 ~ 2026-07-16）</li>
  <li><strong>验证命令</strong>：<code>openssl ts -verify -in *.tsr -CAfile digicert.pem -untrusted chain.pem</code></li>
  </ul>
