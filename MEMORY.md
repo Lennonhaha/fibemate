@@ -982,3 +982,18 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 ### IETF draft -04
 - 文件已推送 GitHub（SHA b5ee74c）
 - **手动提交**：需 2026-07-19 05:59 CST 之后到 datatracker.ietf.org/submit/ 上传
+## 2026-07-16 11:11 - pqc-readiness.html 更新 + 全部 22 commits 推送完成
+
+### 官网 pqc-readiness.html 更新（本地 commit 483cf57）
+- 7 处修改全部完成：日期 2026-07-16、TSR 计数 73->75、v2.2 区块日期、footer
+- 新增 7.11：LG v3.1 球面投影归档（连续几何与离散有限域不兼容，顶层数学错误）
+- 所有修改已本地 commit
+
+### GitHub 推送完成
+- 22 个 ahead commits 全部通过 origin2 (HTTPS + OAuth token) 推送到 GitHub master
+- GitHub master SHA: 483cf57
+- Workspace 与 GitHub 同步
+
+### 直播网站更新
+- 服务器 SSH 端口 22 封锁，无法直接推送
+- GitHub 已更新，服务器需手动: cd /opt/fibemate-repo && git pull origin master
