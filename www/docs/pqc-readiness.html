@@ -64,7 +64,7 @@
 
 <header>
   <h1>抗量子就绪状态 (Post-Quantum Readiness)</h1>
-  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-15 · 公开透明 · 持续更新</p>
+  <p class="meta"><strong>FIBEMATE 技术文档</strong> · 2026-07-16 · 公开透明 · 持续更新</p>
 </header>
 
 <!-- ====== Status Banner ====== -->
@@ -347,7 +347,7 @@
   <p style="margin:0.5rem 0 0;color:var(--muted);">DMTH 假设无已知反例。LookingGlass 默认关闭，不影响生产加密。VWZ 签名方案已完成全链路 Rust→WASM→前端部署→研究端 API 集成。技术文档已内部归档。</p>
 </div>
 
-<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>73 份（lg-001~lg-073）DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-073 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-15</p>
+<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>75 份（lg-001~lg-075）DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-075 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-16</p>
 
 <hr>
 
@@ -519,7 +519,7 @@
 <hr>
 <h3>7.10 LookingGlass v2.2 — Rust 源码恢复与 WASM 重建</h3>
 <div class="card card-amber" style="margin-bottom:1.5rem;">
-  <p style="margin:0;color:var(--amber);"><strong>&#9888; 研究线 &#183; 默认关闭 &#183; 不写入生产加密 &#183; 2026-07-10</strong></p>
+  <p style="margin:0;color:var(--amber);"><strong>&#9888; 研究线 &#183; 默认关闭 &#183; 不写入生产加密 &#183; 2026-07-16</strong></p>
   <p style="margin:0.5rem 0 0;color:var(--muted);">v2.2 与 v2.1 共享同一架构（七层有限群表示克罗内克嵌套 + 仿射偏移 + 会话密钥层序置换），不引入新密码学假设，不提升 LWE 格硬度。本次工作为已部署 WASM（48.5KB）的 <strong>Rust 源码重建与可复现性闭环</strong>&mdash;源码曾丢失，经测试驱动重建恢复，并由 FreeTSA 时间戳存证锁定。</p>
 </div>
 
@@ -540,10 +540,16 @@
 
 本页面属于 FIBEMATE 透明度公开承诺，状态发生变更将即时修订正文。</p>
 
-<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-15 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
+<h3>7.11 LookingGlass v3.1 — 球面投影（已归档为数学不可行）</h3>
+<div class="card card-amber" style="margin-bottom:1.5rem;">
+  <p style="margin:0;color:var(--amber);"><strong>&#9888; 研究线 &#183; 默认关闭 &#183; 不写入生产加密 &#183; 2026-07-16</strong></p>
+  <p style="margin:0.5rem 0 0;color:var(--muted);">v3.1 在 v2.2 七层混淆基础上叠加<strong>球面投影</strong>（48D &#8594; 194B 高维球面映射），试图破坏自动化代数求解的建模能力。完整管线：48B &#8594; sphere_confuse &#8594; 194B &#8594; lgv2_confuse &#8594; lgv2_deconfuse &#8594; 194B &#8594; sphere_deconfuse &#8594; 48B。经数学验证：球面投影在有限域 Z<sub>3329</sub> 上存在致命缺陷（浮点归一化在离散域归零、往返误差 ~93702），判定为<strong>连续几何与离散有限域不兼容的顶层数学错误</strong>。三线通过：Rust 17/17、C 13/13、WASM pipeline PASS，往返零误差，WASM 22.8KB。结论：球面投影已<strong>归档为纯理论探索</strong>，稳定迭代回归 v2.2 七层有限群表示。</p>
+</div>
+
+<p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-16 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
 
 <footer>
-  <p>最后更新：2026-07-10 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
+  <p>最后更新：2026-07-16 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
 </footer>
 
 </div>
