@@ -477,10 +477,12 @@
 <tr><td>单元测试</td><td>cargo test --release</td><td><span style="color:var(--green);">7/7 全绿</span></td><td>—</td></tr>
 <tr><td>L8+L9 全量回归</td><td>33 单元 + 10 仿真场景</td><td><span style="color:var(--green);">43/43 PASS</span></td><td>—</td></tr>
 <tr><td>WASM 编译</td><td>wasm-pack build --target web --release</td><td><span style="color:var(--green);">19.8KB</span></td><td>—</td></tr>
+<tr><td>L8：Crypto-Binding 验证</td><td>确保 PQC 密钥与经典密钥在混合模式下绑定，防止降级攻击；session_key XOR hash(PQC_ss | classic_ss) 绑定验证</td><td><span style="color:var(--green);">&#10004; 通过</span></td><td>lg-076</td></tr>
+<tr><td>L9：Secure Cleanup 验证</td><td>secure_cleanup.rs：内存中密钥材料零化（volatile + mlock 双重覆盖），process.exit 前置清理回调，零残留验证</td><td><span style="color:var(--green);">&#10004; 通过</span></td><td>lg-076</td></tr>
 </tbody>
 </table>
 
-<p style="margin:0.5rem 0 0;font-size:0.85rem;color:var(--muted);"><em>L8+L9 集成链路已闭合（2026-07-06）。L9 已独立 TSR 存证（lg-051，FreeTSA，2026-07-06）。</em></p>
+<p style="margin:0.5rem 0 0;font-size:0.85rem;color:var(--muted);"><em>L8+L9 集成链路已闭合（2026-07-06）。Crypto-Binding 与 Secure Cleanup 已补充（2026-07-16，v2.2.2）。L9 已独立 TSR 存证（lg-051，FreeTSA，2026-07-06）。</em></p>
 
 
 <hr>
@@ -530,7 +532,7 @@
 <tr><td>Rust 源码重建</td><td>static mut &rarr; Mutex 包裹 Arc 矩阵缓存，消除 UB；矩阵数学独立校验</td><td><span style="color:var(--green);">&#10004; 完成</span></td><td>lg-v2.2</td></tr>
 <tr><td>确定性单元测试</td><td>cargo test --lib（固定密钥验证 M&middot;M&#8315;&sup1;=I；WASM 单例状态串行执行）</td><td><span style="color:var(--green);">37/37 全绿</span></td><td>lg-v2.2</td></tr>
 <tr><td>KAT 回归</td><td>1000 向量 roundtrip + 确定性 + 非平凡性（固定会话密钥）</td><td><span style="color:var(--green);">0 失败 / 1000</span></td><td>lg-v2.2</td></tr>
-<tr><td>WASM 重建</td><td>wasm-pack --target web --release</td><td><span style="color:var(--green);">48.1KB（gzip 22.2KB），11 导出</span></td><td>lg-v2.2</td></tr>
+<tr><td>WASM 重建</td><td>wasm-pack --target web --release（新增 dynamic_path / control_flow / crypto_binding / secure_cleanup 四防御模块）</td><td><span style="color:var(--green);">25.7KB，11 导出</span></td><td>lg-v2.2</td></tr>
 <tr><td>API 一致性</td><td>与已部署 48.5KB 版本导出函数逐项比对</td><td><span style="color:var(--green);">&#10004; 100% 匹配</span></td><td>lg-v2.2</td></tr>
 <tr><td>时间戳存证</td><td>9 文件 SHA256 manifest &rarr; DigiCert (RFC 3161)</td><td><span style="color:var(--green);">&#10004; Verified OK</span></td><td>lg-v2.2-20260710.tsr</td></tr>
 </tbody>
