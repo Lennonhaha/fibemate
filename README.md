@@ -1,7 +1,7 @@
 # FIBEMATE - 下一代后量子密码通信协议
 
 **v3.3-preview** | 2026-07-16
-TSR 序列: lg-001 ~ lg-075 | 许可证: GNU GPLv3
+TSR 序列: lg-001 ~ lg-076 | 许可证: GNU GPLv3
 [fibemate.net](https://fibemate.net) | [PQC 就绪状态](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
@@ -118,7 +118,7 @@ fibemate/
 │   ├── docs/             # 文档 + TSA 存证
 │   │   ├── pqc-readiness.html
 │   │   ├── lg-vwz-security-en.html
-│   │   └── tsa/          # lg-001~060 TSR 文件
+│   │   └── tsa/          # lg-001~076 TSR 文件
 │   ├── lgv1/             # LookingGlass v1 (DMTH) 📦 已归档
 │   └── lgv2/             # LookingGlass v2 群表示代数实验 WASM
 ├── rtl/                  # FPGA RTL (Verilog)
