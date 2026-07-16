@@ -544,7 +544,7 @@
 <div class="card card-amber" style="margin-bottom:1.5rem;">
   <p style="margin:0;color:var(--amber);"><strong>&#9888; 研究线 &#183; 默认关闭 &#183; 不写入生产加密 &#183; 2026-07-16</strong></p>
   <p style="margin:0.5rem 0 0;color:var(--muted);">v3.1 在 v2.2 七层混淆基础上叠加<strong>球面投影</strong>（48D &#8594; 194B 高维球面映射），试图破坏自动化代数求解的建模能力。完整管线：48B &#8594; sphere_confuse &#8594; 194B &#8594; lgv2_confuse &#8594; lgv2_deconfuse &#8594; 194B &#8594; sphere_deconfuse &#8594; 48B。<br><br>
-  <strong>工程层面：</strong>v1.0 浮点版因浮点归一化在离散域归零（往返误差 ~93702）失败；v1.0 定点修复版（isqrt 替代浮点 sqrt）往返零误差，三线交叉验证全部通过：Rust 17/17 PASS（含 5 球面 + 1 管线交叉）、C 13/13 PASS、WASM pipeline PASS，WASM 22.8KB。<br><br>
+  <strong>工程层面：</strong>2026-07-10 浮点版本因浮点归一化在 Z<sub>3329</sub> 离散域归零（x/(norm×SCALE) &lt; 1 ⇒ 整数截断为 0，往返误差 ~93702）失败；2026-07-16 定点修复版（isqrt 替代浮点 sqrt，x×SCALE÷norm 替代 x÷(norm×SCALE)）往返零误差，三线交叉验证全部通过：Python 200/200 PASS（max_err=0）、Rust 17/17 PASS（含 5 球面 + 1 管线交叉）、C 13/13 PASS、WASM pipeline PASS，WASM 22.8KB。<br><br>
   <strong>数学层面：</strong>球面投影的连续几何本质与 Z<sub>3329</sub> 离散有限域不兼容——即使工程上能往返零误差，球面归一化在有限域中不提供任何密码学安全保证（无格硬度假设、无可证明安全性）。判定为<strong>连续几何与离散有限域不兼容的顶层数学错误</strong>。<br><br>
   <strong>结论：</strong>球面投影已<strong>归档为纯理论探索</strong>，稳定迭代回归 v2.2 七层有限群表示。</p>
 </div>
