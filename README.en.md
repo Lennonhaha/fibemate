@@ -1,7 +1,7 @@
-# FIBEMATE — Post-Quantum Cryptography Full-Stack Platform
+# FIBEMATE - Post-Quantum Cryptography Full-Stack Platform
 
-**v3.3-preview** | 2026-07-14  
-TSR: lg-001 ~ lg-069 | License: GNU GPLv3  
+**v3.3-preview** | 2026-07-16
+TSR: lg-001 ~ lg-075 | License: GNU GPLv3
 [fibemate.net](https://fibemate.net) | [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
@@ -12,16 +12,16 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 | Track | Content | Status |
 |-------|---------|--------|
-| **Standard PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) — KAT, WASM, TLS 1.3 Hybrid KEX | ✅ Production Ready |
-| **National Crypto Hybrid** | SM2/SM3/SM4 + ML-KEM — IANA #4590 Application-Layer Verification | ✅ Dual-Track Live |
+| **Standard PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT, WASM, TLS 1.3 Hybrid KEX | ✅ Production Ready |
+| **National Crypto Hybrid** | SM2/SM3/SM4 + ML-KEM - IANA #4590 Application-Layer Verification | ✅ Dual-Track Live |
 | **Research** | LookingGlass v2 (algebraic group experiment), VWZ lattice-tensor signature, FPGA v5 hardware protection | 🔬 Experimental Branch |
 
 > **Note**: All research components (LookingGlass, VWZ) are **default-off** and do not provide cryptographic security guarantees. See [Security Model](#security-model) for details.
 
 ### Production Environment
 
-- **TLS 1.3 Hybrid PQC Handshake** — Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, p95=78.5ms, lg-053/lg-057
-- **Dual-track graceful degradation** — Standard clients automatically fall back to classical ECDH
+- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, p95=78.5ms, lg-053/lg-057
+- **Dual-track graceful degradation** - Standard clients automatically fall back to classical ECDH
 
 ---
 
@@ -32,7 +32,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 | **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | KAT 10,000/10,000 |
 | **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM integration |
 | **SM2 ECDH** | BigInt scalar masking + projective randomization, constant-time | TVLA 5/5 PASS (N=10,000) |
-| **SM4-αGCM** | α=7.5 authenticated encryption, auto-select λ₂C or SM4 | 10/10 PASS |
+| **SM4-αGCM** | α=7.5 authenticated encryption, auto-select λ2C or SM4 | 10/10 PASS |
 | **SM3 Hash** | GB/T 32905 compliant | KAT PASS |
 | **TLS 1.3 Hybrid** | Path C-2 (SM2+ML-KEM-768) application-layer ✅ | Path C-2 5/5 |
 | **OPK Pre-Keys** | X3DH async handshake, 7/7 PASS | E2E closed |
@@ -136,13 +136,13 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 
 | Layer | Content | Security Level |
 |-------|---------|-----------------|
-| **L1–L7** | Standard ML-KEM-768 + SLH-DSA + SM2 ECDH | 128-bit classical + 128-bit PQC |
+| **L1-L7** | Standard ML-KEM-768 + SLH-DSA + SM2 ECDH | 128-bit classical + 128-bit PQC |
 | **L8** | Runtime integrity detectors (43/43 PASS) | Logical integrity |
 | **L9** | Hardware fault protection (FPGA v5) | Physical attack surface |
 
 > **Important**: LookingGlass (v1 archived, v2 algebraic group experiment) and VWZ are **experimental, default-off research components**. They are pure无损 linear-transform binary obfuscation experiments with **no cryptographic security guarantees**. Neither improves LWE lattice hardness. Default-closed, never in the production encryption path.
 
-### Research Components — Honest Characterization
+### Research Components - Honest Characterization
 
 | Component | What it is | What it is NOT |
 |-----------|-----------|----------------|
@@ -162,7 +162,7 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 
 FIBEMATE implements engineering verification of the SM2+ML-KEM-768 hybrid scheme:
 
-- **TLS Layer** (Path A): X25519MLKEM768 —搁置 (browser/nginx technical blockers), build artifacts retained for reference
+- **TLS Layer** (Path A): X25519MLKEM768 -搁置 (browser/nginx technical blockers), build artifacts retained for reference
 - **Application Layer** (Path C-2): SM2+ML-KEM-768 HTTP-layer hybrid KEX, TSR lg-053/lg-057
 
 See [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/).
@@ -171,7 +171,7 @@ See [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yan
 
 ## License
 
-GNU General Public License v3.0 — see [LICENSE](./LICENSE)
+GNU General Public License v3.0 - see [LICENSE](./LICENSE)
 
 The ML-KEM-768 and SLH-DSA implementations are based on NIST FIPS 203/205. The SM2/SM3/SM4 implementations reference Chinese national standards GB/T 32918/32905/32907.
 
@@ -179,11 +179,11 @@ The ML-KEM-768 and SLH-DSA implementations are based on NIST FIPS 203/205. The S
 
 ## Acknowledgements
 
-- **NIST PQC Standardization Project** — ML-KEM (FIPS 203), SLH-DSA (FIPS 205)
-- **Open Quantum Safe** — liboqs, oqs-provider
-- **OSCCA (Office of Commercial Cryptography Administration)** — SM2/SM3/SM4 national standards (GB/T 32918, GB/T 32905, GB/T 32907)
-- **FreeTSA / UnionTrust** — Timestamp Authority for evidence sealing
+- **NIST PQC Standardization Project** - ML-KEM (FIPS 203), SLH-DSA (FIPS 205)
+- **Open Quantum Safe** - liboqs, oqs-provider
+- **OSCCA (Office of Commercial Cryptography Administration)** - SM2/SM3/SM4 national standards (GB/T 32918, GB/T 32905, GB/T 32907)
+- **FreeTSA / UnionTrust** - Timestamp Authority for evidence sealing
 
 ---
 
-*FIBEMATE — Post-Quantum Cryptography, Engineered.*
+*FIBEMATE - Post-Quantum Cryptography, Engineered.*
