@@ -1,8 +1,8 @@
-﻿[package]
+[package]
 name = "lgv2"
-version = "2.2.0"
+version = "2.2.2"
 edition = "2021"
-description = "LG v2.1/v2.2 7-layer irreducible group representation confusion engine"
+description = "LG v2.2 confusion engine + 4 defense modules"
 
 [lib]
 path = "lib.rs"

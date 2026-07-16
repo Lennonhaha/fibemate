@@ -1,6 +1,12 @@
 use wasm_bindgen::prelude::*;
 
-/// LG v2.1/v2.2 混淆引擎 (Rust/C/WASM)
+// 五短板补全模块
+pub mod dynamic_path;
+pub mod control_flow;
+pub mod crypto_binding;
+pub mod secure_cleanup;
+
+/// LG v2.2 混淆引擎 (Rust/C/WASM)
 /// 匹配 Python lgv2_nonlinear.py 参考实现：
 ///   - 输入 ≤ BLOCK_SIZE：直接对原始长度执行全 7 层
 ///   - 输入 > BLOCK_SIZE：分割为 BLOCK_SIZE 块，每块独立混淆
@@ -107,7 +113,7 @@ fn layer_seed(base: u64, idx: usize) -> u64 {
 }
 
 /// 预计算各层 off1/off2 种子（64-bit，与输入大小无关）
-struct LayerSeeds {
+pub struct LayerSeeds {
     off1: [u64; NUM_LAYERS],
     off2: [u64; NUM_LAYERS],
 }
@@ -198,6 +204,50 @@ fn deconfuse_full(data: &mut [u8], seed: u64) {
 }
 
 // ============================================================
+// LG v3.1 球面投影 (48D -> 256D via fixed-point, norm-preserving)
+// ============================================================
+
+const SPHERE_SCALE_BITS: u32 = 16;
+const SPHERE_SCALE: u64 = 65536;
+const SPHERE_Q: u32 = 3329;
+
+fn isqrt(n: u64) -> u32 {
+    if n <= 1 { return n as u32; }
+    let mut x = n;
+    let mut y = (x + 1) >> 1;
+    while y < x { x = y; y = (x + n / x) >> 1; }
+    x as u32
+}
+
+/// 48 bytes -> 194 bytes (2B norm + 48x4B u32 quotients LE)
+pub fn sphere_confuse(input: &[u8]) -> Vec<u8> {
+    assert_eq!(input.len(), 48);
+    let nsq: u64 = input.iter().map(|&b| (b as u64) * (b as u64)).sum();
+    let norm = (isqrt(nsq)).max(1) as u64;
+    let mut out = Vec::with_capacity(194);
+    out.extend_from_slice(&(norm as u16).to_le_bytes());
+    for &b in input {
+        let q = ((b as u64) << SPHERE_SCALE_BITS) / norm;
+        out.extend_from_slice(&(q as u32).to_le_bytes());
+    }
+    out
+}
+
+/// 194 bytes -> 48 bytes
+pub fn sphere_deconfuse(input: &[u8]) -> Vec<u8> {
+    assert!(input.len() >= 194);
+    let norm = u16::from_le_bytes([input[0], input[1]]).max(1) as u64;
+    let mut out = Vec::with_capacity(48);
+    for i in 0..48 {
+        let off = 2 + i * 4;
+        let q = u32::from_le_bytes([input[off], input[off+1], input[off+2], input[off+3]]) as u64;
+        let x = (q * norm + (SPHERE_SCALE >> 1)) >> SPHERE_SCALE_BITS;
+        out.push((x % SPHERE_Q as u64) as u8);
+    }
+    out
+}
+
+// ============================================================
 // WASM 公开 API
 // ============================================================
 
@@ -218,6 +268,21 @@ pub fn lgv2_deconfuse(data: &[u8], seed: u64) -> Vec<u8> {
 }
 
 // ============================================================
+
+/// Combined pipeline: sphere (48B -> 194B) -> lgv2_confuse
+#[wasm_bindgen]
+pub fn lgv31_sphere_confuse(data: &[u8]) -> Vec<u8> {
+    let sphere_out = sphere_confuse(data);
+    lgv2_confuse(&sphere_out, 0x4C473331)
+}
+
+/// Combined reverse: lgv2_deconfuse -> sphere_deconfuse -> 48B
+#[wasm_bindgen]
+pub fn lgv31_sphere_deconfuse(data: &[u8]) -> Vec<u8> {
+    let sphere_enc = lgv2_deconfuse(data, 0x4C473331);
+    sphere_deconfuse(&sphere_enc)
+}
+
 // 单元测试
 // ============================================================
 #[cfg(test)]
@@ -343,5 +408,63 @@ mod tests {
         // 32B FF seed=0x55 u2192 [143,174,209,228,135,100,99,94]
         let c32f = lgv2_confuse(&[0xFFu8;32], 0x55);
         assert_eq!(&c32f[..8], &[143u8,174,209,228,135,100,99,94], "32B FF cross-verify");
+    }
+
+    // ---- LG v3.1 sphere projection tests ----
+    #[test]
+    fn test_sphere_roundtrip_200() {
+        use std::collections::hash_map::DefaultHasher;
+        use std::hash::{Hash, Hasher};
+        for s in 0..200 {
+            let mut input = [0u8; 48];
+            for i in 0..48 {
+                let mut h = DefaultHasher::new();
+                (s * 7919 + i * 104729).hash(&mut h);
+                input[i] = (h.finish() & 0xFF) as u8;
+            }
+            let c = sphere_confuse(&input);
+            assert_eq!(c.len(), 194);
+            let r = sphere_deconfuse(&c);
+            assert_eq!(&r[..], &input[..], "fail at {}", s);
+        }
+    }
+
+    #[test]
+    fn test_sphere_roundtrip_zero() {
+        let z = [0u8; 48];
+        let c = sphere_confuse(&z);
+        let r = sphere_deconfuse(&c);
+        assert_eq!(&r[..], &z[..]);
+    }
+
+    #[test]
+    fn test_sphere_roundtrip_max() {
+        let m = [255u8; 48];
+        let c = sphere_confuse(&m);
+        let r = sphere_deconfuse(&c);
+        assert_eq!(&r[..], &m[..]);
+    }
+
+    #[test]
+    fn test_sphere_deterministic() {
+        let a = [42u8; 48];
+        assert_eq!(sphere_confuse(&a), sphere_confuse(&a));
+    }
+
+    #[test]
+    fn test_sphere_distinct() {
+        let c0 = sphere_confuse(&[0u8; 48]);
+        let c1 = sphere_confuse(&[1u8; 48]);
+        let d = c0.iter().zip(c1.iter()).filter(|(a,b)| a!=b).count();
+        assert!(d > 40, "only {} bytes differ", d);
+    }
+
+    #[test]
+    fn test_lgv31_pipeline_roundtrip() {
+        let input = b"HELLO FIBEMATE LGv3.1 sphere projection test..!!"; // 48 bytes
+        let enc = lgv31_sphere_confuse(input);
+        assert_eq!(enc.len(), 194);
+        let dec = lgv31_sphere_deconfuse(&enc);
+        assert_eq!(&dec[..], &input[..]);
     }
 }
