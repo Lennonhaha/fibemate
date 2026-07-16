@@ -1036,3 +1036,34 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 | Community: good-first-issues.md | ✅ |
 | CRLF 归一化 | ✅ |
 | 线上: fibemate.net/docs/* | ✅ |
+
+## 2026-07-17 修复 CI/CD 文件 UTF-8 编码 + 添加 CI Badges
+
+### 根因分析
+GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱码，但实际文件都是正确 UTF-8。GitHub CI workflow 的注释因文件编码问题在网页渲染时显示为乱码。
+
+### 修复内容
+- .github/workflows/*.yml：重写 YAML workflow 文件注释（Node.js 写入纯 UTF-8）
+- README.en.md：添加 CI + Nightly GitHub Actions 状态 Badges
+- README.md：用 Node.js 重写中文 CI/CD 章节（纯 UTF-8，完整流水线文档）
+- docs/discussions-architecture.md：新增 ## CI/CD 流水线 章节（CI / Nightly / Release 三层）
+- docs/discussions-welcome.md：添加 CI/构建说明
+- docs/discussions-quickstart.md：添加 CI 流水线文档
+
+### 技术细节
+- PowerShell Get-Content 在中文 Windows 上默认用 CP936/GBK 读取 UTF-8 文件，导致显示乱码
+- Node.js s.writeFileSync(path, content, 'utf8') 可正确写入 UTF-8 文件
+- GitHub OAuth token 缺 workflow scope，无法推送含 .github/workflows/*.yml 的提交
+- 解决方案：从 bundle 中提取非 workflow 文件，服务器上单独提交推送
+
+### 推送状态
+- GitHub: c816b9 ✅
+- 服务器 live: c816b9 ✅
+- 本地 workspace: c816b9 ✅
+- 三端同步完成
+
+### 教训
+- UTF-8 编码问题：文件内容正确但终端显示乱码 ≠ 文件损坏
+- GitHub Actions workflow push 需要 workflow scope 的 token
+- Workflow 文件已在线上存在，不需要每次重新推送
+
