@@ -1122,7 +1122,7 @@
         </div>
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-07-15 &nbsp;|&nbsp; 路径 A 已搁置 · 路径 C-2 已上线 ✅ &nbsp;|&nbsp; 路径 C-2 5/5 验证通过 ✅ &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.2 48/48 &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; TSR 71 份 ✓<br>
+            最后更新：2026-07-16 &nbsp;|&nbsp; 路径 A 已搁置 · 路径 C-2 已上线 ✅ &nbsp;|&nbsp; 路径 C-2 5/5 验证通过 ✅ &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.2 四模块 &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; TSR 78 份 ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + oqs-provider 编译链就绪 (路径 A 已搁置，保留编译产出供参考) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
@@ -1131,7 +1131,7 @@
                 计划于 <strong>2026.08.31</strong> 以 <strong>GNU General Public License v3.0 (GPLv3)</strong> 开源核心密码学模块<br>
                 （以第三方安全审计为前提）。开源前，代码为私有仓库，所有验证报告<br>
                 （KAT、TVLA）仅为自证，待开源后可独立验证。<br>
-                所有核心代码已通过 <strong>69+ 条</strong> 联合信任(tsa.cn) + DigiCert 双源时间戳存证，原创性可追溯。<br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-07-14 · SM2 ECC v1.3 (wNAF+Comb) + SM3 v2.0 (inline) ✅ + lg-058 · FreeTSA Granted &#x2705;</small>
+                所有核心代码已通过 <strong>78+ 条</strong> 联合信任(tsa.cn) + DigiCert 双源时间戳存证，原创性可追溯。<br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-07-16 · SM2 ECC v1.3 (wNAF+Comb) + SM3 v2.0 (inline) ✅ + lg-058 · FreeTSA Granted &#x2705;</small>
             </p>
         </div>
         <p class="footer-beian" style="margin-top:0.3rem;font-size:0.82rem;color:#94a3b8;">
@@ -1149,7 +1149,7 @@
   <span style="color:#00d4aa;">max |t|=1.82</span>
  </div>
  <div>
-  <span style="color:#00d4aa;">FreeTSA · 2026-07-08</span>&nbsp;<span style="color:#8b949e;">| FPGA v5 256/256 + LG v2.2 48/48 + lg-001~069</span>
+  <span style="color:#00d4aa;">FreeTSA · 2026-07-08</span>&nbsp;<span style="color:#8b949e;">| FPGA v5 256/256 + LG v2.2 四模块 + lg-001~078</span>
   <a href="/docs/evidence/tvla_n10000.tsr" style="color:#8b949e;margin-left:6px;">⏱ N=10K TSR</a>
   <a href="/docs/evidence/tvla_n10000_report.sha256" style="color:#8b949e;margin-left:4px;">SHA256</a>
   <span style="color:#8b949e;margin-left:8px;">|</span>
@@ -1282,7 +1282,7 @@
         <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">⚡ 2026-06-15 · SM2 全栈重构完成，与 sm-crypto 双向互操作验证通过，性能提升 7.3-8.6x · <a href="/docs/sm2-optimization.html" style="color:#00E5C3;">详情 →</a></p>
         <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">⚡ 2026-06-16 · SM2 加解密性能再提升 9%，wNAF 标量乘优化上线 · <a href="/docs/sm2-optimization.html" style="color:#00E5C3;">文章 →</a> · <a href="/security.html#sec-9-8" style="color:#00E5C3;">数据 →</a></p>
         <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🛡️ 2026-06-16 · SM2 TVLA v2 10/10 全部通过 (N=2,000)，jsbn + BigInt 双路径无泄漏 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">分析报告 →</a></p>
-        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🔒 2026-07-08 · React Native 硬件侧信道防护合成通过 (ntt_fault_protect + ntt_masked_wrapper + hw_monitor + lfsr256_prng) · VWZ Rust/WASM 公钥压缩 (全量表 2.8KB, rank-1 理论值 468B, 7/7) · 浏览器 WASM 基准测速完成 · TSR 时间戳存证达 57 份 | 🔬 <a href="/docs/pqc-readiness.html#7" style="color:#00E5C3;">PQC 就绪状态 →</a></p>
+        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🔒 2026-07-08 · React Native 硬件侧信道防护合成通过 (ntt_fault_protect + ntt_masked_wrapper + hw_monitor + lfsr256_prng) · VWZ Rust/WASM 公钥压缩 (全量表 2.8KB, rank-1 理论值 468B, 7/7) · 浏览器 WASM 基准测速完成 · TSR 时间戳存证达 78 份 | 🔬 <a href="/docs/pqc-readiness.html#7" style="color:#00E5C3;">PQC 就绪状态 →</a></p>
         <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🟢 2026-06-18 · SM2 TVLA v1.3 Montgomery Ladder N=5,000 7/7 全绿 · verify |t|=0.10 · decrypt |t|=0.16 · 三重防护锁定 · FreeTSA 存证 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00d4aa;">完整分析 →</a> · <a href="/TECHNICAL-VERIFICATION.md" style="color:#8b949e;">证据地图 →</a></p>
 
         <p class="footer-tech" style="margin-top: 0.5rem; font-size: 0.8rem;">
@@ -1415,7 +1415,7 @@
         </details>
         <p style="margin:1rem 0 0;font-size:0.72rem;color:#646c78;line-height:1.6;">
         <small>验证: <code style="font-size:0.7rem;">openssl ts -verify -data [file] -in [file].tsr -CAfile cacert.pem</code></small><br>
-        <small>完整清单: <code style="font-size:0.7rem;">docs/timestamp-manifest.json</code> | 共 67 条记录 | 联合信任 tsa.cn (付费) + DigiCert 双源存证</small>
+        <small>完整清单: <code style="font-size:0.7rem;">docs/timestamp-manifest.json</code> | 共 78 条记录 | 联合信任 tsa.cn (付费) + DigiCert 双源存证</small>
         </p>
         <p style="margin: 0.8rem 0 0; font-size: 0.8rem; color: #646c78;">计划 2026.08.31 开源 | 独立技术研究项目 · 非商业运营 · 个人ICP备案</p>
     </div>
