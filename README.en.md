@@ -1,4 +1,7 @@
 # FIBEMATE - Post-Quantum Cryptography Full-Stack Platform
+[![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
+[![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly.yml)
+
 
 **v3.3-preview** | 2026-07-16
 TSR: lg-001 ~ lg-076 | License: GNU GPLv3
