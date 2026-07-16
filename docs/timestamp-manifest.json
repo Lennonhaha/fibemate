@@ -1,381 +1,711 @@
-[
-  {
-    "file": "www/message-crypto-v2.js",
-    "size": 54836,
-    "sha256": "4e2f4bef677578b4c019b1c177ca7c34eba45ce5017166f9e6a948957b05bc9f",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T00:49:00+08:00"
-  },
-  {
-    "file": "www/crypto/sm2-browser.js",
-    "size": 1298,
-    "sha256": "5df297037ac1951f0511a16bd4a6842fb8753f42b788260a4edd14baa29f40ce",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T00:49:00+08:00"
-  },
-  {
-    "file": "www/crypto/sm2-browser.bundle.js",
-    "size": 39782,
-    "sha256": "14cfcdbc8cecb70201c56661b4785e34ab1d22714fdd8e079589bc7b708bda04",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T00:49:00+08:00"
-  },
-  {
-    "file": "www/crypto/ml-kem-768.js",
-    "size": 20384,
-    "sha256": "60b3f61bba0f7a6cf6deddd5bc375f88c0a63496dcb686372fbdba45b37eaefd",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T00:49:00+08:00"
-  },
-  {
-    "file": "www/crypto/sm2-browser.esm.js",
-    "size": 1284,
-    "sha256": "6563d887e2bb7c67528f4634bd1e191259f48b6ce54005f7ccbe23e8af5b58c4",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T00:49:00+08:00"
-  },
-  {
-    "file": "www/crypto/sm2-browser.cjs.js",
-    "size": 39731,
-    "sha256": "de05878842c4e8ebda1542425bfe15a2fa830187dddb6cf4d61c76e3fed75507",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T00:49:00+08:00"
-  },
-  {
-    "file": "fibemate-algoreg-v3.0.0-algoreg.tar.gz",
-    "size": 144579,
-    "sha256": "5f07de2b9a5dcfc3b377630b2997ac35c4d088fc4d686e7dc897123cbc43ee2b",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T00:49:00+08:00"
-  },
-  {
-    "file": "www/zk/bulletproofs.js",
-    "size": 7101,
-    "sha256": "5a3c0fb51c524a64d930195ad344f3aa58a8189b3a8d19654ce701f9277ef9b3",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-25T00:49:00+08:00"
-  },
-  {
-    "file": "www/privacy-layers/index.js",
-    "size": 68329,
-    "sha256": "46cc03b88272168f1488ae36db9cc16071a7932af2983ae8ce2ad24a74d41462",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-25T00:49:00+08:00"
-  },
-  {
-    "file": "www/session-manager.js",
-    "size": 23125,
-    "sha256": "00c9c720279cc333cb9065b6f19efaf8e631ec22527ed00d282adc203edc8943",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-25T00:49:00+08:00"
-  },
-  {
-    "file": "www/ml-kem-hybrid-integration.js",
-    "size": 8236,
-    "sha256": "da7519650c7eec68fbaa50329d59beb893f370e99f10f597360024ef22a1fc15",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-25T00:49:00+08:00"
-  },
-  {
-    "file": "www/legacy-crypto-bridge.js",
-    "size": 6087,
-    "sha256": "5841764ca926577edecb61e48a90cda14b75baf33b3797094e78f967a92a9712",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-25T00:49:00+08:00"
-  },
-  {
-    "file": "www/index.html",
-    "size": 43207,
-    "sha256": "19b70b7031793c133ae15720079e358dc1332ca283557b8e32fd606bb60adacb",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:24:00+08:00"
-  },
-  {
-    "file": "www/docs/architecture.html",
-    "size": 11819,
-    "sha256": "15217ea509a170b4ccfc1659500eefb2516b45debdebf34e5d8ae6fec6d6c319",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:24:00+08:00"
-  },
-  {
-    "file": "www/main.html",
-    "size": 34508,
-    "sha256": "def402bb1e298bc9ca1dbe72f9a59345eb0f38681a6d209d9505186b25fcaa76",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:24:00+08:00"
-  },
-  {
-    "file": "www/privacy-layers/pir-search.js",
-    "size": 6765,
-    "sha256": "ba43abcfd98d39ea62927e1ffd3e44f7088d794ad43b944de3318ad0a22b780e",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:41:00+08:00"
-  },
-  {
-    "file": "src/crypto/bloom-filter.js",
-    "size": 8148,
-    "sha256": "6ba1f9fb75e426a960b8282d3889ea22dd593f645c36c2f78e53ef6243f30198",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:41:00+08:00"
-  },
-  {
-    "file": "src/crypto/mixnet-transport.js",
-    "size": 11080,
-    "sha256": "991b84cd821cb89a293f8847e469cdcbbe98695cf572f6d3315938802b9f73c5",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:41:00+08:00"
-  },
-  {
-    "file": "src/crypto/distributed-mixnet.js",
-    "size": 7635,
-    "sha256": "899d744ccc5c559185a61ade6550c6d6932b865e602e3b14f5267d53e04ab938",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:41:00+08:00"
-  },
-  {
-    "file": "www/privacy-layers/sphinx-packet.js",
-    "size": 17996,
-    "sha256": "45a8fe8af8fdce1a9c095fcbe1fb494d631b42097675d58e0e9614dc11cce6b7",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:41:00+08:00"
-  },
-  {
-    "file": "src/crypto/nym-mixnet.js",
-    "size": 11089,
-    "sha256": "9aec6a8bff5e4043beee632754a467e8f2dce94f6ace01896301295baa7e8222",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:41:00+08:00"
-  },
-  {
-    "file": "src/crypto/traffic-shaping.js",
-    "size": 11208,
-    "sha256": "a4dd1102321e5a6882dd3364300f278fa56eaa3dc46238ecb760118b7deeca67",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-05-25T06:41:00+08:00"
-  },
-  {
-    "file": "src/index.js",
-    "size": 49174,
-    "sha256": "230a631865ba0ec04f1400fe765786a79938fc555233e00a01be28025a051b2f",
-    "sha256_current": "c29aee736d4bddb58cbb4b27494b6c4da3a8d46ae82970404a9dc9cad93ccb96",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T01:18:00+08:00",
-    "note": "modified after timestamp; original archived snapshot"
-  },
-  {
-    "file": "src/lib/jwt-helper.js",
-    "size": 618,
-    "sha256": "77217b718824e0ac35f25cceae2ae7094929586b6f2e0be4dff26924e98f666e",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T01:18:00+08:00"
-  },
-  {
-    "file": "backup/mlkem-1024-verified/test_1024.c",
-    "size": 3403,
-    "sha256": "d6a70f9bab00e69796a54bc3ffabe1c30fc9c47ff2bee447cd35e13989b031cc",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-19T00:00:00+08:00"
-  },
-  {
-    "file": "backup/mlkem-1024-verified/kem.c",
-    "size": 3403,
-    "sha256": "fa06d66571099ed3d25504d83d88c198443c461b0a559211593d9b09165c0180",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-19T00:00:00+08:00"
-  },
-  {
-    "file": "docs/kat/KeyGen-ML-DSA-44.txt",
-    "size": 0,
-    "sha256": "d3afbeff16c5fcadbf116b671dfb7aac8b8a8ec97db8330f7768a5d0c68e4c1e",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-21T00:00:00+08:00",
-    "status": "archived",
-    "note": "file not on server; .tsr on CFCA cloud"
-  },
-  {
-    "file": "docs/kat/SigGen-ML-DSA-44.txt",
-    "size": 0,
-    "sha256": "cae189138d049e443dc92a66f9ec14e9c1e466ab1b967c0c4385a04473ec3984",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-21T00:00:00+08:00",
-    "status": "archived",
-    "note": "file not on server; .tsr on CFCA cloud"
-  },
-  {
-    "file": "docs/kat/SigVer-ML-DSA-44.txt",
-    "size": 0,
-    "sha256": "9962b232ba7ee5520af52efd8d951d8feb544ad7071ff4a805e7b02e4db21371",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-21T00:00:00+08:00",
-    "status": "archived",
-    "note": "file not on server; .tsr on CFCA cloud"
-  },
-  {
-    "file": "kat_fips.js",
-    "size": 8825,
-    "sha256": "7ef6e8e6e12515eef923bca9b665f769e51e82e4e984ed3cea96f7979718d52d",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T03:12:00+08:00"
-  },
-  {
-    "file": "verify_final.js",
-    "size": 6968,
-    "sha256": "e1c9dec551424811e6a947bd31ed4cf46f5fc368a3ec4f05027f31c3c77aaf6e",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-23T03:12:00+08:00"
-  },
-  {
-    "file": "docs/kat/test_sm2.js",
-    "size": 1534,
-    "sha256": "1217dd38a08092ca3f3389e3f520ac90ef21b56ae337c588b985286f1291f08a",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-21T00:00:00+08:00"
-  },
-  {
-    "file": "docs/kat/test_sm2_module.js",
-    "size": 1845,
-    "sha256": "dff62334216451473f6a2ddc845443c1b96237c98161f5d996871df3bb3694fa",
-    "tsa": "CFCA",
-    "timestamp": "2026-05-21T00:00:00+08:00"
-  },
-  {
-    "file": "src/crypto/ws-padding.js",
-    "description": "WebSocket 随机块大小填充模块 — Layer 2 流量混淆",
-    "tsa": "DigiCert",
-    "size": 3445,
-    "sha256": "090a9deaaca80608993d01a983e1697b4aa28ea7c6ce713d920ae03db902a4bf",
-    "timestamp": "2026-05-31T02:59:52+08:00",
-    "tsr": "docs/tsa/ws-padding.js.tsr",
-    "tsa_time": "31 2026 GMT"
-  },
-  {
-    "file": "src/crypto/traffic-shaping.js",
-    "description": "Poisson 流量塑形 + 虚拟流量生成 — Layer 2/3",
-    "tsa": "DigiCert",
-    "size": 11208,
-    "sha256": "a4dd1102321e5a6882dd3364300f278fa56eaa3dc46238ecb760118b7deeca67",
-    "timestamp": "2026-05-31T02:59:52+08:00",
-    "tsr": "docs/tsa/traffic-shaping.js.tsr",
-    "tsa_time": "42 2026 GMT"
-  },
-  {
-    "file": "src/crypto/unified-traffic-obfuscator.js",
-    "description": "统一流量混淆编排层 — 组合 Padding+Poisson+Mixnet",
-    "tsa": "DigiCert",
-    "size": 4436,
-    "sha256": "5446f4c07dbba9ca78f28208c3c6418e6afdf67eafbc84d3625e5a210c64d94f",
-    "timestamp": "2026-05-31T02:59:52+08:00",
-    "tsr": "docs/tsa/unified-traffic-obfuscator.js.tsr",
-    "tsa_time": "52 2026 GMT"
-  },
-  {
-    "file": "docs/THREAT_MODEL.md",
-    "size": 10534,
-    "sha256": "a4b57321263ec0a89edbaf3c16f928aa79cbd02b55274b1c8c7772c99370835d",
-    "description": "Fibemate 威胁模型 — 信任边界·资产清单·威胁树·安全属性对照",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-06-08T07:05:00+08:00"
-  },
-  {
-    "file": "www/security-block.html",
-    "size": 1655,
-    "sha256": "585841c0b7ff5cbccf2f7996fd3a5c6aa86efcf2cfc539e9778da4274e3f5c32",
-    "description": "首页安全验证区块 — 嵌入式完整性卡片",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-06-08T07:05:00+08:00"
-  },
-  {
-    "file": "deploy.sh",
-    "size": 1235,
-    "sha256": "f92f06e1e764be006690f6c78b155c2873ef7ee686a69c6e307e178366f194a5",
-    "description": "部署脚本 — 一键推送 LICENSE·NOTICE·THREAT_MODEL·security",
-    "tsa": "FreeTSA",
-    "timestamp": "2026-06-08T07:05:00+08:00"
-  },
-  {
-    "file": "experimental/sm2/_bigint_sm2.js",
-    "description": "SM2完整实现(wNAF) — KeyGen/Sign/Verify/Encrypt/Decrypt, BigInt+Jacobian+256预计算表+wNAF标量乘",
-    "size": 21800,
-    "sha256": "91cb89b7d86313c429aaa1c305ca0f0f54e43b0b2a37dfa3c9ea2964cee8ed6a",
-    "tsa": "DigiCert",
-    "timestamp": "2026-06-16T02:32:19+08:00"
-  },
-  {
-    "file": "experimental/sm2/_sm2_scalarmul.js",
-    "description": "SM2 wNAF标量乘独立模块 — 理论1.3x, 实测JS引擎约1.16x",
-    "size": 6267,
-    "sha256": "c1deb9901b4578a5596bed42675351d54428140fc981c40f239667c2efb8cd84",
-    "tsa": "DigiCert",
-    "timestamp": "2026-06-16T02:32:26+08:00"
-  },
-  {
-    "timestamp": "2026-06-16T14:08:27+08:00",
-    "sha256": "dfa8282ec0f68f836084827be8c10d6c86222faf65828e804e2efce306a15639",
-    "file": "www/security.html",
-    "size": 39037,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:08:28+08:00",
-    "sha256": "cdbbc6d6b16768a628c421b510ac1bbb49cf2976e21878d197638f53e32f92a7",
-    "file": "www/docs/tvla/index.html",
-    "size": 9469,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:08:30+08:00",
-    "sha256": "b15c1a6e47e6a48af44e567c1ae60cc79a0c6ba56b2e536a1884f129949bdfc8",
-    "file": "www/docs/sm2-tvla-analysis.html",
-    "size": 22966,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:08:31+08:00",
-    "sha256": "991987252c764dc097a4076966b0edc12e8ac5f39026bc7ab32dd17b3e85e846",
-    "file": "www/docs/tvla/sm2/tvla-sm2-v3-report.json",
-    "size": 3261,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:08:54+08:00",
-    "sha256": "2da907dd3682306e00ee42d62c0f9ac894071a2bfa9005d1e5a6f2f647223b70",
-    "file": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3-v1-report.json",
-    "size": 1114,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:08:58+08:00",
-    "sha256": "65cc6e302729954227692ea6f1abd8f4fcb4345b9f7c61e72a4cfd77b640d8c3",
-    "file": "www/docs/tvla/sm2/tvla-sm2-v3-output.txt",
-    "size": 2264,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:08:59+08:00",
-    "sha256": "59b4e87c42cd28b3af49ec14f575f4669b48ae6cebc825b9dcb605ff02ba0f83",
-    "file": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
-    "size": 8608,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:09:02+08:00",
-    "sha256": "6ee24ce5abdc98fc9d0f6f8cb717dad61c433a09755bfc5e2d6632197e3743a1",
-    "file": "www/docs/tvla/ml-kem-768/tvla-mlkem-report-v2-final.json",
-    "size": 2442,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:09:39+08:00",
-    "sha256": "7bc6d22b44f6a394b55e9cff96a54a071bbf2ec5123210727e095212eeaac8e6",
-    "file": "www/docs/pqc-readiness.html",
-    "size": 18671,
-    "tsa": "FreeTSA"
-  },
-  {
-    "timestamp": "2026-06-16T14:09:41+08:00",
-    "sha256": "8980879e5d94af9f3428f2c9829cfd8dbb6c49aa8527155a28972e24e65604d7",
-    "file": "www/docs/sm2-optimization.html",
-    "size": 27513,
-    "tsa": "FreeTSA"
-  }
-]
+﻿{
+    "version":  "2.0",
+    "entries":  [
+                    {
+                        "id":  "lg-001",
+                        "file":  "docs/tsa/lg-001.tsr",
+                        "size":  1069,
+                        "sha256":  "789bb50ba07485b08f5c25d77ee2d7516c9d51fe6e509319cff4993a9533b1d1",
+                        "timestamp":  "2026-06-26T11:54:54+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-002",
+                        "file":  "docs/tsa/lg-002.tsr",
+                        "size":  1069,
+                        "sha256":  "d14492912574bd0ff13275973fc882c402ffa1bba7e19d172e0f8ea1c1f70a09",
+                        "timestamp":  "2026-06-26T11:54:54+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-003",
+                        "file":  "docs/tsa/lg-003.tsr",
+                        "size":  1070,
+                        "sha256":  "8bbb5b5e652f2fac6245f8524038ced7bca0c1923d9c5cf19597f2094c3a1853",
+                        "timestamp":  "2026-06-26T11:54:55+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-004",
+                        "file":  "docs/tsa/lg-004.tsr",
+                        "size":  1070,
+                        "sha256":  "26f2c87a2eac2007e56baba5bcdc26f822317e69ce0737fd552e8415c3875cce",
+                        "timestamp":  "2026-06-26T11:54:55+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-005",
+                        "file":  "docs/tsa/lg-005.tsr",
+                        "size":  1069,
+                        "sha256":  "27b04b9615a0fa9977c55247b377e5dbf954ca122cc206eae2f6ea8b0d41a25b",
+                        "timestamp":  "2026-06-26T11:54:56+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-006",
+                        "file":  "docs/tsa/lg-006.tsr",
+                        "size":  1068,
+                        "sha256":  "956569a7371c4369db3c1efd9b5e8385a50e9cb0d3e8309e3f7935dffe0dcbb0",
+                        "timestamp":  "2026-06-26T11:54:57+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-007",
+                        "file":  "docs/tsa/lg-007.tsr",
+                        "size":  1070,
+                        "sha256":  "57c716b11bff750d741fa6bd9d3cb415f32eb8c6064a611020301a376090e179",
+                        "timestamp":  "2026-06-26T11:54:57+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-008",
+                        "file":  "docs/tsa/lg-008.tsr",
+                        "size":  1069,
+                        "sha256":  "c94577ec365d77f1bf0d5aa553efe6f2362fe29dcd0126c1b8d3945e34957cff",
+                        "timestamp":  "2026-06-26T11:54:58+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-009",
+                        "file":  "docs/tsa/lg-009.tsr",
+                        "size":  1070,
+                        "sha256":  "36d345520a54f91c76c48f715b24876ad30f319d84fa5aad84057fe3fbe8905c",
+                        "timestamp":  "2026-06-26T11:54:58+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-010",
+                        "file":  "docs/tsa/lg-010.tsr",
+                        "size":  1069,
+                        "sha256":  "9badabef24e79a6dc9465be7d154439bf9761810e8aee563c943fb41f61a706b",
+                        "timestamp":  "2026-06-26T11:54:59+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-011",
+                        "file":  "docs/tsa/lg-011.tsr",
+                        "size":  1070,
+                        "sha256":  "b0d87ed9dd6966ce8e316435f74b553380b9fbb592bd167ba223d3570dae5506",
+                        "timestamp":  "2026-06-26T11:55:00+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-012",
+                        "file":  "docs/tsa/lg-012.tsr",
+                        "size":  1070,
+                        "sha256":  "016da21ec01b97860fe0e2a27cee983c60701c53ab6bdfd3df916e22995a2491",
+                        "timestamp":  "2026-06-26T11:55:00+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-013",
+                        "file":  "docs/tsa/lg-013.tsr",
+                        "size":  1070,
+                        "sha256":  "80a225195285d550a3491156bca0b4fd7eee334311a0fec32a5b1b22953a67be",
+                        "timestamp":  "2026-06-26T11:55:01+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-014",
+                        "file":  "docs/tsa/lg-014.tsr",
+                        "size":  1070,
+                        "sha256":  "ee6ded5dd0e6f85a99b1d3aecb3f08233221eec4596f7989000ab08d08b08a92",
+                        "timestamp":  "2026-06-26T11:55:02+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-015",
+                        "file":  "docs/tsa/lg-015.tsr",
+                        "size":  1070,
+                        "sha256":  "7f9e3667143e880d2f1bf53ac909a6b6c358085ea7334144efd64232cbd0e971",
+                        "timestamp":  "2026-06-26T12:02:19+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-016",
+                        "file":  "docs/tsa/lg-016.tsr",
+                        "size":  1069,
+                        "sha256":  "fa2a382e7670dfc9b5a77f987b123f12adb90a23b1e34561fb98f88e4ff4ad8b",
+                        "timestamp":  "2026-06-26T12:02:20+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-017",
+                        "file":  "docs/tsa/lg-017.tsr",
+                        "size":  1069,
+                        "sha256":  "925e089427041d53dca7a7f0bd1caaa5f1b73e8805abbd0c1b7355e7b95139d7",
+                        "timestamp":  "2026-06-26T12:05:40+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-018",
+                        "file":  "docs/tsa/lg-018.tsr",
+                        "size":  1069,
+                        "sha256":  "84b0c20bba3ac12451801d6f584dc4acf07ecf063fd667b44a6f0b5c6b8dceaa",
+                        "timestamp":  "2026-06-26T12:23:00+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-019",
+                        "file":  "docs/tsa/lg-019.tsr",
+                        "size":  1069,
+                        "sha256":  "5287a3086bbcdc502f911e8c5860d3a3a53ca5106a2b818ea698c0b3a4595f45",
+                        "timestamp":  "2026-06-26T12:23:01+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-020",
+                        "file":  "docs/tsa/lg-020.tsr",
+                        "size":  1069,
+                        "sha256":  "b1383124ce5e2e580b615a1b6ba1528d51465ee8436b361bf99e660c0e029fd0",
+                        "timestamp":  "2026-06-26T12:23:40+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-021",
+                        "file":  "docs/tsa/lg-021.tsr",
+                        "size":  1069,
+                        "sha256":  "90c53951240770b915748f40efbaf49c8b24f4661df6671f901473528565ec0d",
+                        "timestamp":  "2026-06-26T13:56:38+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-022",
+                        "file":  "docs/tsa/lg-022.tsr",
+                        "size":  1069,
+                        "sha256":  "2616fe81ef171a94d56a12a435c5fba5e8ea2963157092191169a31f238e9310",
+                        "timestamp":  "2026-06-26T13:56:39+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-023",
+                        "file":  "docs/tsa/lg-023.tsr",
+                        "size":  1070,
+                        "sha256":  "a3e87c38ce74df178f37d87a7c31589c4c39f6c941295b0efcc66042419cdf60",
+                        "timestamp":  "2026-06-26T14:09:33+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-024",
+                        "file":  "docs/tsa/lg-024.tsr",
+                        "size":  1069,
+                        "sha256":  "ee7cec419cf9162b16fa029914e8e50ba94432003ccaebc1b4a04c7147e438c7",
+                        "timestamp":  "2026-06-26T14:09:34+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-025",
+                        "file":  "docs/tsa/lg-025.tsr",
+                        "size":  1070,
+                        "sha256":  "fd76fcce48c0e9460e9ccb46948ab981d0dd69ac85fffc01ce63f386a7a7d7d2",
+                        "timestamp":  "2026-06-26T14:09:34+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-026",
+                        "file":  "docs/tsa/lg-026.tsr",
+                        "size":  1069,
+                        "sha256":  "26fa020d3eb6fe9221e8094041c5e939b926aa7ea3ec882fa89dbbf476c04c3c",
+                        "timestamp":  "2026-06-26T14:09:35+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-027",
+                        "file":  "docs/tsa/lg-027.tsr",
+                        "size":  1069,
+                        "sha256":  "4733d18b9863d4a07dd44a9ec8f904e50040ff61ec1bc0256c2acb9d6bfa8004",
+                        "timestamp":  "2026-06-26T14:09:36+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-028",
+                        "file":  "docs/tsa/lg-028.tsr",
+                        "size":  1070,
+                        "sha256":  "762423cdabe5dd5edcc2b8a680ac5f29b1f2225966cc28fb9e1575b3c3090cf9",
+                        "timestamp":  "2026-06-26T14:09:37+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-029",
+                        "file":  "docs/tsa/lg-029.tsr",
+                        "size":  1069,
+                        "sha256":  "ba21088af8763da94d380564bc65fb8b7b3af07675ff217c1b3dc99d568d47b4",
+                        "timestamp":  "2026-06-26T14:09:37+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-030",
+                        "file":  "docs/tsa/lg-030.tsr",
+                        "size":  1070,
+                        "sha256":  "6bbcd5d7ed763abbb78268bb3007a7c06001f254e9521f3088ca65468bd9b324",
+                        "timestamp":  "2026-06-26T14:09:38+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-031",
+                        "file":  "docs/tsa/lg-031.tsr",
+                        "size":  1069,
+                        "sha256":  "f94b0e341ffc20fef0ca3c500efae7cde0389997614077a95711f6e4ab09a5a6",
+                        "timestamp":  "2026-06-26T14:09:39+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-032",
+                        "file":  "docs/tsa/lg-032.tsr",
+                        "size":  1070,
+                        "sha256":  "093d6574be09f32ccad98c34c4f903a35fdc6d03b39274febdd086370f92223c",
+                        "timestamp":  "2026-06-26T14:30:52+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-033",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-034",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-035",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-036",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-037",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-038",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-039",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-040",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-041",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-042",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-043",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-044",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-045",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-046",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-047",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-048",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-049",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-050",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-051",
+                        "file":  "docs/tsa/lg-051.tsr",
+                        "size":  974,
+                        "sha256":  "3ce4ce3141276e5b425cb6cd5a7c654c465017d4428e0546a76270de7504275e",
+                        "timestamp":  "2026-06-30T09:20:33+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-052",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-053",
+                        "file":  "docs/tsa/lg-053-freetsa.tsr",
+                        "size":  943,
+                        "sha256":  "b8594c3ddb95e9322c61bf4e94dcacb4caa9cd8f4bbd03f98906a2428696a364",
+                        "timestamp":  "2026-07-05T20:34:18+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-054",
+                        "file":  "docs/tsa/lg-054-freetsa.tsr",
+                        "size":  942,
+                        "sha256":  "93e6c96fe84120d1b27f00c935786844c78c2f850a558536888b5dcb794e35ac",
+                        "timestamp":  "2026-07-06T04:56:47+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-055",
+                        "file":  "docs/tsa/lg-055-freetsa.tsr",
+                        "size":  973,
+                        "sha256":  "47918508d0bf3683ce7cbd2b7c6c22579dac7c9c98c86ad10ce4365520bbfd7c",
+                        "timestamp":  "2026-07-06T23:22:14+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-056",
+                        "file":  "docs/tsa/lg-056_v5_3_20260707.tsr",
+                        "size":  4632,
+                        "sha256":  "507c824fed7d8d9b854d2874a3f8779de380a379d07904e241a07d50446a623f",
+                        "timestamp":  "2026-07-07T07:31:05+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-057",
+                        "file":  "docs/tsa/lg-057_v5_3_lgv2_1_20260707.tsr",
+                        "size":  4633,
+                        "sha256":  "6b5358c72aabddb229db11a612d2edd1bb1999046bead9189ab5a0619a73551e",
+                        "timestamp":  "2026-07-07T08:07:50+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-058",
+                        "file":  "docs/tsa/lg-058.tsr",
+                        "size":  4632,
+                        "sha256":  "c090f5214678e2acd9413e94f7bb0963bbc3ff91745e7bd7c28f1d45b59fc8f2",
+                        "timestamp":  "2026-07-08T21:35:58+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-059",
+                        "file":  "docs/tsa/lg-059.tsr",
+                        "size":  1069,
+                        "sha256":  "be2518f7155901115e0e1a5d296bf3681b19344b95478e49586f746530550b13",
+                        "timestamp":  "2026-07-10T08:25:36+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-060",
+                        "file":  "docs/tsa/lg-060.tsr",
+                        "size":  1069,
+                        "sha256":  "e7fcfe3c502ff9a5e40e16445e9e57d5ca5ff2a89b1e79ecd8b9870c3c6b79a1",
+                        "timestamp":  "2026-07-10T08:27:01+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-061",
+                        "file":  "docs/tsa/lg-061.tsr",
+                        "size":  1069,
+                        "sha256":  "84dadb4dbd3884a0eedb656c4fa3ad022deefdf9eaa4c84c40f109a661fd5bb4",
+                        "timestamp":  "2026-07-10T08:31:56+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-062",
+                        "file":  "docs/tsa/lg-062.tsr",
+                        "size":  1070,
+                        "sha256":  "588d7c9db8bff116dd00eb9a302816cf8b8098cdfd5d09e75471aa396069860d",
+                        "timestamp":  "2026-07-10T08:43:57+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-063",
+                        "file":  "docs/tsa/lg-063.tsr",
+                        "size":  1069,
+                        "sha256":  "dbe1e97f1733a86f56053e0740ac8543a2110a5acc8776f8285d051600ab0fa7",
+                        "timestamp":  "2026-07-10T09:12:31+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-064",
+                        "file":  "docs/tsa/lg-064.tsr",
+                        "size":  1069,
+                        "sha256":  "1068f4ab27c4d6dd3ebd9ddf0e8ac101bca9250fe043158c2efedbed67cbea70",
+                        "timestamp":  "2026-07-10T09:12:31+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-065",
+                        "file":  "docs/tsa/lg-065.tsr",
+                        "size":  1069,
+                        "sha256":  "85c6c1444fda4913865c792da9b33e3f6c9997f08deb2c3a1dd1ff786f04b53c",
+                        "timestamp":  "2026-07-10T09:34:23+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-066",
+                        "file":  "docs/tsa/lg-066.tsr",
+                        "size":  1069,
+                        "sha256":  "438f0fac69553e15202a46fa238db20a7dcb6ebd367fbbe4def94ca0474560df",
+                        "timestamp":  "2026-07-10T10:03:43+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-067",
+                        "file":  "docs/tsa/lg-067b.tsr",
+                        "size":  1070,
+                        "sha256":  "749ccaa69834d47592f064c3fd2a0b25c3a5ec46e8ccb16630352e2ad2babb6d",
+                        "timestamp":  "2026-07-10T11:11:05+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-068",
+                        "file":  "docs/tsa/lg-068.tsr",
+                        "size":  1070,
+                        "sha256":  "d22317ea8299b968de259aa29ac6a7511c3825534b6f574189a08e88b66d636b",
+                        "timestamp":  "2026-07-10T11:23:29+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-069",
+                        "file":  "docs/tsa/lg-069-formal-verification-k3-20260714.tsr",
+                        "size":  1070,
+                        "sha256":  "6aa8c02890bef6021bc1904d0310b02cd1faa8e38b80279f993f4bfc4fc21f4b",
+                        "timestamp":  "2026-07-14T13:24:42+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-070",
+                        "file":  "docs/tsa/lg-070-pqc-readiness-update-20260715.tsr",
+                        "size":  1069,
+                        "sha256":  "b592c5008913975b7aec5832ad159681cf98289f66e9aab2e295f207dca4870d",
+                        "timestamp":  "2026-07-15T04:36:18+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-071",
+                        "file":  "docs/tsa/lg-071-readme-fpga-uart-20260715.tsr",
+                        "size":  1070,
+                        "sha256":  "05f6bc774568f86ba1ba516d23e962df0b1b755062f04bbe3bd5927fc3cbd36b",
+                        "timestamp":  "2026-07-15T04:37:12+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-072",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-073",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-074",
+                        "file":  "docs/tsa/lg-074-l8l9-43-tests-20260715.tsr",
+                        "size":  6006,
+                        "sha256":  "4559a2c8a9596c5b56dfc4c1f2a0945b357f6797b4981877d1869a7489ba15ff",
+                        "timestamp":  "2026-07-15T09:37:11+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-075",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-076",
+                        "file":  "",
+                        "size":  0,
+                        "sha256":  "",
+                        "timestamp":  "",
+                        "tsa":  "DigiCert",
+                        "status":  "unavailable"
+                    },
+                    {
+                        "id":  "lg-077",
+                        "file":  "docs/tsa/lg-077-four-modules-evaluation-2026-07-16.tsr",
+                        "size":  5995,
+                        "sha256":  "7a8d142a12f7c43f3f3d35305f4c2218f679406e022cd38a3f287f54688bf471",
+                        "timestamp":  "2026-07-16T09:28:36+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    },
+                    {
+                        "id":  "lg-078",
+                        "file":  "docs/tsa/lg-078-opk-tlaplus-2026-07-16.tsr",
+                        "size":  5995,
+                        "sha256":  "7b1400356c26afa9ae36316d5d503d9d6423563bb2e06d29a2ac0851a020679c",
+                        "timestamp":  "2026-07-16T09:28:37+08:00",
+                        "tsa":  "DigiCert",
+                        "status":  "available"
+                    }
+                ],
+    "total":  78,
+    "available":  55,
+    "generated":  "2026-07-17T06:16:02+08:00",
+    "missing":  23
+}
