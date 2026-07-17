@@ -1,148 +1,917 @@
 {
-  "version": "2026-06-25-v2",
-  "generated_at": "2026-06-25T16:10:00+08:00",
+  "version": "2026-07-16-v3",
+  "generated_at": "2026-07-17T02:25:05Z",
+  "total": 129,
+  "tsr_sequence": "lg-001~076 (lg-072/073/075 FreeTSA regen 2026-07-17)",
   "files": [
     {
-      "id": "intt-final-verified",
-      "file": "intt_v1_verified.bit",
-      "sha256": "833BB501498B662DAB921AD644A66C12B1E75BC34B0B49FF4EA0FDDB7B244441",
-      "commit": "4a0eacc0653606b402b3796e2a787f64e4b5a8a7",
-      "device": "A7-Lite-35T (XC7A35T-2FGG484)",
-      "desc": "INTT hardware verification 256/256 passed",
-      "timestamps": [
-        {
-          "provider": "tsa.cn",
-          "file": "commit_hash.txt_可信时间戳.tsa",
-          "timestamp_utc": "2026-06-12T22:26:11Z",
-          "type": "PKCS#7 SignedData",
-          "verified": true
-        },
-        {
-          "provider": "FreeTSA",
-          "file": "commit_intt_v1.tsr",
-          "timestamp_utc": "2026-06-12T22:18:03Z",
-          "type": "RFC 3161 .tsr",
-          "verified": true
-        }
-      ]
+      "name": "lg-058.tsr",
+      "dir": "2026-07-09",
+      "size": 4632,
+      "sha256": "c090f5214678e2acd9413e94f7bb0963bbc3ff91745e7bd7c28f1d45b59fc8f2",
+      "mtime": "2026-07-08T21:35:58Z"
     },
     {
-      "id": "intt-commit",
-      "file": "git-commit-4a0eacc0",
-      "sha256": "58AB52272551DA8B3D09A50E02C7F74F480DF611F68E0FB61E938960867BBD61",
-      "commit": "4a0eacc0653606b402b3796e2a787f64e4b5a8a7",
-      "desc": "Git commit locking RTL + scripts + bitstream for INTT V1",
-      "timestamps": [
-        {
-          "provider": "tsa.cn",
-          "file": "commit_hash.txt_可信时间戳.tsa",
-          "timestamp_utc": "2026-06-12T22:26:11Z",
-          "type": "PKCS#7 SignedData",
-          "verified": true
-        }
-      ]
+      "name": "index-fixes.tsr",
+      "dir": "2026-06-25",
+      "size": 1070,
+      "sha256": "7141b577b7deccbc955e0623b5a6400de84d3fe23277059e93106fe0b82662af",
+      "mtime": "2026-06-26T22:07:48Z"
     },
     {
-      "file": "ml-kem-768.js",
-      "path": "/crypto/ml-kem-768.js",
-      "version": "final (KAT 20/20 PASS)",
-      "sha256": "4ee3d9b3948e45d6db87b56f24af05ef53590bf33eabc1b9698ac6d8d155ffd3",
-      "kat_status": "20/20 PASS",
-      "timestamps": [
-        {
-          "provider": "tsa.cn",
-          "file": "ml-kem-768.tsq_可信时间戳.tsa",
-          "timestamp_utc": "2026-05-29T04:08:33Z",
-          "type": "PKCS#7 SignedData",
-          "verified": true
-        },
-        {
-          "provider": "DigiCert",
-          "file": "ml-kem-768_digicert.tsr",
-          "timestamp_utc": "2026-05-29T02:26:18Z",
-          "type": "RFC 3161 .tsr",
-          "verified": true
-        }
-      ]
+      "name": "index.tsr",
+      "dir": "2026-06-25",
+      "size": 4633,
+      "sha256": "fcb1412e90a3273ca1551b5292d5ad0bd515eb7c94a3df00e5206ad2ca2086e3",
+      "mtime": "2026-06-26T22:07:48Z"
     },
     {
-      "file": "package.json",
-      "path": "/package.json",
-      "timestamps": [
-        {
-          "provider": "DigiCert",
-          "file": "package_json.tsr",
-          "timestamp_utc": "2026-05-29T02:30:00Z",
-          "type": "RFC 3161 .tsr"
-        }
-      ]
+      "name": "pqc-hybrid-client.js.tsr",
+      "dir": "2026-06-25",
+      "size": 1070,
+      "sha256": "4bf82387d5e3d6b9fce5d170c6450a883bce3e9256fe13232baaee7cb5e6c36c",
+      "mtime": "2026-06-26T22:07:48Z"
     },
     {
-      "file": "test-ml-kem-kat.html",
-      "path": "/crypto/test-ml-kem-kat.html",
-      "timestamps": [
-        {
-          "provider": "DigiCert",
-          "file": "test-ml-kem-kat.tsr",
-          "timestamp_utc": "2026-05-29T02:30:00Z",
-          "type": "RFC 3161 .tsr"
-        }
-      ]
+      "name": "pqc-hybrid-e2e.html.tsr",
+      "dir": "2026-06-25",
+      "size": 1070,
+      "sha256": "7e63f0399ebaedeee0d72dc515639932b807fa0972a6c1a80cd4cd2e64920877",
+      "mtime": "2026-06-26T22:07:48Z"
     },
     {
-      "file": "index.html",
-      "path": "/index.html",
-      "version": "v3.0-preview / 6-25 six-fixes",
-      "sha256": "09CE797A6416E5C9393551920C8718498CD216115D297CDF6295C628414AD143",
-      "desc": "P0:TVLA wording+P0:license plan+P1:perf side-by-side+P1:hybrid definition+P2:disclaimer+P3:poem footer",
-      "timestamps": [
-        {
-          "provider": "DigiCert",
-          "file": "index-fixes.tsr",
-          "timestamp_utc": "2026-06-25T06:34:14Z",
-          "serial": "0xE6BD85FA7240D662F25EA2FD09360172",
-          "type": "RFC 3161 .tsr",
-          "verified": true,
-          "status": "Granted"
-        }
-      ]
+      "name": "pqc-hybrid-server.js.tsr",
+      "dir": "2026-06-25",
+      "size": 1070,
+      "sha256": "b948e1191f9715ec6a152461e196da8e311209e35261ae7814ce8fc6a32473b6",
+      "mtime": "2026-06-26T22:07:48Z"
     },
     {
-      "id": "ntt-pipeline-v1.3",
-      "file": "hardware/ntt_core_pipe.v",
-      "sha256": "d8a151a6ce87c3d0ac65f6c0019f0987836edf3222c087b468764d333baf4d5b",
-      "version": "v1.3",
-      "desc": "NTT Pipeline core — FIFO 128-deep, 256/256 ALL MATCH, 1.89x speedup",
-      "timestamps": [
-        {
-          "provider": "FreeTSA",
-          "file": "hardware/ntt_core_pipe.tsr",
-          "type": "RFC 3161 .tsr",
-          "verified": true,
-          "status": "Granted",
-          "timestamp_utc": "2026-06-25T08:10:00Z"
-        }
-      ]
+      "name": "pqc-readiness.tsr",
+      "dir": "2026-06-25",
+      "size": 4633,
+      "sha256": "7a4bb4c8d0d09fd01e85e20aea24bd4d07484a85f247bc7152931e95cf280a04",
+      "mtime": "2026-06-26T22:07:48Z"
     },
     {
-      "id": "ntt-pipeline-v1.3-bundle",
-      "file": "hardware/ntt_pipeline_v1.3.sha256",
-      "desc": "SHA256 bundle: ntt_core_pipe.v + ntt_core.v + ntt_butterfly_unif.v + tb_ntt_compare.v",
-      "timestamps": [
-        {
-          "provider": "FreeTSA",
-          "file": "hardware/ntt_bundle.tsr",
-          "type": "RFC 3161 .tsr",
-          "verified": true,
-          "status": "Granted",
-          "timestamp_utc": "2026-06-25T08:10:00Z"
-        }
-      ]
+      "name": "sm2-frontend-verification.tsr",
+      "dir": "2026-06-25",
+      "size": 5995,
+      "sha256": "a1baea94d851eda4baf08f205bdeed5fb626a687f978f852248d1ee52e44c8e7",
+      "mtime": "2026-06-26T22:07:48Z"
+    },
+    {
+      "name": "sm2-optimization.tsr",
+      "dir": "2026-06-25",
+      "size": 1070,
+      "sha256": "0f4674e22462026c2533b45d4978709ba434b526106adf918788f87bdade1b4e",
+      "mtime": "2026-06-26T22:07:48Z"
+    },
+    {
+      "name": "sm2-tvla-analysis.tsr",
+      "dir": "2026-06-25",
+      "size": 1070,
+      "sha256": "1bb0a00ba1003432bae05e1167b689baac7f252c1eff8eb11bf421f67e12fa4b",
+      "mtime": "2026-06-26T22:07:48Z"
+    },
+    {
+      "name": "lg-053-freetsa.tsr",
+      "dir": "2026-07-06",
+      "size": 943,
+      "sha256": "b8594c3ddb95e9322c61bf4e94dcacb4caa9cd8f4bbd03f98906a2428696a364",
+      "mtime": "2026-07-05T20:34:18Z"
+    },
+    {
+      "name": "lg-v2.2-20260710.tsr",
+      "dir": "2026-07-11",
+      "size": 942,
+      "sha256": "35d75232025e20df099880f4c94053aa595e1389f6c850f532b86f0fff3c16a5",
+      "mtime": "2026-07-10T16:39:05Z"
+    },
+    {
+      "name": "ntt-bundle-tsr_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "6419cbf1f864c418389ddcb7641d217590b2271779d19d7c5e72f9ce001eb8ad",
+      "mtime": "2026-07-01T02:23:07Z"
+    },
+    {
+      "name": "ntt-bundle-tsr_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "5dee39142bd02607811e814766278abc7f5dcf21ebb64ebed6014c0c6a173c24",
+      "mtime": "2026-07-01T02:23:07Z"
+    },
+    {
+      "name": "ntt-core-pipe-tsr_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "8b72a5a56bbde2fcd75bc4b7cdf8e46401fcd195ff0f41d0e767c0154e4cbb33",
+      "mtime": "2026-07-01T02:23:08Z"
+    },
+    {
+      "name": "ntt-core-pipe-tsr_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "26dd8432088f30072fcfa2a58718502282e849e7a9a85f80fe6434e231b103ef",
+      "mtime": "2026-07-01T02:23:08Z"
+    },
+    {
+      "name": "pkv3_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "52babd2f9ff45f5e6b65bc8aa450190415f1a1e765ac1ede9918d614ccd30d39",
+      "mtime": "2026-07-01T02:23:09Z"
+    },
+    {
+      "name": "pkv3_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "6cb88f6c9f28fd7b9e2754ce14527da77ecbd85836c6d257b3a97a13e7d262d8",
+      "mtime": "2026-07-01T02:23:09Z"
+    },
+    {
+      "name": "src-index_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "8c6b22c7a76084736778fd9c105e42370527af3b6fdf9fe03c90269c17c960fd",
+      "mtime": "2026-07-01T02:23:10Z"
+    },
+    {
+      "name": "src-index_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "ff4b8e2689e35bd9f8d58957ac4b94269e1161afd7a75ab23addaab825ee3a9c",
+      "mtime": "2026-07-01T02:23:10Z"
+    },
+    {
+      "name": "tvla-9of9-corrected-report_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "517b0dee72d3cc15225ffb49cae30d454eb5137bf23a33487713178faebda55f",
+      "mtime": "2026-07-01T02:22:53Z"
+    },
+    {
+      "name": "tvla-9of9-corrected-report_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "3ca22227dd8e975c58916233221998eed3d720aec7aa57041087a9749ef03843",
+      "mtime": "2026-07-01T02:22:53Z"
+    },
+    {
+      "name": "tvla-9of9-corrected-tsq_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "3e37c24f2efce6cb02bc524f1a6f327767ddb64224e310dc0662fde2d11994cd",
+      "mtime": "2026-07-01T02:22:55Z"
+    },
+    {
+      "name": "tvla-9of9-corrected-tsq_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "b52457744206a772096a4da86327bb4461c223b85c616cb86092111c51051dea",
+      "mtime": "2026-07-01T02:22:55Z"
+    },
+    {
+      "name": "tvla-9of9-corrected-tsr_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "adee4293b7eb998eb8ff55033feae19bf0c5a2c45f9bb0ed47e783feebc48134",
+      "mtime": "2026-07-01T02:22:54Z"
+    },
+    {
+      "name": "tvla-9of9-corrected-tsr_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "e835e39bd931bafe9c588f7244d88124557a4fdd5274bdaeb46cf78160fdc3ff",
+      "mtime": "2026-07-01T02:22:54Z"
+    },
+    {
+      "name": "tvla-9of9-summary-tsq_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "45bbe05421436b45b5f71648e349388ad13f903fc13ce6c0e3b50c46cf595e39",
+      "mtime": "2026-07-01T02:22:57Z"
+    },
+    {
+      "name": "tvla-9of9-summary-tsq_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "53ddf41a57bad8fb83824cbdfa50a972e76390c775f8365d0f79a81649bb4063",
+      "mtime": "2026-07-01T02:22:56Z"
+    },
+    {
+      "name": "tvla-9of9-summary-tsr_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "ba9804c1758a2aeb1902430d916fcf7aa773bebf25d28b096d34efc72ccb8f00",
+      "mtime": "2026-07-01T02:22:56Z"
+    },
+    {
+      "name": "tvla-9of9-summary-tsr_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "a11b4e081a9463ff248c713a3e33d8b9e18dc92edb3a130ae3965ca022edf0c8",
+      "mtime": "2026-07-01T02:22:55Z"
+    },
+    {
+      "name": "tvla-defense-reviewers-tsq_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "f80e8a509d322b7e64da4b922db5a15b8476e09d94e3fa3b8cc7f2b10a1b5e18",
+      "mtime": "2026-07-01T02:22:59Z"
+    },
+    {
+      "name": "tvla-defense-reviewers-tsq_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "771665459bd7042a0cbb2c29525cc9d22fabcc682cbb35c59194cdb1b2144432",
+      "mtime": "2026-07-01T02:22:59Z"
+    },
+    {
+      "name": "tvla-defense-reviewers-tsr_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "1a472cb274ff9b97c9126ce685f53b58b18fc5ed9b2d2036a81e7be6784a48b2",
+      "mtime": "2026-07-01T02:22:58Z"
+    },
+    {
+      "name": "tvla-defense-reviewers-tsr_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "0b7f78f4a632e547f4b54e39aa353ca09dfd5eced2f768c93f0fd1ce2e7d0411",
+      "mtime": "2026-07-01T02:22:57Z"
+    },
+    {
+      "name": "tvla-defense-tsq_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "4ec3aed9f259343fc363e5184b52058050e0c2de9f60b3a5fc8b0286ac2b1c49",
+      "mtime": "2026-07-01T02:23:02Z"
+    },
+    {
+      "name": "tvla-defense-tsq_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "4e7169ad0af3cbdc345484b30fe68edcfc2488329f8f5f4e308bfaeae45794a8",
+      "mtime": "2026-07-01T02:23:02Z"
+    },
+    {
+      "name": "tvla-exp5-tsq_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "4c0c102e3cfc89a8fe90866b6da868c4229ab87b5a8d75bd014b9f0bd19003bc",
+      "mtime": "2026-07-01T02:23:06Z"
+    },
+    {
+      "name": "tvla-exp5-tsq_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "783e669044ec17a9673290ecef3ac5edb35cf333bf8c6c7aaa24ad7c599ef2b0",
+      "mtime": "2026-07-01T02:23:05Z"
+    },
+    {
+      "name": "tvla-exp5-tsr_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "ff6c5a36e4a699618184aefda958f73129fc9934c4069b8b5c00dae98fb9085b",
+      "mtime": "2026-07-01T02:23:05Z"
+    },
+    {
+      "name": "tvla-exp5-tsr_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "afdd114e57e8142f7cf9d03fdc2d6c349e2816037eedcfd3d96ac800b12f5265",
+      "mtime": "2026-07-01T02:23:05Z"
+    },
+    {
+      "name": "tvla-final-tsq_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "589a84b2c1d5f5fd0127f2153e2b01fc083141fbf7f2a326f2535a5230836e99",
+      "mtime": "2026-07-01T02:23:03Z"
+    },
+    {
+      "name": "tvla-final-tsq_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "d05357a9b6922748a137a4d4afa860d463607d3646eeb1255aa75a69d8dffd54",
+      "mtime": "2026-07-01T02:23:03Z"
+    },
+    {
+      "name": "tvla-mlkem-report-v2-final_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "7d69ac0d54108fa3578cf2791abdc80797b6a5f720c814052500298c90e2bfee",
+      "mtime": "2026-07-01T02:22:46Z"
+    },
+    {
+      "name": "tvla-mlkem-report-v2-final_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "9a63a64e6407239b83d58bf9633742c7749ba7622e66c6b35f7b16d5cdf74eec",
+      "mtime": "2026-07-01T02:22:45Z"
+    },
+    {
+      "name": "tvla-mlkem-report-v2_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "a76864921ca2686daeca05eaed0513f93443abc26a9e5ceaf284e022d4b650af",
+      "mtime": "2026-07-01T02:22:47Z"
+    },
+    {
+      "name": "tvla-mlkem-report-v2_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "fde18146d82926f283953696602370fd5d008f4d2330f0e92eb62e2af207e4ed",
+      "mtime": "2026-07-01T02:22:46Z"
+    },
+    {
+      "name": "tvla-mlkem-report_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "854894d8f7c756421e2fc9f033dc43829e297161068bbb973f04e6617b5b4178",
+      "mtime": "2026-07-01T02:22:48Z"
+    },
+    {
+      "name": "tvla-mlkem-report_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "fb5e4c0b9c2ab5d31a1297b9ab4fff49c882cbfdef550f7bacfba2a73e41981d",
+      "mtime": "2026-07-01T02:22:48Z"
+    },
+    {
+      "name": "tvla-report-20260531_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "21541d7539c8bcbecf345208bdb030c2752caa8e4fa19ef0944b5c0efacd4117",
+      "mtime": "2026-07-01T02:22:49Z"
+    },
+    {
+      "name": "tvla-report-20260531_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "025af9ca278a680977400e3e80002186aa8ae4736efea393f58901a212ebc8d7",
+      "mtime": "2026-07-01T02:22:48Z"
+    },
+    {
+      "name": "tvla-sm2-report_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "0a8003ed78bf96a3131bf56f0e491bded391b6e66af173f4b78b5e2fb4747a8d",
+      "mtime": "2026-07-01T02:22:51Z"
+    },
+    {
+      "name": "tvla-sm2-report_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "b305d96ca3490100a4f1feb3ed51fd048f64260cdbefa6bf97244c5d81faf1f5",
+      "mtime": "2026-07-01T02:22:50Z"
+    },
+    {
+      "name": "tvla-wasm-report_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "9c25a1bf7999e7307a7eb8004175f007fb526aea0db23cdd1ad011a65052a8d6",
+      "mtime": "2026-07-01T02:22:52Z"
+    },
+    {
+      "name": "tvla-wasm-report_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "f2321e4bdcb3aa418c10c2d3b018dba96803b0f5a9b567af48f2b91716cef08b",
+      "mtime": "2026-07-01T02:22:52Z"
+    },
+    {
+      "name": "vwz-bench-html_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "3e96522a77b58094c427b6379d5703893192ba64ca6ca83a0b30d60a621802df",
+      "mtime": "2026-07-01T02:23:35Z"
+    },
+    {
+      "name": "vwz-bench-html_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "c8e454ff3f427a3191c37e9e886f2ea2230d9a2b8aede6bcee46e70ae9488b99",
+      "mtime": "2026-07-01T02:23:34Z"
+    },
+    {
+      "name": "vwz-bench-js_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "3fdf5566c10b906f26ffe7ad672ef8cfba19c76780becf50457a5cea65cdb2f8",
+      "mtime": "2026-07-01T02:23:36Z"
+    },
+    {
+      "name": "vwz-bench-js_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "e80c853847f735bbebaaf93c4e6098676646326564d76ea9e3248d1927b95510",
+      "mtime": "2026-07-01T02:23:35Z"
+    },
+    {
+      "name": "vwz-research-api_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "fbd16704da98e63d1272a7ba2ef714bea7d58c8a3e507d7d28d8047124e31e4b",
+      "mtime": "2026-07-01T02:23:34Z"
+    },
+    {
+      "name": "vwz-research-api_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "b4425454c4c2cbb9d276e1cebe046d445e356c0a93640f1866a8b2a801543316",
+      "mtime": "2026-07-01T02:23:33Z"
+    },
+    {
+      "name": "www-age-verification_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "954aaed3e1bcc32145976c03feab1e6eeaa66dc2b92f30e60f1c047e127f6590",
+      "mtime": "2026-07-01T02:23:30Z"
+    },
+    {
+      "name": "www-age-verification_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "7269e30bace277e5e8161def8ba418a7c21c15594cae2c444a91b76ad7f7d837",
+      "mtime": "2026-07-01T02:23:30Z"
+    },
+    {
+      "name": "www-architecture_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "c5c4041bf4a349d0deb3ceb4c38f390815c1467a40a8d7c21d159620496b0aab",
+      "mtime": "2026-07-01T02:23:12Z"
+    },
+    {
+      "name": "www-architecture_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "ffebd089c760c6721d77ef4f9bdb811efc38abcb4d54f811e86bf18281141942",
+      "mtime": "2026-07-01T02:23:12Z"
+    },
+    {
+      "name": "www-blog_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "cbce440f3cd53e1fd777b6729d3ed8d3a4149eec668a11a486e3efeca59b91da",
+      "mtime": "2026-07-01T02:23:26Z"
+    },
+    {
+      "name": "www-blog_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "f19924ab052f1714955dc82757d15461fcefc9130c2c251845541f8bb9050520",
+      "mtime": "2026-07-01T02:23:25Z"
+    },
+    {
+      "name": "www-dev-portfolio_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "122d8c862126bf1b84bd3b3a6361bfd71c3ad818a33269993935f9f553817b23",
+      "mtime": "2026-07-01T02:23:27Z"
+    },
+    {
+      "name": "www-dev-portfolio_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "9d866a69da4b94a1a2a6f77c468b7ee5b4ad938639f9c23f53a8a8e727f2a8bf",
+      "mtime": "2026-07-01T02:23:26Z"
+    },
+    {
+      "name": "www-diagnose-pq_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "f4b154fe23af4e999f07e4b1175b559a937caa1a3a38f8d9287f1c3ade8a8287",
+      "mtime": "2026-07-01T02:23:31Z"
+    },
+    {
+      "name": "www-diagnose-pq_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "c0db11c961914386ea6372cf029b4a05e751a8b70b45a83672ea17e262ab881b",
+      "mtime": "2026-07-01T02:23:31Z"
+    },
+    {
+      "name": "www-disclaimer-cn_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "a7b0defdb76d66f083e3f079247dcdb752f0fda2e8dbb1c8303b7cef4cebd79b",
+      "mtime": "2026-07-01T02:23:18Z"
+    },
+    {
+      "name": "www-disclaimer-cn_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "a65e9a50ade453e5a9d07b77c8df8e1e34cf780b89469c7570f656feb53b43ae",
+      "mtime": "2026-07-01T02:23:17Z"
+    },
+    {
+      "name": "www-disclaimer-en_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "2ff3c825df999d9457b2db9cd289cee5888234dba63b834ad0c4942ab32cec44",
+      "mtime": "2026-07-01T02:23:22Z"
+    },
+    {
+      "name": "www-disclaimer-en_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "e88bccb6329e7dc7c20824359db9668960c442c08cb7a77945f0b470bd52f2e6",
+      "mtime": "2026-07-01T02:23:18Z"
+    },
+    {
+      "name": "www-dmth-explanation_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "9df702c9347f8f5e81d96db54ad987e0ee9291f60a9e3e0bc9d05d4d8801aec1",
+      "mtime": "2026-07-01T02:23:15Z"
+    },
+    {
+      "name": "www-dmth-explanation_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "e76c9611ad95a18cf7722f987f442138dd81194add161ec6cddadc73b08254ba",
+      "mtime": "2026-07-01T02:23:14Z"
+    },
+    {
+      "name": "www-faq_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "bd418b34c64e252548de7930633542f972e7b76559541cd1b2b3d6d9abc4c8c9",
+      "mtime": "2026-07-01T02:23:13Z"
+    },
+    {
+      "name": "www-faq_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "8063f4f6642d7b5b272136938ac459ada7eb01c155ef4e65014a61f1bf27950d",
+      "mtime": "2026-07-01T02:23:13Z"
+    },
+    {
+      "name": "www-index_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "00c1b08044d0b9072198d06b05d1ae3b83b66d88c6b2a42f0deed393ed851203",
+      "mtime": "2026-07-01T02:23:11Z"
+    },
+    {
+      "name": "www-index_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "3c926d4a7364b2215d83ed852524b07616300926d41b99e25a09f6eca29f1b54",
+      "mtime": "2026-07-01T02:23:11Z"
+    },
+    {
+      "name": "www-landing-new_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "bb30b4acca446e764e5dc0b1d459aa64baee45af1081b2b96158c5bcf5ff7f0c",
+      "mtime": "2026-07-01T02:23:23Z"
+    },
+    {
+      "name": "www-landing-new_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "25251c26f953c26a9bfeacc58cc7c3db8fe5942cbd37377d2785d867b45e5a76",
+      "mtime": "2026-07-01T02:23:23Z"
+    },
+    {
+      "name": "www-landing_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "c453eb2f3cf0e9a4f23cb49c393e427f6f6a1bf899616ad16f9e7e98a27b207f",
+      "mtime": "2026-07-01T02:23:23Z"
+    },
+    {
+      "name": "www-landing_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "c1e44a27a861cce512a377301a059c1d89072bb60b9925de2522512979c1a525",
+      "mtime": "2026-07-01T02:23:22Z"
+    },
+    {
+      "name": "www-legal_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1137,
+      "sha256": "c49bea57af5c09fc76c61d104cb28472747fbff49c70b5adefb96c207a6ec091",
+      "mtime": "2026-07-01T02:23:28Z"
+    },
+    {
+      "name": "www-legal_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 975,
+      "sha256": "9020372d70a6a15a729cf566e4eb761b5f6d1a87556603d570948957705ef843",
+      "mtime": "2026-07-01T02:23:27Z"
+    },
+    {
+      "name": "www-lg-security-en_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "b8b5af01f21375c2cfdd8678a64338a19397f3ffd9258d462dc17be36b527af6",
+      "mtime": "2026-07-01T02:23:16Z"
+    },
+    {
+      "name": "www-lg-security-en_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "cd4340dedfba05923827c797d900c1c2a3e1ca96a1daa7befc13bc8f8669d14a",
+      "mtime": "2026-07-01T02:23:15Z"
+    },
+    {
+      "name": "www-m_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "622388eda12fb270f33ffd4d4b41783db6348cf0c906a318f2d13e5695b744e9",
+      "mtime": "2026-07-01T02:23:29Z"
+    },
+    {
+      "name": "www-m_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "b15d99ef7f709c87eecfd66dbf20ba22bd726a71fdb0c6f6a8ce09a31db45b57",
+      "mtime": "2026-07-01T02:23:29Z"
+    },
+    {
+      "name": "www-pqc-readiness_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "6e710aad19ee96325612e89b1c28f3cd18034f6edb278db30bb06f5eff219e40",
+      "mtime": "2026-07-01T02:23:14Z"
+    },
+    {
+      "name": "www-pqc-readiness_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "4a19c6b779ceacfbf47a928d99bab4d9f98089fdfcbd9418717dd95345407f2a",
+      "mtime": "2026-07-01T02:23:14Z"
+    },
+    {
+      "name": "www-security_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "9ccfa1c6a29cac975a661ed62d045f3cfc511872beafac28f902929be0b27a54",
+      "mtime": "2026-07-01T02:23:17Z"
+    },
+    {
+      "name": "www-security_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "6b0f9ec4234306a43bda4d504b41daca7869aa693897b655b5f7d0a14f6bcc38",
+      "mtime": "2026-07-01T02:23:16Z"
+    },
+    {
+      "name": "www-terms_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "5a7700577b22e75df600ceb62433a818b20273c76cdfca978fcafc6daad5091e",
+      "mtime": "2026-07-01T02:23:29Z"
+    },
+    {
+      "name": "www-terms_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 973,
+      "sha256": "33924f76c02a5b8ae0f279b93fec7c0644db5b05cbdf5e68475e165c7d10fa43",
+      "mtime": "2026-07-01T02:23:28Z"
+    },
+    {
+      "name": "www-test-login_digicert.tsr",
+      "dir": "2026-07-01",
+      "size": 1138,
+      "sha256": "8152862568f43b7ccb47e5b0644e07d6906a152b5f431261bb1fb0a54a0bb2cf",
+      "mtime": "2026-07-01T02:23:33Z"
+    },
+    {
+      "name": "www-test-login_freetsa.tsr",
+      "dir": "2026-07-01",
+      "size": 974,
+      "sha256": "fed36107158dd0dbfc158447f7e04356a8008f80472d5968be238dd09a6edb90",
+      "mtime": "2026-07-01T02:23:33Z"
+    },
+    {
+      "name": "lg-070-pqc-readiness-update-20260715.tsr",
+      "dir": "2026-07-15",
+      "size": 1069,
+      "sha256": "b592c5008913975b7aec5832ad159681cf98289f66e9aab2e295f207dca4870d",
+      "mtime": "2026-07-15T04:36:18Z"
+    },
+    {
+      "name": "lg-071-readme-fpga-uart-20260715.tsr",
+      "dir": "2026-07-15",
+      "size": 1070,
+      "sha256": "05f6bc774568f86ba1ba516d23e962df0b1b755062f04bbe3bd5927fc3cbd36b",
+      "mtime": "2026-07-15T04:37:12Z"
+    },
+    {
+      "name": "lg-051.tsr",
+      "dir": "2026-06-30",
+      "size": 974,
+      "sha256": "3ce4ce3141276e5b425cb6cd5a7c654c465017d4428e0546a76270de7504275e",
+      "mtime": "2026-06-30T09:20:34Z"
+    },
+    {
+      "name": "lg047.tsr",
+      "dir": "2026-06-30",
+      "size": 942,
+      "sha256": "f6c836bae1db89ec9040114a1eb8c55c7926fc1ad9690bd4171eb8000878493e",
+      "mtime": "2026-07-01T02:11:54Z"
+    },
+    {
+      "name": "lg048.tsr",
+      "dir": "2026-06-30",
+      "size": 941,
+      "sha256": "caa32f064d844e1759522a7dcb06282309702df402741b013cd948cd1496772c",
+      "mtime": "2026-07-01T02:11:54Z"
+    },
+    {
+      "name": "lg049.tsr",
+      "dir": "2026-06-30",
+      "size": 942,
+      "sha256": "b888b1d5d9429320a54adcdc73fc5fa8234730e39ee8656b1b61c928a3aa6a8a",
+      "mtime": "2026-07-01T02:11:54Z"
+    },
+    {
+      "name": "lg050.tsr",
+      "dir": "2026-06-30",
+      "size": 942,
+      "sha256": "de37c3565b1054ac2884b8adfceaae3c7cdb714feb3b8ea39165483e3bdf2121",
+      "mtime": "2026-07-01T02:11:54Z"
+    },
+    {
+      "name": "lg-074-l8l9-43-tests-20260715.tsr",
+      "dir": "2026-07-16",
+      "size": 6006,
+      "sha256": "4559a2c8a9596c5b56dfc4c1f2a0945b357f6797b4981877d1869a7489ba15ff",
+      "mtime": "2026-07-16T22:13:40Z"
+    },
+    {
+      "name": "lg-076-lgv2-defense-modules-20260716-freetsa.tsr",
+      "dir": "2026-07-16",
+      "size": 942,
+      "sha256": "6127a694b8fab09dde9e3a83bc0366b41508dd245ee7590d8dafc1dcff3259af",
+      "mtime": "2026-07-16T22:17:50Z"
+    },
+    {
+      "name": "lg-077-four-modules-evaluation-2026-07-16.tsr",
+      "dir": "2026-07-16",
+      "size": 5995,
+      "sha256": "7a8d142a12f7c43f3f3d35305f4c2218f679406e022cd38a3f287f54688bf471",
+      "mtime": "2026-07-16T22:13:41Z"
+    },
+    {
+      "name": "lg-078-opk-tlaplus-2026-07-16.tsr",
+      "dir": "2026-07-16",
+      "size": 5995,
+      "sha256": "7b1400356c26afa9ae36316d5d503d9d6423563bb2e06d29a2ac0851a020679c",
+      "mtime": "2026-07-16T22:13:41Z"
+    },
+    {
+      "name": "lg-056_v5_3_20260707.tsr",
+      "dir": "2026-07-07",
+      "size": 4632,
+      "sha256": "507c824fed7d8d9b854d2874a3f8779de380a379d07904e241a07d50446a623f",
+      "mtime": "2026-07-08T21:21:31Z"
+    },
+    {
+      "name": "lg-057_v5_3_lgv2_1_20260707.tsr",
+      "dir": "2026-07-07",
+      "size": 4633,
+      "sha256": "6b5358c72aabddb229db11a612d2edd1bb1999046bead9189ab5a0619a73551e",
+      "mtime": "2026-07-08T21:21:31Z"
+    },
+    {
+      "name": "lg-v2-free-tsa.tsr",
+      "dir": "2026-06-28",
+      "size": 943,
+      "sha256": "9e3292c2ac4afdd6e5c6a8545b05cbb206cbc486d218d1261ecd877a049193c4",
+      "mtime": "2026-06-27T20:00:06Z"
+    },
+    {
+      "name": "vwz_digicert.tsr",
+      "dir": "2026-06-28",
+      "size": 1138,
+      "sha256": "52359db32aa125b96c241d2f43da830a7da9179352857e6f8276d575864a4085",
+      "mtime": "2026-06-27T20:43:43Z"
+    },
+    {
+      "name": "vwz_snapshot.tsr",
+      "dir": "2026-06-28",
+      "size": 975,
+      "sha256": "399a883f55650975d286c07e64d0ed968309314f329fb812102e5605815ab0d7",
+      "mtime": "2026-06-27T20:43:42Z"
+    },
+    {
+      "name": "lg-069-formal-verification-k3-20260714.tsr",
+      "dir": "2026-07-14",
+      "size": 1070,
+      "sha256": "6aa8c02890bef6021bc1904d0310b02cd1faa8e38b80279f993f4bfc4fc21f4b",
+      "mtime": "2026-07-14T13:24:42Z"
+    },
+    {
+      "name": "lg-059.tsr",
+      "dir": "2026-07-10",
+      "size": 1069,
+      "sha256": "be2518f7155901115e0e1a5d296bf3681b19344b95478e49586f746530550b13",
+      "mtime": "2026-07-10T08:25:36Z"
+    },
+    {
+      "name": "lg-060.tsr",
+      "dir": "2026-07-10",
+      "size": 1069,
+      "sha256": "e7fcfe3c502ff9a5e40e16445e9e57d5ca5ff2a89b1e79ecd8b9870c3c6b79a1",
+      "mtime": "2026-07-10T08:27:02Z"
+    },
+    {
+      "name": "lg-061.tsr",
+      "dir": "2026-07-10",
+      "size": 1069,
+      "sha256": "84dadb4dbd3884a0eedb656c4fa3ad022deefdf9eaa4c84c40f109a661fd5bb4",
+      "mtime": "2026-07-10T08:31:56Z"
+    },
+    {
+      "name": "lg-062.tsr",
+      "dir": "2026-07-10",
+      "size": 1070,
+      "sha256": "588d7c9db8bff116dd00eb9a302816cf8b8098cdfd5d09e75471aa396069860d",
+      "mtime": "2026-07-10T08:43:57Z"
+    },
+    {
+      "name": "lg-063.tsr",
+      "dir": "2026-07-10",
+      "size": 1069,
+      "sha256": "dbe1e97f1733a86f56053e0740ac8543a2110a5acc8776f8285d051600ab0fa7",
+      "mtime": "2026-07-10T09:12:31Z"
+    },
+    {
+      "name": "lg-064.tsr",
+      "dir": "2026-07-10",
+      "size": 1069,
+      "sha256": "1068f4ab27c4d6dd3ebd9ddf0e8ac101bca9250fe043158c2efedbed67cbea70",
+      "mtime": "2026-07-10T09:12:31Z"
+    },
+    {
+      "name": "lg-065.tsr",
+      "dir": "2026-07-10",
+      "size": 1069,
+      "sha256": "85c6c1444fda4913865c792da9b33e3f6c9997f08deb2c3a1dd1ff786f04b53c",
+      "mtime": "2026-07-10T09:34:24Z"
+    },
+    {
+      "name": "lg-066.tsr",
+      "dir": "2026-07-10",
+      "size": 1069,
+      "sha256": "438f0fac69553e15202a46fa238db20a7dcb6ebd367fbbe4def94ca0474560df",
+      "mtime": "2026-07-10T10:03:43Z"
+    },
+    {
+      "name": "lg-067.tsr",
+      "dir": "2026-07-10",
+      "size": 1070,
+      "sha256": "d14d251f4f1b8269f6393e5184dc104edc07e0ed2fdeae7961b2a8a96735dcd6",
+      "mtime": "2026-07-10T10:26:11Z"
+    },
+    {
+      "name": "lg-067b.tsr",
+      "dir": "2026-07-10",
+      "size": 1070,
+      "sha256": "749ccaa69834d47592f064c3fd2a0b25c3a5ec46e8ccb16630352e2ad2babb6d",
+      "mtime": "2026-07-10T11:11:06Z"
+    },
+    {
+      "name": "lg-068.tsr",
+      "dir": "2026-07-10",
+      "size": 1070,
+      "sha256": "d22317ea8299b968de259aa29ac6a7511c3825534b6f574189a08e88b66d636b",
+      "mtime": "2026-07-10T11:23:29Z"
+    },
+    {
+      "label": "lg-072",
+      "file": "tsa/2026-07-17-lg-gen/lg-072-tls-hybrid-extension.js.sha256",
+      "sha256": "efb2cb313bfd3294bdbba682f4c40e574f027a44c0633e62e59a2c1d5aa5978cd",
+      "tsr": "tsa/2026-07-17-lg-gen/lg-072.tsr",
+      "tsa_provider": "freetsa",
+      "timestamp": "2026-07-17T02:23:47Z",
+      "note": "IANA #4590 TLS hybrid extension; original TSQ from commit 2445f814"
+    },
+    {
+      "label": "lg-073",
+      "file": "tsa/2026-07-17-lg-gen/lg-073-hybrid-kem-client.js.sha256",
+      "sha256": "46a5f78f9fe7117fa5f6ddeefd3871fec5425bfa73f53c2028956f00ddd047c7",
+      "tsr": "tsa/2026-07-17-lg-gen/lg-073.tsr",
+      "tsa_provider": "freetsa",
+      "timestamp": "2026-07-17T02:23:48Z",
+      "note": "IANA #4590 hybrid-kem-client.js; from commit 4e42f7c5"
+    },
+    {
+      "label": "lg-075",
+      "file": "tsa/2026-07-17-lg-gen/lg-075-README.md.sha256",
+      "sha256": "a4f78da937d31812137b1c1c9cfdef9f1063ee452e29637370ac6a7dc2c2220f",
+      "tsr": "tsa/2026-07-17-lg-gen/lg-075.tsr",
+      "tsa_provider": "freetsa",
+      "timestamp": "2026-07-17T02:23:49Z",
+      "note": "README.md date sync; from commit 2c56bdc0"
     }
-  ],
-  "notes": [
-    "2026-06-25: six fixes deployed - P0-1 TVLA precise wording, P0-2 open-source plan, P1-1 perf side-by-side display, P1-2 hybrid KEX definition, P2 compliance disclaimer banner, P3 poem moved to footer",
-    "Prior: ml-kem-768.js KAT 20/20 PASS, INTT V1 FPGA 256/256 verified",
-    "2026-06-25 hardware: NTT Pipeline v1.3 — 12,550→6,652 cycles, 1.89x speedup, 256/256 ALL MATCH, zero BRAM"
   ]
 }
