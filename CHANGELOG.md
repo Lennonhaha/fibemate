@@ -5,11 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.3-preview] — 2026-07-17
 
 ### Added
-- Open source readiness: CI/CD pipelines, issue templates, PR template, CoC, SECURITY.md
+- TLS 1.3 hybrid key exchange Path A (X25519MLKEM768 via oqs-provider + systemd override)
+- TLS hybrid deployment guide (`docs/tls-hybrid-deployment.md`, 9 chapters)
+- Performance baseline: X25519MLKEM768 KeyGen 9.50ms, Encaps 2.78ms, Decaps 2.79ms (N=200)
+- Formal security model documentation: ROM/QROM proofs for hybrid KEM composability
+- Cached OPRF-based privacy-preserving authentication (OPAQUE-PAKE draft)
+- LookingGlass v3.1 spherical projection research (archived, mathematical infeasibility confirmed)
+- TLA+ formal verification for Path C-2: 7 invariants, 101,467 states, 0 violations
+- Open source readiness: Code of Conduct, Contributing guide, Security policy
 - Open source timeline notice on fibemate.net hero area
+
+### Changed
+- Nginx/sslh 443 port multiplexing for HTTPS + SSH
+- SM2 TVLA upgraded N=10,000 (was N=5,000), 20/20 passed
+- INTT scaling constant corrected: 3316 → 3303 (paper errata)
+
+### Security
+- QROM formal proof referenced for hybrid KEM IND-CCA2 composability
+- TLS 1.3 server-side hybrid handshake verified (key_share 0x11ec, IANA #4588)
+- Browser fallback path confirmed: classic ECDH for clients without oqsprovider
+- 76 TSR timestamped evidence records (lg-001~lg-076)
+
+## [3.2-preview] — 2026-07-07
 
 ## [3.2-preview] — 2026-07-07
 
