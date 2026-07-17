@@ -77,9 +77,9 @@
     <li>核心改进：wNAF 窗口乘 → Montgomery Ladder（常数时间，固定迭代次数，无条件 ADD+DOUBLE）</li>
     <li>三重防护：Scalar Masking + Projective Randomization (Z-blinding) + Montgomery Ladder</li>
     <li>性能特点：528s (N=5,000) · 比 Masked v1.2 慢 3.8x（恒定时间 vs 可变 wNAF），安全性优先级</li>
-    <li>2026-06-18 FreeTSA 时间戳存证 (Status: Granted) · 2026-06-25 DigiCert Granted ✅（参考文献/免责声明修正版） · <a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></li>
+    <li>2026-06-18 FreeTSA 时间戳存证 (Status: Granted) · 2026-06-25 DigiCert Granted ✅（参考文献/免责声明修正版） · <a href="/docs/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></li>
   </ul>
-  <p style="margin:0.5rem 0 0;">详见<a href="#montgomery-ladder">第 3.7 节</a>（Montgomery Ladder v1.3 详情）和 <a href="/docs/evidence/TECHNICAL-VERIFICATION.md">技术验证证据地图 v4 →</a></p>
+  <p style="margin:0.5rem 0 0;">详见<a href="#montgomery-ladder">第 3.7 节</a>（Montgomery Ladder v1.3 详情）和 <a href="/docs/TECHNICAL-VERIFICATION.md">技术验证证据地图 v4 →</a></p>
 </div>
 
 <!-- ==================== 旧版公告（存档） ==================== -->
@@ -106,7 +106,7 @@
     <li>高阶峰值 encrypt Order 4 (|t|=1.24)：KDF+XOR 轻微数据依赖方差，在阈值内</li>
     <li>decrypt 最稳健：高阶 t ≤ 0.74，三重防护在高阶统计下最有效</li>
     <li>测试时长：571.7s (N=5,000 × 4 阶 × 5 操作)，阈值 ≤ 4.5</li>
-    <li>2026-06-21 FreeTSA 时间戳存证 (Status: Granted) · <a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></li>
+    <li>2026-06-21 FreeTSA 时间戳存证 (Status: Granted) · <a href="/docs/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></li>
   </ul>
   <p style="margin:0.5rem 0 0;">详见<a href="#high-order-tvla">第 3.8 节</a>（高阶 TVLA 完整数据）和 <a href="/docs/evidence/tvla-sm2-high-order-report.json">高阶 TVLA 报告 (JSON) →</a></p>
 </div>
@@ -654,7 +654,7 @@ t = ─────────────────────────
     </tr>
     <tr>
       <td>技术验证证据地图</td>
-      <td><a href="/docs/evidence/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></td>
+      <td><a href="/docs/TECHNICAL-VERIFICATION.md">TECHNICAL-VERIFICATION.md v4</a></td>
       <td style="font-size:0.72rem">含高阶 TVLA 章节</td>
     </tr>
   </tbody>
@@ -719,7 +719,7 @@ t = ─────────────────────────
     <tr><td><strong>v3 sign |t|</strong></td><td>2.47</td><td>1.37</td></tr>
     <tr><td><strong>v1.2 masked |t| (verify/decrypt)</strong></td><td colspan="2" class="badge-pass">1.19 / 2.06 (✅ 全部通过)</td></tr>
     <tr><td><strong>🏆 v1.3 ladder |t| (verify/decrypt)</strong></td><td colspan="2" class="badge-pass" style="font-size:0.9rem;">0.10 / 0.16 (✅ 全绿 · ↓92%)</td></tr>
-    <tr><td><strong>RAW 数据 v1.3</strong></td><td colspan="2"><span style="color:#8b949e;">sm2-tvla-v13-final_2026-06-18.md（待归档）</span> · <a href="/docs/evidence/TECHNICAL-VERIFICATION.md">证据地图 v4</a></td></tr>
+    <tr><td><strong>RAW 数据 v1.3</strong></td><td colspan="2"><span style="color:#8b949e;">sm2-tvla-v13-final_2026-06-18.md（待归档）</span> · <a href="/docs/TECHNICAL-VERIFICATION.md">证据地图 v4</a></td></tr>
   </tbody>
 </table>
 
