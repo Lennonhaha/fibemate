@@ -1,8 +1,8 @@
 {
   "version": "2026-07-16-v3",
-  "generated_at": "2026-07-16T22:21:23Z",
-  "total": 126,
-  "tsr_sequence": "lg-001~071 + lg-074~078 (76 + 46 legacy batch = 122 total)",
+  "generated_at": "2026-07-17T02:25:05Z",
+  "total": 129,
+  "tsr_sequence": "lg-001~076 (lg-072/073/075 FreeTSA regen 2026-07-17)",
   "files": [
     {
       "name": "lg-058.tsr",
@@ -885,6 +885,33 @@
       "size": 1070,
       "sha256": "d22317ea8299b968de259aa29ac6a7511c3825534b6f574189a08e88b66d636b",
       "mtime": "2026-07-10T11:23:29Z"
+    },
+    {
+      "label": "lg-072",
+      "file": "tsa/2026-07-17-lg-gen/lg-072-tls-hybrid-extension.js.sha256",
+      "sha256": "efb2cb313bfd3294bdbba682f4c40e574f027a44c0633e62e59a2c1d5aa5978cd",
+      "tsr": "tsa/2026-07-17-lg-gen/lg-072.tsr",
+      "tsa_provider": "freetsa",
+      "timestamp": "2026-07-17T02:23:47Z",
+      "note": "IANA #4590 TLS hybrid extension; original TSQ from commit 2445f814"
+    },
+    {
+      "label": "lg-073",
+      "file": "tsa/2026-07-17-lg-gen/lg-073-hybrid-kem-client.js.sha256",
+      "sha256": "46a5f78f9fe7117fa5f6ddeefd3871fec5425bfa73f53c2028956f00ddd047c7",
+      "tsr": "tsa/2026-07-17-lg-gen/lg-073.tsr",
+      "tsa_provider": "freetsa",
+      "timestamp": "2026-07-17T02:23:48Z",
+      "note": "IANA #4590 hybrid-kem-client.js; from commit 4e42f7c5"
+    },
+    {
+      "label": "lg-075",
+      "file": "tsa/2026-07-17-lg-gen/lg-075-README.md.sha256",
+      "sha256": "a4f78da937d31812137b1c1c9cfdef9f1063ee452e29637370ac6a7dc2c2220f",
+      "tsr": "tsa/2026-07-17-lg-gen/lg-075.tsr",
+      "tsa_provider": "freetsa",
+      "timestamp": "2026-07-17T02:23:49Z",
+      "note": "README.md date sync; from commit 2c56bdc0"
     }
   ]
 }
