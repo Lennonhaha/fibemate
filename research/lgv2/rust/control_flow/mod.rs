@@ -1,5 +1,10 @@
 // 五短板补全 #5: 商业级混淆 —— 控制流平坦化 + 不透明谓词
 
+mod opaque_predicates;
+pub use opaque_predicates::*;
+
+// 五短板补全 #5: 商业级混淆 —— 控制流平坦化 + 不透明谓词
+
 /// 不透明谓词: 总是返回 true，但静态分析无法证明
 pub fn opaque_predicate() -> bool {
     let x = 0x9E3779B97F4A7C15u64;
@@ -107,3 +112,4 @@ mod tests {
         assert_eq!(r, 42);
     }
 }
+
