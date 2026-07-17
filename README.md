@@ -1,4 +1,5 @@
 # FIBEMATE - 下一代后量子密码通信协议
+[![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml) [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly.yml)
 
 **v3.3-preview** | 2026-07-16
 TSR 序列: lg-001~071 + lg-074~078 | 许可证: GNU GPLv3
