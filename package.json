@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@alicloud/dysmsapi20170525": "4.5.1",
+    "pqc-kyber": "0.7.0",
     "@alicloud/openapi-client": "0.4.15",
     "@noble/curves": "2.2.0",
     "@noble/post-quantum": "0.6.1",
