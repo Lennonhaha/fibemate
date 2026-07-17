@@ -905,7 +905,7 @@
                 <div class="feature-icon">&#x1F1E8;&#x1F1F3;</div>
                 <div class="feature-title">国密算法（技术验证）</div>
                 <div class="feature-desc" style="line-height:1.7;">
-                    SM2/SM3/SM4 国密算法技术验证与工程实现 · SM2 密钥协商 + SM4-αGCM 认证加密，ML-KEM-768 后量子增强。
+                    SM2/SM3/SM4 国密算法技术验证与工程实现 · SM2 密钥协商 + SM4-αGCM 认证加密（常数时间 S-box，位切片实现 ✅），ML-KEM-768 后量子增强。
                     <br><br>
                     <strong style="color:#00d4aa;">&#x1F4CA; SM2 TVLA v1.3 Montgomery Ladder N=5,000 · 1-4 阶矩高阶验证 · Welch's t-test 阈值 4.5</strong>
                     <table style="width:100%;font-size:0.8rem;margin:0.5rem 0;border-collapse:collapse;">
@@ -985,6 +985,19 @@
             <tr><td>解密</td><td style="text-align:right;color:#00d4aa;"><strong>2.06</strong></td><td style="text-align:right;color:#f87171;"><strong>8.22 &#x274C;</strong></td></tr>
           </table>
           <p style="font-size:0.7rem;color:#00d4aa;margin:0.3rem 0 0;">✅ 7/7 一阶 + 20/20 高阶 PASS · N=5,000 · 528s (一阶) + 571.7s (高阶) · verify ↓92% · decrypt ↓92%</p>
+        </div>
+
+        <div class="verification-card">
+          <div class="card-icon">&#x1F6A7;</div>
+          <h3>SM4 S-box 位切片 · TVLA lg-080 ✅</h3>
+          <table style="width:100%;font-size:0.78rem;margin:0.5rem 0;border-collapse:collapse;">
+            <thead><tr style="background:rgba(255,255,255,0.04);"><th style="text-align:left;padding:3px 6px;">操作</th><th style="text-align:right;padding:3px 6px;">|t| (位切片)</th><th style="text-align:right;padding:3px 6px;">|t| (标准 S-box)</th><th style="text-align:center;padding:3px 6px;">结果</th></tr></thead>
+            <tbody>
+              <tr><td style="padding:2px 6px;">加密</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>通过</strong></td><td style="text-align:right;padding:2px 6px;color:#f87171;">缓存泄漏</td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; 消除</td></tr>
+              <tr><td style="padding:2px 6px;">解密</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>通过</strong></td><td style="text-align:right;padding:2px 6px;color:#f87171;">缓存泄漏</td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; 消除</td></tr>
+            </tbody>
+          </table>
+          <p style="font-size:0.7rem;color:#00d4aa;margin:0.3rem 0 0;">&#x1F4CC; 位切片实现：S-box 查表 → 逐比特逻辑运算等效变换，零缓存时序依赖 · DigiCert lg-080 TSR 存证 ✅</p>
         </div>
 
         <div class="verification-card">
@@ -1122,7 +1135,7 @@
         </div>
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-07-17 &nbsp;|&nbsp; 路径 A ✅ Active (oqs-provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; 路径 C-2 5/5 验证通过 ✅ &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.2 48/48 &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; TSR 76 份 ✓<br>
+            最后更新：2026-07-17 &nbsp;|&nbsp; 路径 A ✅ Active (oqs-provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; 路径 C-2 5/5 验证通过 ✅ &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.2 48/48 &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; TSR 77 份 (lg-080) ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + oqs-provider 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
@@ -1131,7 +1144,7 @@
                 计划于 <strong>2026.08.31</strong> 以 <strong>GNU General Public License v3.0 (GPLv3)</strong> 开源核心密码学模块<br>
                 （以第三方安全审计为前提）。开源前，代码为私有仓库，所有验证报告<br>
                 （KAT、TVLA）仅为自证，待开源后可独立验证。<br>
-                所有核心代码已通过 <strong>69+ 条</strong> 联合信任(tsa.cn) + DigiCert 双源时间戳存证，原创性可追溯。<br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-07-14 · SM2 ECC v1.3 (wNAF+Comb) + SM3 v2.0 (inline) ✅ + lg-058 · FreeTSA Granted &#x2705;</small>
+                所有核心代码已通过 <strong>70+ 条</strong> 联合信任(tsa.cn) + DigiCert 双源时间戳存证，原创性可追溯。<br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-07-17 · SM4 S-box 位切片 TVLA lg-080 ✅ + SM2 TVLA lg-058 · 双源存证 &#x2705;</small>
             </p>
         </div>
         <p class="footer-beian" style="margin-top:0.3rem;font-size:0.82rem;color:#94a3b8;">
@@ -1149,7 +1162,7 @@
   <span style="color:#00d4aa;">max |t|=1.82</span>
  </div>
  <div>
-  <span style="color:#00d4aa;">FreeTSA · 2026-07-08</span>&nbsp;<span style="color:#8b949e;">| FPGA v5 256/256 + LG v2.2 48/48 + lg-001~071 + lg-074~078</span>
+  <span style="color:#00d4aa;">FreeTSA · 2026-07-08</span>&nbsp;<span style="color:#8b949e;">| FPGA v5 256/256 + LG v2.2 48/48 + lg-001~071 + lg-074~080</span>
   <a href="/docs/evidence/tvla_n10000.tsr" style="color:#8b949e;margin-left:6px;">⏱ N=10K TSR</a>
   <a href="/docs/evidence/tvla_n10000_report.sha256" style="color:#8b949e;margin-left:4px;">SHA256</a>
   <span style="color:#8b949e;margin-left:8px;">|</span>
