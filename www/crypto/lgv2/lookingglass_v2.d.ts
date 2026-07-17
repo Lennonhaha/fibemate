@@ -2,36 +2,76 @@
 /* eslint-disable */
 
 /**
- * Apply forward Kronecker-recursive transform (256-dim, identity-padded)
+ * 密码学绑定: 将混淆输出与 ML-KEM 共享密钥绑定
+ * kem_ss: 32 字节 ML-KEM 共享密钥
+ * 返回: 混淆结果 XOR Keccak-256(binding_label || MLKEM_SS)
  */
-export function apply_forward(input: Uint16Array): Uint16Array;
+export function lgv2_bind_kem(data: Uint8Array, kem_ss: Uint8Array): Uint8Array;
+
+export function lgv2_confuse(data: Uint8Array, seed: bigint): Uint8Array;
 
 /**
- * Apply inverse Kronecker-recursive transform (256-dim, identity-padded)
+ * lgv2_confuse_d: 可变深度的混淆 (depth: 1..=7, 默认 7)
  */
-export function apply_inverse(input: Uint16Array): Uint16Array;
+export function lgv2_confuse_d(data: Uint8Array, seed: bigint, depth: number): Uint8Array;
 
 /**
- * Number of active layers
+ * 增强混淆: session 差异化 + 安全零化 + 可变深度
+ * depth: 1..=7, 默认 7; 值越大混淆越强但越慢
  */
-export function get_depth(): number;
+export function lgv2_confuse_ex(data: Uint8Array, seed: bigint, session_key: bigint, depth: number): Uint8Array;
 
 /**
- * Roundtrip: forward → inverse must be identity
+ * 端到端安全混淆: 混乱 + ML-KEM 绑定 + 可变深度
  */
-export function roundtrip_test(input: Uint16Array): boolean;
+export function lgv2_confuse_full(data: Uint8Array, seed: bigint, session_key: bigint, kem_ss: Uint8Array, depth: number): Uint8Array;
+
+export function lgv2_deconfuse(data: Uint8Array, seed: bigint): Uint8Array;
+
+/**
+ * lgv2_deconfuse_d: 可变深度的解混淆 (depth 必须与混淆时一致)
+ */
+export function lgv2_deconfuse_d(data: Uint8Array, seed: bigint, depth: number): Uint8Array;
+
+/**
+ * 增强解混淆: session 差异化 + 可变深度 (depth 必须与混淆时一致)
+ */
+export function lgv2_deconfuse_ex(data: Uint8Array, seed: bigint, session_key: bigint, depth: number): Uint8Array;
+
+/**
+ * 端到端安全解绑: ML-KEM 解绑 + 解混淆 + 可变深度
+ */
+export function lgv2_deconfuse_full(data: Uint8Array, seed: bigint, session_key: bigint, kem_ss: Uint8Array, depth: number): Uint8Array;
+
+/**
+ * 密码学解绑: 使用相同 ML-KEM 共享密钥解除绑定
+ */
+export function lgv2_unbind_kem(data: Uint8Array, kem_ss: Uint8Array): Uint8Array;
+
+/**
+ * 获取库版本信息
+ */
+export function lgv2_version(): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly apply_forward: (a: number, b: number, c: number) => void;
-    readonly apply_inverse: (a: number, b: number, c: number) => void;
-    readonly roundtrip_test: (a: number, b: number) => number;
-    readonly get_depth: () => number;
-    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
-    readonly __wbindgen_export: (a: number, b: number) => number;
-    readonly __wbindgen_export2: (a: number, b: number, c: number) => void;
+    readonly lgv2_bind_kem: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly lgv2_confuse: (a: number, b: number, c: bigint) => [number, number];
+    readonly lgv2_confuse_d: (a: number, b: number, c: bigint, d: number) => [number, number];
+    readonly lgv2_confuse_ex: (a: number, b: number, c: bigint, d: bigint, e: number) => [number, number];
+    readonly lgv2_confuse_full: (a: number, b: number, c: bigint, d: bigint, e: number, f: number, g: number) => [number, number];
+    readonly lgv2_deconfuse: (a: number, b: number, c: bigint) => [number, number];
+    readonly lgv2_deconfuse_d: (a: number, b: number, c: bigint, d: number) => [number, number];
+    readonly lgv2_deconfuse_ex: (a: number, b: number, c: bigint, d: bigint, e: number) => [number, number];
+    readonly lgv2_deconfuse_full: (a: number, b: number, c: bigint, d: bigint, e: number, f: number, g: number) => [number, number];
+    readonly lgv2_version: () => [number, number];
+    readonly lgv2_unbind_kem: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly __wbindgen_externrefs: WebAssembly.Table;
+    readonly __wbindgen_malloc: (a: number, b: number) => number;
+    readonly __wbindgen_free: (a: number, b: number, c: number) => void;
+    readonly __wbindgen_start: () => void;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;

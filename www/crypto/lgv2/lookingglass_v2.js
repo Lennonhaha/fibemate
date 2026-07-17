@@ -1,103 +1,218 @@
-/* @ts-self-types="./lookingglass_v2.d.ts" */
+/* @ts-self-types="./lgv2.d.ts" */
 
 /**
- * Apply forward Kronecker-recursive transform (256-dim, identity-padded)
- * @param {Uint16Array} input
- * @returns {Uint16Array}
+ * 密码学绑定: 将混淆输出与 ML-KEM 共享密钥绑定
+ * kem_ss: 32 字节 ML-KEM 共享密钥
+ * 返回: 混淆结果 XOR Keccak-256(binding_label || MLKEM_SS)
+ * @param {Uint8Array} data
+ * @param {Uint8Array} kem_ss
+ * @returns {Uint8Array}
  */
-export function apply_forward(input) {
-    try {
-        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        const ptr0 = passArray16ToWasm0(input, wasm.__wbindgen_export);
-        const len0 = WASM_VECTOR_LEN;
-        wasm.apply_forward(retptr, ptr0, len0);
-        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
-        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
-        var v2 = getArrayU16FromWasm0(r0, r1).slice();
-        wasm.__wbindgen_export2(r0, r1 * 2, 2);
-        return v2;
-    } finally {
-        wasm.__wbindgen_add_to_stack_pointer(16);
-    }
-}
-
-/**
- * Apply inverse Kronecker-recursive transform (256-dim, identity-padded)
- * @param {Uint16Array} input
- * @returns {Uint16Array}
- */
-export function apply_inverse(input) {
-    try {
-        const retptr = wasm.__wbindgen_add_to_stack_pointer(-16);
-        const ptr0 = passArray16ToWasm0(input, wasm.__wbindgen_export);
-        const len0 = WASM_VECTOR_LEN;
-        wasm.apply_inverse(retptr, ptr0, len0);
-        var r0 = getDataViewMemory0().getInt32(retptr + 4 * 0, true);
-        var r1 = getDataViewMemory0().getInt32(retptr + 4 * 1, true);
-        var v2 = getArrayU16FromWasm0(r0, r1).slice();
-        wasm.__wbindgen_export2(r0, r1 * 2, 2);
-        return v2;
-    } finally {
-        wasm.__wbindgen_add_to_stack_pointer(16);
-    }
-}
-
-/**
- * Number of active layers
- * @returns {number}
- */
-export function get_depth() {
-    const ret = wasm.get_depth();
-    return ret >>> 0;
-}
-
-/**
- * Roundtrip: forward → inverse must be identity
- * @param {Uint16Array} input
- * @returns {boolean}
- */
-export function roundtrip_test(input) {
-    const ptr0 = passArray16ToWasm0(input, wasm.__wbindgen_export);
+export function lgv2_bind_kem(data, kem_ss) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
     const len0 = WASM_VECTOR_LEN;
-    const ret = wasm.roundtrip_test(ptr0, len0);
-    return ret !== 0;
+    const ptr1 = passArray8ToWasm0(kem_ss, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_bind_kem(ptr0, len0, ptr1, len1);
+    var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v3;
+}
+
+/**
+ * @param {Uint8Array} data
+ * @param {bigint} seed
+ * @returns {Uint8Array}
+ */
+export function lgv2_confuse(data, seed) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_confuse(ptr0, len0, seed);
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
+
+/**
+ * lgv2_confuse_d: 可变深度的混淆 (depth: 1..=7, 默认 7)
+ * @param {Uint8Array} data
+ * @param {bigint} seed
+ * @param {number} depth
+ * @returns {Uint8Array}
+ */
+export function lgv2_confuse_d(data, seed, depth) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_confuse_d(ptr0, len0, seed, depth);
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
+
+/**
+ * 增强混淆: session 差异化 + 安全零化 + 可变深度
+ * depth: 1..=7, 默认 7; 值越大混淆越强但越慢
+ * @param {Uint8Array} data
+ * @param {bigint} seed
+ * @param {bigint} session_key
+ * @param {number} depth
+ * @returns {Uint8Array}
+ */
+export function lgv2_confuse_ex(data, seed, session_key, depth) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_confuse_ex(ptr0, len0, seed, session_key, depth);
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
+
+/**
+ * 端到端安全混淆: 混乱 + ML-KEM 绑定 + 可变深度
+ * @param {Uint8Array} data
+ * @param {bigint} seed
+ * @param {bigint} session_key
+ * @param {Uint8Array} kem_ss
+ * @param {number} depth
+ * @returns {Uint8Array}
+ */
+export function lgv2_confuse_full(data, seed, session_key, kem_ss, depth) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(kem_ss, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_confuse_full(ptr0, len0, seed, session_key, ptr1, len1, depth);
+    var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v3;
+}
+
+/**
+ * @param {Uint8Array} data
+ * @param {bigint} seed
+ * @returns {Uint8Array}
+ */
+export function lgv2_deconfuse(data, seed) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_deconfuse(ptr0, len0, seed);
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
+
+/**
+ * lgv2_deconfuse_d: 可变深度的解混淆 (depth 必须与混淆时一致)
+ * @param {Uint8Array} data
+ * @param {bigint} seed
+ * @param {number} depth
+ * @returns {Uint8Array}
+ */
+export function lgv2_deconfuse_d(data, seed, depth) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_deconfuse_d(ptr0, len0, seed, depth);
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
+
+/**
+ * 增强解混淆: session 差异化 + 可变深度 (depth 必须与混淆时一致)
+ * @param {Uint8Array} data
+ * @param {bigint} seed
+ * @param {bigint} session_key
+ * @param {number} depth
+ * @returns {Uint8Array}
+ */
+export function lgv2_deconfuse_ex(data, seed, session_key, depth) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_deconfuse_ex(ptr0, len0, seed, session_key, depth);
+    var v2 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v2;
+}
+
+/**
+ * 端到端安全解绑: ML-KEM 解绑 + 解混淆 + 可变深度
+ * @param {Uint8Array} data
+ * @param {bigint} seed
+ * @param {bigint} session_key
+ * @param {Uint8Array} kem_ss
+ * @param {number} depth
+ * @returns {Uint8Array}
+ */
+export function lgv2_deconfuse_full(data, seed, session_key, kem_ss, depth) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(kem_ss, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_deconfuse_full(ptr0, len0, seed, session_key, ptr1, len1, depth);
+    var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v3;
+}
+
+/**
+ * 密码学解绑: 使用相同 ML-KEM 共享密钥解除绑定
+ * @param {Uint8Array} data
+ * @param {Uint8Array} kem_ss
+ * @returns {Uint8Array}
+ */
+export function lgv2_unbind_kem(data, kem_ss) {
+    const ptr0 = passArray8ToWasm0(data, wasm.__wbindgen_malloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passArray8ToWasm0(kem_ss, wasm.__wbindgen_malloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.lgv2_unbind_kem(ptr0, len0, ptr1, len1);
+    var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v3;
+}
+
+/**
+ * 获取库版本信息
+ * @returns {string}
+ */
+export function lgv2_version() {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.lgv2_version();
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
 }
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
-        __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
-            throw new Error(getStringFromWasm0(arg0, arg1));
+        __wbindgen_init_externref_table: function() {
+            const table = wasm.__wbindgen_externrefs;
+            const offset = table.grow(4);
+            table.set(0, undefined);
+            table.set(offset + 0, undefined);
+            table.set(offset + 1, null);
+            table.set(offset + 2, true);
+            table.set(offset + 3, false);
         },
     };
     return {
         __proto__: null,
-        "./lookingglass_v2_bg.js": import0,
+        "./lgv2_bg.js": import0,
     };
 }
 
-function getArrayU16FromWasm0(ptr, len) {
+function getArrayU8FromWasm0(ptr, len) {
     ptr = ptr >>> 0;
-    return getUint16ArrayMemory0().subarray(ptr / 2, ptr / 2 + len);
-}
-
-let cachedDataViewMemory0 = null;
-function getDataViewMemory0() {
-    if (cachedDataViewMemory0 === null || cachedDataViewMemory0.buffer.detached === true || (cachedDataViewMemory0.buffer.detached === undefined && cachedDataViewMemory0.buffer !== wasm.memory.buffer)) {
-        cachedDataViewMemory0 = new DataView(wasm.memory.buffer);
-    }
-    return cachedDataViewMemory0;
+    return getUint8ArrayMemory0().subarray(ptr / 1, ptr / 1 + len);
 }
 
 function getStringFromWasm0(ptr, len) {
     return decodeText(ptr >>> 0, len);
-}
-
-let cachedUint16ArrayMemory0 = null;
-function getUint16ArrayMemory0() {
-    if (cachedUint16ArrayMemory0 === null || cachedUint16ArrayMemory0.byteLength === 0) {
-        cachedUint16ArrayMemory0 = new Uint16Array(wasm.memory.buffer);
-    }
-    return cachedUint16ArrayMemory0;
 }
 
 let cachedUint8ArrayMemory0 = null;
@@ -108,9 +223,9 @@ function getUint8ArrayMemory0() {
     return cachedUint8ArrayMemory0;
 }
 
-function passArray16ToWasm0(arg, malloc) {
-    const ptr = malloc(arg.length * 2, 2) >>> 0;
-    getUint16ArrayMemory0().set(arg, ptr / 2);
+function passArray8ToWasm0(arg, malloc) {
+    const ptr = malloc(arg.length * 1, 1) >>> 0;
+    getUint8ArrayMemory0().set(arg, ptr / 1);
     WASM_VECTOR_LEN = arg.length;
     return ptr;
 }
@@ -136,9 +251,8 @@ function __wbg_finalize_init(instance, module) {
     wasmInstance = instance;
     wasm = instance.exports;
     wasmModule = module;
-    cachedDataViewMemory0 = null;
-    cachedUint16ArrayMemory0 = null;
     cachedUint8ArrayMemory0 = null;
+    wasm.__wbindgen_start();
     return wasm;
 }
 
@@ -210,7 +324,7 @@ async function __wbg_init(module_or_path) {
     }
 
     if (module_or_path === undefined) {
-        module_or_path = new URL('lookingglass_v2_bg.wasm', import.meta.url);
+        module_or_path = new URL('lgv2_bg.wasm', import.meta.url);
     }
     const imports = __wbg_get_imports();
 
