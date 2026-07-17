@@ -1,10 +1,10 @@
-# FIBEMATE Nightly 鈥?鍏ㄩ噺楠岃瘉
+# FIBEMATE Nightly - Full Verification Suite
 #
-# 瑙﹀彂: 姣忔棭 06:00 UTC (14:00 CST)
-# 瑕嗙洊:
-#   - 璺ㄨ瑷€涓€鑷存€?(JS ? Rust)
-#   - KAT 10,000 楠岃瘉
-#   - STM32 C 缂栬瘧妫€鏌?
+# Trigger: Daily at 06:00 UTC (14:00 CST)
+# Coverage:
+#   - Cross-lang equivalence (JS vs WASM)
+#   - KAT 10,000 test suite
+#   - STM32 C compilation check
 name: Nightly
 
 on:
@@ -18,7 +18,9 @@ env:
 
 jobs:
 
-  # 鈹€鈹€鈹€ 璺ㄨ瑷€涓€鑷存€?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  # ================================================================
+  # Cross-lang equivalence (JS vs WASM)
+  # ================================================================
   cross-lang:
     runs-on: ubuntu-latest
     steps:
@@ -30,12 +32,14 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install npm deps
-        run: npm install --ignore-scripts
+        run: npm install
 
       - name: Cross-lang seed test
         run: node test/test-cross-lang-seeded.js
 
-  # 鈹€鈹€鈹€ KAT 鍙繍琛岄獙璇?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  # ================================================================
+  # KAT - Known Answer Tests
+  # ================================================================
   kat-smoke:
     runs-on: ubuntu-latest
     steps:
@@ -47,13 +51,15 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install npm deps
-        run: npm install --ignore-scripts
+        run: npm install
 
       - name: Verify KAT suite loads
         run: |
-          node -e "const m=require('./www/crypto/ml-kem-768.js'); const kp=m.keygen(); console.log('ML-KEM keypair:', kp[0].length, 'B pk');"
+          node -e "const m=require('./www/crypto/ml-kem-768.js'); const kp=m.generateKeypair(); console.log('ML-KEM keypair:', kp.publicKey.length, 'B pk');"
 
-  # 鈹€鈹€鈹€ STM32 C 缂栬瘧 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  # ================================================================
+  # STM32 C compilation
+  # ================================================================
   stm32-build:
     runs-on: ubuntu-latest
     steps:
