@@ -1,7 +1,7 @@
 # FIBEMATE - 下一代后量子密码通信协议
 
 **v3.3-preview** | 2026-07-16
-TSR 序列: lg-001~071 + lg-074~078 | 许可证: GNU GPLv3
+TSR 序列: lg-001 ~ lg-078 | 许可证: GNU GPLv3
 [fibemate.net](https://fibemate.net) | [PQC 就绪状态](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
@@ -18,7 +18,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台,聚焦三条技术�
 
 ### 生产环境
 
-- **TLS 1.3 混合后量子握手** - 路径 A (X25519MLKEM768, NamedGroup) ✅ Active 2026-07-17 (oqs-provider + systemd override) · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ 5/5, p95=78.5ms, lg-053/lg-057
+- **TLS 1.3 混合后量子握手** - 路径 A (X25519MLKEM768, NamedGroup) 已于 2026-07-10 搁置(浏览器/nginx 技术阻断) · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ 5/5, p95=78.5ms, lg-053/lg-057
 - **路径 C-2** - SM2+ML-KEM-768 混合密钥交换 (IANA #4590 应用层验证)
 - **双轨道互不干扰** - 普通客户端自动降级至经典 ECDH
 
@@ -30,10 +30,10 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台,聚焦三条技术�
 |------|------|------|
 | **ML-KEM-768** | C Native + WASM 双实现,FIPS 203 合规 | KAT 10,000/10,000 |
 | **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205),签名 7,856B | WASM 集成 |
-| **SM2 ECDH** | BigInt 标量掩码 + 射影随机化,常量时间 | TVLA 5/5 PASS (N=10,000) |
+| **SM2 ECDH** | BigInt 标量掩码 + 射影随机化,常量时间 | TVLA N=10,000 20/20 |
 | **SM4-αGCM** | α=7.5 认证加密,自动选择 λ2C 或 SM4 | 10/10 PASS |
 | **SM3 哈希** | GB/T 32905 合规 | KAT 通过 |
-| **TLS 1.3 混合** | 路径 A ✅ Active · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ | 路径 C-2 独立运行 |
+| **TLS 1.3 混合** | 路径 A 已搁置 · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ | 路径 C-2 独立运行 |
 | **OPK 预密钥** | X3DH 异步握手,7/7 全绿 | 端到端闭环 |
 | **LookingGlass** | v1 DMTH 📦 (已归档) + v2 群表示代数实验 🔬 + v2.2 Rust源码重建 🔬 | v1 36/36 TVLA · v2/v2.2 WASM 线性变换 · v2.2 37/37 单测 + 1000/1000 KAT |
 | **VWZ 签名** | Vandermonde-Wang-Zhang 格-张量方案 (k=16, NIST-1 128-bit, 归约证明 §6.5) | WASM 7/7 · 归约 148/148 |
@@ -112,13 +112,13 @@ fibemate/
 │   ├── index.html        # 主站
 │   ├── crypto/           # 浏览器密码模块
 │   │   ├── ml-kem-768.js
-│   │   ├── sm2-bigint-ec.js (v1.2, TVLA 5/5)
+│   │   ├── sm2-bigint-ec.js (v1.3, TVLA N=10,000 20/20)
 │   │   ├── sm4-alpha-gcm.js
 │   │   └── pqc-hybrid-client.js
 │   ├── docs/             # 文档 + TSA 存证
 │   │   ├── pqc-readiness.html
 │   │   ├── lg-vwz-security-en.html
-│   │   └── tsa/          # lg-001~076 TSR 文件
+│   │   └── tsa/          # lg-001~078 TSR 文件
 │   ├── lgv1/             # LookingGlass v1 (DMTH) 📦 已归档
 │   └── lgv2/             # LookingGlass v2 群表示代数实验 WASM
 ├── rtl/                  # FPGA RTL (Verilog)
@@ -157,7 +157,7 @@ FIBEMATE 遵循纵深防御 (defense-in-depth) 三层架构(不包含 LookingGla
 
 FIBEMATE 完成了 SM2+ML-KEM-768 混合方案的工程验证:
 
-- **TLS 层** (路径 A): X25519MLKEM768 - ✅ Active 2026-07-17 (oqs-provider + systemd override),编译产出保留供参考
+- **TLS 层** (路径 A): X25519MLKEM768 - 已于 2026-07-10 搁置(浏览器/nginx 技术阻断),编译产出保留供参考
 - **应用层** (路径 C-2): SM2+ML-KEM-768 - HTTP 层混合密钥交换,lg-053/lg-057 存证
 
 详见 [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/)。

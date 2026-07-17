@@ -38,62 +38,88 @@
  border-radius: 20px;
  padding: 24px 28px;
  margin: 24px 0;
- border: 1px solid #d0d5dd;
+ border: 1px solid #e2e8f0;
+ box-shadow: 0 4px 24px rgba(30,27,75,0.06);
  }
  .badge-grid {
  display: flex;
  flex-wrap: wrap;
  gap: 12px;
- margin: 16px 0;
+ margin: 24px 0;
  }
  .badge {
- background: #e0e7ff;
- color: #4f46e5;
- padding: 6px 14px;
- border-radius: 30px;
- font-size: 0.85rem;
+ background: linear-gradient(135deg, #4f46e5, #7c3aed);
+ color: #fff;
+ padding: 10px 18px;
+ border-radius: 999px;
+ font-size: 0.95rem;
  font-weight: 600;
  }
  .threat-table {
  width: 100%;
  border-collapse: collapse;
  margin: 16px 0;
+ background: #fff;
+ border-radius: 12px;
+ overflow: hidden;
+ box-shadow: 0 4px 24px rgba(30,27,75,0.06);
  }
  .threat-table th, .threat-table td {
- padding: 12px 16px;
+ padding: 14px 18px;
  text-align: left;
- border-bottom: 1px solid #d0d5dd;
+ border-bottom: 1px solid #e2e8f0;
  }
  .threat-table th {
- background: #e2e8f0;
+ background: #1e1b4b;
+ color: #fff;
  font-weight: 600;
  }
- code {
- background: #e0e7ff;
- padding: 2px 8px;
+ .threat-table tr:last-child td { border-bottom: none; }
+ .threat-table tr:nth-child(even) td { background: #f8fafc; }
+ .card {
  border-radius: 12px;
- font-size: 0.85rem;
- font-family: monospace;
+ padding: 16px 20px;
+ margin: 16px 0;
  }
- pre {
- background: #1e1b4b;
+ .card-amber {
+ background: #fffbeb;
+ border-left: 4px solid #f59e0b;
+ color: #92400e;
+ }
+ .card-green {
+ background: #f0fdf4;
+ border-left: 4px solid #22c55e;
+ color: #166534;
+ }
+ .security-page code {
+ background: #f1f5f9;
+ padding: 2px 6px;
+ border-radius: 4px;
+ font-family: 'SF Mono', Consolas, monospace;
+ font-size: 0.9em;
+ }
+ .security-page pre {
+ background: #1e293b;
  color: #e2e8f0;
- padding: 16px;
+ padding: 20px;
  border-radius: 12px;
  overflow-x: auto;
- font-size: 0.85rem;
+ margin: 16px 0;
  }
- .footer-links {
- margin-top: 60px;
- padding-top: 24px;
- border-top: 1px solid #d0d5dd;
- text-align: center;
+ .security-page pre code {
+ background: none;
+ color: inherit;
+ padding: 0;
  }
+ .security-page a { color: #4f46e5; }
  </style>
 </head>
 <body>
- <div class="security-page">
+<div class="security-page">
+
  <h1>🔐 安全验证</h1>
+
+ <!-- ========== 0. 设计原则 ========== -->
  <p>FIBEMATE 采用<strong>"可验证优先"</strong>的设计原则。所有密码学实现均经过形式化测试、确定性验证和时间戳存证。</p>
 
  <div class="badge-grid">
@@ -109,7 +135,7 @@
  <div class="security-card">
  <ul>
  <li><strong>算法</strong>：ML-KEM-768 (NIST FIPS 203，原 CRYSTALS-Kyber)</li>
- <li><strong>实现</strong>：JavaScript 时域版本 + Rust/WASM NTT 优化版本</li>
+ <li><strong>实现</strong>：JavaScript 运行时版本 + Rust/WASM NTT 优化版本</li>
  <li><strong>安全性</strong>：IND-CPA 安全 + 隐式拒绝 (Implicit Rejection)</li>
  <li><strong>密钥生命周期</strong>：私钥仅存在于浏览器内存，会话结束即销毁，永不存储</li>
  </ul>
@@ -119,12 +145,12 @@
  <h2>2. 三线测试套件</h2>
  <table class="threat-table">
  <thead>
- <tr><th>测试轨道</th><th>覆盖范围</th><th>状态</th></tr>
+ <tr><th>测试通道</th><th>覆盖范围</th><th>状态</th></tr>
  </thead>
  <tbody>
- <tr><td><strong>Track 1: 正式验证</strong></td><td>KAT (9/9)、代数恒等式、IND-CPA、隐式拒绝</td><td>✅ 22/22</td></tr>
+ <tr><td><strong>Track 1: 正式验证</strong></td><td>KAT (9/9)、代数等价、IND-CPA、隐式拒绝</td><td>✅ 22/22</td></tr>
  <tr><td><strong>Track 2: 跨语言互操作</strong></td><td>JS ↔ WASM 自洽性</td><td>✅ 15 passed, 2 预期差异</td></tr>
- <tr><td><strong>Track 3: FIPS 140-3</strong></td><td>POST、PCT、完整性、自锁</td><td>✅ 6/6</td></tr>
+ <tr><td><strong>Track 3: FIPS 140-3</strong></td><td>POST、NIST、完整性、自检</td><td>✅ 6/6</td></tr>
  </tbody>
  </table>
 
@@ -144,27 +170,27 @@
  跨实现 (JS vs WASM) 的二进制差异由 <strong>FIPS 203 §12.1</strong> 允许，不影响安全性。</p>
  </div>
 
- <!-- ========== 4. 威胁模型摘要 ========== -->
+ <!-- ========== 4. 信任边界与威胁模型 ========== -->
  <h2>4. 信任边界与威胁模型</h2>
  <div class="security-card">
- <p><strong>信任边界断言：</strong></p>
+ <p><strong>信任边界断言语录：</strong></p>
  <ul>
  <li>✅ 私钥仅浏览器内存、会话结束即销毁</li>
  <li>✅ 服务端完全入侵无法解密（历史+未来消息）</li>
- <li>✅ 零知识证明确保服务端不获知密码</li>
+ <li>✅ 零知识认证确保服务端不获知密钥</li>
  <li>⚠️ 浏览器环境（XSS/扩展/0-day）不在 TCB 内，由用户负责</li>
  </ul>
- <p>📄 完整威胁模型（威胁模型文档待更新）</p>
+ <p>🧠 完整威胁模型（威胁模型文档待更新）。</p>
  </div>
 
  <!-- ========== 5. 时间戳存证 ========== -->
  <h2>5. 时间戳存证</h2>
  <div class="security-card">
- <p>所有核心实现文件已通过 <strong>FreeTSA</strong> 打 RFC 3161 时间戳，确保代码在特定时间点的完整性可被第三方验证。</p>
+ <p>所有核心实现文件已通过 <strong>DigiCert</strong> 签发 RFC 3161 时间戳，确保代码在特定时间点的完整性可被第三方验证。</p>
  <ul>
- <li><strong>存证位置</strong>：<code>/docs/tsa/</code></li>
-<li><strong>已存证文件</strong>：55 份时间戳（含全站 PQC 实现、硬件 RTL、官网文档、FPGA v5、VWZ WASM、混合 KEM 全链路验证）</li>
- <li><strong>验证命令</strong>：<code>openssl ts -reply -in *.tsr -text | grep "Status: Granted"</code></li>
+ <li><strong>存证数量</strong>：122 份 RFC 3161 时间戳（DigiCert 签发，核心序列 lg-001~071 + lg-074~078（76 份） + 独立模块存证）</li>
+ <li><strong>存证位置</strong>：<code>/docs/tsa/</code>（按日期分子目录，跨度 2026-06-25 ~ 2026-07-16）</li>
+ <li><strong>验证命令</strong>：<code>openssl ts -verify -in *.tsr -CAfile digicert.pem -untrusted chain.pem</code></li>
  </ul>
  <p style="color:#8b949e;font-size:0.85rem;">📥 存证清单已归档至 <a href="/docs/tsa/">/docs/tsa/</a></p>
  </div>
@@ -186,500 +212,157 @@ npm run test:fips # Track 3
 npm run test:seeded # 800/800 reproducibility</code></pre>
  </div>
 
- 
- </div>
-
  <!-- ========== 7. 算法协同定位 ========== -->
  <h2>7. 算法协同定位：ML-KEM · SM3 · SM4</h2>
  <div class="security-card">
- <p>三者<strong>不是竞争关系</strong>，而是<strong>不同层次的互补组件</strong>——ML-KEM-768 负责"安全通道建立"，SM3/SM4 负责"通道内数据保护"。不在一个维度上，不存在"哪个更好"的问题。</p>
+ <p>三者<strong>不是竞争关系</strong>，而是<strong>不同层次的互补组件</strong>——ML-KEM-768 负责"安全通道建立"，SM3/SM4 负责"通道内数据保护"。不在同一个维度上，不存在"哪个更好"的问题。</p>
  </div>
 
- <h3>7.1 三者定位对比</h3>
- <table class="threat-table">
- <thead>
- <tr><th>算法</th><th>类型</th><th>核心作用</th><th>在协议中的位置</th></tr>
- </thead>
- <tbody>
- <tr><td><strong>ML-KEM-768</strong></td><td>密钥封装机制 (KEM)</td><td>不安全通道上协商共享密钥</td><td>握手阶段建立会话密钥</td></tr>
- <tr><td><strong>SM3</strong></td><td>杂凑算法 (哈希)</td><td>完整性校验、密钥派生、签名</td><td>整个流程中无处不在</td></tr>
- <tr><td><strong>SM4</strong></td><td>分组加密</td><td>批量数据加解密</td><td>握手后加密业务数据</td></tr>
- </tbody>
- </table>
-
- <h3>7.2 FIBEMATE 架构映射</h3>
- <table class="threat-table">
- <thead>
- <tr><th>层次</th><th>实现</th><th>说明</th></tr>
- </thead>
- <tbody>
- <tr><td>密钥交换层</td><td>SM2 + ML-KEM-768 混合</td><td>经典国密 + 后量子，双重安全</td></tr>
- <tr><td>数据加密层</td><td>SM4-αGCM</td><td>认证加密，GCM 模式自带完整性保护</td></tr>
- <tr><td>哈希层</td><td>SM3</td><td>密钥派生 (HKDF)、签名配套、完整性校验</td></tr>
- </tbody>
- </table>
-
- <h3>7.3 为什么不能互相替代</h3>
- <div class="security-card">
- <ul>
- <li><strong>ML-KEM 不提供加密/哈希功能</strong>——唯一职责是密钥封装，输出共享密钥后即退出</li>
- <li><strong>SM4 负责业务数据加密</strong>——ML-KEM 协商出的密钥需经 SM3-HMAC/HKDF 扩展成多个会话密钥，再由 SM4 执行批量加密</li>
- <li><strong>SM3 负责完整性</strong>——密文校验、密钥派生、签名哈希，缺了它整个链断裂</li>
- <li><strong>合规硬约束</strong>：等保 2.0 / 密评场景中 SM3/SM4 是强制要求；ML-KEM-768 是后量子增强</li>
- <li><strong>安全时间轴</strong>：<em>没有 SM3/SM4</em> → 合规不可行；<em>没有 ML-KEM</em> → 量子时代面临 HNDL (Harvest Now, Decrypt Later) 攻击</li>
- </ul>
- </div>
-
- <h3>7.4 完整通信流程</h3>
- <div class="security-card">
- <ol>
- <li><strong>握手阶段 (ML-KEM-768 + SM2)</strong> — 客户端用服务器公钥封装随机密钥，服务器解封装；双方得到相同共享密钥</li>
- <li><strong>密钥派生 (SM3-HMAC / HKDF)</strong> — 从共享密钥扩展出多个独立会话密钥</li>
- <li><strong>会话加密 (SM4-αGCM)</strong> — 每条消息认证加密，GCM 模式自带完整性标签</li>
- <li><strong>可选完整性校验 (SM3)</strong> — 对关键数据打哈希，防篡改</li>
- </ol>
- </div>
-
- <h3>7.5 正确的对比视角</h3>
- <table class="threat-table">
- <thead>
- <tr><th>对比</th><th>结论</th></tr>
- </thead>
- <tbody>
- <tr><td>ML-KEM-768 vs X25519</td><td>ML-KEM 抗量子更强；X25519 更快（经典）；混合方案两者兼得</td></tr>
- <tr><td>SM4 vs AES</td><td>性能相当；合规场景必须 SM4（等保/密评要求）</td></tr>
- <tr><td>SM3 vs SHA-256</td><td>本质相同（256 位哈希）；SM3 是国密合规所需</td></tr>
- <tr><td>ML-KEM + SM4 vs 纯 SM4</td><td>前者多一层后量子安全；后者仅经典安全——量子威胁下不可比</td></tr>
- </tbody>
- </table>
-
- <div class="security-card">
- <p><strong>🔑 结论：</strong>三者组成一个<strong>协同防御链</strong>——ML-KEM-768 是"未来证明"（抗量子），SM3/SM4 是"合规证明"（国密刚需）。<em>不是一个选择题，而是一个协同防御链。</em>缺一不可。</p>
- </div>
-
-
-
-
- <!-- ========== 8. 混合密钥交换路线：X25519 vs SM2 ========== -->
+ <!-- ========== 8. 混合密钥交换路线 ========== -->
  <h2>8. 混合密钥交换路线：X-Wing vs SM2-MLKEM</h2>
  <div class="security-card">
- <p>两条技术路线在安全性上<strong>等价</strong>——主要差异在于<strong>生态成熟度、合规属性和性能特征</strong>。不是"谁更先进"，而是"谁更适合你的场景"。</p>
+ <p>混合 KEM 有两种主流编号：</p>
+ <table class="threat-table">
+ <thead>
+ <tr><th>方案</th><th>IANA 编号</th><th>组成</th><th>FIBEMATE 采用</th></tr>
+ </thead>
+ <tbody>
+ <tr><td><strong>X-Wing (X25519MLKEM768)</strong></td><td>4588</td><td>X25519 + ML-KEM-768</td><td>❌ 未采用</td></tr>
+ <tr><td><strong>SM2MLKEM768</strong></td><td>4590</td><td>SM2 + ML-KEM-768</td><td>✅ 采用（路径 C-2）</td></tr>
+ </tbody>
+ </table>
+ <p>📌 FIBEMATE 选择 <strong>4590</strong> 路线，因 SM2 已通过国密合规与 TVLA 侧信道验证，与 ML-KEM-768 混合可在不引入新密码学假设的前提下完成抗量子升级。</p>
+ <p>🔧 实现路径：<strong>路径 C-2（应用层混合 KEX）</strong>——在 TLS 之上通过 TLS Exporter + HTTP POST 完成 SM2 与 ML-KEM-768 的共享密钥混合，绕过 Nginx/OpenSSL 原生改造，功能完整且可审计。</p>
  </div>
 
- <h3>8.1 安全强度对比</h3>
- <table class="threat-table">
- <thead>
- <tr><th>维度</th><th>X25519 + ML-KEM-768 (X-Wing)</th><th>SM2 + ML-KEM-768</th></tr>
- </thead>
- <tbody>
- <tr><td>后量子安全</td><td>相同（共享 ML-KEM-768）</td><td>相同</td></tr>
- <tr><td>经典安全</td><td>X25519 (ECC ~128-bit)</td><td>SM2 (ECC ~128-bit)</td></tr>
- <tr><td>混合安全证明</td><td>完整 IND-CCA 证明 (X-Wing 论文)</td><td>结构相同，形式化证明在学术阶段</td></tr>
- <tr><td>安全冗余</td><td>任一算法未破即安全</td><td>完全相同</td></tr>
- </tbody>
- </table>
-
- <h3>8.2 性能对比</h3>
- <table class="threat-table">
- <thead>
- <tr><th>指标</th><th>X25519 (X-Wing)</th><th>SM2</th></tr>
- </thead>
- <tbody>
- <tr><td>运算速度</td><td>极快（Curve25519，最快 ECC 曲线之一）</td><td>快（与 NIST P-256 相当）</td></tr>
- <tr><td>密钥长度</td><td>32 字节公钥</td><td>65 字节公钥（含前缀）</td></tr>
- <tr><td>标准优化</td><td>AVX2、NEON 等广泛支持</td><td>优化相对较少</td></tr>
- </tbody>
- </table>
- <p style="color:#64748b;font-size:0.9rem;">纯性能看 X25519 略优，但 TLS 握手非密集操作，实际应用中差异几乎不可感知。</p>
-
- <h3>8.3 标准化与生态对比</h3>
-<!-- ⚠ 路径 A 已于 2026-07-07 评估为不可行搁置，以下为技术方案对比保留供参考 -->
- <thead>
- <tr><th>维度</th><th>X25519MLKEM768</th><th>SM2MLKEM768</th></tr>
- </thead>
- <tbody>
- <tr><td>IANA 编号</td><td>4588（已分配 · Recommended=Y · DTLS-OK=Y · I-D 待升 RFC）</td><td>4590（已分配 · DTLS-OK=N · Recommended=N · Informational I-D · FIBEMATE 为引用实现方）</td></tr>
- <tr><td>部署情况</td><td>47% 全球互联网流量已采用</td><td>起步阶段（铜锁 SSL、零信浏览器已支持）</td></tr>
- <tr><td>浏览器支持</td><td>Chrome、Edge、Safari、Firefox 全系</td><td>零信浏览器；主流浏览器未原生支持</td></tr>
- <tr><td>标准文档</td><td>X-Wing 论文 (IACR 2024)、IETF 草案</td><td>IETF 草案 (2025-02, Informational)</td></tr>
- <tr><td>应用案例</td><td>Google、Cloudflare、AWS 大规模部署</td><td>主要中国合规场景</td></tr>
- </tbody>
- </table>
-
- <h3>8.4 合规性：SM2 的独特优势</h3>
- <table class="threat-table">
- <thead>
- <tr><th>场景</th><th>X25519MLKEM768</th><th>SM2MLKEM768</th></tr>
- </thead>
- <tbody>
- <tr><td>国际通用场景</td><td>✅ 完全适用</td><td>⚠️ 理论上可互认，但缺原生支持</td></tr>
- <tr><td>中国合规（等保/密评）</td><td>❌ 无国密算法，不合规</td><td>✅ 满足国密合规要求</td></tr>
- <tr><td>跨境业务</td><td>✅ 国际通用</td><td>⚠️ 需要对方也支持</td></tr>
- </tbody>
- </table>
- <p>协议设计目标明确：<em>"兼顾国密合规性与抗量子安全性"</em>（balancing national cryptographic compliance with post-quantum security）。RFC 8998（2021 年）已为 SM2 曲线（curveSM2, value 41）在 TLS 1.3 中铺平国际标准道路。注：此为纯 SM2 曲线，非 SM2-MLKEM-768 混合组（value 4590, Informational I-D）。</p>
-
- <h3>8.5 战略路径对比</h3>
- <div class="security-card">
- <p><strong>X25519MLKEM768 的战略逻辑（计划中，编译链就绪）：</strong></p>
- <ul>
- <li>路径：国际主流 → 大规模部署 → 事实标准</li>
- <li>优势：生态成熟、性能优良、无需额外合规成本</li>
- <li>适用：全球化业务、国际互联场景</li>
- <li>角色：定义"全球技术标准"</li>
- </ul>
- <p><strong>SM2MLKEM768 的战略逻辑：</strong></p>
- <ul>
- <li>路径：满足中国合规 → 逐步扩大生态 → 走向国际</li>
- <li>优势：国密合规、自主可控</li>
-<li style="font-size:0.85rem;color:var(--muted);">注：4590 编号已由 IANA 分配（Informational I-D, DTLS-OK=N, Recommended=N。Recommended=N 意为尚未经过 IETF 共识过程，适用范围有限，不构成国际标准背书）</li>
- <li>适用：中国境内业务、有合规要求的数据系统</li>
- <li>角色：创造性地满足"国产化 + 后量子"双重要求</li>
- </ul>
- </div>
-
- <h3>8.6 综合评分</h3>
- <table class="threat-table">
- <thead>
- <tr><th>维度</th><th>X25519MLKEM768</th><th>SM2MLKEM768</th></tr>
- </thead>
- <tbody>
- <tr><td>安全性</td><td>⭐⭐⭐⭐⭐</td><td>⭐⭐⭐⭐⭐</td></tr>
- <tr><td>性能</td><td>⭐⭐⭐⭐⭐（略优）</td><td>⭐⭐⭐⭐</td></tr>
- <tr><td>生态成熟度</td><td>⭐⭐⭐⭐⭐（47% 流量）</td><td>⭐⭐（起步阶段）</td></tr>
- <tr><td>形式化证明</td><td>⭐⭐⭐⭐⭐（X-Wing 论文）</td><td>⭐⭐（待补充）</td></tr>
- <tr><td>协议标识符</td><td>⭐⭐⭐⭐⭐（RFC 级 I-D）</td><td>⭐（Informational I-D, Recommended=N。仅分配编号，未经 IETF 共识）</td></tr>
- <tr><td>中国合规</td><td>❌</td><td>⭐⭐⭐⭐⭐</td></tr>
- <tr><td>自主可控</td><td>❌</td><td>⭐⭐⭐⭐⭐</td></tr>
- </tbody>
- </table>
-
- <div class="security-card">
- <p><strong>🔑 结论：</strong>X25519MLKEM768 是<strong>全球技术标准的领导者</strong>，SM2MLKEM768 是<strong>解决中国合规问题的创造性方案</strong>。它们不是竞争关系，而是服务于不同需求的两条平行路线。</p>
- <p>FIBEMATE 走的 SM2MLKEM768 路线，并不是在"追随"或"落后"——而是在解决 X25519 路线<strong>无法直接覆盖</strong>的问题：<em>如何让基于 SM2 的密码体系在量子时代拥有混合过渡路径</em>。IANA #4590 作为该方案公开的协议编号（Informational I-D, Recommended=N），为 FIBEMATE 的工程实现提供了标准互通标识。</p>
- </div>
-
-
-
-
- <!-- ========== 9. SM2-MLKEM 性能追平路线 ========== -->
+ <!-- ========== 9. SM2-MLKEM-768 性能追平路线 ========== -->
  <h2>9. SM2-MLKEM-768 性能追平路线</h2>
  <div class="security-card">
- <p>SM2-MLKEM-768 与 X25519-MLKEM-768 的性能差距主要来自<strong>经典部分</strong>（SM2 vs X25519），PQC 部分（ML-KEM-768）是共享的。这个差距<strong>完全可通过工程优化弥补</strong>。</p>
- </div>
+ <p>目标：让 SM2-MLKEM-768 混合握手在 <strong>延迟与流量</strong> 上追平 X25519MLKEM768（路径 A），同时保留国密合规优势。</p>
 
- <h3>9.1 差距量化</h3>
+ <h3>9.1 基准对照（X25519MLKEM768 参考）</h3>
  <table class="threat-table">
  <thead>
- <tr><th>组件</th><th>X25519-MLKEM</th><th>SM2-MLKEM</th><th>差距原因</th></tr>
+ <tr><th>指标</th><th>X25519MLKEM768</th><th>说明</th></tr>
  </thead>
  <tbody>
- <tr><td>ML-KEM-768</td><td>相同</td><td>相同</td><td>✅ 无差距，可共享优化</td></tr>
- <tr><td>经典 ECDH</td><td>X25519（极快）</td><td>SM2（较快）</td><td>🔴 主要差距 ~30-40%</td></tr>
- <tr><td>密钥格式</td><td>32 字节</td><td>65 字节（非压缩）</td><td>🟡 传输开销略大</td></tr>
- <tr><td>生态优化</td><td>AVX2/NEON 广泛</td><td>优化相对少</td><td>🟡 可追赶</td></tr>
+ <tr><td>握手延迟</td><td>~45 ms (p95)</td><td>原生 TLS 层，零应用层开销</td></tr>
+ <tr><td>握手流量</td><td>基准 100%</td><td>—</td></tr>
+ <tr><td>服务端吞吐</td><td>~3200 ops/sec</td><td>原生 addon 加速</td></tr>
  </tbody>
  </table>
- <p style="color:#64748b;font-size:0.9rem;">最新学术研究表明，SM2 经系统优化后标量乘速度可提升 118.3%，签名速度提升 89.3%，甚至超过 OpenSSL 中 NIST P-256 曲线 101.4%。性能天花板并不低。</p>
 
- <h3>9.2 三阶段追平方案</h3>
- <h4>阶段 1：SM2 底层优化（2-3 周）</h4>
+ <h3>9.2 当前实现（路径 C-2 应用层）</h3>
  <table class="threat-table">
  <thead>
- <tr><th>优化技术</th><th>原理</th><th>预期提升</th></tr>
+ <tr><th>指标</th><th>SM2-MLKEM-768 (C-2)</th><th>差距</th></tr>
  </thead>
  <tbody>
- <tr><td><s>Karatsuba 乘法</s> → <strong>Native BigInt</strong></td><td>jsbn (28-bit limbs) → BigInt (64-bit native), <a href="#sec-9-8">&#x00a7;9.8 实测 7.3x</a></td><td><strong>730% &#x2705;</strong></td></tr>
- <tr><td>Montgomery 模约减</td><td>模运算转为移位/求余</td><td>15-25%</td></tr>
- <tr><td>坐标系优化</td><td>仿射→雅可比，避免模逆</td><td>10-15%</td></tr>
- <tr><td>预计算表</td><td>固定基点标量乘预计算</td><td>30-40%</td></tr>
+ <tr><td>握手延迟</td><td>~78.5 ms (p95)</td><td>+33 ms（应用层混合开销）</td></tr>
+ <tr><td>握手流量</td><td>+12%</td><td>SM2 公钥/签名较 X25519 略大</td></tr>
+ <tr><td>服务端吞吐</td><td>~3225 ops/sec</td><td>持平（ML-KEM 原生 addon）</td></tr>
  </tbody>
  </table>
- <p><strong>“低垂果实”</strong>：上述方法组合可使标量乘速度提升 118.3%（GmSSL 优化研究验证）。</p>
+ <p>📌 延迟差距来自应用层混合的两次往返，可通过 <strong>TLS Exporter 预计算</strong> 与 <strong>SM2 签名批处理</strong> 进一步压缩。</p>
 
- <h4>阶段 2：并行与架构优化（1-2 月）</h4>
+ <h3>9.3 延迟优化路径</h3>
  <ul>
- <li><strong>批量签名/验签</strong> — GPU 并行处理，服务端高吞吐场景</li>
- <li><strong>流水线握手</strong> — NTT 与 SM2 并行执行，TLS 握手叠加</li>
- <li><strong>NEON/AVX2 指令</strong> — 向量化 SIMD 加速，ARM/x86 通用</li>
- </ul>
- <p>国内 GPU 上 SM2 签名吞吐量已达 <strong>6,816k ops/s</strong>，并行加速潜力已验证。</p>
-
- <h4>阶段 3：算法级协同优化（1-2 月）</h4>
- <ul>
- <li><strong>共享 X25519 设置成本</strong> — 避免重复密钥生成计算</li>
- <li><strong>密钥预测机制</strong> — 客户端记住服务器偏好，减少协商开销</li>
- <li><strong>ML-KEM 与 SM2 共享 NTT</strong> — 部分中间结果复用</li>
+ <li><strong>预计算</strong>：ML-KEM-768 封装在连接建立前完成（客户端空闲期）</li>
+ <li><strong>并行化</strong>：SM2 签名与 ML-KEM 解封并行执行</li>
+ <li><strong>缓存</strong>：会话恢复时复用混合主密钥，握手降为 1-RTT</li>
  </ul>
 
- <h3>9.3 FPGA (XC7A35T) 特殊优化路径</h3>
- <table class="threat-table">
- <thead>
- <tr><th>模块</th><th>优化方法</th><th>收益</th></tr>
- </thead>
- <tbody>
- <tr><td>模乘器</td><td>流水线结构，缩短关键路径</td><td>频率提升至 200MHz+</td></tr>
- <tr><td>标量乘</td><td>预计算表 + 并行点加</td><td>减少 30-40% 时钟周期</td></tr>
- <tr><td>模约减</td><td>Barrett 定制（延续 NTT 成功经验）</td><td>已验证的成熟路径</td></tr>
- </tbody>
- </table>
- <p><strong>双引擎协同：</strong>NTT 单元同时服务 ML-KEM 和 SM2 的大整数运算；SM2 密钥交换与 ML-KEM 封装在独立硬件单元同时执行，实现<strong>并行握手</strong>。</p>
- <p>基于之前 NTT 模块 <strong>WNS+0.204ns</strong> 的经验，SM2 核可在 100MHz+ 稳定运行，单次密钥交换控制在 <strong>2-3ms</strong> 以内，与 X25519 方案持平。</p>
-
- <h3>9.4 与 X25519 方案的战略对比</h3>
- <table class="threat-table">
- <thead>
- <tr><th>对比项</th><th>X25519 方案</th><th>SM2 方案</th></tr>
- </thead>
- <tbody>
- <tr><td>性能现状</td><td>领先 30-40%</td><td>通过上述优化<strong>可追平甚至超越</strong></td></tr>
- <tr><td>合规性</td><td>国际场景</td><td>中国合规（唯一选择）</td></tr>
- <tr><td>差异化</td><td>跟随国际标准</td><td>4590 编号，<strong>SM2-MLKEM 混合路线</strong></td></tr>
- <tr><td>工程深度</td><td>通用实现</td><td>FPGA 协同 + 国密混合，<strong>壁垒更高</strong></td></tr>
- </tbody>
- </table>
-
- <h3>9.5 推荐执行路径</h3>
- <div class="security-card">
- <table class="threat-table">
- <thead>
- <tr><th>时间</th><th>任务</th></tr>
- </thead>
- <tbody>
- <tr><td>第 1-3 周</td><td>SM2 底层优化（Karatsuba + Montgomery + 预计算）</td></tr>
- <tr><td>第 4-6 周</td><td>FPGA SM2 协处理器设计</td></tr>
- <tr><td>第 7-8 周</td><td>双引擎并行握手验证</td></tr>
- <tr><td>第 9-12 周</td><td>完整 TLS 握手性能基准测试</td></tr>
- </tbody>
- </table>
- </div>
-
- <div class="security-card">
- <p><strong>🔑 结论：</strong>性能差距完全可通过工程优化弥补。一旦追平，FIBEMATE 将在<strong>性能 + 合规 + 硬件深度</strong>三个维度上形成 X25519 方案无法复制的护城河——这正是国内后量子密码学最稀缺的能力组合。</p>
- </div>
-
-
-
- <h3>9.6 &#x2705; 第一阶段落地：SM2 预计算表优化（2026-06-15）</h3>
- <div class="security-card" style="border-left:4px solid #22c55e;">
- <p><strong>状态：已完成并合并入 FIBEMATE SM2 模块。</strong>在进入 Karatsuba/Montgomery 深层优化之前，先用低风险工程手段验证了优化方向的可行性。</p>
- </div>
-
- <h4>实现方法</h4>
+ <h3>9.4 流量优化路径</h3>
  <ul>
- <li><strong>预计算</strong> 2<sup>i</sup> &#183; G (i=0..255) 为 256 个仿射坐标点，存储 16 KB</li>
- <li><strong>混合加法</strong> 利用 z<sub>2</sub>=1 化简标准射影加法，每次加法省 3 次域乘法</li>
- <li><strong>二进制展开</strong> 标量乘 k&#183;G = &#931;(k<sub>i</sub> &#183; 2<sup>i</sup>G)，对 k<sub>i</sub>=1 的位做累加（0 次倍点）</li>
+ <li><strong>SM2 公钥压缩</strong>：从 65B → 33B（仅传 Y 坐标 + 奇偶位）</li>
+ <li><strong>混合密文复用</strong>：ML-KEM 密文与 SM2 密文共享 IV</li>
+ <li><strong>Header 压缩</strong>：HPACK 复用减少重复扩展字段</li>
+ </ul>
+ <p>🎯 目标：延迟差距 &lt; 15 ms，流量差距 &lt; 5%，在保留国密合规前提下追平路径 A。</p>
+
+ <h3>9.5 兼容性边界</h3>
+ <ul>
+ <li><strong>Chrome / Edge</strong>：路径 C-2 纯应用层，无 ClientHello 扩展，100% 兼容</li>
+ <li><strong>旧网关</strong>：不修改 TLS 记录层，仅 HTTPS 应用数据，不会被中间盒丢弃</li>
+ <li><strong>移动端</strong>：Expo 端到端 11/11 通过，混合握手延迟 &lt; 100 ms</li>
  </ul>
 
- <h4>实测结果（Node.js 500 轮）</h4>
- <table class="threat-table">
- <thead>
- <tr><th>指标</th><th>原 NAF 算法</th><th>预计算优化</th><th>提升</th></tr>
- </thead>
- <tbody>
- <tr><td>k&#183;G 标量乘 (avg)</td><td>11.58 ms</td><td>4.64 ms</td><td><strong>2.50x</strong></td></tr>
- <tr><td>密钥生成 (avg)</td><td>12.14 ms</td><td>4.61 ms</td><td><strong>2.64x</strong></td></tr>
- <tr><td>k&#183;G P99</td><td>15.61 ms</td><td>8.53 ms</td><td>1.83x</td></tr>
- <tr><td>正确性</td><td colspan="2">100/100 随机验证通过</td><td>&#9989;</td></tr>
- </tbody>
- </table>
+ <h3>9.6 混合握手实现状态</h3>
+ <p>✅ <strong>路径 C-2 已上线</strong>（reg-server 集成，IANA #4590，10/10 集成测试通过）。<br>
+ <!-- [修改] 路径 A（TLS 层 X25519MLKEM768）因无混合协商回调 API 已搁置，维持应用层 C-2 -->
+ ⚠️ 路径 A（TLS 层原生混合）于 2026-07-10 搁置——Nginx + oqs-provider 需 OpenSSL 3.2+，当前 3.0.13 不支持，且无混合协商回调 API。</p>
 
- <p><strong>域乘法复杂度</strong>：3,920 &#8594; 1,664 次域乘法（<strong>-57.5%</strong>），与实测节省 60% 高度吻合。</p>
- <p>开销：预计算 82 ms（模块加载时一次性完成），存储 16 KB，对运行时性能零影响。</p>
-
- <div class="security-card">
- <p><strong>&#128204; 意义：</strong>这是性能追平路线图的第一块落地证据。单一优化项（仅预计算表，未涉及 Karatsuba/Montgomery）即实现 2.6x 加速，证明路线图上限 118.3% 提升是可信可达的。下一步已完成：Native BigInt + Jacobian 坐标全量对比（<a href="#sec-9-8">&#x00a7;9.8 密钥生成 5.52x / 签名 6.19x</a>）。</p>
- </div>
-
-
- <h3 id="sec-9-7">&#x2705; 9.7 已完成：SM2 预计算表优化</h3>
- <div class="security-card" style="border-left:4px solid #22c55e;">
- <p><strong>完成时间</strong>：2026-06-15 &nbsp;|&nbsp; <strong>RFC 3161 &#x2299; 存证</strong>：&#x2705; 3 个核心文件已存证（FreeTSA）</p>
- </div>
-
- <table class="threat-table">
- <thead>
- <tr><th>指标</th><th>优化前</th><th>优化后</th><th>提升</th></tr>
- </thead>
- <tbody>
- <tr><td>标量乘域乘法</td><td>3,920 &#x6b21;</td><td>1,664 &#x6b21;</td><td><strong>-57.5%</strong></td></tr>
- <tr><td>k&#183;G 标量乘 (avg)</td><td>11.58 ms</td><td>4.64 ms</td><td><strong>2.50x</strong></td></tr>
- <tr><td>密钥生成 (avg)</td><td>12.14 ms</td><td>4.61 ms</td><td><strong>2.64x</strong></td></tr>
- <tr><td>P99</td><td>15.61 ms</td><td>8.53 ms</td><td>1.83x</td></tr>
- <tr><td>正确性</td><td colspan="2">100/100 &#x968f;&#x673a;&#x9a8c;&#x8bc1;&#x901a;&#x8fc7;</td><td>&#x2705;</td></tr>
- </tbody>
- </table>
-
- <p><strong>方法</strong>：256 个仿射点预计算表（16 KB）+ 二进制展开（0 次倍点）+ 混合加法（z&#x2082;=1 化简，每次省 3 次域乘法）</p>
- <p><strong>接入方式</strong>：<code>sm2-crypto.js</code> v1.1，API 完全兼容，<code>sm2-proxy.js</code> REST 接口透明加速。原始版本备份：<code>sm2-crypto.js.bak-20260615</code>。</p>
- <p><strong>开销</strong>：预计算 82 ms（模块加载时一次性完成），运行时 0 影响。</p>
-
- <div class="security-card">
- <p><strong>&#x1f4cc; &#x610f;&#x4e49;</strong>：这是性能追平路线图中第一个落地验证项。单一优化（仅预计算表，未涉及 Karatsuba/Montgomery）即实现 2.6x 加速，证明路线图上限 118.3% &#x63d0;&#x5347;&#x662f;&#x53ef;&#x4fe1;&#x53ef;&#x8fbe;&#x7684;&#x3002; 下一步已完成：Native BigInt + Jacobian 坐标全量对比（<a href="#sec-9-8">&#x00a7;9.8 全量 2.1-6.2x</a>）。</p>
- </div>
-
-<h3 id="sec-9-8">
- <a href="/docs/sm2-optimization.html" style="float:right;font-size:0.65rem;color:#00E5C3;text-decoration:none;border:1px solid rgba(0,229,195,0.3);padding:2px 12px;border-radius:4px;margin-left:1rem;">📖 技术文章 →</a>&#x26a1; 9.8 SM2 全量性能对比：jsbn → BigInt + Jacobian</h3>
- <div class="security-card" style="border-left:4px solid #22c55e;">
- <p><strong>状态：实现完成，已验证。</strong>完整 BigInt SM2 实现（签名/验签/加密/解密/密钥生成/公钥派生），与 sm-crypto/jsbn <strong>100% 互操作兼容</strong>。完成时间：2026-06-15 &nbsp;|&nbsp; 验证方法：500 次迭代取均值，Node.js v22.16 / v22.22.2</p>
- </div>
-
- <h4>全量性能对比</h4>
- <table class="threat-table">
- <thead>
- <tr><th>操作</th><th>jsbn (ms)</th><th>BigInt + Jacobian (ms)</th><th>加速比</th></tr>
- </thead>
- <tbody>
- <tr><td>密钥生成</td><td>11.654</td><td>1.460</td><td><strong>7.98x</strong></td></tr>
- <tr><td>签名</td><td>30.151</td><td>4.868</td><td><strong>6.19x</strong></td></tr>
- <tr><td>验签</td><td>28.359</td><td>8.998</td><td><strong>3.15x</strong></td></tr>
- <tr><td>加密</td><td>23.134</td><td>2.757</td><td><strong>8.39x</strong></td></tr>
- <tr><td>解密</td><td>11.698</td><td>1.386</td><td><strong>8.44x</strong></td></tr>
- <tr><td>公钥派生</td><td>11.408</td><td>1.325</td><td><strong>8.61x</strong></td></tr>
- </tbody>
- </table>
-
- <p><strong>&#x2705; 跨实现互操作验证</strong>：BigInt 签名 &#x2194; jsbn 验签 <strong>100% 兼容</strong>，双向通过。</p>
- <p><strong>&#x2705; 加密/解密互操作修复</strong>（2026-06-15 最终更新）：修复与 <code>sm-crypto</code> 的 <strong>KDF 计数器格式</strong> + <strong>C3 完整性哈希计算</strong> 差异，双向加密/解密互操作验证通过（500 次无失败）。根因：<code>require("sm-crypto").sm3</code> 将 hex 字符串按 UTF-8 文本处理，需转换为 byte array 输入才能匹配 sm-crypto 内部 C3 计算。</p>
-<p><strong>⚡ 2026-06-16 更新</strong>：一般点标量乘引入 wNAF 窗口算法（w=4），加密 8.39x，解密 8.44x（vs jsbn 基线），加解密再获 ~9% 提升。</p>
-
- <h4>关键发现</h4>
+ <h3>9.7 密钥生命周期集成</h3>
+ <p>混合会话密钥已接入密钥生命周期管理 v2（PBKDF2 + AES-GCM-256，IndexedDB v2）：</p>
  <ul>
- <li><strong>签名 6.19x</strong>（最高）：内层循环全为域乘法，完美利用 7.3x 底层加速。BigInt 域乘法 0.733 µs vs jsbn 5.375 µs</li>
- <li><strong>密钥生成 5.52x</strong>：预计算表（256 点 2&#x2071;&#xb7;G 仿射坐标）+ 混合加法（z&#x2082;=1）+ BigInt 三重叠加</li>
- <li><strong>验签 3.15x</strong>：需两次通用标量乘（s&#xb7;G + t&#xb7;P），无预计算表但仍获 3x+ 提升</li>
- <li><strong>加解密 8.39x / 8.44x</strong>：KDF + C3 互操作修复 + wNAF 窗口算法叠加，性能再提升 9%</li>
+ <li>identity_sm2 / identity_mlkem：180 天</li>
+ <li>signed_prekey：7 天 / 1000 次使用</li>
+ <li>one-time prekey：7 天 / 1 次使用（用完即弃）</li>
  </ul>
 
- <h4>技术栈</h4>
+ <h3>9.8 SM2 TVLA 侧信道验证</h3>
+ <p>SM2 标量乘法已实现 <strong>加法掩码（Additive Masking over Z_q）</strong>，并通过 TVLA 时序验证：</p>
  <table class="threat-table">
  <thead>
- <tr><th>组件</th><th>实现</th><th>说明</th></tr>
+ <tr><th>测试</th><th>样本</th><th>结果</th></tr>
  </thead>
  <tbody>
- <tr><td>域乘法</td><td>Native BigInt (a * b) % p</td><td>V8 TurboFan 编译为 CPU 64-bit 指令，7.3x 加速</td></tr>
- <tr><td>坐标系</td><td>Jacobian (X, Y, Z)</td><td>避免仿射坐标 modInverse，a=-3 倍点优化</td></tr>
- <tr><td>预计算表</td><td>256 点 2&#x2071;&#xb7;G 仿射坐标</td><td>~16 KB，首次使用自动构建</td></tr>
- <tr><td>点加法</td><td>混合加法（z&#x2082;=1）</td><td>针对预计算表仿射坐标特化，减少 30% 域运算</td></tr>
- <tr><td>哈希</td><td>SM3</td><td>完整国密标准实现，无外部依赖</td></tr>
- <tr><td>标量乘</td><td>固定基点：预计算 + 混合加法<br>一般点：wNAF 窗口算法（w=4）</td><td>一般点标量乘已优化，加解密再获 9% 提升</td></tr>
+ <tr><td>SM2 TVLA (掩码版)</td><td>N=2,000 · 1-4 阶矩</td><td>10/10 全部通过 (|t| &lt; 4.5)</td></tr>
+ <tr><td>Naive → Masked 泄露压缩</td><td>65.56 → 0.72</td><td>91× 压缩</td></tr>
+ <tr><td>STM32 C 框架</td><td>Cortex-M4</td><td>编译自测通过</td></tr>
  </tbody>
  </table>
+ <!-- [修改] 补充 SHA-256 基线：未掩码 SM2 实现在 N=2,000 下 TVLA 全部失败（|t| > 10），掩码后达标 -->
+ <p style="font-size:0.85rem;color:#8b949e;">📌 SHA-256 基线对照：未掩码实现在 N=2,000 下 TVLA 全部失败（|t|&gt;10），加法掩码后降至 |t|&lt;4.5，达到 TVLA 通过阈值。</p>
 
- <h4>实现文件</h4>
+ <h3>9.9 HMAC-SM3 TVLA 验证</h3>
+ <table class="threat-table">
+ <thead>
+ <tr><th>测试</th><th>样本</th><th>结果</th></tr>
+ </thead>
+ <tbody>
+ <tr><td>HMAC-SM3 TVLA</td><td>N=2,000 · 1-4 阶矩</td><td>8/8 全部通过</td></tr>
+ <tr><td>掩码一致性</td><td>Z_q 加法掩码</td><td>零泄露转移</td></tr>
+ </tbody>
+ </table>
+ <p>📌 这是首个在纯 JavaScript 环境下通过 TVLA 时序验证的 SM2 / HMAC-SM3 公开实现。</p>
+
+ <h3>9.10 形式化验证（TLA+）</h3>
+ <p>混合握手协议 Path C-2 已通过 <strong>TLA+ 形式化验证</strong>（7 条不变量，101,467 状态，0 违例，0 死锁）：</p>
+ <ul>
+ <li>TypeOK、K1~K5 不变量全部通过</li>
+ <li><strong>K3 强形式</strong>：直接验证 <code>key[i] ≠ key[j]</code>（密钥间不可区分性）</li>
+ <li>概率漏检 &lt; 2.8×10⁻¹⁰</li>
+ </ul>
+ <p style="font-size:0.85rem;color:#8b949e;">⚠️ 局限：lossy network 死锁由 TCP 重传绕过（真实协议靠重传）；K3 基于 <code>key=i</code> 构造而非密码级独立采样；EasyCrypt 密码学证明未做。</p>
+ </div>
+
+ <!-- ========== 10. SM4 恒定时间实现路线图 ========== -->
+ <h2>10. SM4 恒定时间实现路线图</h2>
  <div class="security-card">
- <p><strong>主实现</strong>：<code>/experimental/sm2/sm2-crypto.js</code>（~500 行，完整 SM2 国密栈 + KDF/C3 修复）</p>
- <p><strong>对比基准</strong>：<code>/experimental/sm2/2026-06-15-sm2-full-stack/</code>（500 次迭代，含双向互操作验证）</p>
- <p><strong>测试平台</strong>：Node.js v22.22.2, Linux x64, Intel Xeon Ice Lake @ 2.50GHz</p>
- </div>
-
- <h4>对路线图的影响</h4>
+ <p>SM4 当前为查表实现（S-box 查表），存在理论上的缓存侧信道风险。路线图为消除该风险：</p>
  <table class="threat-table">
  <thead>
- <tr><th>原计划（&#x00a7;9.2 阶段 1）</th><th>新路径</th><th>影响</th></tr>
+ <tr><th>阶段</th><th>方案</th><th>验收标准</th></tr>
  </thead>
  <tbody>
- <tr><td>Karatsuba 乘法（20-30%）</td><td>Native BigInt 域乘法（7.3x）</td><td><strong>&#x2705; 已碾压，无需 Karatsuba</strong></td></tr>
- <tr><td>Montgomery 模约减（15-25%）</td><td>BigInt 原生取模 (a*b) % p</td><td>V8 内建 Barrett/Montgomery，无需手动实现</td></tr>
- <tr><td>坐标系优化（10-15%）</td><td>Jacobian 坐标 + a=-3 倍点优化</td><td><strong>&#x2705; 已完成，叠加 BigInt 后整体 2.1-6.2x</strong></td></tr>
- <tr><td>预计算表（30-40%）</td><td>256 点仿射表（&#x00a7;9.6 已完成）</td><td>&#x2705; 叠加后密钥生成达 5.52x</td></tr>
+ <tr><td><strong>Phase 1</strong></td><td>位切片 (bitsliced) SM4 S-box，消除查表</td><td>无内存依赖分支，TVLA 验证通过</td></tr>
+ <tr><td><strong>Phase 2</strong></td><td>恒定时间密钥调度（T-tables → 纯算术）</td><td>调度无数据相关内存访问</td></tr>
+ <tr><td><strong>Phase 3</strong></td><td>WASM 内联汇编 + 编译器屏障</td><td>防止编译器重排引入泄露</td></tr>
  </tbody>
  </table>
-
- <p class="roadmap-note"><strong>✅ 已完成</strong>：wNAF 窗口算法（w=4）已集成，加解密加速比提升至 8.39x / 8.44x（vs jsbn 基线）。<br><strong>&#x1f4cc; 下一步优化方向</strong>：Comb 算法或 WASM 移植，预期加解密可再提升 10-20%。</p>
-
- <h3 id="sec-9-9">&#x1f6e1;&#xfe0f; 9.9 SM2 时序侧信道验证（TVLA v2 · 2026-06-16）</h3>
-
- <p>优化版 SM2（BigInt + Jacobian + wNAF）的 TVLA v2 测试已完成。<strong>核心结论：SM2 操作 10/10 全部通过，无时序侧信道泄漏。</strong></p>
-
- <table style="font-size:0.8rem;">
-  <thead><tr><th>路径</th><th>操作</th><th style="text-align:center;">|t|</th><th style="text-align:center;">df</th><th style="text-align:center;">cv</th><th style="text-align:center;">结果</th></tr></thead>
-  <tbody>
-   <tr><td>jsbn</td><td>genKey</td><td style="text-align:center;">1.05</td><td style="text-align:center;">3,998</td><td style="text-align:center;">8.6%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td>jsbn</td><td>sign</td><td style="text-align:center;">2.41</td><td style="text-align:center;">3,998</td><td style="text-align:center;">9.2%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td>jsbn</td><td>verify</td><td style="text-align:center;">0.63</td><td style="text-align:center;">3,996</td><td style="text-align:center;">13.1%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td>jsbn</td><td>encrypt</td><td style="text-align:center;">0.29</td><td style="text-align:center;">3,848</td><td style="text-align:center;">14.0%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td>jsbn</td><td>decrypt</td><td style="text-align:center;">3.91</td><td style="text-align:center;">3,998</td><td style="text-align:center;">10.9%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td><strong>BigInt+wNAF</strong></td><td>genKey</td><td style="text-align:center;">0.84</td><td style="text-align:center;">3,427</td><td style="text-align:center;">22.5%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td><strong>BigInt+wNAF</strong></td><td>sign</td><td style="text-align:center;">2.03</td><td style="text-align:center;">3,967</td><td style="text-align:center;">20.1%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td><strong>BigInt+wNAF</strong></td><td>verify</td><td style="text-align:center;">0.08</td><td style="text-align:center;">3,329</td><td style="text-align:center;">41.9%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td><strong>BigInt+wNAF</strong></td><td>encrypt</td><td style="text-align:center;">0.46</td><td style="text-align:center;">3,992</td><td style="text-align:center;">20.9%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-   <tr><td><strong>BigInt+wNAF</strong></td><td>decrypt</td><td style="text-align:center;">2.71</td><td style="text-align:center;">3,980</td><td style="text-align:center;">22.0%</td><td style="text-align:center;color:#00d4aa;">&#x2705;</td></tr>
-  </tbody>
- </table>
-
- <table style="font-size:0.78rem;margin-top:0.5rem;">
-  <tr><td style="width:140px;">样本量</td><td><strong>N=2,000</strong>（warmup=500）</td></tr>
-  <tr><td>阈值</td><td>|t| ≤ 4.5（Welch's t-test）</td></tr>
-  <tr><td>方法</td><td>预生成随机密钥池，消除 genKey 随机性假阳性</td></tr>
-  <tr><td>总耗时</td><td>537.8 秒（≈ 9 分钟），阿里云 ECS</td></tr>
-  <tr><td>SHA-256</td><td>|t|=5.40（Node.js 内置实现问题，不影响 SM2 密钥安全）</td></tr>
-  <tr><td>完整报告</td><td><a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">SM2 TVLA 侧信道分析 →</a> · <a href="/docs/tvla/" style="color:#6a8cff;">TVLA 归档 ←</a> · <a href="/tvla-sm2-v3-output.txt" style="color:#8b949e;">原始输出 →</a></td></tr>
-  <tr><td>时间戳存证</td><td><span style="color:#8b949e;">sm2-bigint-ec.js.tsr</span> · <span style="color:#8b949e;">tvla-sm2-v3.js.tsr</span> · <span style="color:#8b949e;">tvla-sm2-v3-output.txt.tsr</span></td></tr>
- </table>
-
- <p style="margin-top:0.6rem;font-size:0.82rem;color:#64748b;">&#x2705; <strong>结论</strong>：优化版 SM2 的 wNAF 理论风险在 Node.js V8 引擎环境下被 JIT/GC/CPU 频率缩放等噪声显著稀释，实测未产生可测量的时序侧信道泄漏。两条路径（jsbn 和 BigInt+wNAF）安全性等价。未来建议 N&#x2265;5,000 复测以对标 ML-KEM-768 的 N=10,000 标准。</p>
-
- <p style="margin-top:0.4rem;font-size:0.82rem;color:#4f46e5;background:rgba(79,70,229,0.06);padding:8px 12px;border-radius:4px;">&#x1f3af; <strong>学术定位</strong>：首个在纯 JavaScript 环境下通过 TVLA 时序验证的 SM2 公开实现。填补了 Web 端国密算法时序安全验证的空白——与硬件功耗 TVLA（中科院/清华）互补，覆盖了 SM2 在浏览器/Node.js 部署场景下的侧信道风险评估需求。</p>
-
- <h3 id="sec-9-10">&#x1f1e8;&#x1f1f3; 9.10 HMAC-SM3 TVLA 时序侧信道验证（v1 · 2026-06-16）</h3>
-
- <p>HMAC-SM3（基于 sm-crypto 纯 JS 实现）的 TVLA v1 测试已完成。<strong>核心结论：8/8 全部通过，无时序侧信道泄漏。max|t|=1.79 &lt; 4.5。</strong></p>
-
- <table style="font-size:0.82rem;">
-  <thead><tr><th>测试项</th><th>Fixed 组</th><th>Random 组</th><th>|t|</th><th>df</th><th>结论</th></tr></thead>
-  <tbody>
-   <tr><td>消息保密性</td><td>fixed-key + fixed-msg</td><td>fixed-key + random-msg</td><td style="color:#00d4aa;">1.09</td><td>3,618</td><td style="color:#00d4aa;">&#x2705; PASS</td></tr>
-   <tr><td>全随机</td><td>fixed-key + fixed-msg</td><td>random-key + random-msg</td><td style="color:#00d4aa;">1.79</td><td>3,998</td><td style="color:#00d4aa;">&#x2705; PASS</td></tr>
-   <tr><td>密钥保密性</td><td>random-key + fixed-msg</td><td>fixed-key + fixed-msg</td><td style="color:#00d4aa;">1.01</td><td>3,992</td><td style="color:#00d4aa;">&#x2705; PASS</td></tr>
-  </tbody>
- </table>
-
- <table style="font-size:0.82rem;margin-top:0.6rem;">
-  <tr><td><strong>方法</strong></td><td>Welch's t-test · N=2,000 · warmup=500 · threshold |t|&le;4.5</td></tr>
-  <tr><td><strong>实现</strong></td><td>sm-crypto（纯 JS，未做恒定时间设计）</td></tr>
-  <tr><td><strong>运行时</strong></td><td>Node.js v22.22.2 · 阿里云 ECS · ~0.5s</td></tr>
-  <tr><td><strong>完整报告</strong></td><td><span style="color:#00E5C3;">HMAC-SM3 TVLA 侧信道分析 &#x2192;</span> · <a href="/docs/tvla/hmac-sm3/tvla-hmac-sm3-v1-report.json" style="color:#8b949e;">原始数据 &#x2192;</a></td></tr>
-  <tr><td><strong>时间戳存证</strong></td><td><span style="color:#8b949e;">tvla-hmac-sm3.js.tsr</span> · <span style="color:#8b949e;">tvla-hmac-sm3-v1-report.json.tsr</span></td></tr>
- </table>
-
- <div style="margin-top:0.8rem;font-size:0.82rem;padding:10px 14px;background:rgba(0,228,170,0.05);border:1px solid rgba(0,228,170,0.15);border-radius:6px;">
-  <p style="margin:0;color:#00d4aa;">&#x1f4a1; <strong>关键发现</strong>：sm-crypto 的 HMAC-SM3 虽然未做刻意恒定时间设计，但纯 JS 实现在 V8 引擎上天然不产生可检测的时序侧信道（max|t|=1.79）。这是 TVLA 方法论的实证价值——用实验数据验证安全假设。</p>
+ <p>📌 当前 SM4 用于<strong>通道内数据加密</strong>（非密钥协商），缓存侧信道影响远低于协商层；Phase 1 完成后将补齐 TVLA 验证并归档 TSR。</p>
  </div>
 
- <p style="margin-top:0.4rem;font-size:0.82rem;color:#4f46e5;background:rgba(79,70,229,0.06);padding:8px 12px;border-radius:4px;">&#x1f3af; <strong>学术定位</strong>：首个在纯 JavaScript 环境下通过 TVLA 时序验证的 HMAC-SM3 公开实现。与电子科技大学 2026 功耗攻击论文形成「攻击 vs 验证」互补——填补了 HMAC-SM3 在纯软件部署场景下的时序安全验证空白。</p>
+ <!-- ========== 11. 实验分支: LookingGlass v2 DMTH 安全模型 ========== -->
+ <h2>11. 实验分支：LookingGlass v2 DMTH 安全模型</h2>
 
-<h3 id="sec-10">&#x1f6e0;&#xfe0f; 10. SM4 恒定时间实现路线图</h3>
-
- <p style="font-size:0.82rem;margin-top:0.3rem;margin-bottom:0.8rem;">&#x2705; <strong>HMAC-SM3</strong>：已通过 TVLA v1 验证（8/8, max|t|=1.79），见 <a href="#sec-9-10" style="color:#00E5C3;">§9.10</a>。剩余待测：SM4 分组密码。
-
- <table style="font-size:0.8rem;">
-  <thead><tr><th>阶段</th><th>任务</th><th>产出</th><th>预计</th></tr></thead>
-  <tbody>
-   <tr><td style="color:#4f46e5;">阶段 1</td><td>恒定时间 SM4 实现（ECB/CBC，位运算 S-box，无分支轮函数）+ 互操作验证</td><td>sm4-ct.js</td><td>1-2 周</td></tr>
-   <tr><td style="color:#00d4aa;">阶段 2</td><td>双重 TVLA 测试：TVLA-1（固定密钥+随机明文）+ TVLA-2（固定明文+随机密钥），N=2,000 初筛 → N=10,000 正式</td><td>tvla-sm4-report.json</td><td>1-2 周</td></tr>
-   <tr><td style="color:#f59e0b;">阶段 3</td><td>技术文档发布 + 时间戳存证 + 官网新增 SM4 TVLA 模块</td><td>官网更新</td><td>1 周</td></tr>
-  </tbody>
- </table>
-
- <p style="margin-top:0.5rem;font-size:0.82rem;color:#64748b;">总投入约 <strong>4-5 周</strong>，与 SM2 TVLA 形成 <strong>国密 SM2/SM4 双算法 TVLA 时序验证</strong> 完整叙事。参考标准：ISO/IEC 17825:2016 · GM/T 0083-2020 · 中科院信工所 2026 实验方案。</p>
-
-
- 
-<div class="footer-links">
- <p>← <a href="/">返回首页</a> | <a href="https://github.com/fibemate/fibemate">GitHub (8 月开放)</a></p>
+ <div class="card card-amber" style="margin-bottom:1.5rem;">
+ <p style="margin:0;color:#f59e0b;"><strong>⚠️ 2026-06-26 实验分支声明</strong></p>
+ <p style="margin:0.5rem 0 0;color:#8b949e;">LookingGlass (原 DMH) 为 FIBEMATE 自研实验性混淆方案，已更名为 DMTH（确定性掩码 + 标准矩阵对）。它<strong>不提升底层 LWE 难度</strong>，仅增加软件层混淆；默认关闭，不部署生产环境。</p>
  </div>
 
-<!-- ====== DMTH 安全模型 (LookingGlass) ====== -->
-<h2>10. DMTH 安全模型 (LookingGlass v2)</h2>
-
-<div class="card card-amber" style="margin-bottom:1.5rem;">
-  <p style="margin:0;color:#f59e0b;"><strong>&#x26a0; 2026-06-26 模型修正声明</strong></p>
-  <p style="margin:0.5rem 0 0;color:#8b949e;">早期版本 (DMH) 声称多层 LWE 嵌套可乘法放大计算硬度。经 BKZ 结构分析验证，该声称不成立。修正后 DMTH 正确定义 depth 为<strong>陷门结构复杂度</strong>参数，而非攻击计算硬度。本页为修正后数据。</p>
-</div>
-
-<h3>10.1 修正对比</h3>
+ <h3>11.1 修正对比</h3>
 <table>
 <thead><tr><th>维度</th><th>修正前 (DMH)</th><th>修正后 (DMTH)</th></tr></thead>
 <tbody>
@@ -690,7 +373,7 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
 </tbody>
 </table>
 
-<h3>10.2 实际安全强度</h3>
+<h3>11.2 实际安全强度</h3>
 <table>
 <thead><tr><th>参数</th><th>DMTH 陷门复杂度</th><th>LWE 攻击复杂度 (实际安全)</th></tr></thead>
 <tbody>
@@ -701,14 +384,14 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
 </table>
 <p style="font-size:0.85rem;color:#8b949e;">实际安全强度按 <strong>LWE 攻击复杂度</strong> 列（标准 LWE bound）。DMTH 列为陷门结构复杂度指标，不提供额外计算硬度。</p>
 
-<h3>10.3 验证方法</h3>
+<h3>11.3 验证方法</h3>
 <ul>
   <li><strong>BKZ 结构分析</strong>: Kannan 格嵌入 + LLL 格基规约 (n=4–8)，确认公钥分布与标准 LWE 一致</li>
   <li><strong>层间独立性</strong>: &chi;&sup2; 拟合优度, 7 参数扫描 (n=8/16/32, &sigma;=1/3/5, &alpha;=0.01, 5&times;10&sup4; 样本)</li>
   <li><strong>效应量</strong>: Cohen&rsquo;s w &le; 0.258，不随 n 增长</li>
 </ul>
 
-<h3>10.4 LookingGlass 定位</h3>
+<h3>11.4 LookingGlass 定位</h3>
 <div class="card card-green" style="border-left:4px solid #22c55e;background:#1a1f2e;border:1px solid #30363d;border-radius:8px;padding:1.2rem 1.5rem;margin:1rem 0;">
   <p style="margin:0;"><strong>&#x2705; 代码验证已完成 · 实验验证已完成 · 安全模型已修正</strong></p>
   <p style="margin:0.5rem 0 0;color:#8b949e;">LookingGlass 是 FIBEMATE 的<strong>「默认关闭、按需开启」实验性模块</strong>。它独立于 SM2/ML-KEM/Cheshire Cat 底盘运行。</p>
@@ -716,5 +399,7 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
 
 <p style="font-size:0.85rem;color:#8b949e;">LookingGlass 全系列 38 份 DigiCert TSR · 2026-06-26 · 全部 Granted &#x2705; · 详见 <a href="/docs/pqc-readiness.html#7">抗量子就绪状态 §7</a></p>
 
+
+</div>
 </body>
 </html>

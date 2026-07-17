@@ -1,4 +1,4 @@
-﻿/**
+/**
  * E2EEStatusUI — end-to-end encryption status display
  * FIBEMATE v2.21-zk-ts
  *

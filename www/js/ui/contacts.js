@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ContactsUI — contact list management
  * FIBEMATE v2.21-zk-ts
  *

@@ -1,266 +1,198 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>鎶€鏈灦鏋?- FIBEMATE</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root {
-            --primary: #00E5C3; --primary-dim: #00b894; --bg-dark: #0a0e17;
-            --bg-card: #111827; --bg-card-hover: #1a2332; --text: #e2e8f0;
-            --text-dim: #94a3b8; --accent-purple: #8b5cf6; --accent-blue: #3b82f6;
-            --accent-pink: #ec4899; --accent-orange: #f97316; --accent-green: #22c55e;
-        }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg-dark); color: var(--text); line-height: 1.7; }
-        a { color: var(--primary); text-decoration: none; }
-        a:hover { text-decoration: underline; }
-        .container { max-width: 960px; margin: 0 auto; padding: 2rem; }
-        
-        /* Nav */
-        nav { display: flex; align-items: center; justify-content: space-between; padding: 1rem 2rem; background: rgba(17,24,39,0.8); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(255,255,255,0.05); position: sticky; top: 0; z-index: 100; }
-        .nav-logo { font-size: 1.25rem; font-weight: 800; color: var(--primary); letter-spacing: 2px; }
-        .nav-back { font-size: 0.9rem; color: var(--text-dim); }
-        .nav-back:hover { color: var(--primary); }
-
-        /* Sections */
-        h1 { font-size: 2.2rem; font-weight: 800; margin-bottom: 0.5rem; }
-        h1 .gradient { background: linear-gradient(135deg, var(--primary), var(--accent-blue)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        h2 { font-size: 1.5rem; font-weight: 700; margin: 2.5rem 0 1rem; padding-bottom: 0.5rem; border-bottom: 2px solid rgba(0,229,195,0.15); }
-        h3 { font-size: 1.15rem; font-weight: 600; margin: 1.5rem 0 0.75rem; color: var(--primary); }
-        .subtitle { color: var(--text-dim); font-size: 1.05rem; margin-bottom: 2rem; }
-
-        /* Architecture Diagram */
-        .arch-diagram { background: var(--bg-card); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 2rem; margin: 1.5rem 0; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.82rem; line-height: 1.6; overflow-x: auto; white-space: pre; color: var(--text-dim); }
-        .arch-diagram .hl { color: var(--primary); }
-        .arch-diagram .dim { color: #646c78; }
-
-        /* Comparison Table */
-        table { width: 100%; border-collapse: collapse; margin: 1rem 0 2rem; font-size: 0.92rem; }
-        th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.06); }
-        th { color: var(--text-dim); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; background: rgba(17,24,39,0.6); }
-        tr:hover td { background: rgba(255,255,255,0.02); }
-        td:first-child { font-weight: 600; color: var(--text); white-space: nowrap; }
-
-        /* Badges */
-        .badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 0.78rem; font-weight: 600; }
-        .badge-stable { background: rgba(34,197,94,0.12); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
-        .badge-experimental { background: rgba(249,115,22,0.12); border: 1px solid rgba(249,115,22,0.3); color: #f97316; }
-        .badge-done { background: rgba(0,229,195,0.1); border: 1px solid rgba(0,229,195,0.2); color: #00d4aa; }
-        .badge-wip { background: rgba(148,163,184,0.1); border: 1px solid rgba(148,163,184,0.2); color: #8b949e; }
-
-        /* Code block */
-        code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.85rem; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; color: var(--primary); }
-        pre { background: rgba(0,0,0,0.3); padding: 1.2rem; border-radius: 8px; overflow-x: auto; margin: 0.75rem 0; font-size: 0.85rem; }
-        pre code { padding: 0; background: none; }
-
-        /* Warning box */
-        .warning { background: rgba(249,115,22,0.06); border: 1px solid rgba(249,115,22,0.2); border-radius: 8px; padding: 1rem 1.5rem; margin: 1rem 0; font-size: 0.9rem; }
-        .warning::before { content: '鈿狅笍 '; }
-
-        /* Flow */
-        .flow-steps { counter-reset: flow; list-style: none; padding: 0; }
-        .flow-steps li { counter-increment: flow; padding: 0.75rem 0 0.75rem 2.5rem; position: relative; }
-        .flow-steps li::before { content: counter(flow); position: absolute; left: 0; top: 0.7rem; width: 1.6rem; height: 1.6rem; background: var(--bg-card); border: 1px solid var(--primary); border-radius: 50%; text-align: center; font-size: 0.78rem; line-height: 1.55rem; color: var(--primary); }
-
-        /* Footer */
-        footer { text-align: center; padding: 2rem; color: var(--text-dim); font-size: 0.82rem; border-top: 1px solid rgba(255,255,255,0.05); margin-top: 3rem; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>系统架构 - FIBEMATE</title>
+<style>
+:root {
+  --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9;
+  --muted:#8b949e; --accent:#00E5C3; --green:#22c55e; --amber:#f59e0b;
+  --red:#f87171; --blue:#58a6ff; --purple:#bc8cff;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.75; padding:0 1rem 4rem; }
+.container { max-width:960px; margin:0 auto; }
+header { padding:3rem 0 2rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+header h1 { font-size:2rem; color:#f0f6fc; }
+header h1 .gradient { background:linear-gradient(135deg,var(--accent),var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+header .meta { color:var(--muted); font-size:0.9rem; margin-top:0.5rem; }
+h2 { font-size:1.3rem; color:#f0f6fc; margin:2.5rem 0 1rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border); }
+h3 { font-size:1.08rem; color:#e6edf3; margin:1.8rem 0 0.8rem; }
+p { margin:0.8rem 0; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.2rem 1.5rem; margin:1rem 0; }
+.card h3 { margin-top:0; }
+.green { color:var(--green); }
+.amber { color:var(--amber); }
+.red { color:var(--red); }
+.blue { color:var(--blue); }
+.accent { color:var(--accent); }
+.muted { color:var(--muted); }
+code { background:rgba(110,118,129,0.2); padding:0.15em 0.4em; border-radius:4px; font-size:0.9em; font-family:"SF Mono",Consolas,monospace; }
+pre { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:1rem 1.2rem; overflow-x:auto; margin:1rem 0; font-size:0.85rem; line-height:1.6; }
+pre code { background:none; padding:0; }
+table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.9rem; }
+th, td { padding:0.55rem 0.8rem; text-align:left; border:1px solid var(--border); }
+th { background:rgba(0,229,195,0.08); color:#f0f6fc; font-weight:600; }
+tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+.tag { display:inline-block; padding:0.1em 0.5em; border-radius:4px; font-size:0.8rem; font-weight:600; }
+.tag-green { background:rgba(34,197,94,0.15); color:var(--green); }
+.tag-amber { background:rgba(245,158,11,0.15); color:var(--amber); }
+.tag-blue { background:rgba(88,166,255,0.15); color:var(--blue); }
+.tag-purple { background:rgba(188,140,255,0.15); color:var(--purple); }
+.arch-box { font-family:"SF Mono",Consolas,monospace; font-size:0.82rem; line-height:1.4; color:var(--accent); white-space:pre; }
+.arch-box .dim { color:var(--muted); }
+.arch-box .hl { color:var(--blue); }
+.pipeline { display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0; align-items:center; }
+.pipeline .step { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:0.6rem 1rem; text-align:center; min-width:100px; }
+.pipeline .step .label { font-size:0.75rem; color:var(--muted); }
+.pipeline .step .value { font-size:1rem; color:#f0f6fc; font-weight:600; }
+.pipeline .arrow { color:var(--accent); font-size:1.2rem; }
+footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+</style>
 </head>
 <body>
-    <nav>
-        <a href="/" class="nav-logo">FIBEMATE</a>
-        <a href="/" class="nav-back">鈫?杩斿洖棣栭〉</a>
-    </nav>
+<div class="container">
 
-    <div class="container">
-        <h1>鎶€鏈?span class="gradient">鏋舵瀯</span></h1>
-        <p class="subtitle">FIBEMATE 閲囩敤鍙屽悗绔灦鏋勶細Node.js 鐢熶骇绋冲畾鐗?+ Rust 楂樻€ц兘瀹為獙鐗堛€備袱涓悗绔?API 鍏煎锛屽彲鏃犵紳鍒囨崲銆?/p>
+<header>
+  <h1>系统<span class="gradient">架构</span></h1>
+  <p class="meta">FIBEMATE 技术架构文档 &middot; 2026-07-17 &middot; <span class="green">双路径 Active</span></p>
+</header>
 
-        <!-- Architecture Diagram -->
-        <h2>绯荤粺鏋舵瀯鎬昏</h2>
-        <div class="arch-diagram">
-鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-鈹?                   <span class="hl">fibemate.net</span>                              鈹?
-鈹?                <span class="dim">(Nginx Reverse Proxy)</span>                       鈹?
-鈹? <span class="dim">TLS 1.3 路 HSTS 路 OCSP Stapling 路 Let's Encrypt</span>           鈹?
-鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-                       鈹?
-         鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹尖攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-         鈹?            鈹?                            鈹?
-         鈻?            鈻?                            鈻?
-  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-  鈹?<span class="hl">绋冲畾閫氶亾</span>   鈹?鈹?<span class="dim">瀹為獙閫氶亾</span>   鈹?             鈹?<span class="dim">闈欐€佽祫婧?/span>   鈹?
-  鈹?<span class="dim">:3001</span>      鈹?鈹?<span class="dim">:8080*</span>     鈹?             鈹?<span class="dim">:80/443</span>    鈹?
-  鈹斺攢鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹攢鈹€鈹€鈹€鈹€鈹€鈹?
-        鈹?             鈹?                          鈹?
-        鈻?             鈻?                          鈻?
-  鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?             鈹屸攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-  鈹?<span class="hl">Node.js</span>   鈹?鈹?<span style="color:var(--accent-orange);">Rust</span>      鈹?             鈹?<span class="dim">www/</span>       鈹?
-  鈹?<span class="hl">v2.21-pq</span>  鈹?鈹?<span style="color:var(--accent-orange);">v0.2-e2ee</span> 鈹?             鈹?<span class="dim">HTML/JS/CSS</span> 鈹?
-  鈹?<span class="badge" style="background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#22c55e;padding:1px 8px;font-size:0.7rem;">PRODUCTION</span> 鈹?鈹?<span class="badge" style="background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:#f97316;padding:1px 8px;font-size:0.7rem;">EXPERIMENTAL</span> 鈹?             鈹?           鈹?
-  鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?             鈹斺攢鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹?
-        </div>
+<!-- Architecture Overview -->
+<h2>系统架构总览</h2>
 
-        <!-- Version Comparison -->
-        <h2>鐗堟湰瀵规瘮</h2>
-        <table>
-            <tr>
-                <th>鐗规€?/th>
-                <th>Node.js 鐢熶骇鐗?/th>
-                <th>Rust 瀹為獙鐗?/th>
-            </tr>
-            <tr>
-                <td>鐘舵€?/td>
-                <td><span class="badge badge-stable">鉁?绋冲畾杩愯</span></td>
-                <td><span class="badge badge-experimental">馃敩 寮€鍙戜腑</span></td>
-            </tr>
-            <tr>
-                <td>鐗堟湰</td>
-                <td>v2.21-pq</td>
-                <td>v0.2-e2ee</td>
-            </tr>
-            <tr>
-                <td>绔彛</td>
-                <td>3001 (PM2 绠＄悊)</td>
-                <td>8080* (Cargo)</td>
-            </tr>
-            <tr>
-                <td>E2EE</td>
-                <td><span class="badge badge-done">PQ + X3DH + Double Ratchet</span></td>
-                <td><span class="badge badge-done">PQ + X3DH + Double Ratchet</span></td>
-            </tr>
-            <tr>
-                <td>ZK / Bulletproofs</td>
-                <td><span class="badge badge-done">宸查泦鎴?/span></td>
-                <td><span class="badge badge-wip">寰呰縼绉?/span></td>
-            </tr>
-            <tr>
-                <td>WebSocket</td>
-                <td><span class="badge badge-done">瀹屾暣鏀寔</span></td>
-                <td><span class="badge badge-done">宸叉墦閫?/span></td>
-            </tr>
-            <tr>
-                <td>SessionManager</td>
-                <td><span class="badge badge-done">浜嬩欢椹卞姩鏋舵瀯</span></td>
-                <td><span class="badge badge-wip">寰呭疄鐜?/span></td>
-            </tr>
-            <tr>
-                <td>鎬ц兘</td>
-                <td>鍩哄噯</td>
-                <td>棰勬湡鎻愬崌 3-5x</td>
-            </tr>
-            <tr>
-                <td>浠ｇ爜閲?/td>
-                <td>~3,100 琛?main.js</td>
-                <td>妯″潡鍖栨灦鏋?/td>
-            </tr>
-            <tr>
-                <td>璁块棶鏂瑰紡</td>
-                <td>榛樿</td>
-                <td>闇€鎵嬪姩鍒囨崲</td>
-            </tr>
-        </table>
+<div class="card">
+  <h3>请求入口 → 服务分发</h3>
+  <pre class="arch-box">
+                      fibemate.net
+                 (Nginx Reverse Proxy)
+              TLS 1.3 . HSTS . OCSP Stapling
+    <span class="dim">+--------------------------------------------------+</span>
+    <span class="dim">|</span>                                                  <span class="dim">|</span>
+    <span class="hl">[Path A: TLS Hybrid]</span>     <span class="hl">[Path C-2: App Hybrid]</span>     <span class="dim">[Static Assets]</span>
+    X25519MLKEM768            SM2+ML-KEM-768         www/ (HTML/JS/CSS)
+    via oqs-provider           via TLS Exporter       :80 / :443
+    <span class="dim">|</span>                          <span class="dim">|</span>                     <span class="dim">|</span>
+    <span class="hl">Active 2026-07-17</span>        <span class="hl">Active 2026-07-06</span>      <span class="dim">Always On</span>
+    <span class="dim">+--------------------------------------------------+</span>
+                      <span class="dim">|</span>
+          <span class="dim">+-----------+-----------+</span>
+          <span class="dim">|</span>                       <span class="dim">|</span>
+    <span class="dim">[Stable: Node.js]</span>      <span class="dim">[Experimental: Rust]</span>
+    <span class="dim">:3001 (PM2)</span>            <span class="dim">:8080 (Cargo)</span>
+    <span class="dim">v2.21-pq PRODUCTION</span>    <span class="dim">v0.2-e2ee</span>
+  </pre>
+</div>
 
-        <!-- How to Switch -->
-        <h2>濡備綍娴嬭瘯 Rust 瀹為獙鐗?/h2>
-        <p>Rust 鍚庣姝ｅ湪绉瀬寮€鍙戜腑锛屾杩庢妧鏈埍濂借€呮彁鍓嶄綋楠岋細</p>
-        <ol class="flow-steps" style="margin: 1rem 0;">
-            <li>鎵撳紑娴忚鍣ㄥ紑鍙戣€呭伐鍏?(<code>F12</code>)</li>
-            <li>鍦?Console 涓墽琛岋細<pre><code>localStorage.setItem('backend', 'rust')</code></pre></li>
-            <li>鍒锋柊椤甸潰锛屽搷搴斿ご涓皢鍑虹幇 <code>X-Backend: rust</code></li>
-            <li>浣撻獙鍚庡彲閫氳繃浠ヤ笅鍛戒护鍒囧洖锛?pre><code>localStorage.removeItem('backend')</code></pre></li>
-        </ol>
+<!-- Dual Path KEX -->
+<h2>双路径混合密钥交换</h2>
 
-        <div class="warning">
-            Rust 瀹為獙鐗堜粛鍦ㄦ祴璇曚腑锛岃鍕跨敤浜庨噸瑕侀€氫俊銆傞儴鍒嗗姛鑳藉彲鑳戒笉绋冲畾銆?
-        </div>
+<div class="card">
+  <h3>Path A &mdash; TLS 1.3 混合握手 <span class="tag tag-green">Active</span></h3>
+  <p>X25519MLKEM768 NamedGroup 通过 <strong>oqs-provider + systemd override</strong> 激活（2026-07-17）。</p>
+  <p class="muted">nginx 原生 NamedGroup 接入已于 2026-07-10 评估不可行（浏览器 TLS 栈不受 JS/WASM 控制 + nginx 无混合协商回调 API），搁置部分为 nginx 原生接入，非 Path A 整体。</p>
+</div>
 
-        <!-- Response Headers -->
-        <h2>鍝嶅簲澶存爣璇?/h2>
-        <p>寮€鍙戣€呭彲閫氳繃娴忚鍣?DevTools 鈫?Network 鏌ョ湅褰撳墠浣跨敤鐨勫悗绔細</p>
-        <table>
-            <tr>
-                <th>鍝嶅簲澶?/th>
-                <th>Node.js 鐢熶骇鐗?/th>
-                <th>Rust 瀹為獙鐗?/th>
-            </tr>
-            <tr>
-                <td><code>X-Backend</code></td>
-                <td><code>nodejs/2.21-pq</code></td>
-                <td><code>rust/0.2-e2ee</code></td>
-            </tr>
-            <tr>
-                <td><code>X-Backend-Status</code></td>
-                <td><code>stable</code></td>
-                <td><code>experimental</code></td>
-            </tr>
-        </table>
+<div class="card">
+  <h3>Path C-2 &mdash; 应用层混合加密 <span class="tag tag-green">Active</span></h3>
+  <p>SM2 + ML-KEM-768 应用层 KEX（IANA #4590），通过 TLS Exporter + HTTP POST 实现。</p>
+  <p>E2E 5/5 验证通过，p95=78.5ms。reg-server :3080 (WS) / :3081 (HTTP)。</p>
+</div>
 
-        <!-- Security Stack -->
-        <h2>瀹夊叏鎶€鏈爤</h2>
-        <table>
-            <tr><th>灞傜骇</th><th>鎶€鏈?/th><th>鐘舵€?/th></tr>
-            <tr><td>浼犺緭灞?/td><td>TLS 1.3 路 HSTS 路 Let's Encrypt</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>瀵嗛挜浜ゆ崲</td><td>ML-KEM-768 Hybrid X3DH</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>杩炵画鍔犲瘑</td><td>Double Ratchet (PQ optimized)</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>韬唤璁よ瘉</td><td>ZK-SNARKs (Bulletproofs Range Proof)</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>娴侀噺娣锋穯</td><td>Sphinx Packet Format + Mixnet</td><td><span class="badge badge-wip">WIP</span></td></tr>
-            <tr><td>浼氳瘽绠＄悊</td><td>SessionManager (Event-Driven)</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>鍥藉瘑</td><td>SM2 / SM3 (GM/T 0003)</td><td><span class="badge badge-done">鉁?/span></td></tr>
-            <tr><td>鍙俊鏃堕棿鎴?/td><td>RFC 3161 (TSA 鈥?鑱斿悎淇′换 (tsa.cn))</td><td><span class="badge badge-done">12/12 Files 100%</span></td></tr>
-        </table>
+<!-- Security Stack -->
+<h2>密码安全技术栈</h2>
 
-        <!-- ===== PQC Hybrid (Path C) ===== -->
-        <h2>PQC 娣峰悎瀵嗛挜浜ゆ崲锛堣矾寰?C锛?/h2>
-        <p>涓嶆敼 Nginx/OpenSSL锛屽湪 TLS 1.3 ECDHE-SM2 鎻℃墜涔嬩笂鍙犲姞 ML-KEM-768锛?/p>
-        <table>
-            <tr><th>绔偣</th><th>鏂规硶</th><th>璇存槑</th></tr>
-            <tr><td><code>/api/pqc-hybrid/init</code></td><td>GET</td><td>鑾峰彇鏈嶅姟绔?ML-KEM-768 鍏挜 + TLS Session ID</td></tr>
-            <tr><td><code>/api/pqc-hybrid/finalize</code></td><td>POST</td><td>鎻愪氦瀵嗘枃锛屽弻鏂?HKDF 娲剧敓鍏变韩瀵嗛挜</td></tr>
-            <tr><td><code>/api/pqc-hybrid/status</code></td><td>GET</td><td>鏈嶅姟鐘舵€?+ 娲昏穬浼氳瘽鏁?/td></tr>
-        </table>
-        <p style="margin-top:0.5rem;font-size:0.85rem;color:var(--text-dim);">
-            楂樺帇楠岃瘉锛?00/900 浼氳瘽鍏ㄩ儴閫氳繃锛坧95=78.5ms锛夛紝闆?session 娉勬紡銆?
-            璇﹁ <a href="/docs/pqc-readiness.html">PQC 灏辩华搴︽姤鍛?/a> 鍜?
-            <a href="/docs/API.html">API 鏂囨。 搂7</a>銆?
-        </p>
+<table>
+  <tr><th>层级</th><th>技术</th><th>状态</th></tr>
+  <tr><td>传输层</td><td>TLS 1.3 &middot; HSTS &middot; Let's Encrypt</td><td><span class="green">Active</span></td></tr>
+  <tr><td>Path A 混合 KEX</td><td>X25519MLKEM768 (oqs-provider)</td><td><span class="green">Active 2026-07-17</span></td></tr>
+  <tr><td>Path C-2 混合 KEX</td><td>SM2+ML-KEM-768 (IANA #4590)</td><td><span class="green">Active 2026-07-06</span></td></tr>
+  <tr><td>密钥交换</td><td>ML-KEM-768 Hybrid X3DH</td><td><span class="green">Active</span></td></tr>
+  <tr><td>PQC KEM</td><td>ML-KEM-768 (FIPS 203) &middot; SLH-DSA (FIPS 205)</td><td><span class="green">Implemented</span></td></tr>
+  <tr><td>国密算法</td><td>SM2/SM3/SM4</td><td><span class="green">Implemented</span></td></tr>
+  <tr><td>侧信道防护</td><td>SM2 TVLA N=10,000 (20/20 PASS)</td><td><span class="green">Verified</span></td></tr>
+  <tr><td>FPGA 加速</td><td>NTT 256/256 &middot; WNS +0.204ns</td><td><span class="green">v5 Verified</span></td></tr>
+  <tr><td>纵深防御</td><td>LookingGlass v2.2 L1-L9</td><td><span class="amber">Research (off by default)</span></td></tr>
+  <tr><td>形式化验证</td><td>TLA+ Path C-2 K3 Strong (7/7 invariants)</td><td><span class="green">Verified</span></td></tr>
+  <tr><td>时间戳存证</td><td>76 RFC 3161 TSR (lg-001~071 + lg-074~078)</td><td><span class="green">Granted</span></td></tr>
+</table>
 
-        <!-- ===== Multi-Platform ===== -->
-        <h2>澶氬钩鍙版灦鏋?/h2>
-        <table>
-            <tr><th>骞冲彴</th><th>杩愯鏃?/th><th>瀵嗙爜妯″潡</th><th>鐘舵€?/th></tr>
-            <tr><td>Tauri 妗岄潰绔?/td><td>Node.js v22 + Rust</td><td>ML-KEM-768 路 SM2 路 SM3 路 SM4-GCM 路 SLH-DSA WASM</td><td><span class="badge badge-done">v3.3-preview</span></td></tr>
-            <tr><td>React Native 绉诲姩绔?/td><td>Node.js v20 路 RN 0.76+</td><td>SM3Hash 路 SM4GCM 路 ML-KEM-768 路 SM2 EC 路 Hybrid锛堥渶 polyfill锛?/td><td><span class="badge badge-done">C2/C3 49/49 閫氳繃</span></td></tr>
-            <tr><td>Web 娴忚鍣?/td><td>Web Crypto API + WASM</td><td>PQC Hybrid Client 路 OPK Client 路 SM2 Bridge 路 SLH-DSA WASM</td><td><span class="badge badge-done">鍏ㄩ儴灏辩华</span></td></tr>
-            <tr><td>FPGA 纭欢</td><td>Xilinx Artix-7 XC7A35T</td><td>NTT Pipeline v1.3锛? 绾ф祦姘寸嚎 路 B=32 Barrett 路 2 DSP48E1锛?/td><td><span class="badge badge-done">256/256 鍏ㄥ尮閰?/span></td></tr>
-        </table>
+<!-- Version Comparison -->
+<h2>后端版本对比</h2>
 
-        <!-- ===== SLH-DSA ===== -->
-        <h2>SLH-DSA WASM 鍚庨噺瀛愮鍚?/h2>
-        <p>鍩轰簬 <code>pqc_sphincsplus</code> (Argyle-Software) 缂栬瘧涓?WASM锛屾彁渚?stateless hash-based 绛惧悕鏂规浣滀负 ML-KEM 鐨勪簰琛ュ師璇細</p>
-        <table>
-            <tr><th>鎸囨爣</th><th>鏁板€?/th></tr>
-            <tr><td>WASM 浣撶Н</td><td>~107KB (gzip ~51KB)</td></tr>
-            <tr><td>绛惧悕鑰楁椂</td><td>~500ms (Web Worker 寮傛)</td></tr>
-            <tr><td>楠岀鑰楁椂</td><td>~10ms (涓荤嚎绋嬪彲琛?</td></tr>
-            <tr><td>鍏挜 / 绛惧悕</td><td>32B / 7,856B</td></tr>
-            <tr><td>瀹夊叏绛夌骇</td><td>NIST SL 5 (256-bit)</td></tr>
-        </table>
-        <p style="font-size:0.85rem;color:var(--text-dim);">
-            SLH-DSA 涓嶄緷璧栨牸鍋囪锛屼笌 ML-KEM 褰㈡垚寮傛瀯鍐椾綑锛氬嵆浣挎煇涓€鏁板鍋囪琚敾鐮达紝鍙︿竴鍘熻浠嶄繚鎸佸畨鍏ㄣ€?
-            璇﹁ <a href="/docs/API.html">API 鏂囨。 搂6</a>銆?
-        </p>
+<table>
+  <tr><th>特性</th><th>Node.js 生产版</th><th>Rust 实验版</th></tr>
+  <tr><td>状态</td><td><span class="green">稳定运行</span></td><td><span class="amber">开发中</span></td></tr>
+  <tr><td>版本</td><td>v2.21-pq</td><td>v0.2-e2ee</td></tr>
+  <tr><td>端口</td><td>3001 (PM2)</td><td>8080 (Cargo)</td></tr>
+  <tr><td>E2EE</td><td>PQ + X3DH + Double Ratchet</td><td>PQ + X3DH + Double Ratchet</td></tr>
+  <tr><td>ZK / Bulletproofs</td><td>已集成</td><td>待迁移</td></tr>
+  <tr><td>WebSocket</td><td>完整支持</td><td>已打通</td></tr>
+  <tr><td>性能</td><td>基准 (3,236 rps ML-KEM)</td><td>预期提升 3-5x</td></tr>
+  <tr><td>代码量</td><td>~3,100 行 main.js</td><td>模块化架构</td></tr>
+  <tr><td>访问方式</td><td>默认</td><td>需手动切换</td></tr>
+</table>
 
+<!-- Data Flow -->
+<h2>数据流全景</h2>
 
+<div class="card">
+  <div class="pipeline">
+    <div class="step"><div class="label">Browser</div><div class="value">HTTPS</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">Nginx</div><div class="value">TLS 1.3</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">Path A</div><div class="value">X25519MLKEM768</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">Node.js</div><div class="value">:3001</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">KEX</div><div class="value">ML-KEM-768</div></div>
+    <div class="arrow">&rarr;</div>
+    <div class="step"><div class="label">Session</div><div class="value">SM4-GCM</div></div>
+  </div>
+  <p class="muted" style="margin-top:1rem;">Path C-2 并行链路：Browser &rarr; TLS Exporter &rarr; SM2+ML-KEM-768 KEX &rarr; reg-server :3080</p>
+</div>
 
-        <p style="margin-top:1rem;font-size:0.85rem;color:var(--text-dim);">
-            <a href="/">杩斿洖棣栭〉</a> 路 鏇存柊鏃堕棿 2026-06-30 路 浠ｇ爜寰呭璁″悗寮€婧?
-        </p>
-    </div>
+<!-- Infrastructure -->
+<h2>基础设施</h2>
+<table>
+  <tr><th>组件</th><th>详情</th><th>状态</th></tr>
+  <tr><td>Nginx</td><td>Reverse Proxy + TLS 1.3 Termination</td><td><span class="green">Running</span></td></tr>
+  <tr><td>oqs-provider</td><td>liboqs 0.12.0 + oqs-provider 0.12.0-dev</td><td><span class="green">Active (systemd override)</span></td></tr>
+  <tr><td>Node.js</td><td>v2.21-pq (PM2 managed, :3001)</td><td><span class="green">Stable</span></td></tr>
+  <tr><td>reg-server</td><td>:3080 (WS) / :3081 (HTTP)</td><td><span class="green">Running</span></td></tr>
+  <tr><td>Rust Backend</td><td>v0.2-e2ee (:8080, experimental)</td><td><span class="amber">Dev</span></td></tr>
+  <tr><td>SSL Cert</td><td>Let's Encrypt ECDSA + certbot auto-renewal</td><td><span class="green">Valid</span></td></tr>
+  <tr><td>Server</td><td>Aliyun ECS (8.156.77.68)</td><td><span class="green">Online</span></td></tr>
+</table>
 
-    <footer>
-        漏 2026 FIBEMATE 路 Post-Quantum Ready 路 鐙珛鎶€鏈爺绌?
-    </footer>
+<!-- TSR -->
+<h2>TSR 时间戳存证体系</h2>
+<div class="card">
+  <p><strong>76</strong> 份 RFC 3161 时间戳（DigiCert + FreeTSA 双源）</p>
+  <p>序列：<code>lg-001~071 + lg-074~078</code></p>
+  <p>全量 Manifest：<a href="/docs/timestamp-manifest.json">timestamp-manifest.json</a> (v3, 126 条)</p>
+  <p class="muted">lg-072/073/075 从未生成</p>
+</div>
+
+<!-- Quick Links -->
+<h2>关联文档</h2>
+<ul>
+  <li><a href="/docs/pqc-readiness.html">抗量子就绪状态 (PQC Readiness)</a></li>
+  <li><a href="/docs/TECHNICAL-VERIFICATION.md">证据地图 v5 (Evidence Map)</a></li>
+  <li><a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 侧信道检测报告</a></li>
+  <li><a href="/docs/fpga-report.html">FPGA 硬件加速报告</a></li>
+  <li><a href="https://github.com/Lennonhaha/fibemate">GitHub</a></li>
+</ul>
+
+<footer>
+  <p>最后更新：2026-07-17 &middot; <a href="/">返回首页</a></p>
+  <p>FIBEMATE &mdash; Post-Quantum Cryptography Full-Stack Verification Platform</p>
+</footer>
+
+</div>
 </body>
 </html>

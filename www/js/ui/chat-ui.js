@@ -1,4 +1,4 @@
-﻿/**
+/**
  * ChatUI — chat rendering, conversation list, view management, utilities
  * FIBEMATE v2.21-zk-ts
  *
