@@ -5,6 +5,7 @@ pub mod dynamic_path;
 pub mod control_flow;
 pub mod crypto_binding;
 pub mod secure_cleanup;
+pub mod detection;
 
 /// LG v2.2 混淆引擎 (Rust/C/WASM)
 /// 匹配 Python lgv2_nonlinear.py 参考实现：
