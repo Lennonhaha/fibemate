@@ -56,7 +56,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 | Module | Description | Verification |
 |--------|-------------|--------------|
-| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | KAT 10,000/10,000 |
+| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | [KAT 10,000](scripts/kat-10000.js) ✅ |
 | **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM integration |
 | **SM2 ECDH** | BigInt scalar masking + projective randomization, constant-time | TVLA 5/5 PASS (N=10,000) |
 | **SM4-αGCM** | α=7.5 authenticated encryption, auto-select λ2C or SM4 | 10/10 PASS |
@@ -64,8 +64,8 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 | **TLS 1.3 Hybrid** | Path C-2 (SM2+ML-KEM-768) application-layer ✅ | Path C-2 5/5 |
 | **OPK Pre-Keys** | X3DH async handshake, 7/7 PASS | E2E closed |
 | **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 |
-| **VWZ Signature** | Vandermonde-Wang-Zhang lattice-tensor scheme (k=16, NIST-1 128-bit) | WASM 7/7 · reduction 148/148 |
-| **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | Artix-7 synthesized · WNS=9.755ns ✅ · ILA+L4 closed |
+| **VWZ Signature** | Vandermonde-Wang-Zhang lattice-tensor scheme (k=16, NIST-1 128-bit) | WASM 7/7 · [148/148](scripts/vwz-148-test.js) ✅ |
+| **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | [43/43](scripts/fpga-l8l9-43-test.js) ✅ · WNS=9.755ns · ILA+L4 |
 | **L4 Formal Verification** | TLA+ state machine 路 Path C-2 (SM2+ML-KEM-768) 路 7 invariants 路 101,467 states 路 TLC EXIT 0 路 DigiCert TSR lg-069 | ✅ Engineering validation |
 ---
 
@@ -104,6 +104,20 @@ pm2 start ecosystem.config.template.js
 # Service listens at http://localhost:3001 by default
 # Nginx reverse proxy example: see BUILD.md
 ```
+
+## Test Scripts
+
+All claims in Core Features are backed by runnable test scripts in `scripts/`:
+
+| Script | Purpose | Tests |
+|--------|---------|-------|
+| [`vwz-148-test.js`](scripts/vwz-148-test.js) | VWZ signature 148/148 reduction suite | 12 groups, 148 tests |
+| [`fpga-l8l9-43-test.js`](scripts/fpga-l8l9-43-test.js) | FPGA L8+L9 cross-validation behavioral model | 43/43 PASS |
+| [`kat-10000.js`](scripts/kat-10000.js) | ML-KEM-768 KAT 10,000 consistency | 10,000 encap/decap roundtrips |
+| [`kat-bench.js`](scripts/kat-bench.js) | KAT performance benchmark | Throughput & latency |
+| [`tsr-verify.sh`](scripts/tsr-verify.sh) | RFC 3161 TSR verification | DigiCert / FreeTSA |
+| [`stress-test.js`](scripts/stress-test.js) | Load/stress endurance testing | Sustained load |
+
 
 ### Test
 
