@@ -105,6 +105,22 @@ pm2 start ecosystem.config.template.js
 # Nginx reverse proxy example: see BUILD.md
 ```
 
+## ⚡ Performance Benchmarks
+
+Production-grade performance data for all core cryptographic modules.
+All measurements on 2 vCPU ECS, Node.js v22.22.
+
+[📊 Full Report →](www/docs/performance-benchmarks-2026-07-18.md)
+
+| Algorithm | Operation | Throughput | Latency (avg) | Notes |
+|-----------|-----------|------------|---------------|-------|
+| **ML-KEM-768** | Full KEM | **107/s** | 9.4 ms | Pure JavaScript, KAT 10K ✅ |
+| **RSA-2048** | KeyGen | 17/s | 60 ms | Node.js native |
+| **ECDSA P-256** | Sign | **578/s** | 1.73 ms | Node.js native |
+| **SM2** | Sign | 205/s | 4.87 ms | BigInt ECC v1.3 |
+| **VWZ** (C) | Sign | **100K/s** | 10 µs | k=16, 68B sig |
+| **FPGA NTT v5** | 256 samples | — | — | WNS 9.755ns |
+
 ## Test Scripts
 
 All claims in Core Features are backed by runnable test scripts in `scripts/`:
