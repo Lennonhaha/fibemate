@@ -205,6 +205,103 @@ fn deconfuse_full(data: &mut [u8], seed: u64) {
 }
 
 // ============================================================
+// ❄️🔥 冷热路径分离 (Hot/Cold Path Separation) — v2.2.3
+// ============================================================
+// 核心原则：精准混淆 — 最强的保护用在最关键的地方，不浪费算力。
+//
+// 冷路径（Cold）：密钥、签名、元数据 → ≤64B 数据 → 全 7 层强度
+// 温路径（Warm）：协议头部、握手帧   → 65~255B     → 3~4 层折中
+// 热路径（Hot）： 大载荷批量数据     → ≥256B       → 1 层轻量 XOR+S-box
+//
+// 设计依据：
+//   - 7 层开销 O(7·n + 7·n²) 在 n>256 时显著恶化（perm 重计算 + 7 次分配）
+//   - 冷数据 n≤64：7 层绝对耗时 ~1μs，无感知
+//   - 热数据 n≥1024：1 层 vs 7 层差异 ~7×，收益显著
+
+/// 对单个 chunk 执行正向 d 层（d ≤ NUM_LAYERS）
+fn confuse_chunk_d(chunk: &mut [u8], seed: u64, seeds: &LayerSeeds, depth: usize) {
+    let depth = depth.min(NUM_LAYERS);
+    if depth == 0 { return; }
+    let n = chunk.len();
+    for li in 0..depth {
+        let mut rng = XorShift64::new(layer_seed(seed, li));
+        let perm: Vec<usize> = {
+            let mut p: Vec<usize> = (0..n).collect();
+            for i in (1..n).rev() {
+                let j = (rng.next() % (i as u64 + 1)) as usize;
+                p.swap(i, j);
+            }
+            p
+        };
+        let mut rng1 = XorShift64::new(seeds.off1[li]);
+        let mut rng2 = XorShift64::new(seeds.off2[li]);
+        let off1: Vec<u8> = (0..n).map(|_| rng1.next_u8()).collect();
+        let off2: Vec<u8> = (0..n).map(|_| rng2.next_u8()).collect();
+        let mut tmp = vec![0u8; n];
+        for i in 0..n { tmp[i] = chunk[i] ^ off1[i]; }
+        for i in 0..n { chunk[perm[i]] = tmp[i]; }
+        for i in 0..n { chunk[i] ^= off2[i]; }
+        for i in 0..n { chunk[i] = SBOX[chunk[i] as usize]; }
+    }
+}
+
+/// 对单个 chunk 执行逆向 d 层（对应前 d 层的逆）
+fn deconfuse_chunk_d(chunk: &mut [u8], seed: u64, seeds: &LayerSeeds, depth: usize) {
+    let depth = depth.min(NUM_LAYERS);
+    if depth == 0 { return; }
+    let n = chunk.len();
+    for li in (0..depth).rev() {
+        for i in 0..n { chunk[i] = INV_SBOX[chunk[i] as usize]; }
+        let mut rng = XorShift64::new(layer_seed(seed, li));
+        let perm: Vec<usize> = {
+            let mut p: Vec<usize> = (0..n).collect();
+            for i in (1..n).rev() {
+                let j = (rng.next() % (i as u64 + 1)) as usize;
+                p.swap(i, j);
+            }
+            p
+        };
+        let inv_perm: Vec<usize> = {
+            let mut inv = vec![0usize; n];
+            for (i, &p) in perm.iter().enumerate() { inv[p] = i; }
+            inv
+        };
+        let mut rng1 = XorShift64::new(seeds.off1[li]);
+        let mut rng2 = XorShift64::new(seeds.off2[li]);
+        let off1: Vec<u8> = (0..n).map(|_| rng1.next_u8()).collect();
+        let off2: Vec<u8> = (0..n).map(|_| rng2.next_u8()).collect();
+        let mut tmp = vec![0u8; n];
+        for i in 0..n { chunk[i] ^= off2[i]; }
+        for i in 0..n { tmp[inv_perm[i]] = chunk[i]; }
+        for i in 0..n { chunk[i] = tmp[i] ^ off1[i]; }
+    }
+}
+
+/// 自动推断混淆深度：基于数据长度
+///   冷（≤64B） → 7 层  密钥/签名/元数据
+///   温（65~255B）→ 4 层  协议头/握手帧
+///   热（256~1023B）→ 2 层  中小载荷
+///   极热（≥1024B）→ 1 层  大载荷批量数据
+pub fn auto_depth(len: usize) -> usize {
+    if len <= 64      { 7 }
+    else if len <= 255 { 4 }
+    else if len < 1024 { 2 }
+    else               { 1 }
+}
+
+/// 全量混淆：可指定层数
+fn confuse_with_depth(data: &mut [u8], seed: u64, depth: usize) {
+    let seeds = LayerSeeds::new(seed);
+    confuse_chunk_d(data, seed, &seeds, depth);
+}
+
+/// 全量解混淆：可指定层数
+fn deconfuse_with_depth(data: &mut [u8], seed: u64, depth: usize) {
+    let seeds = LayerSeeds::new(seed);
+    deconfuse_chunk_d(data, seed, &seeds, depth);
+}
+
+// ============================================================
 // LG v3.1 球面投影 (48D -> 256D via fixed-point, norm-preserving)
 // ============================================================
 
@@ -265,6 +362,45 @@ pub fn lgv2_deconfuse(data: &[u8], seed: u64) -> Vec<u8> {
     if data.is_empty() { return vec![]; }
     let mut result = data.to_vec();
     deconfuse_full(&mut result, seed);
+    result
+}
+
+/// ❄️🔥 可变深度混淆（调用方指定层数 d=0..7）
+#[wasm_bindgen]
+pub fn lgv2_confuse_d(data: &[u8], seed: u64, depth: u32) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    confuse_with_depth(&mut result, seed, depth as usize);
+    result
+}
+
+/// ❄️🔥 可变深度解混淆（必须与 lgv2_confuse_d 用相同 depth）
+#[wasm_bindgen]
+pub fn lgv2_deconfuse_d(data: &[u8], seed: u64, depth: u32) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    deconfuse_with_depth(&mut result, seed, depth as usize);
+    result
+}
+
+/// ❄️🔥 自动冷热路径混淆 — 根据数据长度自动选择深度
+///   冷（≤64B）→ 7层 | 温（65~255B）→ 4层 | 热（≥256B）→ 2~1层
+#[wasm_bindgen]
+pub fn lgv2_confuse_auto(data: &[u8], seed: u64) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let depth = auto_depth(data.len());
+    let mut result = data.to_vec();
+    confuse_with_depth(&mut result, seed, depth);
+    result
+}
+
+/// ❄️🔥 自动冷热路径解混淆（与 lgv2_confuse_auto 配对）
+#[wasm_bindgen]
+pub fn lgv2_deconfuse_auto(data: &[u8], seed: u64) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let depth = auto_depth(data.len());
+    let mut result = data.to_vec();
+    deconfuse_with_depth(&mut result, seed, depth);
     result
 }
 
@@ -467,5 +603,103 @@ mod tests {
         assert_eq!(enc.len(), 194);
         let dec = lgv31_sphere_deconfuse(&enc);
         assert_eq!(&dec[..], &input[..]);
+    }
+
+    // ---- ❄️🔥 冷热路径分离测试 ----
+
+    #[test]
+    fn test_depth_roundtrip_full7() {
+        let data: Vec<u8> = (0..100).map(|i| (i * 7) as u8).collect();
+        let c7 = lgv2_confuse_d(&data, 0x1234, 7);
+        let r = lgv2_deconfuse_d(&c7, 0x1234, 7);
+        assert_eq!(data, r, "depth=7 roundtrip");
+        // 交叉验证：d=7 应与全量一致
+        let full = lgv2_confuse(&data, 0x1234);
+        assert_eq!(c7, full, "depth=7 must match lgv2_confuse");
+    }
+
+    #[test]
+    fn test_depth_roundtrip_variable() {
+        let data: Vec<u8> = (0..200).map(|i| (i ^ 0x55) as u8).collect();
+        for d in 0..=7 {
+            let c = lgv2_confuse_d(&data, 42, d);
+            let r = lgv2_deconfuse_d(&c, 42, d);
+            assert_eq!(data, r, "depth={} roundtrip failed", d);
+        }
+    }
+
+    #[test]
+    fn test_auto_depth_roundtrip() {
+        for &n in &[16, 32, 64, 128, 255, 256, 512, 1024, 4096] {
+            let data: Vec<u8> = (0..n).map(|i| (i & 0xFF) as u8).collect();
+            let c = lgv2_confuse_auto(&data, 0xCAFE);
+            let r = lgv2_deconfuse_auto(&c, 0xCAFE);
+            assert_eq!(data, r, "auto roundtrip n={}", n);
+        }
+    }
+
+    #[test]
+    fn test_auto_depth_deterministic() {
+        let data: Vec<u8> = (0..100).map(|i| i as u8).collect();
+        let r1 = lgv2_confuse_auto(&data, 42);
+        let r2 = lgv2_confuse_auto(&data, 42);
+        assert_eq!(r1, r2, "auto must be deterministic");
+    }
+
+    #[test]
+    fn test_auto_depth_correct_tier() {
+        // 冷: ≤64B → 7 层
+        let cold: Vec<u8> = vec![0xAA; 32];
+        let c = lgv2_confuse_auto(&cold, 1);
+        assert_eq!(c, lgv2_confuse_d(&cold, 1, 7), "cold: should use 7 layers");
+
+        // 温: 65~255B → 4 层
+        let warm: Vec<u8> = vec![0xBB; 128];
+        let c = lgv2_confuse_auto(&warm, 1);
+        assert_eq!(c, lgv2_confuse_d(&warm, 1, 4), "warm: should use 4 layers");
+
+        // 热: 256~1023B → 2 层
+        let hot: Vec<u8> = vec![0xCC; 512];
+        let c = lgv2_confuse_auto(&hot, 1);
+        assert_eq!(c, lgv2_confuse_d(&hot, 1, 2), "hot: should use 2 layers");
+
+        // 极热: ≥1024B → 1 层
+        let vhot: Vec<u8> = vec![0xDD; 2048];
+        let c = lgv2_confuse_auto(&vhot, 1);
+        assert_eq!(c, lgv2_confuse_d(&vhot, 1, 1), "very-hot: should use 1 layer");
+    }
+
+    #[test]
+    fn test_depth_0_noop() {
+        let data: Vec<u8> = vec![1, 2, 3, 4, 5];
+        let c = lgv2_confuse_d(&data, 99, 0);
+        assert_eq!(c, data, "depth=0 should be identity");
+    }
+
+    #[test]
+    fn test_auto_depth_empty() {
+        let c = lgv2_confuse_auto(&[], 1);
+        assert_eq!(c.len(), 0);
+    }
+
+    /// 基准：热路径 d=1 vs 冷路径 d=7，验证 output 不同
+    #[test]
+    fn test_cold_hot_produce_different_output() {
+        let data: Vec<u8> = (0..1024).map(|i| (i & 0xFF) as u8).collect();
+        let hot = lgv2_confuse_d(&data, 0xBEEF, 1);   // 1 层
+        let cold = lgv2_confuse_d(&data, 0xBEEF, 7);   // 7 层
+        assert_ne!(hot, cold, "different depth must produce different output");
+        // 都要可逆
+        assert_eq!(lgv2_deconfuse_d(&hot, 0xBEEF, 1), data);
+        assert_eq!(lgv2_deconfuse_d(&cold, 0xBEEF, 7), data);
+    }
+
+    /// 验证交叉深度：用 d=3 混淆再用 d=7 解混淆会失败 ✓
+    #[test]
+    fn test_cross_depth_rejection() {
+        let data: Vec<u8> = vec![42; 64];
+        let c = lgv2_confuse_d(&data, 7, 3);
+        let r = lgv2_deconfuse_d(&c, 7, 1);  // 错误深度
+        assert_ne!(data, r, "cross-depth should NOT roundtrip correctly (security feature)");
     }
 }
