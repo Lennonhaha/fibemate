@@ -209,7 +209,7 @@ function cbd2(buf) {
 // Sample polynomial from seed+nonce — returns TIME-DOMAIN coefficients
 // This replaces the old sampleNTT which was misnamed
 function samplePoly(seed, nonce) {
-    const stream = shake128(new Uint8Array([...seed, nonce]), 768);
+    const stream = shake128(new Uint8Array([...seed, (nonce >> 8) & 0xff, nonce & 0xff]), 768);
     const a = new Int16Array(KYBER_N);
     let j = 0, idx = 0;
     while (j < KYBER_N && idx < 765) {

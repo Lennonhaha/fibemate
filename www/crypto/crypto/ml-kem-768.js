@@ -309,7 +309,7 @@ function cbd2(buf) {
     return r;
 }
 function sampleNTT(seed, nonce) {
-    const stream = shake128(new Uint8Array([...seed, nonce]), 504);
+    const stream = shake128(new Uint8Array([...seed, (nonce >> 8) & 0xff, nonce & 0xff]), 504);
     const a = new Int16Array(256);
     let j=0, idx=0;
     while (j<256 && idx<503) { const d1=stream[idx]|((stream[idx+1]&0x0F)<<8); const d2=(stream[idx+1]>>4)|(stream[idx+2]<<4); idx+=3; if(d1<KYBER_Q)a[j++]=d1; if(j<256&&d2<KYBER_Q)a[j++]=d2; }
