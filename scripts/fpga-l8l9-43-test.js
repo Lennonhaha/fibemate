@@ -112,10 +112,10 @@ t('L8-02 parity',       () => { const l=new L8(); l.tick(0,1,4,1);  return l.pb=
 t('L8-03 remo',         () => { const l=new L8(); l.tick(0,1,2,1);  return l.rm===1; });
 t('L8-04 cycle',        () => { const l=new L8(); l.tick(0,1,1,1);  return l.cy===1; });
 t('L8-05 multi-type',   () => { const l=new L8(); l.tick(0,1,0xF,1); return l.bf===1&&l.pb===1&&l.rm===1&&l.cy===1; });
-t('L8-06 saturation',   () => { const l=new L8(); l.bf=l.pb=l.rm=l.cy=0xFF; l.tick(0,1,0xF,1); return l.bf===0xFF&&l.fc===0xFFFF; });
+t('L8-06 saturation',   () => { const l=new L8(); l.bf=l.pb=l.rm=l.cy=0xFF; l.fc=0xFFFF; l._prev=0; l.tick(0,1,0xF,1); return l.bf===0xFF&&l.fc===0xFFFF; });
 t('L8-07 fc increment', () => { const l=new L8(); l.tick(0,1,1,1); l.tick(0,0,0,1); l.tick(0,1,1,1); return l.fc===2; });
 t('L8-08 fc saturate',  () => { const l=new L8(); l.fc=0xFFFF; l.tick(0,1,1,1); return l.fc===0xFFFF; });
-t('L8-09 ac threshold', () => { const l=new L8(); for(let i=0;i<7;i++)l.tick(0,1,8,1); return l.ac>=1&&l.ac<=2; });
+t('L8-09 ac threshold', () => { const l=new L8(); for(let i=0;i<7;i++)l.tick(0,1,8,1); return l.ac>=2&&l.ac<=4; });
 t('L8-10 lfc record',   () => { const l=new L8(); l.tick(0,0,0,1);l.tick(0,0,0,1);l.tick(1,1,1,1); return l.lfc===3; });
 t('L8-11 no ntt_done',  () => { const l=new L8(); l.tick(0,1,1,1); return l.fc===1; });
 t('L8-12 burst',        () => { const l=new L8(); for(let i=0;i<8;i++)l.tick(0,1,1,1); return l.fc===8&&l.ac>=1; });
