@@ -1,11 +1,24 @@
-# FIBEMATE - Post-Quantum Cryptography Full-Stack Platform
+# FIBEMATE — Post-Quantum Cryptography Full-Stack Engineering Platform
+
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly.yml)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Version](https://img.shields.io/badge/version-3.3_preview-brightgreen.svg)](https://fibemate.net)
+[![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 
+**v3.3-preview** · 2026-07-18 · TSR: lg-001 ~ lg-082 · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
-**v3.3-preview** | 2026-07-18
-TSR: lg-001 ~ lg-082 | License: GNU GPLv3
-[fibemate.net](https://fibemate.net) | [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+> **Cite this work**: [CITATION.cff](./CITATION.cff) — Liu, T. *FIBEMATE: Post-Quantum Cryptography Full-Stack Engineering Platform*. v3.3-preview, 2026.
+
+---
+
+## Why FIBEMATE?
+
+The post-quantum transition is not just about swapping algorithms — it's about **engineering the entire stack** from browser to FPGA, from KAT vectors to formal verification, from national standards to IANA registrations.
+
+FIBEMATE is a solo-developed, publicly verifiable engineering proof that the full chain works end-to-end: ML-KEM-768 + SM2 hybrid key exchange over TLS 1.3, hardware-accelerated NTT on Artix-7 FPGA, TLA+ formal verification of the handshake protocol, and WASM-based browser cryptography — all backed by 82 RFC 3161 timestamped evidence records.
+
+**Who is this for?** Crypto engineers implementing PQC in practice, security researchers exploring hybrid KEX architectures, FPGA developers working on lattice-based hardware, and anyone evaluating the real-world readiness of post-quantum migration.
 
 ---
 
@@ -119,25 +132,19 @@ fibemate/
 │   └── ntt/             # FPGA NTT C reference
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
-│   ├── crypto/          # Browser crypto modules
-│   │   ├── ml-kem-768.js
-│   │   ├── sm2-bigint-ec.js (v1.3, TVLA 20/20 N=10k)
-│   │   ├── sm3.js (v2.0, inline compression)
-│   │   ├── sm4-alpha-gcm.js
-│   │   └── pqc-hybrid-client.js
-│   ├── docs/            # Docs + TSR evidence
-│   │   ├── pqc-readiness.html
-│   │   └── tsa/         # lg-001~082 TSR files
+│   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
+│   ├── docs/            # Docs + TSR evidence (lg-001~082)
 │   └── lgv1/            # LookingGlass v1 (DMTH) 📦 archived
 ├── rtl/                 # FPGA RTL (Verilog)
 │   ├── ntt_core_pipe2.v
 │   └── vwz/
 ├── c-stm32/             # STM32 C framework
-├── scripts/             # CI / build / TVLA scripts
+├── scripts/             # CI / build / TVLA / Jasmin KAT cross-verify
+├── papers/              # Publications: VWZ ePrint 2026/110618
 ├── package.json
 ├── LICENSE              # GPLv3
-├── README.md            # Chinese version
-├── README.en.md         # English version
+├── README.md            # This file
+├── CITATION.cff         # Citation metadata
 └── BUILD.md             # Build and deployment guide
 ```
 
@@ -153,7 +160,7 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 | **L8** | Runtime integrity detectors (43/43 PASS) | Logical integrity |
 | **L9** | Hardware fault protection (FPGA v5) | Physical attack surface |
 
-> **Important**: LookingGlass (v1 archived, v2 algebraic group experiment) and VWZ are **experimental, default-off research components**. They are pure无损 linear-transform binary obfuscation experiments with **no cryptographic security guarantees**. Neither improves LWE lattice hardness. Default-closed, never in the production encryption path.
+> **Important**: LookingGlass (v1 archived, v2 algebraic group experiment) and VWZ are **experimental, default-off research components**. They are purely lossless linear-transform binary obfuscation experiments with **no cryptographic security guarantees**. Neither improves LWE lattice hardness. Default-closed, never in the production encryption path.
 
 ### Research Components - Honest Characterization
 
@@ -175,10 +182,21 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 
 FIBEMATE implements engineering verification of the SM2+ML-KEM-768 hybrid scheme:
 
-- **TLS Layer** (Path A): X25519MLKEM768 -搁置 (browser/nginx technical blockers), build artifacts retained for reference
+- **TLS Layer** (Path A): X25519MLKEM768 — shelved (browser/nginx technical blockers), build artifacts retained for reference
 - **Application Layer** (Path C-2): SM2+ML-KEM-768 HTTP-layer hybrid KEX, TSR lg-053/lg-057
 
 See [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/).
+
+---
+
+## Contributing
+
+FIBEMATE welcomes contributions from the PQC community. Here's how to get involved:
+
+- **Good First Issues** — See [GOOD_FIRST_ISSUES.md](./GOOD_FIRST_ISSUES.md) for tagged tasks suitable for new contributors
+- **Discussions** — Join the conversation on [GitHub Discussions](https://github.com/Lennonhaha/fibemate/discussions)
+- **Security** — Report vulnerabilities privately via [SECURITY.md](./SECURITY.md)
+- **Citation** — If you use FIBEMATE in your work, cite via [CITATION.cff](./CITATION.cff)
 
 ---
 
