@@ -47,7 +47,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 - **VWZ: A Vandermonde Tensor Trapdoor for Compact Post-Quantum Signatures**
   Tianhe Liu. *IACR ePrint Archive, 2026.* (under editor review)
   Signature 80 bytes · Public key 1.76 KB · NIST-1 security · 43/43 cross-validation tests PASS
-  [PDF](papers/vwz-eprint-2026.pdf) · [ePrint](https://eprint.iacr.org/2026/110618) (pending) · [Reduction Proof (VMQ-SPARSE → EUF-CMA)](docs/research/route-c-lvwz-phase1-math.md) · [Simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate)
+  [PDF](papers/vwz-eprint-2026.pdf) · [ePrint](https://eprint.iacr.org/2026/110618) (pending) · [Reduction Proof (VMQ-SPARSE → EUF-CMA)](docs/research/route-c-lvwz-phase1-math.md) · [Simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate) · [148/148 Test Report](docs/vwz-148-test-report.md)
 
 > TSR vwz-076 — FreeTSA RFC 3161 timestamp (2026-07-17 11:30:15 GMT, serial 0x06497CB4): [vwz-076-main-20260717.tsr](papers/vwz-076-main-20260717.tsr)
 
