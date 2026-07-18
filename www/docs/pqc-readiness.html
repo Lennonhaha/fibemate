@@ -581,6 +581,7 @@
 <tr><td>WASM 编译</td><td>wasm-pack build --target web --release</td><td><span style="color:var(--green);">19.8KB</span></td><td>—</td></tr>
 <tr><td>L8：Crypto-Binding 验证</td><td>确保 PQC 密钥与经典密钥在混合模式下绑定，防止降级攻击；session_key XOR hash(PQC_ss | classic_ss) 绑定验证</td><td><span style="color:var(--green);">&#10004; 通过</span></td><td>lg-076</td></tr>
 <tr><td>L9：Secure Cleanup 验证</td><td>secure_cleanup.rs：内存中密钥材料零化（volatile + mlock 双重覆盖），process.exit 前置清理回调，零残留验证</td><td><span style="color:var(--green);">&#10004; 通过</span></td><td>lg-076</td></tr>
+<tr><td>LG v2.2.3 冷热路径分离</td><td>lgv2_confuse_auto(): 冷≤64B→7层 / 温65~255B→4层 / 热≥256B→2~1层，大载荷6-7×吞吐</td><td><span style="color:var(--green);">61/61 PASS</span></td><td>lg-082</td></tr>
 </tbody>
 </table>
 
@@ -629,7 +630,7 @@
 
 <h4>重建验证</h4>
 <table>
-<thead><tr><th>验证项</th><th>方法</th><th>结果</th><th>存证</th></tr></thead>
+<thead><tr><th>验证项</th><th>方法</th><th>结果</th><th>存证</th></tr>
 <tbody>
 <tr><td>Rust 源码重建</td><td>static mut &rarr; Mutex 包裹 Arc 矩阵缓存，消除 UB；矩阵数学独立校验</td><td><span style="color:var(--green);">&#10004; 完成</span></td><td>lg-v2.2</td></tr>
 <tr><td>确定性单元测试</td><td>cargo test --lib（固定密钥验证 M&middot;M&#8315;&sup1;=I；WASM 单例状态串行执行）</td><td><span style="color:var(--green);">37/37 全绿</span></td><td>lg-v2.2</td></tr>
