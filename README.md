@@ -1,3 +1,13 @@
+> ⚠️ **IMPORTANT DISCLAIMER**
+>
+> **FIBEMATE is an engineering demonstration platform, not a certified product.**
+>
+> - **Production-ready components** (ML-KEM-768, SLH-DSA, SM2/SM3/SM4) have passed functional verification and software TVLA side-channel testing, but **have not undergone third-party security audit**.
+> - **Experimental components** (VWZ, LookingGlass) **provide no cryptographic security guarantees**, are default-off, require manual activation.
+> - Full security assessment: see [Security Model](#security-model) and [Known Limitations](#known-limitations).
+
+---
+
 # FIBEMATE — Post-Quantum Cryptography Full-Stack Engineering Platform
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
@@ -9,7 +19,21 @@
 
 **v3.3-preview** · 2026-07-18 · TSR: lg-001 ~ lg-085 · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
+> **Production/Experiment Separation**: 🟢 Production-grade (default-on, auditable) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
+
 > **Cite this work**: [CITATION.cff](./CITATION.cff) — Liu, T. *FIBEMATE: Post-Quantum Cryptography Full-Stack Engineering Platform*. v3.3-preview, 2026.
+
+---
+
+## 📋 Quick Navigation
+
+| If you are... | Jump to |
+| :--- | :--- |
+| 🔒 **Evaluating production readiness** | → [🟢 Production-Grade Base](#-production-grade-base-default-on--auditable) · [Security Model](#security-model) · [Known Limitations](#known-limitations) |
+| 🔬 **Researching VWZ / LookingGlass** | → [🔬 Experimental Research Components](#-experimental-research-components-default-off--no-security-guarantees) · [VWZ ePrint](#-publications) |
+| 🛠️ **Building / running** | → [Quick Start](#quick-start) · [BUILD.md](BUILD.md) |
+| 🤔 **Questioning ML-KEM interoperability** | → [ML-KEM-768 Wire Format](#ml-kem-768-wire-format) |
+| 📊 **Verifying claims** | → [Test Scripts](#test-scripts) · [TSR Evidence](#timestamp-evidence) |
 
 ---
 
@@ -42,6 +66,47 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 ---
 
+## 🟢 Production-Grade Base (Default-On · Auditable)
+
+These components form the **trusted security foundation** of FIBEMATE. All claims backed by runnable test scripts.
+
+| Module | Description | Verification |
+|--------|-------------|-------------|
+| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | [KAT 10,000](scripts/kat-10000.js) ✅ |
+| **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM integration |
+| **SM2 ECDH** | BigInt scalar masking + projective randomization, constant-time | TVLA 5/5 PASS (N=10,000) |
+| **SM4-αGCM** | α=7.5 authenticated encryption, auto-select M2C or SM4 | 10/10 PASS |
+| **SM3 Hash** | GB/T 32905 compliant | KAT PASS |
+| **TLS 1.3 Hybrid** | Path C-2 (SM2+ML-KEM-768) application-layer ✅ | Path C-2 5/5 |
+| **OPK Pre-Keys** | X3DH async handshake, 7/7 PASS | E2E closed |
+| **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | [43/43](scripts/fpga-l8l9-43-test.js) ✅ · WNS=9.755ns · ILA+L4 |
+| **L4 Formal Verification** | TLA+ state machine · Path C-2 (SM2+ML-KEM-768) · 7 invariants · 101,467 states · TLC EXIT 0 · DigiCert TSR lg-069 | ✅ Engineering validation |
+
+---
+
+## 🔬 Experimental Research Components (Default-Off · No Security Guarantees)
+
+> ⚠️ These components **provide no cryptographic security guarantees** and are **never in the production encryption path**. They must be manually enabled.
+
+| Module | Description | Status |
+|--------|-------------|--------|
+| **VWZ Signature** | Vandermonde-Wang-Zhang lattice-tensor scheme (k=16, NIST-1 128-bit) | [148/148 ✅](scripts/vwz-148-test.js) | C implementation · No formal security reduction · Awaiting external review |
+| **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 · No security claims |
+
+---
+
+### Physical Security Verification Status
+
+| Level | Status | Detail |
+|-------|--------|--------|
+| Software TVLA | ✅ Complete | 36/36 green (N=5,000, \|t\|<2.06) |
+| SM2 BigInt Masking | ✅ Complete | N=10,000 PASS, \|t\|<2.06 |
+| FPGA ILA+L4 Timing | ✅ Complete | WNS=9.755ns |
+| Hardware ChipWhisperer | ⚠️ Pending | CH340G 5V level mismatch; pending CP2102/FT232 replacement |
+| Target Completion | Q4 2026 | — |
+
+---
+
 ## 📄 Publications
 
 - **VWZ: A Vandermonde Tensor Trapdoor for Compact Post-Quantum Signatures**
@@ -51,22 +116,24 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 > TSR vwz-076 — FreeTSA RFC 3161 timestamp (2026-07-17 11:30:15 GMT, serial 0x06497CB4): [vwz-076-main-20260717.tsr](papers/vwz-076-main-20260717.tsr)
 
+---
 
-## Core Features
+## ⚡ Performance Benchmarks
 
-| Module | Description | Verification |
-|--------|-------------|--------------|
-| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | [KAT 10,000](scripts/kat-10000.js) ✅ |
-| **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM integration |
-| **SM2 ECDH** | BigInt scalar masking + projective randomization, constant-time | TVLA 5/5 PASS (N=10,000) |
-| **SM4-αGCM** | α=7.5 authenticated encryption, auto-select λ2C or SM4 | 10/10 PASS |
-| **SM3 Hash** | GB/T 32905 compliant | KAT PASS |
-| **TLS 1.3 Hybrid** | Path C-2 (SM2+ML-KEM-768) application-layer ✅ | Path C-2 5/5 |
-| **OPK Pre-Keys** | X3DH async handshake, 7/7 PASS | E2E closed |
-| **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 |
-| **VWZ Signature** | Vandermonde-Wang-Zhang lattice-tensor scheme (k=16, NIST-1 128-bit) | [148/148 ✅](scripts/vwz-148-test.js) | C implementation |
-| **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | [43/43](scripts/fpga-l8l9-43-test.js) ✅ · WNS=9.755ns · ILA+L4 |
-| **L4 Formal Verification** | TLA+ state machine 路 Path C-2 (SM2+ML-KEM-768) 路 7 invariants 路 101,467 states 路 TLC EXIT 0 路 DigiCert TSR lg-069 | ✅ Engineering validation |
+Production-grade performance data for all core cryptographic modules.
+All measurements on 2 vCPU ECS, Node.js v22.22.
+
+[📊 Full Report + Charts](www/docs/performance-benchmarks-2026-07-18.md)
+
+| Algorithm | Operation | Throughput | Latency (avg) | Notes |
+|-----------|----------|------------|---------------|-------|
+| **ML-KEM-768** | Full KEM | **107/s** | 9.4 ms | Pure JavaScript, KAT 10K ✅ |
+| **RSA-2048** | KeyGen | 17/s | 60 ms | Node.js native |
+| **ECDSA P-256** | Sign | **578/s** | 1.73 ms | Node.js native |
+| **SM2** | Sign | 205/s | 4.87 ms | BigInt ECC v1.3 |
+| **VWZ** (C) | Sign | **100K/s** | 10 µs | k=16, 68B sig |
+| **FPGA NTT v5** | 256 samples | — | — | WNS 9.755ns |
+
 ---
 
 ## Quick Start
@@ -105,21 +172,7 @@ pm2 start ecosystem.config.template.js
 # Nginx reverse proxy example: see BUILD.md
 ```
 
-## ⚡ Performance Benchmarks
-
-Production-grade performance data for all core cryptographic modules.
-All measurements on 2 vCPU ECS, Node.js v22.22.
-
-[📊 Full Report →](www/docs/performance-benchmarks-2026-07-18.md)
-
-| Algorithm | Operation | Throughput | Latency (avg) | Notes |
-|-----------|-----------|------------|---------------|-------|
-| **ML-KEM-768** | Full KEM | **107/s** | 9.4 ms | Pure JavaScript, KAT 10K ✅ |
-| **RSA-2048** | KeyGen | 17/s | 60 ms | Node.js native |
-| **ECDSA P-256** | Sign | **578/s** | 1.73 ms | Node.js native |
-| **SM2** | Sign | 205/s | 4.87 ms | BigInt ECC v1.3 |
-| **VWZ** (C) | Sign | **100K/s** | 10 µs | k=16, 68B sig |
-| **FPGA NTT v5** | 256 samples | — | — | WNS 9.755ns |
+---
 
 ## Test Scripts
 
@@ -134,7 +187,6 @@ All claims in Core Features are backed by runnable test scripts in `scripts/`:
 | [`tsr-verify.sh`](scripts/tsr-verify.sh) | RFC 3161 TSR verification | DigiCert / FreeTSA |
 | [`stress-test.js`](scripts/stress-test.js) | Load/stress endurance testing | Sustained load |
 
-
 ### Test
 
 ```bash
@@ -144,7 +196,7 @@ node test/test-fibemate.js
 # Per-module tests
 node test/test-fibemate.js       # ML-KEM KAT 10,000
 node scripts/kat-diag.js         # KAT diagnostic
-node test/test-cross-lang.js    # Cross-language verification
+node test/test-cross-lang.js     # Cross-language verification
 ```
 
 ---
@@ -153,17 +205,16 @@ node test/test-cross-lang.js    # Cross-language verification
 
 ```
 fibemate/
-├── src/                  # Server source
+├── src/                 # Server source
 │   ├── index.js         # Express entry
 │   ├── pqc-hybrid-server.js  # Path C-2 hybrid KEX
 │   ├── opk-server.js    # X3DH pre-key protocol
-│   └── crypto/           # Obfuscation / padding / filters
+│   └── crypto/          # Obfuscation / padding / filters
 ├── packages/pqc-kem/    # PQC KEM package (ML-KEM-768 WASM + C bindings)
 │   └── src/             # KEM implementation
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
-│   ├── docs/            # Docs + TSR evidence (lg-001~082)
 │   └── docs/            # Documentation + TSR evidence (lg-001~082)
 ├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
 │   └── (timing-critical IP, available on request)
@@ -184,14 +235,14 @@ fibemate/
 FIBEMATE implements a **defense-in-depth** architecture across three layers (research components excluded):
 
 | Layer | Content | Security Level |
-|-------|---------|-----------------|
+|-------|---------|----------------|
 | **L1-L7** | Standard ML-KEM-768 + SLH-DSA + SM2 ECDH | 128-bit classical + 128-bit PQC |
 | **L8** | Runtime integrity detectors (43/43 PASS) | Logical integrity |
 | **L9** | Hardware fault protection (FPGA v5) | Physical attack surface |
 
 > **Important**: LookingGlass (v1 archived, v2 algebraic group experiment) and VWZ are **experimental, default-off research components**. They are purely lossless linear-transform binary obfuscation experiments with **no cryptographic security guarantees**. Neither improves LWE lattice hardness. Default-closed, never in the production encryption path.
 
-### Research Components - Honest Characterization
+### Research Components — Honest Characterization
 
 | Component | What it is | What it is NOT |
 |-----------|-----------|----------------|
@@ -213,11 +264,18 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 
 FIBEMATE's ML-KEM-768 implementation uses **time-domain** coefficient representation. As a result, its wire format does **not** match the NIST KAT vectors (which use NTT-domain representation). This is a **design choice**, not a bug.
 
+**Why time-domain?**
+- Simplifies integration with SM2 hybrid KEX (avoids repeated NTT-domain ↔ time-domain conversion)
+- More natural for FPGA pipeline design (NTT accelerator inputs in time domain)
+- This project prioritizes **internal chain consistency** over cross-library interoperability
+
+If interoperability with liboqs becomes required, an NTT-domain adapter can be added (design reserves the interface).
+
 - Internal consistency: ✅ 6/6 PASS
 - Security: ✅ NOT affected (IND-CPA secure)
 - Interoperability with liboqs/NIST reference: ❌ Not supported at this time
 
-An NTT-domain adapter can be added in the future if interoperability becomes a requirement. See [docs/design-decisions.md](./docs/design-decisions.md) for the full rationale.
+See [docs/design-decisions.md](./docs/design-decisions.md) for the full rationale.
 
 ### Nonce Truncation Bug (Fixed 2026-07-18)
 
@@ -249,13 +307,13 @@ FIBEMATE welcomes contributions from the PQC community. Here's how to get involv
 
 ## License
 
-GNU General Public License v3.0 - see [LICENSE](./LICENSE)
+GNU General Public License v3.0 — see [LICENSE](./LICENSE)
 
 The ML-KEM-768 and SLH-DSA implementations are based on NIST FIPS 203/205. The SM2/SM3/SM4 implementations reference Chinese national standards GB/T 32918/32905/32907.
 
 ---
 
-## Acknowledgements
+## Acknowledgments
 
 - **NIST PQC Standardization Project** - ML-KEM (FIPS 203), SLH-DSA (FIPS 205)
 - **Open Quantum Safe** - liboqs, oqs-provider
@@ -264,4 +322,4 @@ The ML-KEM-768 and SLH-DSA implementations are based on NIST FIPS 203/205. The S
 
 ---
 
-*FIBEMATE - Post-Quantum Cryptography, Engineered.*
+*FIBEMATE — Post-Quantum Cryptography, Engineered.*
