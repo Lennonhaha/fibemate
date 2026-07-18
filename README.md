@@ -3,8 +3,8 @@
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly.yml)
 
 
-**v3.3-preview** | 2026-07-16
-TSR: lg-001 ~ lg-076 | License: GNU GPLv3
+**v3.3-preview** | 2026-07-18
+TSR: lg-001 ~ lg-082 | License: GNU GPLv3
 [fibemate.net](https://fibemate.net) | [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 ---
@@ -127,7 +127,7 @@ fibemate/
 │   │   └── pqc-hybrid-client.js
 │   ├── docs/            # Docs + TSR evidence
 │   │   ├── pqc-readiness.html
-│   │   └── tsa/         # lg-001~076 TSR files
+│   │   └── tsa/         # lg-001~082 TSR files
 │   └── lgv1/            # LookingGlass v1 (DMTH) 📦 archived
 ├── rtl/                 # FPGA RTL (Verilog)
 │   ├── ntt_core_pipe2.v
