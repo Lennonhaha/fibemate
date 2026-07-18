@@ -37,6 +37,11 @@ jobs:
         run: |
           node test/test-keccak.js
           node test/test-fibemate.js
+
+      - name: Jasmin KAT cross-verification (informational)
+        continue-on-error: true
+        run: |
+          node scripts/kat-jasmin-compare.js || echo "INFO: Jasmin KAT mismatch expected — FIBEMATE uses time-domain polyMul vs Jasmin NTT-domain. See docs/design-decisions.md"
           
   # 鈹€鈹€鈹€ Markdown / 鏂囨。妫€鏌?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
   docs-check:
