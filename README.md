@@ -178,6 +178,24 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 
 ---
 
+## Implementation Notes
+
+### ML-KEM-768 Wire Format
+
+FIBEMATE's ML-KEM-768 implementation uses **time-domain** coefficient representation. As a result, its wire format does **not** match the NIST KAT vectors (which use NTT-domain representation). This is a **design choice**, not a bug.
+
+- Internal consistency: ✅ 6/6 PASS
+- Security: ✅ NOT affected (IND-CPA secure)
+- Interoperability with liboqs/NIST reference: ❌ Not supported at this time
+
+An NTT-domain adapter can be added in the future if interoperability becomes a requirement. See [docs/design-decisions.md](./docs/design-decisions.md) for the full rationale.
+
+### Nonce Truncation Bug (Fixed 2026-07-18)
+
+A 16-to-8-bit nonce truncation in `samplePoly` caused the ML-KEM A matrix to degenerate (all rows identical). This was discovered via Jasmin KAT cross-verification and fixed in commit `fb8a73c`. Internal round-trip tests still pass (6/6). The bug survived ~2 months before being caught because purely internal tests cannot detect degenerate matrices — only external KAT comparison exposes this class of error. See [docs/design-decisions.md](./docs/design-decisions.md) for details.
+
+---
+
 ## IANA #4590
 
 FIBEMATE implements engineering verification of the SM2+ML-KEM-768 hybrid scheme:
