@@ -2,7 +2,7 @@
 const WebSocket = require('ws');
 const crypto = require('crypto');
 
-const WS_URL = 'ws://127.0.0.1:3082';
+const WS_URL = 'ws://127.0.0.1:3080';
 let tests = 0, passed = 0;
 
 function test(name) { tests++; console.log(`\n--- ${name} ---`); return name; }
@@ -27,7 +27,7 @@ async function runTests() {
   // 2. Health check (HTTP)
   const http = require('http');
   const health = await new Promise((resolve) => {
-    http.get('http://127.0.0.1:3083/health', (res) => {
+    http.get('http://127.0.0.1:3081/health', (res) => {
       let body = ''; res.on('data', d => body += d);
       res.on('end', () => resolve(JSON.parse(body)));
     });
@@ -38,20 +38,20 @@ async function runTests() {
   // 3. Register Alice
   test('Register Alice');
   const aliceKey = crypto.randomBytes(32).toString('hex');
-  const r1 = await wsSend(ws, { type: 'register', username: 'alice', identityKey: aliceKey });
+  const r1 = await wsSend(ws, { type: "register", username: 'alice', identityKey: aliceKey });
   if (r1.ok) { pass(`userId=${r1.userId}`); } else { fail('register', r1.error); }
   const aliceId = r1.userId;
 
   // 4. Register Bob
   test('Register Bob');
   const bobKey = crypto.randomBytes(32).toString('hex');
-  const r2 = await wsSend(ws, { type: 'register', username: 'bob', identityKey: bobKey });
+  const r2 = await wsSend(ws, { type: "register", username: 'bob', identityKey: bobKey });
   if (r2.ok) { pass(`userId=${r2.userId}`); } else { fail('register', r2.error); }
   const bobId = r2.userId;
 
   // 5. Duplicate username reject
   test('Duplicate Username Reject');
-  const r3 = await wsSend(ws, { type: 'register', username: 'alice', identityKey: 'fake' });
+  const r3 = await wsSend(ws, { type: "register", username: 'alice', identityKey: 'fake' });
   if (!r3.ok && r3.error === 'username taken') { pass('rejected correctly'); } else { fail('duplicate', JSON.stringify(r3)); }
 
   // 6. Alice uploads OPKs
