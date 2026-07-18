@@ -22,6 +22,15 @@
     where sm2_ephem_i and mlkem_ss_i are independently sampled
     per session -> key_i # key_j with probability 1 - 2^-256.
 *)
+(*
+  KEM Security Assumptions (see docs/security-model.md):
+    - ML-KEM-768: IND-CCA2 (via FO transform) over MLWE, QROM
+    - SM2 ECDH:   ECDLP on SM2 P-256, ROM
+    - Hybrid KEM: Dual-PRF combiner (NIST SP 800-56Cr2)
+      Theorem: if EITHER component is IND-CPA secure => hybrid KEM is IND-CPA
+      Ref: Kiltz et al. (2024), draft-ietf-tls-hybrid-design
+*)
+
 EXTENDS Integers, FiniteSets, Sequences, TLC
 
 CONSTANTS NULL
