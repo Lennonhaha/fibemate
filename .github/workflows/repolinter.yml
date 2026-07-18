@@ -1,0 +1,20 @@
+name: Repolinter
+on: [push, pull_request]
+
+jobs:
+  repolinter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: todogroup/repolinter-action@c7cff1e5c5d155e5ed8382bcaa48112a3e375eee
+        with:
+          repolinter_rules: |
+            "rules":
+              "readme-file-exists": {"level": "error"}
+              "license-file-exists": {"level": "error"}
+              "contributing-file-exists": {"level": "warning"}
+              "code-of-conduct-file-exists": {"level": "warning"}
+              "changelog-file-exists": {"level": "warning"}
+              "security-file-exists": {"level": "error"}
+              "support-file-exists": {"level": "off"}
+              "readme-references-license": {"level": "warning"}

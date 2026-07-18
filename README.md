@@ -5,6 +5,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Version](https://img.shields.io/badge/version-3.3_preview-brightgreen.svg)](https://fibemate.net)
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/0/badge)](https://www.bestpractices.dev/projects/0)
 
 **v3.3-preview** · 2026-07-18 · TSR: lg-001 ~ lg-082 · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
@@ -85,10 +86,10 @@ cd fibemate
 npm install
 
 # Compile C Native addon (ML-KEM-768, NTT)
-cd addon && npm install && cd ..
+cd packages/pqc-kem && npm install && cd ../..
 
 # Verify core crypto modules
-node -e "const m=require('./addon/build/Release/mlkem.node'); const kp=m.keygen(); console.log('ML-KEM-768 OK:', kp[0].length+'B pk')"
+node -e "const m=require('./packages/pqc-kem'); const kp=m.keygen(); console.log('ML-KEM-768 OK:', kp[0].length+'B pk')"
 ```
 
 ### Run
@@ -98,7 +99,7 @@ node -e "const m=require('./addon/build/Release/mlkem.node'); const kp=m.keygen(
 npm start
 
 # Production
-pm2 start ecosystem.config.js
+pm2 start ecosystem.config.template.js
 
 # Service listens at http://localhost:3001 by default
 # Nginx reverse proxy example: see BUILD.md
@@ -108,12 +109,12 @@ pm2 start ecosystem.config.js
 
 ```bash
 # All core tests
-node test/test-all.js
+node test/test-fibemate.js
 
 # Per-module tests
-node crypto/ml-kem-768-kat.js    # ML-KEM KAT 10,000
-node crypto/sm2-tvla-suite.js    # SM2 TVLA
-node crypto/pqc-hybrid-test.js  # Hybrid handshake
+node test/test-fibemate.js       # ML-KEM KAT 10,000
+node scripts/kat-diag.js         # KAT diagnostic
+node test/test-cross-lang.js    # Cross-language verification
 ```
 
 ---
@@ -127,17 +128,15 @@ fibemate/
 │   ├── pqc-hybrid-server.js  # Path C-2 hybrid KEX
 │   ├── opk-server.js    # X3DH pre-key protocol
 │   └── crypto/           # Obfuscation / padding / filters
-├── addon/               # C Native addon (ML-KEM-768, NTT)
-│   ├── build/Release/mlkem.node
-│   └── ntt/             # FPGA NTT C reference
+├── packages/pqc-kem/    # PQC KEM package (ML-KEM-768 WASM + C bindings)
+│   └── src/             # KEM implementation
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
 │   ├── docs/            # Docs + TSR evidence (lg-001~082)
-│   └── lgv1/            # LookingGlass v1 (DMTH) 📦 archived
-├── rtl/                 # FPGA RTL (Verilog)
-│   ├── ntt_core_pipe2.v
-│   └── vwz/
+│   └── docs/            # Documentation + TSR evidence (lg-001~082)
+├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
+│   └── (timing-critical IP, available on request)
 ├── c-stm32/             # STM32 C framework
 ├── scripts/             # CI / build / TVLA / Jasmin KAT cross-verify
 ├── papers/              # Publications: VWZ ePrint 2026/110618
@@ -211,7 +210,7 @@ See [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yan
 
 FIBEMATE welcomes contributions from the PQC community. Here's how to get involved:
 
-- **Good First Issues** — See [GOOD_FIRST_ISSUES.md](./GOOD_FIRST_ISSUES.md) for tagged tasks suitable for new contributors
+- **Good First Issues** — See [Good First Issues](./docs/good-first-issues.md) for tagged tasks suitable for new contributors
 - **Discussions** — Join the conversation on [GitHub Discussions](https://github.com/Lennonhaha/fibemate/discussions)
 - **Security** — Report vulnerabilities privately via [SECURITY.md](./SECURITY.md)
 - **Citation** — If you use FIBEMATE in your work, cite via [CITATION.cff](./CITATION.cff)
