@@ -121,7 +121,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 ## ⚡ Performance Benchmarks
 
 Production-grade performance data for all core cryptographic modules.
-All measurements on 2 vCPU ECS, Node.js v22.22.
+All measurements on 2 vCPU ECS, Node.js v22.22. Pure JavaScript, no native bindings. Single-run average over 10,000 rounds.
 
 [📊 Full Report + Charts](www/docs/performance-benchmarks-2026-07-18.md)
 
