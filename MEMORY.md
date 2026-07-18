@@ -1052,7 +1052,7 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 
 ### 技术细节
 - PowerShell Get-Content 在中文 Windows 上默认用 CP936/GBK 读取 UTF-8 文件，导致显示乱码
-- Node.js s.writeFileSync(path, content, 'utf8') 可正确写入 UTF-8 文件
+- Node.js s.writeFileSync(path, content, 'utf8') 可正确写入 UTF-8 文件
 - GitHub OAuth token 缺 workflow scope，无法推送含 .github/workflows/*.yml 的提交
 - 解决方案：从 bundle 中提取非 workflow 文件，服务器上单独提交推送
 
@@ -1066,4 +1066,3 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - UTF-8 编码问题：文件内容正确但终端显示乱码 ≠ 文件损坏
 - GitHub Actions workflow push 需要 workflow scope 的 token
 - Workflow 文件已在线上存在，不需要每次重新推送
-
