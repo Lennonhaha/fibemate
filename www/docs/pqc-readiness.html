@@ -581,7 +581,8 @@
 <tr><td>WASM 编译</td><td>wasm-pack build --target web --release</td><td><span style="color:var(--green);">19.8KB</span></td><td>—</td></tr>
 <tr><td>L8：Crypto-Binding 验证</td><td>确保 PQC 密钥与经典密钥在混合模式下绑定，防止降级攻击；session_key XOR hash(PQC_ss | classic_ss) 绑定验证</td><td><span style="color:var(--green);">&#10004; 通过</span></td><td>lg-076</td></tr>
 <tr><td>L9：Secure Cleanup 验证</td><td>secure_cleanup.rs：内存中密钥材料零化（volatile + mlock 双重覆盖），process.exit 前置清理回调，零残留验证</td><td><span style="color:var(--green);">&#10004; 通过</span></td><td>lg-076</td></tr>
-<tr><td>LG v2.2.3 冷热路径分离</td><td>lgv2_confuse_auto(): 冷≤64B→7层 / 温65~255B→4层 / 热≥256B→2~1层，大载荷6-7×吞吐</td><td><span style="color:var(--green);">61/61 PASS</span></td><td>lg-082</td></tr>
+<tr><td><tr><td>VWZ 148/148 验证套件</td><td>14 组 148 测试：Basic/Multi/Tamper/Serial/Seeded/Edge/Cross-k/Batch</td><td><span style="color:var(--green);">148/148 PASS</span></td><td>lg-083</td></tr>
+<tr><td>LG v2.2.3 冷热路径分离</td><td>lgv2_confuse_auto(): 冷≤64B→7层 / 温65~255B→4层 / 热≥256B→2~1层，大载荷6-7×吞吐</td><td><span style="color:var(--green);">61/61 PASS</span></td><td>lg-082~083</td></tr>
 </tbody>
 </table>
 
