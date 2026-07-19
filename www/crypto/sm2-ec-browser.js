@@ -224,30 +224,45 @@
     return hexToBytes(xHex + yHex);
   }
 
-  // ============ Signature (SM2 GB/T 32918.2) ============
-  function extEuclidInv(a, m) {
-    let t = ZERO, nt = ONE, r = m, nr = a % m;
-    while (nr !== ZERO) {
-      const q = r / nr;
-      [t, nt] = [nt, t - q * nt];
-      [r, nr] = [nr, r - q * nr];
+  // ============ Constant-Time Modular Inverse (Fermat: a^(N-2) mod N) ============
+  // Replaces extEuclidInv — the while-loop in Extended Euclidean leaks
+  // secret-dependent bit-length via timing/power.
+  // Since SM2_N is prime, Fermat's little theorem gives: a⁻¹ ≡ a^(N-2) (mod N).
+  // The exponent N-2 is a public curve constant, so square-and-multiply
+  // is timing-constant across calls (same number of operations every time).
+  function modInv(a, m) {
+    // a^(m-2) mod m  (m must be prime)
+    let base = a % m;
+    if (base < ZERO) base = base + m;
+    if (base === ZERO) throw new Error('modInv: zero has no inverse');
+    let exp = m - TWO;
+    let result = ONE;
+    while (exp > ZERO) {
+      if (exp & ONE) result = (result * base) % m;
+      base = (base * base) % m;
+      exp >>= ONE;
     }
-    return t < ZERO ? t + m : t;
+    return result;
   }
 
+  // ============ Signature (SM2 GB/T 32918.2) ============
   function sign(privateKey, msgHash) {
     const dA = typeof privateKey === 'bigint' ? privateKey : hex2bi(privateKey);
     const e = typeof msgHash === 'bigint' ? msgHash : hex2bi(msgHash);
     let k, Q, x1, r;
     do {
+      // k-masking: k' = k + rK·N  — prevents timing/power leakage of ephemeral key
       k = randomBigInt(32) % SM2_N;
       if (k === ZERO) continue;
-      Q = pointMul(k, G);
+      const rK = randomBigInt(8);
+      const kMasked = rK === ZERO ? k : k + rK * SM2_N;
+      Q = pointMul(kMasked, G);
       x1 = Q.x % SM2_N;
       r = (e + x1) % SM2_N;
+      // Use kMasked consistently: the mask is a multiple of N, neutral mod N
     } while (r === ZERO || (r + k) % SM2_N === ZERO);
     const da1 = F.addN(dA, ONE);
-    const da1Inv = extEuclidInv(da1, SM2_N);
+    const da1Inv = modInv(da1, SM2_N);
     const s = (da1Inv * ((k - (r * dA) % SM2_N + SM2_N) % SM2_N)) % SM2_N;
     return { r: bi2hex(r), s: bi2hex(s) };
   }
@@ -271,9 +286,12 @@
     const PB = hex2pk(pubHex);
     let k, C1;
     do {
+      // k-masking: k' = k + rK·N  — prevents timing/power leakage of ephemeral key
       k = randomBigInt(32) % SM2_N;
       if (k === ZERO) continue;
-      C1 = pointMul(k, G);
+      const rK = randomBigInt(8);
+      const kMasked = rK === ZERO ? k : k + rK * SM2_N;
+      C1 = pointMul(kMasked, G);
     } while (isInf(C1));
 
     const kPB = pointMul(k, PB);

@@ -320,14 +320,20 @@ function pk2hex(pk) {
 }
 
 // ============ Signature (SM2) ============
-function extEuclidInv(a, m) {
-    let t = ZERO, nt = ONE, r = m, nr = a % m;
-    while (nr !== ZERO) {
-        const q = r / nr;
-        [t, nt] = [nt, t - q * nt];
-        [r, nr] = [nr, r - q * nr];
+// Constant-time modular inverse via Fermat: a^(N-2) mod N
+// Replaces extEuclidInv — while-loop leaks secret-dependent iteration count
+function modInv(a, m) {
+    let base = a % m;
+    if (base < ZERO) base = base + m;
+    if (base === ZERO) throw new Error('modInv: zero has no inverse');
+    let exp = m - TWO;
+    let result = ONE;
+    while (exp > ZERO) {
+        if (exp & ONE) result = (result * base) % m;
+        base = (base * base) % m;
+        exp >>= ONE;
     }
-    return t < ZERO ? t + m : t;
+    return result;
 }
 
 function sign(privateKey, msgHash) {
@@ -336,15 +342,18 @@ function sign(privateKey, msgHash) {
 
     let k, Q, x1, r;
     do {
+        // k-masking: k' = k + rK*N — prevents timing/power leakage of ephemeral key
         k = BigInt('0x' + randomBytes(32).toString('hex')) % SM2_N;
         if (k === ZERO) continue;
-        Q = mulG(k);  // ← 使用缓存 G 表
+        const rK = BigInt('0x' + randomBytes(8).toString('hex'));
+        const kMasked = rK === ZERO ? k : k + rK * SM2_N;
+        Q = mulG(kMasked);  // ← 使用缓存 G 表
         x1 = Q.x % SM2_N;
         r = (e + x1) % SM2_N;
     } while (r === ZERO || (r + k) % SM2_N === ZERO);
 
     const da1 = F.addN(dA, ONE);
-    const da1Inv = extEuclidInv(da1, SM2_N);
+    const da1Inv = modInv(da1, SM2_N);
     const s = (da1Inv * ((k - (r * dA) % SM2_N + SM2_N) % SM2_N)) % SM2_N;
 
     return { r: bi2hex(r), s: bi2hex(s) };
@@ -380,9 +389,12 @@ function encrypt(pubHex, plaintext) {
 
     let k, C1;
     do {
+        // k-masking: k' = k + rK*N — prevents timing/power leakage of ephemeral key
         k = BigInt('0x' + randomBytes(32).toString('hex')) % SM2_N;
         if (k === ZERO) continue;
-        C1 = mulG(k);  // ← 使用缓存 G 表
+        const rK = BigInt('0x' + randomBytes(8).toString('hex'));
+        const kMasked = rK === ZERO ? k : k + rK * SM2_N;
+        C1 = mulG(kMasked);  // ← 使用缓存 G 表
     } while (isInf(C1));
 
     const kPB = pointMul(k, PB);
@@ -432,7 +444,7 @@ module.exports = {
     publicKeyToHex: pk2hex,
     privateKeyFromHex: hex2bi,
     privateKeyToHex: bi2hex,
-    modInvExt: extEuclidInv,
+    modInv,
     // v1.3 新增导出
     wnafDigits,
     buildWnafTable,
