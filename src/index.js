@@ -1,3 +1,10 @@
+// ---- Feature Flags (P0: compile-time-equivalent isolation) ----
+// All experimental code is gated behind flags.EXPERIMENTAL.
+// Production:      FIBEMATE_EXPERIMENTAL=0  (default, no experimental code runs)
+// Development:     FIBEMATE_EXPERIMENTAL=1  node src/index.js
+// Subsystem off:   FIBEMATE_EXPERIMENTAL=1 FIBEMATE_NO_MIXNET=1 node src/index.js
+const flags = require('./flags');
+
 const { safeCompare, safeCompareHex, safeFind, safeFindByField, timingSafe404 } = require('./lib/constant-time');
 
 /**
@@ -70,10 +77,11 @@ const CONFIG = {
 console.log('[DB] ✓ JSON数据库已加载:', CONFIG.DB_PATH);
 
 // ========================
-// Mixnet 元数据隐藏层 (Phase 3 & 4)
+// Mixnet 元数据隐藏层 (Phase 3 & 4) — EXPERIMENTAL, gated by flags.MIXNET
 // ========================
-const { MixnetTransport, MIXNET_CONFIG } = require('../experimental/mixnet/mixnet-transport');
-const { Phase4Transport } = require('../experimental/phase4/integrate-phase4');
+const MixnetTransport = flags.MIXNET ? require('../experimental/mixnet/mixnet-transport').MixnetTransport : null;
+const MIXNET_CONFIG = flags.MIXNET ? require('../experimental/mixnet/mixnet-transport').MIXNET_CONFIG : null;
+const Phase4Transport = flags.PHASE4 ? require('../experimental/phase4/integrate-phase4').Phase4Transport : null;
 let mixnetTransport = null;
 let phase4Transport = null;
 
@@ -90,11 +98,12 @@ app.get("/", function(req, res) { res.sendFile(require("path").join(staticPath, 
 ;
 const db = new Database(CONFIG.DB_PATH);
 app.set('db', db);
-const zkAnonAuth = require("../experimental/zk-auth/zk-anonymous-auth");
-const cryptoProxy = require("../experimental/proxy/crypto-proxy");
-const sm2Proxy = require("../experimental/sm2/sm2-proxy"); zkAnonAuth.setDatabase(db);
+const zkAnonAuth = flags.ZK_AUTH ? require("../experimental/zk-auth/zk-anonymous-auth") : { router: (req,res,next)=>next(), setDatabase: ()=>{} };
+const cryptoProxy = flags.EXPERIMENTAL ? require("../experimental/proxy/crypto-proxy") : (app) => {};
+const sm2Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm2-proxy") : (app) => {};
+if (flags.ZK_AUTH) zkAnonAuth.setDatabase(db);
 const opkServer = require('./opk-server'); // init moved after authMiddleware
-const sm34Proxy = require("../experimental/sm2/sm34-proxy");
+const sm34Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm34-proxy") : (app) => {};
 const { checkAccountLockout, recordFailedLogin, resetLoginAttempts } = require('./lib/lockout'); // security-hotfix 2026-06-09
 global.noirDb = db;
 const server = http.createServer(app);
@@ -202,10 +211,13 @@ app.get('/', (req, res) => {
 // SPA fallback
 
 // A2A Agent-to-Agent 接口 (2026-06-09 添加)
-const vwzResearchRouter = require('./vwz-research-api');
+// VWZ Research API — gated by flags.VWZ
+const vwzResearchRouter = flags.VWZ ? require('./vwz-research-api') : null;
 const a2aCore = require('../api/a2a/a2a-core');
 app.use('/a2a', a2aCore.router);
-app.use('/research/vwz', vwzResearchRouter);
+if (flags.VWZ) {
+  app.use('/research/vwz', vwzResearchRouter);
+}
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/voice') || req.path.startsWith('/research') || req.path === '/health') return next();
   if (req.path === '/app' || req.path === '/index') {
@@ -368,13 +380,21 @@ const sockets = onlineUsers.get(userId);
   return ok;
 }
 // 初始化 Mixnet
-// 初始化 Mixnet 传输层 (Phase 3)
-mixnetTransport = new MixnetTransport(db, onlineUsers, sendToUser);
-console.log('[Mixnet] ✓ Phase 3 元数据隐藏层已启动 (padding: ' + MIXNET_CONFIG.PAD_MESSAGE_SIZE + 'B, cover: ' + Math.round(MIXNET_CONFIG.COVER_TRAFFIC_RATE * 100) + '%)');
+// 初始化 Mixnet 传输层 (Phase 3) — gated by flags.MIXNET
+if (flags.MIXNET) {
+  mixnetTransport = new MixnetTransport(db, onlineUsers, sendToUser);
+  console.log('[Mixnet] ✓ Phase 3 元数据隐藏层已启动 (padding: ' + MIXNET_CONFIG.PAD_MESSAGE_SIZE + 'B, cover: ' + Math.round(MIXNET_CONFIG.COVER_TRAFFIC_RATE * 100) + '%)');
+} else {
+  console.log('[Mixnet] Skipped (MIXNET flag off)');
+}
 
-// 初始化 Phase 4 抗流量分析层
-phase4Transport = new Phase4Transport(db, onlineUsers, sendToUser);
-console.log('[Phase4] ✓ 抗流量分析层已启动 (Sphinx packets + Nym Mixnet)');
+// 初始化 Phase 4 抗流量分析层 — gated by flags.PHASE4
+if (flags.PHASE4) {
+  phase4Transport = new Phase4Transport(db, onlineUsers, sendToUser);
+  console.log('[Phase4] ✓ 抗流量分析层已启动 (Sphinx packets + Nym Mixnet)');
+} else {
+  console.log('[Phase4] Skipped (PHASE4 flag off)');
+}
 
 // 初始化统一流量混淆层 (TLS 1.3 + Poisson Cover Traffic + Random Padding)
 const trafficObfuscator = new UnifiedTrafficObfuscator(db, onlineUsers, sendToUser);
@@ -517,9 +537,9 @@ try {
 
           if (phase4Transport) {
             phase4Transport.sendMessage(to, outgoingMsg, true);
-          } else {
+          } else if (mixnetTransport) {
             mixnetTransport.sendMessage(to, outgoingMsg, false);
-}
+          }
           const delivered = onlineUsers.has(to); // 假设最终会送达
 
           ws.send(JSON.stringify({ type: 'message_sent', messageId: msgId, delivered, timestamp: now }));
@@ -743,21 +763,9 @@ app.get('/api/users/count', authMiddleware, (req, res) => {
 });
 
 
-// Phase 4 配置端点
+// Phase 4 配置端点 — gated by flags.PHASE4
 app.get('/api/nym/config', authMiddleware, (req, res) => {
-
-// API 健康检查别名（兼容监控脚本）
-app.get("/api/health", (req, res) => {
- res.json({
- status: "ok", service: "Noir E2E Backend",
- version: "1.0.0", timestamp: new Date().toISOString(),
- uptime: Math.floor(process.uptime())
- });
-});
-
-// 用户计数API - 公开访问（测试用户管理）
-
-
+  if (!flags.PHASE4) return res.status(404).json({ error: 'phase4 not available' });
   if (!phase4Transport) {
     return res.status(503).json({ error: 'Phase 4 transport not initialized' });
   }
@@ -1295,22 +1303,25 @@ setInterval(() => {
 // ========================
 // ZK 匿名身份认证路由
 // ========================
-// [DISABLED: zk-auth.js superseded by zk-anonymous-auth.js]
-// [DISABLED: zk-auth.js superseded by zk-anonymous-auth.js]
-const zkRegV2Routes = require('../experimental/zk-auth/zk-register-v2');
-app.use('/api/auth', zkRegV2Routes);
+// ZK Auth v2 routes — gated by flags.ZK_AUTH
+if (flags.ZK_AUTH) {
+  const zkRegV2Routes = require('../experimental/zk-auth/zk-register-v2');
+  app.use('/api/auth', zkRegV2Routes);
+}
 const smsRoutes = require('./sms-routes')(CONFIG.JWT_SECRET);
 app.use('/api/sms', smsRoutes);
 
 // ========================
-// Phase 2: 私密发现路由 (Bloom Filter PIR)
+// Phase 2: 私密发现路由 (Bloom Filter PIR) — gated by flags.PIR
 // ========================
-const pirSearchRoutes = require('../experimental/pir/pir-search');
+const pirSearchRoutes = flags.PIR ? require('../experimental/pir/pir-search') : null;
 
 // ========================
 // Mixnet 配置 API
 // ========================
+// Mixnet 配置 API — gated by flags.MIXNET
 app.get('/api/mixnet/config', authMiddleware, (req, res) => {
+  if (!flags.MIXNET) return res.status(404).json({ error: 'mixnet not available' });
   res.json({
     padding: {
       enabled: true,
@@ -1333,13 +1344,17 @@ app.get('/api/mixnet/config', authMiddleware, (req, res) => {
   });
 });
 
-app.use('/api/search', authMiddleware, pirSearchRoutes(db));
+// PIR search routes — gated by flags.PIR
+if (flags.PIR) {
+  app.use('/api/search', authMiddleware, pirSearchRoutes(db));
+}
 
-// Nexus Community API
-const integrateNexus = require("../experimental/nexus/nexus-integration");
-// Nexus: 使用主 authMiddleware 进行 JWT 验证
-app.use('/api/nexus', authMiddleware);
-integrateNexus(app);
+// Nexus Community API — gated by flags.NEXUS
+if (flags.NEXUS) {
+  const integrateNexus = require("../experimental/nexus/nexus-integration");
+  app.use('/api/nexus', authMiddleware);
+  integrateNexus(app);
+}
 
 // ========================
 // 启动
@@ -1502,9 +1517,11 @@ server.listen(CONFIG.PORT, '127.0.0.1', () => {
 process.on('SIGTERM', () => { console.log('关闭中...'); process.exit(0); });
 process.on('SIGINT', () => { console.log('关闭中...'); process.exit(0); });
 
-// ZK-SNARKs Groth16 路由 (2026-05-14 添加)
-const zkSnarksGroth16Routes = require('../experimental/zk-auth/zk-snarks-groth16');
-app.use('/api/auth', zkSnarksGroth16Routes);
+// ZK-SNARKs Groth16 路由 (2026-05-14 添加) — gated by flags.ZK_AUTH
+if (flags.ZK_AUTH) {
+  const zkSnarksGroth16Routes = require('../experimental/zk-auth/zk-snarks-groth16');
+  app.use('/api/auth', zkSnarksGroth16Routes);
+}
 // PQC Hybrid TLS Session Key Exchange
 pqcHybrid.mount(app);
 
