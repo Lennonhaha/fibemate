@@ -47,7 +47,7 @@ FIBEMATE 在 TLS 1.3 传输层部署 X25519MLKEM768 混合密钥交换，实现�
 | 层 | 协议 | 状态 |
 |----|------|------|
 | TLS 传输层 | 经典 ECDHE X25519 | ✅ 行业标准 |
-| TLS 混合握手 | Path A — X25519MLKEM768 NamedGroup | ✅ **Active 2026-07-17** |
+| TLS 混合握手 | Path A — X25519MLKEM768 NamedGroup | ⚠️ Shelved 2026-07-19（浏览器生态未就绪）|
 | 应用层 (E2E) | Path C-2 — SM2+ML-KEM-768 | ✅ 5/5, p95=78.5ms |
 
 ---
@@ -354,9 +354,7 @@ grep -A5 'tls' /etc/sslh.cfg
 
 ### 7.5 浏览器不协商 0x11ec
 
-**这是预期行为**。截至 2026-07，主流浏览器（Chrome、Firefox、Safari）**不内置 oqsprovider**，因此不会发送 `X25519MLKEM768` 组。客户端会回退到经典 `x25519` 或 `prime256v1`。这正是 FIBEMATE 双轨道设计的意义：
-- **Path A**（TLS 传输层）：面向未来，等浏览器生态跟进
-- **Path C-2**（应用层）：SM2+ML-KEM-768，今天可用（IANA #4590）
+**这是预期行为**。截至 2026-07，主流浏览器（Chrome、Firefox、Safari）**不内置 oqsprovider**，因此不会发送 `X25519MLKEM768` 组。客户端会回退到经典 `x25519` 或 `prime256v1`。Path A（TLS 传输层）已于 2026-07-19 搁置：
 
 ---
 

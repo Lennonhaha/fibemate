@@ -409,7 +409,7 @@ Groups = X25519MLKEM768:prime256v1:x25519
 |------|-----|
 | 签名大小 | 68 字节 (k=16, NIST-1 128-bit) |
 | 公钥压缩 | 64.5× (19,074B → 296B) |
-| 归约证明 | VMQ-SPARSE → EUF-CMA (148/148) |
+| 安全分析 | VMQ-SPARSE hardness investigation; 148/148 extended functional tests |
 | 状态 | 默认关闭，不部署生产 |
 
 ### 7.3 LookingGlass v3.1（已归档）

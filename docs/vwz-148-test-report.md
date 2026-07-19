@@ -57,5 +57,5 @@ OK 148/148 — VWZ 148/148 verified.
 | Test suite | `scripts/vwz-148-test.js` |
 | TSR (DigiCert) | `www/docs/tsa/2026-07-18/lg-083-vwz-148-suite-20260718.tsr` |
 | Rust WASM source | `www/crypto/vwz/vwz_signature_bg.wasm` |
-| Reduction proof | `docs/research/route-c-lvwz-phase1-math.md` (VMQ-SPARSE → EUF-CMA) |
+| VMQ-SPARSE analysis | `docs/research/route-c-lvwz-phase1-math.md` (hardness investigation) |
 | ePrint | `papers/vwz-eprint-2026.pdf` (IACR 2026/110618, pending) |
