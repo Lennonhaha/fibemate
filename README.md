@@ -90,7 +90,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| **VWZ Signature** | Vandermonde-Wang-Zhang lattice-tensor scheme (k=16, NIST-1 128-bit) | [148/148 ✅](scripts/vwz-148-test.js) | C implementation · No formal security reduction · Awaiting external review |
+| **VWZ Signature** | Vandermonde-Wronskian-Zariski tensor scheme (k=16, NIST-1 128-bit) | [148/148 ✅](scripts/vwz-148-test.js) | VMQ-SPARSE hardness assumption · No reduction to standard LWE · Pending peer review |
 | **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 · No security claims |
 
 ---
@@ -109,10 +109,13 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 ## 📄 Publications
 
-- **VWZ: A Vandermonde Tensor Trapdoor for Compact Post-Quantum Signatures**
-  Tianhe Liu. *IACR ePrint Archive, 2026.* (under editor review)
-  Signature 80 bytes · Public key 1.76 KB · NIST-1 security · 43/43 cross-validation tests PASS
-  [PDF](papers/vwz-eprint-2026.pdf) · [ePrint](https://eprint.iacr.org/2026/110618) (pending) · [Security Reduction → VMQ-SPARSE](docs/research/route-c-lvwz-phase1-math.md) · ⚠️ Custom assumption, not standard LWE · [Simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate) · [148/148 Test Report](docs/vwz-148-test-report.md)
+- **VWZ: A Vandermonde-Wronskian-Zariski Tensor Trapdoor for Compact Post-Quantum Signatures.**
+  Tianhe Liu. IACR Cryptology ePrint Archive, Report 2026/110618, 2026 (under editorial review).
+  NIST Security Level 1 parameters: signature 80 bytes, public key 1.76 KB.
+  43 cross-validation tests passed (paper implementation); 148 extended functional tests passed (external suite).
+  [PDF](papers/vwz-eprint-2026.pdf) · [ePrint](https://eprint.iacr.org/2026/110618) · [Hardness: VMQ-SPARSE](docs/research/route-c-lvwz-phase1-math.md) · [Cryptanalysis simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate) · [148-Test Report](docs/vwz-148-test-report.md)
+
+  Underlying assumption: VMQ-SPARSE (Vandermonde Multivariate Quadratic tensor orbit pseudorandomness), a novel tensor-based hardness assumption distinct from lattice assumptions such as LWE. The paper does not contain a security reduction to any standard well-studied problem.
 
 > TSR vwz-076 — FreeTSA RFC 3161 timestamp (2026-07-17 11:30:15 GMT, serial 0x06497CB4): [vwz-076-main-20260717.tsr](papers/vwz-076-main-20260717.tsr)
 
@@ -180,7 +183,7 @@ All claims in Core Features are backed by runnable test scripts in `scripts/`:
 
 | Script | Purpose | Tests |
 |--------|---------|-------|
-| [`vwz-148-test.js`](scripts/vwz-148-test.js) | VWZ signature 148/148 reduction suite | 12 groups, 148 tests |
+| [`vwz-148-test.js`](scripts/vwz-148-test.js) | VWZ 148 extended functional tests (correctness, serialization, tamper, edge cases) | 15 groups, 148 tests |
 | [`fpga-l8l9-43-test.js`](scripts/fpga-l8l9-43-test.js) | FPGA L8+L9 cross-validation behavioral model | 43/43 PASS |
 | [`kat-10000.js`](scripts/kat-10000.js) | ML-KEM-768 KAT 10,000 consistency | 10,000 encap/decap roundtrips |
 | [`kat-bench.js`](scripts/kat-bench.js) | KAT performance benchmark | Throughput & latency |
@@ -247,7 +250,7 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 | Component | What it is | What it is NOT |
 |-----------|-----------|----------------|
 | **LookingGlass v2** | Binary obfuscation via algebraic group representations (wreath product recursion); educational / hardware self-test aid | Not a cryptographic security primitive; does not enhance LWE hardness |
-| **VWZ** | Lattice-tensor signature scheme with Vandermonde structure; research exploration | Not production-ready; reduction to VMQ-SPARSE (custom assumption), no reduction to standard LWE; pending peer review |
+| **VWZ** | Tensor-based signature scheme (Vandermonde-Wronskian-Zariski); research exploration | Not production-ready; relies on VMQ-SPARSE (novel tensor-based hardness assumption); no reduction to standard LWE; pending peer review |
 
 ### Known Limitations
 
