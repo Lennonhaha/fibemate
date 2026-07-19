@@ -30,5 +30,22 @@
   "overrides": {
     "jsonpath": "1.1.1",
     "bfj": "8.0.0"
-  }
+  },
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lennonhaha/fibemate.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Lennonhaha/fibemate/issues"
+  },
+  "homepage": "https://github.com/Lennonhaha/fibemate#readme"
 }

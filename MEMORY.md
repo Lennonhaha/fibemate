@@ -940,16 +940,44 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 - FT2232H JTAG 芯片进入 CM_PROB_PHANTOM 状态，pnputil 无法修复，唯一解决是重启电脑重新 USB 枚举
 - Vivado 2021.1 启动失败（exit -1073741515），根因 XILINX_LICENSE_FILE 未设置且许可证文件全 0 字节；hw_server (24MB) 无需许可证可独立运行
 - FreeTSA 404/403 需改用 DigiCert TSR；服务端 PTY 输出干扰二进制文件需 RequestTTY=no
+- ISP（113.4.157.95）封锁出站22端口，安全组规则无效——ISP级封锁；GH token + HTTPS可绕过git push但无法替代SSH部署；服务器部署依赖用户直连、Workbench或GitHub Actions webhook
+- LG v2.2.2：可变depth（1..=7层可调）、pass融合（每层5→3次扫描）、新增lgv2_confuse_d/lgv2_confuse_ex API；WASM 25.7KB
+- UART TX信号绑定到B9引脚（直连已烧毁的FT4232H JTAG芯片）→信号发到死芯片，PMOD收不到数据；需重建bitstream绑到M18/N19可触PMOD引脚
+- PowerShell ConvertTo-Json将中文转为\uXXXX转义，GitHub GraphQL API不做自动unescape；中文发GitHub API最佳路径：Linux服务器直接POST或Python json.dumps手动控制
+- PowerShell ConvertTo-Json 将中文转为 \uXXXX 转义，GitHub GraphQL API 不做自动 unescape；中文发 GitHub API 最佳路径：Linux 服务器直接 POST 或 Python json.dumps 手动控制
+- UART TX 信号绑定到 B9 引脚（直连已烧毁的 FT4232H JTAG 芯片），信号发到死芯片，PMOD 收不到数据；需重建 bitstream 绑到 M18/N19 可触 PMOD 引脚
 
 ## 当前项目与关注
 
 - L8/L9 FPGA 43/43 测试清单定义完成（L8 4大类27项 + L9 3大类16项），TSR lg-074 DigiCert 存证；缺口 CDC 可接受、sw_irq 软件清除 P1、WARN LED4x 时序 P2
 - CH340G 串口调试：M18 电压固定 0.76V，T19 LED 常亮，CP2102 始终收到 1 byte 0x00 非连续数据；根因时钟/计数器异常而非接线问题
+- 识别出6个冗余仓库待清理：lgv2testx、game-sever、Liu、psychic-octo-lamp、T；master分支已切换为main后删除
+- 仓库审计找回20个遗漏文件（commit 1a1a7358/1671dc54/ccc8a29a），包括vwz-148-test.js、fpga-l8l9-43-test.js、6份文档、dingtalk-alert.js等；根因是/opt/fibemate-full/与/opt/fibemate-repo/长期不同步
+- 不透明谓词模块opaque_predicates.rs完成：10种不透明谓词（从2种升级），36/36测试全绿
+- OQS编译完成：liboqs + oqs-provider 0.7.0，TLS 1.3混合握手前置条件已就绪
+- 生产级性能基准已发布（commit 54522629）：ML-KEM-768 Pure JS KEM 9.4ms(107/s)、SM2 BigInt Sign 4.87ms(205/s)加速8×、LG v2 WASM confuse<2ms、VWZ k=8 Sign 10µs(~100K/s)比Ed25519快5×、KAT 10000 0 fail(143 ops/s 70.1s)；ECS 2vCPU环境
+- VWZ ePrint已提交审核：iacr.org/2026/110618，放行后更新官网链接
+- SSL证书到期预警：fibemate.link剩余20天，fibemate.net剩余32天，certbot timer自动续期
+- SM2 BigInt+Jacobian全量优化完成：加速比3.15x-8.61x；SM2预计算表优化：k·G标量乘2.50x提升、密钥生成2.64x提升
+- C盘清理：7.4GB→16.2GB，释放8.8GB；Rust nightly工具链(~1.4GB)因安全策略拦截未能删除
+- E盘全量备份完成：D:\FIBEMATE\_backup_2026-07-18\，瘦身~18MB（TSR 200时间戳384KB、工作记录67份296KB、源码13.4MB、git bundle 4.3MB）；6GB冗余02-Source-*标记可删除
+- 服务器磁盘使用85%（32G/40G），暂未触发ENOSPC
+- LG v2.2.2 发布（WASM 21.4KB raw/9.7KB gzip）：可变 depth（1..=7 层可调）、pass 融合（每层 5→3 次扫描）、新增 lgv2_confuse_d/lgv2_confuse_ex API；Rust 30/30 passed，Python KAT 100-byte roundtrip 与 Rust 一致
+- GitHub fibemate 主仓库清理完成：master 分支已删除（仅保留 main），识别出 6 个冗余仓库待清理（lgv2testx、game-sever、Liu、psychic-octo-lamp、T）
+- 服务器磁盘使用 85%（32G/40G），暂未触发 ENOSPC
+- 项目评分自评调整建议：互操作性上调至 6.0（标准兼容性 3.0+自洽性 9.0 加权），'演示级部署'标签不准确（有完整后端），建议改为'单人级运维'；项目瓶颈在'做给别人看'而非代码质量，8/31 开源是解决可见性的第一步
+- 不透明谓词模块 opaque_predicates.rs 完成：10 种不透明谓词（从 2 种升级），36/36 测试全绿
+- LG v2 不包含前女友攻击防护（密钥生命周期/异常检测/告警），该功能应作为独立中间件 lg-guard 实现，LG 只负责密文混淆和内存清理
+- OQS 编译完成：liboqs + oqs-provider 0.7.0（TLS 1.3 混合握手前置条件已就绪）
+- SM2 BigInt+Jacobian 全量优化完成：加速比 3.15x-8.61x；SM2 预计算表优化：k·G 标量乘 2.50x 提升、密钥生成 2.64x 提升
+- C 盘清理：7.4GB→16.2GB，释放 8.8GB；Rust nightly 工具链(~1.4GB)因安全策略拦截未能删除
+- TSR 存证序列完整补齐至 78 份：lg-001~071 + lg-074~078（从服务器拉取补齐 lg-033~076）；DigiCert+FreeTSA 双机构签发体系；FreeTSA 404/403 需改用 DigiCert TSR
 
 ## 用户身份与偏好
 
 - 用户偏好固定引脚（rx=M18, gnd=N25），不愿意频繁换引脚或量电压
 - 用户偏好快速推进，要求反复测试直到通过，不希望被频繁询问
+- UART调试偏好：固定M18=TX、N25=GND引脚，不愿频繁换引脚或量电压；偏好快速推进，要求反复测试直到通过，不希望被频繁询问
 
 ## 2026-07-16 凌晨：LG v2 独立仓库 + GitHub Release + 依赖锁定报告完成
 
@@ -1066,3 +1094,7 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - UTF-8 编码问题：文件内容正确但终端显示乱码 ≠ 文件损坏
 - GitHub Actions workflow push 需要 workflow scope 的 token
 - Workflow 文件已在线上存在，不需要每次重新推送
+
+## 技术规范偏好
+
+- 时间戳存证体系使用DigiCert+FreeTSA双机构签发，TSR序列完整对齐至78份manifest条目（lg-033~076从服务器拉取补齐）
