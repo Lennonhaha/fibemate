@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
-    "test:keccak": "node test/test-keccak.js"
+    "test:keccak": "node test/test-keccak.js",
+    "lint": "eslint packages/pqc-kem/src/ scripts/ test/",
+    "lint:quiet": "eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 50"
   },
   "dependencies": {
     "@alicloud/dysmsapi20170525": "4.5.1",

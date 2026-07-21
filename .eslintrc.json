@@ -1,0 +1,49 @@
+{
+  "env": {
+    "node": true,
+    "es2022": true,
+    "browser": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022
+  },
+  "extends": "eslint:recommended",
+  "rules": {
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-undef": "error",
+    "no-constant-condition": ["error", { "checkLoops": false }],
+    "no-empty": ["warn", { "allowEmptyCatch": true }],
+    "no-prototype-builtins": "off",
+    "no-case-declarations": "off"
+  },
+  "ignorePatterns": [
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/build/**",
+    "**/pkg/**",
+    "**/archive/**",
+    "**/*.wasm",
+    "packages/**/vendor/**"
+  ],
+  "globals": {
+    "BigInt": "readonly",
+    "TextEncoder": "readonly",
+    "TextDecoder": "readonly",
+    "crypto": "readonly",
+    "Uint8Array": "readonly",
+    "Uint16Array": "readonly",
+    "Uint32Array": "readonly",
+    "Int16Array": "readonly",
+    "Int32Array": "readonly",
+    "Float64Array": "readonly",
+    "ArrayBuffer": "readonly",
+    "DataView": "readonly",
+    "Buffer": "readonly",
+    "process": "readonly",
+    "console": "readonly",
+    "require": "readonly",
+    "module": "readonly",
+    "exports": "readonly",
+    "__dirname": "readonly"
+  }
+}

@@ -45,6 +45,24 @@ jobs:
         run: |
           node scripts/kat-jasmin-compare.js || echo "INFO: Jasmin KAT mismatch expected — FIBEMATE uses time-domain polyMul vs Jasmin NTT-domain. See docs/design-decisions.md"
           
+  
+  # ESLint 静态分析
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install ESLint
+        run: npm install --no-save eslint
+
+      - name: Run ESLint
+        run: npx eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 50
+
   # Markdown / 文档检查
   docs-check:
     runs-on: ubuntu-latest
