@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
-      - uses: todogroup/repolinter-action@c7cff1e5c5d155e5ed8382bcaa48112a3e375eee
+      - uses: todogroup/repolinter-action@4d478dcd860571382da7d512d6dc6dd5f554fbb2
         with:
           repolinter_rules: |
             "rules":
