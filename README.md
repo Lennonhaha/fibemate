@@ -15,7 +15,7 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Version](https://img.shields.io/badge/version-3.3_preview-brightgreen.svg)](https://fibemate.net)
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/0/badge)](https://www.bestpractices.dev/projects/0)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
 **v3.3-preview** · 2026-07-21 · TSR: lg-051~087 (36 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
