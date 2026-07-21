@@ -6,6 +6,7 @@
 #   - KAT 10,000 test suite
 #   - STM32 C compilation check
 name: Nightly
+permissions: read-all
 
 on:
   schedule:
@@ -18,16 +19,14 @@ env:
 
 jobs:
 
-  # ================================================================
   # Cross-lang equivalence (JS vs WASM)
-  # ================================================================
   cross-lang:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -37,16 +36,14 @@ jobs:
       - name: Cross-lang seed test
         run: node test/test-cross-lang-seeded.js
 
-  # ================================================================
   # KAT - Known Answer Tests
-  # ================================================================
   kat-smoke:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -57,13 +54,11 @@ jobs:
         run: |
           node -e "const m=require('./www/crypto/ml-kem-768.js'); const kp=m.generateKeypair(); console.log('ML-KEM keypair:', kp.publicKey.length, 'B pk');"
 
-  # ================================================================
   # STM32 C compilation
-  # ================================================================
   stm32-build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Install ARM toolchain
         run: |
