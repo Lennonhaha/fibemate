@@ -1,7 +1,7 @@
 # TSR Manifest — FIBEMATE v3.3-preview
 
 **Generated**: 2026-07-21  
-**Commit**: e64e94d  
+**Commit**: ecad043  
 **Scope**: Timestamped evidence records for ML-KEM-768, SM2, FPGA, and website snapshots
 
 > All TSR files in this manifest are verifiable via `openssl ts -verify -in file.tsr -queryfile file.tsq -CAfile <TSA-CA>.pem`. SHA256 digests of the timestamped content are provided alongside each TSR.
@@ -12,9 +12,9 @@
 
 | Metric | Value |
 | :--- | :--- |
-| Total TSR files | 36 |
-| Total unique lg-xxx identifiers | 35 |
-| ID range | lg-002 ~ lg-087 |
+| Total TSR files | 38 |
+| Total unique lg-xxx identifiers | 37 |
+| ID range | lg-002 ~ lg-089 |
 | TSA providers | DigiCert, FreeTSA |
 
 ---
@@ -49,7 +49,7 @@
 | lg-73 | `lg-073.tsr` | 4643 | `33581255f1332e75...` | tsq  |
 | lg-74 | `lg-074-l8l9-43-tests-20260715.tsr` | 6006 | `4559a2c8a9596c5b...` |  |
 | lg-75 | `lg-075.tsr` | 4643 | `abe851c5ecf5377e...` | tsq  |
-| lg-76 | `lg-076-lgv2-defense-modules-20260716.tsr` | 4644 | `95111e7ecf30a917...` | tsq sha256  |
+| lg-76 | `lg-076-lgv2-defense-modules-20260716-freetsa.tsr` | 4644 | `95111e7ecf30a917...` | tsq sha256  |
 | lg-80 | `lg-080.tsr` | 943 | `163858aadde8d33e...` | tsq sha256  |
 | lg-82 | `lg-082.tsr` | 942 | `75c7e10342f42980...` | tsq sha256  |
 | lg-83 | `lg-083-vwz-148-suite-20260718.tsr` | 6063 | `0d835038139a63c4...` |  |
@@ -57,6 +57,8 @@
 | lg-85 | `lg-085-kat-10000-20260718.tsr` | 6064 | `bc80727ed83447fc...` |  |
 | lg-86 | `lg-086.tsr` | 941 | `1e8de40fa8199f27...` | tsq sha256  |
 | lg-87 | `lg-087.tsr` | 943 | `be27d03ba1b8db3a...` | tsq sha256  |
+| lg-88 | `lg-088.tsr` | 1070 | `5b6db8608e0a0e4e...` | tsq sha256  |
+| lg-89 | `lg-089.tsr` | 1070 | `4d41f78a7c650d0a...` | tsq sha256  |
 | lg-v2.2 | `lg-v2.2-20260710.tsr` | 942 | `35d75232025e20df...` |  |
 | lg-v2 | `lg-v2-free-tsa.tsr` | 943 | `9e3292c2ac4afdd6...` |  |
 
@@ -75,13 +77,13 @@ historical traceability entries but are **not distributed as files** in this rep
 
 ```bash
 # Verify a single TSR (example with FreeTSA)
-openssl ts -verify -in docs/tsa/complete/lg-082.tsr \
-  -queryfile docs/tsa/complete/lg-082.tsq \
-  -CAfile <freetsa-ca.pem>
+openssl ts -verify -in docs/tsa/2026-07-21/lg-088.tsr \
+  -queryfile docs/tsa/2026-07-21/lg-088.tsq \
+  -CAfile <digicert-ca.pem>
 
 # Verify all TSR files with tsq companions
-find docs/tsa/complete -name "*.tsq" | while read q; do
-  t="docs/tsa/complete/$(basename $q .tsq).tsr"
-  openssl ts -verify -in "$t" -queryfile "$q" -CAfile freetsa-ca.pem 2>&1 | grep Verification
+find docs/tsa -name "*.tsq" | while read q; do
+  t="$(dirname $q)/$(basename $q .tsq).tsr"
+  openssl ts -verify -in "$t" -queryfile "$q" -CAfile <tsa-ca.pem> 2>&1 | grep Verification
 done
 ```
