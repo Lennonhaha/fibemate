@@ -270,6 +270,7 @@ FIBEMATE's ML-KEM-768 implementation uses **NTT-domain** coefficient representat
 **Verification status:**
 - ✅ NIST FIPS 203 compatible (NTT domain)
 - ✅ Noble cross-verification: 200/200 both directions
+- ✅ liboqs cross-verification: 10,000/10,000 both directions
 - ✅ KAT 10,000 roundtrips passed
 - ✅ KEM 1,000 stress: 1,000/1,000 (8.9s)
 - ✅ All primitives byte-level verified
@@ -277,7 +278,7 @@ FIBEMATE's ML-KEM-768 implementation uses **NTT-domain** coefficient representat
 **Interoperability:**
 - ✅ `@noble/post-quantum` — cross-validated 200/200
 - ✅ NIST reference implementation — compatible wire format
-- ⏳ liboqs — pending (same FIPS 203 wire format)
+- ✅ liboqs — cross-verified 10,000/10,000 (FIPS 203 compatible)
 
 **Design decisions:**
 - NTT domain throughout (aligns with FIPS 203 standard)
