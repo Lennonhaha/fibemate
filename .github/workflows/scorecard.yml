@@ -1,4 +1,6 @@
 name: OpenSSF Scorecard
+permissions: read-all
+
 on:
   workflow_dispatch:
   schedule:
@@ -10,7 +12,7 @@ jobs:
   analysis:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
       - name: Run scorecard
         env:
           GITHUB_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -18,12 +20,12 @@ jobs:
           docker run --rm \
             -e GITHUB_AUTH_TOKEN \
             -e GITHUB_REPOSITORY=Lennonhaha/fibemate \
-            gcr.io/openssf/scorecard:latest \
+            gcr.io/openssf/scorecard:v5.5.0 \
             --repo=github.com/Lennonhaha/fibemate \
             --format=json \
             --show-details 2>&1 | tee results.json
           echo "EXIT=$?"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         if: always()
         with:
           name: scorecard-results
