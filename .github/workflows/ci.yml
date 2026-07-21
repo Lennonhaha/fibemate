@@ -1,11 +1,13 @@
-# FIBEMATE CI Pipeline 鈥?鏍稿績楠岃瘉
+# FIBEMATE CI Pipeline — 核心验证
 #
-# 瑙﹀彂: push / PR to master
-# 瑕嗙洊:
-#   - Node.js 鍗曞厓娴嬭瘯
-#   - 鏂囨。閾炬帴妫€鏌?#   - 浠ｇ爜椋庢牸 (Prettier + ESLint)
+# 触发: push / PR to master
+# 覆盖:
+#   - Node.js 单元测试
+#   - 文档链接检查
+#   - 代码风格 (Prettier + ESLint)
 
 name: CI
+permissions: read-all
 
 on:
   push:
@@ -19,14 +21,14 @@ env:
 
 jobs:
 
-  # 鈹€鈹€鈹€ Node.js 鍗曞厓娴嬭瘯 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  # Node.js 单元测试
   node-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -43,14 +45,14 @@ jobs:
         run: |
           node scripts/kat-jasmin-compare.js || echo "INFO: Jasmin KAT mismatch expected — FIBEMATE uses time-domain polyMul vs Jasmin NTT-domain. See docs/design-decisions.md"
           
-  # 鈹€鈹€鈹€ Markdown / 鏂囨。妫€鏌?鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  # Markdown / 文档检查
   docs-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
 
