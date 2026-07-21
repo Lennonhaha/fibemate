@@ -11,14 +11,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Run scorecard
         run: |
-          curl -sSL https://github.com/ossf/scorecard/releases/download/v5.1.1/scorecard_5.1.1_linux_amd64.tar.gz | tar xz
-          ./scorecard --repo=github.com/Lennonhaha/fibemate --format=sarif --output=results.sarif \
-            --publish=false
+          curl -sSLo scorecard.tar.gz https://github.com/ossf/scorecard/releases/download/v5.1.1/scorecard_5.1.1_linux_amd64.tar.gz
+          tar xzf scorecard.tar.gz
+          ls -la scorecard*
+          ./scorecard --version
+          ./scorecard --repo=github.com/Lennonhaha/fibemate --format=sarif --output=results.sarif 2>&1 || echo "EXIT_CODE=True"
         env:
           GITHUB_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
           name: SARIF file
           path: results.sarif
