@@ -6,26 +6,22 @@ on:
   push:
     branches: [ main ]
 
-permissions:
-  contents: read
-  actions: read
-
 jobs:
   analysis:
     name: Scorecard analysis
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@692973e3d937129bcbf40652eb9f2f61becf3332
+      - uses: actions/checkout@v4
         with:
           persist-credentials: false
       - name: Run analysis
-        uses: ossf/scorecard-action@dc50aa9510ff46b811dd3065a4a2bed06d04968b
+        uses: ossf/scorecard-action@v2
         with:
           results_file: results.sarif
           results_format: sarif
           publish_results: false
       - name: Upload artifact
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb5887
+        uses: actions/upload-artifact@v4
         with:
           name: SARIF file
           path: results.sarif
