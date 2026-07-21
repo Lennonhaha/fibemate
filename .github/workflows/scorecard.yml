@@ -18,8 +18,9 @@ jobs:
           curl -sSLo scorecard.tar.gz https://github.com/ossf/scorecard/releases/download/v5.1.1/scorecard_5.1.1_linux_amd64.tar.gz
           tar xzf scorecard.tar.gz
           ls -la scorecard*
-          ./scorecard --version
-          ./scorecard --repo=github.com/Lennonhaha/fibemate --format=sarif --output=results.sarif 2>&1 || echo "EXIT_CODE=True"
+          ./scorecard --version 2>&1
+          ./scorecard --repo=github.com/Lennonhaha/fibemate --format=sarif --output=results.sarif 2>&1
+          echo "EXIT: $?"
         env:
           GITHUB_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/upload-artifact@v4
