@@ -1,4 +1,6 @@
 name: Repolinter
+permissions: read-all
+
 on: [push, pull_request]
 
 jobs:
