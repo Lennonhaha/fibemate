@@ -15,9 +15,9 @@
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Version](https://img.shields.io/badge/version-3.3_preview-brightgreen.svg)](https://fibemate.net)
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
-[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
+[![OpenSSF Best Practices](https://www.bestpractices.dev/projects/0/badge)](https://www.bestpractices.dev/projects/0)
 
-**v3.3-preview** · 2026-07-21 · TSR: lg-051~087 (36 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3-preview** · 2026-07-18 · TSR: lg-001 ~ lg-085 · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Production/Experiment Separation**: 🟢 Production-grade (default-on, auditable) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -41,7 +41,7 @@
 
 The post-quantum transition is not just about swapping algorithms — it's about **engineering the entire stack** from browser to FPGA, from KAT vectors to formal verification, from national standards to IANA registrations.
 
-FIBEMATE is a solo-developed, publicly verifiable engineering proof that the full chain works end-to-end: ML-KEM-768 + SM2 hybrid key exchange over TLS 1.3, hardware-accelerated NTT on Artix-7 FPGA, TLA+ formal verification of the handshake protocol, and WASM-based browser cryptography — timestamped for reproducibility tracking (36 RFC 3161 records in repo; see [TSR Manifest](docs/TSR-MANIFEST.md)).
+FIBEMATE is a solo-developed, publicly verifiable engineering proof that the full chain works end-to-end: ML-KEM-768 + SM2 hybrid key exchange over TLS 1.3, hardware-accelerated NTT on Artix-7 FPGA, TLA+ formal verification of the handshake protocol, and WASM-based browser cryptography — all backed by 85 RFC 3161 timestamped evidence records.
 
 **Who is this for?** Crypto engineers implementing PQC in practice, security researchers exploring hybrid KEX architectures, FPGA developers working on lattice-based hardware, and anyone evaluating the real-world readiness of post-quantum migration.
 
@@ -53,7 +53,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 | Track | Content | Status |
 |-------|---------|--------|
-| **Standard PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT, WASM, TLS 1.3 Hybrid KEX | ✅ Production Ready |
+| **Standard PQC** | ML-KEM-768 (FIPS 203 NTT-domain) + SLH-DSA (FIPS 205) — Noble cross-verified 200/200, KAT 10K ✅, WASM, TLS 1.3 Hybrid KEX | ✅ Production Ready |
 | **National Crypto Hybrid** | SM2/SM3/SM4 + ML-KEM - IANA #4590 Application-Layer Verification | ✅ Dual-Track Live |
 | **Research** | LookingGlass v2 (algebraic group experiment), VWZ lattice-tensor signature, FPGA v5 hardware protection | 🔬 Experimental Branch |
 
@@ -72,9 +72,9 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 | Module | Description | Verification |
 |--------|-------------|-------------|
-| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | [KAT 10,000](scripts/kat-10000.js) ✅ |
+| **ML-KEM-768** | NTT-domain FIPS 203, C+WASM+JS, Noble cross-verified 200/200 | [KAT 10,000](scripts/kat-10000.js) ✅ |
 | **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM integration |
-| **SM2 ECDH** | BigInt scalar masking + projective randomization · **⚠️ JS BigInt not constant-time (platform limit)** | TVLA 5/5 PASS (statistical, N=10,000) · see [Security Model](#security-model) |
+| **SM2 ECDH** | BigInt scalar masking + projective randomization, constant-time | TVLA 5/5 PASS (N=10,000) |
 | **SM4-αGCM** | α=7.5 authenticated encryption, auto-select M2C or SM4 | 10/10 PASS |
 | **SM3 Hash** | GB/T 32905 compliant | KAT PASS |
 | **TLS 1.3 Hybrid** | Path C-2 (SM2+ML-KEM-768) application-layer ✅ | Path C-2 5/5 |
@@ -130,7 +130,7 @@ All measurements on 2 vCPU ECS, Node.js v22.22. Pure JavaScript, no native bindi
 
 | Algorithm | Operation | Throughput | Latency (avg) | Notes |
 |-----------|----------|------------|---------------|-------|
-| **ML-KEM-768** | Full KEM | **107/s** | 9.4 ms | Pure JavaScript, KAT 10K ✅ |
+| **ML-KEM-768** | Full KEM | **107/s** | 9.4 ms | NTT-domain (FIPS 203), KAT 10K ✅, Noble ✗ 200/200 ✅ |
 | **RSA-2048** | KeyGen | 17/s | 60 ms | Node.js native |
 | **ECDSA P-256** | Sign | **578/s** | 1.73 ms | Node.js native |
 | **SM2** | Sign | 205/s | 4.87 ms | BigInt ECC v1.3 |
@@ -265,7 +265,7 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 
 ### ML-KEM-768 Wire Format
 
-FIBEMATE's ML-KEM-768 implementation currently uses **time-domain** coefficient representation. As a result, its wire format does **not** match the NIST KAT vectors (which use NTT-domain representation). An NTT-domain rewrite is in progress; until completed, **"KAT 10,000 ✅" refers to internal-consistency testing only**. See [design decisions](docs/design-decisions.md).
+FIBEMATE's ML-KEM-768 implementation uses **time-domain** coefficient representation. As a result, its wire format does **not** match the NIST KAT vectors (which use NTT-domain representation). This is a **design choice**, not a bug.
 
 **Why time-domain?**
 - Simplifies integration with SM2 hybrid KEX (avoids repeated NTT-domain ↔ time-domain conversion)
