@@ -379,7 +379,7 @@ function encapsulate(publicKey) {
     const tr = vecAccTimeDomain(t, r_ntt, KYBER_K);  // time domain
     const e2 = cbd2(shake256(new Uint8Array([...m,2*KYBER_K]),128));
     const mPoly = new Int16Array(256);
-    for(let i=0;i<256;i++) mPoly[i]=((m[i>>3]>>(i&7))&1)*Math.floor(KYBER_Q/2);
+    for(let i=0;i<256;i++) mPoly[i]=((m[i>>3]>>(i&7))&1)*Math.ceil(KYBER_Q/2);
     const v = new Int16Array(256);
     for(let i=0;i<256;i++) v[i]=modAdd(modAdd(tr[i],e2[i]),mPoly[i]);
     
@@ -438,7 +438,7 @@ function decapsulate(secretKey,ciphertext) {
     const tr2 = vecAccTimeDomain(t, r_ntt, n);
     const e2 = cbd2(shake256(new Uint8Array([...mPrime,2*n]),128));
     const mPoly2 = new Int16Array(256);
-    for(let i=0;i<256;i++) mPoly2[i]=((mPrime[i>>3]>>(i&7))&1)*Math.floor(KYBER_Q/2);
+    for(let i=0;i<256;i++) mPoly2[i]=((mPrime[i>>3]>>(i&7))&1)*Math.ceil(KYBER_Q/2);
     const v2 = new Int16Array(256);
     for(let i=0;i<256;i++) v2[i]=modAdd(modAdd(tr2[i],e2[i]),mPoly2[i]);
     
