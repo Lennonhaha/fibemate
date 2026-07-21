@@ -2,7 +2,7 @@ name: OpenSSF Scorecard
 on:
   workflow_dispatch:
   schedule:
-    - cron: '30 1 * * 6'
+    - cron: "30 1 * * 6"
   push:
     branches: [main]
 
@@ -11,20 +11,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Run scorecard via Docker
+      - name: Run scorecard
+        env:
+          GITHUB_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           docker run --rm \
-            -e GITHUB_AUTH_TOKEN=`${{ secrets.GITHUB_TOKEN }} \
-            -v `${{ github.workspace }}:/repo \
+            -e GITHUB_AUTH_TOKEN \
+            -e GITHUB_REPOSITORY=Lennonhaha/fibemate \
             gcr.io/openssf/scorecard:latest \
             --repo=github.com/Lennonhaha/fibemate \
-            --format=sarif --output=/repo/results.sarif \
-            --show-details 2>&1
-          echo "EXIT=`$?"
-          ls -la results.sarif 2>&1 || touch results.sarif
+            --format=json \
+            --show-details 2>&1 | tee results.json
+          echo "EXIT=$?"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: scorecard-results
-          path: results.sarif
+          path: results.json
           retention-days: 5
