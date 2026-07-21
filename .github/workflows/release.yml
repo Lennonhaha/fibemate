@@ -8,6 +8,7 @@
 #   - 生成校验和
 
 name: Release
+permissions: read-all
 
 on:
   workflow_dispatch:
@@ -24,10 +25,10 @@ jobs:
   release-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: ${{ env.NODE_VERSION }}
 
@@ -48,7 +49,7 @@ jobs:
             const kp = m.keygen();
             const ct = m.encaps(kp[0]);
             const ss = m.decaps(ct, kp[1]);
-            console.log('ML-KEM-768: ✅', kp[0].length+'B pk |', ss.length+'B shared');
+            console.log('ML-KEM-768: ?', kp[0].length+'B pk |', ss.length+'B shared');
           "
 
       - name: Generate SHA256 manifest
@@ -63,7 +64,7 @@ jobs:
           echo "... $(wc -l < RELEASE_CHECKSUMS.txt) files checksummed"
 
       - name: Upload release checksums
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: release-checksums
           path: RELEASE_CHECKSUMS.txt
