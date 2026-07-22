@@ -50,8 +50,8 @@ function modMulBarrett(a, b) {
   if (r >= 3329) r -= 3329;               // double safety
   return r;
 }
-function modAdd(a, b) { const r = ((a|0)+(b|0)) % Q; return r >= 0 ? r : r+Q; }
-function modSub(a, b) { const r = ((a|0)-(b|0)) % Q; return r >= 0 ? r : r+Q; }
+function modAdd(a, b) { const r = ((a|0)+(b|0)); return r >= Q ? r-Q : r; }
+function modSub(a, b) { const r = ((a|0)-(b|0)); return r < 0 ? r+Q : r; }
 function modMul(a, b) { return modMulBarrett(((a|0)%Q+Q)%Q, ((b|0)%Q+Q)%Q); }
 function modNeg(a) { const na = ((a|0)%Q+Q)%Q; return na ? Q-na : 0; }
 
@@ -79,8 +79,9 @@ function ntt(f) {
             for (let j = 0; j < m2; j++) {
                 const i0 = k+j, i1 = k+j+m2;
                 const a = f[i0], b = f[i1];
-                f[i0] = modAdd(a, modMul(b, omega));
-                f[i1] = modSub(a, modMul(b, omega));
+                const t = modMul(b, omega);
+                f[i0] = modAdd(a, t);
+                f[i1] = modSub(a, t);
             }
         }
     }
