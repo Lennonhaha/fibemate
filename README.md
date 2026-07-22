@@ -19,7 +19,7 @@
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
-**v3.3-preview** · 2026-07-22 · TSR: lg-001~095 (95 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3-preview** · 2026-07-22 · TSR: lg-001~096 (96 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Production/Experiment Separation**: 🟢 Production-grade (default-on, auditable) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -220,7 +220,7 @@ fibemate/
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
-│   └── docs/            # Documentation + TSR evidence (lg-001~095)
+│   └── docs/            # Documentation + TSR evidence (lg-001~096)
 ├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
 │   └── (timing-critical IP, available on request)
 ├── c-stm32/             # STM32 C framework
