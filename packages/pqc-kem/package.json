@@ -18,7 +18,8 @@
     "test": "node test/basic.test.js",
     "build:native": "node-gyp rebuild -C native",
     "build:native:release": "node-gyp rebuild -C native --release",
-    "test:native": "node -e \"var a=require(\"./native/build/Release/mlkem.node\");var k=a.keygen();var e=a.encaps(k[0]);var d=a.decaps(e[0],k[1]);process.exit(Buffer.from(d).equals(e[1])?0:1);console.log(\"Native addon test PASS\")\"",
-    "ci:build": "npm run build:native:release && npm run test:native"
+    "test:native": "node ../../scripts/test-native-addon.cjs",
+    "ci:build": "npm run build:native:release && npm run test:native",
+    "bench:native": "node ../../scripts/mlkem-bench-native.cjs 500"
   }
 }
