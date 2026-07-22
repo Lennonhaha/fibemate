@@ -5,7 +5,7 @@
 # Produces a self-contained audit package with:
 #   - Source snapshot (HEAD)
 #   - All TSR evidence (lg-001 ~ lg-095)
-#   - Test reports
+#   - Test reports + QA docs + risk rectification
 #   - Governance & compliance docs
 #   - Cross-validation records
 #   - inventory.sha256 manifest
@@ -29,7 +29,7 @@ PKG="$WORK/fibemate-audit-v3.3-preview"
 mkdir -p "$PKG"
 
 # ─── 1. Source snapshot ──────────────────────────────────────
-echo "[1/8] Source snapshot..."
+echo "[1/9] Source snapshot..."
 mkdir -p "$PKG/source"
 # Critical source files
 for f in \
@@ -49,7 +49,7 @@ done
 cp --parents packages/pqc-kem/src/ml-kem-768.js "$PKG/"
 
 # ─── 2. All TSR evidence ─────────────────────────────────────
-echo "[2/8] TSR evidence..."
+echo "[2/9] TSR evidence..."
 mkdir -p "$PKG/evidence/tsr"
 cp -r "$REPO/docs/tsa" "$PKG/evidence/tsa/" 2>/dev/null || true
 if [ -d "$REPO/evidence/tsr" ]; then
@@ -58,12 +58,14 @@ fi
 cp "$REPO/docs/TSR-MANIFEST.md" "$PKG/evidence/" 2>/dev/null || true
 cp "$REPO/docs/timestamp-manifest.json" "$PKG/evidence/" 2>/dev/null || true
 
-# ─── 3. Test & verification reports ───────────────────────────
-echo "[3/8] Test reports..."
+# ─── 3. QA & test documentation (NEW) ────────────────────────
+echo "[3/9] QA documentation..."
 mkdir -p "$PKG/docs"
 for f in \
     docs/testing.md \
+    docs/quality-assurance.md \
     docs/security-limitations.md \
+    docs/risk-rectification.md \
     docs/pqc-readiness.md \
     docs/audit-package-2026-07-22.md \
     docs/v3.3-audit-gap-analysis-2026-07-22.md \
@@ -76,8 +78,14 @@ for f in \
     [ -f "$REPO/$f" ] && cp "$REPO/$f" "$PKG/$f"
 done
 
-# ─── 4. Governance ───────────────────────────────────────────
-echo "[4/8] Governance..."
+# ─── 4. Pre-commit & smoke test config ───────────────────────
+echo "[4/9] Pre-commit & smoke test..."
+mkdir -p "$PKG/test"
+[ -f "$REPO/.pre-commit-config.yaml" ] && cp "$REPO/.pre-commit-config.yaml" "$PKG/"
+[ -f "$REPO/test/smoke-crypto.js" ] && cp "$REPO/test/smoke-crypto.js" "$PKG/test/"
+
+# ─── 5. Governance ───────────────────────────────────────────
+echo "[5/9] Governance..."
 for f in \
     GOVERNANCE.md \
     CODE_OF_CONDUCT.md \
@@ -90,8 +98,8 @@ for f in \
     [ -f "$REPO/$f" ] && cp "$REPO/$f" "$PKG/$f"
 done
 
-# ─── 5. Cross-validation records ─────────────────────────────
-echo "[5/8] Cross-validation records..."
+# ─── 6. Cross-validation records ─────────────────────────────
+echo "[6/9] Cross-validation records..."
 mkdir -p "$PKG/evidence/cross-validation"
 
 # Extract noble/liboqs notes from MEMORY.md
@@ -104,13 +112,13 @@ if [ -f "$REPO/www/kat_10000_result.json" ]; then
     cp "$REPO/www/kat_10000_result.json" "$PKG/evidence/cross-validation/"
 fi
 
-# ─── 6. CI + build config ────────────────────────────────────
-echo "[6/8] CI & build..."
+# ─── 7. CI + build config ────────────────────────────────────
+echo "[7/9] CI & build..."
 mkdir -p "$PKG/config"
 for f in package.json package-lock.json .gitignore; do
     [ -f "$REPO/$f" ] && cp "$REPO/$f" "$PKG/$f"
 done
-# CI files (may not exist, skip if dir missing)
+# CI files
 for f in ci.yml nightly.yml; do
     src="$REPO/.github/workflows/$f"
     if [ -f "$src" ]; then
@@ -119,15 +127,15 @@ for f in ci.yml nightly.yml; do
     fi
 done
 
-# ─── 7. Demo verification ────────────────────────────────────
-echo "[7/8] Demo verification..."
+# ─── 8. Demo verification ────────────────────────────────────
+echo "[8/9] Demo verification..."
 mkdir -p "$PKG/evidence/demo"
 cp "$REPO/docs/tsa/2026-07-22/lg-095-demo-verify.md" "$PKG/evidence/demo/" 2>/dev/null || true
 cp "$REPO/www/demo/index.html" "$PKG/evidence/demo/" 2>/dev/null || true
 cp "$REPO/www/demo/ml-kem-768.js" "$PKG/evidence/demo/" 2>/dev/null || true
 
-# ─── 8. Inventory ────────────────────────────────────────────
-echo "[8/8] Generating inventory.sha256..."
+# ─── 9. Inventory ────────────────────────────────────────────
+echo "[9/9] Generating inventory.sha256..."
 mkdir -p "$OUTDIR"
 cd "$WORK"
 find fibemate-audit-v3.3-preview -type f | sort | while read -r f; do

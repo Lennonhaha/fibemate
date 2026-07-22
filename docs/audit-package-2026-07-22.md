@@ -1,6 +1,6 @@
 # FIBEMATE v3.3-preview — Audit Package
 
-> Generated 2026-07-22 · HEAD `99b3bd47`
+> Generated 2026-07-22 · HEAD `bf9ae819`
 > For third-party security auditors
 
 ## 1. Repository Snapshot
@@ -9,7 +9,7 @@
 |:---|:---|
 | Repository | `https://github.com/Lennonhaha/fibemate` |
 | Branch | `master` |
-| Commit | `99b3bd47` |
+| Commit | `bf9ae819` |
 | License | GPL-3.0-only |
 | Language | JavaScript (ES2022) + Rust (WASM bindings) |
 | Node.js | 22 LTS |
@@ -155,3 +155,20 @@ docker run --rm fibemate-bench
 ## 8. Contact
 
 For audit queries: open a GitHub issue with `[audit]` prefix, or email the repository owner.
+
+
+## 9. Update: 2026-07-22 Quality Assurance Documentation (HEAD `bf9ae819`)
+
+The following documents were added after the initial audit package (HEAD `99b3bd47`):
+
+| Document | Description | TSR |
+|:---|:---|:---|
+| `docs/quality-assurance.md` | 7-layer QA architecture blueprint (L1-L7) | — |
+| `docs/testing.md` | 4-layer CI pipeline + functional + compatibility tests | — |
+| `docs/security-limitations.md` (expanded) | P0/P1/P2 risk classification + mandatory constraints | lg-094 |
+| `docs/risk-rectification.md` | 19-item P0-P3 rectification tracker with 8.31 deadlines | — |
+| `.pre-commit-config.yaml` | Multi-language pre-commit hooks | — |
+| `test/smoke-crypto.js` | ML-KEM-768 + SM2 pre-commit smoke (5/5 PASS) | — |
+| `scripts/update-readme.py` | Idempotent README updater | — |
+
+All new files have been verified on the live server (ECS). Core implementation (`ml-kem-768.js`) unchanged.
