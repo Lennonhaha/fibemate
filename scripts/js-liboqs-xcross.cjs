@@ -20,7 +20,7 @@ for (let i = 0; i < N; i++) {
     const { ct: ctHex, ss: ssLibHex } = JSON.parse(r1.stdout.trim());
     const ctBuf = fromHex(ctHex);
 
-    const decJS = MLKEM768.decapsulate(ctBuf, keysJS.secretKey);
+    const decJS = MLKEM768.decapsulate(keysJS.secretKey, ctBuf);
     // decapsulate returns raw K_bar_implicit_rej (or hashed? depends on impl)
     // Let's try both raw and hashed
     
