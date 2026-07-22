@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML-KEM-768 Demo · FIBEMATE</title>
+<style>
+:root {
+  --bg: #0a0e17; --surface: #111827; --border: #1f2937;
+  --text: #e0e0e0; --dim: #6b7280; --accent: #38bdf8;
+  --green: #34d399; --red: #f87171; --amber: #fbbf24;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg); color: var(--text);
+  min-height: 100vh; display: flex; flex-direction: column; align-items: center;
+  padding: 2rem 1rem;
+}
+.container { max-width: 800px; width: 100%; }
+header {
+  text-align: center; margin-bottom: 2rem;
+  padding-bottom: 1.5rem; border-bottom: 1px solid var(--border);
+}
+h1 { font-size: 1.75rem; font-weight: 700; color: #fff; margin-bottom: .25rem; }
+h1 span { color: var(--accent); }
+.subtitle { color: var(--dim); font-size: .875rem; }
+
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.25rem 1.5rem; margin-bottom: 1rem;
+}
+.card-title { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--dim); margin-bottom: .75rem; }
+
+.row { display: flex; gap: .75rem; flex-wrap: wrap; align-items: center; }
+.grow { flex: 1; }
+
+.btn {
+  padding: .5rem 1rem; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--surface); color: var(--text); font-size: .8125rem;
+  cursor: pointer; font-family: inherit; transition: all .15s;
+  white-space: nowrap;
+}
+.btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+.btn:disabled { opacity: .4; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #0a0e17; border-color: var(--accent); font-weight: 600; }
+.btn-primary:hover:not(:disabled) { background: #7dd3fc; }
+
+.hex-box {
+  width: 100%; padding: .75rem; background: #0a0e17;
+  border: 1px solid var(--border); border-radius: 6px;
+  font-family: 'Cascadia Code', 'Fira Code', monospace;
+  font-size: .6875rem; color: var(--dim); line-height: 1.6;
+  word-break: break-all; min-height: 3rem; max-height: 8rem;
+  overflow-y: auto; white-space: pre-wrap;
+}
+
+.pulse { opacity: .5; }
+.step { display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem; font-size: .8125rem; }
+.step .icon { width: 1.25rem; text-align: center; }
+.step .label { color: var(--dim); }
+.step .val { color: var(--text); font-family: monospace; font-size: .75rem; margin-left: auto; }
+
+.badges { display: flex; gap: .5rem; flex-wrap: wrap; margin-top: .5rem; }
+.badge {
+  padding: .15rem .5rem; font-size: .6875rem; border-radius: 999px;
+  background: rgba(56,189,248,.1); color: var(--accent); border: 1px solid rgba(56,189,248,.2);
+}
+.badge.green { background: rgba(52,211,153,.1); color: var(--green); border-color: rgba(52,211,153,.2); }
+
+.log { margin-top: .75rem; }
+.log-entry { font-family: monospace; font-size: .6875rem; padding: .15rem 0; }
+.log-entry.ok { color: var(--green); }
+.log-entry.err { color: var(--red); }
+.log-entry.info { color: var(--dim); }
+
+footer {
+  text-align: center; margin-top: 2rem; color: var(--dim); font-size: .75rem;
+  border-top: 1px solid var(--border); padding-top: 1.25rem;
+}
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>ML-KEM-768 <span>Demo</span></h1>
+  <p class="subtitle">FIBEMATE · FIPS 203 · Pure JavaScript · Zero-Dependency</p>
+  <div class="badges" style="justify-content:center;margin-top:.5rem">
+    <span class="badge green">FIPS 203</span>
+    <span class="badge">NIST Post-Quantum</span>
+    <span class="badge green">v3.3-preview</span>
+  </div>
+</header>
+
+<div class="card" id="step1">
+  <div class="card-title">1 · Initialize</div>
+  <div class="row">
+    <button class="btn btn-primary" id="btnInit" onclick="init()">Load ML-KEM-768</button>
+    <span class="pulse" id="initStatus">Waiting…</span>
+  </div>
+</div>
+
+<div class="card" id="step2" style="display:none">
+  <div class="card-title">2 · Key Generation</div>
+  <div class="row">
+    <button class="btn btn-primary" id="btnKeygen" onclick="doKeygen()" disabled>Generate Keypair</button>
+    <span class="pulse" id="keygenStatus"></span>
+  </div>
+  <div id="keypairOutput" style="display:none;margin-top:.75rem">
+    <div class="step"><span class="icon">🔑</span><span class="label">Public Key</span><span class="val" id="pkLen"></span></div>
+    <div class="hex-box" id="pkHex"></div>
+    <div class="step" style="margin-top:.5rem"><span class="icon">🔒</span><span class="label">Secret Key</span><span class="val" id="skLen"></span></div>
+    <div class="hex-box" id="skHex"></div>
+  </div>
+</div>
+
+<div class="card" id="step3" style="display:none">
+  <div class="card-title">3 · Encapsulation (Bob → Alice)</div>
+  <div class="row">
+    <button class="btn btn-primary" id="btnEncaps" onclick="doEncaps()" disabled>Encapsulate</button>
+    <span class="pulse" id="encapsStatus"></span>
+  </div>
+  <div id="encapsOutput" style="display:none;margin-top:.75rem">
+    <div class="step"><span class="icon">📦</span><span class="label">Ciphertext</span><span class="val" id="ctLen"></span></div>
+    <div class="hex-box" id="ctHex"></div>
+    <div class="step" style="margin-top:.5rem"><span class="icon">🔐</span><span class="label">Shared Secret (Bob)</span><span class="val" id="ssEncLen"></span></div>
+    <div class="hex-box" id="ssEncHex"></div>
+  </div>
+</div>
+
+<div class="card" id="step4" style="display:none">
+  <div class="card-title">4 · Decapsulation (Alice recovers)</div>
+  <div class="row">
+    <button class="btn btn-primary" id="btnDecaps" onclick="doDecaps()" disabled>Decapsulate</button>
+    <span class="pulse" id="decapsStatus"></span>
+  </div>
+  <div id="decapsOutput" style="display:none;margin-top:.75rem">
+    <div class="step"><span class="icon">🔐</span><span class="label">Shared Secret (Alice)</span><span class="val" id="ssDecLen"></span></div>
+    <div class="hex-box" id="ssDecHex"></div>
+  </div>
+</div>
+
+<div class="card" id="step5" style="display:none">
+  <div class="card-title">5 · Verification</div>
+  <div id="verifyStatus" class="step"></div>
+</div>
+
+<div class="card" id="bench" style="display:none">
+  <div class="card-title">Performance (your browser)</div>
+  <div class="row">
+    <button class="btn" id="btnBench" onclick="runBench()" disabled>Benchmark 100 rounds</button>
+    <span class="pulse" id="benchStatus"></span>
+  </div>
+  <div id="benchOutput" style="margin-top:.75rem"></div>
+</div>
+
+<footer>
+  <p><a href="/">FIBEMATE</a> · ML-KEM-768 FIPS 203 · Pure JavaScript · <a href="https://github.com/Lennonhaha/fibemate">GitHub</a></p>
+</footer>
+
+</div>
+
+<script>
+// ============================================================
+// Browser polyfills for ml-kem-768.js
+// ============================================================
+if (typeof Buffer === 'undefined') {
+  window.Buffer = {
+    from(data, enc) {
+      if (Array.isArray(data) || data instanceof Uint8Array) return new Uint8Array(data);
+      if (typeof data === 'string' && enc === 'hex') {
+        const bytes = new Uint8Array(data.length / 2);
+        for (let i = 0; i < data.length; i += 2) bytes[i / 2] = parseInt(data.slice(i, i + 2), 16);
+        return bytes;
+      }
+      if (data instanceof Uint8Array || data instanceof ArrayBuffer) return new Uint8Array(data);
+      return new Uint8Array(data);
+    },
+    concat(arrs) {
+      let total = 0;
+      for (const a of arrs) total += a.length;
+      const out = new Uint8Array(total);
+      let off = 0;
+      for (const a of arrs) { out.set(a, off); off += a.length; }
+      return out;
+    },
+    compare(a, b) {
+      if (a.length !== b.length) return a.length - b.length;
+      for (let i = 0; i < a.length; i++) { if (a[i] !== b[i]) return a[i] - b[i]; }
+      return 0;
+    },
+    alloc(n) { return new Uint8Array(n); }
+  };
+}
+if (typeof Int16Array === 'undefined') { window.Int16Array = Int16Array; }
+if (typeof setTimeout === 'undefined') { var setTimeout = (f, t) => f(); }
+
+// ============================================================
+// Load ML-KEM-768 module
+// ============================================================
+let MLKEM;
+
+async function init() {
+  const btn = document.getElementById('btnInit');
+  const st = document.getElementById('initStatus');
+  btn.disabled = true; st.textContent = 'Loading…';
+
+  try {
+    // Load standalone browser bundle
+    const mod = await import('./ml-kem-768.js');
+    MLKEM = mod.default || mod;
+    st.textContent = `✅ Loaded · v3.3-preview · Q=${MLKEM.PUBLIC_KEY_BYTES ? 'OK' : 'PARTIAL'}`;
+    st.className = '';
+
+    if (MLKEM.encapsulate && MLKEM.decapsulate) {
+      document.getElementById('step2').style.display = '';
+      document.getElementById('btnKeygen').disabled = false;
+    } else {
+      st.textContent = '❌ Module loaded but missing exports';
+    }
+  } catch (e) {
+    st.textContent = '❌ ' + e.message;
+    st.className = '';
+    document.getElementById('step3').style.display = '';
+    document.getElementById('step4').style.display = '';
+    document.getElementById('step5').style.display = '';
+    // Fallback: try bundle path
+    try {
+      const mod = await import('/noble-pq-bundle/ml-kem.js');
+      MLKEM = mod;
+      st.textContent += ' | Fallback: noble bundle loaded';
+      document.getElementById('btnKeygen').disabled = false;
+    } catch {}
+  }
+}
+
+let keypair, encResult;
+
+function pushLog(msg, cls) {
+  const el = document.createElement('div');
+  el.className = 'log-entry ' + (cls || '');
+  el.textContent = msg;
+  document.getElementById('verifyStatus').appendChild(el);
+}
+
+function hex(bytes, max) {
+  const h = Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+  return max ? h.slice(0, max) + '…' : h;
+}
+
+async function doKeygen() {
+  const btn = document.getElementById('btnKeygen');
+  const st = document.getElementById('keygenStatus');
+  btn.disabled = true; st.textContent = 'Generating…';
+
+  const t0 = performance.now();
+  try {
+    keypair = MLKEM.generateKeypair();
+    const ms = (performance.now() - t0).toFixed(1);
+
+    document.getElementById('pkLen').textContent = `${keypair.publicKey.length}B`;
+    document.getElementById('pkHex').textContent = hex(keypair.publicKey);
+    document.getElementById('skLen').textContent = `${keypair.secretKey.length}B`;
+    document.getElementById('skHex').textContent = hex(keypair.secretKey);
+    document.getElementById('keypairOutput').style.display = '';
+    st.textContent = `✅ Done in ${ms}ms`;
+
+    document.getElementById('step3').style.display = '';
+    document.getElementById('btnEncaps').disabled = false;
+  } catch (e) {
+    st.textContent = '❌ ' + e.message;
+  }
+}
+
+async function doEncaps() {
+  const btn = document.getElementById('btnEncaps');
+  const st = document.getElementById('encapsStatus');
+  btn.disabled = true; st.textContent = 'Encapsulating…';
+
+  const t0 = performance.now();
+  try {
+    encResult = MLKEM.encapsulate(keypair.publicKey);
+    const ms = (performance.now() - t0).toFixed(1);
+
+    document.getElementById('ctLen').textContent = `${encResult.ciphertext.length}B`;
+    document.getElementById('ctHex').textContent = hex(encResult.ciphertext);
+    document.getElementById('ssEncLen').textContent = `${encResult.sharedSecret.length}B`;
+    document.getElementById('ssEncHex').textContent = hex(encResult.sharedSecret);
+    document.getElementById('encapsOutput').style.display = '';
+    st.textContent = `✅ Done in ${ms}ms`;
+
+    document.getElementById('step4').style.display = '';
+    document.getElementById('step5').style.display = '';
+    document.getElementById('btnDecaps').disabled = false;
+  } catch (e) {
+    st.textContent = '❌ ' + e.message;
+  }
+}
+
+async function doDecaps() {
+  const btn = document.getElementById('btnDecaps');
+  const st = document.getElementById('decapsStatus');
+  btn.disabled = true; st.textContent = 'Decapsulating…';
+
+  const t0 = performance.now();
+  try {
+    const ssDec = MLKEM.decapsulate(keypair.secretKey, encResult.ciphertext);
+    const ms = (performance.now() - t0).toFixed(1);
+
+    document.getElementById('ssDecLen').textContent = `${ssDec.length}B`;
+    document.getElementById('ssDecHex').textContent = hex(ssDec);
+    document.getElementById('decapsOutput').style.display = '';
+    st.textContent = `✅ Done in ${ms}ms`;
+
+    // Verify
+    const match = Buffer.compare(encResult.sharedSecret, ssDec) === 0;
+    const vst = document.getElementById('verifyStatus');
+    vst.innerHTML = '';
+    vst.className = 'step';
+    if (match) {
+      vst.innerHTML = '<span class="icon">✅</span><span class="val" style="color:var(--green)">KEM Roundtrip PASS — Bob and Alice share the same 32-byte secret</span>';
+      document.getElementById('bench').style.display = '';
+      document.getElementById('btnBench').disabled = false;
+    } else {
+      vst.innerHTML = '<span class="icon">❌</span><span class="val" style="color:var(--red)">FAIL — Shared secrets do not match</span>';
+    }
+  } catch (e) {
+    st.textContent = '❌ ' + e.message;
+  }
+}
+
+async function runBench() {
+  const btn = document.getElementById('btnBench');
+  const st = document.getElementById('benchStatus');
+  const out = document.getElementById('benchOutput');
+  btn.disabled = true; st.textContent = 'Running 100 rounds…';
+  out.innerHTML = '';
+
+  const N = 100;
+  let kp, enc;
+
+  try {
+    // Keygen
+    let t0 = performance.now();
+    for (let i = 0; i < N; i++) kp = MLKEM.generateKeypair();
+    const tKeygen = ((performance.now() - t0) / N).toFixed(1);
+
+    // Encaps
+    t0 = performance.now();
+    for (let i = 0; i < N; i++) enc = MLKEM.encapsulate(kp.publicKey);
+    const tEncaps = ((performance.now() - t0) / N).toFixed(1);
+
+    // Decaps
+    t0 = performance.now();
+    for (let i = 0; i < N; i++) MLKEM.decapsulate(kp.secretKey, enc.ciphertext);
+    const tDecaps = ((performance.now() - t0) / N).toFixed(1);
+
+    out.innerHTML = `
+      <div class="step"><span class="icon">⚡</span><span class="label">keygen</span><span class="val" style="color:var(--accent)">${tKeygen} ms/op</span></div>
+      <div class="step"><span class="icon">📦</span><span class="label">encaps</span><span class="val" style="color:var(--accent)">${tEncaps} ms/op</span></div>
+      <div class="step"><span class="icon">🔓</span><span class="label">decaps</span><span class="val" style="color:var(--accent)">${tDecaps} ms/op</span></div>
+      <div class="step" style="margin-top:.5rem"><span class="label" style="color:var(--dim)">User Agent</span><span class="val" style="font-size:.625rem">${navigator.userAgent.slice(0,80)}</span></div>
+    `;
+    st.textContent = `✅ 100 rounds complete`;
+  } catch (e) {
+    st.textContent = '❌ ' + e.message;
+  }
+}
+</script>
+</body>
+</html>
