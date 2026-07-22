@@ -320,3 +320,4 @@ step1_move_cf.py
 public/key-lifecycle-manager.js
 public/secure-key-storage-v2.js
 public/test-key-lifecycle.js
+bindings/python/__pycache__/
