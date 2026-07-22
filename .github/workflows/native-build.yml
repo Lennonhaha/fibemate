@@ -68,5 +68,48 @@ jobs:
           process.exit(pass === 100 ? 0 : 1);
           "
 
+      - name: Verify NIST KAT (100 vectors, spot-check)
+        run: |
+          node -e "
+          const fs = require('fs');
+          const pk = require('./packages/pqc-kem');
+          const ref = fs.readFileSync('packages/pqc-kem/test/kat/mlkem-768-KAT.rsp', 'utf8');
+          var count = 0, pass = 0;
+          var seed = '', dk = '', c = '', k = '';
+          for (const line of ref.split('\n')) {
+            if (line.startsWith('count =')) { count++; continue; }
+            if (line.startsWith('dk =')) dk = line.slice(5);
+            else if (line.startsWith('c =')) c = line.slice(4);
+            else if (line.startsWith('k =')) k = line.slice(4);
+            if (dk && c && k) {
+              try {
+                const sk = Buffer.from(dk.substring(0,4800), 'hex');
+                const ct = Buffer.from(c, 'hex');
+                const d = pk.decapsulate(sk, ct);
+                if (Buffer.from(d).toString('hex') === k) pass++;
+                else process.stderr.write('KAT #' + count + ' mismatch\n');
+              } catch(e) { process.stderr.write('KAT #' + count + ' error: ' + e.message + '\n'); }
+              dk = ''; c = ''; k = '';
+            }
+          }
+          console.log('KAT verify:', pass + '/' + count);
+          process.exit(pass === count ? 0 : 1);
+          "
+
       - name: Compat fixtures test
         run: node test/run-compat-fixtures.mjs
+
+      - name: JS fallback verify (no addon)
+        run: |
+          node -e "
+          const JS = require('./packages/pqc-kem/src/ml-kem-768.js');
+          let pass = 0;
+          for (let i = 0; i < 10; i++) {
+            const kp = JS.generateKeypair();
+            const enc = JS.encapsulate(kp.publicKey);
+            const d = JS.decapsulate(kp.secretKey, enc.ciphertext);
+            if (Buffer.from(enc.sharedSecret).equals(Buffer.from(d))) pass++;
+          }
+          console.log('JS fallback roundtrip:', pass + '/10');
+          process.exit(pass === 10 ? 0 : 1);
+          "
