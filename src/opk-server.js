@@ -21,7 +21,7 @@
 const OPK_TTL_MS = 7 * 86400000;
 // 低供应阈值
 const LOW_SUPPLY_THRESHOLD = 20;
- */
+
 
 // 内存缓存 { userId → [{keyId, publicKey, status, createdAt}] }
 const opkCache = {};

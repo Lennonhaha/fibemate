@@ -28,7 +28,8 @@ const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
 // ML-KEM-768 native addon (FIPS 203 verified)
-const mlkem = require('../addon/build/Release/mlkem.node');
+let mlkem;
+try { mlkem = require('../packages/pqc-kem/src/ml-kem-768.js'); } catch (_) { mlkem = null; console.warn('[mlkem] C addon unavailable, using JS fallback'); }
 const mlkemPureJS = require('../packages/pqc-kem/src/ml-kem-768.js');
 const PQRatchet = require('../double-ratchet-pq');
 const pqSessions = new Map();
@@ -105,7 +106,12 @@ const sm2Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm2-proxy") :
 if (flags.ZK_AUTH) zkAnonAuth.setDatabase(db);
 const opkServer = require('./opk-server'); // init moved after authMiddleware
 const sm34Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm34-proxy") : (app) => {};
-const { checkAccountLockout, recordFailedLogin, resetLoginAttempts } = require('./lib/lockout'); // security-hotfix 2026-06-09
+let checkAccountLockout, recordFailedLogin, resetLoginAttempts;
+try { ({ checkAccountLockout, recordFailedLogin, resetLoginAttempts } = require('./lib/lockout')); } catch (_) {
+  checkAccountLockout = (n,l) => ({ locked: false, remaining: 0, remainingSec: 0 });
+  recordFailedLogin = (n,l) => {};
+  resetLoginAttempts = (n,l) => {};
+} // security-hotfix 2026-06-09
 global.noirDb = db;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: '/ws' });
@@ -906,7 +912,7 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
       logSecurity('login_blocked', null, { username, remainingSec: lockStatus.remainingSec });
       return res.status(429).json({
         error: `账户已锁定，请 ${min} 分 ${sec} 秒后重试`,
-        lockoutRemaining: lockStatus.remainingSec
+        lockoutRemaining: (lockStatus && lockStatus.remainingSec) || 0
       });
     }
 

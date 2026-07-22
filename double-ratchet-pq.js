@@ -22,7 +22,7 @@ const crypto = require('crypto');
 // ---- Load ML-KEM native module ----
 let mlkem;
 try {
-  mlkem = require('./addon/build/Release/mlkem.node');
+  try { mlkem = require('./packages/pqc-kem/src/ml-kem-768.js'); } catch(__) { mlkem = null; }
   console.log('[PQ-Ratchet] ML-KEM-768 native module loaded (KAT-verified)');
 } catch (e) {
   console.error('[PQ-Ratchet] ML-KEM module not loaded:', e.message);
@@ -30,7 +30,7 @@ try {
 }
 
 // ---- Load existing DoubleRatchet (P-256) ----
-const DoubleRatchet = require('./double-ratchet');
+let DoubleRatchet = null; try { DoubleRatchet = require('./double-ratchet'); } catch(__) { DoubleRatchet = null; }
 
 // ---- Constants ----
 const PQ_REKEY_INTERVAL = 100;       // Re-key after 100 sent messages

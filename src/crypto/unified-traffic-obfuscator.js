@@ -12,7 +12,8 @@
 
 const { WsPadding } = require('./ws-padding');
 const { TrafficShaper } = require('./traffic-shaping');
-const { MixnetTransport } = require('../../experimental/mixnet/mixnet-transport');
+let MixnetTransport = null;
+try { MixnetTransport = require('../../experimental/mixnet/mixnet-transport').MixnetTransport; } catch (_) { /* experimental not installed */ }
 
 class UnifiedTrafficObfuscator {
   constructor(db, onlineUsers, sendToUserFn) {
@@ -26,8 +27,8 @@ class UnifiedTrafficObfuscator {
     // Layer 2: Poisson traffic shaper
     this.shaper = new TrafficShaper();
     
-    // Layer 3: Mixnet transport
-    this.mixnet = new MixnetTransport(db, onlineUsers, sendToUserFn);
+    // Layer 3: Mixnet transport (optional — graceful degrade)
+    this.mixnet = MixnetTransport ? new MixnetTransport(db, onlineUsers, sendToUserFn) : null;
 
     this.stats = {
       messagesPadded: 0,
@@ -59,7 +60,7 @@ class UnifiedTrafficObfuscator {
 
   stop() {
     this.shaper.disable();
-    this.mixnet.stop();
+    if (this.mixnet) this.mixnet.stop();
     console.log('[UnifiedObfuscator] Stopped');
   }
 
@@ -95,14 +96,14 @@ class UnifiedTrafficObfuscator {
 
     if (opts.skipShaping) {
       // Urgent: skip Poisson, go direct to mixnet
-      this.mixnet.sendMessage(toUserId, msgObj, false);
+      if (this.mixnet) this.mixnet.sendMessage(toUserId, msgObj, false);
       return { shaped: false, padded: true };
     }
 
     // Layer 2: Poisson rate-limiting + random delay
     const result = this.shaper.processOutgoing(fromUserId, msgObj, (shaped) => {
       // After Poisson delay, pass to mixnet
-      this.mixnet.sendMessage(toUserId, shaped, true);
+      if (this.mixnet) this.mixnet.sendMessage(toUserId, shaped, true);
     });
 
     if (!result.allowed) {
