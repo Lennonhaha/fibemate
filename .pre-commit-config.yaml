@@ -1,0 +1,53 @@
+# See https://pre-commit.com for more information
+# Install: pip install pre-commit && pre-commit install
+
+repos:
+  # ─── Generic file hygiene ─────────────────────────────────
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-json
+      - id: check-added-large-files
+        args: ["--maxkb=500"]
+      - id: check-case-conflict
+      - id: detect-private-key
+      - id: mixed-line-ending
+        args: ["--fix=lf"]
+
+  # ─── ESLint (JS/MJS) ──────────────────────────────────────
+  - repo: https://github.com/pre-commit/mirrors-eslint
+    rev: v8.57.0
+    hooks:
+      - id: eslint
+        files: \.(js|mjs|cjs)$
+        args: ["--quiet", "--fix"]
+        additional_dependencies:
+          - eslint@8.57.0
+
+  # ─── Markdown lint ─────────────────────────────────────────
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.41.0
+    hooks:
+      - id: markdownlint
+        files: \.md$
+        args: ["--fix", "--disable", "MD013", "MD033", "MD041"]
+
+  # ─── Rust cargo clippy ─────────────────────────────────────
+  - repo: https://github.com/rust-lang/rustfmt
+    rev: v1.7.1
+    hooks:
+      - id: rustfmt
+        files: \.rs$
+
+  # ─── Local: crypto smoke test ──────────────────────────────
+  - repo: local
+    hooks:
+      - id: crypto-smoke
+        name: Crypto smoke test (ML-KEM + SM2)
+        entry: node test/smoke-crypto.js
+        language: system
+        files: packages/pqc-kem/src/.*\.js$
+        pass_filenames: false
