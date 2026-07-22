@@ -26,7 +26,7 @@ try {
   console.log('[pqc-hybrid] ✅ C Native ML-KEM-768');
 } catch (_) {
   try {
-    mlkem = require('../public/crypto/crypto/ml-kem-768.js');
+    mlkem = require('../packages/pqc-kem/src/ml-kem-768.js');
     console.log('[pqc-hybrid] JS ML-KEM-768');
   } catch (__) {
     mlkem = null;

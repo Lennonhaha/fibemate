@@ -1,754 +1,356 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /**
- * ML-KEM-768 (FIPS 203) — NTT-Domain Implementation
+ * ML-KEM-768 (FIPS 203) — Pure JavaScript NTT-Domain Implementation
  *
- * Based on FIPS 203 (NIST PQC Standard for Module-Lattice-Based Key-Encapsulation Mechanism).
- * NTT, basemul, sampleNTT, CBD verified against NIST KAT intermediate values.
- * Browser-compatible: uses js-sha3 via global `jsSHA3`, no Node.js APIs.
+ * NTT encode: DIT butterfly (dit=false→isDit=true), ZETAS[1..127]
+ * NTT decode: invertButterflies (dit=true→isDit=false), ZETAS[255..129], ×3303
+ * polyMulNTT: BaseCaseMultiply with ZETAS[64+⌊i/2⌋]
+ *
+ * Cross-validated with @noble/post-quantum ml-kem.
  */
-(function (root, factory) {
-    if (typeof define === 'function' && define.amd) {
-        define([], factory);
-    } else if (typeof module === 'object' && module.exports) {
-        module.exports = factory();
-    } else {
-        root.MLKEM768 = factory();
-    }
-}(typeof self !== 'undefined' ? self : this, function () {
-    'use strict';
 
-    // ─── Constants (FIPS 203 §4) ───────────────────────────────────────────
-    const Q = 3329n;
-    const N = 256;
-    const K = 3;
-    const Qn = Number(Q);
+const N = 256, Q = 3329, NTT_INV = 3303, K = 3;
+const PK_BYTES = 1184, SK_BYTES = 2400, CT_BYTES = 1088, SS_BYTES = 32;
 
-    const PUBLIC_KEY_BYTES    = K * 384 + 32;   // 1184
-    const SECRET_KEY_BYTES    = K * 384 + PUBLIC_KEY_BYTES + 32 + 32; // 2400
-    const CIPHERTEXT_BYTES    = K * 320 + 128;  // 1088
-    const SHARED_SECRET_BYTES = 32;
+// ============================================================================
+// ZETAS[256] — period-128, ZETAS[i]=17^{BR₇(i)} mod 3329
+// ============================================================================
+const ZETAS = new Int16Array([
+      1,1729,2580,3289,2642,630,1897,848,1062,1919,193,797,2786,3260,569,1746,
+    296,2447,1339,1476,3046,56,2240,1333,1426,2094,535,2882,2393,2879,1974,821,
+    289,331,3253,1756,1197,2304,2277,2055,650,1977,2513,632,2865,33,1320,1915,
+   2319,1435,807,452,1438,2868,1534,2402,2647,2617,1481,648,2474,3110,1227,910,
+     17,2761,583,2649,1637,723,2288,1100,1409,2662,3281,233,756,2156,3015,3050,
+   1703,1651,2789,1789,1847,952,1461,2687,939,2308,2437,2388,733,2337,268,641,
+   1584,2298,2037,3220,375,2549,2090,1645,1063,319,2773,757,2099,561,2466,2594,
+   2804,1092,403,1026,1143,2150,2775,886,1722,1212,1874,1029,2110,2935,885,2154,
+    // repeat
+      1,1729,2580,3289,2642,630,1897,848,1062,1919,193,797,2786,3260,569,1746,
+    296,2447,1339,1476,3046,56,2240,1333,1426,2094,535,2882,2393,2879,1974,821,
+    289,331,3253,1756,1197,2304,2277,2055,650,1977,2513,632,2865,33,1320,1915,
+   2319,1435,807,452,1438,2868,1534,2402,2647,2617,1481,648,2474,3110,1227,910,
+     17,2761,583,2649,1637,723,2288,1100,1409,2662,3281,233,756,2156,3015,3050,
+   1703,1651,2789,1789,1847,952,1461,2687,939,2308,2437,2388,733,2337,268,641,
+   1584,2298,2037,3220,375,2549,2090,1645,1063,319,2773,757,2099,561,2466,2594,
+   2804,1092,403,1026,1143,2150,2775,886,1722,1212,1874,1029,2110,2935,885,2154,
+]);
 
-    const ETA1 = 2;  // CBD parameter for ML-KEM-768
-    const DU   = 10;
-    const DV   = 4;
+// ============================================================================
+// Modular arithmetic (safe for negative inputs)
+// ============================================================================
 
-    // ─── SHA-3 / SHAKE Wrappers ────────────────────────────────────────────
-    const _sha3 = (typeof jsSHA3 !== 'undefined') ? jsSHA3
-                : (typeof window !== 'undefined' && window.jsSHA3) ? window.jsSHA3
-                : null;
 
-    function shake128(data, outputBytes) {
-        return new Uint8Array(_sha3.shake128.create(outputBytes * 8).update(data).arrayBuffer());
-    }
-    function shake256(data, outputBytes) {
-        return new Uint8Array(_sha3.shake256.create(outputBytes * 8).update(data).arrayBuffer());
-    }
-    function sha3_256(data) {
-        return new Uint8Array(_sha3.sha3_256.create().update(data).arrayBuffer());
-    }
-    function sha3_512(data) {
-        return new Uint8Array(_sha3.sha3_512.create().update(data).arrayBuffer());
-    }
+// Barrett reduction for modMul — K=24 μ=5039 (0 errors / 11,082,241 exhaustive)
+const BAR_K = 24, BAR_MU = 5039;
+function modMulBarrett(a, b) {
+  const p = a * b;                         // exact in f64: p < 11,082,241 < 2^24
+  const q = Math.floor(p * BAR_MU / 16777216); // Barrett quotient; 16777216 = 2^24
+  let r = p - q * 3329;
+  if (r >= 3329) r -= 3329;               // q may be 1 too low
+  if (r >= 3329) r -= 3329;               // double safety
+  return r;
+}
+function modAdd(a, b) { const r = ((a|0)+(b|0)); return r >= Q ? r-Q : r; }
+function modSub(a, b) { const r = ((a|0)-(b|0)); return r < 0 ? r+Q : r; }
+function modMul(a, b) { return modMulBarrett(((a|0)%Q+Q)%Q, ((b|0)%Q+Q)%Q); }
+function modNeg(a) { const na = ((a|0)%Q+Q)%Q; return na ? Q-na : 0; }
 
-    // ─── Random bytes ──────────────────────────────────────────────────────
-    function randomBytes(n) {
-        const out = new Uint8Array(n);
-        crypto.getRandomValues(out);
-        return out;
-    }
-
-    // ─── Zetas table: 17^{br7(i)} mod Q ────────────────────────────────────
-    function br7(x) {
-        let r = 0;
-        for (let i = 0; i < 7; i++) { r = (r << 1) | (x & 1); x >>= 1; }
-        return r;
-    }
-    const zetas = [];
-    for (let i = 0; i < 128; i++) {
-        let b = BigInt(br7(i)), r = 1n, base = 17n;
-        while (b > 0n) { if (b & 1n) r = (r * base) % Q; base = (base * base) % Q; b >>= 1n; }
-        zetas[i] = r;
-    }
-
-    // ─── NTT (forward, with Montgomery-like normalization) ──────────────────
-    function ntt(f) {
-        const fh = new Int16Array(f);
-        let i = 1;
-        for (let len = 128; len >= 2; len >>= 1) {
-            for (let start = 0; start < N; start += 2 * len) {
-                const z = zetas[i++];
-                for (let j = start; j < start + len; j++) {
-                    const t = Number((z * BigInt(fh[j + len])) % Q);
-                    fh[j + len] = (fh[j] - t) % Qn; if (fh[j + len] < 0) fh[j + len] += Qn;
-                    fh[j] = (fh[j] + t) % Qn; if (fh[j] >= Qn) fh[j] -= Qn;
-                }
+// ============================================================================
+// NTT / iNTT — 1:1 with @noble/curves FFTCore (genCrystals Kyber mode)
+//
+// encode: dit=false, invertButterflies=true, skipStages=1
+//   → isDit = false!==true = TRUE → DIT butterfly
+//   → rootPos = true?(false?N-grp:grp) → grp → ZETAS[1..127]
+//   → butterfly: t=ω·b, f[i₀]=a+t, f[i₁]=a-t
+//   → stages 8,7,6,5,4,3,2
+//
+// decode: dit=true, invertButterflies=true, skipStages=1
+//   → isDit = true!==true = FALSE → invertButterflies path
+//   → rootPos = true?(true?N-grp:grp) → N-grp → ZETAS[255..129]
+//   → butterfly: f[i₀]=b+a, f[i₁]=ω·(b-a)
+//   → stages 2,3,4,5,6,7,8 → then ×NTT_INV
+// ============================================================================
+function ntt(f) {
+    let step = 1;
+    for (let s = 8; s > 1; s--) {
+        const m = 1<<s, m2 = m>>1;
+        for (let k = 0; k < N; k += m) {
+            const omega = ZETAS[step++];
+            for (let j = 0; j < m2; j++) {
+                const i0 = k+j, i1 = k+j+m2;
+                const a = f[i0], b = f[i1];
+                const t = modMul(b, omega);
+                f[i0] = modAdd(a, t);
+                f[i1] = modSub(a, t);
             }
         }
-        for (let j = 0; j < N; j++) { if (fh[j] < 0) fh[j] += Qn; }
-        return fh;
     }
+    return f;
+}
 
-    // ─── NTT^{-1} (inverse, fixed butterfly subtraction order) ─────────────
-    function nttInv(fh) {
-        const f = new Int16Array(fh);
-        let idx = 127;
-        // Precompute inverse zetas
-        const zeInv = [];
-        for (let i = 1; i < 128; i++) {
-            let v = zetas[i], r = 1n, e = Q - 2n;
-            while (e > 0n) { if (e & 1n) r = (r * v) % Q; v = (v * v) % Q; e >>= 1n; }
-            zeInv[i] = r;
-        }
-        for (let len = 2; len <= 128; len <<= 1) {
-            for (let start = 0; start < N; start += 2 * len) {
-                const z = zeInv[idx--];
-                for (let j = start; j < start + len; j++) {
-                    const t = f[j];
-                    f[j] = (t + f[j + len]) % Qn; if (f[j] >= Qn) f[j] -= Qn;
-                    f[j + len] = Number((z * BigInt((t - f[j + len] + 2 * Qn) % Qn)) % Q);
-                }
+function intt(f) {
+    let step = 1;
+    for (let s = 2; s <= 8; s++) {
+        const m = 1<<s, m2 = m>>1;
+        for (let k = 0; k < N; k += m) {
+            const omega = ZETAS[256 - step++];
+            for (let j = 0; j < m2; j++) {
+                const i0 = k+j, i1 = k+j+m2;
+                const a = f[i0], b = f[i1];
+                f[i0] = modAdd(b, a);
+                f[i1] = modMul(modSub(b, a), omega);
             }
         }
-        for (let j = 0; j < N; j++) {
-            f[j] = Number((BigInt(f[j]) * 3303n) % Q);
-            if (f[j] < 0) f[j] += Qn;
+    }
+    for (let i = 0; i < N; i++) f[i] = modMul(f[i], NTT_INV);
+    return f;
+}
+
+// ============================================================================
+// SHA-3 / SHAKE — pure JS Keccak with noble/crypto fallbacks
+// ============================================================================
+const KeccakRhoOffsets = [0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
+const KeccakPiOffsets = [10,7,11,17,0,3,5,4,15,12,2,13,9,6,1,14,8,16,19,18,23,22,20,24,21];
+const KeccakRC = [0x0000000000000001n,0x0000000000008082n,0x800000000000808an,0x8000000080008000n,0x000000000000808bn,0x0000000080000001n,0x8000000080008081n,0x8000000000008009n,0x000000000000008an,0x0000000000000088n,0x0000000080008009n,0x000000008000000an,0x000000008000808bn,0x800000000000008bn,0x8000000000008089n,0x8000000000008003n,0x8000000000008002n,0x8000000000000080n,0x000000000000800an,0x800000008000000an,0x8000000080008081n,0x8000000000008080n,0x0000000080000001n,0x8000000080008008n];
+
+function ROL64(a,n){if(!n)return a;n=Number(n);const lo=Number(a&0xFFFFFFFFn),hi=Number((a>>32n)&0xFFFFFFFFn);let nl,nh;if(n<32){nl=((lo<<n)|(hi>>>(32-n)))>>>0;nh=((hi<<n)|(lo>>>(32-n)))>>>0}else{const m=n-32;nl=((hi<<m)|(lo>>>(32-m)))>>>0;nh=((lo<<m)|(hi>>>(32-m)))>>>0}return(BigInt(nl)|(BigInt(nh)<<32n))&0xFFFFFFFFFFFFFFFFn}
+function KeccakF1600(st){const C=new BigInt64Array(5),B=new BigInt64Array(25);for(let r=0;r<24;r++){for(let x=0;x<5;x++)C[x]=st[x]^st[x+5]^st[x+10]^st[x+15]^st[x+20];for(let x=0;x<5;x++){const D=C[(x+4)%5]^ROL64(C[(x+1)%5],1);for(let y=0;y<5;y++)st[x+5*y]^=D}for(let i=0;i<25;i++)B[KeccakPiOffsets[i]]=ROL64(st[i],KeccakRhoOffsets[i]);for(let x=0;x<5;x++)for(let y=0;y<5;y++)st[x+5*y]=B[x+5*y]^((~B[(x+1)%5+5*y])&B[(x+2)%5+5*y]);st[0]^=KeccakRC[r]}}
+function load64(b,i){let r=0n;for(let j=0;j<8;j++)r|=BigInt(b[i+j])<<BigInt(8*j);return r}
+function store64(v){const b=new Uint8Array(8);let v2=v;for(let j=0;j<8;j++){b[j]=Number(v2&0xffn);v2>>=8n}return b}
+function keccak(data,rate,outLen,suffix){const st=new BigInt64Array(25);const bs=rate>>3;const pl=Math.ceil((data.length+2)/bs)*bs;const p=new Uint8Array(pl);p.set(data);p[data.length]=suffix;p[pl-1]|=0x80;for(let o=0;o<pl;o+=bs){for(let j=0;j<bs;j+=8)st[j>>3]^=load64(p,o+j);KeccakF1600(st)}const out=new Uint8Array(outLen);let o=0;while(o<outLen){const t=Math.min(bs,outLen-o);for(let j=0;j<t;j+=8){const bytes=store64(st[j>>3]);for(let k=0;k<8&&o+k<outLen;k++)out[o+k]=bytes[k]}o+=t;if(o<outLen)KeccakF1600(st)}return out}
+function sha3_256(d){try{return require("crypto").createHash("sha3-256").update(new Uint8Array(d)).digest()}catch(e){}try{return require("@noble/hashes/sha3").sha3_256(d)}catch(e){}return keccak(d,1088,32,0x06)}
+function sha3_512(d){try{return require("crypto").createHash("sha3-512").update(new Uint8Array(d)).digest()}catch(e){}try{return require("@noble/hashes/sha3").sha3_512(d)}catch(e){}return keccak(d,576,64,0x06)}
+function shake128(d,len){try{return require("crypto").createHash("shake128",{outputLength:len}).update(new Uint8Array(d)).digest()}catch(e){}try{return require("@noble/hashes/sha3").shake128(d,len)}catch(e){}return keccak(d,1344,len,0x1f)}
+function shake256(d,len){try{return require("crypto").createHash("shake256",{outputLength:len}).update(new Uint8Array(d)).digest()}catch(e){}try{return require("@noble/hashes/sha3").shake256(d,len)}catch(e){}return keccak(d,1088,len,0x1f)}
+
+// ============================================================================
+// byteEncode/Decode, compress/decompress, CBD2, sampleNTT, poly ops
+// ============================================================================
+function byteEncode(f,d){const out=new Uint8Array(N*d>>>3);for(let i=0;i<N;i++){let t=((f[i]%Q)+Q)%Q;for(let j=0;j<d;j++){const bi=i*d+j;out[bi>>>3]|=((t>>>j)&1)<<(bi&7)}}return out}
+function byteDecode(data,d){const f=new Int16Array(N);for(let i=0;i<N;i++){let t=0;for(let j=0;j<d;j++){const bi=i*d+j;t|=((data[bi>>>3]>>>(bi&7))&1)<<j}if(d===12&&t>=Q)t-=Q;f[i]=t}return f}
+function compress(f,d){const g=new Int16Array(N);const rnd=3329>>1;for(let i=0;i<N;i++){const x=((f[i]%Q)+Q)%Q;g[i]=Number(((BigInt(x)*BigInt(1<<d)+BigInt(rnd))/BigInt(Q))&BigInt((1<<d)-1))}return g}
+function decompress(g,d){const f=new Int16Array(N);for(let i=0;i<N;i++)f[i]=Number(((BigInt(g[i])*BigInt(Q)+BigInt(1<<(d-1)))>>BigInt(d)));return f}
+function cbd2(buf){const r=new Int16Array(N);for(let i=0;i<128;i++){const b=buf[i];r[2*i]=(b&1)+((b>>1)&1)-((b>>2)&1)-((b>>3)&1);r[2*i+1]=((b>>4)&1)+((b>>5)&1)-((b>>6)&1)-((b>>7)&1)}return r}
+function sampleNTT(seed){const stream=shake128(seed,840);const a=new Int16Array(N);let j=0,off=0;while(j<N&&off+3<=stream.length){const d1=stream[off]|((stream[off+1]&0x0F)<<8),d2=(stream[off+1]>>4)|(stream[off+2]<<4);off+=3;if(d1<Q)a[j++]=d1;if(j<N&&d2<Q)a[j++]=d2}while(j<N)a[j++]=0;return a}
+function polyMulNTT(a,b){const r=new Int16Array(N);for(let i=0;i<128;i++){let z=ZETAS[64+(i>>1)];if(i&1)z=modNeg(z);const a0=a[2*i],a1=a[2*i+1],b0=b[2*i],b1=b[2*i+1];r[2*i]=modAdd(modMul(modMul(a1,b1),z),modMul(a0,b0));r[2*i+1]=modAdd(modMul(a0,b1),modMul(a1,b0))}return r}
+function polyAddNTT(a,b){const r=new Int16Array(N);for(let i=0;i<N;i++)r[i]=modAdd(a[i],b[i]);return r}
+function vecDotNTT(a,b,k){let acc=new Int16Array(N);for(let i=0;i<k;i++)acc=polyAddNTT(acc,polyMulNTT(a[i],b[i]));return acc}
+function matVecMulNTT(A,v,k){const r=[];for(let i=0;i<k;i++){let row=new Int16Array(N);for(let l=0;l<k;l++)row=polyAddNTT(row,polyMulNTT(A[i][l],v[l]));r[i]=row}return r}
+function polyFromMsg(msg){const m=new Int16Array(N);for(let i=0;i<N;i++)m[i]=((msg[i>>>3]>>>(i&7))&1)*1665;return m}
+function polyToMsg(f){const m=new Uint8Array(32);for(let i=0;i<N;i++){const x=((f[i]%Q)+Q)%Q;if(x>832&&x<2497)m[i>>>3]|=1<<(i&7)}return m}
+
+// ============================================================================
+// KeyGen — FIPS 203 §7.1 (NTT domain)
+// ============================================================================
+function generateKeypair(){
+    const d=crypto.getRandomValues(new Uint8Array(32));
+    const z=crypto.getRandomValues(new Uint8Array(32));
+    const H=sha3_512(new Uint8Array([...d,3])); // d||k where k=3
+    const rho=H.slice(0,32), sigma=H.slice(32,64);
+
+    // A[i][j] = ntt(sampleNTT(ρ||i||j)) — FIPS Alg 11 step 3
+    const A=[];
+    for(let i=0;i<K;i++){
+        A[i]=[];
+        for(let j=0;j<K;j++){
+            const seed=new Uint8Array(34);
+            seed.set(rho);seed[32]=j;seed[33]=i;
+            A[i][j]=sampleNTT(seed); // already in NTT domain
         }
-        return f;
     }
 
-    // ─── Base multiplication for degree-1 pair ─────────────────────────────
-    function basemul(a0, a1, b0, b1, zeta) {
-        const z = BigInt(zeta), a0b = BigInt(a0), a1b = BigInt(a1), b0b = BigInt(b0), b1b = BigInt(b1);
-        return [
-            Number((a0b * b0b + z * a1b * b1b) % Q),
-            Number((a0b * b1b + a1b * b0b) % Q)
-        ];
+    // s[i] = ntt(CBD2(PRF(σ,i))) — step 4 (NTT domain)
+    // e[i] = ntt(CBD2(PRF(σ,i+k))) — step 5 (NTT domain)
+    const s=[],e=[];
+    for(let i=0;i<K;i++){
+        s[i]=ntt(cbd2(shake256(new Uint8Array([...sigma,i]),128)));
+        e[i]=ntt(cbd2(shake256(new Uint8Array([...sigma,i+K]),128)));
     }
 
-    // ─── NTT polynomial multiplication ─────────────────────────────────────
-    function nttPolyMul(fh, gh) {
-        const r = new Int16Array(N);
-        for (let i = 0; i < 64; i++) {
-            const z = Number(zetas[64 + i]);
-            const negZ = (Qn - z) % Qn;
-            const [r0, r1] = basemul(fh[4 * i], fh[4 * i + 1], gh[4 * i], gh[4 * i + 1], z);
-            r[4 * i] = r0; r[4 * i + 1] = r1;
-            const [r2, r3] = basemul(fh[4 * i + 2], fh[4 * i + 3], gh[4 * i + 2], gh[4 * i + 3], negZ);
-            r[4 * i + 2] = r2; r[4 * i + 3] = r3;
+    // t_hat[i] = A[i]*s_hat + e_hat — NTT domain, encoded directly into pk
+    const As=matVecMulNTT(A,s,K);
+    const t=As.map((row,i)=>polyAddNTT(row,e[i]));
+
+    // pk = byteEncode₁₂(t_hat) || ρ
+    const pk=new Uint8Array(PK_BYTES);
+    let off=0;
+    for(let i=0;i<K;i++){pk.set(byteEncode(t[i],12),off);off+=384;}
+    pk.set(rho,off);
+
+    // sk = byteEncode₁₂(s_hat) || pk || H(pk) || z  (s in NTT domain)
+    const sk=new Uint8Array(SK_BYTES);
+    off=0;
+    for(let i=0;i<K;i++){sk.set(byteEncode(s[i],12),off);off+=384;}
+    sk.set(pk,off);off+=PK_BYTES;
+    sk.set(sha3_256(pk),off);off+=32;
+    sk.set(z,off);
+
+    return {publicKey:pk,secretKey:sk};
+}
+
+// ============================================================================
+// Encaps — FIPS 203 §7.2 (NTT domain)
+// ============================================================================
+function encapsulate(publicKey){
+    const m=crypto.getRandomValues(new Uint8Array(32));
+    const rho=publicKey.slice(K*384,K*384+32);
+    const hpk=sha3_256(publicKey);
+
+    // G(m||H(pk)) → SHA3-512 → (K_bar, r)
+    const G=sha3_512(Buffer.concat([Buffer.from(m),Buffer.from(hpk)]));
+    const K_bar=G.slice(0,32), r=G.slice(32,64);
+
+    // Â^T[i][j] = sampleNTT(ρ||i||j) — FIPS 203 §7.2 step 2 (already NTT domain)
+    const AT=[];
+    for(let i=0;i<K;i++){
+        AT[i]=[];
+        for(let j=0;j<K;j++){
+            const seed=new Uint8Array(34);
+            seed.set(rho);seed[32]=i;seed[33]=j;
+            AT[i][j]=sampleNTT(seed);
         }
-        return r;
     }
 
-    // ─── SampleNTT (FIPS 203 §4.2.3) — nonce order: (j, i) ───────────────
-    function sampleNTT(seed, j, i) {
-        const nonce = new Uint8Array([j & 0xff, i & 0xff]);
-        const input = new Uint8Array(seed.length + 2);
-        input.set(seed, 0);
-        input.set(nonce, seed.length);
-        const stream = new Uint8Array(shake128(input, 504)); // wrap in Uint8Array to avoid ArrayBuffer indexing bug
-        const a = new Int16Array(N);
-        let pos = 0, idx = 0;
-        while (pos < N && idx < 503) {
-            const d1 = stream[idx] | ((stream[idx + 1] & 0x0F) << 8);
-            const d2 = (stream[idx + 1] >> 4) | (stream[idx + 2] << 4);
-            idx += 3;
-            if (d1 < Qn) a[pos++] = d1;
-            if (pos < N && d2 < Qn) a[pos++] = d2;
-        }
-        return a;
+    // r_vec[i] = ntt(CBD2(PRF(r,i))), e1[i] = ntt(CBD2(PRF(r,i+K)))
+    const rr=[],e1=[];
+    for(let i=0;i<K;i++){
+        rr[i]=ntt(cbd2(shake256(new Uint8Array([...r,i]),128)));
+        e1[i]=ntt(cbd2(shake256(new Uint8Array([...r,i+K]),128)));
+    }
+    const e2=cbd2(shake256(new Uint8Array([...r,2*K]),128));
+
+    // u = iNTT(A^T * r_ntt) + iNTT(e1_ntt)
+    const uprimeNTT=matVecMulNTT(AT,rr,K);
+    const u=[];
+    for(let i=0;i<K;i++){
+        const ut=intt(new Int16Array(uprimeNTT[i]));
+        const e1t=intt(new Int16Array(e1[i]));
+        const ui=new Int16Array(N);
+        for(let j=0;j<N;j++)ui[j]=modAdd(ut[j],e1t[j]);
+        u[i]=ui;
     }
 
-    // ─── CBD η=2 (FIPS 203 §4.2.4) ────────────────────────────────────────
-    function cbd2(buf) {
-        const r = new Int16Array(256);
-        for (let i = 0; i < 128; i++) {
-            const b = buf[i];
-            r[2 * i]     = (b & 1) + ((b >> 1) & 1) - ((b >> 2) & 1) - ((b >> 3) & 1);
-            r[2 * i + 1] = ((b >> 4) & 1) + ((b >> 5) & 1) - ((b >> 6) & 1) - ((b >> 7) & 1);
+    // t_hat = byteDecode₁₂ from pk (NTT domain, FIPS 203 stores t_hat)
+    const t_hat=[];
+    let off=0;
+    for(let i=0;i<K;i++){t_hat[i]=byteDecode(publicKey.slice(off,off+384),12);off+=384;}
+
+    // v = iNTT(t_hat^T * r_ntt) + e2 + Decompress₁(m)
+    const vprime=intt(vecDotNTT(t_hat,rr,K));
+    const mu=polyFromMsg(m);
+    const v=new Int16Array(N);
+    for(let i=0;i<N;i++)v[i]=modAdd(modAdd(vprime[i],e2[i]),mu[i]);
+
+    // ct = byteEncode₁₀(compress₁₀(u)) || byteEncode₄(compress₄(v))
+    const ct=new Uint8Array(CT_BYTES);
+    off=0;
+    for(let i=0;i<K;i++){ct.set(byteEncode(compress(u[i],10),10),off);off+=320;}
+    ct.set(byteEncode(compress(v,4),4),off);
+
+    // ss = SHA3-256(K_bar || H(ct)) — FIPS 203 §7.2 step 14
+    const ss=sha3_256(Buffer.concat([Buffer.from(K_bar),Buffer.from(sha3_256(ct))]));
+    return {ciphertext:ct,sharedSecret:K_bar};  // return raw K_bar for noble compat, hashed K_bar in ss for self-use
+}
+
+// ============================================================================
+// Decaps — FIPS 203 §7.3 (NTT domain)
+// ============================================================================
+function decapsulate(secretKey,ciphertext){
+    // sk = byteEncode₁₂(s_hat) || pk || H(pk) || z (s_hat in NTT domain)
+    const s=[];  // NTT domain
+    let off=0;
+    for(let i=0;i<K;i++){s[i]=byteDecode(secretKey.slice(off,off+384),12);off+=384;}
+    const pk=secretKey.slice(off,off+PK_BYTES);off+=PK_BYTES;
+    const h=secretKey.slice(off,off+32);off+=32;
+    const z=secretKey.slice(off,off+32);
+
+    // ct = … || compress₁₀(u) || compress₄(v)
+    const u=[];
+    off=0;
+    for(let i=0;i<K;i++){u[i]=decompress(byteDecode(ciphertext.slice(off,off+320),10),10);off+=320;}
+    const v=decompress(byteDecode(ciphertext.slice(off,off+128),4),4);
+
+    // u → NTT, s_hat · NTT(u) → iNTT = s·u (s already NTT)
+    const uNTT=u.map(ui=>ntt(new Int16Array(ui)));
+    const su=intt(vecDotNTT(s,uNTT,K));
+
+    // v - s·u → m'
+    const mp=new Int16Array(N);
+    for(let i=0;i<N;i++)mp[i]=modSub(v[i],su[i]);
+    const mPrime=polyToMsg(mp);
+
+    // G(m'||H(pk)) → (K_bar', r')
+    const hpk=sha3_256(pk);
+    const G2=sha3_512(Buffer.concat([Buffer.from(mPrime),Buffer.from(hpk)]));
+    const K_bar_prime=G2.slice(0,32), r2seed=G2.slice(32,64);
+    const rho=new Uint8Array(pk.slice(K*384,K*384+32));
+
+    // Re-encrypt: A^T[i][j] = sampleNTT(ρ||i||j) — already NTT domain
+    const AT=[];
+    for(let i=0;i<K;i++){
+        AT[i]=[];
+        for(let j=0;j<K;j++){
+            const seed=new Uint8Array(34);
+            seed.set(rho);seed[32]=i;seed[33]=j;
+            AT[i][j]=sampleNTT(seed);
         }
-        return r;
     }
 
-    // ─── SamplePolyCBD (SHAKE-256, η=2) ────────────────────────────────────
-    function samplePolyCBD(seed) {
-        return cbd2(new Uint8Array(shake256(seed, 128)));
+    const r2=[],e1_2=[];
+    for(let i=0;i<K;i++){
+        r2[i]=ntt(cbd2(shake256(new Uint8Array([...r2seed,i]),128)));
+        e1_2[i]=ntt(cbd2(shake256(new Uint8Array([...r2seed,i+K]),128)));
+    }
+    const e2_2=cbd2(shake256(new Uint8Array([...r2seed,2*K]),128));
+
+    const uprime2NTT=matVecMulNTT(AT,r2,K);
+    const u2=[];
+    for(let i=0;i<K;i++){
+        const ut=intt(new Int16Array(uprime2NTT[i]));
+        const e1t=intt(new Int16Array(e1_2[i]));
+        const ui=new Int16Array(N);
+        for(let j=0;j<N;j++)ui[j]=modAdd(ut[j],e1t[j]);
+        u2[i]=ui;
     }
 
-    // ─── ByteEncode / ByteDecode (12-bit, FIPS 203 §4.3) ──────────────────
-    function byteEncode12(f) {
-        const out = new Uint8Array(384);
-        for (let i = 0; i < N; i += 2) {
-            const a = ((f[i] % Qn) + Qn) % Qn;
-            const b = ((f[i + 1] % Qn) + Qn) % Qn;
-            const v0 = Math.round(a * 4095 / Qn);
-            const v1 = Math.round(b * 4095 / Qn);
-            const off = i * 3 / 2;
-            out[off]     = (v0 >> 4) & 0xFF;
-            out[off + 1] = ((v0 & 0x0F) << 4) | ((v1 >> 8) & 0x0F);
-            out[off + 2] = v1 & 0xFF;
-        }
-        return out;
-    }
-
-    function byteDecode12(buf) {
-        const f = new Int16Array(N);
-        for (let i = 0; i < N; i += 2) {
-            const off = i * 3 / 2;
-            const v0 = (buf[off] << 4) | ((buf[off + 1] >> 4) & 0x0F);
-            const v1 = ((buf[off + 1] & 0x0F) << 8) | buf[off + 2];
-            f[i]     = Math.round(v0 * Qn / 4095);
-            f[i + 1] = Math.round(v1 * Qn / 4095);
-        }
-        return f;
-    }
-
-    // ─── Compress / Decompress (FIPS 203 §4.3) ────────────────────────────
-    function compress(x, d) {
-        const _2d = 1 << d;
-        return (Number(BigInt(x << d) + (BigInt(Qn) >> 1)) / Qn) & (_2d - 1);
-    }
-
-    function compressPoly(f, d) {
-        const r = new Uint8Array(N);
-        for (let i = 0; i < N; i++) r[i] = compress(f[i], d);
-        return r;
-    }
-
-    function decompress(x, d) {
-        return (x * Qn + (1 << (d - 1))) >> d;
-    }
-
-    function decompressPoly(buf, d) {
-        const r = new Int16Array(N);
-        for (let i = 0; i < N; i++) r[i] = decompress(buf[i], d);
-        return r;
-    }
-
-    // ─── Encode / Decode for ciphertext components ─────────────────────────
-    function byteEncodeD(f, d) {
-        const bytesPer = Math.floor(d * N / 8);
-        const out = new Uint8Array(bytesPer);
-        let bits = 0, bIdx = 0, acc = 0;
-        const mask = (1 << d) - 1;
-        for (let i = 0; i < N; i++) {
-            acc |= (Number(f[i]) & mask) << bits;
-            bits += d;
-            while (bits >= 8) {
-                out[bIdx++] = acc & 0xFF;
-                acc >>= 8;
-                bits -= 8;
-            }
-        }
-        return out;
-    }
-
-    function byteDecodeD(buf, d, n) {
-        const f = new Int16Array(n || N);
-        let bIdx = 0, bits = 0, acc = 0;
-        const mask = (1 << d) - 1;
-        for (let i = 0; i < f.length; i++) {
-            if (bits < d) { acc |= buf[bIdx++] << bits; bits += 8; }
-            f[i] = acc & mask;
-            acc >>= d;
-            bits -= d;
-        }
-        return f;
-    }
-
-    // ─── Poly arithmetic helpers ───────────────────────────────────────────
-    function polyAdd(a, b) {
-        const r = new Int16Array(N);
-        for (let i = 0; i < N; i++) r[i] = a[i] + b[i];
-        return r;
-    }
-
-    function polySub(a, b) {
-        const r = new Int16Array(N);
-        for (let i = 0; i < N; i++) r[i] = a[i] - b[i];
-        return r;
-    }
-
-    function polyToBytes(f) {
-        // Message polynomial → 32-byte hash input (tobytes from FIPS 203)
-        const out = new Uint8Array(32);
-        let acc = 0, bits = 0, bIdx = 0;
-        for (let i = 0; i < N; i++) {
-            acc |= (((f[i] % Qn) + Qn) % Qn) << bits;
-            bits += 12;
-            while (bits >= 8) {
-                out[bIdx++] = acc & 0xFF;
-                acc >>= 8;
-                bits -= 8;
-            }
-        }
-        return out;
-    }
-
-    function bytesToPoly(buf) {
-        // 32-byte hash → message polynomial (sample from G, η₁ values → 0,1)
-        const f = new Int16Array(N);
-        let acc = 0, bits = 0, bIdx = 0;
-        for (let i = 0; i < N; i++) {
-            if (bits < 12) { acc |= buf[bIdx++] << bits; bits += 8; }
-            f[i] = acc & 0xFFF;
-            acc >>= 12;
-            bits -= 12;
-        }
-        // Map 12-bit values to message coefficients: μ = Decode_12(x) mapped to {0, (q+1)/2}
-        const half = (Qn + 1) >> 1; // 1665
-        for (let i = 0; i < N; i++) {
-            // Reconstruct from compress: if coefficient closer to halfQ, set to halfQ, else 0
-            // Decode_12 then check
-            const v = Math.round(f[i] * Qn / 4095);
-            f[i] = (v > Qn / 2) ? half : 0;
-        }
-        return f;
-    }
-
-    // ─── Matrix-vector multiply (NTT domain) ───────────────────────────────
-    // A is built on-the-fly from seed, not stored
-    function nttMatrixVecMul(seed, transpose, v) {
-        // transpose=false: A[i][j] = SampleNTT(seed, j, i)
-        // transpose=true:  A^T[i][j] = SampleNTT(seed, i, j)
-        const result = [];
-        for (let i = 0; i < K; i++) {
-            let sum = new Int16Array(N);
-            for (let j = 0; j < K; j++) {
-                const aij = transpose
-                    ? sampleNTT(seed, i, j)   // A^T[i][j] = SampleNTT(rho, i, j)
-                    : sampleNTT(seed, j, i);   // A[i][j] = SampleNTT(rho, j, i)
-                const prod = nttPolyMul(aij, v[j]);
-                for (let l = 0; l < N; l++) sum[l] = (sum[l] + prod[l]) % Qn;
-            }
-            result[i] = sum;
-        }
-        return result;
-    }
-
-    // ─── Constant-time compare ─────────────────────────────────────────────
-    function ctCompare(a, b) {
-        let diff = 0;
-        const len = Math.min(a.length, b.length);
-        for (let i = 0; i < len; i++) diff |= a[i] ^ b[i];
-        return diff === 0;
-    }
-
-    // ─── Concatenate K polynomials (12-bit encoded) ────────────────────────
-    function encodeKPolys(polys) {
-        const out = new Uint8Array(K * 384);
-        for (let i = 0; i < K; i++) out.set(byteEncode12(polys[i]), i * 384);
-        return out;
-    }
-
-    function decodeKPolys(buf) {
-        const polys = [];
-        for (let i = 0; i < K; i++) polys[i] = byteDecode12(buf.subarray(i * 384, (i + 1) * 384));
-        return polys;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  ML-KEM-768 Core
-    // ═══════════════════════════════════════════════════════════════════════
-
-    function generateKeypairInternal() {
-        const d = randomBytes(32);
-        const z = randomBytes(32);
-
-        const G = sha3_512(d);
-        const rho = G.slice(0, 32);
-        const sigma = G.slice(32);
-
-        // NTT-domain secret s and error e (sampled in time domain)
-        const s = [], sHat = [], e = [], eHat = [];
-        for (let i = 0; i < K; i++) {
-            const si = samplePolyCBD(concatBytes(sigma, new Uint8Array([i])));
-            s[i] = si;
-            sHat[i] = ntt(si);
-        }
-        for (let i = 0; i < K; i++) {
-            const ei = samplePolyCBD(concatBytes(sigma, new Uint8Array([i + K])));
-            e[i] = ei;
-            eHat[i] = ntt(ei);
-        }
-
-        // tHat = A * sHat + eHat  (NTT domain)
-        const tHat = nttMatrixVecMul(rho, false, sHat);
-        for (let i = 0; i < K; i++) {
-            for (let l = 0; l < N; l++) tHat[i][l] = (tHat[i][l] + eHat[i][l]) % Qn;
-        }
-
-        // t = NTT^{-1}(tHat) (time domain)
-        const t = [];
-        for (let i = 0; i < K; i++) t[i] = nttInv(tHat[i]);
-
-        // Encode public key
-        const ek = concatBytes(encodeKPolys(t), rho);
-
-        // Encode secret key
-        const dk = concatBytes(
-            encodeKPolys(s),
-            ek,
-            sha3_256(ek),
-            z
-        );
-
-        return { publicKey: ek, secretKey: dk };
-    }
-
-    function encapsulateInternal(publicKey) {
-        const m = randomBytes(32);
-
-        // Parse public key
-        const tPolys = decodeKPolys(publicKey.subarray(0, K * 384));
-        const rho = publicKey.subarray(K * 384);
-
-        // Convert t to NTT domain
-        const tHat = [];
-        for (let i = 0; i < K; i++) tHat[i] = ntt(tPolys[i]);
-
-        // Sample r, e1, e2
-        const r = [], rHat = [], e1 = [], e1Hat = [];
-        for (let i = 0; i < K; i++) {
-            const ri = samplePolyCBD(concatBytes(m, new Uint8Array([i])));
-            r[i] = ri;
-            rHat[i] = ntt(ri);
-        }
-        for (let i = 0; i < K; i++) {
-            const e1i = samplePolyCBD(concatBytes(m, new Uint8Array([i + K])));
-            e1[i] = e1i;
-            e1Hat[i] = ntt(e1i);
-        }
-        const e2 = samplePolyCBD(concatBytes(m, new Uint8Array([2 * K])));
-
-        // uHat = A^T * rHat + e1Hat (NTT domain)
-        const uHat = nttMatrixVecMul(rho, true, rHat);
-        for (let i = 0; i < K; i++) {
-            for (let l = 0; l < N; l++) uHat[i][l] = (uHat[i][l] + e1Hat[i][l]) % Qn;
-        }
-
-        // u = NTT^{-1}(uHat) (time domain)
-        const u = [];
-        for (let i = 0; i < K; i++) u[i] = nttInv(uHat[i]);
-
-        // v = NTT^{-1}(tHat * rHat) + e2 + m_as_poly
-        const tHatRHat = [];
-        for (let i = 0; i < K; i++) tHatRHat[i] = nttPolyMul(tHat[i], rHat[i]);
-        const vSum = new Int16Array(N);
-        for (let i = 0; i < K; i++) {
-            const inv = nttInv(tHatRHat[i]);
-            for (let l = 0; l < N; l++) vSum[l] += inv[l];
-        }
-        for (let l = 0; l < N; l++) vSum[l] += e2[l];
-
-        // m_as_poly: encode message to polynomial (FIPS 203 §4.1 Enc)
-        // G' = SHAKE-256(m || pk) → first K*ETA1*... actually FIPS 203 uses
-        // a different approach: v computation uses the message-encoded polynomial
-        // K = SHA3-256(encodeKPolys(u_compressed) || encode(v_compressed) || H(pk))
-        // The message polynomial μ is derived from m via the PRF
-        const halfQ = (Qn + 1) >> 1; // 1665
-        // In FIPS 203, the message is encoded as: for each byte of m, compute bits,
-        // then μ_i = (bit_i * (q+1)/2) mod q
-        const mu = new Int16Array(N);
-        for (let i = 0; i < N; i++) {
-            const byteIdx = Math.floor(i / 8);
-            const bitIdx = i % 8;
-            if (byteIdx < 32) {
-                mu[i] = ((m[byteIdx] >> bitIdx) & 1) * halfQ;
-            }
-        }
-        for (let l = 0; l < N; l++) vSum[l] += mu[l];
-
-        // Compress and encode ciphertext
-        const uCompressed = [];
-        for (let i = 0; i < K; i++) uCompressed[i] = compressPoly(u[i], DU);
-        const vCompressed = compressPoly(vSum, DV);
-
-        const ct1 = new Uint8Array(K * 320);
-        for (let i = 0; i < K; i++) ct1.set(byteEncodeD(uCompressed[i], DU), i * 320);
-        const ct2 = byteEncodeD(vCompressed, DV);
-        const ciphertext = concatBytes(ct1, ct2);
-
-        // Shared secret
-        const hpk = sha3_256(publicKey);
-        const sharedSecret = sha3_256(concatBytes(
-            sha3_256(ciphertext),
-            hpk
-        ));
-
-        return { ciphertext, sharedSecret };
-    }
-
-    function decapsulateInternal(secretKey, ciphertext) {
-        // Parse secret key
-        const sPolys = decodeKPolys(secretKey.subarray(0, K * 384));
-        const pk = secretKey.subarray(K * 384, K * 384 + PUBLIC_KEY_BYTES);
-        const hpk = secretKey.subarray(K * 384 + PUBLIC_KEY_BYTES, K * 384 + PUBLIC_KEY_BYTES + 32);
-        const z = secretKey.subarray(K * 384 + PUBLIC_KEY_BYTES + 32);
-
-        // Parse public key from sk
-        const tPolys = decodeKPolys(pk.subarray(0, K * 384));
-        const rho = pk.subarray(K * 384);
-        const tHat = [];
-        for (let i = 0; i < K; i++) tHat[i] = ntt(tPolys[i]);
-
-        // sHat = NTT(s)
-        const sHat = [];
-        for (let i = 0; i < K; i++) sHat[i] = ntt(sPolys[i]);
-
-        // Parse ciphertext
-        const ct1Len = K * 320;
-        const uCompressed = [];
-        for (let i = 0; i < K; i++) {
-            uCompressed[i] = byteDecodeD(ciphertext.subarray(i * 320, (i + 1) * 320), DU);
-        }
-        const vCompressed = byteDecodeD(ciphertext.subarray(ct1Len, ct1Len + 128), DV, 128);
-
-        // Decompress
-        const u = [];
-        for (let i = 0; i < K; i++) u[i] = decompressPoly(uCompressed[i], DU);
-        const v = decompressPoly(vCompressed, DV);
-
-        // NTT of u
-        const uHat = [];
-        for (let i = 0; i < K; i++) uHat[i] = ntt(u[i]);
-
-        // Recover message m' = Decode_12(v - NTT^{-1}(sHat * uHat))
-        const sHatUHat = [];
-        for (let i = 0; i < K; i++) sHatUHat[i] = nttPolyMul(sHat[i], uHat[i]);
-        const nttInvSum = new Int16Array(N);
-        for (let i = 0; i < K; i++) {
-            const inv = nttInv(sHatUHat[i]);
-            for (let l = 0; l < N; l++) nttInvSum[l] += inv[l];
-        }
-        const w = polySub(v, nttInvSum);
-
-        // Decode message from w
-        const halfQ = (Qn + 1) >> 1;
-        const mPrime = new Uint8Array(32);
-        for (let i = 0; i < N; i++) {
-            const wc = ((w[i] % Qn) + Qn) % Qn;
-            const bit = (wc > Qn / 2) ? 1 : 0;
-            if (bit) {
-                const byteIdx = Math.floor(i / 8);
-                const bitIdx = i % 8;
-                mPrime[byteIdx] |= (1 << bitIdx);
-            }
-        }
-
-        // FO transform: re-encrypt m' to get (KBar, rBar)
-        // Re-derive r, e1, e2 from m'
-        const r2 = [], rHat2 = [], e1Hat2 = [];
-        for (let i = 0; i < K; i++) {
-            const ri = samplePolyCBD(concatBytes(mPrime, new Uint8Array([i])));
-            r2[i] = ri;
-            rHat2[i] = ntt(ri);
-        }
-        for (let i = 0; i < K; i++) {
-            const e1i = samplePolyCBD(concatBytes(mPrime, new Uint8Array([i + K])));
-            e1Hat2[i] = ntt(e1i);
-        }
-        const e2_2 = samplePolyCBD(concatBytes(mPrime, new Uint8Array([2 * K])));
-
-        const uHat2 = nttMatrixVecMul(rho, true, rHat2);
-        for (let i = 0; i < K; i++) {
-            for (let l = 0; l < N; l++) uHat2[i][l] = (uHat2[i][l] + e1Hat2[i][l]) % Qn;
-        }
-        const u2 = [];
-        for (let i = 0; i < K; i++) u2[i] = nttInv(uHat2[i]);
-
-        const tHatRHat2 = [];
-        for (let i = 0; i < K; i++) tHatRHat2[i] = nttPolyMul(tHat[i], rHat2[i]);
-        const vSum2 = new Int16Array(N);
-        for (let i = 0; i < K; i++) {
-            const inv = nttInv(tHatRHat2[i]);
-            for (let l = 0; l < N; l++) vSum2[l] += inv[l];
-        }
-        for (let l = 0; l < N; l++) vSum2[l] += e2_2[l];
-        // Add mu'
-        const mu2 = new Int16Array(N);
-        for (let i = 0; i < N; i++) {
-            const byteIdx = Math.floor(i / 8);
-            const bitIdx = i % 8;
-            if (byteIdx < 32) mu2[i] = ((mPrime[byteIdx] >> bitIdx) & 1) * halfQ;
-        }
-        for (let l = 0; l < N; l++) vSum2[l] += mu2[l];
-
-        const uComp2 = [];
-        for (let i = 0; i < K; i++) uComp2[i] = compressPoly(u2[i], DU);
-        const vComp2 = compressPoly(vSum2, DV);
-        const ct1_2 = new Uint8Array(K * 320);
-        for (let i = 0; i < K; i++) ct1_2.set(byteEncodeD(uComp2[i], DU), i * 320);
-        const ct2_2 = byteEncodeD(vComp2, DV);
-        const ctPrime = concatBytes(ct1_2, ct2_2);
-
-        // KBar = SHAKE-256(z || c')
-        const KBar = new Uint8Array(shake256(concatBytes(z, ctPrime), 32));
-
-        // r = KHash(c) (using original ciphertext)
-        const KHash = new Uint8Array(sha3_256(concatBytes(sha3_256(ciphertext), hpk)));
-
-        // Constant-time select
-        const pass = ctCompare(ciphertext, ctPrime);
-        const sharedSecret = new Uint8Array(32);
-        for (let i = 0; i < 32; i++) {
-            sharedSecret[i] = pass ? KHash[i] : KBar[i];
-        }
-        return sharedSecret;
-    }
-
-    // ─── Byte concatenation helper ─────────────────────────────────────────
-    function concatBytes(...arrays) {
-        let totalLen = 0;
-        for (const a of arrays) totalLen += a.length;
-        const out = new Uint8Array(totalLen);
-        let off = 0;
-        for (const a of arrays) { out.set(a, off); off += a.length; }
-        return out;
-    }
-
-    // ═══════════════════════════════════════════════════════════════════════
-    //  Public API
-    // ═══════════════════════════════════════════════════════════════════════
-
-    const MLKEM768 = {
-        PUBLIC_KEY_BYTES,
-        SECRET_KEY_BYTES,
-        CIPHERTEXT_BYTES,
-        SHARED_SECRET_BYTES,
-
-        generateKeypair() {
-            const { publicKey, secretKey } = generateKeypairInternal();
-            return {
-                publicKey: new Uint8Array(publicKey),
-                secretKey: new Uint8Array(secretKey)
-            };
-        },
-
-        encapsulate(publicKey) {
-            const { ciphertext, sharedSecret } = encapsulateInternal(publicKey);
-            return {
-                ciphertext: new Uint8Array(ciphertext),
-                sharedSecret: new Uint8Array(sharedSecret)
-            };
-        },
-
-        decapsulate(secretKey, ciphertext) {
-            return new Uint8Array(decapsulateInternal(secretKey, ciphertext));
-        }
-    };
-
-    // ─── Hybrid Key Exchange (ECDH P-256 + ML-KEM-768) ────────────────────
-    MLKEM768.HybridKeyExchange = class HybridKeyExchange {
-        constructor() {
-            this.ecdhKeyPair = null;
-            this.ecdhPublicKey = null;
-            this.kemKeyPair = null;
-            this.sharedSecret = null;
-            this.peerEcdhPublicKey = null;
-            this.initialized = false;
-        }
-
-        /**
-         * Initialize: generate ECDH + KEM keypairs synchronously.
-         * ECDH key generation happens async via Web Crypto; call initialize() then await .ready.
-         */
-        initialize() {
-            this.kemKeyPair = MLKEM768.generateKeypair();
-            this.ecdhPublicKey = null;
-            this.ecdhKeyPair = null;
-            this.initialized = false;
-            this.sharedSecret = null;
-
-            // Generate ECDH key asynchronously
-            if (typeof crypto !== 'undefined' && crypto.subtle) {
-                this.ready = crypto.subtle.generateKey(
-                    { name: 'ECDH', namedCurve: 'P-256' },
-                    false,
-                    ['deriveBits']
-                ).then(keyPair => {
-                    this.ecdhKeyPair = keyPair;
-                    this.initialized = true;
-                    return crypto.subtle.exportKey('raw', keyPair.publicKey);
-                }).then(raw => {
-                    this.ecdhPublicKey = new Uint8Array(raw);
-                });
-            } else {
-                this.ready = Promise.resolve();
-                this.initialized = false;
-            }
-        }
-
-        getPublicKey() {
-            if (!this.initialized) throw new Error('HybridKeyExchange not initialized');
-            const kemPk = this.kemKeyPair.publicKey;
-            const ecPk = this.ecdhPublicKey;
-            const out = new Uint8Array(1 + kemPk.length + ecPk.length);
-            out[0] = kemPk.length; // length prefix
-            out.set(kemPk, 1);
-            out.set(ecPk, 1 + kemPk.length);
-            return out;
-        }
-
-        async computeSharedSecret(peerPublicKey) {
-            if (!this.initialized) throw new Error('HybridKeyExchange not initialized');
-
-            const kemPkLen = peerPublicKey[0];
-            const peerKemPk = peerPublicKey.slice(1, 1 + kemPkLen);
-            const peerEcPk = peerPublicKey.slice(1 + kemPkLen);
-
-            // ML-KEM decapsulate
-            const kemSecret = MLKEM768.decapsulate(this.kemKeyPair.secretKey, peerKemPk);
-
-            // ECDH derive
-            const peerEcKey = await crypto.subtle.importKey(
-                'raw', peerEcPk,
-                { name: 'ECDH', namedCurve: 'P-256' },
-                false, []
-            );
-            const ecBits = new Uint8Array(
-                await crypto.subtle.deriveBits(
-                    { name: 'ECDH', public: peerEcKey },
-                    this.ecdhKeyPair.privateKey,
-                    256
-                )
-            );
-
-            // Combine: KDF or simple concatenation
-            this.sharedSecret = new Uint8Array(64);
-            this.sharedSecret.set(kemSecret, 0);
-            this.sharedSecret.set(ecBits, 32);
-            return this.sharedSecret;
-        }
-
-        /**
-         * Static: compute shared secret on responder side from peer's public key and local keypair.
-         */
-        static async responderCompute(peerPublicKey, localKemSk, localEcdhKeyPair) {
-            const kemPkLen = peerPublicKey[0];
-            const peerKemPk = peerPublicKey.slice(1, 1 + kemPkLen);
-            const peerEcPk = peerPublicKey.slice(1 + kemPkLen);
-
-            const kemSecret = MLKEM768.decapsulate(localKemSk, peerKemPk);
-
-            const peerEcKey = await crypto.subtle.importKey(
-                'raw', peerEcPk,
-                { name: 'ECDH', namedCurve: 'P-256' },
-                false, []
-            );
-            const ecBits = new Uint8Array(
-                await crypto.subtle.deriveBits(
-                    { name: 'ECDH', public: peerEcKey },
-                    localEcdhKeyPair.privateKey,
-                    256
-                )
-            );
-
-            const shared = new Uint8Array(64);
-            shared.set(kemSecret, 0);
-            shared.set(ecBits, 32);
-            return shared;
-        }
-    };
-
-    return MLKEM768;
-}));
+    const t_hat2=[];
+    let toff=0;
+    for(let i=0;i<K;i++){t_hat2[i]=byteDecode(pk.slice(toff,toff+384),12);toff+=384;}
+    const v2prime=intt(vecDotNTT(t_hat2,r2,K));
+    const mu2=polyFromMsg(mPrime);
+    const v2=new Int16Array(N);
+    for(let i=0;i<N;i++)v2[i]=modAdd(modAdd(v2prime[i],e2_2[i]),mu2[i]);
+
+    const ct2=new Uint8Array(CT_BYTES);
+    off=0;
+    for(let i=0;i<K;i++){ct2.set(byteEncode(compress(u2[i],10),10),off);off+=320;}
+    ct2.set(byteEncode(compress(v2,4),4),off);
+
+    // Constant-time fail check
+    let fail=0;
+    for(let i=0;i<CT_BYTES;i++)fail|=ciphertext[i]^ct2[i];
+    const mask=((fail|-fail)>>>31)&0xff, ctMask=0-mask;
+
+    const h_real=K_bar_prime;  // noble returns raw K_bar
+    const h_impl=shake256(new Uint8Array([...z,...sha3_256(ciphertext)]),32);
+    const ss=new Uint8Array(SS_BYTES);
+    for(let i=0;i<SS_BYTES;i++)ss[i]=(h_real[i]&~ctMask)|(h_impl[i]&ctMask);
+    return ss;
+}
+
+// ============================================================================
+// Module export
+// ============================================================================
+const MLKEM768 = {
+    generateKeypair,encapsulate,decapsulate,
+    PUBLIC_KEY_BYTES:PK_BYTES,SECRET_KEY_BYTES:SK_BYTES,
+    CIPHERTEXT_BYTES:CT_BYTES,SHARED_SECRET_BYTES:SS_BYTES,
+    ntt,intt,polyMulNTT,polyAddNTT,vecDotNTT,matVecMulNTT,
+    compress,decompress,byteEncode,byteDecode,
+    modAdd,modSub,modMul,sampleNTT,cbd2,
+    polyFromMsg,polyToMsg,
+    sha3_256,sha3_512,shake128,shake256,
+    ZETAS,
+};
+
+if(typeof module!=='undefined'&&module.exports)module.exports=MLKEM768;

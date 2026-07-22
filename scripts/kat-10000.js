@@ -6,7 +6,7 @@
 
 "use strict";
 
-const M = require("../www/crypto/ml-kem-768.js");
+const M = require("../packages/pqc-kem/src/ml-kem-768.js");
 const crypto = require("crypto");
 const fs = require("fs");
 const path = require("path");

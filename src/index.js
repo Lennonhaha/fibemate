@@ -29,7 +29,7 @@ const path = require('path');
 const fs = require('fs');
 // ML-KEM-768 native addon (FIPS 203 verified)
 const mlkem = require('../addon/build/Release/mlkem.node');
-const mlkemPureJS = require('../www/crypto/ml-kem-768.js');
+const mlkemPureJS = require('../packages/pqc-kem/src/ml-kem-768.js');
 const PQRatchet = require('../double-ratchet-pq');
 const pqSessions = new Map();
 

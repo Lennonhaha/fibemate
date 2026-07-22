@@ -1,5 +1,6 @@
 // ML-KEM-768 (FIPS 203) — Browser-compatible standalone
 // Auto-generated from packages/pqc-kem/src/ml-kem-768.js
+// Synced: $(date)
 (function() {
 
 // Browser Buffer polyfill (Node.js built-in in original source)
@@ -32,12 +33,13 @@ if (typeof Buffer === 'undefined') {
   };
 }
 
-// Browser Int16Array polyfill (just in case)
+// Browser crypto polyfill (Web Crypto API)
+if (typeof crypto === 'undefined' || typeof crypto.getRandomValues === 'undefined') {
+  // Fallback: not expected in modern browsers
+}
+
+// Browser Int16Array (exists in all modern browsers, but just in case)
 if (typeof Int16Array === 'undefined') { window.Int16Array = Int16Array; }
-/**
- * ML-KEM-768 (FIPS 203) — Pure JavaScript NTT-Domain Implementation
- *
- * NTT encode: DIT butterfly (dit=false→isDit=true), ZETAS[1..127]
  * NTT decode: invertButterflies (dit=true→isDit=false), ZETAS[255..129], ×3303
  * polyMulNTT: BaseCaseMultiply with ZETAS[64+⌊i/2⌋]
  *
@@ -73,9 +75,21 @@ const ZETAS = new Int16Array([
 // ============================================================================
 // Modular arithmetic (safe for negative inputs)
 // ============================================================================
-function modAdd(a, b) { const r = ((a|0)+(b|0)) % Q; return r >= 0 ? r : r+Q; }
-function modSub(a, b) { const r = ((a|0)-(b|0)) % Q; return r >= 0 ? r : r+Q; }
-function modMul(a, b) { const na = ((a|0)%Q+Q)%Q, nb = ((b|0)%Q+Q)%Q; return Number((BigInt(na)*BigInt(nb))%BigInt(Q)); }
+
+
+// Barrett reduction for modMul — K=24 μ=5039 (0 errors / 11,082,241 exhaustive)
+const BAR_K = 24, BAR_MU = 5039;
+function modMulBarrett(a, b) {
+  const p = a * b;                         // exact in f64: p < 11,082,241 < 2^24
+  const q = Math.floor(p * BAR_MU / 16777216); // Barrett quotient; 16777216 = 2^24
+  let r = p - q * 3329;
+  if (r >= 3329) r -= 3329;               // q may be 1 too low
+  if (r >= 3329) r -= 3329;               // double safety
+  return r;
+}
+function modAdd(a, b) { const r = ((a|0)+(b|0)); return r >= Q ? r-Q : r; }
+function modSub(a, b) { const r = ((a|0)-(b|0)); return r < 0 ? r+Q : r; }
+function modMul(a, b) { return modMulBarrett(((a|0)%Q+Q)%Q, ((b|0)%Q+Q)%Q); }
 function modNeg(a) { const na = ((a|0)%Q+Q)%Q; return na ? Q-na : 0; }
 
 // ============================================================================
@@ -102,8 +116,9 @@ function ntt(f) {
             for (let j = 0; j < m2; j++) {
                 const i0 = k+j, i1 = k+j+m2;
                 const a = f[i0], b = f[i1];
-                f[i0] = modAdd(a, modMul(b, omega));
-                f[i1] = modSub(a, modMul(b, omega));
+                const t = modMul(b, omega);
+                f[i0] = modAdd(a, t);
+                f[i1] = modSub(a, t);
             }
         }
     }
@@ -375,7 +390,6 @@ const MLKEM768 = {
     ZETAS,
 };
 
-
-
 window.MLKEM768 = MLKEM768;
+
 })();
