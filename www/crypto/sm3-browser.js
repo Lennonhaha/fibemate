@@ -267,5 +267,5 @@
     }
   };
 
-  window.SM3Hash = SM3Hash; if(typeof module!==undefined)module.exports=SM3Hash;
+  if (typeof window !== "undefined") window.SM3Hash = SM3Hash; if(typeof module!=="undefined")module.exports=SM3Hash;
 })();
