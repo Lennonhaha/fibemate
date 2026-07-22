@@ -37,9 +37,21 @@ const ZETAS = new Int16Array([
 // ============================================================================
 // Modular arithmetic (safe for negative inputs)
 // ============================================================================
+
+
+// Barrett reduction for modMul — K=24 μ=5039 (0 errors / 11,082,241 exhaustive)
+const BAR_K = 24, BAR_MU = 5039;
+function modMulBarrett(a, b) {
+  const p = a * b;                         // exact in f64: p < 11,082,241 < 2^24
+  const q = Math.floor(p * BAR_MU / 16777216); // Barrett quotient; 16777216 = 2^24
+  let r = p - q * 3329;
+  if (r >= 3329) r -= 3329;               // q may be 1 too low
+  if (r >= 3329) r -= 3329;               // double safety
+  return r;
+}
 function modAdd(a, b) { const r = ((a|0)+(b|0)) % Q; return r >= 0 ? r : r+Q; }
 function modSub(a, b) { const r = ((a|0)-(b|0)) % Q; return r >= 0 ? r : r+Q; }
-function modMul(a, b) { const na = ((a|0)%Q+Q)%Q, nb = ((b|0)%Q+Q)%Q; return Number((BigInt(na)*BigInt(nb))%BigInt(Q)); }
+function modMul(a, b) { return modMulBarrett(((a|0)%Q+Q)%Q, ((b|0)%Q+Q)%Q); }
 function modNeg(a) { const na = ((a|0)%Q+Q)%Q; return na ? Q-na : 0; }
 
 // ============================================================================
