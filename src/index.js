@@ -219,12 +219,9 @@ app.get('/', (req, res) => {
 
 // A2A Agent-to-Agent 接口 (2026-06-09 添加)
 // VWZ Research API — gated by flags.VWZ
-const vwzResearchRouter = flags.VWZ ? require('./vwz-research-api') : null;
+// VWZ Research API — moved to experimental/vwz-lg branch (2026-07-22)
 const a2aCore = require('../api/a2a/a2a-core');
 app.use('/a2a', a2aCore.router);
-if (flags.VWZ) {
-  app.use('/research/vwz', vwzResearchRouter);
-}
 app.get('*', (req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/voice') || req.path.startsWith('/research') || req.path === '/health') return next();
   if (req.path === '/app' || req.path === '/index') {

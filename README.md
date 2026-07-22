@@ -4,6 +4,8 @@
 >
 > - **Production-ready components** (ML-KEM-768, SLH-DSA, SM2/SM3/SM4) have passed functional verification and software TVLA side-channel testing, but **have not undergone third-party security audit**.
 > - **Experimental components** (VWZ, LookingGlass) **provide no cryptographic security guarantees**, are default-off, require manual activation.
+
+> ⚠️ VWZ / LookingGlass 实验组件已于 2026-07-22 迁移至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支。主分支保留文档引用，源代码不再维护于 main。
 > - Full security assessment: see [Security Model](#security-model) and [Known Limitations](#known-limitations).
 
 ---
