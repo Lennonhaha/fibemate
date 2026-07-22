@@ -17,7 +17,7 @@
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
-**v3.3-preview** · 2026-07-21 · TSR: lg-001~089 (89 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3-preview** · 2026-07-21 · TSR: lg-001~094 (94 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Production/Experiment Separation**: 🟢 Production-grade (default-on, auditable) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -41,7 +41,7 @@
 
 The post-quantum transition is not just about swapping algorithms — it's about **engineering the entire stack** from browser to FPGA, from KAT vectors to formal verification, from national standards to IANA registrations.
 
-FIBEMATE is a solo-developed, publicly verifiable engineering proof that the full chain works end-to-end: ML-KEM-768 + SM2 hybrid key exchange over TLS 1.3, hardware-accelerated NTT on Artix-7 FPGA, TLA+ formal verification of the handshake protocol, and WASM-based browser cryptography — timestamped for reproducibility tracking (89 RFC 3161 records in repo; see [TSR Manifest](docs/TSR-MANIFEST.md)).
+FIBEMATE is a solo-developed, publicly verifiable engineering proof that the full chain works end-to-end: ML-KEM-768 + SM2 hybrid key exchange over TLS 1.3, hardware-accelerated NTT on Artix-7 FPGA, TLA+ formal verification of the handshake protocol, and WASM-based browser cryptography — timestamped for reproducibility tracking (94 RFC 3161 records in repo; see [TSR Manifest](docs/TSR-MANIFEST.md)).
 
 **Who is this for?** Crypto engineers implementing PQC in practice, security researchers exploring hybrid KEX architectures, FPGA developers working on lattice-based hardware, and anyone evaluating the real-world readiness of post-quantum migration.
 
@@ -110,7 +110,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 ## 📄 Publications
 
 - **VWZ: A Vandermonde-Wronskian-Zariski Tensor Trapdoor for Compact Post-Quantum Signatures.**
-  Tianhe Liu. IACR Cryptology ePrint Archive, Report 2026/110618, 2026 (under editorial review).
+  Tianhe Liu. IACR Cryptology ePrint Archive, Report 2026/110618, 2026 (withdrawn after editorial review).
   NIST Security Level 1 parameters: signature 80 bytes, public key 1.76 KB.
   43 cross-validation tests passed (paper implementation); 148 extended functional tests passed (external suite).
   [PDF](papers/vwz-eprint-2026.pdf) · [ePrint](https://eprint.iacr.org/2026/110618) · [Hardness: VMQ-SPARSE](docs/research/route-c-lvwz-phase1-math.md) · [Cryptanalysis simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate) · [148-Test Report](docs/vwz-148-test-report.md)
@@ -218,7 +218,7 @@ fibemate/
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
-│   └── docs/            # Documentation + TSR evidence (lg-001~089)
+│   └── docs/            # Documentation + TSR evidence (lg-001~094)
 ├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
 │   └── (timing-critical IP, available on request)
 ├── c-stm32/             # STM32 C framework
