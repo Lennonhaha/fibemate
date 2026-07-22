@@ -46,10 +46,13 @@ export function encaps(publicKey: Buffer): [Buffer, Buffer];
  * @param ciphertext - 1088-byte Node.js Buffer
  * @returns sharedSecret — 32-byte Node.js Buffer
  *
+ * NOTE: N-API parameter order is (ciphertext, secretKey), NOT (secretKey, ciphertext).
+ * The JS wrapper in index.js handles this reversal for API consistency.
+ *
  * @example
- * const ss = addon.decaps(sk, ct);
+ * const ss = addon.decaps(ct, sk);
  */
-export function decaps(secretKey: Buffer, ciphertext: Buffer): Buffer;
+export function decaps(ciphertext: Buffer, secretKey: Buffer): Buffer;  // N-API real order: (ct, sk)
 
 // ═══════════════════════════════════════════════════════════════
 // Batch API — one N-API call processes N operations internally
