@@ -1,0 +1,72 @@
+name: Native Addon Build
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/pqc-kem/native/**'
+      - 'packages/pqc-kem/index.js'
+      - '.github/workflows/native-build.yml'
+  pull_request:
+    paths:
+      - 'packages/pqc-kem/native/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }}, Node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04]
+        node: [20, 22]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install npm dependencies
+        working-directory: packages/pqc-kem
+        run: npm install --ignore-scripts
+
+      - name: Build native addon
+        working-directory: packages/pqc-kem
+        run: npx node-gyp rebuild -C native --release
+
+      - name: Verify native addon loads
+        run: |
+          node -e "
+          const pk = require('./packages/pqc-kem');
+          console.log('Backend:', pk.usingNative ? 'C NATIVE' : 'JS (no addon)');
+          const k = pk.generateKeypair();
+          console.log('pk bytes:', k.publicKey.length);
+          const e = pk.encapsulate(k.publicKey);
+          console.log('ct bytes:', e.ciphertext.length);
+          const d = pk.decapsulate(k.secretKey, e.ciphertext);
+          const ok = Buffer.from(e.sharedSecret).equals(Buffer.from(d));
+          console.log('roundtrip:', ok ? 'PASS' : 'FAIL');
+          process.exit(ok ? 0 : 1);
+          "
+
+      - name: Self-KAT (100 rounds)
+        run: |
+          node -e "
+          const pk = require('./packages/pqc-kem');
+          let pass = 0;
+          for (let i = 0; i < 100; i++) {
+            const k = pk.generateKeypair();
+            const e = pk.encapsulate(k.publicKey);
+            const d = pk.decapsulate(k.secretKey, e.ciphertext);
+            if (Buffer.from(e.sharedSecret).equals(Buffer.from(d))) pass++;
+          }
+          console.log('Self-KAT 100:', pass + '/100');
+          process.exit(pass === 100 ? 0 : 1);
+          "
+
+      - name: Compat fixtures test
+        run: node test/run-compat-fixtures.mjs
