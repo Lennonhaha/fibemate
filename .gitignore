@@ -327,3 +327,4 @@ oqs_gen
 packages/pqc-kem/native/build/
 *.o
 *.d
+__pycache__/

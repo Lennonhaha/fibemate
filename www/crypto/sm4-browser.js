@@ -431,5 +431,5 @@
     }
   };
 
-  window.SM4GCM = SM4GCM; if(typeof module!==undefined)module.exports=SM4GCM;
+  if (typeof window !== "undefined") window.SM4GCM = SM4GCM; if(typeof module!=="undefined")module.exports=SM4GCM;
 })();
