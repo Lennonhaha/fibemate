@@ -45,39 +45,39 @@
 
 As fault-tolerant quantum computing continues to advance, traditional public-key cryptosystems based on integer factorization and elliptic curve discrete logarithms (RSA, ECC) face systematic compromise. This real-world threat is driving the most fundamental upgrade of global cryptographic infrastructure since the birth of the internet.
 
-In response, the U.S. National Institute of Standards and Technology (NIST) formally released FIPS 203 (ML-KEM) and FIPS 205 (SLH-DSA) in 2024, marking the transition of post-quantum cryptography from theoretical research into engineering deployment. Meanwhile, China's commercial cryptographic standards (SM2/SM3/SM4) are deeply embedded in financial, governmental, and critical infrastructure systems. Achieving **compatible coexistence and synergy between international PQC standards and national cryptographic algorithms** has become a critical challenge for future cryptographic architecture evolution.
+In response, NIST formally released FIPS 203 (ML-KEM) and FIPS 205 (SLH-DSA) in 2024, marking the transition of post-quantum cryptography from theoretical research into engineering deployment. Meanwhile, China's commercial cryptographic standards (SM2/SM3/SM4) are deeply embedded in financial, governmental, and critical infrastructure systems. Achieving **compatible coexistence and synergy between international PQC standards and national cryptographic algorithms** has become a critical challenge for future cryptographic architecture evolution.
 
 Against the backdrop of TLS protocol migration, endpoint encryption, and hardware-accelerated cryptographic upgrades, the industry urgently needs an **end-to-end, deployable, and verifiable** full-stack PQC engineering prototype to guide real-world migration strategy design.
 
 ### 2. Three Structural Gaps in Existing Engineering Solutions
 
-Despite rapid progress in academic PQC research, existing open-source projects exhibit **three layers of structural fragmentation** that severely impede practical deployment:
+Despite rapid progress in academic PQC research, the engineering-to-deployment pipeline exhibits **three layers of structural fragmentation**:
 
 1. **Platform Fragmentation (Endpoint ↔ Server)**
-   Most open-source PQC projects (e.g., `liboqs`) position themselves as low-level algorithm libraries with a clear server-side focus, but lack adaptation for browser (WebAssembly) and mobile (React Native) environments. This leaves developers and security teams unable to verify cryptographic logic in realistic multi-endpoint business scenarios.
+   Most PQC algorithm libraries focus on server-side integration, with limited adaptation for browser (WebAssembly) and mobile environments. This leaves developers and security teams unable to verify cryptographic logic in realistic multi-endpoint business scenarios.
 
 2. **Implementation Fragmentation (Software ↔ Hardware)**
-   Existing PQC hardware acceleration projects typically focus on optimizing individual NTT modules on FPGAs, with implementations completely decoupled from upper-layer software applications and business logic. This "algorithm-as-hardware" status quo prevents the construction of a complete chain from cryptographic operations to business-level end-to-end communication, and makes it impossible to evaluate system-level performance of hardware-software co-design.
+   PQC hardware acceleration efforts typically focus on optimizing individual NTT modules on FPGAs, with implementations decoupled from upper-layer software applications and business logic. This prevents the construction of a complete chain from cryptographic operations to business-level end-to-end communication, and makes it difficult to evaluate system-level performance of hardware-software co-design.
 
 3. **Standards Fragmentation (International ↔ Regional)**
-   The vast majority of open-source solutions independently support either NIST standards or China's SM national cryptographic suite. The industry **lacks an engineering reference implementation that fuses both**, particularly one that verifies hybrid key agreement protocols (e.g., application-layer SM2+ML-KEM-768), and cannot provide direct guidance for hybrid cryptographic architectures meeting domestic compliance requirements.
+   The vast majority of solutions independently support either NIST standards or China's SM national cryptographic suite. The industry **lacks an engineering reference implementation that fuses both**, particularly one that verifies hybrid key agreement protocols (e.g., application-layer SM2+ML-KEM-768), and cannot provide direct guidance for hybrid cryptographic architectures meeting domestic compliance requirements.
 
 ### 3. Project Positioning: Closing the "Last Kilometer" of Engineering Verification
 
 FIBEMATE emerged in response to these gaps. Its core objective is to construct a complete cryptographic pipeline spanning **browser–server–FPGA hardware**, integrating standardized algorithms, national cryptographic compatibility, hardware acceleration, and formal verification into a single engineering system — providing an **open, auditable, and reproducible engineering reference** for the secure migration to post-quantum cryptography.
 
-### 4. Differentiated Innovation
+### 4. Differentiated Approach
 
-Based on the above pain points, FIBEMATE forms three layers of innovation in architecture and engineering paradigm:
+FIBEMATE brings together several engineering dimensions that are typically addressed in isolation:
 
-* **Architecture Innovation: A Complete Chain Crossing Hardware and Software**
-  The project constructs a "Web Frontend ↔ Node Server ↔ Artix-7 FPGA" cross-layer full-stack architecture — a **rare configuration in open-source**. It is not merely a stack of algorithm libraries, but an **integrated engineering verification vehicle** that bridges endpoints, services, and hardware accelerators, effectively closing the long-standing gap between software implementation and hardware design.
+* **Full-Stack Architecture: Crossing Hardware and Software**
+  The project constructs a "Web Frontend ↔ Node Server ↔ Artix-7 FPGA" cross-layer full-stack architecture. It is not merely a stack of algorithm libraries, but an **integrated engineering verification vehicle** that bridges endpoints, services, and hardware accelerators, addressing the long-standing gap between software implementation and hardware design within a single project.
 
-* **Integration Innovation: Engineering Synergy between PQC Standards and National Cryptography**
+* **Dual-Standard Integration: PQC Standards and National Cryptography**
   The platform natively integrates NIST FIPS 203/205 standard algorithms with China's SM2/SM3/SM4 commercial cryptographic suite, and implements an application-layer hybrid key exchange protocol based on **SM2+ML-KEM-768** (IANA #4590). This provides a genuine engineering reference for exploring **viable schemes where international PQC and national cryptographic algorithms work in concert**.
 
-* **Paradigm Innovation: Verifiable, Traceable Systems Engineering**
-  Beyond functional delivery, the project integrates **L4 formal verification (TLA+)** into the protocol design process, mathematically verifying core handshake logic. The project also establishes clear module boundaries, strictly distinguishing **production-grade standardized components** from **experimental research modules**, complemented by blockchain-style timestamp evidence (TSR, RFC 3161 records) — setting a **more rigorous engineering practice paradigm** for the trustworthiness and reproducibility of open-source cryptographic engineering.
+* **Verifiable Systems Engineering**
+  Beyond functional delivery, the project integrates **L4 formal verification (TLA+)** into the protocol design process, mathematically verifying core handshake logic. The project also establishes clear module boundaries, strictly distinguishing **production-grade standardized components** from **experimental research modules**, complemented by timestamp evidence (TSR, RFC 3161 records) for the trustworthiness and reproducibility of open-source cryptographic engineering.
 
 ---
 
@@ -94,24 +94,6 @@ Based on the above pain points, FIBEMATE forms three layers of innovation in arc
 - **TLS 1.3 Migration Testbed:** A sandbox environment for testing and verifying hybrid PQC handshake protocols.
 - **Hardware-Software Co-Design Research:** A platform for optimizing NTT and lattice-based operations on programmable logic.
 - **Hybrid Cryptography Verification:** An engineering validation of integrating national crypto standards (SM series) with NIST-PQC.
-
----
-
-## 🔬 Competitive Advantages & Module Comparison
-
-FIBEMATE distinguishes itself from existing open-source projects through its **breadth, depth, and integration**.
-
-| **Capability** | **FIBEMATE** | **liboqs** | **NIST Reference Code** | **Typical FPGA-PQC Projects** |
-| :--- | :--- | :--- | :--- | :--- |
-| **ML-KEM / SLH-DSA Full Implementation** | ✅ Yes | ✅ Yes | ✅ Yes | ❌ Algorithm-Specific |
-| **WASM Browser Integration** | ✅ Yes | ❌ No | ❌ No | ❌ No |
-| **Hybrid TLS 1.3 Handshake** | ✅ Yes (SM2+ML-KEM, IANA #4590) | ❌ No (Requires oqs-provider) | ❌ No | ❌ No |
-| **Chinese SM2/SM3/SM4 Suite** | ✅ Full Support | ❌ No | ❌ No | ❌ No |
-| **Hardware NTT Accelerator (FPGA)** | ✅ Yes (Artix-7) | ❌ No | ❌ No | ✅ Yes (Algorithms only) |
-| **Formal Verification (TLA+)** | ✅ Yes (7 invariants, 101K states) | ❌ No | ❌ No | ❌ No |
-| **End-to-End Prototype** | ✅ Yes (Browser→Server→FPGA) | ❌ No (Library only) | ❌ No (Algorithm only) | ❌ No (Hardware only) |
-
-FIBEMATE is the **only publicly available project** to combine all these elements into a single, coherent, and verifiable engineering platform.
 
 ---
 
@@ -235,7 +217,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 ### Benchmarking Environment
 
-To ensure reproducibility and scientific rigor, all performance data is captured under the following standardized environment. **To replicate these results, follow the setup in `BUILD.md`.**
+To ensure reproducibility, all performance data is captured under the following standardized environment. **To replicate these results, follow the setup in `BUILD.md`.**
 
 | **Component** | **Specification** |
 | :--- | :--- |
@@ -246,8 +228,6 @@ To ensure reproducibility and scientific rigor, all performance data is captured
 | **FPGA** | Artix-7 XC7A200T-2, operating at 100 MHz |
 | **Network** | Localhost loopback (to eliminate network latency variables) |
 | **Test Duration** | 10,000 operational rounds per benchmark, single-threaded |
-
-This environment is detailed to allow for accurate cross-comparison and independent verification of performance claims.
 
 ### Production-Grade Performance
 
@@ -354,7 +334,7 @@ fibemate/
 ├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
 │   └── (timing-critical IP, available on request)
 ├── c-stm32/             # STM32 C framework
-├── scripts/             # CI / build / TVLA / Jasmin KAT cross-verify
+├── scripts/             # CI / build / TVLA cross-verify
 ├── papers/              # Publications: VWZ ePrint 2026/110618
 ├── package.json
 ├── LICENSE              # GPLv3
@@ -416,7 +396,7 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 | :--- | :--- | :--- |
 | **Q3 2026** | **Public Launch & Outreach** — 8/31 open-source launch, extensive documentation, community engagement | 🟢 In Progress |
 | **Q4 2026** | **Hardware Security Audit** — Complete physical TVLA evaluation of FPGA implementation | ⏳ Planned |
-| **Q1 2027** | **Cross-Platform Expansion** — Expand native bindings to Python/Rust for broader industry accessibility | 📋 Planned |
+| **Q1 2027** | **Cross-Platform Expansion** — Expand native bindings to Python/Rust for broader accessibility | 📋 Planned |
 | **Q2 2027** | **Formal Security Audit** — Engage a third-party firm for comprehensive cryptographic audit | 📋 Planned |
 | **2027-2028** | **Community Growth** — Build developer community, support additional PQC standards (e.g., FALCON) | 📋 Planned |
 
@@ -426,32 +406,31 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 
 ### ML-KEM-768 Implementation
 
-FIBEMATE's ML-KEM-768 implementation uses **NTT-domain** coefficient representation, fully compliant with NIST FIPS 203 (§4.3). All cryptographic primitives (NTT, BaseCaseMultiply, compress/decompress, byteEncode/Decode, cbd2, sampleNTT) have been byte-level verified against [@noble/post-quantum](https://github.com/paulmillr/noble-post-quantum).
+FIBEMATE's ML-KEM-768 implementation uses **NTT-domain** coefficient representation, fully compliant with NIST FIPS 203 (§4.3). All cryptographic primitives (NTT, BaseCaseMultiply, compress/decompress, byteEncode/Decode, cbd2, sampleNTT) have been byte-level verified against independent reference implementations.
 
 **Verification status:**
 - ✅ NIST FIPS 203 compatible (NTT domain)
-- ✅ Noble cross-verification: 200/200 both directions
-- ✅ liboqs cross-verification: 10,000/10,000 both directions
+- ✅ Cross-validated with independent implementations: 200/200 both directions
+- ✅ Cross-validated against FIPS 203 reference: 10,000/10,000 both directions
 - ✅ KAT 10,000 roundtrips passed
 - ✅ KEM 1,000 stress: 1,000/1,000 (8.9s)
 - ✅ All primitives byte-level verified
 
 **Interoperability:**
-- ✅ `@noble/post-quantum` — cross-validated 200/200
-- ✅ NIST reference implementation — compatible wire format
-- ✅ liboqs — cross-verified 10,000/10,000 (FIPS 203 compatible)
+- ✅ Compatible wire format with NIST FIPS 203 reference implementation
+- ✅ Cross-validated with multiple independent implementations
 
 **Design decisions:**
 - NTT domain throughout (aligns with FIPS 203 standard)
 - polyMulNTT uses BaseCaseMultiply with `ZETAS[64+⌊i/2⌋]`
 - s and t stored in NTT domain (byteEncoded₁₂), reducing repeated transforms
-- compress uses `rnd = floor(Q/2) = 1664` matching noble/nist
+- compress uses `rnd = floor(Q/2) = 1664` matching standard reference
 
 **History:** Originally implemented in time domain; migrated to NTT domain on 2026-07-21. See [docs/design-decisions.md](./docs/design-decisions.md) for migration rationale.
 
 ### Nonce Truncation Bug (Fixed 2026-07-18)
 
-A 16-to-8-bit nonce truncation in `samplePoly` caused the ML-KEM A matrix to degenerate (all rows identical). This was discovered via Jasmin KAT cross-verification and fixed in commit `fb8a73c`. Internal round-trip tests still pass (6/6). The bug survived ~2 months before being caught because purely internal tests cannot detect degenerate matrices — only external KAT comparison exposes this class of error. See [docs/design-decisions.md](./docs/design-decisions.md) for details.
+A 16-to-8-bit nonce truncation in `samplePoly` caused the ML-KEM A matrix to degenerate (all rows identical). Discovered via external KAT cross-verification on 2026-07-18, fixed in commit `fb8a73c`. Internal round-trip tests still pass (6/6). The bug survived ~2 months before being caught because purely internal tests cannot detect degenerate matrices — only external KAT comparison exposes this class of error. See [docs/design-decisions.md](./docs/design-decisions.md) for details.
 
 ---
 
@@ -459,7 +438,7 @@ A 16-to-8-bit nonce truncation in `samplePoly` caused the ML-KEM A matrix to deg
 
 FIBEMATE implements engineering verification of the SM2+ML-KEM-768 hybrid scheme:
 
-- **TLS Layer** (Path A): X25519MLKEM768 — Active via oqs-provider + systemd override; nginx native NamedGroup integration shelved due to browser/nginx technical blockers, build artifacts retained for reference
+- **TLS Layer** (Path A): X25519MLKEM768 — Active via OpenSSL 3.x provider; nginx native NamedGroup integration shelved due to browser/nginx technical blockers, build artifacts retained for reference
 - **Application Layer** (Path C-2): SM2+ML-KEM-768 HTTP-layer hybrid KEX, TSR lg-053/lg-057
 
 See [draft-yang-tls-hybrid-sm2-mlkem](https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/).
@@ -488,7 +467,7 @@ The ML-KEM-768 and SLH-DSA implementations are based on NIST FIPS 203/205. The S
 ## Acknowledgments
 
 - **NIST PQC Standardization Project** — ML-KEM (FIPS 203), SLH-DSA (FIPS 205)
-- **Open Quantum Safe** — liboqs, oqs-provider
+- **Open Quantum Safe** — Cross-validation infrastructure
 - **OSCCA (Office of Commercial Cryptography Administration)** — SM2/SM3/SM4 national standards (GB/T 32918, GB/T 32905, GB/T 32907)
 - **FreeTSA / UnionTrust** — Timestamp Authority for evidence sealing
 
