@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 /**
  * test-tls-hybrid-extension.js — IANA #4590 TLS 混合扩展单元测试

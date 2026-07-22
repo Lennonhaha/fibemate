@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 // VWZ WASM Server-Side Benchmark (Node.js)
 // Usage: node bench_vwz.js [k=8,16]

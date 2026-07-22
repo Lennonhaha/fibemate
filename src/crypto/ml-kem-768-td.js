@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ML-KEM-768 — Pure Time-Domain Implementation (No NTT)
  * 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Video Call UI - 视频通话界面
  * 完整的来电/去电 UI，包括视频预览

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE 5G-A Optimization Module
  * 5G-A优化模块

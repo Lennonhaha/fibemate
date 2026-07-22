@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Constant-time comparison utilities for timing side-channel protection.
  * 

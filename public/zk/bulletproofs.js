@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Bulletproofs - Range Proof Implementation
  * Proves that a committed value is in range [0, 2^n) without revealing the value

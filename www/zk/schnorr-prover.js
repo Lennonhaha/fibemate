@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Schnorr Prover - Zero-Knowledge Proof of Knowledge
  * Proves knowledge of discrete log without revealing it

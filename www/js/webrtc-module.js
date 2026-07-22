@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE WebRTC Module - 真实音视频通话实现
  * 支持: Voice Call, Video Call

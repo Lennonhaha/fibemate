@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 
 // VWZ 研究线 API — 仅 /research/* 命名空间，不接入生产线

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Privacy Features Integration
  * Integrates new security modules into existing message flow

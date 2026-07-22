@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE DingTalk Alert Module
  * Sends security alerts to DingTalk group via webhook

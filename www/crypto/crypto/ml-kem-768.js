@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ML-KEM-768 — 使用标准DFT矩阵NTT + 负循环卷积乘法
  * 

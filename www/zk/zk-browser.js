@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ZK Browser Compatibility Layer
  * Ensures ZK modules work in browser environments without Node.js crypto

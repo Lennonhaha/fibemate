@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Backend - 隐私增强即时通讯服务器
  * 架构: 服务器零知识 - 只转发密文，不解密、不存储消息内容

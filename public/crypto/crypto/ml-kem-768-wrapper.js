@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ML-KEM-768 WASM-compatible wrapper
  * Bridges the pure JS time-domain implementation to the expected WASM interface

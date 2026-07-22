@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // https-server.js - HTTPS wrapper for FIBEMATE
 const https = require('https');
 const http = require('http');

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // key-storage-migration.js - Key storage migration utility
 console.warn('[key-storage-migration] Loaded placeholder - full implementation pending');
 window.KeyStorageMigration = window.KeyStorageMigration || {

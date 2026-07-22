@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ================================================
 // Conversations  — v3 适配后端格式 { conversations: [{ id, otherUser, ... }] }
 // ================================================

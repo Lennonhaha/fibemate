@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FibeMate ML-KEM-768 Hybrid X3DH Integration v2
  * Events: fibemate:pqready, fibemate:session:established, fibemate:session:failed

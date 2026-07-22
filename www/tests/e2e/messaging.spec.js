@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE E2E Tests - Messaging Flow
  * Tests: Send/Receive Messages, E2EE, File Transfer, Voice Messages

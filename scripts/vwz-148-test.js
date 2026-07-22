@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 /**
  * VWZ Hash-and-Sign — 148/148 Full Validation Suite vFinal

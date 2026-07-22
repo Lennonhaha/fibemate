@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ================================================
 // Voice/Video Call v3.0-preview — Extended: Call History, Incoming UI, Status
 // ================================================

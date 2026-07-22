@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // SM2 TVLA — High-Order (v1.3, N=5000)
 // Tests: genKey / sign / verify / encrypt / decrypt
 // Orders: 1 (mean) / 2 (variance) / 3 (skewness) / 4 (kurtosis)

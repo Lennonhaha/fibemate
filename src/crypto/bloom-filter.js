@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Bloom Filter + 差分隐私 — Phase 2 私密发现层
  * 

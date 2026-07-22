@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Noble vs JS: decapsulate same ct+sk
 const MLKEM768 = require('../packages/pqc-kem/src/ml-kem-768.js');
 const { ml_kem768 } = require('@noble/post-quantum/ml-kem.js');

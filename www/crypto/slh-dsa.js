@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * SLH-DSA-128s (SPHINCS+) Frontend Wrapper
  *

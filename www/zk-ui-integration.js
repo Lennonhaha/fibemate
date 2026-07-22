@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * zk-ui-integration.js — ZK Authentication UI Bridge (v2 Full Implementation)
  * 

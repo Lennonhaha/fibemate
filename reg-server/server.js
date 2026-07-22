@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Registration Backend + IANA #4590 E2E Key Exchange
  * Node.js + ws (WebSocket) + in-memory storage

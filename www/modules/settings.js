@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ================================================
 // Settings v3.0-preview — Extended: Theme, Storage, Export
 // ================================================

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ZK UI Integration - Connects ZK authentication with UI flow
  * Features: State management, progress visualization, graceful fallback

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * KAT 10,000 轮真实计时测试
  * 运行: node kat_bench.js

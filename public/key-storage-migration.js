@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Key Storage Migration Script
  * Migrates plaintext keys from localStorage to encrypted IndexedDB storage

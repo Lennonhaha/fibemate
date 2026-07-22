@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Emoji Picker Component
  * 简单的Emoji选择器组件

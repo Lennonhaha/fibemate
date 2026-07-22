@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 /**
  * FIBEMATE 三线测试套件 — v1.0.0

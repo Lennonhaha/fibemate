@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 /**
  * FIBEMATE 跨语言互操作测试 — Node.js

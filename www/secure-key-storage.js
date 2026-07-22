@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // secure-key-storage.js - Secure key storage interface
 // Version: placeholder (original file pending deployment)
 console.warn('[secure-key-storage] Loaded placeholder - full implementation pending');

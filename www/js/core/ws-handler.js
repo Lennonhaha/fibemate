@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * WSHandler — WebSocket connection lifecycle + message dispatch
  * FIBEMATE v2.21-zk-ts

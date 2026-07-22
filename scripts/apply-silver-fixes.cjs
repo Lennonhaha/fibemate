@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Update CI to add ESLint static analysis step
 const fs = require('fs');
 const path = '/opt/fibemate-repo/.github/workflows/ci.yml';

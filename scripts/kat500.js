@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const {generateKeypair, encapsulate, decapsulate} = require('./packages/pqc-kem/src/ml-kem-768.js');
 
 const t = Date.now();

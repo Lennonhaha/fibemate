@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Audited & minimal JS implementation of hash functions, MACs, and KDFs.
  * Check out individual modules.

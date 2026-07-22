@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * TVLA 9/9 Complete Test - Corrected Version
  * Fixes the bug where polyMul/matVecMul were not executed

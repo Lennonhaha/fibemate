@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 // =============================================================================
 // verify-tsr.js — FIBEMATE TSR 时间戳存证「可复现」验证（跨平台 Node 版）

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * PQ-WASM Electron Test
  * Run this in Electron DevTools console to test ML-KEM-768

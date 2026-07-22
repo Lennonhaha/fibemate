@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Two-Factor Authentication (2FA) Module
  * 双因素认证 — TOTP (Time-based One-Time Password)

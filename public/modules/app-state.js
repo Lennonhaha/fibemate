@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Tauri - Main Interface Logic v3
  * Features: Messages, Contacts, Vault, Key Management, Settings, Voice Call

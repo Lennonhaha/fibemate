@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * pqc-hybrid-server.js — 路径 C-2: SM2 + ML-KEM-768 混合后量子密钥交换
  *

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // P0-03a: modInv benchmark — Fermat vs extEuclid
 'use strict';
 

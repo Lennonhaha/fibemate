@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Community Module
  * Features: Channels, Groups, Discovery, Posts

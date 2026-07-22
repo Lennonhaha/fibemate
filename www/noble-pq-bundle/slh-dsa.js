@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 var __NOBLE_PQ__ = (() => {
   var __defProp = Object.defineProperty;
   var __getOwnPropDesc = Object.getOwnPropertyDescriptor;

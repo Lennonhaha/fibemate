@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // inp.js - FIBEMATE Input Plugin System Stub
 // Defines global objects expected by main.js
 window.fibemate_plugins = window.fibemate_plugins || [];

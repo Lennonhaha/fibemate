@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // SM3 哈希函数 (GB/T 32905-2016)
 // 256-bit 输出，类似 SHA-256 但使用不同的常数和变换函数
 

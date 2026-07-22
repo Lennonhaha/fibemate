@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Shared WebSocket Manager
  * Singleton that manages a single WebSocket connection for all modules

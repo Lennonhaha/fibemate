@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * WebSocket Message Padding Layer — TLS 1.3 流量随机填充
  * 

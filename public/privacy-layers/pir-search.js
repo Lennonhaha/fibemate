@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * EXPERIMENTAL — 仿真非生产
  * 此模块为 Privacy Layer 实验性功能，未经生产审计

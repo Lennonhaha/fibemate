@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * reg-e2e-test.js — reg-server IANA #4590 E2E 握手集成测试
  *

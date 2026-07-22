@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 /**
  * FIBEMATE ML-KEM-768 × Jasmin (libjade) KAT Byte-by-Byte Verification

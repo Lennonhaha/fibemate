@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * MessageController — encryption pipeline + conversation management
  * FIBEMATE v2.21-zk-ts

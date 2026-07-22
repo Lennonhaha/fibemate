@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /* tslint:disable */
 /* eslint-disable */
 export const memory: WebAssembly.Memory;

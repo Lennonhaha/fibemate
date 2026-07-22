@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ChatUI — chat rendering, conversation list, view management, utilities
  * FIBEMATE v2.21-zk-ts

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Real-time Security Monitor
  * Monitors logs in real-time and alerts on suspicious activity

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 import { sm2 } from '@noble/curves/sm2';
 import { sha256 } from '@noble/hashes/sha256';
 const h2b=h=>{const b=new Uint8Array(h.length/2);for(let i=0;i<h.length;i+=2)b[i/2]=parseInt(h.substring(i,i+2),16);return b};

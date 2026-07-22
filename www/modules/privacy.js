@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ================================================
 // Privacy Features Integration (NEW)
 // ================================================

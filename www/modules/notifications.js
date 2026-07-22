@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ================================================
 // Notifications v3.0-preview — Message alerts, system notices, DND scheduling
 // ================================================

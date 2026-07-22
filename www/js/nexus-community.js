@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Nexus Community Module
  * Professional-grade community platform with E2EE

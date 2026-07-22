@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Satellite Test Runner
  * 真实环境测试 - 验证卫星网络适配功能

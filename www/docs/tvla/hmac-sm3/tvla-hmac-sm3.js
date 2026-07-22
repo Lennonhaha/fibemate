@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 "use strict";
 const crypto = require("crypto");
 const sm3_hmac = require("sm-crypto").sm3;

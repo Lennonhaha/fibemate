@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // P0-03a Functional Verification: sm2-ec-browser.js after k-masking + modInv fix
 'use strict';
 

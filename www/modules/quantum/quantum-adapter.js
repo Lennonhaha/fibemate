@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Quantum City Network Adapter
  * 量子城域网适配模块

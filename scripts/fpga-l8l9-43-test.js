@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 /**
  * FPGA L8+L9 — 43/43 Cross-Validation Suite v2

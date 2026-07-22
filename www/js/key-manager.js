@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Key Manager Module
  * Manages all cryptographic keys with secure storage

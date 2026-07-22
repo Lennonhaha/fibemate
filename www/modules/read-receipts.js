@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Read Receipts Module
  * 已读回执 — 显示消息已读/未读状态

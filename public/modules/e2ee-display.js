@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE E2EE Status Display Module
  * 端到端加密状态可视化

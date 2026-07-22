@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ================================================
 // Contacts  — v3 从后端 /api/contacts 加载（v2 用的是 localStorage）
 // ================================================

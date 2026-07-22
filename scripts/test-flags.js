@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Feature Flag Smoke Test
  * Verifies that the feature flag isolation in src/index.js works correctly

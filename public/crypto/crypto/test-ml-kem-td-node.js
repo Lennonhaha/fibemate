@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ML-KEM-768 Time-Domain Node.js Test
  * Run with: node test-ml-kem-td-node.js

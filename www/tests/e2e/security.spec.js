@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE E2E Tests - Security Features
  * Tests: XSS Prevention, CSRF Protection, Rate Limiting, Encryption

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE SQLite Database — 完全兼容 JsonDB 接口
  *

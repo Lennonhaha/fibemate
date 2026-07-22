@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Secure Key Storage Module
  * Encrypts private keys with user device password before storing in IndexedDB

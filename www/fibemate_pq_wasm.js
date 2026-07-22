@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /* @ts-self-types="./fibemate_pq_wasm.d.ts" */
 
 /**

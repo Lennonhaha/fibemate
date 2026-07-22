@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 // 10000-round liboqs cross-verification
 const MLKEM768 = require('../packages/pqc-kem/src/ml-kem-768.js');

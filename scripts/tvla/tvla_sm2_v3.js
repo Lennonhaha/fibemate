@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * SM2 TVLA v2 — jsbn vs BigInt+wNAF+Jacobian
  * Welch's t-test, interleaved A/B, N=2000, |t| > 4.5 → FAIL

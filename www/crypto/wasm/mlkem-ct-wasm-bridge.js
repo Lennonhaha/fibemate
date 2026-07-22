@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * mlkem-ct-wasm-bridge.js
  * ML-KEM-768 WASM 集成桥 — 用恒定时间 WASM 替换 JS BigInt 向量操作

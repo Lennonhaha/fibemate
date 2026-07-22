@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const path = require('path');
 const mlkemPath = path.resolve(__dirname, '..', 'packages', 'pqc-kem', 'src', 'ml-kem-768.js');
 const m = require(mlkemPath);

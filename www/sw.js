@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // FIBEMATE PWA Service Worker
 // Network-first strategy with offline fallback cache
 const CACHE_NAME = 'fibemate-v2';

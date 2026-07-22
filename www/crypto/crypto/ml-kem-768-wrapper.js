@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ml-kem-768-wrapper.js — FIPS 203 verified C code via backend API
 // Replaces the placeholder/WASM ML-KEM-768 with native C addon on server
 // API surface matches ml-kem-768.js for drop-in compatibility

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ============================================================
 // FIBEMATE Security Levels - Downgrade Attack Protection
 // 降级攻击防护：强制最小安全等级检查

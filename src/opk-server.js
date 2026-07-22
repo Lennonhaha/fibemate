@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE OPK Server — One-Time Pre-Key 服务端
  * ==============================================

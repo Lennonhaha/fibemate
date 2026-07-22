@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 # FIBEMATE PM2 Ecosystem Config — Template
 # ==========================================
 # Copy this file to ecosystem.config.js, fill in your values.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // SM2 TVLA leak diagnosis — micro-benchmark of individual operations
 // Identifies which sub-operations of verify/decrypt leak
 

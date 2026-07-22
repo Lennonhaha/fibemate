@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 ﻿/**
  * KAT 10000-Round Consistency Test - ML-KEM-768
  * Fixed: decapsulate() argument order (secretKey, ciphertext)

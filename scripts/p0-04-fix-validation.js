@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // P0-04: ML-KEM-768 roundtrip fix — comprehensive cross-copy validation
 //
 // Fix applied to: www/crypto/crypto/ml-kem-768.js

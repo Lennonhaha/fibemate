@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const Q = 3329;
 // Barrett: Q = 3329 needs K >= 2*bit_width(Q) = 24
 // K=24, MU = floor(2^24 / 3329) = floor(16777216/3329) = 5039

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Quantum Integration Module
  * 量子集成模块 - 统一入口

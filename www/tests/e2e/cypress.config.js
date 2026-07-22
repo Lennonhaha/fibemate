@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const { defineConfig } = require('cypress');
 
 module.exports = defineConfig({

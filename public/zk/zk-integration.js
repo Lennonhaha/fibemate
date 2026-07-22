@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ZK Integration - Bridges existing P-256 auth with new Schnorr+Bulletproofs ZK
  * Provides unified FIBEMATE_ZK API

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * @fibemate/pqc-kem — ML-KEM-768 (FIPS 203) pure JavaScript implementation.
  */

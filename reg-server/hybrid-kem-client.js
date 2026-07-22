@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * hybrid-kem-client.js — IANA #4590 混合 KEM 客户端实现
  *

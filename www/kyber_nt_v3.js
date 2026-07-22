@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE kyber_nt.js — ML-KEM-768 (FIPS 203) 纯JavaScript实现 v3.2
  * ================================================================

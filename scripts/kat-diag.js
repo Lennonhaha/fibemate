@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 /**
  * FIBEMATE × Jasmin KAT — 诊断：定位首个差异来源

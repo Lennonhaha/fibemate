@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 join('');
 
   container.querySelectorAll('.key-rotate-btn').forEach(btn => {

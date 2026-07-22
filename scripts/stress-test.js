@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // FIBEMATE 压测脚本 - Stress Test Suite
 // No external deps, uses Node.js built-in http only
 const http = require('http');

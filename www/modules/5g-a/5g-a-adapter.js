@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE 5G-A Network Adapter
  * 5G-A网络适配模块

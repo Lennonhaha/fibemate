@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Forward Error Correction (FEC)
  * 前向纠错 - 应对卫星网络高丢包率

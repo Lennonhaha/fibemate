@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE UI Bindings - Batch event binding utility
  * Replaces repetitive getElementById + addEventListener patterns

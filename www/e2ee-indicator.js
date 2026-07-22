@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * E2EE 状态栏模块
  * 功能：显示当前会话的加密状态，支持 PQ-X3DH / 纯 X3DH / 无加密 三种状态

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ============================================================
 // FIBEMATE Message Crypto - Double Ratchet Session Manager
 // 管理多个peer的加密会话，提供简单API供main.js调用

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ================================================
 // Contacts v3.0-preview — Contact management with groups, favorites, safety numbers
 // ================================================

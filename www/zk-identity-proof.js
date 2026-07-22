@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE ZK Identity Proof — Schnorr 非交互式协议 (P-256)
  * 

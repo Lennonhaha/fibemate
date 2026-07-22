@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const keccak = require('../lib/keccak.js');
 const assert = require('assert');
 const crypto = require('crypto');

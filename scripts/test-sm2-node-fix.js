@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 const sm2=require('../sm2-bigint-ec');
 const crypto=require('crypto');

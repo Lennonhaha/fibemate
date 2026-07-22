@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const sm2 = require('sm-crypto').sm2;
 var SM2Browser = {
   generateKeypair: function() {

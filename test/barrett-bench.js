@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const Q = 3329;
 const MU = 315;  // floor(2^20 / Q) = floor(1048576/3329) = 315
 const K = 20;

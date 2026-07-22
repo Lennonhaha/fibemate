@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * PQXDH Integration Test - Node.js version
  * Tests the WASM-compatible wrapper interface

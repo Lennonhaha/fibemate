@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 var fib = require('../packages/pqc-kem');
 function h2b(hex) { return new Uint8Array(Buffer.from(hex,'hex')); }
 function b2h(b) { return Array.prototype.slice.call(b).map(function(x){return x.toString(16).padStart(2,'0');}).join(''); }

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // SM2 TVLA v3 — BigInt-only, masked (v1.2)
 // Quick validation: N=2000 then N=5000
 "use strict";

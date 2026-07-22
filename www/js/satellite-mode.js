@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Satellite Mode
  * 卫星网络适配模式 - 自动降配保证可用性

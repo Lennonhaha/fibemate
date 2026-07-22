@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Integration test: Verify src/index.js does NOT load experimental modules in production mode.
  *

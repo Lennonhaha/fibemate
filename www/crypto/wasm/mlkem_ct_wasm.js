@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /* @ts-self-types="./mlkem_ct_wasm.d.ts" */
 
 /**

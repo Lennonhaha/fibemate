@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // FIBEMATE 压测脚本 v2 — Extended: B/F/W
 // ==========================================
 // B: Basic (health, mlkem)

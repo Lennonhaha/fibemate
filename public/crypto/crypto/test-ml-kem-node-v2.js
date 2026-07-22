@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Node.js test for ML-KEM-768 fix v2
 const fs = require('fs');
 const crypto = require('crypto');

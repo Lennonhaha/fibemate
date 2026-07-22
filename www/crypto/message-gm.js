@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE MessageGM — SM2-based Double Ratchet + SLH-DSA Signatures
  * ==================================================================

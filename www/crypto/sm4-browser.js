@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE SM4 Block Cipher Browser Edition
  * ==========================================

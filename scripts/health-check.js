@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 // scripts/health-check.js — FIBEMATE 全栈健康检查
 // Usage: node scripts/health-check.js [--bom] [--git]

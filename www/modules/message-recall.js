@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Message Recall Module
  * 消息撤回 — 发送后可撤回已发消息

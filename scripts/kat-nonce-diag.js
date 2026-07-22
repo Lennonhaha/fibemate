@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 var jsSha3 = require('js-sha3');
 var fib = require('../packages/pqc-kem');

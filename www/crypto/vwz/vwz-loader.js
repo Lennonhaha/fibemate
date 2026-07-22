@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // VWZ Hash-and-Sign — Browser Integration Loader
 // 
 // Usage:

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // P0-04: Fix ml-kem-768.js KEM roundtrip — step-by-step data-flow trace
 const m = require('../www/crypto/crypto/ml-kem-768.js');
 

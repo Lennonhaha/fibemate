@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Satellite Integration
  * 卫星网络适配集成模块 - 统一入口

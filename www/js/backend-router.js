@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Backend Router — Grayscale toggle between Node.js and Rust backends.
  * Must load BEFORE modules/app-state.js so API_BASE picks up the correct prefix.

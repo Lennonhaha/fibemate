@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Satellite Network Simulator
  * 卫星网络模拟器 - 用于测试卫星模式适配

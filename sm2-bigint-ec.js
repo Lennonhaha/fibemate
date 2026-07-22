@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE SM2 BigInt 域操作 & 椭圆曲线点运算
  * Jacobian 射影坐标 + Native BigInt，域乘法加速 11.4x

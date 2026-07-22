@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Backend Router — dual-backend (Node.js + Rust) dynamic switching
  * FIBEMATE v2.21-zk-ts

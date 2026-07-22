@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * tls-hybrid-extension.js — IANA #4590 SM2-MLKEM768 混合密钥交换扩展
  *

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Network Detector
  * 检测当前网络类型（5G/4G/WiFi/卫星）并触发模式切换

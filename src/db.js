@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Simple File-based JSON Database - zero dependencies
  */

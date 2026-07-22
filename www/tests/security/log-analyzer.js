@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Security Log Analyzer
  * Analyzes nginx and application logs for attack patterns

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const ws = require('ws');
 const w = new ws('wss://fibemate.net/reg/ws', { rejectUnauthorized: false });
 w.on('open', () => {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 #!/usr/bin/env node
 var jsSha3 = require('js-sha3');
 var d = new Uint8Array(Buffer.from('7c9935a0b07694aa0c6d10e4db6b1add2fd81a25ccb148032dcd739936737f2d','hex'));

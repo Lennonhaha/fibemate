@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Focused debug: JS keygen → liboqs encaps → JS decaps (should work!)
 const MLKEM768 = require('../packages/pqc-kem/src/ml-kem-768.js');
 const { spawnSync } = require('child_process');

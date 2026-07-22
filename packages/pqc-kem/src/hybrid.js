@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * HybridKeyExchange — ML-KEM-768 + ECDH-P-256 hybrid key exchange.
  *

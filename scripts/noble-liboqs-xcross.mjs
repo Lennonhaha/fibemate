@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 import { ml_kem768 } from '@noble/post-quantum/ml-kem.js';
 import { spawnSync } from 'child_process';
 

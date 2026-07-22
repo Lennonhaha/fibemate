@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // End-to-end test: localhost connection to reg-server via SSH
 const WebSocket = require('ws');
 const crypto = require('crypto');

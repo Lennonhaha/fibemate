@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE 国密加密状态显示模块
  * 国密加密状态可视化 (SM2/SM4/SM3)

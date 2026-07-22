@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * ZK Module Index - Entry point for all ZK functionality
  */

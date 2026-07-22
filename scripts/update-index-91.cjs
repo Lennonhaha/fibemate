@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Update index.html references from lg-089 → lg-091
 const fs = require('fs');
 const path = '/opt/fibemate-repo/www/index.html';

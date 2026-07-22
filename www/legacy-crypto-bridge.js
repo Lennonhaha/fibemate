@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ============================================================
 // FIBEMATE Legacy Crypto Bridge v2
 // Bridges SessionManager (native API) to legacy MessageCrypto (compat API)

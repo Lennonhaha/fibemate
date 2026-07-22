@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE E2E Tests - Contacts Management
  * Tests: Add Contact, Export, Search, Group Creation

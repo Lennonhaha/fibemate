@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Verify: liboqs decaps returns raw K_bar (not hashed K)
 const { spawnSync } = require('child_process');
 const oqsPath = process.argv[2] || './oqs_gen';

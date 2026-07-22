@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Satellite Performance Monitor
  * 性能监控 - 收集卫星模式下的性能指标

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Traffic Shaping for Anti-Traffic Analysis
  * Phase 4 - Rate limiting + Poisson cover traffic + Flow correlation resistance

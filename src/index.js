@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ---- Feature Flags (P0: compile-time-equivalent isolation) ----
 // All experimental code is gated behind flags.EXPERIMENTAL.
 // Production:      FIBEMATE_EXPERIMENTAL=0  (default, no experimental code runs)

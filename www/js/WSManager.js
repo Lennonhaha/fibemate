@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE Unified WebSocket Manager v4
  * 合并 main-v3 和 nexus 的双 WebSocket 连接为单例管理
