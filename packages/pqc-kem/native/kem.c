@@ -27,6 +27,7 @@ int crypto_kem_keypair_derand(uint8_t *pk,
                               const uint8_t *coins)
 {
   uint8_t indcpa_sk[KYBER_INDCPA_SECRETKEYBYTES];
+  memset(sk, 0, KYBER_SECRETKEYBYTES);
   indcpa_keypair_derand(pk, indcpa_sk, coins);
   /* FIPS 203 compact sk format: d(32) || ek(1184) || H(ek)(32) || z(32) = 1280 bytes */
   memcpy(sk, coins, KYBER_SYMBYTES);
