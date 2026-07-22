@@ -1,0 +1,101 @@
+# Benchmarking Docker Image
+#
+# SPDX-License-Identifier: GPL-3.0-only
+#
+# Build:  docker build -t fibemate-bench:latest -f Dockerfile.bench .
+# Run:    docker run --rm --cpus=2 --memory=512m fibemate-bench:latest
+#
+# Locked to Node.js 22 LTS on Debian Bookworm for reproducible results.
+
+FROM node:22-bookworm-slim
+
+LABEL org.opencontainers.image.title="FIBEMATE Benchmark"
+LABEL org.opencontainers.image.description="Reproducible ML-KEM-768 + SM2 performance baseline"
+LABEL org.opencontainers.image.version="v3.3-preview"
+LABEL org.opencontainers.image.licenses="GPL-3.0-only"
+
+# System info for audit trail
+RUN echo "=== Build Environment ===" > /build-info.txt \
+ && uname -a >> /build-info.txt \
+ && cat /proc/cpuinfo | grep -m1 'model name' >> /build-info.txt \
+ && cat /proc/cpuinfo | grep -c processor | awk '{print "CPU cores: " $0}' >> /build-info.txt \
+ && cat /proc/meminfo | grep MemTotal >> /build-info.txt \
+ && node --version >> /build-info.txt
+
+WORKDIR /app
+
+# Copy only production packages — no fuzz/, no scripts/, no www/
+COPY packages/    ./packages/
+COPY index.js     ./
+
+# Baseline: no warmup, single-threaded, pinned CPU
+RUN echo "=== ML-KEM-768 Keygen Bench ===" > /results.txt \
+ && node -e "
+const { generateKeypair, encapsulate, decapsulate } = require('./packages/pqc-kem/src/ml-kem-768.js');
+const N = 1000;
+let start, end;
+
+// Keygen
+start = Date.now();
+for (let i = 0; i < N; i++) generateKeypair();
+end = Date.now();
+console.log('keygen: ' + ((end-start)/N).toFixed(2) + ' ms/op (N=' + N + ')');
+
+// Encaps
+const kp = generateKeypair();
+start = Date.now();
+for (let i = 0; i < N; i++) encapsulate(kp.publicKey);
+end = Date.now();
+console.log('encaps: ' + ((end-start)/N).toFixed(2) + ' ms/op (N=' + N + ')');
+
+// Decaps
+const { ciphertext } = encapsulate(kp.publicKey);
+start = Date.now();
+for (let i = 0; i < N; i++) decapsulate(kp.secretKey, ciphertext);
+end = Date.now();
+console.log('decaps: ' + ((end-start)/N).toFixed(2) + ' ms/op (N=' + N + ')');
+
+// Barrett modMul microbench
+const { modMul } = require('./packages/pqc-kem/src/ml-kem-768.js');
+const Q = 3329n;
+start = Date.now();
+let sum = 0n;
+for (let i = 0; i < 100000; i++) sum += modMul(BigInt(i % Q), BigInt((i*7) % Q));
+end = Date.now();
+console.log('modMul(Barrett): ' + ((end-start)/1000).toFixed(3) + ' μs/op (N=100K)');
+" >> /results.txt
+
+RUN echo "=== SM2 Sign/Verify Bench ===" >> /results.txt \
+ && node -e "
+const sm2 = require('./packages/pqc-kem/src/sm2-bigint-ec.js');
+const N = 500;
+const kp = sm2.generateKeyPair();
+const msg = Buffer.from('FIBEMATE SM2 benchmark message ' + Date.now());
+
+let start = Date.now();
+for (let i = 0; i < N; i++) sm2.sign(msg, kp.privateKey);
+let end = Date.now();
+console.log('SM2 sign  (N=' + N + '): ' + ((end-start)/N).toFixed(2) + ' ms/op');
+
+const sig = sm2.sign(msg, kp.privateKey);
+start = Date.now();
+for (let i = 0; i < N; i++) sm2.verify(msg, sig, kp.publicKey);
+end = Date.now();
+console.log('SM2 verify(N=' + N + '): ' + ((end-start)/N).toFixed(2) + ' ms/op');
+" >> /results.txt
+
+RUN echo "=== KAT Self-Test ===" >> /results.txt \
+ && node -e "
+const { generateKeypair, encapsulate, decapsulate } = require('./packages/pqc-kem/src/ml-kem-768.js');
+const N = 1000;
+let ok = 0;
+for (let i = 0; i < N; i++) {
+  const kp = generateKeypair();
+  const { ciphertext, sharedSecret: ssEnc } = encapsulate(kp.publicKey);
+  const ssDec = decapsulate(kp.secretKey, ciphertext);
+  if (Buffer.compare(ssEnc, ssDec) === 0) ok++;
+}
+console.log('KEM roundtrip: ' + ok + '/' + N + (ok === N ? ' PASS' : ' FAIL'));
+" >> /results.txt
+
+CMD ["sh", "-c", "cat /build-info.txt && echo && cat /results.txt"]
