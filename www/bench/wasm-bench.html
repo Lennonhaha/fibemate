@@ -166,7 +166,7 @@ async function benchMLKEMNative(count) {
 async function benchMLKEMPureJS(count) {
   log('正在加载 ML-KEM PureJS 模块...');
   try {
-    const mod = await import('/crypto/crypto/ml-kem-768.js');
+    const mod = await import('/crypto/ml-kem-768.js');
     const client = mod.MLKEM768;
     
     log('ML-KEM PureJS 加载成功，基准测试中...');

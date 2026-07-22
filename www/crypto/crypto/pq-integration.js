@@ -250,10 +250,100 @@ class PQKeyManager {
     }
 }
 
+// SLH-DSA (SPHINCS+) lazy-loaded via WASM
+let _slhDsaModule = null;
+let _slhDsaInitPromise = null;
+
+/**
+ * SLH-DSA-128s Stateless Hash-Based Signature (FIPS 205).
+ * Used for message authentication alongside ML-KEM-768 key exchange.
+ */
+const SLHDSA = {
+    /**
+     * Check if SLH-DSA is available.
+     * @returns {Promise<boolean>}
+     */
+    async isAvailable() {
+        try {
+            await this._ensureLoaded();
+            return true;
+        } catch (e) {
+            console.warn('SLH-DSA WASM not available:', e.message);
+            return false;
+        }
+    },
+
+    /**
+     * Generate a new SLH-DSA keypair.
+     * @returns {Promise<{publicKey: string, secretKey: string, sigBytes: number}>}
+     */
+    async keygen() {
+        const mod = await this._ensureLoaded();
+        const jsonStr = mod.keygen();
+        const keys = JSON.parse(jsonStr);
+        return { ...keys, sigBytes: 7856 };
+    },
+
+    /**
+     * Sign a message (CPU-intensive ~500ms, call from Worker).
+     * @param {string} message
+     * @param {string} secretKeyB64
+     * @param {string} publicKeyB64
+     * @returns {Promise<string>} Base64 signature
+     */
+    async sign(message, secretKeyB64, publicKeyB64) {
+        const mod = await this._ensureLoaded();
+        return mod.sign(message, publicKeyB64, secretKeyB64);
+    },
+
+    /**
+     * Verify a signature (fast ~10ms, main thread safe).
+     * @param {string} sigB64
+     * @param {string} message
+     * @param {string} publicKeyB64
+     * @returns {Promise<boolean>}
+     */
+    async verify(sigB64, message, publicKeyB64) {
+        const mod = await this._ensureLoaded();
+        return mod.verify(sigB64, message, publicKeyB64);
+    },
+
+    /**
+     * Get algorithm parameters.
+     * @returns {Promise<Object>}
+     */
+    async getParams() {
+        const mod = await this._ensureLoaded();
+        return JSON.parse(mod.get_params());
+    },
+
+    async _ensureLoaded() {
+        if (_slhDsaModule) return _slhDsaModule;
+        if (_slhDsaInitPromise) return _slhDsaInitPromise;
+
+        _slhDsaInitPromise = (async () => {
+            try {
+                const module = await import('./slh-dsa-wasm/pkg/fibemate_slh_dsa_wasm.js');
+                await module.default();
+                _slhDsaModule = module;
+                console.log('[PQIntegration] SLH-DSA WASM loaded');
+                return module;
+            } catch (e) {
+                // Clear on failure so next call retries instead of caching failure forever
+                _slhDsaInitPromise = null;
+                throw e;
+            }
+        })();
+
+        return _slhDsaInitPromise;
+    }
+};
+
 // Export
 const PQIntegration = {
     PQDoubleRatchet,
     PQKeyManager,
+    SLHDSA,
     
     /**
      * Check if post-quantum cryptography is available
@@ -271,6 +361,7 @@ const PQIntegration = {
             classicalSecurity: '128-bit (ECDH P-256)',
             quantumSecurity: '192-bit (ML-KEM-768)',
             combinedSecurity: '128-bit classical + post-quantum',
+            signatureAlgorithm: 'SLH-DSA-128s (FIPS 205)',
             status: this.isAvailable() ? 'available' : 'unavailable'
         };
     }
