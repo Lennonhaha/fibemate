@@ -77,7 +77,7 @@ class SM4GCMRef:
 
     def _encrypt_block(self, block):
         """Encrypt one 16-byte block with SM4 (raw)."""
-        return bytes(self.cipher.crypt_ecb(list(block)))
+        result = bytes(self.cipher.crypt_ecb(list(block))); return result[:16]  # gmssl returns 32 bytes (enc+dec)
 
     def encrypt(self, plaintext, iv=None, aad=b''):
         """

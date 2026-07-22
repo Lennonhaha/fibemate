@@ -208,71 +208,67 @@
   // ================================================================
   //  GF(2^128) Multiplication (for GCM authentication)
   // ================================================================
-  function gfMul(x, y) {
-    let R = new Uint8Array(16);
-    const Z = new Uint8Array(16);
-    let V = new Uint8Array(y);
-
-    for (let i = 0; i < 128; i++) {
-      const bit = (x[i >> 3] >> (7 - (i & 7))) & 1;
-      if (bit) {
-        for (let j = 0; j < 16; j++) Z[j] ^= V[j];
+  function gfMul(xBytes, yBytes) {
+    // Standard GCM GF(2^128) multiplication (right-shift convention)
+    // Reduction polynomial: x^128 + x^7 + x^2 + x + 1 => R = 0xE1 << 120
+    const R = 0xE1000000000000000000000000000000n;
+    const MASK = (1n << 128n) - 1n;
+    let x = 0n, y = 0n;
+    for (let i = 0; i < 16; i++) {
+      x = (x << 8n) | BigInt(xBytes[i]);
+      y = (y << 8n) | BigInt(yBytes[i]);
+    }
+    let z = 0n;
+    for (let i = 127; i >= 0; i--) {
+      if ((x >> BigInt(i)) & 1n) {
+        z ^= y;
       }
-      // V = (V >> 1) ⊕ (R if LSB was set)
-      const lsb = V[15] & 1;
-      let carry = 0;
-      for (let j = 15; j >= 0; j--) {
-        const nextCarry = (V[j] & 1) << 7;
-        V[j] = ((V[j] >>> 1) | carry) & 0xFF;
-        carry = nextCarry;
-      }
-      if (lsb) {
-        V[0] ^= 0xE1;
+      if (y & 1n) {
+        y = (y >> 1n) ^ R;
+      } else {
+        y >>= 1n;
       }
     }
-    return Z;
+    z &= MASK;
+    const out = new Uint8Array(16);
+    for (let i = 15; i >= 0; i--) {
+      out[i] = Number(z & 0xFFn);
+      z >>= 8n;
+    }
+    return out;
   }
-
   function ghash(H, A, C) {
-    let Y = new Uint8Array(16);
-
-    // Process A (additional authenticated data)
-    for (let i = 0; i < A.length; i += 16) {
-      const len = Math.min(16, A.length - i);
+    // Standard GCM GHASH via BigInt (matches Python _gf128_mul)
+    const ZERO16 = new Uint8Array(16);
+    let Y = ZERO16.slice();
+    const processBlock = (data, offset) => {
       const block = new Uint8Array(16);
-      block.set(A.subarray(i, i + len));
+      const remaining = data.length - offset;
+      const len = Math.min(16, remaining);
+      block.set(data.subarray(offset, offset + len));
+      // zero-pad remaining bytes already handled (block initialized to 0)
       for (let j = 0; j < 16; j++) Y[j] ^= block[j];
       Y = gfMul(Y, H);
-    }
-
-    // Process C (ciphertext)
-    for (let i = 0; i < C.length; i += 16) {
-      const len = Math.min(16, C.length - i);
-      const block = new Uint8Array(16);
-      block.set(C.subarray(i, i + len));
-      for (let j = 0; j < 16; j++) Y[j] ^= block[j];
-      Y = gfMul(Y, H);
-    }
-
-    // Process lengths (A_len || C_len) × 8, 64-bit big-endian each
-    const lenBlock = new Uint8Array(16);
+    };
+    for (let i = 0; i < A.length; i += 16) processBlock(A, i);
+    for (let i = 0; i < C.length; i += 16) processBlock(C, i);
     const aBits = A.length * 8;
     const cBits = C.length * 8;
-    lenBlock[4] = (aBits >>> 56) & 0xFF;
-    lenBlock[5] = (aBits >>> 48) & 0xFF;
-    lenBlock[6] = (aBits >>> 40) & 0xFF;
-    lenBlock[7] = (aBits >>> 32) & 0xFF;
-    lenBlock[8] = (aBits >>> 24) & 0xFF;
-    lenBlock[9] = (aBits >>> 16) & 0xFF;
-    lenBlock[10] = (aBits >>> 8) & 0xFF;
-    lenBlock[11] = aBits & 0xFF;
-    lenBlock[12] = (cBits >>> 56) & 0xFF;
-    lenBlock[13] = (cBits >>> 48) & 0xFF;
-    lenBlock[14] = (cBits >>> 40) & 0xFF;
-    lenBlock[15] = (cBits >>> 32) & 0xFF;
+    const lenBlock = new Uint8Array(16);
+    // AAD length: 8 bytes big-endian (bytes 0-7)
+    lenBlock[0] = 0; lenBlock[1] = 0; lenBlock[2] = 0; lenBlock[3] = 0;
+    lenBlock[4] = (aBits >>> 24) & 0xFF;
+    lenBlock[5] = (aBits >>> 16) & 0xFF;
+    lenBlock[6] = (aBits >>> 8) & 0xFF;
+    lenBlock[7] = aBits & 0xFF;
+    // CT length: 8 bytes big-endian (bytes 8-15)
+    lenBlock[8] = 0; lenBlock[9] = 0; lenBlock[10] = 0; lenBlock[11] = 0;
+    lenBlock[12] = (cBits >>> 24) & 0xFF;
+    lenBlock[13] = (cBits >>> 16) & 0xFF;
+    lenBlock[14] = (cBits >>> 8) & 0xFF;
+    lenBlock[15] = cBits & 0xFF;
     for (let j = 0; j < 16; j++) Y[j] ^= lenBlock[j];
     Y = gfMul(Y, H);
-
     return Y;
   }
 
@@ -297,7 +293,7 @@
       if (iv.length !== 12) throw new Error('GCM IV must be 12 bytes');
 
       const aad = (opts && opts.aad)
-        ? (typeof opts.aad === 'string' ? new TextEncoder().encode(opts.aad) : opts.aad)
+        ? (typeof opts.aad === 'string' ? hexToBytes(opts.aad) : opts.aad)
         : new Uint8Array(0);
 
       const pt = typeof plaintext === 'string'
@@ -349,8 +345,11 @@
       const ct = hexToBytes(cipherHex);
       const iv = hexToBytes(ivHex);
       const expectedTag = hexToBytes(authTagHex);
-      const aad = aadParam
-        ? (typeof aadParam === 'string' ? new TextEncoder().encode(aadParam) : hexToBytes(aadParam))
+      const rawAad = aadParam && typeof aadParam === 'object' && aadParam.aad
+        ? aadParam.aad
+        : aadParam;
+      const aad = rawAad
+        ? (typeof rawAad === 'string' ? hexToBytes(rawAad) : rawAad)
         : new Uint8Array(0);
 
       const rK = keySchedule(keyBytes);
