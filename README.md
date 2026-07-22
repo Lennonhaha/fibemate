@@ -17,7 +17,7 @@
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
-**v3.3-preview** · 2026-07-21 · TSR: lg-001~094 (94 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3-preview** · 2026-07-22 · TSR: lg-001~095 (95 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Production/Experiment Separation**: 🟢 Production-grade (default-on, auditable) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -41,7 +41,7 @@
 
 The post-quantum transition is not just about swapping algorithms — it's about **engineering the entire stack** from browser to FPGA, from KAT vectors to formal verification, from national standards to IANA registrations.
 
-FIBEMATE is a solo-developed, publicly verifiable engineering proof that the full chain works end-to-end: ML-KEM-768 + SM2 hybrid key exchange over TLS 1.3, hardware-accelerated NTT on Artix-7 FPGA, TLA+ formal verification of the handshake protocol, and WASM-based browser cryptography — timestamped for reproducibility tracking (94 RFC 3161 records in repo; see [TSR Manifest](docs/TSR-MANIFEST.md)).
+FIBEMATE is a solo-developed, publicly verifiable engineering proof that the full chain works end-to-end: ML-KEM-768 + SM2 hybrid key exchange over TLS 1.3, hardware-accelerated NTT on Artix-7 FPGA, TLA+ formal verification of the handshake protocol, and WASM-based browser cryptography — timestamped for reproducibility tracking (95 RFC 3161 records in repo; see [TSR Manifest](docs/TSR-MANIFEST.md)).
 
 **Who is this for?** Crypto engineers implementing PQC in practice, security researchers exploring hybrid KEX architectures, FPGA developers working on lattice-based hardware, and anyone evaluating the real-world readiness of post-quantum migration.
 
@@ -218,7 +218,7 @@ fibemate/
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
-│   └── docs/            # Documentation + TSR evidence (lg-001~094)
+│   └── docs/            # Documentation + TSR evidence (lg-001~095)
 ├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
 │   └── (timing-critical IP, available on request)
 ├── c-stm32/             # STM32 C framework
@@ -228,7 +228,15 @@ fibemate/
 ├── LICENSE              # GPLv3
 ├── README.md            # This file
 ├── CITATION.cff         # Citation metadata
-└── BUILD.md             # Build and deployment guide
+├── BUILD.md             # Build and deployment guide
+├── .pre-commit-config.yaml   # Multi-language pre-commit hooks
+├── docs/
+│   ├── testing.md              # 4-layer CI pipeline + functional + compatibility tests
+│   ├── quality-assurance.md    # 7-layer QA architecture blueprint
+│   ├── security-limitations.md # Security boundaries & stability weighting
+│   ├── audit-package-2026-07-22.md  # Third-party audit package
+│   ├── platform-matrix.md      # Multi-platform test matrix
+│   └── VULNERABILITIES.md      # Vulnerability tracking (FIB-001~)
 ```
 
 ---
