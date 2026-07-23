@@ -22,6 +22,19 @@ const SM2_GX = 0x32C4AE2C1F1981195F9904466A39C9948FE30BBFF2660BE1715A4589334C74C
 const SM2_GY = 0xBC3736A2F4F6779C59BDCEE36B692153D0A9877CC62A474002DF32E52139F0A0n;
 
 const ZERO = 0n, ONE = 1n, TWO = 2n, THREE = 3n, FOUR = 4n, EIGHT = 8n;
+// Fast Mersenne reduction for SM2_P = 2^256 - 2^224 - 2^96 + 2^64 - 1
+// Identity: 2^256 ≡ 2^224 + 2^96 - 2^64 + 1 (mod p)
+const _SM2_M256 = (1n << 256n) - 1n;
+function _fastModP(x) {
+  let t = x;
+  for (let i = 0; i < 5; i++) {
+    const s1 = t >> 256n;
+    t = (t & _SM2_M256) + s1 + (s1 << 224n) + (s1 << 96n) - (s1 << 64n);
+  }
+  while (t >= SM2_P) t -= SM2_P;
+  while (t < 0n) t += SM2_P;
+  return t;
+}
 
 // ============ Field Operations (mod SM2_P) ============
 const F = {
@@ -33,10 +46,10 @@ const F = {
         return a >= b ? a - b : a - b + SM2_P;
     },
     mul(a, b) {
-        return (a * b) % SM2_P;
+        return _fastModP(a * b);
     },
     sqr(a) {
-        return (a * a) % SM2_P;
+        return _fastModP(a * a);
     },
     /** Extended Euclidean modular inverse */
     inv(a) {

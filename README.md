@@ -21,7 +21,7 @@
 
 **v3.3-preview** · 2026-07-22 · TSR: lg-001~096 (96 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
-> **Production/Experiment Separation**: 🟢 Production-grade (default-on, auditable) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
+> **Engineering evaluation platform — not production ready**: 🟢 Production-grade (default-on, auditable) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
 > **Cite this work**: [CITATION.cff](./CITATION.cff) — Liu, T. *FIBEMATE: Post-Quantum Cryptography Full-Stack Engineering Platform*. v3.3-preview, 2026.
 
@@ -31,7 +31,7 @@
 
 | If you are... | Jump to |
 | :--- | :--- |
-| 🔒 **Evaluating production readiness** | → [🟢 Production-Grade Base](#-production-grade-base-default-on--auditable) · [Security Model](#security-model) · [Known Limitations](#known-limitations) |
+| 🔒 **Engineering evaluation** | → [🟢 Production-Grade Base](#-production-grade-base-default-on--audit-pending) · [Security Model](#security-model) · [Known Limitations](#known-limitations) |
 | 🔬 **Researching VWZ / LookingGlass** | → [🔬 Experimental Research Components](#-experimental-research-components-default-off--no-security-guarantees) · [VWZ ePrint](#-publications) |
 | 🛠️ **Building / running** | → [Quick Start](#quick-start) · [BUILD.md](BUILD.md) |
 | 🤔 **Questioning ML-KEM interoperability** | → [ML-KEM-768 Wire Format](#ml-kem-768-wire-format) |
@@ -145,7 +145,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 | Track | Content | Status |
 |-------|---------|--------|
-| **Standard PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT, WASM, TLS 1.3 Hybrid KEX | ✅ Production Ready |
+| **Standard PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT, WASM, TLS 1.3 Hybrid KEX | ✅ Engineering Ready (Audit Pending) |
 | **National Crypto Hybrid** | SM2/SM3/SM4 + ML-KEM - IANA #4590 Application-Layer Verification | ✅ Dual-Track Live |
 | **Research** | LookingGlass v2 (algebraic group experiment), VWZ lattice-tensor signature, FPGA v5 hardware protection | 🔬 Experimental Branch |
 
@@ -158,7 +158,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 ---
 
-## 🟢 Production-Grade Base (Default-On · Auditable)
+## 🟢 Production-Grade Base (Default-On · Audit Pending)
 
 These components form the **trusted security foundation** of FIBEMATE. All claims backed by runnable test scripts.
 
@@ -229,7 +229,7 @@ To ensure reproducibility, all performance data is captured under the following 
 | **Network** | Localhost loopback (to eliminate network latency variables) |
 | **Test Duration** | 10,000 operational rounds per benchmark, single-threaded |
 
-### Production-Grade Performance
+### End‑to‑End Performance (Engineering Baseline)
 
 All measurements on the above environment. Single-run average over 10,000 rounds.
 
@@ -242,7 +242,7 @@ All measurements on the above environment. Single-run average over 10,000 rounds
 | **RSA-2048** | KeyGen | 17/s | 60 ms | Node.js native |
 | **ECDSA P-256** | Sign | **578/s** | 1.73 ms | Node.js native |
 | **SM2** | Sign | 205/s | 4.87 ms | BigInt ECC v1.3 |
-| **VWZ** (C) | Sign | **100K/s** | 10 µs | k=16, 68B sig |
+| **VWZ** (C) | Sign | ⚠️ Experimental | — | ⚠️ EPrint submission returned · Default‑Off |
 | **FPGA NTT v5** | 256 samples | — | — | WNS 9.755ns |
 
 ---
