@@ -1,0 +1,24 @@
+TSR: lg-099
+Date: 2026-07-23
+Baseline: f8125fb
+Result: 480/480 PASS
+
+Modules:
+  SM2 sign/verify:    100/100 PASS
+  SM2 encrypt/decrypt: 100/100 PASS
+  SM3 KAT (30 vectors): 30/30 PASS
+  SM4-GCM KAT (30 vectors): 30/30 PASS
+  ML-KEM-768 roundtrip: 100/100 PASS
+  ML-KEM key uniqueness: 20/20 PASS
+
+Key change: perf: SM2 Mersenne fast reduction — 1.8× modMul
+CI scripts (SHA256):
+  scripts/ci-gm-sm2.cjs    b5662e02b7f7009e8c7044863a13490edc621cb8b746587b39c7ff94cd3a6f7e
+  scripts/ci-gm-sm3.cjs    d053e0395315c524a9e880df8ee0475c2c59feb2614772e60b913fd55aff6ee7
+  scripts/ci-gm-sm4.cjs    67cd28678975e06e4e52cb4294410d580d47d7e17721be41ac34366bf6233a2a
+  scripts/ci-mlkem-kat.cjs 5dae38dd4218d6dbbd0da89a6caa12c042a61d92db00e5dd4dd2ba78c228b3ea
+
+Related commits:
+  f8125fb — merge: server/main ← local CI fixes
+  e555f96 — ci: full regression suite - sm2/sm3/sm4/mlkem
+  72f476e — perf: SM2 Mersenne fast reduction — 1.8× modMul | docs: README honesty
