@@ -202,10 +202,10 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 ## 📄 Publications
 
 - **VWZ: A Vandermonde-Wronskian-Zariski Tensor Trapdoor for Compact Post-Quantum Signatures.**
-  Tianhe Liu. IACR Cryptology ePrint Archive, Report 2026/110618, 2026 (withdrawn after editorial review).
+  Tianhe Liu. IACR Cryptology ePrint Archive, Report 2026/110618, 2026.
   NIST Security Level 1 parameters: signature 80 bytes, public key 1.76 KB.
   43 cross-validation tests passed (paper implementation); 148 extended functional tests passed (external suite).
-  [PDF](papers/vwz-eprint-2026.pdf) · [ePrint](https://eprint.iacr.org/2026/110618) · [Hardness: VMQ-SPARSE](docs/research/route-c-lvwz-phase1-math.md) · [Cryptanalysis simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate) · [148-Test Report](docs/vwz-148-test-report.md)
+  [PDF](papers/vwz-eprint-2026.pdf) · [ePrint](https://eprint.iacr.org/2026/110618) · [VWZ Challenge](https://fibemate.net/vwz-challenge) · [Hardness: VMQ-SPARSE](docs/research/route-c-lvwz-phase1-math.md) · [Cryptanalysis simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate) · [148-Test Report](docs/vwz-148-test-report.md)
 
   Underlying assumption: VMQ-SPARSE (Vandermonde Multivariate Quadratic tensor orbit pseudorandomness), a novel tensor-based hardness assumption distinct from lattice assumptions such as LWE. The paper does not contain a security reduction to any standard well-studied problem.
 
