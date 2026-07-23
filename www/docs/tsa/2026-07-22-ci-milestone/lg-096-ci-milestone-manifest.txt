@@ -1,0 +1,13 @@
+# CI Milestone TSR Manifest — 2026-07-22
+# 460/460 CI all-green: SM2 (200) + SM3 (30) + SM4-GCM (30) + ML-KEM-768 (100)
+# Commit: 49bb5d8b894f194251be5c7b5bd68d1ff2956630
+
+273807e34fe98846720f00888eeaf7433190779db8e8f89b3c6ea96ae7aedb39  .github/workflows/ci.yml
+b5662e02b7f7009e8c7044863a13490edc621cb8b746587b39c7ff94cd3a6f7e  scripts/ci-gm-sm2.cjs
+06cc1d120412fc439aa84294c735f7141a9d8fa1a86daaa0b80548427c3b0596  scripts/ci-gm-sm3.cjs
+54a004dfb068275e975430cc7e812729c053b03a7a991e1f9d50cbdc6f466b0c  scripts/ci-gm-sm4.cjs
+5dae38dd4218d6dbbd0da89a6caa12c042a61d92db00e5dd4dd2ba78c228b3ea  scripts/ci-mlkem-kat.cjs
+633fcf92a2f92ab9c3fdd0e756367905054c82c586f7fbbc8ed4f2f217a37d28  packages/sm2-ref/test/kat/sm2-KAT.json
+b9d9db09b753c45262fd44e27b6c7eface0fe4c13d8a13db8e730cd555a3bab5  packages/sm3-ref/test/kat/sm3-KAT.json
+87561893d1cc62436ce61a77888e7d979ed853b5604b780c15c7ad5ec9003ab2  packages/sm4-ref/test/kat/sm4-gcm-KAT.json
+863b519de0f159ebeb69db1a70ffc0c22448a4e2eb02414037d1dfc8444b2668  packages/pqc-kem/test/kat/mlkem-768-KAT.rsp

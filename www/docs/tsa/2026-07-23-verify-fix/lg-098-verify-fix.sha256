@@ -1,0 +1,3 @@
+8681b5ac99adfff6bc6649d78ebb89637b9e7da865a3ee7893e4f879b32d38f3  /opt/fibemate-full/sm2-bigint-ec.js
+a1ca882bfcb8d5467d0811624ec9bb1b27cd0837cf35f634e85bdb28f6e3a0fa  scripts/fix-verify-blinding.cjs
+e051cad16f8d3ed51958dce98b85492e1057b161041119252af00c8126728638  scripts/verify-gradient-quick.cjs

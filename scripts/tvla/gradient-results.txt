@@ -1,0 +1,17 @@
+# SM2 TVLA Stress-Gradient Results — 2026-07-23
+
+N=[500, 2000, 5000]  |  threshold |t|≤4.5
+Method: Welch t-test, software timing, BigInt masked v1.2
+
+Raw |t| values:
+  genKey:  [1.25, 0.75, 0.30]  beta=-0.014  noise
+  sign:    [0.08, 0.19, 0.53]  beta=+0.009  clean
+  verify:  [0.56, 3.75, 12.19] beta=+0.243  R2=0.956  LEAK (wNAF timing)
+  encrypt: [0.18, 0.37, 0.78]  beta=+0.012  clean
+  decrypt: [2.08, 2.70, 1.03]  beta=-0.016  noise
+
+Conclusion:
+  - genKey/sign/encrypt/decrypt: no sample-size-dependent timing leakage
+  - verify: STRONG N-dependence (R2=0.956), crosses |t|=4.5 at N≈1749
+  - Root cause: wNAF scalar mult in verify uses data-dependent loop counts
+  - sign is masked (PASS), verify operates on public-key data (unmasked)

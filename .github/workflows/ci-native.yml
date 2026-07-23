@@ -1,0 +1,72 @@
+# Native C Addon CI — ML-KEM-768
+#
+# Verifies the C addon compiles and works across platforms.
+# Separate from ci.yml which covers JS-level API tests.
+
+name: Native Addon CI
+
+on:
+  push:
+    paths:
+      - 'packages/pqc-kem/native/**'
+      - '.github/workflows/ci-native.yml'
+  pull_request:
+    paths:
+      - 'packages/pqc-kem/native/**'
+      - '.github/workflows/ci-native.yml'
+  workflow_dispatch:
+
+jobs:
+  build-native:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [20, 22]
+      fail-fast: false    # don't cancel macos if ubuntu fails
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install build tools (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: Install build tools (macOS)
+        if: runner.os == 'macOS'
+        run: brew install gcc make
+
+      - name: npm install (addon deps)
+        working-directory: packages/pqc-kem
+        run: npm install
+
+      - name: Build C addon
+        working-directory: packages/pqc-kem
+        run: npm run build:native:release
+
+      - name: Run native tests
+        working-directory: packages/pqc-kem
+        run: node ../../scripts/test-native-addon.cjs
+
+      - name: Performance benchmark (500 rounds)
+        working-directory: packages/pqc-kem
+        run: node ../../scripts/mlkem-bench-native.cjs 500
+
+  # Nightly: full 10000-round regression
+  nightly-regression:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - run: sudo apt-get update && sudo apt-get install -y build-essential
+      - working-directory: packages/pqc-kem
+        run: npm install && npm run build:native:release
+      - working-directory: packages/pqc-kem
+        run: node ../../scripts/mlkem-bench-native.cjs 10000

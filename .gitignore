@@ -321,3 +321,10 @@ public/key-lifecycle-manager.js
 public/secure-key-storage-v2.js
 public/test-key-lifecycle.js
 bindings/python/__pycache__/
+
+# VWZ/LG experimental components (moved to experimental/vwz-lg branch)
+oqs_gen
+packages/pqc-kem/native/build/
+*.o
+*.d
+__pycache__/
