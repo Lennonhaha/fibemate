@@ -1,19 +1,21 @@
-# FIBEMATE CI Pipeline — 核心验证
+# FIBEMATE CI Pipeline
 #
-# 触发: push / PR to master
+# 触发: push / PR to main
 # 覆盖:
+#   - 国密三件套 (SM2/SM3/SM4-GCM) JS↔Python 跨语言验证
+#   - ML-KEM-768 KAT 自验证
 #   - Node.js 单元测试
-#   - 文档链接检查
-#   - 代码风格 (Prettier + ESLint)
+#   - ESLint 静态分析
+#   - 文档检查
 
 name: CI
 permissions: read-all
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main ]
   pull_request:
-    branches: [ master ]
+    branches: [ main ]
 
 env:
   CARGO_TERM_COLOR: always
@@ -21,7 +23,44 @@ env:
 
 jobs:
 
-  # Node.js 单元测试
+  # ─── 国密跨语言 KAT 验证 ─────────────────────────────
+  gm-crossval:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: SM2 sign/verify + encrypt/decrypt (100 vectors)
+        run: node scripts/ci-gm-sm2.cjs
+
+      - name: SM3 hash (30 vectors)
+        run: node scripts/ci-gm-sm3.cjs
+
+      - name: SM4-GCM (30 vectors)
+        run: node scripts/ci-gm-sm4.cjs
+
+  # ─── ML-KEM-768 KAT ─────────────────────────────────
+  mlkem-kat:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: ML-KEM-768 cross-language validation
+        run: node test/test-cross-lang.js
+
+  # ─── Node.js 单元测试 ───────────────────────────────
   node-test:
     runs-on: ubuntu-latest
     steps:
@@ -40,13 +79,7 @@ jobs:
           node test/test-keccak.js
           node test/test-fibemate.js
 
-      - name: Jasmin KAT cross-verification (informational)
-        continue-on-error: true
-        run: |
-          node scripts/kat-jasmin-compare.js || echo "INFO: Jasmin KAT mismatch expected — FIBEMATE uses time-domain polyMul vs Jasmin NTT-domain. See docs/design-decisions.md"
-          
-  
-  # ESLint 静态分析
+  # ─── ESLint 静态分析 ─────────────────────────────────
   lint:
     runs-on: ubuntu-latest
     steps:
@@ -63,7 +96,7 @@ jobs:
       - name: Run ESLint
         run: npx eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 50
 
-  # Markdown / 文档检查
+  # ─── 文档检查 ───────────────────────────────────────
   docs-check:
     runs-on: ubuntu-latest
     steps:
