@@ -942,10 +942,13 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 - FreeTSA 404/403 需改用 DigiCert TSR；服务端 PTY 输出干扰二进制文件需 RequestTTY=no
 - ISP（113.4.157.95）封锁出站22端口，安全组规则无效——ISP级封锁；GH token + HTTPS可绕过git push但无法替代SSH部署；服务器部署依赖用户直连、Workbench或GitHub Actions webhook
 - LG v2.2.2：可变depth（1..=7层可调）、pass融合（每层5→3次扫描）、新增lgv2_confuse_d/lgv2_confuse_ex API；WASM 25.7KB
-- UART TX信号绑定到B9引脚（直连已烧毁的FT4232H JTAG芯片）→信号发到死芯片，PMOD收不到数据；需重建bitstream绑到M18/N19可触PMOD引脚
+- 2026-07-24 FPGA UART最终修复成功，UART信号从绑到B9（直连已烧毁的FT4232H JTAG芯片）改为正确绑定到T19/N19可触PMOD引脚，最终在外置CH340上获得FPGA alive+NTT OK输出
 - PowerShell ConvertTo-Json将中文转为\uXXXX转义，GitHub GraphQL API不做自动unescape；中文发GitHub API最佳路径：Linux服务器直接POST或Python json.dumps手动控制
 - PowerShell ConvertTo-Json 将中文转为 \uXXXX 转义，GitHub GraphQL API 不做自动 unescape；中文发 GitHub API 最佳路径：Linux 服务器直接 POST 或 Python json.dumps 手动控制
 - UART TX 信号绑定到 B9 引脚（直连已烧毁的 FT4232H JTAG 芯片），信号发到死芯片，PMOD 收不到数据；需重建 bitstream 绑到 M18/N19 可触 PMOD 引脚
+- Vivado因引脚冲突将UART信号自动分配到悬空焊盘U2/V2导致无输出——约束文件中uart_rx绑定T19但led[1]也占用T19；修复后最终UART输出驱动成功
+- 第三方审查核心结论：项目需诚实定位——'教育价值和集成展示是核心价值，当前实现不适用于生产环境安全需求'
+- HTTPS直连(443端口)也被封锁，SSH 22+HTTPS 443均被封禁；采用服务器中转→git push GitHub→git pull→cp同步全链路策略
 
 ## 当前项目与关注
 
@@ -961,7 +964,7 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 - SM2 BigInt+Jacobian全量优化完成：加速比3.15x-8.61x；SM2预计算表优化：k·G标量乘2.50x提升、密钥生成2.64x提升
 - C盘清理：7.4GB→16.2GB，释放8.8GB；Rust nightly工具链(~1.4GB)因安全策略拦截未能删除
 - E盘全量备份完成：D:\FIBEMATE\_backup_2026-07-18\，瘦身~18MB（TSR 200时间戳384KB、工作记录67份296KB、源码13.4MB、git bundle 4.3MB）；6GB冗余02-Source-*标记可删除
-- 服务器磁盘使用85%（32G/40G），暂未触发ENOSPC
+- 服务器磁盘使用85%（32G/40G），暂未触发ENOSPC；生产部署目录/opt/fibemate-full/addon/包含完整C Native addon在备份中
 - LG v2.2.2 发布（WASM 21.4KB raw/9.7KB gzip）：可变 depth（1..=7 层可调）、pass 融合（每层 5→3 次扫描）、新增 lgv2_confuse_d/lgv2_confuse_ex API；Rust 30/30 passed，Python KAT 100-byte roundtrip 与 Rust 一致
 - GitHub fibemate 主仓库清理完成：master 分支已删除（仅保留 main），识别出 6 个冗余仓库待清理（lgv2testx、game-sever、Liu、psychic-octo-lamp、T）
 - 服务器磁盘使用 85%（32G/40G），暂未触发 ENOSPC
@@ -972,12 +975,38 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 - SM2 BigInt+Jacobian 全量优化完成：加速比 3.15x-8.61x；SM2 预计算表优化：k·G 标量乘 2.50x 提升、密钥生成 2.64x 提升
 - C 盘清理：7.4GB→16.2GB，释放 8.8GB；Rust nightly 工具链(~1.4GB)因安全策略拦截未能删除
 - TSR 存证序列完整补齐至 78 份：lg-001~071 + lg-074~078（从服务器拉取补齐 lg-033~076）；DigiCert+FreeTSA 双机构签发体系；FreeTSA 404/403 需改用 DigiCert TSR
+- 2026-07-17: Discussion #7 发布FIBEMATE v3.3 Tech Overview全栈状态帖，修复PowerShell ConvertTo-Json导致的Unicode二次转义问题，最终通过Linux服务器直接POST GraphQL API解决
+- 2026-07-17: 全站TSR校准完成——lg-074/076/077/078三件套上传服务器，timestamp-manifest.json v3（126条），8个页面TSR计数统一为76份，GitHub默认分支master→main切换成功
+- 2026-07-17: TSR存证序列完整补齐至76份：lg-052/lg-072/lg-073/lg-075使用FreeTSA重生成，决策不重签为DigiCert，维持双机构签发体系
+- 2026-07-19: P0缺陷清单梳理，核心缺陷包括KEM互操作和Nonce截断漏洞（存活两个月、影响核心KEM）；sign() ephemeral k未masking、extEuclidInv变时长模逆、浏览器版从未TVLA实测是额外P0级问题
+- 2026-07-19: P0-03a完成——sm2-ec-browser.js sign()和encrypt()增加k-masking（k'=k+rK·N），modInv从扩展欧几里得改为Fermat小定理a^(N-2) mod N，12/12测试全部通过
+- 2026-07-21: 第三方审查指出多个核心问题——ML-KEM声称通过KAT但承认不匹配NIST KAT向量为逻辑矛盾；JS BigInt SM2 constant-time声明不成立（V8非恒时）；TSR是存在性而非正确性证明
+- 2026-07-21: 根据第三方审查调整README——删除'does not match NIST KAT'免责声明、SM2加⚠️非恒时/JS平台限制安全警告、TSR从'backed by evidence'弱化为'timestamped for reproducibility tracking'、定位从production-grade改为'全栈PQC工程演示平台'
+- 2026-07-21: OpenSSF最佳实践徽章Passing级别获得（全部66项填写提交）；Scorecard修复——使用Go CLI版本替代ossf/scorecard-action绕过Actions权限限制
+- 2026-07-21晚至22日凌晨: NTT域重写最终完成——ZETAS扩展为256条，NTT encode DIT蝶形ZETAS[1..127]，NTT decode DIF蝶形+inverted butterflies ZETAS[255..129]+×3303；NTT roundtrip 200/200、KEM 10000压力测试通过；liboqs 0.12.0交叉验证10000/10000双向全绿
+- 2026-07-22: Barrett modMul优化完成——14×加速比，0 errors/11M，TSR lg-092存证；质量体系搭建（pre-commit+smoke+testing.md §6）、安全文档扩充（security-limitations+risk-rectification 19项）、审计打包（258KB·234文件）
+- 2026-07-22: 8.31开源发布准备——7/10核心社区基础设施就绪（Issue模板、PR模板、RELEASE.md、SUPPORT/SECURITY/CONTRIBUTING/GOVERNANCE/CODE_OF_CONDUCT/FUNDING/CITATION.cff、开源公告草稿、社交素材包、官网倒计时横幅脚本）
+- 2026-07-22: 密码库副本审计——确认ml-kem-768.js有5个不一致副本，生产环境运行老代码；制定全链路修复方案，统一packages为基准，所有副本SHA256一致验证通过
+- 2026-07-22: SM2 Python↔JS跨语言交叉验证完成，100/100 KAT向量通过；修复参数顺序bug（encrypt/decrypt参数交换）、Python mode=0对齐到JS mode=1（C1C3C2）
+- 2026-07-22: CI加固阶段1完成——国密三件套260/260+ML-KEM-768 100/100共460测试全绿；SM2 encrypt(publicKey,msg)参数顺序修正、ML-KEM decapsulate(sk,ct)参数顺序修正、ML-KEM keygen()修复为generateKeypair()、Buffer↔Uint8Array类型统一
+- 2026-07-22/23: README v3.5——+6战略章节（Background/Audience/Architecture/Bench Env/Competitive/Roadmap）346→497行；后删除所有外部品牌引用（liboqs/noble/Jasmin/oqs-provider）并移除对比矩阵，476行；官网同步zero-brand清理
+- 2026-07-23: SM2 Mersenne快速约减优化完成——1.8×提升（22.1ms vs 39.5ms, 50k ops），1000次随机向量100%正确；TSR lg-099证据固化，TSR链001~099连续完整；回归测试480/480全绿通过
+- 2026-07-23: 双棘轮（Double Ratchet）源码完整开发完成（435行，零TODO），列为已完成状态
+- 2026-07-24: FPGA UART引脚冲突最终修复——Vivado因引脚冲突将UART信号自动分配到悬空焊盘U2/V2；修复led[1]占用T19(UART RX)的冲突，uart_rx固定到T19；最终UART输出驱动成功：FibeMate FPGA alive + NTT OK，外置CH340(COM6) N19→CH340 RX
+- 2026-07-24: CI #193 6/6全绿通过——lint/node-test/mlkem-kat/sm3-kat/sm4-kat/gm-crossval全部通过；GitHub 177bfd5、服务器Live 177bfd5、本地Workspace 177bfd5三端一致；TSR 100份文件齐全；倒计时37天
+- TSR存证链持续扩展至100份：lg-001~099连续完整+lg-100；DigiCert+FreeTSA双机构签发体系；lg-090(README)+lg-091(ml-kem-768.js)等DigiCert签发
+- 2026-07-24 FPGA UART最终修复成功：根因为Vivado因引脚冲突将UART信号分配到悬空焊盘U2/V2；修复后FibeMate FPGA alive + NTT OK输出成功，使用外置CH340(COM6)
 
 ## 用户身份与偏好
 
 - 用户偏好固定引脚（rx=M18, gnd=N25），不愿意频繁换引脚或量电压
 - 用户偏好快速推进，要求反复测试直到通过，不希望被频繁询问
-- UART调试偏好：固定M18=TX、N25=GND引脚，不愿频繁换引脚或量电压；偏好快速推进，要求反复测试直到通过，不希望被频繁询问
+- 用户偏好固定引脚且不愿意频繁换引脚或量电压；偏好快速推进，要求反复测试直到通过
+- 用户偏好诚实坦率的项目定位，认为项目应注明'教育价值和集成展示是核心价值，当前实现不适用于生产环境安全需求'
+- 用户偏好梯度扫描（TVLA+梯度扫描组合）进行侧信道诊断
+- 用户偏好异步多线的沟通风格，会带上具体分析、优先级排序和操作建议
+- 用户负责fibemate项目综合CI/加密工程，涉及多种语言（JS/Python/Rust/C）
+- 用户已建立较为成熟的TSR时间戳备份工作流（已有100条TSR记录）
 
 ## 2026-07-16 凌晨：LG v2 独立仓库 + GitHub Release + 依赖锁定报告完成
 

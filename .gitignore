@@ -1,4 +1,4 @@
-# Dependencies
+﻿# Dependencies
 node_modules/
 package-lock.json
 
@@ -20,7 +20,9 @@ diag_*.js
 kat_*.js
 chk_*.js
 dbg_*.js
-*t.js
+**/scripts/*test.js
+**/scripts/*Test.js
+# double-ratchet.js / fix-ratchet.js are WHITELISTED (core crypto)
 *t2.js
 *t3.js
 *t4.js
@@ -105,7 +107,6 @@ main.html
 main.js
 /index.html
 message-crypto-*.js
-double-ratchet.js
 styles.css
 phone-verify.js
 video-call-test.js

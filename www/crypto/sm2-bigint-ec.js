@@ -27,13 +27,16 @@ const ZERO = 0n, ONE = 1n, TWO = 2n, THREE = 3n, FOUR = 4n, EIGHT = 8n;
 const _SM2_M256 = (1n << 256n) - 1n;
 function _fastModP(x) {
   let t = x;
-  for (let i = 0; i < 5; i++) {
+  // Mersenne reduction: 2^256 ≡ 2^224 + 2^96 - 2^64 + 1 (mod SM2_P)
+  // Iterate until no overflow or converging; safe for up to ~2048-bit intermediates
+  for (let i = 0; i < 12; i++) {
     const s1 = t >> 256n;
+    if (s1 === 0n) break;
     t = (t & _SM2_M256) + s1 + (s1 << 224n) + (s1 << 96n) - (s1 << 64n);
   }
-  while (t >= SM2_P) t -= SM2_P;
-  while (t < 0n) t += SM2_P;
-  return t;
+  // Fallback: direct BigInt modulo (safe, rare for jDbl / mul intermediates)
+  if (t >= SM2_P || t < 0n) t = t % SM2_P;
+  return t < 0n ? t + SM2_P : t;
 }
 
 // ============ Field Operations (mod SM2_P) ============
