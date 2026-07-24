@@ -17,7 +17,7 @@
 | 信号 | FPGA 引脚 | 物理位置 | IOSTANDARD | 连接目标 |
 |------|-----------|----------|------------|----------|
 | `uart_tx` | **N19** | PMOD1 pin1 | LVCMOS33 | 外置 CH340 RXD → COM6 |
-| `uart_rx` | **T19** | PMOD1 pin2 | LVCMOS33 | 外置 CH340 TXD |
+| `uart_rx` | **T19** | PMOD1 pin2 | LVCMOS33 | ⚠️ 未实连（保留位） |
 | `led[0]` | **M18** | 板载 | LVCMOS33 | 心跳指示灯 (1Hz) |
 | `led[1]` | **R17** | 板载 | LVCMOS33 | NTT 故障指示 |
 | `led[2]` | **U20** | 板载 | LVCMOS33 | 报警指示 |
@@ -116,7 +116,7 @@ vivado -mode batch -source scripts/program.tcl -nojournal -nolog
 | Slice Registers | ~2,100 | 41,600 | ~5% |
 | Block RAM | 1 | 50 | 2% |
 | DSP48E1 | 1 | 90 | ~1% |
-| I/O | 34 | 250 | ~14% |
+| I/O | 37 | 250 | ~15% |
 
 ---
 
