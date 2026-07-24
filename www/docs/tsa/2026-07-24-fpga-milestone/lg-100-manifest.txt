@@ -1,0 +1,10 @@
+﻿lg-100: FPGA UART debug working on A7-Lite — v5_n19 bitstream verified
+Date: 2026-07-24
+Commit: fd743065a10e11c00aeb0bb33d3d7555532bd65d
+Files:
+  fpga/constraints/a7lite_35t.xdc : 90AD87D9889F015E01CFABC9CA10EE5253E318383FCD1E40704C3AD1E50DB701
+  docs/hardware.md : EB1C5BF4358E74BBDC1CE540C49D6C7F8DB2AF83BBC926012B2D655D762744EF
+Evidence:
+  - UART output verified on COM6: 'FibeMate FPGA alive' + 'NTT OK'
+  - Pin: uart_tx -> N19 (PMOD1 pin1), external CH340
+  - Bitstream: fpga/releases/v4/fibemate_fpga_top.bit (602KB)
