@@ -1,9 +1,8 @@
+﻿#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
-#!/usr/bin/env node
 /**
- * FIBEMATE × Jasmin KAT — 诊断：定位首个差异来源
- * 
- * 策略：逐层对比 — SHA3-512(d) → rho/sigma → samplePoly → A[0][0] → As+e → pk
+ * FIBEMATE 脳 Jasmin KAT 鈥?璇婃柇锛氬畾浣嶉涓樊寮傛潵婧? * 
+ * 绛栫暐锛氶€愬眰瀵规瘮 鈥?SHA3-512(d) 鈫?rho/sigma 鈫?samplePoly 鈫?A[0][0] 鈫?As+e 鈫?pk
  */
 const crypto = { getRandomValues: null };
 globalThis.crypto = crypto;
@@ -28,10 +27,10 @@ function printHex(label, bytes, n) {
     console.log('  ' + label + ': ' + s);
 }
 
-// Jasmin KAT — d(32) = first 32 bytes of JASMIN_COINS
+// Jasmin KAT 鈥?d(32) = first 32 bytes of JASMIN_COINS
 var d = hexToBytes('7c9935a0b07694aa0c6d10e4db6b1add2fd81a25ccb148032dcd739936737f2d');
 
-// Step 1: SHA3-512(d) → seed
+// Step 1: SHA3-512(d) 鈫?seed
 var seed = sha3_512(d);
 printHex('sha3_512(d)', seed);
 
@@ -40,7 +39,7 @@ var sigma = seed.slice(32, 64);
 printHex('rho', rho);
 printHex('sigma', sigma);
 
-// Step 2: samplePoly(rho, (0<<8)|0) — first poly of A matrix
+// Step 2: samplePoly(rho, (0<<8)|0) 鈥?first poly of A matrix
 var a00 = samplePoly(rho, 0);
 console.log('  A[0][0] first 8 coeffs: [' + 
     Array.from(a00.slice(0, 8)).map(function(x) { return x; }).join(', ') + ']');
@@ -71,7 +70,7 @@ var jasmin_pk = hexToBytes(
     'c45200c9ffdb60449c49465979272367c083a7d6267a3ed7a7fd47957c219327');
 
 // Compare byteEncode output
-console.log('\n=== byteEncode 诊断 ===');
+console.log('\n=== byteEncode 璇婃柇 ===');
 var t0 = kp.publicKey.slice(0, 12).reduce(function(s, b) { return s + b.toString(16).padStart(2,'0'); }, '');
 var t0_jasmin = jasmin_pk.slice(0, 12).reduce(function(s, b) { return s + b.toString(16).padStart(2,'0'); }, '');
 console.log('  t[0] bytes 0-11: ' + t0 + ' (Jasmin: ' + t0_jasmin + ')');
