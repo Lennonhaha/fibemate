@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 // scripts/health-check.js 鈥?FIBEMATE 鍏ㄦ爤鍋ュ悍妫€鏌?// Usage: node scripts/health-check.js [--bom] [--git]
 const https = require('https');

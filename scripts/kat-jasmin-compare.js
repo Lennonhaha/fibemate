@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE ML-KEM-768 脳 Jasmin (libjade) KAT Byte-by-Byte Verification

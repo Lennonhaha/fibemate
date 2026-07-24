@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 // =============================================================================
 // verify-tsr.js 鈥?FIBEMATE TSR 鏃堕棿鎴冲瓨璇併€屽彲澶嶇幇銆嶉獙璇侊紙璺ㄥ钩鍙?Node 鐗堬級

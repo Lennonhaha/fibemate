@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE 脳 Jasmin KAT 鈥?璇婃柇锛氬畾浣嶉涓樊寮傛潵婧? * 

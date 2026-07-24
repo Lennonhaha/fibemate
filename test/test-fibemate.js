@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE 涓夌嚎娴嬭瘯濂椾欢 鈥?v1.0.0

@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env node
+#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 /**
  * test-tls-hybrid-extension.js 鈥?IANA #4590 TLS 娣峰悎鎵╁睍鍗曞厓娴嬭瘯
