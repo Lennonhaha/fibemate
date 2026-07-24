@@ -28,5 +28,8 @@ module.exports = [
       "no-irregular-whitespace": "off",
       "no-regex-spaces": "off"
     }
+  },
+  {
+    ignores: ["**/*.mjs"]
   }
 ];
