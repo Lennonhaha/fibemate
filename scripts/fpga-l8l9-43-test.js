@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 /**
- * FPGA L8+L9 鈥?43/43 Cross-Validation Suite v2
+ * FPGA L8+L9 — 43/43 Cross-Validation Suite v2
  * Cycle-accurate behavioral model matching hw_monitor.v + hw_monitor_resp.v
  */
 'use strict';
@@ -17,7 +17,7 @@ function t(name, fn) {
     if (testNum % 8 === 0) process.stdout.write('.');
 }
 
-// 鈹€鈹€鈹€ L8: Fault Monitor (hw_monitor.v v5.1) 鈹€鈹€鈹€
+// ─── L8: Fault Monitor (hw_monitor.v v5.1) ───
 class L8 {
     constructor() {
         this.WARN = 3; this.TRIP = 8; this.ALERT_N = 6;
@@ -40,7 +40,7 @@ class L8 {
             if (ft & 1) this.cy = Math.min(0xFF, this.cy + 1);
             this.hap = 1;
         } else if (fa) {
-            // Sustained fault 鈥?count each cycle
+            // Sustained fault — count each cycle
             this.fc = Math.min(0xFFFF, this.fc + 1);
             if (ft & 8) this.bf = Math.min(0xFF, this.bf + 1);
             if (ft & 4) this.pb = Math.min(0xFF, this.pb + 1);
@@ -48,7 +48,7 @@ class L8 {
             if (ft & 1) this.cy = Math.min(0xFF, this.cy + 1);
             this.hap = 1;
         } else { this.hap = 0; }
-        // Alert: bf >= WARN 鈫?alert per bf/WARN periods
+        // Alert: bf >= WARN → alert per bf/WARN periods
         const bfAlerts = Math.floor(this.bf / this.WARN);
         const fcAlerts = Math.floor(this.fc / (this.WARN * 2));
         this.ac = Math.min(0xFFFF, bfAlerts + fcAlerts);
@@ -64,7 +64,7 @@ class L8 {
     sr3() { return this.ac; }
 }
 
-// 鈹€鈹€鈹€ L9: Response FSM (hw_monitor_resp.v v2) 鈹€鈹€鈹€
+// ─── L9: Response FSM (hw_monitor_resp.v v2) ───
 class L9 {
     constructor() {
         this.st = 'M'; this.fz=0; this.ce=1; this.irq=0;
@@ -83,14 +83,14 @@ class L9 {
             if (this.rc >= this.RH) { this.st = 'M'; this.rc = 0; this.ce = 1; this.irq = 0; }
             return;
         }
-        // M 鈫?W
+        // M → W
         if (this.st === 'M' && (l8.bf >= l8.WARN || l8.fc >= l8.WARN * 2)) { this.st = 'W'; return; }
-        // W 鈫?T or W 鈫?M
+        // W → T or W → M
         if (this.st === 'W') {
             if (l8.fc >= l8.TRIP || l8.ac >= 4) { this.st = 'T'; this.irq = 1; this.ce = 0; return; }
             if (l8.fc < l8.WARN && l8.ac === 0) { this.st = 'M'; return; }
         }
-        // T 鈫?Z
+        // T → Z
         if (this.st === 'T') { this.st = 'Z'; this.fz = 1; return; }
     }
 }
@@ -102,11 +102,12 @@ function tickN(l8, l9, n, nd, fa, ft, rst) {
     }
 }
 
-console.log('FPGA L8+L9 鈥?43-Test Cross-Validation v2');
+console.log('FPGA L8+L9 — 43-Test Cross-Validation v2');
 console.log(`Node ${process.version}`);
-console.log('鈺?.repeat(60));
+console.log('═'.repeat(60));
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?[1] L8 Fault Counters (12) 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?console.log('\n[1] L8 Fault Counters');
+// ═══════════ [1] L8 Fault Counters (12) ═══════════
+console.log('\n[1] L8 Fault Counters');
 t('L8-01 bf_mismatch',  () => { const l=new L8(); l.tick(0,1,8,1);  return l.bf===1&&l.fc===1; });
 t('L8-02 parity',       () => { const l=new L8(); l.tick(0,1,4,1);  return l.pb===1; });
 t('L8-03 remo',         () => { const l=new L8(); l.tick(0,1,2,1);  return l.rm===1; });
@@ -120,7 +121,8 @@ t('L8-10 lfc record',   () => { const l=new L8(); l.tick(0,0,0,1);l.tick(0,0,0,1
 t('L8-11 no ntt_done',  () => { const l=new L8(); l.tick(0,1,1,1); return l.fc===1; });
 t('L8-12 burst',        () => { const l=new L8(); for(let i=0;i<8;i++)l.tick(0,1,1,1); return l.fc===8&&l.ac>=1; });
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?[2] L8 Status Registers (6) 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?console.log('\n[2] L8 Status Registers');
+// ═══════════ [2] L8 Status Registers (6) ═══════════
+console.log('\n[2] L8 Status Registers');
 t('L8-13 sr0',      () => { const l=new L8(); l.fc=5;l.ac=3; return l.sr0()===((5<<16)|3); });
 t('L8-14 sr1',      () => { const l=new L8(); l.bf=0xAB;l.pb=0xCD;l.rm=0xEF;l.cy=0x11; return l.sr1()===((0xAB<<24)|(0xCD<<16)|(0xEF<<8)|0x11); });
 t('L8-15 sr2',      () => { const l=new L8(); l.lfc=0xDEAD; return l.sr2()===0xDEAD; });
@@ -128,7 +130,8 @@ t('L8-16 sr3',      () => { const l=new L8(); l.ac=7; return l.sr3()===7; });
 t('L8-17 reset zero',() => { const l=new L8(); l.fc=42;l.ac=3; l.tick(0,0,0,0); return l.fc===0&&l.ac===0; });
 t('L8-18 post-rst',  () => { const l=new L8(); for(let i=0;i<10;i++)l.tick(0,0,0,1); return l.fc===0&&l.ac===0; });
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?[3] L8 Alert/LED (6) 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?console.log('\n[3] L8 Alert / LED');
+// ═══════════ [3] L8 Alert/LED (6) ═══════════
+console.log('\n[3] L8 Alert / LED');
 t('L8-19 hap pulse',  () => { const l=new L8(); l.tick(0,1,1,1); return l.hap===1; });
 t('L8-20 hap repeat', () => { const l=new L8(); l.tick(0,1,1,1);l.tick(0,0,0,1);l.tick(0,1,1,1); return l.hap===1; });
 t('L8-21 led[0] hb', () => { const l=new L8(); l.tick(0,0,0,1); return l.led[0]===1; });
@@ -136,37 +139,42 @@ t('L8-22 led[1] flt',() => { const l=new L8(); l.tick(0,1,1,1); return l.led[1]=
 t('L8-23 led[2] alrt',()=> { const l=new L8(); for(let i=0;i<9;i++)l.tick(0,1,8,1); return l.ac>=3&&l.led[2]===1; });
 t('L8-24 led[3] pass',()=> { const l=new L8(); l.tick(0,0,0,1); return l.led[3]===1; });
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?[4] L8 Edge Cases (3) 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?console.log('\n[4] L8 Edge Cases');
+// ═══════════ [4] L8 Edge Cases (3) ═══════════
+console.log('\n[4] L8 Edge Cases');
 t('L8-25 multi pulse',  () => { const l=new L8(); l.tick(0,1,3,1); return l.rm===1&&l.cy===1&&l.fc===1; });
 t('L8-26 short reset',  () => { const l=new L8(); l.fc=99; l.tick(0,0,0,0); l.tick(0,0,0,1); return l.fc===0; });
 t('L8-27 post-done pers',()=> { const l=new L8(); l.tick(1,0,0,1);l.tick(1,1,1,1);l.tick(1,1,1,1); return l.fc===2; });
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?[5] L9 FSM (10) 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?console.log('\n[5] L9 FSM Transitions');
+// ═══════════ [5] L9 FSM (10) ═══════════
+console.log('\n[5] L9 FSM Transitions');
 t('L9-01 POR idle', () => { const l8=new L8(),l9=new L9(); l9.tick(l8,1); return l9.st==='M'; });
-t('L9-02 M鈫扺 single',()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<3;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.st==='W'; });
-t('L9-03 M鈫扺 total',  ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<6;i++){l8.tick(0,1,1,1);l9.tick(l8,1);} return l9.st==='W'; });
+t('L9-02 M→W single',()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<3;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.st==='W'; });
+t('L9-03 M→W total',  ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<6;i++){l8.tick(0,1,1,1);l9.tick(l8,1);} return l9.st==='W'; });
 t('L9-04 W hold',      ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<4;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} l8.tick(0,1,1,1);l9.tick(l8,1); return l9.st==='W'; });
-t('L9-05 W鈫扵 by fc',  ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<8;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.st==='T'; });
-t('L9-06 W鈫扵 by ac',  ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<24;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.st==='T'||l9.st==='Z'; });
-t('L9-07 T鈫抁 auto',   ()=> { const l8=new L8(),l9=new L9(); l9.st='T';l9.tick(l8,1); return l9.st==='Z'; });
+t('L9-05 W→T by fc',  ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<8;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.st==='T'; });
+t('L9-06 W→T by ac',  ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<24;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.st==='T'||l9.st==='Z'; });
+t('L9-07 T→Z auto',   ()=> { const l8=new L8(),l9=new L9(); l9.st='T';l9.tick(l8,1); return l9.st==='Z'; });
 t('L9-08 Z hold',      ()=> { const l8=new L8(),l9=new L9(); l9.st='T';l9.tick(l8,1); for(let i=0;i<10;i++)l9.tick(l8,1); return l9.fz===1; });
-t('L9-09 Z鈫扲',         ()=> { const l8=new L8(),l9=new L9(); l9.st='T';l9.tick(l8,1); for(let i=0;i<l9.ZC;i++)l9.tick(l8,1); return l9.st==='R'; });
-t('L9-10 R鈫扢',         ()=> { const l8=new L8(),l9=new L9(); l9.st='T';l9.tick(l8,1); for(let i=0;i<l9.ZC+l9.RH;i++)l9.tick(l8,1); return l9.st==='M'; });
+t('L9-09 Z→R',         ()=> { const l8=new L8(),l9=new L9(); l9.st='T';l9.tick(l8,1); for(let i=0;i<l9.ZC;i++)l9.tick(l8,1); return l9.st==='R'; });
+t('L9-10 R→M',         ()=> { const l8=new L8(),l9=new L9(); l9.st='T';l9.tick(l8,1); for(let i=0;i<l9.ZC+l9.RH;i++)l9.tick(l8,1); return l9.st==='M'; });
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?[6] L9 Response Outputs (3) 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?console.log('\n[6] L9 Response Outputs');
+// ═══════════ [6] L9 Response Outputs (3) ═══════════
+console.log('\n[6] L9 Response Outputs');
 t('L9-11 fz assert',   ()=> { const l8=new L8(),l9=new L9(); l9.st='T';l9.tick(l8,1); return l9.fz===1; });
 t('L9-12 clk disable', ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<9;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.ce===0; });
 t('L9-13 irq set',    ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<9;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.irq===1; });
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?[7] Cross-Layer Integration (3) 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?console.log('\n[7] Cross-Layer Integration');
+// ═══════════ [7] Cross-Layer Integration (3) ═══════════
+console.log('\n[7] Cross-Layer Integration');
 t('L9-14 full cycle',  ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<9;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} for(let i=0;i<l9.ZC+l9.RH;i++)l9.tick(l8,1); return l9.st==='M'&&l9.ce===1; });
 t('L9-15 rapid recov', ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<4;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} l8.tick(0,0,0,1);l9.tick(l8,1); return l9.st==='W'&&l9.ce===1; });
 t('L9-16 irq held',    ()=> { const l8=new L8(),l9=new L9(); for(let i=0;i<9;i++){l8.tick(0,1,8,1);l9.tick(l8,1);} return l9.irq===1; });
 
-// 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?SUMMARY 鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺愨晲鈺?console.log('\n\n鈺?.repeat(60));
+// ═══════════ SUMMARY ═══════════
+console.log('\n\n═'.repeat(60));
 console.log(`  L8+L9: ${passed}P / ${failed}F / ${testNum} total`);
-console.log('鈺?.repeat(60));
+console.log('═'.repeat(60));
 if (failures.length) { console.log('\nFailures:'); failures.forEach(f=>console.log(`  ${f}`)); }
 if (testNum !== TOTAL) { console.log(`\nWARN: count ${testNum} != ${TOTAL}`); failed++; }
-else if (failed === 0) console.log(`\nOK ${TOTAL}/${TOTAL} 鈥?L8+L9 43/43 verified.`);
+else if (failed === 0) console.log(`\nOK ${TOTAL}/${TOTAL} — L8+L9 43/43 verified.`);
 process.exit(failed===0 && testNum===TOTAL ? 0 : 1);

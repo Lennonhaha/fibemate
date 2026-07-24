@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 /**
- * FIBEMATE ML-KEM-768 脳 Jasmin (libjade) KAT Byte-by-Byte Verification
+ * FIBEMATE ML-KEM-768 × Jasmin (libjade) KAT Byte-by-Byte Verification
  */
 
 const crypto = { getRandomValues: null };
@@ -11,7 +11,7 @@ const { generateKeypair, encapsulate, decapsulate,
         PUBLIC_KEY_BYTES, SECRET_KEY_BYTES, CIPHERTEXT_BYTES, SHARED_SECRET_BYTES }
     = require('../packages/pqc-kem');
 
-// Jasmin (libjade) Official KAT 鈥?Test Vector 0
+// Jasmin (libjade) Official KAT — Test Vector 0
 const JASMIN_COINS = hexToBytes(
   '7c9935a0b07694aa0c6d10e4db6b1add2fd81a25ccb148032dcd739936737f2d' +
   '8626ed79d451140800e03b59b956f8210e556067407d13dc90fa9e8b872bfb8f');
@@ -175,6 +175,6 @@ if (fail > 0) {
     console.log('  4. Different seed derivation (d -> rho, sigma)');
     process.exit(1);
 } else {
-    console.log('\nAll KAT checks passed 鈥?FIBEMATE byte-compatible with Jasmin.');
+    console.log('\nAll KAT checks passed — FIBEMATE byte-compatible with Jasmin.');
     process.exit(0);
 }
