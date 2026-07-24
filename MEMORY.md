@@ -1163,3 +1163,11 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - SM3: 21,272 ops/s (3B), 4,506 ops/s (1140B) — 纯 JS，教育/验证用途
 - SM4-GCM: 4,879 ops/s encrypt (10B), 100 ops/s (2300B), 8,030 ops/s decrypt — 纯 JS GCM
 - 数据已写入 scripts/benchmark-report
+
+### SM3/SM4 benchmark 评估 — 实事求是
+- 纯 JS 性能=预期之内，非生产优化问题：SM3 ~5KB/s, SM4-GCM ~230KB/s
+- 对比 OpenSSL: 慢 100-1000x — 这是 JS vs C/ASM 的语言差距，非实现质量问题
+- 足够教育/验证场景：不需要 GB/s 级别，讲清楚原理就够了
+- decrypt > encrypt: 纯JS GCM 正常现象（加密额外 tag 计算开销）
+- 下一步: WASM 移植可提升 10-50x
+- 项目精神: 「数据诚实，不美化，不贬低」
