@@ -57,8 +57,8 @@ jobs:
       - name: Install dependencies
         run: npm install --ignore-scripts
 
-      - name: ML-KEM-768 cross-language validation
-        run: node test/test-cross-lang.js
+      - name: ML-KEM-768 roundtrip + KAT self-validation
+        run: node scripts/ci-mlkem-kat.cjs
 
   # ─── Node.js 单元测试 ───────────────────────────────
   node-test:
@@ -91,7 +91,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install ESLint
-        run: npm install --no-save eslint
+        run: npm install --no-save eslint @eslint/js
 
       - name: Run ESLint
         run: npx eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 50

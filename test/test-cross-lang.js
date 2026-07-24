@@ -29,11 +29,11 @@ console.log('[JS]  Pure ML-KEM-768 loaded (time-domain, O(n^2))');
 // ============================================================
 // Load WASM ML-KEM-768 (via wasm-bindgen)
 // ============================================================
-const wasmBindgen = require('C:/01_源码/fibemate-electron/src/crypto/crypto/pq-wasm-pkg/fibemate_pq_wasm.js');
+const wasmBindgen = require('../src/crypto/pq-wasm-pkg/fibemate_pq_wasm.js');
 
 // Read WASM binary and initialize
 const wasmBytes = fs.readFileSync(
-    'C:/01_源码/fibemate-electron/src/crypto/crypto/pq-wasm-pkg/fibemate_pq_wasm_bg.wasm'
+    path.join(__dirname, '../src/crypto/pq-wasm-pkg/fibemate_pq_wasm_bg.wasm')
 );
 wasmBindgen.initSync({ module: new WebAssembly.Module(wasmBytes) });
 console.log('[WASM] ML-KEM-768 WASM loaded (Rust/pqc_kyber, ~200x faster)');
