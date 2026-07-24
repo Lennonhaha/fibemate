@@ -328,3 +328,4 @@ packages/pqc-kem/native/build/
 *.o
 *.d
 __pycache__/
+.eslintrc.json

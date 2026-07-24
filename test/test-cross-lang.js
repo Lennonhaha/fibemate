@@ -23,7 +23,7 @@ Object.defineProperty(global, 'crypto', {
 // ============================================================
 // Load Pure JS ML-KEM-768
 // ============================================================
-const JS_MLKEM = require('C:/01_源码/fibemate-electron/src/crypto/crypto/ml-kem-768-td.js');
+const JS_MLKEM = require('../src/crypto/ml-kem-768-td.js');
 console.log('[JS]  Pure ML-KEM-768 loaded (time-domain, O(n^2))');
 
 // ============================================================

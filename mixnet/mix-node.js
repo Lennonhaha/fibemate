@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-only
+#!/usr/bin/env node
 /**
  * EXPERIMENTAL — 仿真非生产
  * 此模块为 Mixnet 实验性代码，未经生产审计
@@ -6,7 +6,7 @@
  */
 
 
-#!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 
 const express = require('express');
 const crypto = require('crypto');
