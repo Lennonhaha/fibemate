@@ -1127,3 +1127,39 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 ## 技术规范偏好
 
 - 时间戳存证体系使用DigiCert+FreeTSA双机构签发，TSR序列完整对齐至78份manifest条目（lg-033~076从服务器拉取补齐）
+
+
+## 2026-07-25：项目全面评价 9.3/10 + 双棘轮 PQ 全链路闭环
+
+### 项目评价（用户 03:40 CST）
+- 综合评分 9.3/10：工程完整性 9.8、密码学实现 9.5、透明度/证据链 10、文档 9.0、创新性 8.5
+- 核心优势：全栈贯通(Web→Server→FPGA)、双轨融合(NIST+国密)、100份TSR证据链、诚实透明、可复现
+- 不足：第三方审计未完成、硬件侧信道未测、SM2纯JS非常数时间、VWZ论文被退回
+- 定位：后量子密码学全栈工程验证平台，非生产产品
+- 8.31开源前待办：SM3/SM4 benchmark(P0)、Nightly CI(P1)、开源公告(P2)
+
+### 双棘轮 PQ 混合全链路闭环（03:30 完成）
+- 根因：decapsulate参数顺序 — 底层(sk, ct)、wrapper传了(ct, sk)、测试又反转了一次
+- 修复：SM2 _fastModP死循环(12轮+兜底)、API迁移(keygen→generateKeypair等)、base class入仓
+- .gitignore修复：*t.js→**/scripts/*test.js，白名单 double-ratchet.js + fix-ratchet.js
+- 验证：ML-KEM-768 + P-256 混合X3DH握手 → 双向4轮消息加密解密全通
+- commit 02aeac51 — GitHub/服务器/本地三端同步
+- 文件：double-ratchet.js(563行,21051字符) + double-ratchet-pq.js(435行,13657字符)
+- benchmark.cjs 已适配异步DR测试
+
+
+## 2026-07-25 项目定位：PQC 可执行教科书 vs 生产工具箱
+
+### FIBEMATE ≠ 多余的
+- FIBEMATE 与 openHiTLS/liboqs 不是竞争关系，是互补关系
+- FIBEMATE: PQC 可执行教科书 — 理解 PQC 如何工作
+- 生产库: PQC 生产工具箱 — 直接使用 PQC 功能
+- 设计原则：可读性、可验证性、可教育 > 极致性能
+- 独一无二：NIST PQC + 国密 SM2/3/4 + 双棘轮 PQ + FPGA 源码 + 100 份 TSR
+- 所有声明都有可运行的测试脚本和 TSR 证据链支撑
+- 灵魂定位：不是更快，而是更清楚
+
+### SM3/SM4 benchmark 完成 (2026-07-25 03:51)
+- SM3: 21,272 ops/s (3B), 4,506 ops/s (1140B) — 纯 JS，教育/验证用途
+- SM4-GCM: 4,879 ops/s encrypt (10B), 100 ops/s (2300B), 8,030 ops/s decrypt — 纯 JS GCM
+- 数据已写入 scripts/benchmark-report
