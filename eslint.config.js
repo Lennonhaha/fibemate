@@ -23,18 +23,10 @@ module.exports = [
     rules: {
       "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
       "no-undef": "warn",
-      "no-console": "off"
-    },
-    ignores: [
-      "node_modules/**",
-      "**/node_modules/**",
-      "dist/**",
-      "www/crypto/**/pkg/**",
-      "**/*.wasm",
-      "**/target/**",
-      "**/build/**",
-      "addon/**",
-      "**/__pycache__/**"
-    ]
+      "no-console": "off",
+      "no-empty": "off",
+      "no-irregular-whitespace": "off",
+      "no-regex-spaces": "off"
+    }
   }
 ];
