@@ -1171,3 +1171,22 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - decrypt > encrypt: 纯JS GCM 正常现象（加密额外 tag 计算开销）
 - 下一步: WASM 移植可提升 10-50x
 - 项目精神: 「数据诚实，不美化，不贬低」
+
+
+## 2026-07-25 10:59 — Nightly CI 失败根因：GitHub 2FA 强制要求
+
+### 根因
+- Nightly CI 失败非代码质量缺陷，而是 GitHub 账户未启用 2FA
+- GitHub 要求 8 月 31 日前强制启用双因素认证，未启用则所有 Actions 拒绝运行
+- 表象：Actions 日志显示权限错误，非测试失败
+- 紧急程度：P0 — 不解决则 8.31 所有自动化流水线停止
+
+### 解决方案
+- P0: 为 GitHub 账户 (Lennonhaha) 启用 2FA（TOTP/Security Key）
+- P1: 启用后手动触发 Nightly 验证
+- P2: 设置 Actions permissions 为最小必要 (read-all)
+
+### 影响
+- P1「Nightly CI 自动变绿」阻塞于账号层面，代码已就绪
+- 不影响本地测试、服务器部署、TSR 生成
+- 8.31 开源前必须解决，否则 CI badge 显示红色
