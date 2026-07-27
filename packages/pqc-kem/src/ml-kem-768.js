@@ -24,6 +24,10 @@ const KYBER_PUBLICKEYBYTES = 1184;
 const KYBER_SECRETKEYBYTES = 2400;
 const KYBER_CIPHERTEXTBYTES = 1088;
 const KYBER_SSBYTES = 32;
+const KYBER_QHALF = 1664; // Math.floor(KYBER_Q / 2), constant-time friendly
+
+// Detect WebCrypto (globalThis.crypto in browsers, require('crypto').webcrypto in Node)
+const _webcrypto = (typeof crypto !== 'undefined' && crypto.getRandomValues) ? crypto : null;
 
 // ============================================================================
 // SHA-3 / SHAKE - Pure JavaScript Keccak
@@ -173,7 +177,8 @@ function zeroizeI16(a) { for (let i = 0; i < a.length; i++) a[i] = 0; }
 function zeroizePolyVec(v) { for (let i = 0; i < v.length; i++) zeroizeI16(v[i]); }
 
 // ============================================================================
-// Modular arithmetic
+// Modular arithmetic (WARNING: not truly constant-time in pure JS — JIT may reorder.
+// This file is for auditability; use the WASM path for production workloads.)
 // ============================================================================
 function modAdd(a, b) { const r = a + b; return r >= KYBER_Q ? r - KYBER_Q : r < 0 ? r + KYBER_Q : r; }
 function modSub(a, b) { const r = a - b; return r < 0 ? r + KYBER_Q : r; }
@@ -297,7 +302,7 @@ function samplePoly(seed, nonce) {
     const stream = shake128(new Uint8Array([...seed, nonce]), 504);
     const a = new Int16Array(256);
     let j = 0, idx = 0;
-    while (j < 256 && idx < 503) {
+    while (j < 256 && idx + 2 < 504) {  // ensure idx+2 stays within stream bounds (0..503)
         const d1 = stream[idx] | ((stream[idx+1] & 0x0F) << 8);
         const d2 = (stream[idx+1] >> 4) | (stream[idx+2] << 4);
         idx += 3;
@@ -317,6 +322,7 @@ function samplePoly(seed, nonce) {
  * @returns {{publicKey: Uint8Array, secretKey: Uint8Array}}
  */
 function generateKeypair() {
+    if (!_webcrypto) throw new Error('Web Crypto API (crypto.getRandomValues) required');
     const d = crypto.getRandomValues(new Uint8Array(32));
     const z = crypto.getRandomValues(new Uint8Array(32));
     const seed = sha3_512(d);
@@ -361,6 +367,7 @@ function generateKeypair() {
     zeroizePolyVec(s);
     zeroizePolyVec(e);
     zeroizeU8(d);
+    zeroizeU8(seed);  // also clear the H(d) intermediate
 
     return { publicKey: pk, secretKey: sk };
 }
@@ -372,6 +379,8 @@ function generateKeypair() {
  * @returns {{ciphertext: Uint8Array, sharedSecret: Uint8Array}}
  */
 function encapsulate(publicKey) {
+    if (!_webcrypto) throw new Error('Web Crypto API (crypto.getRandomValues) required');
+    if (publicKey.length !== KYBER_PUBLICKEYBYTES) throw new RangeError(`publicKey must be ${KYBER_PUBLICKEYBYTES} bytes, got ${publicKey.length}`);
     const m = crypto.getRandomValues(new Uint8Array(32));
 
     const t = [];
@@ -406,7 +415,7 @@ function encapsulate(publicKey) {
     const tTr = vecDot(t, r, KYBER_K);
     const mPoly = new Int16Array(256);
     for (let i = 0; i < 256; i++) {
-        mPoly[i] = ((m[i >> 3] >> (i & 7)) & 1) * Math.floor(KYBER_Q / 2);
+        mPoly[i] = ((m[i >> 3] >> (i & 7)) & 1) * KYBER_QHALF;
     }
     const v = new Int16Array(256);
     for (let i = 0; i < 256; i++) {
@@ -439,6 +448,9 @@ function encapsulate(publicKey) {
  * @returns {Uint8Array} sharedSecret — 32 bytes
  */
 function decapsulate(secretKey, ciphertext) {
+    if (secretKey.length !== KYBER_SECRETKEYBYTES) throw new RangeError(`secretKey must be ${KYBER_SECRETKEYBYTES} bytes, got ${secretKey.length}`);
+    if (ciphertext.length !== KYBER_CIPHERTEXTBYTES) throw new RangeError(`ciphertext must be ${KYBER_CIPHERTEXTBYTES} bytes, got ${ciphertext.length}`);
+
     const n = KYBER_K;
 
     const s = [];
@@ -501,7 +513,7 @@ function decapsulate(secretKey, ciphertext) {
     const tTr = vecDot(t, r, n);
     const mPoly2 = new Int16Array(256);
     for (let i = 0; i < 256; i++) {
-        mPoly2[i] = ((mPrime[i >> 3] >> (i & 7)) & 1) * Math.floor(KYBER_Q / 2);
+        mPoly2[i] = ((mPrime[i >> 3] >> (i & 7)) & 1) * KYBER_QHALF;
     }
     const v2 = new Int16Array(256);
     for (let i = 0; i < 256; i++) {
