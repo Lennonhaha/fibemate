@@ -38,6 +38,7 @@
 | 🛠️ **Building / running** | → [Quick Start](#quick-start) · [BUILD.md](BUILD.md) |
 | 🤔 **Questioning ML-KEM interoperability** | → [ML-KEM-768 Wire Format](#ml-kem-768-wire-format) |
 | 📊 **Verifying claims** | → [Test Scripts](#test-scripts) · [TSR Evidence](#timestamp-evidence) |
+| 🏅 **OpenSSF & Project Health** | → [OpenSSF Roadmap](docs/openssf-roadmap.md) · [Best Practices (13695)](https://bestpractices.dev/projects/13695) |
 
 ---
 
