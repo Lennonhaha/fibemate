@@ -180,8 +180,30 @@ function zeroizePolyVec(v) { for (let i = 0; i < v.length; i++) zeroizeI16(v[i])
 // Modular arithmetic (WARNING: not truly constant-time in pure JS — JIT may reorder.
 // This file is for auditability; use the WASM path for production workloads.)
 // ============================================================================
+/**
+ * Modular addition in Z_Q. Returns (a+b) mod 3329.
+ * WARNING: ternary-based — not truly CT in pure JS.
+ * @param {number} a
+ * @param {number} b
+ * @returns {number} (a+b) mod 3329
+ */
 function modAdd(a, b) { const r = a + b; return r >= KYBER_Q ? r - KYBER_Q : r < 0 ? r + KYBER_Q : r; }
+
+/**
+ * Modular subtraction in Z_Q. Returns (a-b) mod 3329.
+ * WARNING: ternary-based — not truly CT in pure JS.
+ * @param {number} a
+ * @param {number} b
+ * @returns {number} (a-b) mod 3329
+ */
 function modSub(a, b) { const r = a - b; return r < 0 ? r + KYBER_Q : r; }
+
+/**
+ * Modular multiplication in Z_Q. Uses BigInt for overflow safety.
+ * @param {number} a
+ * @param {number} b
+ * @returns {number} (a*b) mod 3329
+ */
 function modMul(a, b) { let r = Number((BigInt(a) * BigInt(b)) % BigInt(KYBER_Q)); return r < 0 ? r + KYBER_Q : r; }
 
 // ============================================================================
@@ -191,6 +213,13 @@ function modMul(a, b) { let r = Number((BigInt(a) * BigInt(b)) % BigInt(KYBER_Q)
 // REMOVED: zero-coefficient skips (`if (f[i] === 0) continue`).
 // Timing now depends only on KYBER_N and KYBER_K, not on secret data.
 // ============================================================================
+/**
+ * Polynomial multiplication in Z_Q[x]/(x^256+1) — negacyclic convolution.
+ * Constant-time: no coefficient skips, no early exits. ~65536 modMul ops.
+ * @param {Int16Array} f — 256 coefficients
+ * @param {Int16Array} g — 256 coefficients
+ * @returns {Int16Array} f*g mod (x^256+1)
+ */
 function polyMul(f, g) {
     const r = new Int16Array(KYBER_N);
     for (let i = 0; i < KYBER_N; i++) {
@@ -211,6 +240,14 @@ function polyMul(f, g) {
 // Matrix/Vector operations — ALL in time domain
 // ============================================================================
 
+/**
+ * Matrix-vector multiplication over R_q = Z_Q[x]/(x^256+1).
+ * r[i] = sum_{j=0}^{k-1} A[i][j] * s[j]
+ * @param {Int16Array[][]} A — k×k polynomial matrix
+ * @param {Int16Array[]} s — k-vector of polynomials
+ * @param {number} k — dimension (3 for ML-KEM-768)
+ * @returns {Int16Array[]} A*s
+ */
 function matVecMul(A, s, k) {
     const r = [];
     for (let i = 0; i < k; i++) {
@@ -224,6 +261,13 @@ function matVecMul(A, s, k) {
     return r;
 }
 
+/**
+ * Vector dot product over R_q. r = sum a[i] * b[i].
+ * @param {Int16Array[]} a
+ * @param {Int16Array[]} b
+ * @param {number} k — dimension
+ * @returns {Int16Array} dot product polynomial
+ */
 function vecDot(a, b, k) {
     let r = new Int16Array(KYBER_N);
     for (let i = 0; i < k; i++) {
@@ -233,6 +277,13 @@ function vecDot(a, b, k) {
     return r;
 }
 
+/**
+ * Vector addition over R_q. r[i] = a[i] + b[i] (coefficient-wise).
+ * @param {Int16Array[]} a
+ * @param {Int16Array[]} b
+ * @param {number} k — dimension
+ * @returns {Int16Array[]}
+ */
 function vecAdd(a, b, k) {
     const r = [];
     for (let i = 0; i < k; i++) {
@@ -246,6 +297,13 @@ function vecAdd(a, b, k) {
 // Serialization, CBD, Sampling
 // ============================================================================
 
+/**
+ * Bit-serialize polynomial coefficients to bytes.
+ * d=12 → 384 bytes; d=4 → 128 bytes; d=10 → 320 bytes.
+ * @param {Int16Array} f — 256 coefficients in Z_Q
+ * @param {number} d — bits per coefficient
+ * @returns {Uint8Array} 32*d bytes
+ */
 function byteEncode(f, d) {
     const out = new Uint8Array(256 * d / 8);
     for (let i = 0; i < 256; i++) {
@@ -258,6 +316,12 @@ function byteEncode(f, d) {
     return out;
 }
 
+/**
+ * Bit-deserialize bytes back to polynomial coefficients.
+ * @param {Uint8Array} data — serialized bytes
+ * @param {number} d — bits per coefficient
+ * @returns {Int16Array} 256 coefficients
+ */
 function byteDecode(data, d) {
     const f = new Int16Array(256);
     for (let i = 0; i < 256; i++) {
@@ -271,6 +335,13 @@ function byteDecode(data, d) {
     return f;
 }
 
+/**
+ * Compress polynomial coefficients from Z_Q to d-bit representation.
+ * c = round((2^d / Q) * x) mod 2^d
+ * @param {Int16Array} f — 256 coefficients in Z_Q
+ * @param {number} d — target bits (10 for u, 4 for v)
+ * @returns {Int16Array} d-bit coefficients
+ */
 function compress(f, d) {
     const g = new Int16Array(256);
     for (let i = 0; i < 256; i++) {
@@ -280,6 +351,13 @@ function compress(f, d) {
     return g;
 }
 
+/**
+ * Decompress d-bit representation back to approximate Z_Q coefficients.
+ * x = round((Q / 2^d) * c)
+ * @param {Int16Array} g — d-bit coefficients
+ * @param {number} d — bits (10 or 4)
+ * @returns {Int16Array} approximate Z_Q coefficients
+ */
 function decompress(g, d) {
     const f = new Int16Array(256);
     for (let i = 0; i < 256; i++) {
@@ -288,6 +366,13 @@ function decompress(g, d) {
     return f;
 }
 
+/**
+ * Centered Binomial Distribution with η=2.
+ * Samples 256 coefficients from 128 bytes of input.
+ * Each coefficient = HW₂(even nibble) - HW₂(odd nibble).
+ * @param {Uint8Array} buf — 128 bytes of random input
+ * @returns {Int16Array} 256 coefficients in [-2,2]
+ */
 function cbd2(buf) {
     const r = new Int16Array(256);
     for (let i = 0; i < 128; i++) {
@@ -298,6 +383,13 @@ function cbd2(buf) {
     return r;
 }
 
+/**
+ * Uniformly sample a polynomial in Z_Q[x]/(x^256+1).
+ * Uses SHAKE-128 XOF with rejection sampling (p ≈ 0.65 acceptance).
+ * @param {Uint8Array} seed — 32-byte domain separator (ρ or σ)
+ * @param {number} nonce — row/col index for matrix position
+ * @returns {Int16Array} 256 coefficients in [0, Q-1]
+ */
 function samplePoly(seed, nonce) {
     const stream = shake128(new Uint8Array([...seed, nonce]), 504);
     const a = new Int16Array(256);
