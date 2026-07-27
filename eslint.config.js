@@ -1,4 +1,5 @@
 const js = require("@eslint/js");
+const noJsBigIntInHotPath = require("./eslint-rules/no-js-bigint-in-hotpath");
 
 module.exports = [
   js.configs.recommended,
@@ -26,7 +27,15 @@ module.exports = [
       "no-console": "off",
       "no-empty": "off",
       "no-irregular-whitespace": "off",
-      "no-regex-spaces": "off"
+      "no-regex-spaces": "off",
+      "no-js-bigint-in-hotpath": "error"
+    },
+    plugins: {
+      "custom": {
+        rules: {
+          "no-js-bigint-in-hotpath": noJsBigIntInHotPath
+        }
+      }
     }
   },
   {
