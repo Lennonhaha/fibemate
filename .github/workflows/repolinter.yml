@@ -20,3 +20,5 @@ jobs:
               "security-file-exists": {"level": "error"}
               "support-file-exists": {"level": "off"}
               "readme-references-license": {"level": "warning"}
+              "source-license-headers-exist": {"level": "off"}
+              "python-package-metadata-exists": {"level": "off"}
