@@ -46,13 +46,18 @@ an individual is officially representing the community in public spaces.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
-reported to the project maintainer at **fibemate@fibemate.net**.
+reported to the project maintainer:
+
+- **Email**: security@fibemate.net (preferred for sensitive reports)
+- **GitHub**: @Lennonhaha (for public discussions)
+
 All complaints will be reviewed and investigated promptly and fairly.
+The project maintainer (@Lennonhaha) is responsible for enforcement decisions.
 
 ## Attribution
 
 This Code of Conduct is adapted from the [Contributor Covenant][homepage],
-version 2.0, available at
-https://www.contributor-covenant.org/version/2/0/code_of_conduct.html.
+version 2.1, available at
+https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.
 
 [homepage]: https://www.contributor-covenant.org

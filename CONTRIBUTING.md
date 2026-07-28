@@ -8,6 +8,17 @@ Thanks for your interest in contributing! FIBEMATE is a post-quantum cryptograph
 - Assume good faith.
 - Focus on the technical merit of ideas, not the person.
 
+## AI-Assisted Contributions
+
+AI-generated code (including from Copilot, ChatGPT, or similar tools) is welcome, but **must meet the same standards as human-written code**:
+
+- The human contributor is fully responsible for the change
+- AI-assisted PRs require the same review process
+- AI does not count as an independent contributor for Bus Factor purposes
+- Security-sensitive changes must include human analysis beyond AI output
+
+See [OpenSSF Roadmap](docs/openssf-roadmap.md) for our policy on AI contributions.
+
 ## How to Contribute
 
 ### Reporting Bugs
@@ -31,7 +42,12 @@ Use [Discussions → Ideas](https://github.com/Lennonhaha/fibemate/discussions/c
 ### Pull Requests
 
 1. **Fork** the repository
-2. Create a **feature branch**: `git checkout -b feature/your-feature`
+2. Create a **feature branch** following naming conventions:
+   - `feature/description` — new features
+   - `fix/description` — bug fixes
+   - `docs/description` — documentation
+   - `security/description` — security fixes
+   - `perf/description` — performance improvements
 3. **Keep changes focused**: One PR = one logical change
 4. **Test your changes**:
    ```bash
@@ -39,7 +55,11 @@ Use [Discussions → Ideas](https://github.com/Lennonhaha/fibemate/discussions/c
    node ci-smoke.mjs --json 2>&1    # Integration smoke tests
    ```
 5. **Verify no regressions** in existing KAT vectors
-6. Submit the PR against `master`
+6. **Sign your commits** (DCO required):
+   ```bash
+   git commit -s -m "feat: description"
+   ```
+7. Submit the PR against `main` (not `master`)
 
 ### Commit Style
 
@@ -83,6 +103,16 @@ node ci-smoke.mjs   # verify baseline
 - New cryptographic code **must** include KAT vectors referencing a published standard or test source
 - Security-sensitive changes require a detailed explanation in the PR description
 - **Never** commit private keys, test credentials, or `.env` files
+
+## Developer Certificate of Origin (DCO)
+
+By contributing to this project, you certify that:
+
+- (a) The contribution was created in whole or in part by you and you have the right to submit it under the open source license indicated in the file; or
+- (b) The contribution is based upon previous work that, to the best of your knowledge, is covered under an appropriate open source license and you have the right under that license to submit that work with modifications; or
+- (c) The contribution was provided directly to you by some other person who certified (a), (b) or (c) and you have not modified it.
+
+**All commits must be signed (`git commit -s`).** PRs without DCO sign-off will be rejected by CI.
 
 ## License
 

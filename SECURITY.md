@@ -50,6 +50,30 @@ Given the project's educational nature, we follow a **coordinated disclosure** a
 - [OpenSSF Best Practices](docs/openssf-roadmap.md)
 - [External Audit Report](docs/ml-kem-768-external-audit-2026-07-27.md)
 
+## Scope of This Policy
+
+This security policy applies to:
+- FIBEMATE cryptographic implementations (JS/WASM/C/RTL)
+- Documentation and examples that could be misused in production
+- CI/CD infrastructure and release artifacts
+
+**Out of scope:**
+- Third-party dependencies (report to respective projects)
+- Academic research discussions (use GitHub Discussions)
+- Feature requests (use GitHub Issues)
+
+## Security History
+
+| Date | Issue | Status |
+|------|-------|--------|
+| 2026-07-27 | ML-KEM `samplePoly` bounds check | Fixed in audit |
+| 2026-07-27 | Nonce truncation in hybrid KEX | Fixed in `fb8a73c` |
+| 2026-07-25 | SM2 `_fastModP` infinite loop | Fixed in `02aeac5` |
+
+## Acknowledgments
+
+We thank security researchers who report issues in good faith. This project is a single-maintainer educational effort; patience with response times is appreciated.
+
 ## PGP Key
 
 Not available. This project does not handle production secrets.
