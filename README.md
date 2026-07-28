@@ -254,10 +254,18 @@ All measurements on the above environment. Single-run average over 10,000 rounds
 
 ### Prerequisites
 
-- Node.js ≥ 18
-- npm ≥ 9
-- Git
-- (Optional) OpenSSL ≥ 3.0, Rust ≥ 1.70, Vivado 2023+
+| Requirement | Version | Notes |
+|-------------|---------|-------|
+| Node.js | ≥ 18 | 20 or 22 recommended |
+| npm | ≥ 9 | — |
+| Git | ≥ 2.30 | — |
+| C++ compiler | C++17 | Required for native addon (gcc/clang/MSVC 2019+) |
+| Python | ≥ 3.8 | Required by node-gyp |
+
+Optional but tested:
+- Rust ≥ 1.70 (WebAssembly / wasm-pack)
+- OpenSSL ≥ 3.0
+- Vivado 2023+ (FPGA RTL)
 
 ### Build
 
@@ -265,12 +273,40 @@ All measurements on the above environment. Single-run average over 10,000 rounds
 git clone https://github.com/Lennonhaha/fibemate.git
 cd fibemate
 npm install
+```
 
-# Compile C Native addon (ML-KEM-768, NTT)
-cd packages/pqc-kem && npm install && cd ../..
+**Native Addon (C, ML-KEM-768 NTT)**
 
-# Verify core crypto modules
-node -e "const m=require('./packages/pqc-kem'); const kp=m.keygen(); console.log('ML-KEM-768 OK:', kp[0].length+'B pk')"
+The C native addon provides high-performance ML-KEM-768 (keygen ~103 µs, vs. ~1.19 ms pure JS).
+It is automatically built when the prerequisite toolchain is available.
+
+The addon is verified in CI across Ubuntu 22.04 with Node 20 and 22, passing
+roundtrip, Self-KAT (100/100), and NIST KAT (100/100) checks. See
+[`.github/workflows/native-build.yml`](.github/workflows/native-build.yml).
+
+```bash
+# The addon builds automatically:
+cd packages/pqc-kem && npm install
+
+# Manual rebuild (release mode):
+npm run build:native:release
+
+# Verify the native backend loaded:
+node -e "const pk = require('.'); console.log('Backend:', pk.usingNative ? 'C NATIVE' : 'JS (no addon)'); const kp = pk.generateKeypair(); console.log('ML-KEM-768 OK:', kp.publicKey.length + 'B pk')"
+```
+
+**Troubleshooting:** If `usingNative` is `false`, confirm:
+- C++17 compiler is in `PATH`
+- Python 3.x is in `PATH` (node-gyp requirement)
+- On Windows: Visual Studio Build Tools or MSVC 2019+
+- Re-run `npm install` in `packages/pqc-kem/`
+
+The system falls back to pure JS automatically — all KAT vectors pass on both backends.
+
+**Core verification (pure JS, no native dependency):**
+
+```bash
+node -e "const m=require('./packages/pqc-kem/src/ml-kem-768.js'); const kp=m.generateKeypair(); console.log('ML-KEM-768 JS:', kp.publicKey.length+'B pk')"
 ```
 
 ### Run
