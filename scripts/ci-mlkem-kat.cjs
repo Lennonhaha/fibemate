@@ -1,7 +1,9 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 // ML-KEM-768 roundtrip self-validation + KAT .rsp header check
-// API: generateKeypair() â†’ {publicKey, secretKey}
-//       encapsulate(pk) â†’ {ciphertext, sharedSecret}
-//       decapsulate(sk, ct) â†’ sharedSecret
+// API: generateKeypair() â†?{publicKey, secretKey}
+//       encapsulate(pk) â†?{ciphertext, sharedSecret}
+//       decapsulate(sk, ct) â†?sharedSecret
 // Exit: 0=ALL PASS, 1=roundtrip mismatch, 2=dependency error
 
 const fs = require('fs');
@@ -39,7 +41,7 @@ for (let i = 0; i < ROUNDS; i++) {
     const { publicKey, secretKey } = mlkem.generateKeypair();
     const { ciphertext, sharedSecret } = mlkem.encapsulate(publicKey);
     const decapSS = mlkem.decapsulate(secretKey, ciphertext);
-    // Buffer (encap) vs Uint8Array (decap) â€” use Buffer.equals for correct comparison
+    // Buffer (encap) vs Uint8Array (decap) â€?use Buffer.equals for correct comparison
     if (Buffer.from(sharedSecret).equals(Buffer.from(decapSS))) pass++;
     else {
       fail++;
@@ -64,5 +66,5 @@ for (let i = 0; i < 20; i++) {
 console.log('Key uniqueness:', keys.size + '/20 unique');
 
 const allPass = fail === 0;
-console.log(allPass ? 'âœ… ML-KEM ALL PASS' : 'âŒ ML-KEM FAILURES');
+console.log(allPass ? 'âœ?ML-KEM ALL PASS' : 'â?ML-KEM FAILURES');
 process.exit(allPass ? 0 : 1);

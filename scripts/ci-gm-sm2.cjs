@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 // SM2 JS‚ÜîPython KAT cross-validation (100 vectors)
 // Exit code: 0=ALL PASS, 1=KAT mismatch, 2=dependency error
 const sm2 = require('../www/crypto/sm2-browser.cjs.js');
@@ -42,5 +44,5 @@ console.log('SM2 sign/verify:  ' + signPass + '/' + kat.length + ' PASS');
 console.log('SM2 encrypt/dec:  ' + encPass + '/' + kat.length + ' PASS');
 
 const allPass = signPass === kat.length && encPass === kat.length;
-console.log(allPass ? '‚úÖ SM2 ALL PASS' : '‚ùå SM2 FAILURES');
+console.log(allPass ? '‚ú?SM2 ALL PASS' : '‚ù?SM2 FAILURES');
 process.exit(allPass ? 0 : 1);

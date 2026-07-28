@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 const core = require('../packages/pqc-kem/src/ml-kem-768');
 
 const _polyMul = core.polyMul;

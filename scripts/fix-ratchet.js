@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 const fs = require('fs');
 
 // Fix double-ratchet-pq.js

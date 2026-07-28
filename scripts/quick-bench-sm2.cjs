@@ -1,4 +1,6 @@
-// quick-bench-sm2.cjs â€” lightweight benchmark for weak VMs
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
+// quick-bench-sm2.cjs â€?lightweight benchmark for weak VMs
 const s = require('/opt/fibemate-repo/www/crypto/sm2-bigint-ec');
 const crypto = require('crypto');
 const N = 200;
@@ -42,4 +44,4 @@ const encs = [];
 for (let i = 0; i < N; i++) encs.push(s.encrypt(pk, 'd'+i));
 bench('decrypt', () => { for (const e of encs) s.decrypt(sk.privateKey, e.c1, e.c2); });
 
-console.log('\n=== Mersenne fast reduction â€” DONE ===');
+console.log('\n=== Mersenne fast reduction â€?DONE ===');

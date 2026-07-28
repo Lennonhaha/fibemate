@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 // SM4-GCM JS‚ÜîPython KAT cross-validation (30 vectors)
 // Exit code: 0=ALL PASS, 1=KAT mismatch, 2=dependency error
 globalThis.window = globalThis;
@@ -33,5 +35,5 @@ console.log('SM4-GCM KAT:', pass + '/' + kat.length + ' PASS');
 if (firstErrors.length) console.error('First errors:', JSON.stringify(firstErrors));
 
 const allPass = pass === kat.length;
-console.log(allPass ? '‚úÖ SM4-GCM ALL PASS' : '‚ùå SM4-GCM FAILURES');
+console.log(allPass ? '‚ú?SM4-GCM ALL PASS' : '‚ù?SM4-GCM FAILURES');
 process.exit(allPass ? 0 : 1);

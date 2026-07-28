@@ -1,8 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 /**
- * ESLint 自定义规则: no-js-bigint-in-hotpath
- * 禁止纯 JS BigInt 路径进入生产加密热路径
- * 原理: JS BigInt 非恒定时间，不适合高吞吐加密操作
- * 
+ * ESLint 自定义规�? no-js-bigint-in-hotpath
+ * 禁止�?JS BigInt 路径进入生产加密热路�? * 原理: JS BigInt 非恒定时间，不适合高吞吐加密操�? * 
  * 兼容 ESLint flat config (v8+ / v9+)
  */
 
@@ -10,7 +10,7 @@ module.exports = {
   meta: {
     type: 'problem',
     docs: {
-      description: '禁止纯 JS BigInt 路径进入生产加密热路径',
+      description: '禁止�?JS BigInt 路径进入生产加密热路�?,
       category: 'Security',
       recommended: true,
     },
@@ -29,7 +29,7 @@ module.exports = {
     ],
     messages: {
       noJsBigIntInHotPath: 
-        '纯 JS BigInt 路径 "{{name}}" 进入热路径 — 性能风险: {{ops}} ops/s，建议使用 C Addon 或 WASM 路径。',
+        '�?JS BigInt 路径 "{{name}}" 进入热路�?�?性能风险: {{ops}} ops/s，建议使�?C Addon �?WASM 路径�?,
     },
   },
 
@@ -47,8 +47,7 @@ module.exports = {
       'hybridKex',
     ];
     
-    // 已知慢路径标记
-    const slowPathMarkers = [
+    // 已知慢路径标�?    const slowPathMarkers = [
       'BigInt',
       'bigint',
       'jsOnly',
@@ -56,8 +55,7 @@ module.exports = {
       'fallbackJs',
     ];
     
-    // 跟踪当前是否在热路径函数内
-    let functionStack = [];
+    // 跟踪当前是否在热路径函数�?    let functionStack = [];
     
     return {
       // 进入函数
@@ -77,13 +75,11 @@ module.exports = {
         });
       },
       
-      // 退出函数
-      'FunctionDeclaration,FunctionExpression,ArrowFunctionExpression:exit'() {
+      // 退出函�?      'FunctionDeclaration,FunctionExpression,ArrowFunctionExpression:exit'() {
         functionStack.pop();
       },
       
-      // 检查函数调用
-      CallExpression(node) {
+      // 检查函数调�?      CallExpression(node) {
         const callee = node.callee;
         if (callee.type !== 'Identifier') return;
         
@@ -106,7 +102,7 @@ module.exports = {
         }
       },
       
-      // 检查 import/require 的慢路径模块
+      // 检�?import/require 的慢路径模块
       ImportDeclaration(node) {
         const source = node.source.value;
         if (source.includes('bigint') || source.includes('pure-js')) {

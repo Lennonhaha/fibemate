@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 const js = require("@eslint/js");
 const noJsBigIntInHotPath = require("./eslint-rules/no-js-bigint-in-hotpath");
 

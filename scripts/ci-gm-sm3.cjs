@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 // SM3 JS‚ÜîPython KAT cross-validation (30 vectors + GBT 32905 standard vectors)
 // Exit code: 0=ALL PASS, 1=KAT mismatch, 2=dependency error
 globalThis.window = globalThis;
@@ -33,5 +35,5 @@ for (const v of kat) {
 console.log('SM3 KAT:', pass + '/' + kat.length + ' PASS');
 
 const allPass = tv0_ok && tv1_ok && pass === kat.length;
-console.log(allPass ? '‚úÖ SM3 ALL PASS' : '‚ùå SM3 FAILURES');
+console.log(allPass ? '‚ú?SM3 ALL PASS' : '‚ù?SM3 FAILURES');
 process.exit(allPass ? 0 : 1);

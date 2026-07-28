@@ -1,4 +1,6 @@
-// scripts/profile-mlkem.js â€” Hot-path profiler for ML-KEM-768
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
+// scripts/profile-mlkem.js â€?Hot-path profiler for ML-KEM-768
 const { generateKeypair, encapsulate, decapsulate } = require('../packages/pqc-kem');
 
 const RUNS = 1000;

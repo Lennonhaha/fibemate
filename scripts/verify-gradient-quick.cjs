@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 /**
  * Quick verify-only gradient: does |t| still grow with âˆšN after blinding fix?
- * Runs at N=[500, 1500, 3000] â€” should be <2 min total.
+ * Runs at N=[500, 1500, 3000] â€?should be <2 min total.
  */
 const crypto = require('crypto');
 const sm2 = require('/opt/fibemate-full/sm2-bigint-ec');
@@ -71,5 +73,5 @@ for (let i = 0; i < SIZES.length; i++) { const p = inter + slope * roots[i]; ssr
 const r2 = sst > 0 ? 1 - ssr / sst : 0;
 const cls = r2 < 0.3 ? 'NOISE (no trend)' : slope < 0.05 ? 'CLEAN (flat)' : 'LEAK STILL PRESENT';
 console.log('beta=' + slope.toFixed(5) + '  R2=' + r2.toFixed(3) + '  -> ' + cls);
-if (tvals.every(function(x) { return x.passed; })) console.log('ALL |t| <= ' + THRESH + ' â€” verify leak CLOSED');
+if (tvals.every(function(x) { return x.passed; })) console.log('ALL |t| <= ' + THRESH + ' â€?verify leak CLOSED');
 else console.log('Verify leak persists');

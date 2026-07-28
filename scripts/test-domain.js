@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 // Quick domain test for modAdd/modSub
 const core = require('../packages/pqc-kem/src/ml-kem-768');
 const Q = 3329;

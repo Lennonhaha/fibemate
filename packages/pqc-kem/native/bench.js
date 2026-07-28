@@ -1,5 +1,7 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 /**
- * Batch API Benchmark â€” ML-KEM-1024
+ * Batch API Benchmark â€?ML-KEM-1024
  * Usage: node bench.js
  */
 const addon = require('./build/Release/mlkem.node');

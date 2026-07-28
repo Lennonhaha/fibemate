@@ -1,6 +1,8 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 #!/usr/bin/env node
 /**
- * KAT (Known Answer Test) Quick Sampling — Nightly Phase 1 ONLY
+ * KAT (Known Answer Test) Quick Sampling �?Nightly Phase 1 ONLY
  * 
  * ⚠️  THIS IS NOT THE FULL KAT 10k TEST SUITE
  * Full KAT 10k remains in test/kat-full/ (Phase 2, pre 8-31)
@@ -54,7 +56,7 @@ function runKAT(count) {
       // Decapsulate (returns ss = SHA3-256(K_bar || H(ct)), not K_bar)
       const dec = mlKem.decapsulate(enc.ciphertext, kp.secretKey);
       
-      // Verify decapsulate is deterministic: same ct + sk → same ss
+      // Verify decapsulate is deterministic: same ct + sk �?same ss
       const dec2 = mlKem.decapsulate(enc.ciphertext, kp.secretKey);
       
       if (Buffer.from(dec).equals(Buffer.from(dec2))) {

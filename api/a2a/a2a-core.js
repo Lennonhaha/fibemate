@@ -1,13 +1,15 @@
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
 #!/usr/bin/env node
 /**
- * A2A Core â€” Agent-to-Agent Protocol v1.0
+ * A2A Core â€?Agent-to-Agent Protocol v1.0
  * FIBEMATE inter-node secure communication layer.
  *
  * Protocol:
- *   GET  /a2a/health          â€” health check + node info
- *   POST /a2a/handshake       â€” exchange ML-KEM-768 public keys
- *   POST /a2a/message         â€” send encrypted message
- *   GET  /a2a/peers           â€” list known peers
+ *   GET  /a2a/health          â€?health check + node info
+ *   POST /a2a/handshake       â€?exchange ML-KEM-768 public keys
+ *   POST /a2a/message         â€?send encrypted message
+ *   GET  /a2a/peers           â€?list known peers
  *
  * SPDX-License-Identifier: GPL-3.0-only
  */
@@ -25,8 +27,8 @@ const MAX_PEERS = 100;
 const HANDSHAKE_TIMEOUT_MS = 30_000;
 
 // ---- In-memory state ----
-const peers = new Map();    // peerId â†’ { publicKey, lastSeen, address }
-const sessions = new Map(); // sessionId â†’ { ss, peerId, createdAt }
+const peers = new Map();    // peerId â†?{ publicKey, lastSeen, address }
+const sessions = new Map(); // sessionId â†?{ ss, peerId, createdAt }
 
 // ---- Node identity (lazy init) ----
 let nodeKeypair = null;
@@ -161,7 +163,7 @@ router.post('/message', (req, res) => {
     try {
       plaintext = decryptPayload(session.ss, ciphertext);
     } catch {
-      return res.status(400).json({ error: 'decryption failed â€” wrong session or corrupted message' });
+      return res.status(400).json({ error: 'decryption failed â€?wrong session or corrupted message' });
     }
 
     // Update peer lastSeen

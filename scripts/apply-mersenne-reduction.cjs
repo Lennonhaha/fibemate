@@ -1,4 +1,6 @@
-// apply-mersenne-reduction.cjs — apply fast SM2 modular reduction to bigint-ec
+// SPDX-License-Identifier: GPL-3.0-only
+// Copyright (c) 2026 FIBEMATE Contributors
+// apply-mersenne-reduction.cjs �?apply fast SM2 modular reduction to bigint-ec
 const fs = require('fs');
 const path = '/opt/fibemate-repo/www/crypto/sm2-bigint-ec.js';
 let src = fs.readFileSync(path, 'utf8');
@@ -6,7 +8,7 @@ let src = fs.readFileSync(path, 'utf8');
 // ─── 1. Add Mersenne fast reduction helper ───
 const mersenneHelper = `
 // Fast Mersenne reduction for SM2_P = 2^256 - 2^224 - 2^96 + 2^64 - 1
-// Identity: 2^256 ≡ 2^224 + 2^96 - 2^64 + 1 (mod p)
+// Identity: 2^256 �?2^224 + 2^96 - 2^64 + 1 (mod p)
 const _SM2_M256 = (1n << 256n) - 1n;
 function _fastModP(x) {
   let t = x;
