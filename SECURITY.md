@@ -3,55 +3,53 @@
 ## Supported Versions
 
 | Version | Supported          |
-|---------|--------------------|
-| v3.x    | ✅ Active development |
-| < v3.0  | ❌ Not supported    |
+| ------- | ------------------ |
+| 3.3.x   | :white_check_mark: |
+| < 3.3   | :x:                |
 
 ## Reporting a Vulnerability
 
-This project implements experimental post-quantum cryptography.
-**Do not rely on FIBEMATE production deployments for high-security applications**
-without independent third-party audit.
+**⚠️ IMPORTANT: This is an educational/research project, not production software.**
 
-If you discover a security vulnerability, please report it privately:
+FIBEMATE is a post-quantum cryptography engineering demonstration platform. It is **NOT** intended for securing real-world communications.
 
-- **Email**: fibemate@fibemate.net
-- **Expect response within**: 72 hours
+### Known Limitations (Non-Exhaustive)
 
-### What to include:
-- Description of the vulnerability
-- Steps to reproduce (if applicable)
-- Affected module(s) and version
+- Pure JavaScript implementations are **not constant-time**
+- No hardware side-channel countermeasures beyond software simulation
+- C native addon has not undergone fuzzing
+- RTL source code is withheld pending security review
 
-### What NOT to do:
-- Do **not** file a public GitHub Issue for security vulnerabilities
-- Do **not** discuss unpatched vulnerabilities in public forums
+### How to Report
 
-## Cryptographic Disclosure
+If you discover a security issue that could affect users who may mistakenly use this project in production:
 
-FIBEMATE implements ML-KEM-768 (FIPS 203), SLH-DSA (FIPS 205),
-and Chinese national standards SM2/SM3/SM4 for educational and research purposes.
-See [THREAT_MODEL.md](/docs/THREAT_MODEL.md) for detailed security assumptions
-and [pqc-readiness](/docs/pqc-readiness.html) for the current PQC deployment status.
+1. **Do NOT open a public issue**
+2. Email: `security@fibemate.net` (monitored, but response time not guaranteed)
+3. Include:
+   - Description of the issue
+   - Steps to reproduce
+   - Impact assessment
+   - Suggested fix (if any)
 
-## Formal Security Guarantees
+### Response Timeline
 
-### TLS 1.3 Hybrid Key Exchange (X25519MLKEM768)
+- Acknowledgment: Within 14 days
+- Assessment: Within 30 days
+- Fix/Disclosure: Timeline varies based on severity and complexity
 
-The hybrid KEM construction follows the IETF `draft-ietf-tls-hybrid-design` concatenation mode.
-Its security is backed by two levels of formal proof:
-- **ROM**: IND-CCA2 via Schage et al., ACM CCS 2024 (at least one component secure → hybrid secure)
-- **QROM**: IND-CCA2 via Bergmann et al., ePrint 2025 (quantum-query-resistant composability)
+### Disclosure Policy
 
-### Application-Layer Hybrid KEX (Path C-2)
-- TLA+ state machine verified: 7 invariants, 101,467 states, 0 violations (TSR lg-069, lg-078)
+Given the project's educational nature, we follow a **coordinated disclosure** approach:
+- Critical issues: Fixed before public disclosure
+- Low-severity issues: May be disclosed in regular development updates
 
-### Side-Channel Resistance
-- ML-KEM-768 TVLA N=10,000 ✅
-- SM2 TVLA 1-4th order moments N=10,000 ✅ (20/20, max |t|=1.82)
-- HMAC-SM3 TVLA 8/8 ✅
+## Security-Related Documentation
 
-## Recognition
+- [Security Limitations](docs/security-limitations.md)
+- [OpenSSF Best Practices](docs/openssf-roadmap.md)
+- [External Audit Report](docs/ml-kem-768-external-audit-2026-07-27.md)
 
-We credit researchers who responsibly disclose vulnerabilities.
-Thank you for helping make this project safer.
+## PGP Key
+
+Not available. This project does not handle production secrets.
