@@ -28,7 +28,7 @@ module.exports = [
       "no-empty": "off",
       "no-irregular-whitespace": "off",
       "no-regex-spaces": "off",
-      "no-js-bigint-in-hotpath": "error"
+      "custom/no-js-bigint-in-hotpath": "error"
     },
     plugins: {
       "custom": {
