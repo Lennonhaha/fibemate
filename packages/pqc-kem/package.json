@@ -1,7 +1,7 @@
 {
   "name": "@fibemate/pqc-kem",
   "version": "0.1.0",
-  "description": "ML-KEM-768 (FIPS 203) - pure JS post-quantum KEM. No deps, no WASM, no NTT.",
+  "description": "ML-KEM-768 (FIPS 203) - post-quantum KEM with optional C native addon.",
   "keywords": [
     "ml-kem",
     "post-quantum",
@@ -14,6 +14,12 @@
     "index.js",
     "src/"
   ],
+  "dependencies": {
+    "node-addon-api": "^8.2.2"
+  },
+  "devDependencies": {
+    "node-gyp": "^11.0.0"
+  },
   "scripts": {
     "test": "node test/basic.test.js",
     "build:native": "node-gyp rebuild -C native",
