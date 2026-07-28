@@ -1,0 +1,14 @@
+{
+  "rules": {
+    "readme-file-exists": { "level": "error" },
+    "license-file-exists": { "level": "error" },
+    "contributing-file-exists": { "level": "warning" },
+    "code-of-conduct-file-exists": { "level": "warning" },
+    "changelog-file-exists": { "level": "warning" },
+    "security-file-exists": { "level": "error" },
+    "support-file-exists": { "level": "off" },
+    "readme-references-license": { "level": "warning" },
+    "source-license-headers-exist": { "level": "off" },
+    "python-package-metadata-exists": { "level": "off" }
+  }
+}
