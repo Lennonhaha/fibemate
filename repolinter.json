@@ -1,8 +1,9 @@
 {
+  "axioms": {},
   "rules": {
     "readme-file-exists": { "level": "error" },
     "license-file-exists": { "level": "error" },
-    "contributing-file-exists": { "level": "warning" },
+    "contributing-file-exists": { "level": "error" },
     "code-of-conduct-file-exists": { "level": "warning" },
     "changelog-file-exists": { "level": "warning" },
     "security-file-exists": { "level": "error" },
