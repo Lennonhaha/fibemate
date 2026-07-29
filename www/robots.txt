@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /node_modules/
+Disallow: /reg-server/
+Disallow: /crypto/vwz/
+Disallow: /crypto/lgv2/
+Disallow: /login.html
+Disallow: /archive/
+
+Sitemap: https://fibemate.net/sitemap.xml
