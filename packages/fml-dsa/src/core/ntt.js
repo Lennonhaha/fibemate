@@ -5,23 +5,11 @@
 // Structure:
 //   FORWARD (DIT):  bit-reverse copy → len=2→256 ascending  → TWIDDLE ζ^(j·N/len)
 //   INVERSE (DIF):  natural order → len=256→2 descending → TWIDDLE ζ^(-j·N/len) → bit-reverse + scale
+//
+// v2: Barrett-based modMul replaces BigInt (2026-07-29 TVLA fix)
 
 import { Q, N, ZETA, INV_N } from './params.js';
-
-// ============================================================
-// Modular arithmetic (constant-time)
-// ============================================================
-function modMul(a, b) {
-  return Number((BigInt(a) * BigInt(b)) % BigInt(Q));
-}
-function ctAdd(a, b) {
-  const s = a + b;
-  return s - (Q & ((Q - 1 - s) >> 31));
-}
-function ctSub(a, b) {
-  const d = a - b;
-  return d + (Q & (d >> 31));
-}
+import { modMul, ctAdd, ctSub } from './modmul.js';
 
 // ============================================================
 // Precomputed ζ^0..ζ^511 (lazy, module-scope)
