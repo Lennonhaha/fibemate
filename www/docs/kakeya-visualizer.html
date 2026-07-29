@@ -289,21 +289,22 @@
         </div>
     </div>
     
-    <!-- Three.js CDN (使用 r128 全局版本, OrbitControls 兼容) -->
-    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <!-- Three.js r128 — 本地托管 (服务器不依赖 CDN) -->
+    <script src="./lib/three.min.js"></script>
     <script>
-        // 如果 unpkg 失败, 尝试 jsdelivr
+        // CDN 后备，仅当本地文件加载失败
         if (typeof THREE === 'undefined') {
-            document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+            document.write('<script src="https://unpkg.com/three@0.128.0/build/three.min.js"><\/script>');
         }
     </script>
     <script>
-        // OrbitControls 加载 (r128 使用全局版本)
+        // OrbitControls — 本地托管
+        if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+            document.write('<script src="./lib/OrbitControls.js"><\/script>');
+        }
+        // CDN 后备
         if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
             document.write('<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
-        }
-        if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
-            document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
         }
     </script>
     
