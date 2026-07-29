@@ -1,8 +1,8 @@
-> ⚠️ **IMPORTANT DISCLAIMER**
+﻿> ⚠️ **IMPORTANT DISCLAIMER**
 >
 > **FIBEMATE is an engineering demonstration platform, not a certified product.**
 >
-> - **Production-ready components** (ML-KEM-768, SLH-DSA, SM2/SM3/SM4) have passed functional verification and software TVLA side-channel testing, but **have not undergone third-party security audit**.
+> - **Engineering-verified components** (ML-KEM-768, SLH-DSA, SM2/SM3/SM4) have passed functional verification, KAT, and software TVLA side-channel testing, but **have not undergone third-party security audit**.
 > - **Experimental components** (VWZ, LookingGlass) **provide no cryptographic security guarantees**, are default-off, require manual activation.
 
 > ⚠️ VWZ / LookingGlass 实验组件已于 2026-07-24 迁移至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支。主分支保留文档引用，源代码不再维护于 main。
@@ -23,7 +23,7 @@
 
 **v3.3-preview** · 2026-07-22 · TSR: lg-001~100 (100 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
-> **Engineering evaluation platform — not production ready**: 🟢 Production-grade (default-on, auditable) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
+> **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
 > **Cite this work**: [CITATION.cff](./CITATION.cff) — Liu, T. *FIBEMATE: Post-Quantum Cryptography Full-Stack Engineering Platform*. v3.3-preview, 2026.
 
@@ -33,7 +33,7 @@
 
 | If you are... | Jump to |
 | :--- | :--- |
-| 🔒 **Engineering evaluation** | → [🟢 Production-Grade Base](#-production-grade-base-default-on--audit-pending) · [Security Model](#security-model) · [Known Limitations](#known-limitations) |
+| 🔒 **Engineering evaluation** | → [🟢 Verified Components](#-verified-components-default-on--self-tested) · [Security Model](#security-model) · [Known Limitations](#known-limitations) |
 | 🔬 **Researching VWZ / LookingGlass** | → [🔬 Experimental Research Components](#-experimental-research-components-default-off--no-security-guarantees) · [VWZ ePrint](#-publications) |
 | 🛠️ **Building / running** | → [Quick Start](#quick-start) · [BUILD.md](BUILD.md) |
 | 🤔 **Questioning ML-KEM interoperability** | → [ML-KEM-768 Wire Format](#ml-kem-768-wire-format) |
@@ -80,7 +80,7 @@ FIBEMATE brings together several engineering dimensions that are typically addre
   The platform natively integrates NIST FIPS 203/205 standard algorithms with China's SM2/SM3/SM4 commercial cryptographic suite, and implements an application-layer hybrid key exchange protocol based on **SM2+ML-KEM-768** (IANA #4590). This provides a genuine engineering reference for exploring **viable schemes where international PQC and national cryptographic algorithms work in concert**.
 
 * **Verifiable Systems Engineering**
-  Beyond functional delivery, the project integrates **L4 formal verification (TLA+)** into the protocol design process, mathematically verifying core handshake logic. The project also establishes clear module boundaries, strictly distinguishing **production-grade standardized components** from **experimental research modules**, complemented by timestamp evidence (TSR, RFC 3161 records) for the trustworthiness and reproducibility of open-source cryptographic engineering.
+  Beyond functional delivery, the project integrates **L4 formal verification (TLA+)** into the protocol design process, mathematically verifying core handshake logic. The project also establishes clear module boundaries, strictly distinguishing **engineering-verified standardized components** from **experimental research modules**, complemented by timestamp evidence (TSR, RFC 3161 records) for the trustworthiness and reproducibility of open-source cryptographic engineering.
 
 ---
 
@@ -161,7 +161,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 ---
 
-## 🟢 Production-Grade Base (Default-On · Audit Pending)
+## 🟢 Verified Components (Default-On · Self-Tested)
 
 These components form the **trusted security foundation** of FIBEMATE. All claims backed by runnable test scripts.
 
