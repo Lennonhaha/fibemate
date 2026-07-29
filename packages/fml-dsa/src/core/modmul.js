@@ -8,6 +8,13 @@ const S = 2 ** SHIFT;
 const S2 = 2 ** 48;
 const M = 33587228;            // floor(2^48 / Q), via BigInt
 
+// ── Input validation helpers ──
+function assertInt(v, name) {
+  if (typeof v !== 'number' || !Number.isInteger(v) || v < 0 || v >= Q) {
+    throw new RangeError(`${name}=${v} is not an integer in [0,${Q})`);
+  }
+}
+
 // Self-test: modMul vs BigInt oracle
 (function() {
   for (let i = 0; i < 3000; i++) {
@@ -20,6 +27,8 @@ const M = 33587228;            // floor(2^48 / Q), via BigInt
 })();
 
 function modMul_inner(a, b) {
+  assertInt(a, 'modMul(a)');
+  assertInt(b, 'modMul(b)');
   const t = a * b;
   const tLo = t % S;
   const tHi = (t - tLo) / S;
@@ -35,11 +44,15 @@ export const modMul = modMul_inner;
 
 // ── Modular add/sub (keep original Q & pattern — ^JS & on -1 yields Q) ──
 export function ctAdd(a, b) {
+  assertInt(a, 'ctAdd(a)');
+  assertInt(b, 'ctAdd(b)');
   const s = a + b;
   return s - (Q & ((Q - 1 - s) >> 31));
 }
 
 export function ctSub(a, b) {
+  assertInt(a, 'ctSub(a)');
+  assertInt(b, 'ctSub(b)');
   const d = a - b;
   return d + (Q & (d >> 31));
 }

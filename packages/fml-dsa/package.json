@@ -10,7 +10,9 @@
     "test:ntt": "node test/ntt.test.js",
     "test:noble": "node test/noble-oracle.test.js",
     "test:kat": "node test/kat-verify.mjs",
-    "test:all": "node test/ntt.test.js && node test/noble-oracle.test.js && node test/fml-dsa.test.js && node test/edge.test.js"
+    "test:input": "node test/input-validation.test.js",
+    "test:tvla": "node test/tvla-timing.test.js",
+    "test:all": "node test/ntt.test.js && node test/noble-oracle.test.js && node test/fml-dsa.test.js && node test/edge.test.js && node test/input-validation.test.js"
   },
   "license": "GPL-3.0-only",
   "devDependencies": {

@@ -35,9 +35,30 @@ const br = new Uint16Array(N);
 })();
 
 // ============================================================
+// Input validation
+// ============================================================
+function assertArray(v, name) {
+  if (!(v instanceof Int32Array)) {
+    throw new TypeError(`${name} must be Int32Array, got ${typeof v}`);
+  }
+  if (v.length !== N) {
+    throw new RangeError(`${name} length=${v.length}, expected ${N}`);
+  }
+}
+function assertPoly(v, name) {
+  assertArray(v, name);
+  for (let i = 0; i < N; i++) {
+    if (typeof v[i] !== 'number' || !Number.isInteger(v[i]) || v[i] < 0 || v[i] >= Q) {
+      throw new RangeError(`${name}[${i}]=${v[i]} not in [0,${Q})`);
+    }
+  }
+}
+
+// ============================================================
 // NTT (forward DIT) — 100/100 roundtrip verified
 // ============================================================
 export function ntt(poly) {
+  assertPoly(poly, 'ntt(poly)');
   const a = new Int32Array(N);
 
   // 1. Bit-reverse copy
@@ -65,6 +86,7 @@ export function ntt(poly) {
 // Inverse NTT (DIF) — 100/100 roundtrip verified
 // ============================================================
 export function invNtt(polyNtt) {
+  assertPoly(polyNtt, 'invNtt(poly)');
   const a = new Int32Array(polyNtt);  // NO bit-reverse here! (DIF starts natural)
 
   // 1. len = 256, 128, ..., 2 (DESCENDING)
