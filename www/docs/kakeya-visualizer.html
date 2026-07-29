@@ -33,8 +33,36 @@
             border-radius: 12px;
             padding: 20px;
             width: 320px;
+            max-width: calc(100vw - 40px);
+            max-height: 80vh;
+            overflow-y: auto;
             backdrop-filter: blur(10px);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Mobile: compact controls, full-width */
+        @media (max-width: 480px) {
+            #controls {
+                top: 8px;
+                left: 8px;
+                right: 8px;
+                width: auto;
+                padding: 12px;
+                border-radius: 8px;
+                font-size: 0.85rem;
+            }
+            h1 {
+                font-size: 15px;
+                margin-bottom: 8px;
+                padding-bottom: 6px;
+            }
+            .control-group {
+                margin-bottom: 12px;
+            }
+            select, button, input {
+                font-size: 0.82rem;
+                padding: 6px 10px;
+            }
         }
         
         h1 {
