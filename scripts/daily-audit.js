@@ -1,7 +1,7 @@
+#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
-#!/usr/bin/env node
-// scripts/daily-audit.js �?ML-KEM-768 每日自动安全/质量排查
+// scripts/daily-audit.js �?ML-KEM-768 每日自动安全/质量排查
 // 用法: node scripts/daily-audit.js [--fix] [--json]
 
 const fs = require('fs');
@@ -17,11 +17,11 @@ const RULES = [
     check: (src) => {
       const m = src.match(/while\s*\(\s*j\s*<\s*256\s*&&\s*(?:idx\s*\+\s*2\s*<\s*504|idx\s*<\s*(\d+))\s*\)/);
       if (!m) return { pass: true, detail: 'while-loop pattern not detected (manual check needed)' };
-      if (m[1]) { const n = parseInt(m[1], 10); return n < 504 ? { pass: true, detail: `bound ${n} (legacy pattern), stream idx+2 max=${n+1} < 504 OK` } : { pass: false, detail: `bound ${n} >= 504 �?OOB` }; }
-      return { pass: true, detail: 'idx+2<504 pattern detected �?safe' };
+      if (m[1]) { const n = parseInt(m[1], 10); return n < 504 ? { pass: true, detail: `bound ${n} (legacy pattern), stream idx+2 max=${n+1} < 504 OK` } : { pass: false, detail: `bound ${n} >= 504 �?OOB` }; }
+      return { pass: true, detail: 'idx+2<504 pattern detected �?safe' };
     },
     fix: (src) => src.replace(/while\s*\(\s*j\s*<\s*256\s*&&\s*idx\s*<\s*503\s*\)/, 'while (j < 256 && idx + 2 < 504)'),
-    fixLabel: 'idx<503 �?idx+2<504',
+    fixLabel: 'idx<503 �?idx+2<504',
   },
   {
     id: 'KYBER_QHALF',
@@ -44,7 +44,7 @@ const RULES = [
     check: (src) => {
       const ok = /typeof\s+crypto\s*!==/.test(src) && /getRandomValues/.test(src);
       return ok ? { pass: true, detail: '_webcrypto guard present' }
-                : { pass: false, detail: 'missing crypto availability check (Node�?8 will crash)' };
+                : { pass: false, detail: 'missing crypto availability check (Node�?8 will crash)' };
     },
     fix: null,
     fixLabel: null,
@@ -83,7 +83,7 @@ const RULES = [
       const docs = (src.match(/\/\*\*[\s\S]*?\*\/\s*(async\s+)?function/g) || []).length;
       const pct = fns > 0 ? Math.round(docs / fns * 100) : 100;
       return pct >= 50 ? { pass: true, detail: `${docs}/${fns} functions documented (${pct}%)` }
-                       : { pass: false, detail: `${docs}/${fns} functions documented (${pct}% �?should reach 50%+)` };
+                       : { pass: false, detail: `${docs}/${fns} functions documented (${pct}% �?should reach 50%+)` };
     },
     fix: null,
     fixLabel: null,
@@ -137,20 +137,20 @@ function run(src, applyFix) {
 function print(report) {
   const ok = report.filter(x => x.pass).length;
   const ng = report.filter(x => !x.pass).length;
-  console.log('\n' + '�?.repeat(62));
-  console.log('  ML-KEM-768 Daily Audit  �? ' + new Date().toISOString().replace('T', ' ').slice(0, 19));
-  console.log('�?.repeat(62));
+  console.log('\n' + '�?.repeat(62));
+  console.log('  ML-KEM-768 Daily Audit  �? ' + new Date().toISOString().replace('T', ' ').slice(0, 19));
+  console.log('�?.repeat(62));
   for (const r of report) {
-    const icon = r.pass ? '�? : '�?;
-    const sev = {HIGH:'🔴',MED:'🟠',LOW:'🟡'}[r.sev] || '�?;
+    const icon = r.pass ? '�? : '�?;
+    const sev = {HIGH:'🔴',MED:'🟠',LOW:'🟡'}[r.sev] || '�?;
     console.log(`  ${icon} ${sev} ${r.label}`);
     console.log(`     ${r.detail}`);
-    if (r.fixed) console.log(`     🔧 auto-fixed �?${r.fixed.ok ? '�? : '�?} ${r.fixed.detail}`);
+    if (r.fixed) console.log(`     🔧 auto-fixed �?${r.fixed.ok ? '�? : '�?} ${r.fixed.detail}`);
     else if (r.fixable) console.log(`     💡 auto-fix available (--fix): ${r.fixLabel}`);
   }
   console.log('─'.repeat(62));
   console.log(`  ${ok} passed / ${ng} failed / ${report.length} checks`);
-  console.log('�?.repeat(62) + '\n');
+  console.log('�?.repeat(62) + '\n');
 }
 
 // ── main ──────────────────────────────────────────────────
@@ -158,7 +158,7 @@ const args = process.argv.slice(2);
 const fix = args.includes('--fix');
 const json = args.includes('--json');
 
-if (!fs.existsSync(TARGET)) { console.error('�?, TARGET, 'not found'); process.exit(1); }
+if (!fs.existsSync(TARGET)) { console.error('�?, TARGET, 'not found'); process.exit(1); }
 
 const src = fs.readFileSync(TARGET, 'utf8');
 const { report, modified } = run(src, fix);
@@ -171,9 +171,9 @@ if (json) {
 
 if (fix && modified !== src) {
   fs.writeFileSync(TARGET, modified, 'utf8');
-  console.log('�?patched file written');
+  console.log('�?patched file written');
 } else if (fix) {
-  console.log('�?no changes needed');
+  console.log('�?no changes needed');
 }
 
 const failed = report.some(r => !r.pass);

@@ -1,6 +1,6 @@
+#!/usr/bin/env node
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
-#!/usr/bin/env node
 // FIBEMATE v3.3-preview Comprehensive Benchmark
 // Covers: ML-KEM-768 (Native/JS), SM2 Mersenne, SM3, SM4-GCM, FPGA NTT reference
 

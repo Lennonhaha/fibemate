@@ -41,7 +41,9 @@
     "lib": "lib",
     "test": "test"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "eslint": "^9.7.0"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Lennonhaha/fibemate.git"
