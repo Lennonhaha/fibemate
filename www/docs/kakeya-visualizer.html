@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE - 离散挂谷集合可视化</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            overflow: hidden;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(15, 15, 30, 0.9);
+            border: 1px solid #3a3a5a;
+            border-radius: 12px;
+            padding: 20px;
+            width: 320px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #00d4ff;
+            border-bottom: 1px solid #3a3a5a;
+            padding-bottom: 10px;
+        }
+        
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        .control-group label {
+            display: block;
+            font-size: 13px;
+            color: #a0a0c0;
+            margin-bottom: 8px;
+        }
+        
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        input[type="range"] {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: #2a2a4a;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #00d4ff;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0, 212, 255, 0.5);
+        }
+        
+        .value-display {
+            min-width: 50px;
+            padding: 4px 8px;
+            background: #2a2a4a;
+            border-radius: 4px;
+            text-align: center;
+            font-size: 12px;
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        
+        .info-box {
+            background: #1a1a2e;
+            border-left: 3px solid #ff6b6b;
+            padding: 12px;
+            margin-top: 15px;
+            border-radius: 4px;
+        }
+        
+        .info-box h3 {
+            font-size: 12px;
+            color: #ff6b6b;
+            margin-bottom: 8px;
+        }
+        
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 4px;
+            color: #c0c0d0;
+        }
+        
+        .info-item span:last-child {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        
+        .warning-box {
+            background: rgba(255, 107, 107, 0.1);
+            border-left: 3px solid #ff6b6b;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+        
+        #legend {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(15, 15, 30, 0.9);
+            border: 1px solid #3a3a5a;
+            border-radius: 12px;
+            padding: 15px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 11px;
+            margin-bottom: 6px;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            border-radius: 1px;
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: #a0a0c0;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 8px;
+            margin-top: 10px;
+            background: #2a2a4a;
+            border: 1px solid #3a3a5a;
+            border-radius: 6px;
+            color: #e0e0e0;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .btn:hover {
+            background: #3a3a5a;
+            border-color: #00d4ff;
+        }
+        
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div id="canvas-container">
+        <div id="loading">正在加载 Three.js...</div>
+    </div>
+    
+    <div id="controls">
+        <h1>🌀 离散挂谷集合可视化</h1>
+        
+        <div class="control-group">
+            <label>维度 (d): 对应 LWE 问题规模</label>
+            <div class="slider-container">
+                <input type="range" id="dimension" min="2" max="256" value="16" step="2">
+                <div class="value-display" id="dimension-value">16</div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>分辨率 (每维点数)</label>
+            <div class="slider-container">
+                <input type="range" id="resolution" min="4" max="32" value="8">
+                <div class="value-display" id="resolution-value">8</div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>透明度 (线段)</label>
+            <div class="slider-container">
+                <input type="range" id="opacity" min="10" max="100" value="60">
+                <div class="value-display" id="opacity-value">60%</div>
+            </div>
+        </div>
+        
+        <div class="checkbox-container">
+            <input type="checkbox" id="autoRotate" checked>
+            <label for="autoRotate">自动旋转</label>
+        </div>
+        
+        <div class="checkbox-container">
+            <input type="checkbox" id="showAxes" checked>
+            <label for="showAxes">显示坐标轴</label>
+        </div>
+        
+        <button class="btn" id="resetCamera">重置视角</button>
+        <button class="btn" id="exportSVG">导出 SVG 截图</button>
+        
+        <div class="info-box">
+            <h3>📊 安全性分析</h3>
+            <div class="info-item">
+                <span>维度 (d):</span>
+                <span id="info-dimension">16</span>
+            </div>
+            <div class="info-item">
+                <span>线段数量:</span>
+                <span id="info-lines">-</span>
+            </div>
+            <div class="info-item">
+                <span>BKZ 安全估计:</span>
+                <span id="info-bkz">-</span>
+            </div>
+            <div class="info-item">
+                <span>LWE 复杂度:</span>
+                <span id="info-lwe">-</span>
+            </div>
+            <div class="info-item">
+                <span>状态:</span>
+                <span id="info-status">安全</span>
+            </div>
+        </div>
+        
+        <div class="warning-box">
+            <strong>⚠️ 教育演示用途</strong><br>
+            此可视化仅用于展示挂谷集合的几何结构。实际安全性需通过 TVLA/侧信道测试验证。
+        </div>
+    </div>
+    
+    <div id="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff6b6b;"></div>
+            <span>X 轴方向</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #4ecdc4;"></div>
+            <span>Y 轴方向</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ffe66d;"></div>
+            <span>Z 轴方向</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #a855f7;"></div>
+            <span>对角线方向</span>
+        </div>
+    </div>
+    
+    <!-- Three.js CDN (使用 r128 全局版本, OrbitControls 兼容) -->
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script>
+        // 如果 unpkg 失败, 尝试 jsdelivr
+        if (typeof THREE === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>');
+        }
+    </script>
+    <script>
+        // OrbitControls 加载 (r128 使用全局版本)
+        if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+            document.write('<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+        }
+        if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
+            document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
+        }
+    </script>
+    
+    <script>
+        // 调试日志
+        window.addEventListener('error', function(e) {
+            console.error('全局错误:', e.message, e.filename, e.lineno);
+        });
+        
+        window.addEventListener('load', function() {
+            console.log('=== 加载状态 ===');
+            console.log('THREE:', typeof THREE);
+            console.log('OrbitControls:', typeof THREE !== 'undefined' ? typeof THREE.OrbitControls : 'N/A');
+            console.log('DOMContentLoaded 已触发');
+        });
+    </script>
+    
+    <script>
+        // ============================================================
+        // 离散挂谷集合生成器
+        // ============================================================
+        
+        class DiscreteKakeya {
+            constructor(dimension, resolution) {
+                this.dimension = dimension;
+                this.resolution = resolution;
+                this.directions = [];
+            }
+            
+            /**
+             * 生成 Perron 树构造的离散方向集
+             * 返回：方向向量数组 [[x1,y1,z1], [x2,y2,z2], ...]
+             */
+            generateDirections() {
+                this.directions = [];
+                
+                const n = this.resolution;
+                const d = Math.min(this.dimension, 256); // 限制最大维度
+                
+                // 生成主轴方向
+                this.addAxisDirections(d, n);
+                
+                // 生成对角线方向
+                this.addDiagonalDirections(d, n);
+                
+                // 生成 Perron 树的递归方向
+                this.addPerronDirections(d, n);
+                
+                return this.directions;
+            }
+            
+            // 主轴方向 (X, Y, Z)
+            addAxisDirections(d, n) {
+                // X 轴方向的线段
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < n; j++) {
+                        this.directions.push({
+                            start: [-d/2, i - n/2, j - n/2],
+                            end: [d/2, i - n/2, j - n/2],
+                            color: new THREE.Color(0xff6b6b), // 红色
+                            type: 'axis-x'
+                        });
+                    }
+                }
+                
+                // Y 轴方向
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < n; j++) {
+                        this.directions.push({
+                            start: [i - n/2, -d/2, j - n/2],
+                            end: [i - n/2, d/2, j - n/2],
+                            color: new THREE.Color(0x4ecdc4), // 青色
+                            type: 'axis-y'
+                        });
+                    }
+                }
+                
+                // Z 轴方向
+                for (let i = 0; i < n; i++) {
+                    for (let j = 0; j < n; j++) {
+                        this.directions.push({
+                            start: [i - n/2, j - n/2, -d/2],
+                            end: [i - n/2, j - n/2, d/2],
+                            color: new THREE.Color(0xffe66d), // 黄色
+                            type: 'axis-z'
+                        });
+                    }
+                }
+            }
+            
+            // 对角线方向
+            addDiagonalDirections(d, n) {
+                const diagonalLength = d * 0.7;
+                
+                // 主对角线
+                for (let i = 0; i < Math.floor(n/2); i++) {
+                    const offset = i - n/4;
+                    this.directions.push({
+                        start: [-diagonalLength/2 + offset, -diagonalLength/2 + offset, -diagonalLength/2],
+                        end: [diagonalLength/2 + offset, diagonalLength/2 + offset, diagonalLength/2],
+                        color: new THREE.Color(0xa855f7), // 紫色
+                        type: 'diagonal'
+                    });
+                }
+            }
+            
+            // Perron 树递归方向（简化版）
+            addPerronDirections(d, n) {
+                const depth = Math.floor(Math.log2(d));
+                const scale = d / 4;
+                
+                // 生成递归分形结构
+                for (let level = 1; level <= Math.min(depth, 4); level++) {
+                    const numBranches = Math.pow(2, level);
+                    const branchLength = scale / level;
+                    
+                    for (let i = 0; i < numBranches; i++) {
+                        const angle = (i / numBranches) * Math.PI * 2;
+                        const x = Math.cos(angle) * branchLength;
+                        const y = Math.sin(angle) * branchLength;
+                        
+                        this.directions.push({
+                            start: [x - branchLength/2, y, 0],
+                            end: [x + branchLength/2, y, 0],
+                            color: new THREE.Color().setHSL(angle / (Math.PI * 2), 0.7, 0.6),
+                            type: `perron-${level}`
+                        });
+                    }
+                }
+            }
+            
+            // 计算安全性估计
+            getSecurityEstimate() {
+                const d = this.dimension;
+                
+                // BKZ 复杂度估计：2^(d * log2(d) / 2)
+                const bkzComplexity = Math.pow(2, d * Math.log2(d) / 2);
+                
+                // LWE 复杂度（简化）：2^(d / 2) * q
+                const q = 3329; // ML-KEM 模数
+                const lweComplexity = Math.pow(2, d / 2) * q;
+                
+                // 安全等级估计
+                let securityLevel = '低';
+                if (d >= 128) securityLevel = '高 (128-bit+)';
+                else if (d >= 64) securityLevel = '中等 (64-bit)';
+                else if (d >= 32) securityLevel = '低 (32-bit)';
+                
+                return {
+                    dimension: d,
+                    lines: this.directions.length,
+                    bkz: this.formatComplexity(bkzComplexity),
+                    lwe: this.formatComplexity(lweComplexity),
+                    security: securityLevel
+                };
+            }
+            
+            formatComplexity(n) {
+                if (n < 1e6) return n.toFixed(0);
+                if (n < 1e9) return (n / 1e6).toFixed(1) + 'M';
+                if (n < 1e12) return (n / 1e9).toFixed(1) + 'G';
+                if (n < 1e15) return (n / 1e12).toFixed(1) + 'T';
+                return '2^' + Math.log2(n).toFixed(0);
+            }
+        }
+        
+        // ============================================================
+        // Three.js 场景初始化
+        // ============================================================
+        
+        let scene, camera, renderer, controls;
+        let lineSegments, axesHelper;
+        let kakeya;
+        
+        function init() {
+            const container = document.getElementById('canvas-container');
+            const loadingEl = document.getElementById('loading');
+            if (loadingEl) loadingEl.style.display = 'none';
+            
+            // 检查 THREE 是否加载
+            if (typeof THREE === 'undefined') {
+                console.error('THREE.js 未加载！CDN 失败');
+                container.innerHTML = '<div style="color:#ff6b6b;padding:40px;text-align:center;font-size:14px;"><h2>⚠️ Three.js 加载失败</h2><p>请检查网络连接（需要访问 unpkg.com 或 jsdelivr.net）</p><p style="margin-top:20px;font-size:12px;color:#a0a0c0;">备用方案：请使用本地安装方式或检查 CDN 可用性</p></div>';
+                return;
+            }
+            
+            if (typeof THREE.OrbitControls === 'undefined') {
+                console.warn('OrbitControls 未加载，将使用基础控制');
+                THREE.OrbitControls = function() {
+                    return { update: function() {}, reset: function() {}, autoRotate: false };
+                };
+            }
+            
+            console.log('开始初始化 Three.js 场景...');
+            
+            // 场景
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x0f0f1e);
+            
+            // 相机
+            camera = new THREE.PerspectiveCamera(
+                60,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(30, 20, 30);
+            
+            // 渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            container.appendChild(renderer.domElement);
+            
+            // 控制器
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.autoRotate = true;
+            controls.autoRotateSpeed = 0.5;
+            
+            // 坐标轴
+            axesHelper = new THREE.AxesHelper(20);
+            scene.add(axesHelper);
+            
+            // 光照
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+            
+            // 初始化挂谷集合
+            kakeya = new DiscreteKakeya(16, 8);
+            updateVisualization();
+            
+            // 事件监听
+            setupEventListeners();
+            
+            // 渲染循环
+            animate();
+        }
+        
+        // ============================================================
+        // 可视化更新
+        // ============================================================
+        
+        function updateVisualization() {
+            // 清除旧的线段
+            if (lineSegments) {
+                scene.remove(lineSegments);
+                lineSegments.geometry.dispose();
+                lineSegments.material.dispose();
+            }
+            
+            // 生成新的方向集
+            const directions = kakeya.generateDirections();
+            const opacity = parseInt(document.getElementById('opacity').value) / 100;
+            
+            // 创建线段几何体
+            const geometry = new THREE.BufferGeometry();
+            const positions = [];
+            const colors = [];
+            
+            directions.forEach(dir => {
+                positions.push(
+                    dir.start[0], dir.start[1], dir.start[2],
+                    dir.end[0], dir.end[1], dir.end[2]
+                );
+                colors.push(
+                    dir.color.r, dir.color.g, dir.color.b,
+                    dir.color.r, dir.color.g, dir.color.b
+                );
+            });
+            
+            geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
+            
+            // 材质
+            const material = new THREE.LineBasicMaterial({
+                vertexColors: true,
+                transparent: true,
+                opacity: opacity,
+                linewidth: 1
+            });
+            
+            lineSegments = new THREE.LineSegments(geometry, material);
+            scene.add(lineSegments);
+            
+            // 更新信息面板
+            updateInfoPanel();
+        }
+        
+        function updateInfoPanel() {
+            const info = kakeya.getSecurityEstimate();
+            
+            document.getElementById('info-dimension').textContent = info.dimension;
+            document.getElementById('info-lines').textContent = info.lines.toLocaleString();
+            document.getElementById('info-bkz').textContent = info.bkz;
+            document.getElementById('info-lwe').textContent = info.lwe;
+            document.getElementById('info-status').textContent = info.security;
+            
+            // 根据安全等级改变颜色
+            const statusEl = document.getElementById('info-status');
+            if (info.dimension >= 128) {
+                statusEl.style.color = '#00ff88';
+            } else if (info.dimension >= 64) {
+                statusEl.style.color = '#ffe66d';
+            } else {
+                statusEl.style.color = '#ff6b6b';
+            }
+        }
+        
+        // ============================================================
+        // 事件监听
+        // ============================================================
+        
+        function setupEventListeners() {
+            // 维度滑块
+            document.getElementById('dimension').addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                document.getElementById('dimension-value').textContent = value;
+                kakeya.dimension = value;
+                updateVisualization();
+            });
+            
+            // 分辨率滑块
+            document.getElementById('resolution').addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                document.getElementById('resolution-value').textContent = value;
+                kakeya.resolution = value;
+                updateVisualization();
+            });
+            
+            // 透明度滑块
+            document.getElementById('opacity').addEventListener('input', (e) => {
+                const value = parseInt(e.target.value);
+                document.getElementById('opacity-value').textContent = value + '%';
+                if (lineSegments) {
+                    lineSegments.material.opacity = value / 100;
+                }
+            });
+            
+            // 自动旋转
+            document.getElementById('autoRotate').addEventListener('change', (e) => {
+                controls.autoRotate = e.target.checked;
+            });
+            
+            // 显示坐标轴
+            document.getElementById('showAxes').addEventListener('change', (e) => {
+                axesHelper.visible = e.target.checked;
+            });
+            
+            // 重置视角
+            document.getElementById('resetCamera').addEventListener('click', () => {
+                camera.position.set(30, 20, 30);
+                controls.reset();
+            });
+            
+            // 导出 SVG
+            document.getElementById('exportSVG').addEventListener('click', () => {
+                alert('SVG 导出功能开发中...\n\n当前可使用浏览器截图功能（F12 → 截取完整网页）');
+            });
+            
+            // 窗口大小调整
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+        }
+        
+        // ============================================================
+        // 渲染循环
+        // ============================================================
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+        
+        // 启动
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            // DOM 已经就绪，直接初始化
+            init();
+        }
+        
+        // 最终保障：如果 5 秒后仍未初始化，强制尝试
+        setTimeout(function() {
+            if (typeof scene === 'undefined' && typeof THREE !== 'undefined') {
+                console.warn('5 秒超时未初始化，强制调用 init()');
+                init();
+            }
+        }, 5000);
+    </script>
+</body>
+</html>
