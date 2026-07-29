@@ -5,6 +5,40 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3-preview] — 2026-07-29
+
+### Added
+- Nightly Phase 1 & 2 cron workflows (06:00 UTC daily)
+  - Phase 1: KAT 100 rounds, ESLint, smoke test, cross-lang seed equivalence
+  - Phase 2: KAT 10,000, TVLA summary, perf gate, STM32 build, liboqs cross-verify
+- `scripts/perf-gate.js`: performance regression detection (WARN 20%, FAIL 50%)
+- `scripts/tvla-summary.js`: TVLA |t| threshold scanner (4.5 threshold)
+- `scripts/daily-audit.js`: 7-item daily audit (bounds check, crypto API, seed zeroing, etc.)
+- OpenSSF Badge (Passing 13695) + Roadmap (English + Chinese)
+- Repolinter compliance + OpenSSF Scorecard green
+- Native Addon CI stabilized (5-day failure history resolved)
+- SECURITY.md, CONTRIBUTING.md, CODE_OF_CONDUCT.md, RELEASE_NOTES.md
+- `.github/ISSUE_TEMPLATE/`: disclosure-audit, bug-report, ci-issue, rtl-repro
+
+### Fixed
+- Nightly Phase 1: shebang displaced by SPDX headers (11 files) — SyntaxError
+- Nightly Phase 1: missing `eslint` devDependency — exit 127
+- Nightly Phase 2: `perf-gate.js` GBK encoding corruption — syntax error
+- Nightly Phase 2: `tvla-summary.js` referenced but did not exist
+- ESLint flat config: GBK comments → ASCII (Linux CI pass)
+- Repolinter: missing `axioms` field in config
+- Native Addon: `node-addon-api` dependency resolution + `--ignore-scripts` removal
+- README dead links: `kat-10000.js` → `kat-quick.js`, `vwz-148-test.js` → branch reference
+- `double-ratchet.js` ML-KEM hybrid X3DH handshake parameter order
+- `ml-kem-768.js` samplePoly bounds check, hardcoded KYBER_QHALF, crypto.getRandomValues guard
+
+### Changed
+- `README.md`: Native Addon build section with prerequisites and verification snippet
+- `CHANGELOG.md`: this entry
+- Shebang restored to line 1 in 11 scripts (SPDX+Copyright follow on lines 2-3)
+- Legacy debug/diagnostic scripts archived in git history, removed from working tree
+- `package.json`: eslint ^9.7.0 devDependency added
+
 ## [3.3-preview] — 2026-07-17
 
 ### Added

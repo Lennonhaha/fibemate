@@ -167,7 +167,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 | Module | Description | Verification |
 |--------|-------------|-------------|
-| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | [KAT 10,000](scripts/kat-10000.js) ✅ |
+| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | [KAT 10,000](scripts/kat-quick.js) ✅ |
 | **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM integration |
 | **SM2 ECDH** | BigInt scalar masking + projective randomization · **⚠️ JS BigInt not constant-time (platform limit)** | TVLA 5/5 PASS (statistical, N=10,000) · see [Security Model](#security-model) |
 | **SM4-αGCM** | α=7.5 authenticated encryption, auto-select M2C or SM4 | 10/10 PASS |
@@ -185,7 +185,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| **VWZ Signature** | Vandermonde-Wronskian-Zariski tensor scheme (k=16, NIST-1 128-bit) | [148/148 ✅](scripts/vwz-148-test.js) | VMQ-SPARSE hardness assumption · No reduction to standard LWE · Pending peer review |
+| **VWZ Signature** | Vandermonde-Wronskian-Zariski tensor scheme (k=16, NIST-1 128-bit) | 148/148 ✅ (experimental/vwz-lg branch) | VMQ-SPARSE hardness assumption · No reduction to standard LWE · Pending peer review |
 | **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 · No security claims |
 
 ---
@@ -334,9 +334,9 @@ All claims in Core Features are backed by runnable test scripts in `scripts/`:
 | [`ci-gm-sm3.cjs`](scripts/ci-gm-sm3.cjs) | SM3 hash CI | 30 |
 | [`ci-gm-sm4.cjs`](scripts/ci-gm-sm4.cjs) | SM4-GCM AEAD CI | 30 |
 | [`ci-mlkem-kat.cjs`](scripts/ci-mlkem-kat.cjs) | ML-KEM-768 roundtrip CI | 100 |
-| [`vwz-148-test.js`](scripts/vwz-148-test.js) | VWZ 148 extended functional tests (correctness, serialization, tamper, edge cases) | 15 groups, 148 tests |
+| [`vwz-148-test.js`](../../tree/experimental/vwz-lg/scripts/vwz-148-test.js) | VWZ 148 extended functional tests (in experimental/vwz-lg branch) | 15 groups, 148 tests |
 | [`fpga-l8l9-43-test.js`](scripts/fpga-l8l9-43-test.js) | FPGA L8+L9 cross-validation behavioral model | 43/43 PASS |
-| [`kat-10000.js`](scripts/kat-10000.js) | ML-KEM-768 KAT 10,000 consistency | 10,000 encap/decap roundtrips |
+| [`kat-quick.js`](scripts/kat-quick.js) | ML-KEM-768 KAT quick sampling (supports --samples 10000) | 100/10,000 encap/decap roundtrips |
 | [`kat-bench.js`](scripts/kat-bench.js) | KAT performance benchmark | Throughput & latency |
 | [`tsr-verify.sh`](scripts/tsr-verify.sh) | RFC 3161 TSR verification | DigiCert / FreeTSA |
 | [`stress-test.js`](scripts/stress-test.js) | Load/stress endurance testing | Sustained load |
