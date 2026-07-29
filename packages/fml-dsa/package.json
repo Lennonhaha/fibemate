@@ -1,0 +1,17 @@
+{
+  "name": "fml-dsa",
+  "version": "0.1.0",
+  "description": "FIBEMATE native ML-DSA (FIPS 204) — NTT-domain, Phase 1 noble-oracle, Phase 2 pure JS",
+  "type": "module",
+  "exports": "./src/index.js",
+  "scripts": {
+    "test": "node test/fml-dsa.test.js",
+    "test:ntt": "node test/ntt.test.js",
+    "test:noble": "node test/noble-oracle.test.js",
+    "test:kat": "node test/kat-verify.mjs"
+  },
+  "license": "GPL-3.0-only",
+  "devDependencies": {
+    "@noble/post-quantum": "^0.6.1"
+  }
+}
