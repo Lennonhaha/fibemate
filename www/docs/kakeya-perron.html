@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FIBEMATE - 绂绘暎鎸傝胺闆嗗悎鍙鍖?/title>
+    <title>FIBEMATE - 离散挂谷集合可视化</title>
     <style>
         * {
             margin: 0;
@@ -225,14 +225,14 @@
 </head>
 <body>
     <div id="canvas-container">
-        <div id="loading">姝ｅ湪鍔犺浇 Three.js...</div>
+        <div id="loading">正在加载 Three.js...</div>
     </div>
     
     <div id="controls">
-        <h1>馃寑 绂绘暎鎸傝胺闆嗗悎鍙鍖?/h1>
+        <h1>🌀 离散挂谷集合可视化</h1>
         
         <div class="control-group">
-            <label>缁村害 (d): 瀵瑰簲 LWE 闂瑙勬ā</label>
+            <label>维度 (d): 对应 LWE 问题规模</label>
             <div class="slider-container">
                 <input type="range" id="dimension" min="2" max="256" value="16" step="2">
                 <div class="value-display" id="dimension-value">16</div>
@@ -240,7 +240,7 @@
         </div>
         
         <div class="control-group">
-            <label>鍒嗚鲸鐜?(姣忕淮鐐规暟)</label>
+            <label>分辨率 (每维点数)</label>
             <div class="slider-container">
                 <input type="range" id="resolution" min="4" max="32" value="8">
                 <div class="value-display" id="resolution-value">8</div>
@@ -248,7 +248,7 @@
         </div>
         
         <div class="control-group">
-            <label>閫忔槑搴?(绾挎)</label>
+            <label>透明度 (线段)</label>
             <div class="slider-container">
                 <input type="range" id="opacity" min="10" max="100" value="60">
                 <div class="value-display" id="opacity-value">60%</div>
@@ -257,62 +257,63 @@
         
         <div class="checkbox-container">
             <input type="checkbox" id="autoRotate" checked>
-            <label for="autoRotate">鑷姩鏃嬭浆</label>
+            <label for="autoRotate">自动旋转</label>
         </div>
         
         <div class="checkbox-container">
             <input type="checkbox" id="showAxes" checked>
-            <label for="showAxes">鏄剧ず鍧愭爣杞?/label>
+            <label for="showAxes">显示坐标轴</label>
         </div>
         
-        <button class="btn" id="resetCamera">閲嶇疆瑙嗚</button>
-        <button class="btn" id="exportSVG">瀵煎嚭 SVG 鎴浘</button>
+        <button class="btn" id="resetCamera">重置视角</button>
+        <button class="btn" id="exportSVG">导出 SVG 截图</button>
         
         <div class="info-box">
-            <h3>馃搳 瀹夊叏鎬у垎鏋?/h3>
+            <h3>📊 安全性分析</h3>
             <div class="info-item">
-                <span>缁村害 (d):</span>
+                <span>维度 (d):</span>
                 <span id="info-dimension">16</span>
             </div>
             <div class="info-item">
-                <span>绾挎鏁伴噺:</span>
+                <span>线段数量:</span>
                 <span id="info-lines">-</span>
             </div>
             <div class="info-item">
-                <span>BKZ 瀹夊叏浼拌:</span>
+                <span>BKZ 安全估计:</span>
                 <span id="info-bkz">-</span>
             </div>
             <div class="info-item">
-                <span>LWE 澶嶆潅搴?</span>
+                <span>LWE 复杂度:</span>
                 <span id="info-lwe">-</span>
             </div>
             <div class="info-item">
-                <span>鐘舵€?</span>
-                <span id="info-status">瀹夊叏</span>
+                <span>状态:</span>
+                <span id="info-status">安全</span>
             </div>
         </div>
         
         <div class="warning-box">
-            <strong>鈿狅笍 鏁欒偛婕旂ず鐢ㄩ€?/strong><br>
-            姝ゅ彲瑙嗗寲浠呯敤浜庡睍绀烘寕璋烽泦鍚堢殑鍑犱綍缁撴瀯銆傚疄闄呭畨鍏ㄦ€ч渶閫氳繃 TVLA/渚т俊閬撴祴璇曢獙璇併€?        </div>
+            <strong>⚠️ 教育演示用途</strong><br>
+            此可视化仅用于展示挂谷集合的几何结构。实际安全性需通过 TVLA/侧信道测试验证。
+        </div>
     </div>
     
     <div id="legend">
         <div class="legend-item">
             <div class="legend-color" style="background: #ff6b6b;"></div>
-            <span>X 杞存柟鍚?/span>
+            <span>X 轴方向</span>
         </div>
         <div class="legend-item">
             <div class="legend-color" style="background: #4ecdc4;"></div>
-            <span>Y 杞存柟鍚?/span>
+            <span>Y 轴方向</span>
         </div>
         <div class="legend-item">
             <div class="legend-color" style="background: #ffe66d;"></div>
-            <span>Z 杞存柟鍚?/span>
+            <span>Z 轴方向</span>
         </div>
         <div class="legend-item">
             <div class="legend-color" style="background: #a855f7;"></div>
-            <span>瀵硅绾挎柟鍚?/span>
+            <span>对角线方向</span>
         </div>
     </div>
     
@@ -322,7 +323,8 @@
 
     <script>
         // ============================================================
-        // 绂绘暎鎸傝胺闆嗗悎鐢熸垚鍣?        // ============================================================
+        // 离散挂谷集合生成器
+        // ============================================================
         
         class DiscreteKakeya {
             constructor(dimension, resolution) {
@@ -332,81 +334,88 @@
             }
             
             /**
-             * 鐢熸垚 Perron 鏍戞瀯閫犵殑绂绘暎鏂瑰悜闆?             * 杩斿洖锛氭柟鍚戝悜閲忔暟缁?[[x1,y1,z1], [x2,y2,z2], ...]
+             * 生成 Perron 树构造的离散方向集
+             * 返回：方向向量数组 [[x1,y1,z1], [x2,y2,z2], ...]
              */
             generateDirections() {
                 this.directions = [];
                 
                 const n = this.resolution;
-                const d = Math.min(this.dimension, 256); // 闄愬埗鏈€澶х淮搴?                
-                // 鐢熸垚涓昏酱鏂瑰悜
+                const d = Math.min(this.dimension, 256); // 限制最大维度
+                
+                // 生成主轴方向
                 this.addAxisDirections(d, n);
                 
-                // 鐢熸垚瀵硅绾挎柟鍚?                this.addDiagonalDirections(d, n);
+                // 生成对角线方向
+                this.addDiagonalDirections(d, n);
                 
-                // 鐢熸垚 Perron 鏍戠殑閫掑綊鏂瑰悜
+                // 生成 Perron 树的递归方向
                 this.addPerronDirections(d, n);
                 
                 return this.directions;
             }
             
-            // 涓昏酱鏂瑰悜 (X, Y, Z)
+            // 主轴方向 (X, Y, Z)
             addAxisDirections(d, n) {
-                // X 杞存柟鍚戠殑绾挎
+                // X 轴方向的线段
                 for (let i = 0; i < n; i++) {
                     for (let j = 0; j < n; j++) {
                         this.directions.push({
                             start: [-d/2, i - n/2, j - n/2],
                             end: [d/2, i - n/2, j - n/2],
-                            color: new THREE.Color(0xff6b6b), // 绾㈣壊
+                            color: new THREE.Color(0xff6b6b), // 红色
                             type: 'axis-x'
                         });
                     }
                 }
                 
-                // Y 杞存柟鍚?                for (let i = 0; i < n; i++) {
+                // Y 轴方向
+                for (let i = 0; i < n; i++) {
                     for (let j = 0; j < n; j++) {
                         this.directions.push({
                             start: [i - n/2, -d/2, j - n/2],
                             end: [i - n/2, d/2, j - n/2],
-                            color: new THREE.Color(0x4ecdc4), // 闈掕壊
+                            color: new THREE.Color(0x4ecdc4), // 青色
                             type: 'axis-y'
                         });
                     }
                 }
                 
-                // Z 杞存柟鍚?                for (let i = 0; i < n; i++) {
+                // Z 轴方向
+                for (let i = 0; i < n; i++) {
                     for (let j = 0; j < n; j++) {
                         this.directions.push({
                             start: [i - n/2, j - n/2, -d/2],
                             end: [i - n/2, j - n/2, d/2],
-                            color: new THREE.Color(0xffe66d), // 榛勮壊
+                            color: new THREE.Color(0xffe66d), // 黄色
                             type: 'axis-z'
                         });
                     }
                 }
             }
             
-            // 瀵硅绾挎柟鍚?            addDiagonalDirections(d, n) {
+            // 对角线方向
+            addDiagonalDirections(d, n) {
                 const diagonalLength = d * 0.7;
                 
-                // 涓诲瑙掔嚎
+                // 主对角线
                 for (let i = 0; i < Math.floor(n/2); i++) {
                     const offset = i - n/4;
                     this.directions.push({
                         start: [-diagonalLength/2 + offset, -diagonalLength/2 + offset, -diagonalLength/2],
                         end: [diagonalLength/2 + offset, diagonalLength/2 + offset, diagonalLength/2],
-                        color: new THREE.Color(0xa855f7), // 绱壊
+                        color: new THREE.Color(0xa855f7), // 紫色
                         type: 'diagonal'
                     });
                 }
             }
             
-            // Perron 鏍戦€掑綊鏂瑰悜锛堢畝鍖栫増锛?            addPerronDirections(d, n) {
+            // Perron 树递归方向（简化版）
+            addPerronDirections(d, n) {
                 const depth = Math.floor(Math.log2(d));
                 const scale = d / 4;
                 
-                // 鐢熸垚閫掑綊鍒嗗舰缁撴瀯
+                // 生成递归分形结构
                 for (let level = 1; level <= Math.min(depth, 4); level++) {
                     const numBranches = Math.pow(2, level);
                     const branchLength = scale / level;
@@ -426,21 +435,22 @@
                 }
             }
             
-            // 璁＄畻瀹夊叏鎬т及璁?            getSecurityEstimate() {
+            // 计算安全性估计
+            getSecurityEstimate() {
                 const d = this.dimension;
                 
-                // BKZ 澶嶆潅搴︿及璁★細2^(d * log2(d) / 2)
+                // BKZ 复杂度估计：2^(d * log2(d) / 2)
                 const bkzComplexity = Math.pow(2, d * Math.log2(d) / 2);
                 
-                // LWE 澶嶆潅搴︼紙绠€鍖栵級锛?^(d / 2) * q
-                const q = 3329; // ML-KEM 妯℃暟
+                // LWE 复杂度（简化）：2^(d / 2) * q
+                const q = 3329; // ML-KEM 模数
                 const lweComplexity = Math.pow(2, d / 2) * q;
                 
-                // 瀹夊叏绛夌骇浼拌
-                let securityLevel = '浣?;
-                if (d >= 128) securityLevel = '楂?(128-bit+)';
-                else if (d >= 64) securityLevel = '涓瓑 (64-bit)';
-                else if (d >= 32) securityLevel = '浣?(32-bit)';
+                // 安全等级估计
+                let securityLevel = '低';
+                if (d >= 128) securityLevel = '高 (128-bit+)';
+                else if (d >= 64) securityLevel = '中等 (64-bit)';
+                else if (d >= 32) securityLevel = '低 (32-bit)';
                 
                 return {
                     dimension: d,
@@ -461,7 +471,8 @@
         }
         
         // ============================================================
-        // Three.js 鍦烘櫙鍒濆鍖?        // ============================================================
+        // Three.js 场景初始化
+        // ============================================================
         
         let scene, camera, renderer, controls;
         let lineSegments, axesHelper;
@@ -472,27 +483,27 @@
             const loadingEl = document.getElementById('loading');
             if (loadingEl) loadingEl.style.display = 'none';
             
-            // 妫€鏌?THREE 鏄惁鍔犺浇
+            // 检查 THREE 是否加载
             if (typeof THREE === 'undefined') {
-                console.error('THREE.js 鏈姞杞斤紒CDN 澶辫触');
-                container.innerHTML = '<div style="color:#ff6b6b;padding:40px;text-align:center;font-size:14px;"><h2>鈿狅笍 Three.js 鍔犺浇澶辫触</h2><p>璇锋鏌ョ綉缁滆繛鎺ワ紙闇€瑕佽闂?unpkg.com 鎴?jsdelivr.net锛?/p><p style="margin-top:20px;font-size:12px;color:#a0a0c0;">澶囩敤鏂规锛氳浣跨敤鏈湴瀹夎鏂瑰紡鎴栨鏌?CDN 鍙敤鎬?/p></div>';
+                console.error('THREE.js 未加载！CDN 失败');
+                container.innerHTML = '<div style="color:#ff6b6b;padding:40px;text-align:center;font-size:14px;"><h2>⚠️ Three.js 加载失败</h2><p>请检查网络连接（需要访问 unpkg.com 或 jsdelivr.net）</p><p style="margin-top:20px;font-size:12px;color:#a0a0c0;">备用方案：请使用本地安装方式或检查 CDN 可用性</p></div>';
                 return;
             }
             
             if (typeof THREE.OrbitControls === 'undefined') {
-                console.warn('OrbitControls 鏈姞杞斤紝灏嗕娇鐢ㄥ熀纭€鎺у埗');
+                console.warn('OrbitControls 未加载，将使用基础控制');
                 THREE.OrbitControls = function() {
                     return { update: function() {}, reset: function() {}, autoRotate: false };
                 };
             }
             
-            console.log('寮€濮嬪垵濮嬪寲 Three.js 鍦烘櫙...');
+            console.log('开始初始化 Three.js 场景...');
             
-            // 鍦烘櫙
+            // 场景
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0f0f1e);
             
-            // 鐩告満
+            // 相机
             camera = new THREE.PerspectiveCamera(
                 60,
                 window.innerWidth / window.innerHeight,
@@ -501,49 +512,56 @@
             );
             camera.position.set(30, 20, 30);
             
-            // 娓叉煋鍣?            renderer = new THREE.WebGLRenderer({ antialias: true });
+            // 渲染器
+            renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(window.devicePixelRatio);
             container.appendChild(renderer.domElement);
             
-            // 鎺у埗鍣?            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            // 控制器
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
             controls.enableDamping = true;
             controls.dampingFactor = 0.05;
             controls.autoRotate = true;
             controls.autoRotateSpeed = 0.5;
             
-            // 鍧愭爣杞?            axesHelper = new THREE.AxesHelper(20);
+            // 坐标轴
+            axesHelper = new THREE.AxesHelper(20);
             scene.add(axesHelper);
             
-            // 鍏夌収
+            // 光照
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
             
-            // 鍒濆鍖栨寕璋烽泦鍚?            kakeya = new DiscreteKakeya(16, 8);
+            // 初始化挂谷集合
+            kakeya = new DiscreteKakeya(16, 8);
             updateVisualization();
             
-            // 浜嬩欢鐩戝惉
+            // 事件监听
             setupEventListeners();
             
-            // 娓叉煋寰幆
+            // 渲染循环
             animate();
         }
         
         // ============================================================
-        // 鍙鍖栨洿鏂?        // ============================================================
+        // 可视化更新
+        // ============================================================
         
         function updateVisualization() {
-            // 娓呴櫎鏃х殑绾挎
+            // 清除旧的线段
             if (lineSegments) {
                 scene.remove(lineSegments);
                 lineSegments.geometry.dispose();
                 lineSegments.material.dispose();
             }
             
-            // 鐢熸垚鏂扮殑鏂瑰悜闆?            const directions = kakeya.generateDirections();
+            // 生成新的方向集
+            const directions = kakeya.generateDirections();
             const opacity = parseInt(document.getElementById('opacity').value) / 100;
             
-            // 鍒涘缓绾挎鍑犱綍浣?            const geometry = new THREE.BufferGeometry();
+            // 创建线段几何体
+            const geometry = new THREE.BufferGeometry();
             const positions = [];
             const colors = [];
             
@@ -561,7 +579,7 @@
             geometry.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
             geometry.setAttribute('color', new THREE.Float32BufferAttribute(colors, 3));
             
-            // 鏉愯川
+            // 材质
             const material = new THREE.LineBasicMaterial({
                 vertexColors: true,
                 transparent: true,
@@ -572,7 +590,7 @@
             lineSegments = new THREE.LineSegments(geometry, material);
             scene.add(lineSegments);
             
-            // 鏇存柊淇℃伅闈㈡澘
+            // 更新信息面板
             updateInfoPanel();
         }
         
@@ -585,7 +603,7 @@
             document.getElementById('info-lwe').textContent = info.lwe;
             document.getElementById('info-status').textContent = info.security;
             
-            // 鏍规嵁瀹夊叏绛夌骇鏀瑰彉棰滆壊
+            // 根据安全等级改变颜色
             const statusEl = document.getElementById('info-status');
             if (info.dimension >= 128) {
                 statusEl.style.color = '#00ff88';
@@ -597,11 +615,11 @@
         }
         
         // ============================================================
-        // 浜嬩欢鐩戝惉
+        // 事件监听
         // ============================================================
         
         function setupEventListeners() {
-            // 缁村害婊戝潡
+            // 维度滑块
             document.getElementById('dimension').addEventListener('input', (e) => {
                 const value = parseInt(e.target.value);
                 document.getElementById('dimension-value').textContent = value;
@@ -609,14 +627,16 @@
                 updateVisualization();
             });
             
-            // 鍒嗚鲸鐜囨粦鍧?            document.getElementById('resolution').addEventListener('input', (e) => {
+            // 分辨率滑块
+            document.getElementById('resolution').addEventListener('input', (e) => {
                 const value = parseInt(e.target.value);
                 document.getElementById('resolution-value').textContent = value;
                 kakeya.resolution = value;
                 updateVisualization();
             });
             
-            // 閫忔槑搴︽粦鍧?            document.getElementById('opacity').addEventListener('input', (e) => {
+            // 透明度滑块
+            document.getElementById('opacity').addEventListener('input', (e) => {
                 const value = parseInt(e.target.value);
                 document.getElementById('opacity-value').textContent = value + '%';
                 if (lineSegments) {
@@ -624,22 +644,23 @@
                 }
             });
             
-            // 鑷姩鏃嬭浆
+            // 自动旋转
             document.getElementById('autoRotate').addEventListener('change', (e) => {
                 controls.autoRotate = e.target.checked;
             });
             
-            // 鏄剧ず鍧愭爣杞?            document.getElementById('showAxes').addEventListener('change', (e) => {
+            // 显示坐标轴
+            document.getElementById('showAxes').addEventListener('change', (e) => {
                 axesHelper.visible = e.target.checked;
             });
             
-            // 閲嶇疆瑙嗚
+            // 重置视角
             document.getElementById('resetCamera').addEventListener('click', () => {
                 camera.position.set(30, 20, 30);
                 controls.reset();
             });
             
-            // 瀵煎嚭 SVG 鎴浘
+            // 导出 SVG 截图
             document.getElementById('exportSVG').addEventListener('click', () => {
                 const d = kakeya.dimension;
                 const res = kakeya.resolution;
@@ -662,8 +683,8 @@
   <image x="0" y="0" width="${w}" height="${h}" xlink:href="${pngDataUrl}" />
   <rect x="0" y="${h}" width="${w}" height="56" fill="#0f0f1e" />
   <line x1="0" y1="${h}" x2="${w}" y2="${h}" stroke="#3a3a5a" stroke-width="1" />
-  <text x="12" y="${h + 22}" class="title">FIBEMATE 鎸傝胺闆嗗悎 鈥?d=${d} 路 ${lines.toLocaleString()} 绾挎 路 BKZ ${info.bkz}</text>
-  <text x="12" y="${h + 42}" fill="#8b949e" font-size="11">鍒嗚鲸鐜?${res}/缁?路 LWE 澶嶆潅搴?${info.lwe} 路 ${now} UTC</text>
+  <text x="12" y="${h + 22}" class="title">FIBEMATE 挂谷集合 — d=${d} · ${lines.toLocaleString()} 线段 · BKZ ${info.bkz}</text>
+  <text x="12" y="${h + 42}" fill="#8b949e" font-size="11">分辨率 ${res}/维 · LWE 复杂度 ${info.lwe} · ${now} UTC</text>
 </svg>`;
 
                 const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
@@ -676,7 +697,7 @@
                 console.log('SVG exported:', a.download, (blob.size / 1024).toFixed(0) + ' KB');
             });
             
-            // 绐楀彛澶у皬璋冩暣
+            // 窗口大小调整
             window.addEventListener('resize', () => {
                 camera.aspect = window.innerWidth / window.innerHeight;
                 camera.updateProjectionMatrix();
@@ -685,7 +706,7 @@
         }
         
         // ============================================================
-        // 娓叉煋寰幆
+        // 渲染循环
         // ============================================================
         
         function animate() {
@@ -694,22 +715,21 @@
             renderer.render(scene, camera);
         }
         
-        // 鍚姩
+        // 启动
         if (document.readyState === 'loading') {
             document.addEventListener('DOMContentLoaded', init);
         } else {
-            // DOM 宸茬粡灏辩华锛岀洿鎺ュ垵濮嬪寲
+            // DOM 已经就绪，直接初始化
             init();
         }
         
-        // 鏈€缁堜繚闅滐細濡傛灉 5 绉掑悗浠嶆湭鍒濆鍖栵紝寮哄埗灏濊瘯
+        // 最终保障：如果 5 秒后仍未初始化，强制尝试
         setTimeout(function() {
             if (typeof scene === 'undefined' && typeof THREE !== 'undefined') {
-                console.warn('5 绉掕秴鏃舵湭鍒濆鍖栵紝寮哄埗璋冪敤 init()');
+                console.warn('5 秒超时未初始化，强制调用 init()');
                 init();
             }
         }, 5000);
     </script>
 </body>
 </html>
-
