@@ -35,6 +35,10 @@
   // ============ Hex / Bytes utilities ============
   function hexPad(s) { return s.length % 2 ? '0' + s : s; }
   function bi2hex(x) { return hexPad(x.toString(16)); }
+  function bi2hex256(x) {
+    const s = x.toString(16);
+    return s.length >= 64 ? s : '0'.repeat(64 - s.length) + s;
+  }
   function hex2bi(s) { return BigInt('0x' + s); }
 
   function hexToBytes(hex) {
@@ -204,7 +208,7 @@
   }
 
   // ============ Public Key Serialization ============
-  function pk2hex(pk) { return '04' + bi2hex(pk.x) + bi2hex(pk.y); }
+  function pk2hex(pk) { return '04' + bi2hex256(pk.x) + bi2hex256(pk.y); }
 
   function hex2pk(hex) {
     if (!hex.startsWith('04') || hex.length !== 130) throw new Error('Invalid public key hex');
@@ -296,7 +300,7 @@
     } while (isInf(C1));
 
     const kPB = pointMul(k, PB);
-    const keyHex = bi2hex(kPB.x);
+    const keyHex = bi2hex256(kPB.x);  // FIX: zero-pad to 256-bit width
     const key = hexToBytes(keyHex);
     const pt = new TextEncoder().encode(plaintext);
     const ct = new Uint8Array(pt.length);
@@ -308,7 +312,7 @@
     const d = typeof privateKey === 'bigint' ? privateKey : hex2bi(privateKey);
     const C1 = hex2pk(c1Hex);
     const dC1 = pointMul(d, C1);
-    const key = hexToBytes(bi2hex(dC1.x));
+    const key = hexToBytes(bi2hex256(dC1.x));  // FIX: zero-pad to 256-bit width
     const ct = hexToBytes(c2Hex);
     const pt = new Uint8Array(ct.length);
     for (let i = 0; i < ct.length; i++) pt[i] = ct[i] ^ key[i % key.length];

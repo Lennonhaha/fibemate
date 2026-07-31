@@ -314,10 +314,20 @@ function hexPad(s) { return s.length % 2 ? '0' + s : s; }
 
 function bi2hex(x) { return hexPad(x.toString(16)); }
 
+/**
+ * Zero-pad a BigInt to N hex chars (full 256-bit width for SM2 field elements).
+ * Without this, leading-zero values produce shorter hex strings, causing
+ * encrypt/decrypt key length mismatch in XOR-based KDF and ~0.4% decrypt failures.
+ */
+function bi2hex256(x) {
+    const s = x.toString(16);
+    return s.length >= 64 ? s : '0'.repeat(64 - s.length) + s;
+}
+
 function hex2bi(s) { return BigInt('0x' + s); }
 
 function pk2hex(pk) {
-    return '04' + bi2hex(pk.x) + bi2hex(pk.y);
+    return '04' + bi2hex256(pk.x) + bi2hex256(pk.y);
 }
 
 // ============ Signature (SM2) ============
@@ -399,7 +409,7 @@ function encrypt(pubHex, plaintext) {
     } while (isInf(C1));
 
     const kPB = pointMul(k, PB);
-    const keyHex = bi2hex(kPB.x);
+    const keyHex = bi2hex256(kPB.x);  // FIX: zero-pad to 256-bit width
     const key = Buffer.from(keyHex, 'hex');
     const pt = Buffer.from(plaintext, 'utf8');
     const ct = Buffer.alloc(pt.length);
@@ -412,7 +422,7 @@ function decrypt(privateKey, c1Hex, c2Hex) {
     const d = typeof privateKey === 'bigint' ? privateKey : hex2bi(privateKey);
     const C1 = makePt(hex2bi(c1Hex.slice(2, 66)), hex2bi(c1Hex.slice(66, 130)));
     const dC1 = pointMul(d, C1);
-    const key = Buffer.from(bi2hex(dC1.x), 'hex');
+    const key = Buffer.from(bi2hex256(dC1.x), 'hex');  // FIX: zero-pad to 256-bit width
     const ct = Buffer.from(c2Hex, 'hex');
     const pt = Buffer.alloc(ct.length);
     for (let i = 0; i < ct.length; i++) pt[i] = ct[i] ^ key[i % key.length];
