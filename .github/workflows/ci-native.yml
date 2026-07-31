@@ -1,4 +1,4 @@
-# Native C Addon CI — ML-KEM-768
+# Native C Addon CI — ML-KEM-768 (Multi-Platform Matrix)
 #
 # Verifies the C addon compiles and works across platforms.
 # Separate from ci.yml which covers JS-level API tests.
@@ -20,9 +20,9 @@ jobs:
   build-native:
     strategy:
       matrix:
-        os: [ubuntu-latest, macos-latest]
+        os: [ubuntu-latest, macos-latest, windows-latest]
         node: [20, 22]
-      fail-fast: false    # don't cancel macos if ubuntu fails
+      fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -37,9 +37,12 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential
 
-      - name: Install build tools (macOS)
-        if: runner.os == 'macOS'
-        run: brew install gcc make
+      - name: Install build tools (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # node-gyp on Windows needs Visual Studio Build Tools (pre-installed on windows-latest)
+          # and Python (also pre-installed). Verify toolchain is available.
+          npm config set msvs_version 2022
 
       - name: npm install (addon deps)
         working-directory: packages/pqc-kem

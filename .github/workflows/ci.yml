@@ -1,12 +1,12 @@
-# FIBEMATE CI Pipeline
+# FIBEMATE CI Pipeline — Multi-Platform Matrix
 #
 # 触发: push / PR to main
 # 覆盖:
-#   - 国密三件套 (SM2/SM3/SM4-GCM) JS↔Python 跨语言验证
-#   - ML-KEM-768 KAT 自验证
-#   - Node.js 单元测试
+#   - 国密三件套 (SM2/SM3/SM4-GCM) 跨平台 JS 验证
+#   - ML-KEM-768 KAT 自验证 (x86: ubuntu/macos/windows)
+#   - Node.js 单元测试 (keccak + fibemate)
 #   - ESLint 静态分析
-#   - 文档检查
+#   - 文档检查 + BOM 检查
 
 name: CI
 permissions: read-all
@@ -19,20 +19,24 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  NODE_VERSION: '18'
 
 jobs:
 
-  # ─── 国密跨语言 KAT 验证 ─────────────────────────────
+  # ─── 国密跨语言 KAT 验证 (JS only, multi-platform) ──
   gm-crossval:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 22]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ matrix.node }}
 
       - name: SM2 sign/verify + encrypt/decrypt (100 vectors)
         run: node scripts/ci-gm-sm2.cjs
@@ -43,16 +47,21 @@ jobs:
       - name: SM4-GCM (30 vectors)
         run: node scripts/ci-gm-sm4.cjs
 
-  # ─── ML-KEM-768 KAT ─────────────────────────────────
+  # ─── ML-KEM-768 KAT (JS only, multi-platform) ───────
   mlkem-kat:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 22]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ matrix.node }}
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -60,16 +69,21 @@ jobs:
       - name: ML-KEM-768 roundtrip + KAT self-validation
         run: node scripts/ci-mlkem-kat.cjs
 
-  # ─── Node.js 单元测试 ───────────────────────────────
+  # ─── Node.js 单元测试 (multi-platform) ──────────────
   node-test:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 22]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ matrix.node }}
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -79,16 +93,16 @@ jobs:
           node test/test-keccak.js
           node test/test-fibemate.js
 
-  # ─── ESLint 静态分析 ─────────────────────────────────
+  # ─── ESLint 静态分析 (single platform, lint only) ────
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22'
 
       - name: Install ESLint
         run: npm install --no-save eslint @eslint/js
@@ -96,39 +110,37 @@ jobs:
       - name: Run ESLint
         run: npx eslint packages/pqc-kem/src/ test/ --max-warnings 150
 
-  # ─── 文档检查 ───────────────────────────────────────
+  # ─── 文档检查 (single platform) ─────────────────────
   docs-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22'
 
       - name: Check markdown formatting
         run: |
           npx --yes markdownlint-cli@0.40.0 \
             --disable MD013 MD033 MD041 MD046 \
-            README.md CONTRIBUTING.md BUILD.md *.md docs/*.md 2>/dev/null || true
+            README.md CONTRIBUTING.md BUILD.md docs/*.md 2>/dev/null || true
 
       - name: Check dead links in docs
         run: |
-          npx --yes markdown-link-check@3.12.2 README.md 2>/dev/null || true
+          npx --yes markdown-link-check@3.12.2 README.md docs/*.md 2>/dev/null || true
 
-  # 鈹€鈹€鈹€ UTF-8 BOM check 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
-  # PowerShell on Chinese Windows mis-decodes UTF-8 BOM files as GBK, showing
-  # garbled text. Repo convention is plain UTF-8 (no BOM) for all source files.
+  # ─── UTF-8 BOM check (single platform) ──────────────
   bom-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22'
 
       - name: Scan tracked text files for UTF-8 BOM
         run: node scripts/check-bom.cjs
