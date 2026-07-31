@@ -1,0 +1,35 @@
+﻿<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>THREE.js Test</title><style>
+body{background:#0a0a14;color:#0f0;font:14px monospace;padding:2rem}
+.ok{color:#0f0}.err{color:#f44}
+</style></head><body>
+<h1>Three.js r128 诊断</h1>
+<div id="log"></div>
+<script>
+var log=document.getElementById("log");
+function out(s,c){var d=document.createElement("div");d.className=c||"";d.textContent=s;log.appendChild(d)}
+
+out("1. 等待 three.min.js 加载...");
+</script>
+<script src="lib/three.min.js"></script>
+<script>
+if(typeof THREE!=="undefined")out("✅ THREE 全局对象存在","ok");else{out("❌ THREE 未定义","err")}
+if(typeof THREE.Scene==="function")out("✅ THREE.Scene 可用","ok");else{out("❌ THREE.Scene 不可用","err")}
+out("REVISION: "+(THREE.REVISION||"未找到"));
+</script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+if(typeof THREE.OrbitControls==="function")out("✅ THREE.OrbitControls 可用","ok");else{out("❌ OrbitControls 不可用","err")}
+
+try{
+  var scene=new THREE.Scene();
+  var cam=new THREE.PerspectiveCamera(60,1,0.1,100);
+  var r=new THREE.WebGLRenderer({antialias:true});
+  r.setSize(100,100);
+  document.body.appendChild(r.domElement);
+  r.render(scene,cam);
+  var ctx=r.getContext();
+  out("✅ WebGL 渲染成功","ok");
+  out("WebGL 版本: "+ctx.getParameter(ctx.VERSION).substring(0,80)+"...");
+}catch(e){out("❌ 渲染失败: "+e.message,"err")}
+</script></body></html>
