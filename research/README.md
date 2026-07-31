@@ -1,4 +1,4 @@
-﻿# FIBEMATE Research Archive
+# FIBEMATE Research Archive
 
 本目录包含 FIBEMATE 的**探索性研究代码**，与 production 加密主干（ML-KEM-768 / SLH-DSA / SM2）**完全隔离**。
 

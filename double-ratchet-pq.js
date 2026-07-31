@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-License-Identifier: GPL-3.0-only
 // ============================================================
 // FIBEMATE Hybrid Double Ratchet 鈥?Post-Quantum Edition
 // ML-KEM-768 (NIST FIPS 203) + P-256 Double Ratchet

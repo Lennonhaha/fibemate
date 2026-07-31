@@ -116,3 +116,19 @@ jobs:
       - name: Check dead links in docs
         run: |
           npx --yes markdown-link-check@3.12.2 README.md 2>/dev/null || true
+
+  # 鈹€鈹€鈹€ UTF-8 BOM check 鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€鈹€
+  # PowerShell on Chinese Windows mis-decodes UTF-8 BOM files as GBK, showing
+  # garbled text. Repo convention is plain UTF-8 (no BOM) for all source files.
+  bom-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Scan tracked text files for UTF-8 BOM
+        run: node scripts/check-bom.cjs

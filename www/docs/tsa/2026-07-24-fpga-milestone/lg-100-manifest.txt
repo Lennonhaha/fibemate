@@ -1,4 +1,4 @@
-﻿lg-100: FPGA UART debug working on A7-Lite — v5_n19 bitstream verified
+lg-100: FPGA UART debug working on A7-Lite — v5_n19 bitstream verified
 Date: 2026-07-24
 Commit: fd743065a10e11c00aeb0bb33d3d7555532bd65d
 Files:

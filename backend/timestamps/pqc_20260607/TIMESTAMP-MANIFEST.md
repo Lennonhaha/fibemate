@@ -1,4 +1,4 @@
-﻿# FIBEMATE PQC Validation Tests — Timestamp Attestation
+# FIBEMATE PQC Validation Tests — Timestamp Attestation
 # DigiCert TSA (RFC 3161) — SHA-256
 # Generated: 2026-06-06 18:22:35 UTC
 # Prior unit test timestamps: backend/timestamps/TIMESTAMP-MANIFEST.md

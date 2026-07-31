@@ -1,10 +1,20 @@
-* text=auto eol=lf
-*.html text eol=lf
-*.md text eol=lf
-*.js text eol=lf
-*.json text eol=lf
-*.sh text eol=lf
-*.tcl text eol=lf
+# FIBEMATE .gitattributes
+#
+# Encoding convention: all text files MUST be plain UTF-8 (NO BOM).
+# Reason: PowerShell on Chinese Windows mis-decodes BOM files as GBK,
+#         showing garbled text. Use:
+#   - Node.js: fs.writeFileSync(path, content, 'utf8')  -- no BOM
+#   - VS Code: "files.encoding": "utf8"                -- no BOM
+#   - PowerShell: Set-Content -Encoding UTF8NoBOM      -- no BOM
+# Enforcement: scripts/check-bom.cjs (pre-commit + CI)
+#
+* text=auto eol=lf working-tree-encoding=UTF-8
+*.html text eol=lf working-tree-encoding=UTF-8
+*.md text eol=lf working-tree-encoding=UTF-8
+*.js text eol=lf working-tree-encoding=UTF-8
+*.json text eol=lf working-tree-encoding=UTF-8
+*.sh text eol=lf working-tree-encoding=UTF-8
+*.tcl text eol=lf working-tree-encoding=UTF-8
 *.png binary
 *.jpg binary
 *.wasm binary

@@ -1,4 +1,4 @@
-﻿# FIBEMATE Test Code Timestamp Attestation
+# FIBEMATE Test Code Timestamp Attestation
 # DigiCert TSA (RFC 3161) — SHA-256
 # Generated: 2026-06-06 01:39 CST (2026-06-05 17:39 UTC)
 

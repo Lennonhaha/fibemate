@@ -1,4 +1,4 @@
-﻿FIBEMATE Mobile Source Manifest - 2026-07-10
+FIBEMATE Mobile Source Manifest - 2026-07-10
 
 File count: 59
 Modules: ML-KEM-768 keygen, SM2 keygen, OPK pool (X25519 100 keys), SM2 E2E encryption UI

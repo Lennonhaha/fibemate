@@ -1,4 +1,4 @@
-﻿{
+{
   "experiment": "Attack Verification for polyMul/matVecMul",
   "date": "2026-06-04T02:04:00Z",
   "method": "Correlation analysis + direct timing measurement + Wilcoxon test",

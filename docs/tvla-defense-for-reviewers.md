@@ -1,4 +1,4 @@
-﻿# TVLA Evaluation Defense Document
+# TVLA Evaluation Defense Document
 ## For Peer Review Response (ML-KEM-768 Implementation)
 
 **Date**: 2026-06-04  

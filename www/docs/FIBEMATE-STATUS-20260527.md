@@ -1,4 +1,4 @@
-﻿# FIBEMATE v3.0-preview --- 项目状态报告
+# FIBEMATE v3.0-preview --- 项目状态报告
 ## 2026-05-27
 
 ---

@@ -51,3 +51,15 @@ repos:
         language: system
         files: packages/pqc-kem/src/.*\.js$
         pass_filenames: false
+
+  # ─── Local: UTF-8 BOM check ────────────────────────────────
+  # PowerShell on Chinese Windows mis-decodes BOM files as GBK, showing
+  # garbled text. Repo convention is plain UTF-8 (no BOM) for all source files.
+  - repo: local
+    hooks:
+      - id: no-bom
+        name: No UTF-8 BOM in text files
+        entry: node scripts/check-bom.cjs
+        language: system
+        files: \.(js|mjs|cjs|html|md|json|ya?ml|toml|sh|css|txt|tcl|tsv)$
+        pass_filenames: false
