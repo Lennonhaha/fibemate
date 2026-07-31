@@ -21,7 +21,7 @@
 
 > ⚠️ **OpenSSF passing certifies engineering hygiene (CI, docs, license), not cryptographic correctness or security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
 
-**v3.3-preview** · 2026-07-22 · TSR: lg-001~100 (100 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3-preview** · 2026-07-31 · TSR: lg-001~100 (100 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 

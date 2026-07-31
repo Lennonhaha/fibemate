@@ -95,10 +95,10 @@
 
 | # | 待办项 | 状态 |
 |---|--------|:----:|
-| P1-1 | SM2 decrypt 偶发 0.2% 故障定位 | ⚠️ 根因未定位 |
+| P1-1 | SM2 decrypt 偶发 0.2% 故障定位 | ✅ 已修复 (commit 3ead8ab) — bi2hex 零填充导致密钥长度不一致 |
 | P1-2 | SM3/SM4 benchmark 构造方式修复 | ⚠️ 待修 |
-| P1-3 | FPGA UART RX 实板验证 | ⚠️ 需三项硬件数据 |
-| P1-4 | kakeya-visualizer.html 3D 画布空白修复 | ⚠️ Three.js 渲染初始化问题 |
+| P1-3 | FPGA UART RX 实板验证 | ⚠️ RTL 已完成 (commit 1cab774 + 139105a UART 回环集成)，硬件实板待验证 |
+| P1-4 | kakeya-visualizer.html 3D 画布空白修复 | ✅ 已修复 (commit 839b1b5) — </script> 闭合缺失 |
 | P1-5 | 服务器 443 修复脚本执行 | ⚠️ 脚本待审 |
 | P1-6 | 硬件 TVLA ChipWhisperer 实测 | ⏳ 需电平转换器，Q4 目标 |
 | P1-7 | Nginx OpenSSL 3.4 升级（Path A） | ⏳ 待服务器维护窗口 |
@@ -158,7 +158,7 @@
 
 ---
 
-> **上次更新**：2026-07-29 11:16 CST
+> **上次更新**：2026-07-31 11:16 CST
 > **下一步优先**：
 > 1. FPGA UART RX 实板验证（需确认引脚 + 烧录正确 bit）
 > 2. SM2 0.2% 偶发故障定位
