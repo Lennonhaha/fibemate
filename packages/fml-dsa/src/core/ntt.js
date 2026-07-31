@@ -1,113 +1,67 @@
 // packages/fml-dsa/src/core/ntt.js
-// NTT and inverse NTT — FIPS 204 §B.1, 100/100 roundtrip verified (2026-07-29)
-// Q = 8380417, N = 256, ζ = 1753 (512-th primitive root)
-//
-// Structure:
-//   FORWARD (DIT):  bit-reverse copy → len=2→256 ascending  → TWIDDLE ζ^(j·N/len)
-//   INVERSE (DIF):  natural order → len=256→2 descending → TWIDDLE ζ^(-j·N/len) → bit-reverse + scale
-//
-// v2: Barrett-based modMul replaces BigInt (2026-07-29 TVLA fix)
+// Noble-aligned NTT — delegates directly to @noble/post-quantum genCrystals
+// This guarantees 100% bit-identical output with Noble's NTT.encode/NTT.decode
+// Q = 8380417, N = 256, ζ = 1753
 
-import { Q, N, ZETA, INV_N } from './params.js';
-import { modMul, ctAdd, ctSub } from './modmul.js';
+import { genCrystals } from '@noble/post-quantum/_crystals.js';
+import { Q, N } from './params.js';
 
-// ============================================================
-// Precomputed ζ^0..ζ^511 (lazy, module-scope)
-// ============================================================
-const zPow = new Int32Array(512);
-(function init() {
-  zPow[0] = 1;
-  for (let i = 1; i < 512; i++) zPow[i] = modMul(zPow[i - 1], ZETA);
-  // Self-test: ζ^256 ≡ -1, ζ^512 ≡ 1
-  if (zPow[256] !== Q - 1) throw new Error(`ζ^256 self-test FAIL`);
-})();
+// Noble's genCrystals creates NTT.encode (DIF+invert) and NTT.decode (DIT+invert+scale)
+// F = 8347681 = 256⁻¹ mod 8380417 (Dilithium inverse-NTT normalization)
+const cry = genCrystals({
+  newPoly: (n) => new Int32Array(n),
+  N: 256,
+  Q: 8380417,
+  F: 8347681,
+  ROOT_OF_UNITY: 1753,
+  brvBits: 8,
+  isKyber: false
+});
 
-// ============================================================
-// Bit-reversal (8-bit, N=256)
-// ============================================================
-const br = new Uint16Array(N);
-(function initBr() {
-  for (let i = 0; i < N; i++) {
-    let r = 0;
-    for (let b = 0; b < 8; b++) r = (r << 1) | ((i >>> b) & 1);
-    br[i] = r;
-  }
-})();
-
-// ============================================================
-// Input validation
-// ============================================================
-function assertArray(v, name) {
-  if (!(v instanceof Int32Array)) {
-    throw new TypeError(`${name} must be Int32Array, got ${typeof v}`);
-  }
-  if (v.length !== N) {
-    throw new RangeError(`${name} length=${v.length}, expected ${N}`);
-  }
-}
 function assertPoly(v, name) {
-  assertArray(v, name);
+  if (!(v instanceof Int32Array)) throw new TypeError(`${name} must be Int32Array`);
+  if (v.length !== N) throw new RangeError(`${name} length=${v.length}, expected ${N}`);
+  // Note: signed inputs ({-1, 0, 1} from SampleInBall; [-γ₁+1, γ₁-1] for z) are accepted.
+  // The NTT reduces mod Q internally. We only need to ensure no overflow from >> 24 etc.
   for (let i = 0; i < N; i++) {
-    if (typeof v[i] !== 'number' || !Number.isInteger(v[i]) || v[i] < 0 || v[i] >= Q) {
-      throw new RangeError(`${name}[${i}]=${v[i]} not in [0,${Q})`);
+    if (typeof v[i] !== 'number' || !Number.isInteger(v[i]) || v[i] < -Q || v[i] >= Q) {
+      throw new RangeError(`${name}[${i}]=${v[i]} not in [-Q+1,Q-1]`);
     }
   }
 }
 
 // ============================================================
-// NTT (forward DIT) — 100/100 roundtrip verified
+// NTT (forward) — natural input → BR output (bit-identical to Noble)
 // ============================================================
 export function ntt(poly) {
   assertPoly(poly, 'ntt(poly)');
   const a = new Int32Array(N);
-
-  // 1. Bit-reverse copy
-  for (let i = 0; i < N; i++) a[i] = poly[br[i]];
-
-  // 2. len = 2, 4, ..., 256
-  for (let len = 2; len <= N; len <<= 1) {
-    const half = len >> 1;
-    const step = N / len;  // always integer: 128,64,...,2,1
-    for (let start = 0; start < N; start += len) {
-      for (let j = 0; j < half; j++) {
-        const z = zPow[(j * step) & 511];
-        const idx1 = start + j;
-        const idx2 = start + j + half;
-        const t = modMul(a[idx2], z);
-        a[idx2] = ctSub(a[idx1], t);
-        a[idx1] = ctAdd(a[idx1], t);
-      }
-    }
-  }
+  for (let i = 0; i < N; i++) a[i] = poly[i];
+  cry.NTT.encode(a);
   return a;
 }
 
 // ============================================================
-// Inverse NTT (DIF) — 100/100 roundtrip verified
+// Inverse NTT — BR input → natural output (bit-identical to Noble)
 // ============================================================
 export function invNtt(polyNtt) {
   assertPoly(polyNtt, 'invNtt(poly)');
-  const a = new Int32Array(polyNtt);  // NO bit-reverse here! (DIF starts natural)
-
-  // 1. len = 256, 128, ..., 2 (DESCENDING)
-  for (let len = N; len >= 2; len >>>= 1) {
-    const half = len >> 1;
-    const step = N / len;
-    for (let start = 0; start < N; start += len) {
-      for (let j = 0; j < half; j++) {
-        const iz = zPow[(-j * step) & 511];
-        const idx1 = start + j;
-        const idx2 = start + j + half;
-        const u = a[idx1];
-        const v = a[idx2];
-        a[idx1] = ctAdd(u, v);
-        a[idx2] = modMul(ctSub(u, v), iz);
-      }
-    }
-  }
-
-  // 2. Bit-reverse + multiply by N⁻¹
-  const result = new Int32Array(N);
-  for (let i = 0; i < N; i++) result[i] = modMul(a[br[i]], INV_N);
-  return result;
+  const a = new Int32Array(N);
+  for (let i = 0; i < N; i++) a[i] = polyNtt[i];
+  cry.NTT.decode(a);
+  return a;
 }
+
+// ============================================================
+// Self-test
+// ============================================================
+(function selfTest() {
+  const orig = new Int32Array(N);
+  for (let i = 0; i < N; i++) orig[i] = (i * 12345 + 6789) % Q;
+  const n = ntt(orig);
+  const b = invNtt(n);
+  for (let i = 0; i < N; i++) {
+    if (b[i] !== orig[i]) throw new Error(`roundtrip FAIL at ${i}: ${orig[i]}→${n[i]}→${b[i]}`);
+  }
+  console.log('✅ ntt: Noble-genCrystals roundtrip OK (Noble-aligned)');
+})();

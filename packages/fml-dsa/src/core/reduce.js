@@ -7,11 +7,18 @@ import { Q } from './params.js';
 
 // ══════════════════════════════════════════════
 // Power2Round: r = r1·2^d + r0
-// FIPS 204 Algorithm 2
+// FIPS 204 Algorithm 2 — r0 ∈ [-2^(d-1), 2^(d-1)-1] (centered mod±)
 // ══════════════════════════════════════════════
 export function power2Round(r, d) {
-  const mod2d = (1 << d) - 1;
-  const r0 = r & mod2d;
+  const two_d = 1 << d;
+  const half = two_d >> 1;
+  const mask = two_d - 1;
+  
+  // mod± 2^d: unsigned bits → centered
+  let r0 = r & mask;
+  if (r0 > half - 1) r0 -= two_d;
+  
+  // r1 = (r - r0) / 2^d   (r0 is signed, r is unsigned mod-Q)
   const r1 = (r - r0) >> d;
   return [r1, r0];
 }
@@ -24,27 +31,27 @@ export function power2RoundML(r) {
 }
 
 // ══════════════════════════════════════════════
-// Decompose: r = r1·2γ₂ + r0 (mod Q)
-// Internal: returns raw (r1, r0); r1 ∈ ℤ (may be negative)
+// Decompose: r = r1·2γ₂ + r0  (mod Q, r in [0,Q))
+// FIPS 204 Algorithm 3 — r0 ∈ (-γ₂, γ₂], r1 ∈ [0, m-1]
 // ══════════════════════════════════════════════
-// FIPS 204 Algorithm 3 (correct — with q-1 special case)
 function _decompose(r, gamma2) {
-  r = ((r % Q) + Q) % Q;                 // Step 1: r ← r mod⁺ q
+  // Step 1: ensure r ∈ [0, Q)
+  r = ((r % Q) + Q) % Q;
   const twoG2 = 2 * gamma2;
-  const alpha = twoG2;
-  const halfAlpha = gamma2;               // α/2 = γ₂
+  const m = Math.floor((Q - 1) / twoG2);
 
-  // Step 2: r₀ ← r mod± α  (centered modulo, output ∈ (-α/2, α/2])
-  let r0 = r % alpha;
-  if (r0 > halfAlpha)       r0 -= alpha;  // bring into (-α/2, α/2]
-  else if (r0 <= -halfAlpha) r0 += alpha; // (boundary: ≤ -γ₂ is out of range)
+  // Step 2: r0 = r mod± (2γ₂)  — centered around 0, ∈ (-γ₂, γ₂]
+  let r0 = r % twoG2;
+  if (r0 > gamma2)        r0 -= twoG2;
+  else if (r0 <= -gamma2) r0 += twoG2;
 
-  // Step 3-5: handle Q-1 boundary
-  if (r - r0 === Q - 1) {
-    return [0, r0 - 1];
-  }
-  // Step 7: r₁ ← (r - r₀) / α
-  return [(r - r0) / alpha, r0];
+  // Steps 3-6: Q-1 boundary case (r - r0 may equal Q-1, which means r1=m)
+  if (r - r0 === Q - 1) return [0, r0 - 1];
+
+  // Step 7: r1 = (r - r0) / (2γ₂).  Normalize into [0, m)
+  let r1 = (r - r0) / twoG2;
+  r1 = ((r1 % m) + m) % m;
+  return [r1, r0];
 }
 
 // Public: returns [r1, r0] where r1 ∈ [0, m-1], r0 ∈ (-γ₂, γ₂]
@@ -71,6 +78,18 @@ export function makeHint(z, r, gamma2) {
   return highBits(r + z, gamma2) !== highBits(r, gamma2) ? 1 : 0;
 }
 
+// Dilithium-style MakeHint (Noble-compatible, FIPS 204 §6.2 alternative):
+//   Caller passes (r0_transformed, w1) where r0_transformed = LowBits(w - cs2) + ct0
+//   and w1 = HighBits(w). This is the "transformed state" referenced in FIPS 204 §6.2
+//   and is what the Dilithium reference implementation (and Noble) uses internally.
+//   Equivalent to Algorithm 39 for valid inputs but produces identical hints to Noble.
+export function makeHintDilithium(z, r, gamma2) {
+  if (z <= gamma2) return 0;
+  if (z > Q - gamma2) return 0;
+  if (z === Q - gamma2 && r === 0) return 0;
+  return 1;
+}
+
 export function makeHintVec(ct0, w_cs2, gamma2) {
   const hints = new Int32Array(ct0.length);
   for (let i = 0; i < ct0.length; i++) {
@@ -86,19 +105,17 @@ export function makeHintVec(ct0, w_cs2, gamma2) {
 export function useHint(h, r, gamma2) {
   const twoG2 = 2 * gamma2;
   const m = Math.floor((Q - 1) / twoG2);
-  const [r1, r0] = _decompose(r, gamma2);
-  // r1 here is the raw integer quotient (may equal m or be negative)
-  // Normalize to [0, m-1] for the wrapping logic
-  const r1m = ((r1 % m) + m) % m;
+  let [r1, r0] = _decompose(r, gamma2);
+  // r1 is already in [0, m) from fixed _decompose
 
   if (h === 1) {
     // FIPS 204 Algorithm 11:
     //   if r0 > 0 → (r1 + 1) mod⁺ m
     //   else  r0 ≤ 0 → (r1 - 1) mod⁺ m
-    if (r0 > 0) return (r1m + 1) % m;
-    return (r1m - 1 + m) % m;
+    if (r0 > 0) return (r1 + 1) % m;
+    return (r1 - 1 + m) % m;
   }
-  return r1m;
+  return r1;
 }
 
 // ══════════════════════════════════════════════
@@ -128,10 +145,11 @@ export function vecInfNormLt(zVec, gamma1, beta) {
   const gamma2 = (Q - 1) / 32; // 261888
   const twoG2 = 2 * gamma2;
 
-  // 1. power2Round
+  // 1. power2Round — centred r0 ∈ [-2^(d-1), 2^(d-1)-1]
+  const halfD = _2D >> 1;
   for (let r = 0; r < 10000; r++) {
     const [r1, r0] = power2Round(r, D);
-    if (r0 < 0 || r0 >= _2D || r1 * _2D + r0 !== r) { ok = false; break; }
+    if (r0 < -halfD || r0 >= halfD || r1 * _2D + r0 !== r) { ok = false; console.log(`FAIL power2Round: r=${r} r1=${r1} r0=${r0}`); break; }
   }
   if (ok) console.log(`  PASS power2Round 10000x`);
 
@@ -139,7 +157,11 @@ export function vecInfNormLt(zVec, gamma1, beta) {
   for (let i = 0; i < 1000; i++) {
     const r = Math.floor(Math.random() * Q);
     const [r1, r0] = decompose(r, gamma2);
-    if (((r1 * twoG2 + r0 - r) % Q + Q) % Q !== 0) { ok = false; break; }
+    if (((r1 * twoG2 + r0 - r) % Q + Q) % Q !== 0) {
+      ok = false;
+      console.log(`  FAIL Decompose roundtrip: r=${r} r1=${r1} r0=${r0} r1*α+r0=${r1*twoG2+r0}`);
+      break;
+    }
   }
   if (ok) console.log(`  PASS Decompose 1000x roundtrip`);
 
@@ -176,7 +198,7 @@ export function vecInfNormLt(zVec, gamma1, beta) {
 
   // 6. Edge: Power2Round(Q-1)
   const [h1, l1] = power2Round(Q - 1, D);
-  if (h1 < 0 || l1 < 0 || l1 >= _2D) { ok = false; }
+  if (l1 < -halfD || l1 >= halfD) { ok = false; console.log(`FAIL power2Round(Q-1): r1=${h1} r0=${l1}`); }
   if (ok) console.log(`  PASS power2Round(Q-1)`);
 
   if (ok) console.log(`✅ reduce: self-tests passed`);

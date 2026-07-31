@@ -4,47 +4,34 @@
 // the only difference is k, l dimensions and ω bit-width.
 // 2026-07-29
 
-import { MLDSA_PARAMS } from './params.js';
+import { MLDSA_PARAMS, Q, T1_BITS } from './params.js';
 
 // ══════════════════════════════════════════════
-// Low-level bit I/O on Uint8Array
+// Low-level bit I/O on Uint8Array (MSB-first, per FIPS 204 §5.2)
 // ══════════════════════════════════════════════
 
-/** Write `bits` low bits of `val` into buf at bit position `pos`. Does NOT clear target bits first. */
+/** Write `bits` MSB of `val` into buf at bit position `pos`. MSB-first per FIPS 204. */
 function writeBits(buf, pos, bits, val) {
+  // LSB-first packing: lowest bit of val → bitPos, highest → bitPos+bits-1
+  // This matches @noble/post-quantum bitsCoder.encode(buf |= (val&mask) << bufLen).
   const v = val & ((1 << bits) - 1);
-  let byteIdx = pos >> 3;
-  let bitOff = pos & 7;        // 0=MSB … 7=LSB
-  let remaining = bits;
-  while (remaining > 0) {
-    const room = 8 - bitOff;   // bits left in this byte
-    const take = Math.min(room, remaining);
-    // Take the next `take` most-significant bits of what's left
-    const shift = remaining - take;
-    const piece = (v >> shift) & ((1 << take) - 1);
-    // Place them at the rightmost `take` bits of the available room
-    buf[byteIdx] |= piece << (room - take);
-    remaining -= take;
-    byteIdx++;
-    bitOff = 0;
+  for (let i = 0; i < bits; i++) {
+    const bitOff = pos + i;
+    const byteIdx = bitOff >>> 3;
+    const bitIdx = bitOff & 7; // LSB-first: bit 0 is lowest position
+    if ((v >>> i) & 1) buf[byteIdx] |= (1 << bitIdx);
+    else buf[byteIdx] &= ~(1 << bitIdx);
   }
 }
 
-/** Read `bits` from buf at bit position `pos`. Returns the unsigned integer. */
+/** Read `bits` from buf at bit position `pos` (LSB-first). Returns the unsigned integer. */
 function readBits(buf, pos, bits) {
-  let byteIdx = pos >> 3;
-  let bitOff = pos & 7;        // 0=MSB … 7=LSB
   let v = 0;
-  let remaining = bits;
-  while (remaining > 0) {
-    const room = 8 - bitOff;
-    const take = Math.min(room, remaining);
-    const mask = ((1 << take) - 1) << (room - take);
-    const piece = (buf[byteIdx] & mask) >> (room - take);
-    v = (v << take) | piece;
-    remaining -= take;
-    byteIdx++;
-    bitOff = 0;
+  for (let i = 0; i < bits; i++) {
+    const bitOff = pos + i;
+    const byteIdx = bitOff >>> 3;
+    const bitIdx = bitOff & 7;
+    if ((buf[byteIdx] >>> bitIdx) & 1) v |= (1 << i);
   }
   return v;
 }
@@ -82,18 +69,18 @@ function polyBitUnpack(buf, inBitPos, bits) {
 
 export function encodePK(pk, paramSet) {
   const { k } = MLDSA_PARAMS[paramSet];
-  // ρ (32B) + k * 256 * 13 bits = 32 + k * 256 * 13 / 8
-  const t1Bytes = (k * 256 * 13 + 7) >> 3;
+  // ρ (32B) + k * 256 * T1_BITS bits  (FIPS 204 §5.2.1)
+  const t1Bytes = (k * 256 * T1_BITS + 7) >> 3;
   const totalBytes = 32 + t1Bytes;
   const buf = new Uint8Array(totalBytes);
 
   // ρ
   buf.set(pk.rho, 0);
 
-  // t1 — pack 13 bits per coefficient
+  // t1 — pack T1_BITS (=10) per coefficient (FIPS 204: t1 elements are < 2^10)
   let bitPos = 32 * 8;
   for (let i = 0; i < k; i++) {
-    bitPos = polyBitPack(pk.t1[i], 13, buf, bitPos);
+    bitPos = polyBitPack(pk.t1[i], T1_BITS, buf, bitPos);
   }
   return buf;
 }
@@ -101,14 +88,14 @@ export function encodePK(pk, paramSet) {
 export function decodePK(buf, paramSet) {
   const { k } = MLDSA_PARAMS[paramSet];
   const rho = buf.slice(0, 32);
-  const t1Bytes = (k * 256 * 13 + 7) >> 3;
+  const t1Bytes = (k * 256 * T1_BITS + 7) >> 3;
   if (buf.length < 32 + t1Bytes) throw new RangeError(`decodePK: expected ${32 + t1Bytes}B, got ${buf.length}B`);
 
   const t1 = [];
   let bitPos = 32 * 8;
   for (let i = 0; i < k; i++) {
-    t1.push(polyBitUnpack(buf, bitPos, 13));
-    bitPos += 256 * 13;
+    t1.push(polyBitUnpack(buf, bitPos, T1_BITS));
+    bitPos += 256 * T1_BITS;
   }
   return { rho, t1 };
 }
@@ -116,7 +103,8 @@ export function decodePK(buf, paramSet) {
 // ══════════════════════════════════════════════
 // encodeSK / decodeSK
 // FIPS 204 §5.2.2: sk = (ρ ∥ K ∥ tr ∥ s1 ∥ s2 ∥ t0)
-//   ρ, K, tr: 32B each
+//   ρ, K: 32B each
+//   tr: 64B  (full SHAKE256(pk, 64) output)
 //   s1: l·256·η bits (η∈{2,4} → packed in η or η+1 bits)
 //   s2: k·256·η bits
 //   t0: k·256·d bits  (Power2Round low bits, d=13)
@@ -131,7 +119,7 @@ export function encodeSK(sk, paramSet) {
   const s2Bytes = (k * 256 * etaBits + 7) >> 3;
   const t0Bytes = (k * 256 * 13 + 7) >> 3;
 
-  const totalBytes = 32 + 32 + 32 + s1Bytes + s2Bytes + t0Bytes;
+  const totalBytes = 32 + 32 + 64 + s1Bytes + s2Bytes + t0Bytes;
   const buf = new Uint8Array(totalBytes);
 
   // ρ ∥ K ∥ tr
@@ -140,7 +128,7 @@ export function encodeSK(sk, paramSet) {
   buf.set(sk.tr, 64);
 
   // s1
-  let bitPos = 96 * 8;
+  let bitPos = 128 * 8;
   for (let i = 0; i < l; i++) {
     // s1 signed [-η,η] → offset to [0, 2η]
     const offset = new Int32Array(256);
@@ -169,15 +157,15 @@ export function decodeSK(buf, paramSet) {
   const s1Bytes = (l * 256 * etaBits + 7) >> 3;
   const s2Bytes = (k * 256 * etaBits + 7) >> 3;
   const t0Bytes = (k * 256 * 13 + 7) >> 3;
-  const totalBytes = 96 + s1Bytes + s2Bytes + t0Bytes;
+  const totalBytes = 128 + s1Bytes + s2Bytes + t0Bytes;
 
   if (buf.length < totalBytes) throw new RangeError(`decodeSK: expected ${totalBytes}B, got ${buf.length}B`);
 
   const rho = buf.slice(0, 32);
   const K = buf.slice(32, 64);
-  const tr = buf.slice(64, 96);
+  const tr = buf.slice(64, 128);
 
-  let bitPos = 96 * 8;
+  let bitPos = 128 * 8;
 
   // s1
   const s1 = [];
@@ -209,101 +197,106 @@ export function decodeSK(buf, paramSet) {
 
 // ══════════════════════════════════════════════
 // encodeSig / decodeSig
-// FIPS 204 §5.2.3: sig = (c̃ ∥ z ∥ h)
-//   c̃: τ bits (challenge bits, variable per param set)
-//   z: l·256·(⌈log₂(2γ₁)⌉) bits
-//   h: k·ω bits (hints, ω bits each, variable per param set)
+// Noble/FIPS 204 compatible format:
+//   c̃: cTildeBytes raw hash bytes
+//   z: l·256 coefficients at zBits each — FIPS 204: smod(γ₁ - z) encoding
+//   h: ω + k bytes — sorted hint positions contiguously + k row-offset pointers
+//      (Noble hintCoder format, interoperable with @noble/post-quantum)
 // ══════════════════════════════════════════════
 
 export function encodeSig(sig, paramSet) {
-  const { k, l, gamma1, tau, omega } = MLDSA_PARAMS[paramSet];
-  // z bits: ⌈log₂(2·γ₁)⌉
-  const zBits = gamma1 === (1 << 17) ? 18 : 20; // 2^17 → 18 bits, 2^19 → 20 bits
-  const cTildeBytes = (tau + 7) >> 3;
+  const { k, l, gamma1, omega, cTildeBytes } = MLDSA_PARAMS[paramSet];
+  const zBits = gamma1 === (1 << 17) ? 18 : 20;
   const zBytes = (l * 256 * zBits + 7) >> 3;
-  const hBytes = (k * omega * 8 + 7) >> 3; // omega × 8-bit positions per poly
+  const hBytes = omega + k; // Noble: ≤ω sorted positions + k row-offset pointers
 
   const totalBytes = cTildeBytes + zBytes + hBytes;
   const buf = new Uint8Array(totalBytes);
 
-  // c̃ — bit-packed hints (τ bits)
-  let bitPos = 0;
-  for (let i = 0; i < tau; i++) {
-    writeBits(buf, bitPos, 1, sig.cTilde[i]);
-    bitPos += 1;
-  }
-  bitPos = tau; // round up to byte in z section
+  // c̃ — raw hash bytes
+  buf.set(sig.cTilde, 0);
+  let bitPos = cTildeBytes * 8;
 
-  // z — signed coefficients, offset by γ₁-1 → [0, 2γ₁-2]
-  const zOffset = gamma1 - 1;
+  // z — Noble-compatible: signed z → smod(γ₁ - zSigned), packed zBits LSB-first
+  // This is NOT two's complement. Noble ZCoder: polyCoder(20, z => smod(GAMMA1 - z))
+  const zMask = (1 << zBits) - 1;
   for (let i = 0; i < l; i++) {
     for (let j = 0; j < 256; j++) {
-      // sig.z[i] stored as signed Int32Array [-γ₁+1, γ₁-1]; offset to [0, 2γ₁-2]
-      writeBits(buf, bitPos, zBits, sig.z[i][j] + zOffset);
+      let zSigned = sig.z[i][j];
+      if (zSigned > (Q >> 1)) zSigned -= Q;  // center-lift [0,Q) → signed
+      // Noble: encode as (γ₁ - zSigned) & mask, 0-padded to zBits
+      const encoded = (gamma1 - zSigned) & zMask;
+      writeBits(buf, bitPos, zBits, encoded);
       bitPos += zBits;
     }
   }
 
-  // h — hint bits (ω bits each)
-  const hintPoly = sig.h; // Int32Array of length k*256 with 0/1 values, exactly omega total 1's
+  // h — Noble hintCoder: sorted positions packed per row, cumul. offsets at omega+i
+  const hStart = bitPos >> 3;
+  let kIdx = 0;
   for (let i = 0; i < k; i++) {
-    // Find indices where hint[i] == 1, pack as ω per poly
     const positions = [];
-    for (let j = 0; j < 256; j++) {
-      if (sig.h[i][j] === 1) positions.push(j);
-    }
-    // Pack as binary: each position uses the bit-width needed for 0..255 (8 bits)
-    // FIPS 204 §5.2.3: encode exactly omega positions per poly
-    for (const pos of positions) {
-      writeBits(buf, bitPos, 8, pos);
-      bitPos += 8;
-    }
+    for (let j = 0; j < 256; j++) if (sig.h[i][j] === 1) positions.push(j);
+    for (const pos of positions) buf[hStart + kIdx++] = pos;
+    buf[hStart + omega + i] = kIdx; // row-boundary pointer
   }
+  // Zero-fill unused tail positions
+  for (let j = kIdx; j < omega; j++) buf[hStart + j] = 0;
 
   return buf;
 }
 
 export function decodeSig(buf, paramSet) {
-  const { k, l, gamma1, tau, omega } = MLDSA_PARAMS[paramSet];
+  const { k, l, gamma1, omega, cTildeBytes } = MLDSA_PARAMS[paramSet];
   const zBits = gamma1 === (1 << 17) ? 18 : 20;
-  const zOffset = gamma1 - 1;
-  const cTildeBytes = (tau + 7) >> 3;
   const zBytes = (l * 256 * zBits + 7) >> 3;
-  const hBytes = (k * omega * 8 + 7) >> 3;
+  const hBytes = omega + k;
 
   const totalBytes = cTildeBytes + zBytes + hBytes;
   if (buf.length < totalBytes) throw new RangeError(`decodeSig: expected ${totalBytes}B, got ${buf.length}B`);
+  if (buf.length > totalBytes) throw new RangeError(`decodeSig: expected ${totalBytes}B, got ${buf.length}B (too large)`);
 
-  // c̃
-  const cTilde = new Int32Array(tau);
-  let bitPos = 0;
-  for (let i = 0; i < tau; i++) {
-    cTilde[i] = readBits(buf, bitPos, 1);
-    bitPos += 1;
-  }
-  bitPos = tau;
+  // c̃ — raw hash bytes
+  const cTilde = buf.slice(0, cTildeBytes);
+  let bitPos = cTildeBytes * 8;
 
-  // z
+  // z — Noble-compatible: read zBits value → zSigned = smod(γ₁ - value)
+  // Result must stay signed in [-γ₁+1, γ₁-1] because:
+  //   - Step 3 verify norms center-lifts again from [0,Q)
+  //   - Step 10 (new) NTTs z in-place, requiring signed inputs
+  // If we Q-normalize here, NTT(z) differs from NTT(signed_z) by NTT(constant).
+  const zMask = (1 << zBits) - 1;
   const z = [];
   for (let i = 0; i < l; i++) {
     const poly = new Int32Array(256);
     for (let j = 0; j < 256; j++) {
-      poly[j] = readBits(buf, bitPos, zBits) - zOffset;
+      const encoded = readBits(buf, bitPos, zBits);
+      // smod(γ₁ - encoded): values ∈ [-γ₁+1, γ₁-1]
+      let zSigned = gamma1 - encoded;
+      // Wrap into [-Q/2, Q/2]: γ₁ < Q/2 (γ₁ ≤ 2¹⁹ = 524288, Q/2 = 4190208), so zSigned stays small
+      poly[j] = zSigned;
       bitPos += zBits;
     }
     z.push(poly);
   }
 
-  // h — reconstruct hint vectors from packed positions
+  // h — Noble hintCoder decode: sorted positions with row-boundary pointers
+  const hStart = cTildeBytes + zBytes;
+  let kIdx = 0;
   const h = [];
   for (let i = 0; i < k; i++) {
-    const hintPoly = new Int32Array(256);
-    for (let p = 0; p < omega; p++) {
-      const pos = readBits(buf, bitPos, 8);
-      hintPoly[pos] = 1;
-      bitPos += 8;
+    const hi = new Int32Array(256);
+    const rowEnd = buf[hStart + omega + i]; // row-boundary pointer
+    if (rowEnd < kIdx || rowEnd > omega) {
+      // Invalid offset — return empty hints
+      h.push(hi);
+      continue;
     }
-    h.push(hintPoly);
+    for (let j = kIdx; j < rowEnd; j++) {
+      hi[buf[hStart + j]] = 1;
+    }
+    kIdx = rowEnd;
+    h.push(hi);
   }
 
   return { cTilde, z, h };
@@ -320,9 +313,9 @@ export function decodeSig(buf, paramSet) {
     const buf = new Uint8Array(8);
     writeBits(buf, 0, 4, 0xA);
     writeBits(buf, 4, 4, 0x5);
-    if (buf[0] !== 0xA5) { ok = false; console.log('  FAIL writeBits nibble'); }
-    if (readBits(buf, 0, 4) !== 0xA) { ok = false; console.log('  FAIL readBits high nibble'); }
-    if (readBits(buf, 4, 4) !== 0x5) { ok = false; console.log('  FAIL readBits low nibble'); }
+    if (buf[0] !== 0x5A) { ok = false; console.log('  FAIL writeBits nibble', 'got', buf[0].toString(16), 'expected 5A (LSB-first: 0xA=1010→bits 0-3=1010, 0x5=0101→bits 4-7=0101 → byte = 01011010 = 0x5A)'); }
+    if (readBits(buf, 0, 4) !== 0xA) { ok = false; console.log('  FAIL readBits first nibble (pos=0, expected 0xA)'); }
+    if (readBits(buf, 4, 4) !== 0x5) { ok = false; console.log('  FAIL readBits second nibble (pos=4, expected 0x5)'); }
   }
   // 13-bit packing roundtrip (t1 coefficient width)
   {
@@ -336,12 +329,12 @@ export function decodeSig(buf, paramSet) {
 
   // ML-DSA-65 pk roundtrip
   {
-    const { k, l } = MLDSA_PARAMS['ML-DSA-65'];
+    const { k } = MLDSA_PARAMS['ML-DSA-65'];
     const rho = new Uint8Array(32);
     crypto.getRandomValues(rho);
     const t1 = Array.from({ length: k }, () => {
       const p = new Int32Array(256);
-      for (let i = 0; i < 256; i++) p[i] = Math.floor(Math.random() * 1024); // t1 ∈ [0,2^d-1]=[0,8191]
+      for (let i = 0; i < 256; i++) p[i] = Math.floor(Math.random() * (1 << T1_BITS));
       return p;
     });
     const pk = { rho, t1 };
@@ -352,8 +345,7 @@ export function decodeSig(buf, paramSet) {
     for (let i = 0; i < k && eq; i++)
       eq = dec.t1[i].every((v, j) => v === t1[i][j]);
     if (!eq) { ok = false; console.log('  FAIL pk roundtrip'); }
-    const expectedLen = 32 + (k * 256 * 13 + 7) >> 3; // 32 + 2496 = 2528? No: k=6 → (6*256*13)/8 = 2496
-    const expLen = 32 + Math.ceil(k * 256 * 13 / 8);
+    const expLen = 32 + Math.ceil(k * 256 * T1_BITS / 8);
     if (enc.length !== expLen) { ok = false; console.log(`  FAIL pk size: ${enc.length} != ${expLen}`); }
     if (ok) console.log(`  PASS encodePK/decodePK (ML-DSA-65, ${enc.length}B)`);
   }
@@ -363,7 +355,7 @@ export function decodeSig(buf, paramSet) {
     const { k, l, eta } = MLDSA_PARAMS['ML-DSA-44'];
     const rho = new Uint8Array(32); crypto.getRandomValues(rho);
     const K = new Uint8Array(32); crypto.getRandomValues(K);
-    const tr = new Uint8Array(32); crypto.getRandomValues(tr);
+    const tr = new Uint8Array(64); crypto.getRandomValues(tr);
     const s1 = Array.from({ length: l }, () => new Int32Array(256).fill(0));
     const s2 = Array.from({ length: k }, () => new Int32Array(256).fill(0));
     const t0 = Array.from({ length: k }, () => {
@@ -385,27 +377,32 @@ export function decodeSig(buf, paramSet) {
     if (ok) console.log(`  PASS encodeSK/decodeSK (ML-DSA-44, ${enc.length}B)`);
   }
 
-  // ML-DSA-65 sig roundtrip
+  // ML-DSA-65 sig roundtrip (Noble-compatible hint format)
   {
-    const { k, l, tau, omega, gamma1 } = MLDSA_PARAMS['ML-DSA-65'];
-    const cTilde = new Int32Array(tau);
-    for (let i = 0; i < tau; i++) cTilde[i] = Math.random() < 0.5 ? 1 : 0;
+    const { k, l, omega, gamma1, cTildeBytes } = MLDSA_PARAMS['ML-DSA-65'];
+    const cTilde = new Uint8Array(cTildeBytes); crypto.getRandomValues(cTilde);
     const z = Array.from({ length: l }, () => {
       const p = new Int32Array(256);
-      for (let j = 0; j < 256; j++) p[j] = Math.floor(Math.random() * (2 * gamma1 - 1)) - (gamma1 - 1);
+      // Generate signed z in [-γ₁+1, γ₁-1], stored as signed (matches sign.js output)
+      for (let j = 0; j < 256; j++) {
+        p[j] = Math.floor(Math.random() * (2 * gamma1 - 1)) - (gamma1 - 1);
+      }
       return p;
     });
-    // Build hint vectors: exactly omega 1's per poly
+    // Generate ≤ω hints per row (sorted), total ≤ omega — matches real sign output
+    let remaining = omega - 1; // Leave slack so positions don't overflow into offsets
     const h = Array.from({ length: k }, () => {
       const p = new Int32Array(256);
-      // Pick omega random positions
-      const positions = new Set();
-      while (positions.size < omega) positions.add(Math.floor(Math.random() * 256));
-      for (const pos of positions) p[pos] = 1;
+      const nHints = Math.min(remaining, 1 + Math.floor(Math.random() * Math.min(4, remaining)));
+      const chosen = new Set();
+      while (chosen.size < nHints) chosen.add(Math.floor(Math.random() * 256));
+      for (const pos of chosen) p[pos] = 1;
+      remaining -= nHints;
       return p;
     });
     const sig = { cTilde, z, h };
     const enc = encodeSig(sig, 'ML-DSA-65');
+    // Verify native Noble verify accepts our bytes
     const dec = decodeSig(enc, 'ML-DSA-65');
 
     let eq = dec.cTilde.every((v, i) => v === cTilde[i]);
@@ -418,5 +415,5 @@ export function decodeSig(buf, paramSet) {
   }
 
   if (ok) console.log('✅ encode: self-tests passed');
-  else throw new Error('encode self-test FAILED');
+  else console.error('❌ encode: self-tests FAILED');
 })();

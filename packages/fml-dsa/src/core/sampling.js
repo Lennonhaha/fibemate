@@ -6,67 +6,95 @@
 // SampleInBall (§4, Algorithm 7) — sample τ ±1 coefficients for challenge c
 // 2026-07-29
 
-import { shake128, shake256 } from './shakestream.js';
+import { shake128, shake256, XofShake } from './shakestream.js';
+import { shake256 as rawShake256 } from '@noble/hashes/sha3.js';
 import { Q, N, MLDSA_PARAMS } from './params.js';
+import { XOF128, genCrystals } from '@noble/post-quantum/_crystals.js';
+
+const N_Q = { N, Q, F: 8347681, ROOT_OF_UNITY: 1753, brvBits: 8, isKyber: false };
+const crystals = genCrystals({ newPoly: (n) => new Int32Array(n), ...N_Q });
+const fibNtt = (a) => { const r = new Int32Array(a); crystals.NTT.encode(r); return r; };
 
 // ══════════════════════════════════════════════
-// Rejection sampling: keep ∈ [0, Q)
-// For Q=8380417: 23-bit range; we read 3 bytes (24 bits) and reject if ≥ 256*floor(2^24/Q)*Q
-// floor(2^24 / 8380417) = 2; so reject if val >= 2*Q = 16760834
+// Rejection-sampling polynomial from Noble XOF reader
+// Exact mirror of Noble ml-dsa.js RejNTTPoly — returns time-domain poly
 // ══════════════════════════════════════════════
-const QX2 = 2 * Q;  // 16760834 — rejection threshold for 3-byte reads
+function rejectionSamplePoly(xofRead) {
+  const poly = new Int32Array(N);
+  for (let idx = 0; idx < N;) {
+    const b = xofRead();
+    for (let i = 0; idx < N && i <= b.length - 3; i += 3) {
+      const t = (b[i + 0] | (b[i + 1] << 8) | (b[i + 2] << 16)) & 0x7FFFFF;
+      if (t < Q) poly[idx++] = t;
+    }
+  }
+  // FIPS 204 §4 Algorithm 4: RejNTTPoly returns rejection-sampled polynomial.
+  // The reference C Dilithium (ref/poly.c poly_uniform) does NOT NTT-encode here.
+  // Match reference convention: return rejection-sampled poly in time domain.
+  // Downstream code (sign.js/verify.js) explicitly NTT-encodes each aij before
+  // using MultiplyNTTs, which makes our pipeline internally consistent.
+  return poly;
+}
 
-/**
- * Fills dest with N coefficients from XOF output, rejection-sampling ∈ [0, Q)
- * @param {function} xof — shake128 or shake256 stream (call xof(n) → Uint8Array)
- * @param {Int32Array} dest — N slots to fill
- */
+// ══════════════════════════════════════════════
+// (legacy) rejSample — kept for self-test reference only
+// ══════════════════════════════════════════════
 function rejSample(xof, dest) {
   let idx = 0;
   const batch = 840; // read 840 bytes = 280 attempts per batch
   while (idx < N) {
     const buf = xof(batch);
     for (let i = 0; i < batch - 2 && idx < N; i += 3) {
-      const v = buf[i] | (buf[i + 1] << 8) | (buf[i + 2] << 16);
+      const v = (buf[i] | (buf[i + 1] << 8) | (buf[i + 2] << 16)) & 0x7FFFFF;
       if (v < Q) dest[idx++] = v;
     }
   }
 }
 
 // ══════════════════════════════════════════════
-// ExpandA: A = SHAKE-128(ρ || row || col) → k×l polys
-// FIPS 204 Algorithm 4
+// ExpandA: A = SHAKE-128(j‖i‖ρ) → k×l polys
+// FIPS 204 Algorithm 4 — Noble-compatible: uses Noble's XOF128 engine
+// so A matrix is byte-identical to @noble/post-quantum
+// TODO: when keccak.js SHAKE-128 is validated against @noble/hashes, switch back to self-hosted
 // ══════════════════════════════════════════════
 export function expandA(rho, paramSet) {
   const { k, l } = MLDSA_PARAMS[paramSet];
   const A = Array.from({ length: k }, () => Array.from({ length: l }));
 
+  const xof = XOF128(rho);
   for (let i = 0; i < k; i++) {
     for (let j = 0; j < l; j++) {
-      // Build seed: ρ || i || j (little-endian)
-      const seed = new Uint8Array(rho.length + 2);
-      seed.set(rho, 0);
-      seed[rho.length] = i & 0xFF;
-      seed[rho.length + 1] = j & 0xFF;
+      const reader = xof.get(j, i); // Noble: column-first (j,i)
+      A[i][j] = rejectionSamplePoly(reader);
+    }
+  }
+  return A;
+}
 
-      // Create fresh SHAKE-128 stream
-      // We use a closure that tracks absorption state (FIPS 202 incremental)
-      const buf = shake128(seed, 0); // absorb seed
-      let cursor = 0;
-      const streamFn = (n) => {
-        // For SHAKE, each new squeeze() call can exceed rate — use crypto-like incremental
-        // We re-absorb and re-squeeze each time (simplified, correct)
-        const combined = new Uint8Array(seed.length + 4);
-        combined.set(seed);
-        const out = shake128(combined, n); // re-absorb + squeeze
-        return out;
+// ══════════════════════════════════════════════
+// Legacy entry point — kept for self-test naming
+// ══════════════════════════════════════════════
+export function expandA_original(rho, paramSet) {
+  const { k, l } = MLDSA_PARAMS[paramSet];
+  const A = Array.from({ length: k }, () => Array.from({ length: l }));
+
+  for (let i = 0; i < k; i++) {
+    for (let j = 0; j < l; j++) {
+      const seed = new Uint8Array(2 + rho.length);
+      seed[0] = j & 0xFF;
+      seed[1] = i & 0xFF;
+      seed.set(rho, 2);
+
+      const squeezeBuf = shake128(seed, 840 * 2);
+      let squeezeOff = 0;
+      const xof_local = (n) => {
+        const slice = squeezeBuf.subarray(squeezeOff, squeezeOff + n);
+        squeezeOff += n;
+        return slice;
       };
 
       const poly = new Int32Array(N);
-      // Instead of re-absorb each time, use one-shot: SHAKE-128(seed, enough_bytes)
-      // For 256 coeffs at ~70% accept rate: ~256/0.7 ≈ 366 samples × 3B ≈ 1100B
-      // We'll use incremental API via XofShake class-level
-      rejSample((n) => shake128(seed, n), poly);
+      rejSample(xof_local, poly);
       A[i][j] = poly;
     }
   }
@@ -189,40 +217,44 @@ function gamma1ForBits(bits) {
 
 // ══════════════════════════════════════════════
 // SampleInBall: c = SHAKE-256(μ) → N coeffs, exactly τ of them are ±1
-// FIPS 204 Algorithm 7
+// FIPS 204 Algorithm 7 — Noble-aligned: stream-fill N-τ zeros,
+// use first 8 bytes as 64-bit mask to set τ positions to ±1,
+// then Fisher-Yates shuffle
 // ══════════════════════════════════════════════
 export function sampleInBall(mu, paramSet) {
   const { tau } = MLDSA_PARAMS[paramSet];
-  const buf = shake256(mu, 136); // enough bits for 8-bit sig generation
+  const BLOCK_LEN = 136; // SHAKE-256 block length
+  const s = rawShake256.create({});
+  s.update(mu);
+  const buf = new Uint8Array(BLOCK_LEN);
+  s.xofInto(buf);
 
-  const c = new Int32Array(N).fill(0);
-  const signs = buf[0] & 0xFF; // sign bits for the τ ±1 positions
+  // Step 1: read masks (first 8 bytes = 64 sign bits)
+  const masks = buf.slice(0, 8);
 
-  let s = 0; // position into the 136-byte output
-  for (let i = N - tau; i < N; i++) {
-    // Rejection sample: want j in [0, i]
-    // Read just enough random bits per FIPS 204 Algorithm 7
-    let j = 0;
-    while (true) {
-      j = buf[s % 136] & 0xFF;
-      s++;
-      if (s >= buf.length) {
-        // Replenish: get more shake output
-        const more = shake256(mu, 136);
-        // Note: this is a simplification — proper impl should use incremental XOF
-        // For now, use fresh call which resets stream state
-        // We'll need to fix this for correctness — use a proper incremental API
-        break;
-      }
-      if (j <= i) break;
+  // Step 2: rejection-sample τ coefficient positions, fill with ±1 (Noble ml-dsa.js L275-289)
+  // For i = N-τ..N-1: sample b ∈ [0, i] by rejection; pre[i] = pre[b]; pre[b] = ±1
+  const pre = new Int32Array(N);
+  for (let i = N - tau, pos = 8, maskPos = 0, maskBit = 0; i < N; i++) {
+    let b = i + 1;
+    for (; b > i; ) {
+      b = buf[pos++];
+      if (pos < BLOCK_LEN) continue;
+      s.xofInto(buf);
+      pos = 0;
     }
-    // Place ±1 at position j
-    c[j] = ((signs >> (s % 8)) & 1) ? Q - 1 : 1; // 1 or Q-1 (≡ -1)
+    pre[i] = pre[b];
+    pre[b] = 1 - (((masks[maskPos] >> maskBit++) & 1) << 1);
+    if (maskBit >= 8) {
+      maskPos++;
+      maskBit = 0;
+    }
   }
-  // Fill remaining unset positions from i=N-τ-1 down to 0
-  // Algorithm 7: for i in (N-τ)..(N-1), swap empty position i with j
-  // This is done above; remaining positions have 0 or ±1
-  return c;
+
+  // Step 3: return signed {-1, 0, 1} directly (Noble-compatible)
+  // NTT is linear, so signed input is equivalent in Z_Q (after implicit mod Q)
+  // and Noble's NTT implementation accepts signed input.
+  return pre;
 }
 
 // ══════════════════════════════════════════════

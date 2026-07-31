@@ -7,9 +7,9 @@ import { MLDSA_PARAMS } from './params.js';
 import { ntt } from './ntt.js';
 import { shake256 } from './shakestream.js';
 import { expandA, expandS } from './sampling.js';
-import { vecNtt, matVecMulNtt, vecAdd } from './polyvec.js';
-import { power2Round, decompose } from './reduce.js';
+import { vecNtt, vecInvNtt, matVecMulNtt, vecAdd } from './polyvec.js';
 import { encodePK, encodeSK } from './encode.js';
+import { power2Round, decompose } from './reduce.js';
 
 /**
  * ML-DSA.KeyGen() — FIPS 204 Algorithm 4
@@ -33,12 +33,9 @@ export function keygen(paramSet = 'ML-DSA-65') {
   const sigma = seed.slice(32, 64);   // seed for ExpandS
   const K = seed.slice(64, 96);       // symmetric key (not used in pure sign)
 
-  // Step 3: A ← ExpandA(ρ) — k×l matrix of polynomials in NTT domain
+  // Step 3: A ← ExpandA(ρ). Noble convention: pass time-domain A directly to
+  // MultiplyNTTs (do not NTT-encode A).
   const A = expandA(rho, paramSet);
-  // expandA returns normal domain; NTT each polynomial in the matrix
-  for (let i = 0; i < k; i++)
-    for (let j = 0; j < l; j++)
-      A[i][j] = ntt(A[i][j]);
 
   // Step 4: (s1, s2) ← ExpandS(σ) — s1 ∈ R_q^l, s2 ∈ R_q^k
   const sAll = expandS(sigma, paramSet);
@@ -55,46 +52,30 @@ export function keygen(paramSet = 'ML-DSA-65') {
   const s2Ntt = vecNtt(s2_raw);
   const tNtt = vecAdd(matVecMulNtt(A, s1Ntt), s2Ntt);
 
-  // Step 6: (t1, t0) ← Power2Round(t, 13) — per polynomial, per coefficient
-  const t1 = [];
-  const t0 = [];
+  // Step 6: t ← NTT⁻¹(tNtt), then (t1, t0) ← Power2Round(t, 13)
+  // FIPS 204 requires Power2Round on NORMAL-domain coefficients
+  const tNormal = vecInvNtt(tNtt);
+  const t1 = [], t0 = [];
   for (let i = 0; i < k; i++) {
-    // Convert NTT-domain t back to normal domain for Power2Round
-    const poly = new Int32Array(256);
-    // tNtt[i] is in NTT domain; we need to go back to normal
-    // Actually FIPS 204 applies Power2Round to t in NTT domain.
-    // The coefficients are already mod Q, just apply bit decomposition.
+    const t1Poly = new Int32Array(256);
+    const t0Poly = new Int32Array(256);
     for (let j = 0; j < 256; j++) {
-      const [h, l] = power2Round(tNtt[i][j], D);
-      poly[j] = h;
+      const [h, l] = power2Round(tNormal[i][j], D);
+      t1Poly[j] = h;
+      t0Poly[j] = l;
     }
-    t1.push(poly);
-    // t0 = low bits
-    const lowPoly = new Int32Array(256);
-    for (let j = 0; j < 256; j++) {
-      lowPoly[j] = tNtt[i][j] & ((1 << D) - 1);
-    }
-    t0.push(lowPoly);
+    t1.push(t1Poly);
+    t0.push(t0Poly);
   }
 
-  // Step 7: tr ← H(rho ∥ t1) — 256-bit commitment
-  const trInput = new Uint8Array(32 + t1.length * 256 * 2);
-  trInput.set(rho, 0);
-  let off = 32;
-  for (const p of t1) {
-    for (let j = 0; j < 256; j++) {
-      trInput[off] = p[j] & 0xFF;
-      trInput[off + 1] = (p[j] >> 8) & 0xFF;
-      off += 2;
-    }
-  }
-  const tr = shake256(trInput, 32);
+  // Step 7: tr ← H(encodePK(pk), 64) — FIPS 204: full 64-byte hash of pk
+  const pkObj = { rho: new Uint8Array(rho), t1 };
+  const tr = shake256(encodePK(pkObj, paramSet), 64);
 
   // Step 8: return (pk, sk)
-  const pk = { rho: new Uint8Array(rho), t1 };
   const sk = { rho: new Uint8Array(rho), K: new Uint8Array(K), tr, s1: s1_raw, s2: s2_raw, t0 };
 
-  return { pk, sk };
+  return { pk: pkObj, sk };
 }
 
 // ══════════════════════════════════════════════
@@ -126,7 +107,7 @@ export function keygenEncoded(paramSet = 'ML-DSA-65') {
 
   ok = ok && sk.rho instanceof Uint8Array && sk.rho.length === 32;
   ok = ok && sk.K instanceof Uint8Array && sk.K.length === 32;
-  ok = ok && sk.tr instanceof Uint8Array && sk.tr.length === 32;
+  ok = ok && sk.tr instanceof Uint8Array && sk.tr.length === 64;
   ok = ok && Array.isArray(sk.s1) && sk.s1.length === l;
   ok = ok && Array.isArray(sk.s2) && sk.s2.length === k;
   ok = ok && Array.isArray(sk.t0) && sk.t0.length === k;
@@ -172,7 +153,7 @@ export function keygenEncoded(paramSet = 'ML-DSA-65') {
   console.log(`  ${ok ? 'PASS' : 'FAIL'} pk.rho == sk.rho`);
 
   // 6. tr consistency
-  ok = ok && sk.tr.length === 32;
+  ok = ok && sk.tr.length === 64;
   // tr should be all-zero? No — it's computed from rho+t1, let's just verify length
   const someNonZero = sk.tr.some(b => b !== 0);
   console.log(`  ${ok ? 'PASS' : 'FAIL'} tr is ${someNonZero ? 'non-zero' : 'zero'} (length=${sk.tr.length})`);
