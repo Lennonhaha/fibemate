@@ -22,6 +22,7 @@ chk_*.js
 dbg_*.js
 **/scripts/*test.js
 **/scripts/*Test.js
+!scripts/smoke-test.js
 # double-ratchet.js / fix-ratchet.js are WHITELISTED (core crypto)
 *t2.js
 *t3.js
