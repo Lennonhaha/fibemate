@@ -1,0 +1,82 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>NTT 最小测试</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0a14;color:#0f0;font:14px monospace;overflow:hidden}
+#log{position:absolute;top:10px;left:10px;z-index:999;background:rgba(0,0,0,.8);padding:10px;font-size:12px;max-height:90vh;overflow-y:auto}
+.ok{color:#0f0}.err{color:#f44}.warn{color:#fa0}
+</style></head><body>
+<div id="log"></div>
+<script>
+var log=document.getElementById("log");
+function out(s,c){var d=document.createElement("div");d.className=c||"";d.textContent=s;log.appendChild(d)}
+
+out("NTT minimal test starting...","warn");
+</script>
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script>
+try{
+  out("THREE OK: "+typeof THREE);
+
+  const N=256, LOGN=8, Q=8380417, ZETA=1753;
+  const twiddle=new Array(N); twiddle[0]=1;
+  for(let i=1;i<N;i++) twiddle[i]=Number((BigInt(twiddle[i-1])*BigInt(ZETA))%BigInt(Q));
+  out("twiddle computed, t[1]="+twiddle[1],"ok");
+
+  const X_SCALE=0.25, Y_SCALE=2.5, Z_SCALE=0.00005;
+
+  // Compute stages (just 1 for minimal test)
+  let data=new Array(N);
+  for(let i=0;i<N;i++){ data[i]=(i*32768+13*i*i)%Q; if(data[i]<0) data[i]+=Q; }
+  out("input data ok, N="+N,"ok");
+
+  const scene=new THREE.Scene();
+  scene.background=new THREE.Color(0x0a0a14);
+  out("scene created","ok");
+
+  const cam=new THREE.PerspectiveCamera(55,window.innerWidth/window.innerHeight,0.5,500);
+  cam.position.set(30,18,35);
+  const r=new THREE.WebGLRenderer({antialias:true});
+  r.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  r.setSize(window.innerWidth,window.innerHeight);
+  document.body.appendChild(r.domElement);
+  out("renderer created","ok");
+
+  const controls=new THREE.OrbitControls(cam,r.domElement);
+  controls.enableDamping=true;
+  controls.autoRotate=true;
+  controls.autoRotateSpeed=0.3;
+  controls.target.set(0,3,0);
+  out("controls created","ok");
+
+  scene.add(new THREE.AmbientLight(0x404060,2));
+  const grid=new THREE.GridHelper(40,20,0x1a1a3a,0x0d0d1a);
+  scene.add(grid);
+  out("lights+grid added","ok");
+
+  // Just render the input layer nodes
+  const nodeGeo=new THREE.SphereGeometry(0.12,6,4);
+  const nodeMat=new THREE.MeshPhongMaterial({color:0xff6b6b,emissive:0xff0000,emissiveIntensity:.6});
+  let count=0;
+  for(let i=0;i<N;i++){
+    const mesh=new THREE.Mesh(nodeGeo,nodeMat);
+    mesh.position.set((i-N/2)*X_SCALE,0,data[i]*Z_SCALE);
+    scene.add(mesh);
+    count++;
+  }
+  out("all "+count+" nodes added","ok");
+
+  out("rendering...","warn");
+  r.render(scene,cam);
+  out("RENDER COMPLETE ✅","ok");
+
+  // Animation loop
+  function animate(){requestAnimationFrame(animate);controls.update();r.render(scene,cam)}
+  animate();
+  out("animation loop started","ok");
+}catch(e){out("CRASH ❌: "+e.message,"err");out("stack: "+(e.stack||"none"),"err")}
+</script></body></html>
