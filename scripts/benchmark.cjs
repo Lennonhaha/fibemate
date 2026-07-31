@@ -60,7 +60,7 @@ function format(r) {
   return `  ✅ ${r.name}: ${(r.avgUs/1000).toFixed(2)}ms avg, ${r.opsPerSec.toFixed(0)} ops/s`;
 }
 
-async async function main() {
+async function main() {
   const results = [];
   let sep = () => console.log('─'.repeat(62));
 

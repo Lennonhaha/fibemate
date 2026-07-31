@@ -1,0 +1,35 @@
+{
+  "timestamp": "2026-07-31T13:21:44.348Z",
+  "algorithm": "ML-KEM-1024",
+  "implementation": "@noble/post-quantum",
+  "method": "Welch's t-test, interleaved A/B",
+  "N_SAMPLES": 10000,
+  "WARMUP": 2000,
+  "THRESH": 4.5,
+  "elapsed_s": 43.2,
+  "results": [
+    {
+      "name": "keygen-1024",
+      "tStat": 0.22,
+      "passed": true,
+      "mA_us": 564.58
+    },
+    {
+      "name": "encapsulate-1024",
+      "tStat": 0.25,
+      "passed": true,
+      "mA_us": 628.49
+    },
+    {
+      "name": "decapsulate-1024",
+      "tStat": 0.72,
+      "passed": true,
+      "mA_us": 758.47
+    }
+  ],
+  "summary": {
+    "pass": 3,
+    "fail": 0,
+    "total": 3
+  }
+}
