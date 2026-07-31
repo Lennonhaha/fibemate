@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE — NTT 蝶形运算可视化 (ML-DSA-65, N=256, Q=8380417)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#0a0a14;color:#d0d0e0;overflow:hidden}
+#canvas-container{width:100vw;height:100vh;position:relative}
+#panel{position:absolute;top:16px;left:16px;background:rgba(10,10,25,.92);border:1px solid #2a2a4a;border-radius:12px;padding:18px;width:280px;max-height:85vh;overflow-y:auto;backdrop-filter:blur(12px);box-shadow:0 8px 32px rgba(0,0,0,.4)}
+h1{font-size:16px;color:#00d4ff;margin-bottom:6px;padding-bottom:8px;border-bottom:1px solid #2a2a4a}
+h2{font-size:12px;color:#888;font-weight:400;margin-bottom:14px}
+.ctrl{margin-bottom:14px}
+.ctrl label{display:block;font-size:12px;color:#a0a0c0;margin-bottom:4px}
+.ctrl input[type=range]{width:100%;accent-color:#00d4ff}
+.ctrl select{width:100%;background:#1a1a30;color:#d0d0e0;border:1px solid #3a3a5a;border-radius:6px;padding:6px 10px;font-size:12px}
+.val{float:right;color:#00d4ff;font-size:11px;font-weight:600}
+.stats{font-size:11px;color:#888;line-height:1.6}
+.stats span{color:#00d4ff;font-weight:600}
+.btn{display:inline-block;background:#1a1a30;color:#00d4ff;border:1px solid #2a2a5a;border-radius:6px;padding:7px 14px;font-size:11px;cursor:pointer;transition:all .2s;margin:2px}
+.btn:hover{background:#2a2a4a;border-color:#00d4ff}
+.btn.active{background:#00d4ff20;border-color:#00d4ff}
+#legend{position:absolute;bottom:20px;right:20px;background:rgba(10,10,25,.85);border:1px solid #2a2a4a;border-radius:8px;padding:12px 16px;font-size:11px;backdrop-filter:blur(8px)}
+.legend-row{display:flex;align-items:center;gap:8px;margin:3px 0}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+#info-bar{position:absolute;bottom:20px;left:20px;font-size:11px;color:#666}
+@media(max-width:500px){#panel{width:240px;padding:12px}h1{font-size:14px}}
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div id="panel">
+  <h1>🦋 NTT 蝶形运算</h1>
+  <h2>ML-DSA-65 · N=256 · Q=8380417 · ζ=1753</h2>
+  <div class="ctrl">
+    <label>当前阶段 <span class="val" id="stage-val">7 / 8</span></label>
+    <input type="range" id="stage" min="0" max="7" value="7">
+  </div>
+  <div class="ctrl">
+    <label>透明度 <span class="val" id="alpha-val">40%</span></label>
+    <input type="range" id="alpha" min="5" max="100" value="40">
+  </div>
+  <div class="ctrl">
+    <label>显示模式</label>
+    <select id="mode">
+      <option value="both">全部（蝴蝶 + 数据流）</option>
+      <option value="butterfly">仅蝶形连线</option>
+      <option value="data">仅数据管</option>
+    </select>
+  </div>
+  <div style="margin-top:8px">
+    <button class="btn active" id="btn-play">▶ 播放动画</button>
+    <button class="btn" id="btn-all">全部阶段</button>
+    <button class="btn" id="btn-reset">↺ 重置视角</button>
+  </div>
+  <div class="stats" style="margin-top:12px">
+    蝶形对/阶段: <span id="stat-pairs">128</span><br>
+    跨接跨度: <span id="stat-stride">128</span><br>
+    旋因子: <span id="stat-twiddle">—</span>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="legend-row"><span class="legend-dot" style="background:#ff6b6b"></span> 输入层（时域）</div>
+  <div class="legend-row"><span class="legend-dot" style="background:#00d4ff"></span> 输出层（NTT 域）</div>
+  <div class="legend-row"><span class="legend-dot" style="background:#ffe66d"></span> 中间阶段</div>
+  <div class="legend-row"><span class="legend-dot" style="background:#7cff6b"></span> 蝴蝶连线</div>
+</div>
+
+<div id="info-bar">拖拽旋转 · 滚轮缩放 · 右键平移 · 点击节点查看数据流</div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ============================================================
+// NTT 参数 (ML-DSA-65 / Dilithium)
+// ============================================================
+const N = 256;
+const LOGN = 8;
+const Q = 8380417;
+const ZETA = 1753;
+
+// Precompute powers of ζ
+const twiddle = new Array(N);
+twiddle[0] = 1;
+for (let i = 1; i < N; i++) {
+  twiddle[i] = Number((BigInt(twiddle[i-1]) * BigInt(ZETA)) % BigInt(Q));
+}
+
+// Bit-reversal for DIF ordering
+function bitRev(x, bits) { let r=0; for(let i=0;i<bits;i++){ r=(r<<1)|(x&1); x>>=1; } return r; }
+
+// Generate synthetic data with recognizable pattern
+const inputData = new Array(N);
+for (let i = 0; i < N; i++) {
+  inputData[i] = (i * 32768 + i * i * 13 + Math.sin(i*0.1)*10000) % Q;
+  if (inputData[i] < 0) inputData[i] += Q;
+}
+
+// Full DIF NTT trace: stages[0]=input, stages[8]=output (BR order)
+const stages = [];
+stages.push([...inputData]);
+let data = [...inputData];
+for (let s = 0; s < LOGN; s++) {
+  const m = 1 << (LOGN - 1 - s);  // stride halves each stage
+  const next = [...data];
+  for (let k = 0; k < N; k += 2*m) {
+    for (let j = 0; j < m; j++) {
+      const a = k + j;
+      const b = k + j + m;
+      const t = Number((BigInt(next[b]) * BigInt(twiddle[j * (1<<s)])) % BigInt(Q));
+      next[b] = (next[a] - t + Q) % Q;
+      next[a] = (next[a] + t) % Q;
+    }
+  }
+  data = next;
+  stages.push([...data]);
+}
+
+// ============================================================
+// Butterfly pair map for each stage
+// ============================================================
+function getButterflyPairs(stage) {
+  const m = 1 << (LOGN - 1 - stage);
+  const pairs = [];
+  for (let k = 0; k < N; k += 2*m) {
+    for (let j = 0; j < m; j++) {
+      pairs.push({ a: k+j, b: k+j+m, stride: m, twiddle: twiddle[j * (1<<stage)] });
+    }
+  }
+  return pairs;
+}
+
+// ============================================================
+// Three.js setup
+// ============================================================
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a14);
+scene.fog = new THREE.Fog(0x0a0a14, 60, 200);
+
+const camera = new THREE.PerspectiveCamera(55, container.clientWidth/container.clientHeight, 0.5, 500);
+camera.position.set(30, 18, 35);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.3;
+controls.target.set(0, 3, 0);
+
+// Lighting
+scene.add(new THREE.AmbientLight(0x404060, 2));
+const dirLight = new THREE.DirectionalLight(0xffffff, 3);
+dirLight.position.set(20, 30, 20);
+scene.add(dirLight);
+
+// Grid
+const grid = new THREE.GridHelper(40, 20, 0x1a1a3a, 0x0d0d1a);
+scene.add(grid);
+
+// ============================================================
+// Scene objects
+// ============================================================
+const X_SCALE = 0.25;  // 256 points → 64 units wide
+const Y_SCALE = 2.5;   // stage spacing
+const Z_SCALE = 0.00005; // value → height
+
+const stageColors = [];
+for (let s = 0; s <= LOGN; s++) {
+  const t = s / LOGN;
+  stageColors.push(new THREE.Color().setHSL(0.6 - t*0.5, 0.9, 0.35 + t*0.35));
+}
+
+let nodeGroup = new THREE.Group();
+let lineGroup = new THREE.Group();
+let tubeGroup = new THREE.Group();
+scene.add(nodeGroup);
+scene.add(lineGroup);
+scene.add(tubeGroup);
+
+// Build all stages but toggle visibility
+const allNodes = [];
+const allLines = [];
+
+function pos(idx, stage) {
+  return new THREE.Vector3(
+    (idx - N/2) * X_SCALE,
+    stage * Y_SCALE,
+    stages[stage][idx] * Z_SCALE
+  );
+}
+
+// Create nodes for all stages
+for (let s = 0; s <= LOGN; s++) {
+  const nodeGeo = new THREE.SphereGeometry(0.12, 6, 4);
+  const nodeMat = new THREE.MeshPhongMaterial({ color: stageColors[s], emissive: stageColors[s], emissiveIntensity: 0.4 });
+  const nodeMeshes = [];
+  for (let i = 0; i < N; i++) {
+    const mesh = new THREE.Mesh(nodeGeo, nodeMat.clone());
+    mesh.position.copy(pos(i, s));
+    mesh.userData = { idx: i, stage: s, value: stages[s][i] };
+    nodeGroup.add(mesh);
+    nodeMeshes.push(mesh);
+  }
+  allNodes.push(nodeMeshes);
+}
+
+// Create butterfly connection lines
+const butterflyPairsAll = [];
+for (let s = 0; s < LOGN; s++) {
+  const pairs = getButterflyPairs(s);
+  butterflyPairsAll.push(pairs);
+  const lineMat = new THREE.LineBasicMaterial({ color: 0x7cff6b, transparent: true, opacity: 0.15, linewidth: 1 });
+  for (const p of pairs) {
+    const geo = new THREE.BufferGeometry();
+    const p1 = pos(p.a, s);
+    const p2 = pos(p.b, s);
+    const p1n = pos(p.a, s+1);
+    const p2n = pos(p.b, s+1);
+    // Draw cross: a→a', a→b', b→a', b→b' (the butterfly)
+    // Main paths: a→a' and a→b' (sum path) + b→b' (diff path)
+    const pts = [
+      p1.x,p1.y,p1.z, p1n.x,p1n.y,p1n.z,  // a → a' (sum)
+      p1.x,p1.y,p1.z, p2n.x,p2n.y,p2n.z,  // a → b' (contributes to diff)
+      p2.x,p2.y,p2.z, p2n.x,p2n.y,p2n.z,  // b → b'
+      p2.x,p2.y,p2.z, p1n.x,p1n.y,p1n.z,  // b → a' (contributes to sum)
+    ];
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    const line = new THREE.LineSegments(geo, lineMat.clone());
+    line.userData = { stage: s, pair: p };
+    lineGroup.add(line);
+    allLines.push(line);
+  }
+}
+
+// Create cylindrical "data tubes" between adjacent stages showing value magnitude
+function createDataTubes(fromStage, toStage) {
+  const group = new THREE.Group();
+  for (let i = 0; i < N; i++) {
+    const p1 = pos(i, fromStage);
+    const p2 = pos(i, toStage);
+    const dir = new THREE.Vector3().subVectors(p2, p1);
+    const len = dir.length();
+    const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
+    
+    const radius = 0.04 + (stages[fromStage][i] / Q) * 0.3;
+    const geo = new THREE.CylinderGeometry(radius, radius, len, 6, 1);
+    const mat = new THREE.MeshPhongMaterial({
+      color: stageColors[fromStage],
+      emissive: stageColors[fromStage],
+      emissiveIntensity: 0.3,
+      transparent: true,
+      opacity: 0.5
+    });
+    const tube = new THREE.Mesh(geo, mat);
+    tube.position.copy(mid);
+    tube.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0), dir.normalize());
+    tube.userData = { idx: i, from: fromStage, to: toStage, value: stages[fromStage][i] };
+    group.add(tube);
+  }
+  return group;
+}
+
+const dataTubeGroups = [];
+for (let s = 0; s < LOGN; s++) {
+  const g = createDataTubes(s, s+1);
+  tubeGroup.add(g);
+  dataTubeGroups.push(g);
+}
+
+// Add stage labels
+const labelSprites = [];
+for (let s = 0; s <= LOGN; s++) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256; canvas.height = 64;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = s === 0 ? '#ff6b6b' : s === LOGN ? '#00d4ff' : '#ffe66d';
+  ctx.font = 'bold 28px monospace';
+  ctx.textAlign = 'center';
+  const label = s === 0 ? '时域输入' : s === LOGN ? 'NTT 域输出 (BR序)' : `stage ${s}`;
+  ctx.fillText(label, 128, 40);
+  
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.minFilter = THREE.LinearFilter;
+  const spriteMat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.position.set(-N/2*X_SCALE - 3, s*Y_SCALE, 0);
+  sprite.scale.set(6, 1.5, 1);
+  scene.add(sprite);
+  labelSprites.push(sprite);
+}
+
+// ============================================================
+// Visibility controls
+// ============================================================
+let currentMode = 'both';
+let currentStage = 7; // show all by default
+
+function updateVisibility() {
+  const mode = currentMode;
+  const showButterfly = mode === 'both' || mode === 'butterfly';
+  const showData = mode === 'both' || mode === 'data';
+  
+  // Node visibility: nodes up to currentStage+1
+  for (let s = 0; s <= LOGN; s++) {
+    const visible = (currentStage >= LOGN-1) || (s <= currentStage+1);
+    for (const m of allNodes[s]) m.visible = visible;
+  }
+  
+  // Line visibility: lines up to currentStage
+  for (const l of allLines) {
+    l.visible = showButterfly && (l.userData.stage <= currentStage);
+  }
+  
+  // Tube visibility
+  for (let s = 0; s < LOGN; s++) {
+    dataTubeGroups[s].visible = showData && (s <= currentStage);
+  }
+  
+  // Update stats
+  const m = 1 << (LOGN - 1 - Math.min(currentStage, LOGN-1));
+  document.getElementById('stat-pairs').textContent = N/2;
+  document.getElementById('stat-stride').textContent = m;
+  const s = Math.min(currentStage, LOGN-1);
+  document.getElementById('stat-twiddle').textContent = s < LOGN ? `ω₂₅₆^{${1<<s}} = ${twiddle[1<<s]}` : '—';
+  
+  // Highlight current stage
+  for (let ss = 0; ss <= LOGN; ss++) {
+    const emissive = (currentStage >= LOGN-1 || ss === currentStage || ss === currentStage+1) ? 0.8 : 0.3;
+    for (const m of allNodes[ss]) {
+      m.material.emissiveIntensity = emissive;
+    }
+  }
+}
+
+// ============================================================
+// UI bindings
+// ============================================================
+document.getElementById('stage').addEventListener('input', e => {
+  currentStage = parseInt(e.target.value);
+  document.getElementById('stage-val').textContent = `${currentStage+1} / ${LOGN}`;
+  updateVisibility();
+});
+
+document.getElementById('alpha').addEventListener('input', e => {
+  const a = parseInt(e.target.value) / 100;
+  document.getElementById('alpha-val').textContent = Math.round(a*100) + '%';
+  for (const l of allLines) l.material.opacity = a * 0.4;
+  for (let s=0;s<LOGN;s++) {
+    dataTubeGroups[s].children.forEach(c => { c.material.opacity = a * 0.8; });
+  }
+});
+
+document.getElementById('mode').addEventListener('change', e => {
+  currentMode = e.target.value;
+  updateVisibility();
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  camera.position.set(30, 18, 35);
+  controls.target.set(0, 3, 0);
+  controls.update();
+});
+
+// Play animation
+let animating = false;
+let animStage = 0;
+let animTimer = null;
+
+function stopAnimation() {
+  animating = false;
+  if (animTimer) clearInterval(animTimer);
+  document.getElementById('btn-play').textContent = '▶ 播放动画';
+  document.getElementById('btn-play').classList.remove('active');
+}
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  if (animating) { stopAnimation(); return; }
+  animating = true;
+  animStage = 0;
+  document.getElementById('btn-play').textContent = '⏸ 停止';
+  document.getElementById('btn-play').classList.add('active');
+  
+  function step() {
+    if (!animating) return;
+    currentStage = animStage;
+    document.getElementById('stage').value = animStage;
+    document.getElementById('stage-val').textContent = `${animStage+1} / ${LOGN}`;
+    updateVisibility();
+    animStage++;
+    if (animStage >= LOGN) { stopAnimation(); return; }
+    animTimer = setTimeout(step, 600);
+  }
+  step();
+});
+
+document.getElementById('btn-all').addEventListener('click', () => {
+  stopAnimation();
+  currentStage = LOGN - 1;
+  document.getElementById('stage').value = LOGN - 1;
+  document.getElementById('stage-val').textContent = `${LOGN} / ${LOGN}`;
+  updateVisibility();
+});
+
+// ============================================================
+// Raycaster for hover info
+// ============================================================
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+let hoveredNode = null;
+const highlightMat = new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 1 });
+
+window.addEventListener('mousemove', e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+window.addEventListener('click', e => {
+  raycaster.setFromCamera(mouse, camera);
+  const allMeshRefs = allNodes.flat();
+  const hits = raycaster.intersectObjects(allMeshRefs);
+  if (hits.length > 0) {
+    const u = hits[0].object.userData;
+    // Flash the connected butterflies
+    if (u.stage < LOGN) {
+      const pairs = butterflyPairsAll[u.stage];
+      for (const p of pairs) {
+        if (p.a === u.idx || p.b === u.idx) {
+          // Highlight the connecting lines temporarily
+          allLines.forEach(l => {
+            if (l.userData.stage === u.stage && (l.userData.pair.a === p.a)) {
+              l.material.color.set(0xffffff);
+              l.material.opacity = 1;
+              setTimeout(() => {
+                l.material.color.set(0x7cff6b);
+                l.material.opacity = 0.3;
+              }, 800);
+            }
+          });
+        }
+      }
+    }
+  }
+});
+
+// ============================================================
+// Render loop
+// ============================================================
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+// Init
+updateVisibility();
+animate();
+
+// Resize
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+console.log('🦋 NTT Butterfly Visualizer ready — N=256, Q=8380417, ζ=1753');
+console.log('   Drag to rotate · Scroll to zoom · Right-drag to pan');
+console.log('   Click any node to highlight its butterfly connections');
+</script>
+</body>
+</html>

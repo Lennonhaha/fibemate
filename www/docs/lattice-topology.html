@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE — 格拓扑结构三维可视化</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#0a0a1a;color:#d0d0e0;overflow:hidden}
+#canvas-container{width:100vw;height:100vh;position:relative}
+#panel{position:absolute;top:16px;left:16px;background:rgba(10,10,30,.94);border:1px solid #2a2a5a;border-radius:14px;padding:18px;width:290px;max-height:85vh;overflow-y:auto;backdrop-filter:blur(14px);box-shadow:0 10px 40px rgba(0,0,0,.5);z-index:10}
+h1{font-size:15px;color:#b388ff;margin-bottom:4px;padding-bottom:8px;border-bottom:1px solid #2a2a5a}
+h2{font-size:11px;color:#777;font-weight:400;margin-bottom:14px}
+.ctrl{margin-bottom:12px}
+.ctrl label{display:block;font-size:11px;color:#a0a0c0;margin-bottom:3px}
+.ctrl input[type=range]{width:100%;accent-color:#b388ff}
+.ctrl select{width:100%;background:#15152a;color:#d0d0e0;border:1px solid #3a3a6a;border-radius:6px;padding:5px 10px;font-size:11px}
+.val{float:right;color:#b388ff;font-size:10px;font-weight:600}
+.stats{font-size:10px;color:#888;line-height:1.7;margin-top:10px;padding-top:10px;border-top:1px solid #1a1a3a}
+.stats span{color:#b388ff;font-weight:600}
+.stats .metric{display:flex;justify-content:space-between}
+.btn{background:#1a1a35;color:#b388ff;border:1px solid #2a2a5a;border-radius:6px;padding:6px 12px;font-size:10px;cursor:pointer;transition:all .2s;margin:2px}
+.btn:hover{background:#2a2a4a;border-color:#b388ff}
+.btn.active{background:#b388ff20;border-color:#b388ff}
+#legend{position:absolute;bottom:20px;right:20px;background:rgba(10,10,30,.88);border:1px solid #2a2a5a;border-radius:8px;padding:12px 16px;font-size:10px;backdrop-filter:blur(8px);z-index:5}
+.legend-row{display:flex;align-items:center;gap:6px;margin:2px 0}
+.legend-dot{width:8px;height:8px;border-radius:50%}
+#info-bar{position:absolute;bottom:18px;left:18px;font-size:10px;color:#555;z-index:5}
+@media(max-width:500px){#panel{width:230px;padding:10px}h1{font-size:13px}}
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div id="panel">
+  <h1>🔷 格拓扑结构</h1>
+  <h2>高维格在 ℝ³ 中的投影 · Voronoi 胞腔 · 短向量</h2>
+  <div class="ctrl">
+    <label>格类型</label>
+    <select id="lattice-type">
+      <option value="cubic">立方格 ℤ³</option>
+      <option value="hexagonal" selected>六方格 A₂ (2D 嵌入 3D)</option>
+      <option value="bcc">体心立方 (BCC)</option>
+      <option value="fcc">面心立方 (FCC)</option>
+      <option value="diamond">金刚石格</option>
+      <option value="random">随机格 (3 维, det=1)</option>
+    </select>
+  </div>
+  <div class="ctrl">
+    <label>格点范围 <span class="val" id="range-val">6</span></label>
+    <input type="range" id="range" min="2" max="12" value="6">
+  </div>
+  <div class="ctrl">
+    <label>格点大小 <span class="val" id="size-val">0.18</span></label>
+    <input type="range" id="size" min="3" max="30" value="18">
+  </div>
+  <div class="ctrl">
+    <label>显示 Voronoi 胞腔</label>
+    <select id="voronoi">
+      <option value="off">关闭</option>
+      <option value="selected" selected>显示选中的</option>
+      <option value="all">显示全部</option>
+    </select>
+  </div>
+  <div class="ctrl">
+    <label>短向量 (SV) 高亮阈值</label>
+    <input type="range" id="sv-threshold" min="0" max="100" value="15">
+    <span style="font-size:10px;color:#888;display:block">前 <span style="color:#b388ff" id="sv-pct">15%</span> 最短的向量高亮</span>
+  </div>
+  <div style="margin-top:10px">
+    <button class="btn" id="btn-basis">🔽 显示基向量</button>
+    <button class="btn" id="btn-reset">↺ 重置视角</button>
+    <button class="btn" id="btn-ortho">📐 正交投影</button>
+  </div>
+  <div class="stats">
+    <div class="metric"><span>格点总数</span><span id="stat-count">—</span></div>
+    <div class="metric"><span>行列式 det(Λ)</span><span id="stat-det">—</span></div>
+    <div class="metric"><span>最短向量 λ₁ ≈</span><span id="stat-lambda">—</span></div>
+    <div class="metric"><span>Hermite γ</span><span id="stat-hermite">—</span></div>
+    <div class="metric"><span>高斯启发式 gh(L)</span><span id="stat-gauss">—</span></div>
+    <div class="metric"><span>格密度 Δ</span><span id="stat-density">—</span></div>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="legend-row"><span class="legend-dot" style="background:#b388ff"></span> 格点（球体大小 ∝ ||v||）</div>
+  <div class="legend-row"><span class="legend-dot" style="background:#00e676"></span> 短向量 (SV ≤ λ₁·1.05)</div>
+  <div class="legend-row"><span class="legend-dot" style="background:#ff5252"></span> 基向量 (B = {b₁, b₂, b₃})</div>
+  <div class="legend-row"><span class="legend-dot" style="background:rgba(179,136,255,.25)"></span> Voronoi 胞腔面</div>
+</div>
+
+<div id="info-bar">拖拽旋转 · 滚轮缩放 · 右键平移 · 悬定格点查看坐标</div>
+
+<script type="importmap">
+{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ============================================================
+// Lattice definitions
+// ============================================================
+const LATTICES = {
+  cubic: {
+    basis: [[1,0,0],[0,1,0],[0,0,1]],
+    name: '立方格 ℤ³', desc: 'det=1, λ₁=1, 打包密度 π/6≈52.4%'
+  },
+  hexagonal: {
+    basis: [[1,0,0], [-0.5, Math.sqrt(3)/2, 0], [0,0,0.8]],
+    name: '六方格 A₂×ℤ', desc: 'det≈0.693, λ₁=1, 2D 最优圆堆积'
+  },
+  bcc: {
+    basis: [[1,0,0],[0,1,0],[0.5,0.5,0.70710678]],
+    name: '体心立方 BCC', desc: 'det≈0.707, λ₁≈1.225'
+  },
+  fcc: {
+    basis: [[0,1,1],[1,0,1],[1,1,0]].map(v => v.map(x => x*0.5)),
+    name: '面心立方 FCC', desc: 'det=0.25, λ₁≈0.707'
+  },
+  diamond: {
+    basis: [[2,0,0],[0,2,0],[1,1,1]],
+    name: '金刚石格', desc: 'det=4, λ₁=√3≈1.732'
+  },
+  random: {
+    // Use a fixed "random" unimodular basis (det=1) for visual comparison
+    basis: [[2,1,0],[1,3,1],[0,1,2]],
+    name: '随机格 (det=1)', desc: 'det=1, BKZ 约化前'
+  }
+};
+
+// ============================================================
+// Generate lattice points: all integer combinations within range
+// ============================================================
+function generateLatticePoints(basis, range) {
+  const points = [];
+  for (let i = -range; i <= range; i++) {
+    for (let j = -range; j <= range; j++) {
+      for (let k = -range; k <= range; k++) {
+        const x = i*basis[0][0] + j*basis[1][0] + k*basis[2][0];
+        const y = i*basis[0][1] + j*basis[1][1] + k*basis[2][1];
+        const z = i*basis[0][2] + j*basis[1][2] + k*basis[2][2];
+        points.push([x, y, z, i, j, k]);
+      }
+    }
+  }
+  return points;
+}
+
+// Det 3x3
+function det3(b) {
+  return b[0][0]*(b[1][1]*b[2][2]-b[1][2]*b[2][1])
+       - b[0][1]*(b[1][0]*b[2][2]-b[1][2]*b[2][0])
+       + b[0][2]*(b[1][0]*b[2][1]-b[1][1]*b[2][0]);
+}
+
+function norm3(v) { return Math.sqrt(v[0]*v[0]+v[1]*v[1]+v[2]*v[2]); }
+
+// Gauss heuristic: gh(L) = sqrt(n/(2πe)) · det(L)^(1/n)
+function gaussHeuristic(det, dim) {
+  return Math.sqrt(dim/(2*Math.PI*Math.E)) * Math.pow(Math.abs(det), 1/dim);
+}
+
+// Hermite factor: γ = λ₁² / det^(2/n)
+function hermiteFactor(lambda1, det, dim) {
+  return lambda1*lambda1 / Math.pow(Math.abs(det), 2/dim);
+}
+
+// ============================================================
+// Scene setup
+// ============================================================
+const container = document.getElementById('canvas-container');
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a1a);
+scene.fog = new THREE.Fog(0x0a0a1a, 40, 120);
+
+const camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.3, 300);
+camera.position.set(12, 9, 14);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(container.clientWidth, container.clientHeight);
+container.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.target.set(0, 0, 0);
+
+// Lights
+scene.add(new THREE.AmbientLight(0x303060, 3));
+const d1 = new THREE.DirectionalLight(0x8888ff, 4);
+d1.position.set(15, 20, 10);
+scene.add(d1);
+const d2 = new THREE.DirectionalLight(0xff88ff, 3);
+d2.position.set(-10, 5, -8);
+scene.add(d2);
+
+// Grid
+const gridHelper = new THREE.GridHelper(30, 30, 0x1a1a3a, 0x0d0d1a);
+scene.add(gridHelper);
+
+// ============================================================
+// Dynamic scene objects
+// ============================================================
+let pointGroup = new THREE.Group();
+let svGroup = new THREE.Group();
+let basisGroup = new THREE.Group();
+let voronoiGroup = new THREE.Group();
+let basisVisible = false;
+scene.add(pointGroup);
+scene.add(svGroup);
+scene.add(basisGroup);
+scene.add(voronoiGroup);
+
+const basisArrows = [];
+const basisLabels = [];
+
+function clearGroup(g) { while(g.children.length>0){ const c=g.children[0]; if(c.geometry)c.geometry.dispose(); if(c.material)c.material.dispose(); g.remove(c); }}
+
+// ============================================================
+// Voronoi cell for a single lattice point
+// ============================================================
+function computeVoronoiFaces(origin, allPoints, basis) {
+  // For each neighbor, compute the perpendicular bisector plane
+  // Take the intersection — simplest approach: just find 6 nearest
+  // Instead, compute fundamental parallelepiped at origin
+  const v = [
+    [basis[0][0], basis[0][1], basis[0][2]],
+    [basis[1][0], basis[1][1], basis[1][2]],
+    [basis[2][0], basis[2][1], basis[2][2]],
+    [-basis[0][0], -basis[0][1], -basis[0][2]],
+    [-basis[1][0], -basis[1][1], -basis[1][2]],
+    [-basis[2][0], -basis[2][1], -basis[2][2]],
+  ];
+  // Vertices of fundamental parallelepiped (a rough Voronoi proxy)
+  const verts = [];
+  for (let i=0;i<=1;i++) for(let j=0;j<=1;j++) for(let k=0;k<=1;k++) {
+    verts.push([
+      origin[0] + i*basis[0][0] + j*basis[1][0] + k*basis[2][0],
+      origin[1] + i*basis[0][1] + j*basis[1][1] + k*basis[2][1],
+      origin[2] + i*basis[0][2] + j*basis[1][2] + k*basis[2][2],
+    ]);
+  }
+  return verts;
+}
+
+function drawVoronoiCell(origin, basis) {
+  const g = new THREE.Group();
+  const verts = computeVoronoiFaces(origin, null, basis);
+  
+  // Draw edges of the parallelepiped as a wireframe
+  const edges = [
+    [0,1],[1,3],[3,2],[2,0], // bottom
+    [4,5],[5,7],[7,6],[6,4], // top
+    [0,4],[1,5],[2,6],[3,7], // verticals
+  ];
+  
+  const geo = new THREE.BufferGeometry();
+  const pts = [];
+  for (const [a,b] of edges) {
+    pts.push(verts[a][0], verts[a][1], verts[a][2], verts[b][0], verts[b][1], verts[b][2]);
+  }
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+  const mat = new THREE.LineBasicMaterial({ color: 0xb388ff, transparent: true, opacity: 0.25, linewidth: 1 });
+  g.add(new THREE.LineSegments(geo, mat));
+  
+  // Semi-transparent face planes
+  const faceQuads = [[0,2,3,1],[4,5,7,6],[0,4,6,2],[1,5,7,3],[0,1,5,4],[2,6,7,3]];
+  for (const q of faceQuads) {
+    const fGeo = new THREE.BufferGeometry();
+    const vp = [
+      verts[q[0]][0],verts[q[0]][1],verts[q[0]][2],
+      verts[q[1]][0],verts[q[1]][1],verts[q[1]][2],
+      verts[q[2]][0],verts[q[2]][1],verts[q[2]][2],
+      verts[q[3]][0],verts[q[3]][1],verts[q[3]][2],
+    ];
+    fGeo.setAttribute('position', new THREE.Float32BufferAttribute(vp, 3));
+    fGeo.setIndex([0,1,2,0,2,3]);
+    fGeo.computeVertexNormals();
+    const fMat = new THREE.MeshPhongMaterial({
+      color: 0xb388ff, emissive: 0x402080, emissiveIntensity: 0.2,
+      transparent: true, opacity: 0.1, side: THREE.DoubleSide, depthWrite: false
+    });
+    g.add(new THREE.Mesh(fGeo, fMat));
+  }
+  
+  return g;
+}
+
+// ============================================================
+// Build visualization
+// ============================================================
+let currentPoints = [];
+let currentBasis = [];
+let currentDet = 1;
+
+function rebuild() {
+  clearGroup(pointGroup);
+  clearGroup(svGroup);
+  clearGroup(basisGroup);
+  clearGroup(voronoiGroup);
+  basisArrows.length = 0;
+  basisLabels.length = 0;
+  
+  const type = document.getElementById('lattice-type').value;
+  const range = parseInt(document.getElementById('range').value);
+  const sizeVal = parseInt(document.getElementById('size').value) / 100;
+  const voronoiMode = document.getElementById('voronoi').value;
+  const svPct = parseInt(document.getElementById('sv-threshold').value) / 100;
+  
+  const lattice = LATTICES[type];
+  currentBasis = lattice.basis;
+  currentDet = det3(currentBasis);
+  const dim = 3;
+  
+  currentPoints = generateLatticePoints(currentBasis, range);
+  
+  // Compute norms
+  const norms = currentPoints.map(p => norm3(p));
+  const minNorm = Math.min(...norms.filter(n => n > 0.001));
+  const maxNorm = Math.max(...norms);
+  const lambda1 = minNorm; // approximately
+  
+  // Sort by norm to find shortest vectors
+  const sorted = currentPoints.map((p,i) => ({p, n: norms[i], i})).sort((a,b) => a.n - b.n);
+  const svCutoff = sorted[Math.max(1, Math.floor(sorted.length * svPct))].n;
+  const lambda1Cutoff = lambda1 * 1.08; // tight SV cutoff
+  
+  // Create point geometry with instanced mesh approach (simple: individual meshes for sv, instanced for others)
+  const svPoints = [];
+  const normalPoints = [];
+  
+  for (let i = 0; i < currentPoints.length; i++) {
+    const p = currentPoints[i];
+    const n = norms[i];
+    if (n < 0.001) continue; // skip origin
+    
+    if (n <= lambda1Cutoff) {
+      svPoints.push({ pos: p, norm: n });
+    } else {
+      normalPoints.push({ pos: p, norm: n });
+    }
+  }
+  
+  // Normal lattice points
+  const nCount = normalPoints.length;
+  if (nCount > 0) {
+    const geo = new THREE.SphereGeometry(sizeVal * 0.7, 8, 6);
+    const mat = new THREE.MeshPhongMaterial({
+      color: 0xb388ff, emissive: 0x402080, emissiveIntensity: 0.4,
+      specular: 0x666688, shininess: 40
+    });
+    const instanced = new THREE.InstancedMesh(geo, mat, nCount);
+    const dummy = new THREE.Object3D();
+    const color = new THREE.Color();
+    
+    for (let i = 0; i < nCount; i++) {
+      const {pos, norm} = normalPoints[i];
+      dummy.position.set(pos[0], pos[1], pos[2]);
+      const s = sizeVal * 0.7 * (0.6 + 0.4 * (1 - norm/maxNorm));
+      dummy.scale.setScalar(Math.max(0.03, s));
+      dummy.updateMatrix();
+      instanced.setMatrixAt(i, dummy.matrix);
+      
+      const t = norm / (maxNorm || 1);
+      color.setHSL(0.73 - t*0.15, 0.7, 0.35 + t*0.45);
+      instanced.setColorAt(i, color);
+    }
+    instanced.instanceMatrix.needsUpdate = true;
+    if (instanced.instanceColor) instanced.instanceColor.needsUpdate = true;
+    pointGroup.add(instanced);
+  }
+  
+  // Short vectors: individual meshes for hover/interaction
+  for (const {pos, norm} of svPoints) {
+    const s = sizeVal * 1.2;
+    const geo = new THREE.SphereGeometry(s, 12, 8);
+    const mat = new THREE.MeshPhongMaterial({
+      color: 0x00e676, emissive: 0x00e676, emissiveIntensity: 0.7,
+      specular: 0xffffff, shininess: 80
+    });
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.position.set(pos[0], pos[1], pos[2]);
+    mesh.userData = { pos, norm, isSV: true };
+    svGroup.add(mesh);
+  }
+  
+  // Origin
+  const origGeo = new THREE.SphereGeometry(sizeVal * 1.5, 16, 12);
+  const origMat = new THREE.MeshPhongMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.9 });
+  const origMesh = new THREE.Mesh(origGeo, origMat);
+  origMesh.userData = { pos: [0,0,0], norm: 0, isOrigin: true };
+  svGroup.add(origMesh);
+  
+  // Voronoi cells
+  if (voronoiMode === 'all') {
+    for (const p of svPoints) {
+      voronoiGroup.add(drawVoronoiCell(p.pos, currentBasis));
+    }
+  } else if (voronoiMode === 'selected') {
+    // Draw Voronoi around origin + 1 neighbor
+    voronoiGroup.add(drawVoronoiCell([0,0,0], currentBasis));
+    if (svPoints.length > 0) {
+      voronoiGroup.add(drawVoronoiCell(svPoints[0].pos, currentBasis));
+    }
+  }
+  
+  // Basis vectors
+  if (basisVisible) drawBasisVectors();
+  
+  // Update stats
+  document.getElementById('stat-count').textContent = currentPoints.length.toLocaleString();
+  document.getElementById('stat-det').textContent = currentDet.toFixed(4);
+  document.getElementById('stat-lambda').textContent = '≈ ' + lambda1.toFixed(3);
+  const hf = hermiteFactor(lambda1, currentDet, dim);
+  document.getElementById('stat-hermite').textContent = hf.toFixed(4);
+  const gh = gaussHeuristic(currentDet, dim);
+  document.getElementById('stat-gauss').textContent = gh.toFixed(3);
+  document.getElementById('stat-density').textContent = ((4/3*Math.PI*Math.pow(lambda1/2,3)*nCount) / Math.abs(currentDet)).toFixed(4);
+  
+  // Range val
+  document.getElementById('range-val').textContent = range;
+  document.getElementById('size-val').textContent = sizeVal.toFixed(2);
+  document.getElementById('sv-pct').textContent = Math.round(svPct*100) + '%';
+}
+
+function drawBasisVectors() {
+  clearGroup(basisGroup);
+  const colors = [0xff5252, 0x448aff, 0xffeb3b];
+  const labels = ['b₁', 'b₂', 'b₃'];
+  
+  for (let i = 0; i < 3; i++) {
+    const v = currentBasis[i];
+    const dir = new THREE.Vector3(v[0], v[1], v[2]);
+    const len = dir.length();
+    dir.normalize();
+    
+    // Arrow
+    const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(0,0,0), len, colors[i], 0.2, 0.12);
+    basisGroup.add(arrow);
+    basisArrows.push(arrow);
+  }
+}
+
+// ============================================================
+// UI bindings
+// ============================================================
+document.getElementById('lattice-type').addEventListener('change', rebuild);
+document.getElementById('range').addEventListener('input', rebuild);
+document.getElementById('size').addEventListener('input', rebuild);
+document.getElementById('voronoi').addEventListener('change', rebuild);
+document.getElementById('sv-threshold').addEventListener('input', () => {
+  document.getElementById('sv-pct').textContent = document.getElementById('sv-threshold').value + '%';
+  rebuild();
+});
+
+document.getElementById('btn-basis').addEventListener('click', () => {
+  basisVisible = !basisVisible;
+  document.getElementById('btn-basis').classList.toggle('active', basisVisible);
+  if (basisVisible) drawBasisVectors(); else clearGroup(basisGroup);
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  camera.position.set(12, 9, 14);
+  controls.target.set(0, 0, 0);
+  controls.update();
+});
+
+let isOrtho = false;
+document.getElementById('btn-ortho').addEventListener('click', () => {
+  isOrtho = !isOrtho;
+  document.getElementById('btn-ortho').classList.toggle('active', isOrtho);
+  camera.projectionMatrix.makePerspective(isOrtho ? camera.fov : camera.fov, camera.aspect, 0.3, 300);
+  // Switch to orthographic
+  if (isOrtho) {
+    const aspect = camera.aspect;
+    const frustumSize = 15;
+    camera.left = -frustumSize * aspect / 2;
+    camera.right = frustumSize * aspect / 2;
+    camera.top = frustumSize / 2;
+    camera.bottom = -frustumSize / 2;
+    camera.near = 0.3;
+    camera.far = 300;
+    camera.updateProjectionMatrix();
+  } else {
+    camera.projectionMatrix.makePerspective(50, camera.aspect, 0.3, 300);
+    camera.updateProjectionMatrix();
+  }
+});
+
+// ============================================================
+// Raycaster for hover
+// ============================================================
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const tooltip = document.createElement('div');
+tooltip.style.cssText = 'position:absolute;background:rgba(10,10,30,.95);color:#d0d0e0;padding:6px 10px;border-radius:6px;font-size:11px;pointer-events:none;border:1px solid #3a3a5a;display:none;z-index:20';
+document.body.appendChild(tooltip);
+
+window.addEventListener('mousemove', e => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(svGroup.children);
+  if (hits.length > 0) {
+    const u = hits[0].object.userData;
+    if (u.pos) {
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 15) + 'px';
+      tooltip.style.top = (e.clientY - 10) + 'px';
+      tooltip.innerHTML = u.isOrigin
+        ? '<b>原点 O</b>'
+        : `格向量 (${u.pos[0].toFixed(2)}, ${u.pos[1].toFixed(2)}, ${u.pos[2].toFixed(2)})<br>‖v‖ = ${u.norm.toFixed(3)}`;
+    }
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+// ============================================================
+// Render
+// ============================================================
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+
+rebuild();
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = container.clientWidth / container.clientHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(container.clientWidth, container.clientHeight);
+});
+
+console.log('🔷 Lattice Topology Visualizer — ℝ³ lattice explorer');
+console.log('   6 lattice types · Voronoi cells · Short vectors · Basis display');
+</script>
+</body>
+</html>
