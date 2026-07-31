@@ -104,7 +104,7 @@ function bitRev(x, bits) { let r=0; for(let i=0;i<bits;i++){ r=(r<<1)|(x&1); x>>
 // Generate synthetic data with recognizable pattern
 const inputData = new Array(N);
 for (let i = 0; i < N; i++) {
-  inputData[i] = (i * 32768 + i * i * 13 + Math.sin(i*0.1)*10000) % Q;
+  inputData[i] = Math.floor(i * 32768 + i * i * 13 + Math.sin(i*0.1)*10000) % Q;
   if (inputData[i] < 0) inputData[i] += Q;
 }
 
