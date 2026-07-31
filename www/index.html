@@ -281,7 +281,7 @@
             margin-top: 0.5rem;
         }
 
-        /* 12层隐私栈 */
+        /* 技术验证栈 */
         .privacy-stack {
             position: relative;
             z-index: 1;
@@ -700,7 +700,7 @@
         <div class="nav-logo">FIBEMATE</div>
         <ul class="nav-links">
             <li><a href="#features">特性</a></li>
-            <li><a href="#privacy">隐私栈</a></li>
+            <li><a href="#privacy">技术栈</a></li>
             <li><a href="#tech">技术</a></li>
             <li><a href="login.html">登录</a></li>
         </ul>
@@ -810,10 +810,10 @@
         </div>
     </section>
 
-<!-- 12层隐私栈 -->
+<!-- 技术验证栈 -->
     <section class="privacy-stack" id="privacy">
-        <h2 class="section-title">隐私技术栈</h2>
-        <p class="section-subtitle">深度防御，每一层都为你的隐私而战</p>
+        <h2 class="section-title">技术验证栈</h2>
+        <p class="section-subtitle">每一层都是可审计、可复现的密码学工程参考实现</p>
         
         <div class="layers-container">
             <div class="layer-card">
@@ -835,9 +835,9 @@
             <div class="layer-card">
                 <div class="layer-header">
                     <div class="layer-number">3</div>
-                    <div class="layer-title">Double Ratchet</div>
+                    <div class="layer-title">Double Ratchet 密钥棘轮（验证示例）</div>
                 </div>
-                <div class="layer-desc">持续密钥更新，每次消息自动刷新</div>
+                <div class="layer-desc">X3DH + Double Ratchet 协议工程参考实现 · PQ 混合（ML-KEM-768 + P-256）验证通过</div>
             </div>
 
             <div class="layer-card">
@@ -954,7 +954,7 @@
 
     <section class="features" id="features">
         <h2 class="section-title">核心特性</h2>
-        <p class="section-subtitle">不只是加密，而是全方位的隐私保护</p>
+        <p class="section-subtitle">不只是加密，而是可验证的全栈密码学工程</p>
 
         <div class="features-grid">
             <div class="feature-card">
@@ -1021,7 +1021,7 @@
                 <div class="feature-icon">🔓</div>
                 <div class="feature-title">开源协议</div>
                 <div class="feature-desc">计划 2026.08.31 开源。代码审计中，暂未公开。
-隐私不应是黑盒 —— 届时所有核心协议实现将公开。</div>
+密码学不应是黑盒 —— 所有核心算法实现将在开源时完整公开。</div>
             </div>
         </div>
     </section>
@@ -1161,8 +1161,8 @@
 
     <!-- CTA -->
     <section class="cta" id="download">
-        <h2>准备好保护你的隐私了吗？</h2>
-        <p>加入 FIBEMATE，体验下一代隐私通信</p>
+        <h2>准备好探索后量子密码了吗？</h2>
+        <p>加入 FIBEMATE，探索后量子密码工程验证</p>
         <div class="hero-buttons">
             <a href="login.html" class="btn-primary">立即开始</a>
         </div>
@@ -1175,7 +1175,7 @@
           <h2 class="section-title">关于<span class="gradient-text">项目</span></h2>
         </div>
         <p style="text-align: center; color: #888; font-size: 1.05rem; line-height: 1.8; max-width: 700px; margin: 0 auto;">
-          FIBEMATE &mdash; 后量子参考实现 &middot; 端到端安全 &middot; 开源隐私通讯协议
+          FIBEMATE &mdash; 后量子密码全栈工程验证平台 &middot; 可审计 &middot; 可复现
         </p>
       </div>
     </section>
@@ -1254,7 +1254,7 @@
 
   <div class="research-declaration" style="margin-top:16px;padding-top:16px;border-top:1px solid #eee;font-size:12px;color:#666;text-align:center;line-height:1.5;">
         <p>
-          🔬 FIBEMATE 是一个独立的隐私技术研究项目。<br>
+          🔬 FIBEMATE 是一个独立的密码学工程验证项目。<br>
           所有加密模块、零知识证明实现均为技术验证与学术研究目的。<br>
           ZK匿名登录功能仅用于展示零知识证明技术能力，不代表已落实实名认证要求。<br>
           项目已通过非经营性ICP备案（黑ICP备2026005787号-1），不涉及商业运营。
@@ -1374,7 +1374,7 @@
         <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🟢 2026-06-18 · SM2 TVLA v1.3 Montgomery Ladder N=5,000 7/7 全绿 · verify |t|=0.10 · decrypt |t|=0.16 · 三重防护锁定 · FreeTSA 存证 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00d4aa;">完整分析 →</a> · <a href="/TECHNICAL-VERIFICATION.md" style="color:#8b949e;">证据地图 →</a></p>
 
         <p class="footer-tech" style="margin-top: 0.5rem; font-size: 0.8rem;">
-            <a href="/docs/pqc-readiness.html" style="color:#00E5C3;text-decoration:none;">Post-Quantum Ready</a> &middot; Double Ratchet &middot; Sphinx Mixnet
+            <a href="/docs/pqc-readiness.html" style="color:#00E5C3;text-decoration:none;">Post-Quantum Ready</a> &middot; Double Ratchet · Sphinx · fml-dsa · FPGA v5
         <p class="footer-backend" style="margin-top: 0.8rem; font-size: 0.85rem;">
             <span style="display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#22c55e;margin:0 8px;">&#x1F680; 生产通道: Node.js v2.21-pq</span>
             <span style="display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:#f97316;margin:0 8px;">&#x1F52C; 实验通道: Rust v0.2-e2ee</span>
@@ -1437,7 +1437,7 @@
         </ul>
         </div>
         <div>
-        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(139,92,246,0.25);padding-bottom:0.3rem;">&#x1F578; 隐私层 Mixnet + PIR (7)</h5>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(139,92,246,0.25);padding-bottom:0.3rem;">&#x1F578; 实验层 Mixnet + PIR (7)</h5>
         <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
         <li><span style="color:#c9d1d9;">traffic-shaping.js</span> &mdash; a4dd1102...</li>
         <li><span style="color:#c9d1d9;">mixnet-transport.js</span> &mdash; 991b84cd...</li>
