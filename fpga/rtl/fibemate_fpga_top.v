@@ -73,6 +73,38 @@ wire uart_tx_core;
 assign uart_tx = uart_tx_core;
 
 // =============================================================================
+// UART receiver + echo buffer
+// =============================================================================
+wire       rx_valid;
+wire [7:0] rx_data;
+reg  [7:0] echo_byte;
+reg        echo_pending;
+
+uart_rx #(.CLK_FREQ(CLK_FREQ), .BAUD_RATE(BAUD_RATE)) u_uart_rx (
+    .clk(sys_clk), .rst_n(rst_n),
+    .rx(uart_rx),
+    .data(rx_data), .data_valid(rx_valid),
+    .busy()
+);
+
+// =============================================================================
+// Echo latch: capture received bytes, send when idle
+// =============================================================================
+always @(posedge sys_clk or negedge rst_n) begin
+    if (!rst_n) begin
+        echo_byte    <= 0;
+        echo_pending <= 0;
+    end else begin
+        if (rx_valid) begin
+            echo_byte    <= rx_data;
+            echo_pending <= 1'b1;
+        end else if (echo_pending && uart_idle) begin
+            echo_pending <= 1'b0;  // cleared when send starts
+        end
+    end
+end
+
+// =============================================================================
 // RAM: 256 x 13-bit dual-port (shared between seq FSM and ntt_core)
 // =============================================================================
 reg [12:0] ram [0:255];
@@ -211,10 +243,13 @@ always @(posedge sys_clk or negedge rst_n) begin
             2'd3: ;
         endcase
 
-        // Unified UART drive: boot message wins until boot_done
+        // Unified UART drive: boot > echo > seq messages
         if (!boot_done) begin
             uart_data <= boot_uart_data;
             uart_send <= boot_uart_send;
+        end else if (echo_pending && uart_idle) begin
+            uart_data <= echo_byte;
+            uart_send <= 1'b1;
         end else begin
             uart_data <= seq_uart_data;
             uart_send <= seq_uart_send;
