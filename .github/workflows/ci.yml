@@ -105,7 +105,7 @@ jobs:
           node-version: '22'
 
       - name: Install ESLint
-        run: npm install --no-save eslint @eslint/js
+        run: npm install --no-save eslint @eslint/js@^9
 
       - name: Run ESLint
         run: npx eslint packages/pqc-kem/src/ test/ --max-warnings 150
