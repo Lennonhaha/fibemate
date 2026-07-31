@@ -316,38 +316,10 @@
         </div>
     </div>
     
-    <!-- Three.js r128 鈥?鏈湴鎵樼 (鏈嶅姟鍣ㄤ笉渚濊禆 CDN) -->
-    <script src="./lib/three.min.js"></script>
-    <script>
-        // CDN 鍚庡锛屼粎褰撴湰鍦版枃浠跺姞杞藉け璐?        if (typeof THREE === 'undefined') {
-            document.write('<script src="lib/three.min.js"><\/script>');
-        }
-    </script>
-    <script>
-        // OrbitControls 鈥?鏈湴鎵樼
-        if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
-            document.write('<script src="./lib/OrbitControls.js"><\/script>');
-        }
-        // CDN 鍚庡
-        if (typeof THREE !== 'undefined' && typeof THREE.OrbitControls === 'undefined') {
-            document.write('<script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"><\/script>');
-        }
-    </script>
-    
-    <script>
-        // 璋冭瘯鏃ュ織
-        window.addEventListener('error', function(e) {
-            console.error('鍏ㄥ眬閿欒:', e.message, e.filename, e.lineno);
-        });
-        
-        window.addEventListener('load', function() {
-            console.log('=== 鍔犺浇鐘舵€?===');
-            console.log('THREE:', typeof THREE);
-            console.log('OrbitControls:', typeof THREE !== 'undefined' ? typeof THREE.OrbitControls : 'N/A');
-            console.log('DOMContentLoaded 宸茶Е鍙?);
-        });
-    </script>
-    
+    <!-- Three.js r128 + OrbitControls -->
+    <script src="lib/three.min.js"></script>
+    <script src="lib/OrbitControls.js"></script>
+
     <script>
         // ============================================================
         // 绂绘暎鎸傝胺闆嗗悎鐢熸垚鍣?        // ============================================================
