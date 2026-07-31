@@ -1,4 +1,4 @@
-﻿> ⚠️ **IMPORTANT DISCLAIMER**
+> ⚠️ **IMPORTANT DISCLAIMER**
 >
 > **FIBEMATE is an engineering demonstration platform, not a certified product.**
 >

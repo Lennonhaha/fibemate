@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -711,7 +711,7 @@
     <section class="hero">
         <div class="hero-content">
             <div class="hero-badge">
-                🔒 v3.3-preview | ML-KEM-768 · SM2 · SLH-DSA · ML-DSA-65 · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 (v1.3) + Mersenne 快速约减 1.8× · SLH-DSA WASM · OPK 预密钥协议
+                🔒 v3.3-preview | ML-KEM-768 · SM2 · SLH-DSA · ML-DSA-65 (fml-dsa 自研 · 跨 Noble 互操作验证) · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 (v1.3) + Mersenne 快速约减 1.8× · SLH-DSA WASM · OPK 预密钥协议
             </div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);">🏆 ML-KEM-768 通过 KAT 10,000 轮一致性验证 + TVLA v2 Enhanced (N=10,000) 时序侧信道验证 · <br><small style="color:#646c78;">C Native Addon (AVX2) 恒定时间 ✓ | 纯 JS 参考实现 时域泄漏评估见报告</small> · <a href="kat-10000.html" style="color:#00E5C3;text-decoration:underline;font-weight:600;">查看 KAT 10,000 轮验证报告 →</a></div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(255,165,0,0.06);border:1px solid rgba(255,165,0,0.15);">⚡ FPGA 合成通过 · ILA+L4 确认闭环 · UART 调试已打通 ✅ · Artix-7 35T 时序收敛 · <a href="/docs/hardware.html" style="color:#10b981;text-decoration:underline;font-weight:600;">查看硬件文档 ↓</a></div>
@@ -858,7 +858,21 @@
 
             <div class="layer-card">
                 <div class="layer-header">
-                    <div class="layer-number">6+</div>
+                    <div class="layer-number">7</div>
+                    <div class="layer-title">后量子数字签名</div>
+                </div>
+                <div class="layer-desc">
+                    SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (FIPS 204 ML-DSA-44/65/87 纯 JS 自研实现)</strong><br>
+                    · fml-dsa：纯 JavaScript，<strong style="color:#00d4aa;">跨 @noble/post-quantum 双向互操作验证通过</strong>（sign→verify / verify→sign 全绿）<br>
+                    · SLH-DSA (SPHINCS+)：FIPS 205 标准，WASM 加速 107KB raw / 51KB gzip<br>
+                    · SHA3/SHAKE 后端 + Fisher-Yates 拒绝采样 + NTT 域矩阵乘法，自研实现覆盖 ML-DSA 全套算法<br>
+                    · <a href="/crypto/test-fml-dsa.html" style="color:#00d4aa;text-decoration:underline;">查看 fml-dsa 跨库验证报告</a>
+                </div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">8+</div>
                     <div class="layer-title">更多保护层</div>
                 </div>
                 <div class="layer-desc">PIR 私有信息查询、ZK 零知识证明 (Bulletproofs)、差分隐私 (ε=1.0)、自毁消息（规划中）</div>
