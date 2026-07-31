@@ -77,14 +77,9 @@ h2{font-size:11px;color:#777;font-weight:400;margin-bottom:14px}
 
 <div id="info-bar">拖拽旋转 · 滚轮缩放 · 右键平移 · 📍 针问题展示 Besicovitch 构造</div>
 
-<script type="importmap">
-{"imports":{"three":"https://unpkg.com/three@0.160.0/build/three.module.js","three/addons/":"https://unpkg.com/three@0.160.0/examples/jsm/"}}
-</script>
-
-<script type="module">
-import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+<script>
 // ============================================================
 // Fibonacci sphere — uniform direction sampling on S²
 // ============================================================
