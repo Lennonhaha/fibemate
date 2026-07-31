@@ -169,6 +169,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 |--------|-------------|-------------|
 | **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | [KAT 10,000](scripts/kat-quick.js) ✅ |
 | **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM integration |
+| **fml-dsa** | FIPS 204 (ML-DSA-44/65/87) from-scratch JS implementation · **cross-Noble interop verified** | [bench/BENCHMARK-2026-07-31.md](packages/fml-dsa/bench/BENCHMARK-2026-07-31.md) · p50 within 30% of @noble/post-quantum |
 | **SM2 ECDH** | BigInt scalar masking + projective randomization · **⚠️ JS BigInt not constant-time (platform limit)** | TVLA 5/5 PASS (statistical, N=10,000) · see [Security Model](#security-model) |
 | **SM4-αGCM** | α=7.5 authenticated encryption, auto-select M2C or SM4 | 10/10 PASS |
 | **SM3 Hash** | GB/T 32905 compliant | KAT PASS |
