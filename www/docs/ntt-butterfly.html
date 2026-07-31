@@ -74,7 +74,15 @@ h2{font-size:12px;color:#888;font-weight:400;margin-bottom:14px}
 
 <script src="lib/three.min.js"></script>
 <script src="lib/OrbitControls.js"></script>
+<div id="error-overlay" style="display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:#200;border:2px solid #f44;border-radius:12px;padding:24px;z-index:9999;max-width:600px;font:14px monospace;color:#faa"></div>
 <script>
+window.onerror=function(msg,src,line,col,err){
+  var e=document.getElementById('error-overlay');
+  e.style.display='block';
+  e.innerHTML='<b>JS ERROR</b><br><br>'+String(msg)+'<br><br>Line: '+line+' Col: '+col+'<br><br><small>'+src+'</small>';
+  return false;
+};
+try {
 // ============================================================
 // NTT 参数 (ML-DSA-65 / Dilithium)
 // ============================================================
@@ -475,6 +483,12 @@ window.addEventListener('resize', () => {
 console.log('🦋 NTT Butterfly Visualizer ready — N=256, Q=8380417, ζ=1753');
 console.log('   Drag to rotate · Scroll to zoom · Right-drag to pan');
 console.log('   Click any node to highlight its butterfly connections');
+} catch(err) {
+  var e=document.getElementById('error-overlay');
+  e.style.display='block';
+  e.innerHTML='<b>JS ERROR</b><br><br>'+String(err.message||err)+'<br><br><small>'+err.stack+'</small>';
+  throw err;
+}
 </script>
 </body>
 </html>
