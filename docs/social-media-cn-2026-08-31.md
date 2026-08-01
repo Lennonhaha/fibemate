@@ -28,7 +28,7 @@
 
 | 技术线 | 内容 | 状态 |
 |:---|:---|:---|
-| **标准 PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) — NTT 域实现、WASM 编译、TLS 1.3 混合 KEX | ✅ 生产就绪 |
+| **标准 PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA-128s (FIPS 205, WASM bridge) — NTT 域实现、fml-dsa (ML-DSA-65, FIPS 204) Noble 互操作验证 | ✅ 已验证 |
 | **国密混合** | SM2/SM3/SM4 + ML-KEM — IANA 注册编号 #4590，应用层验证 | ✅ 双轨在线 |
 | **硬件 (FPGA)** | NTT 加速器 Artix-7 35T — 256×256 回环、行为模型 43/43 | ✅ 仿真通过 |
 
@@ -301,7 +301,8 @@ FIBEMATE 是一个后量子密码学（PQC）全栈工程验证平台。项目�
 ##### 1. 标准化 PQC 实现
 
 - **ML-KEM-768**（FIPS 203）：全 NTT 域实现，`keygen/encaps/decaps` 全部对齐 FIPS 标准线格式
-- **SLH-DSA**（FIPS 205）：WASM 编译就绪
+- **SLH-DSA-128s**（FIPS 205）：WASM 桥接封装
+- **fml-dsa / ML-DSA-65**（FIPS 204）：纯 JavaScript 实现，与 @noble/post-quantum 双向互操作验证通过
 - **与 @noble/post-quantum 交叉验证**：10,000/10,000 轮通过
 - **与 liboqs 0.12.0 (C) 交叉验证**：10,000/10,000 轮双向通过
 
@@ -335,7 +336,7 @@ FIBEMATE 是一个后量子密码学（PQC）全栈工程验证平台。项目�
 
 ```
 Browser (WebCrypto + IndexedDB)
-  ↕ TLS 1.3 Hybrid KEX (X25519+MLKEM768)
+  ↕ Application-layer Hybrid KEX (X25519+MLKEM768)
 Node.js Server (Express + WS)
   ↕ Barrett modMul (constant-time)
 Crypto Core (ml-kem-768.js · SM2 · SM3 · SM4)

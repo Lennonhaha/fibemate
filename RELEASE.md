@@ -37,7 +37,7 @@
 | ML-KEM-768 | KAT 10,000/10,000 ✅ |
 | SM2 | 11/11 tests (v1.3) ✅ |
 | SM4 | Bit-sliced constant-time S-box ✅ |
-| SLH-DSA | WASM compiled ✅ |
+| SLH-DSA-128s | WASM bridge (FIPS 205) ✅ |
 | LookingGlass | v2.2.3 cold/hot path (61/61) ✅ |
 | VWZ | 148/148 + C reference ✅ |
 | FPGA | NTT v5, WNS 9.755ns, L8+L9 43/43 ✅ |
