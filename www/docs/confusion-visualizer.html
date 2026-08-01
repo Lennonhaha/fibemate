@@ -182,10 +182,23 @@
     
     <!-- Three.js r128 + OrbitControls — local (no CDN dependency) -->
     <script src="/docs/three-r128.min.js"></script>
-    <script src="/docs/OrbitControls-r128.js"></script>
     <script>
-    document.getElementById('loader-overlay').style.display = 'none';
-    initScene();
+    // Ensure THREE is loaded before OrbitControls
+    if (typeof THREE === 'undefined') {
+        document.getElementById('loader-status').textContent = 'Error: Three.js failed to load';
+    } else {
+        // Load OrbitControls after THREE is ready
+        var orbitScript = document.createElement('script');
+        orbitScript.src = '/docs/OrbitControls-r128.js';
+        orbitScript.onload = function() {
+            document.getElementById('loader-overlay').style.display = 'none';
+            initScene();
+        };
+        orbitScript.onerror = function() {
+            document.getElementById('loader-status').textContent = 'Error: OrbitControls failed to load';
+        };
+        document.head.appendChild(orbitScript);
+    }
     </script>
     
     <!-- ============================================================ -->
