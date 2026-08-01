@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-01T06:49:48.043Z",
-  "version": "1.1",
+  "generated": "2026-08-01T08:00:00.000Z",
+  "version": "1.2",
   "scope": {
     "included": [
       "ML-KEM-768",
@@ -41,17 +41,17 @@
   ],
   "summary": {
     "totalModules": 8,
-    "highRisk": 1,
-    "mediumRisk": 4,
+    "highRisk": 0,
+    "mediumRisk": 5,
     "lowRisk": 3,
-    "averageCoverage": 64
+    "averageCoverage": 71
   },
   "matrix": [
     {
       "module": "SLH-DSA",
-      "coverageScore": 40,
-      "riskLevel": "high",
-      "riskScore": 30,
+      "coverageScore": 65,
+      "riskLevel": "medium",
+      "riskScore": 20,
       "tvlaPassRate": null,
       "tvlaGenuinePassRate": null,
       "tvlaMaxT": null,
@@ -66,18 +66,18 @@
         "macos",
         "windows"
       ],
-      "hasSmoke": false,
-      "hasBenchmark": false,
+      "hasSmoke": true,
+      "hasBenchmark": true,
       "hasInterop": false,
       "isHardware": false,
-      "note": "NIST reference C implementation; KAT vectors from fips205/",
-      "summary": "FIPS 205 stateless hash-based signature. NIST reference C implementation. WASM build validated in CI."
+      "note": "Noble @noble/post-quantum slh-dsa.js; smoke + benchmark via scripts/slh-dsa-*.mjs",
+      "summary": "FIPS 205 stateless hash-based signature (Noble JS implementation). Smoke 5/5 (keygen/sign/verify/tamper/wrongKey), benchmark keygen=489ms sign=4199ms verify=4.2ms."
     },
     {
       "module": "SM3",
-      "coverageScore": 50,
+      "coverageScore": 65,
       "riskLevel": "medium",
-      "riskScore": 25,
+      "riskScore": 15,
       "tvlaPassRate": null,
       "tvlaGenuinePassRate": null,
       "tvlaMaxT": null,
@@ -92,18 +92,18 @@
         "macos",
         "windows"
       ],
-      "hasSmoke": false,
+      "hasSmoke": true,
       "hasBenchmark": true,
       "hasInterop": false,
       "isHardware": false,
-      "note": "",
-      "summary": "Chinese national standard hash (≈SHA-256). Pure JS, education/validation use. ~5 KB/s throughput."
+      "note": "GBT 32905 vectors + KAT 30/30 + determinism + empty input; benchmark 3B-100KB range",
+      "summary": "Chinese national standard hash (≈SHA-256). Pure JS, smoke 5/5 (GBT 32905 TV0+TV1, KAT 30/30, determinism, empty). Benchmark 43K ops/s@3B, 19.6 MB/s@100KB."
     },
     {
       "module": "SM4-GCM",
-      "coverageScore": 50,
+      "coverageScore": 65,
       "riskLevel": "medium",
-      "riskScore": 25,
+      "riskScore": 15,
       "tvlaPassRate": null,
       "tvlaGenuinePassRate": null,
       "tvlaMaxT": null,
@@ -118,12 +118,12 @@
         "macos",
         "windows"
       ],
-      "hasSmoke": false,
+      "hasSmoke": true,
       "hasBenchmark": true,
       "hasInterop": false,
       "isHardware": false,
-      "note": "",
-      "summary": "Chinese national standard block cipher + GCM mode. Pure JS, ~230 KB/s encrypt throughput."
+      "note": "KAT 30/30 + tamper detection + 100-round roundtrip; benchmark 10B-10KB range",
+      "summary": "Chinese national standard block cipher + GCM mode. Pure JS, smoke 3/3 (100-round roundtrip, tamper, KAT 30/30). Benchmark enc=9K ops/s@10B, enc=59 ops/s@10KB."
     },
     {
       "module": "P-256/ECDH",
@@ -166,12 +166,12 @@
       "ciPlatforms": [
         "ubuntu"
       ],
-      "hasSmoke": false,
+      "hasSmoke": true,
       "hasBenchmark": false,
       "hasInterop": false,
       "isHardware": false,
-      "note": "",
-      "summary": "HMAC over SM3. TVLA 8/8 ALL PASS. KAT verified via scripts/hmac-sm3-kat.cjs (GBT 32905-2016 vectors, 6 tests)."
+      "note": "smoke test included via sm3-smoke.cjs (HMAC-SM3 shares SM3 core)",
+      "summary": "HMAC over SM3. TVLA 8/8 ALL PASS. KAT verified via scripts/hmac-sm3-kat.cjs (GBT 32905-2016 vectors, 6 tests). SM3 smoke test covers core hash."
     },
     {
       "module": "ML-KEM-768",
