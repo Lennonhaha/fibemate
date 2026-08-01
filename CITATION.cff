@@ -11,9 +11,10 @@ repository-code: 'https://github.com/Lennonhaha/fibemate'
 url: 'https://fibemate.net'
 abstract: >-
   FIBEMATE is a post-quantum cryptography full-stack engineering verification platform.
-  It implements ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa native JS with proven Noble interop), SLH-DSA (FIPS 205), and Chinese national standards
-  SM2/SM3/SM4, with TLS 1.3 hybrid key exchange (X25519MLKEM768), FPGA hardware acceleration,
-  and formal verification via TLA+ and QROM proofs.
+  It implements ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa native JS with proven Noble interop),
+  SLH-DSA-128s (FIPS 205, WASM bridge), and Chinese national standards SM2/SM3/SM4,
+  with application-layer ML-KEM-768 hybrid key exchange, FPGA hardware acceleration,
+  and TLA+ formal verification with QROM security model documentation.
 keywords:
   - post-quantum cryptography
   - ML-DSA-65
@@ -29,5 +30,5 @@ keywords:
   - TLA+
   - formal verification
 license: GPL-3.0-only
-version: 3.3-preview
-date-released: '2026-07-31'
+version: 3.3.0
+date-released: '2026-08-31'
