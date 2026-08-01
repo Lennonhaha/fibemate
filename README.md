@@ -1,16 +1,19 @@
-> ⚠️ **IMPORTANT DISCLAIMER**
+> **FIBEMATE 是一个后量子密码学（PQC）全栈工程验证平台，开源（GPL-3.0），不是聊天软件。**
+>
+> ⚠️ **This is NOT the Rust chat app of the same name.** FIBEMATE is an open-source post-quantum cryptography engineering verification platform covering ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa native + Noble cross-validation), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, application-layer hybrid KEX, TLA+ formal verification, and 100 TSR evidence records.
+
+> ⚠️ **安全声明 / Security Notice**
 >
 > **FIBEMATE is an engineering demonstration platform, not a certified product.**
 >
 > - **Engineering-verified components** (ML-KEM-768, SLH-DSA, SM2/SM3/SM4) have passed functional verification, KAT, and software TVLA side-channel testing, but **have not undergone third-party security audit**.
 > - **Experimental components** (VWZ, LookingGlass) **provide no cryptographic security guarantees**, are default-off, require manual activation.
-
-> ⚠️ VWZ / LookingGlass 实验组件已于 2026-07-24 迁移至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支。主分支保留文档引用，源代码不再维护于 main。
+> - VWZ / LookingGlass 实验组件已于 2026-07-24 迁移至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支。主分支保留文档引用，源代码不再维护于 main。
 > - Full security assessment: see [Security Model](#security-model) and [Known Limitations](#known-limitations).
 
 ---
 
-# FIBEMATE — Post-Quantum Cryptography Full-Stack Engineering Platform
+# FIBEMATE — 后量子密码学全栈工程验证平台 / Post-Quantum Cryptography Full-Stack Engineering Platform
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
