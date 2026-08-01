@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE — Traffic Obfuscation 3D</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0f0f1e; color: #e0e0e0; overflow: hidden;
+        }
+        #canvas-container { width: 100vw; height: 100vh; position: relative; }
+        
+        #loader-overlay {
+            position: absolute; inset: 0;
+            background: #0f0f1e;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            z-index: 1000;
+        }
+        #loader-overlay .spinner {
+            width: 36px; height: 36px;
+            border: 3px solid #2a2a4a;
+            border-top-color: #00d4ff;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-bottom: 16px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        #loader-status { font-size: 12px; color: #a0a0c0; }
+        #loader-error {
+            font-size: 12px; color: #ff6b6b; margin-top: 6px;
+            display: none; max-width: 400px; text-align: center; line-height: 1.5;
+        }
+        
+        #tooltip {
+            position: absolute; pointer-events: none;
+            background: rgba(15,15,30,0.95); border: 1px solid #3a3a5a;
+            border-radius: 8px; padding: 10px 14px; font-size: 12px;
+            display: none; max-width: 280px;
+            backdrop-filter: blur(8px); box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+            z-index: 100;
+        }
+        #tooltip .tt-strategy { font-weight: bold; margin-bottom: 4px; }
+        #tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; margin: 2px 0; }
+        #tooltip .tt-label { color: #a0a0c0; }
+        #tooltip .tt-val { color: #00d4ff; font-weight: bold; }
+        
+        #controls {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(15,15,30,0.92); border: 1px solid #3a3a5a;
+            border-radius: 12px; padding: 20px; width: 300px;
+            backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            z-index: 10;
+        }
+        h1 {
+            font-size: 16px; margin-bottom: 12px;
+            color: #00d4ff; border-bottom: 1px solid #3a3a5a;
+            padding-bottom: 10px;
+        }
+        .control-group { margin-bottom: 14px; }
+        .control-group label { display: block; font-size: 12px; color: #a0a0c0; margin-bottom: 6px; }
+        .slider-container { display: flex; align-items: center; gap: 8px; }
+        input[type="range"] {
+            flex: 1; height: 4px; border-radius: 2px;
+            background: #2a2a4a; outline: none;
+            -webkit-appearance: none; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%;
+            background: #00d4ff; box-shadow: 0 0 8px rgba(0,212,255,0.5);
+        }
+        .value-display {
+            min-width: 44px; padding: 3px 6px;
+            background: #1a1a3e; border-radius: 4px;
+            text-align: center; font-size: 11px; color: #00d4ff; font-weight: bold;
+        }
+        .btn {
+            width: 100%; padding: 7px; margin-top: 6px;
+            background: #1a1a3e; border: 1px solid #3a3a5a;
+            border-radius: 6px; color: #c0c0d0; font-size: 12px;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn:hover { background: #2a2a5a; border-color: #00d4ff; color: #fff; }
+        
+        .legend-row {
+            display: flex; align-items: center; gap: 8px;
+            margin-bottom: 5px; font-size: 11px;
+            cursor: pointer; padding: 4px 6px; border-radius: 4px;
+            transition: background 0.2s;
+        }
+        .legend-row:hover { background: rgba(255,255,255,0.05); }
+        .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .legend-row.dimmed { opacity: 0.35; }
+        
+        .insight-box {
+            background: #1a1a2e; border-left: 3px solid #00d4ff;
+            padding: 10px 12px; margin-top: 10px; border-radius: 4px;
+            font-size: 11px; line-height: 1.5;
+        }
+        .insight-box strong { color: #00d4ff; }
+        
+        #selected-info {
+            position: absolute; bottom: 20px; left: 20px;
+            background: rgba(15,15,30,0.92); border: 1px solid #3a3a5a;
+            border-radius: 10px; padding: 12px 16px; font-size: 12px;
+            display: none; backdrop-filter: blur(8px); z-index: 10;
+        }
+        #selected-info .si-header { font-weight: bold; color: #00d4ff; margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+    <div id="canvas-container"></div>
+    
+    <div id="loader-overlay">
+        <div class="spinner"></div>
+        <div id="loader-status">Loading Three.js CDN...</div>
+        <div id="loader-error"></div>
+    </div>
+    
+    <div id="tooltip"></div>
+    
+    <div id="controls">
+        <h1>&#127919; Traffic Obfuscation &mdash; 3D Parameter Space</h1>
+        
+        <div class="control-group">
+            <label>Point Size</label>
+            <div class="slider-container">
+                <input type="range" id="pointSize" min="4" max="20" value="8">
+                <div class="value-display" id="pointSize-val">8</div>
+            </div>
+        </div>
+        <div class="control-group">
+            <label>Opacity</label>
+            <div class="slider-container">
+                <input type="range" id="opacity" min="20" max="100" value="85">
+                <div class="value-display" id="opacity-val">85%</div>
+            </div>
+        </div>
+        <div class="control-group" style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="autoRotate" checked>
+            <label for="autoRotate" style="display:inline;font-size:12px;">Auto-rotate</label>
+        </div>
+        <div class="control-group" style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="showGrid" checked>
+            <label for="showGrid" style="display:inline;font-size:12px;">Grid floor</label>
+        </div>
+        <div class="control-group" style="display:flex;align-items:center;gap:8px;">
+            <input type="checkbox" id="showSurface" checked>
+            <label for="showSurface" style="display:inline;font-size:12px;">Pareto surface</label>
+        </div>
+        <button class="btn" id="resetCamera">Reset View</button>
+        <button class="btn" id="viewTop">Top View (Delay vs Accuracy)</button>
+        <button class="btn" id="viewSide">Side View (Overhead vs Accuracy)</button>
+        
+        <div style="margin-top:12px;padding-top:10px;border-top:1px solid #3a3a5a;">
+            <div class="legend-row" data-strategy="staticpad">
+                <div class="legend-dot" style="background:#00ff88;"></div>
+                <span>StaticPad &mdash; Zero delay</span>
+            </div>
+            <div class="legend-row" data-strategy="perphase">
+                <div class="legend-dot" style="background:#ff6b6b;"></div>
+                <span>Per-Phase Jitter &mdash; Variable delay</span>
+            </div>
+            <div class="legend-row" data-strategy="budgetpool">
+                <div class="legend-dot" style="background:#4ea8ff;"></div>
+                <span>Budget Pooling &mdash; Shared budget</span>
+            </div>
+            <div class="legend-row" data-strategy="baseline">
+                <div class="legend-dot" style="background:#ffcc00;"></div>
+                <span>Baseline &mdash; No obfuscation</span>
+            </div>
+        </div>
+        <div class="insight-box">
+            <strong>Core Finding:</strong> Pad budget (R&sup2;=74%) is a more reliable obfuscation lever than jitter (R&sup2;=25%).<br>
+            <strong>Best:</strong> BudgetPool(J=3000) &rarr; 53.3% acc (16ms cost)
+        </div>
+    </div>
+    
+    <div id="selected-info"></div>
+    
+    <!-- ============================================================ -->
+    <!-- Robust multi-CDN loader (no document.write)                   -->
+    <!-- ============================================================ -->
+    <script>
+    (function() {
+        var statusEl = document.getElementById('loader-status');
+        
+        var CDN_SOURCES = [
+            { name: 'unpkg',   url: 'https://unpkg.com/three@0.128.0/build/three.min.js' },
+            { name: 'jsdelivr', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js' },
+            { name: 'bootcdn',  url: 'https://cdn.bootcdn.net/ajax/libs/three.js/r128/three.min.js' }
+        ];
+        
+        var ORBIT_SOURCES = [
+            { name: 'unpkg',    url: 'https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js' },
+            { name: 'jsdelivr',  url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js' }
+        ];
+        
+        function loadScript(url, timeoutMs) {
+            return new Promise(function(resolve, reject) {
+                var s = document.createElement('script');
+                s.src = url;
+                s.async = false;
+                var timer = setTimeout(function() {
+                    s.onload = s.onerror = null;
+                    s.remove();
+                    reject(new Error('timeout'));
+                }, timeoutMs || 10000);
+                s.onload = function() {
+                    clearTimeout(timer);
+                    s.remove();
+                    resolve();
+                };
+                s.onerror = function() {
+                    clearTimeout(timer);
+                    s.remove();
+                    reject(new Error('network error'));
+                };
+                document.head.appendChild(s);
+            });
+        }
+        
+        function trySources(sources, label, timeoutMs) {
+            var idx = 0;
+            function next() {
+                if (idx >= sources.length) {
+                    return Promise.reject(new Error('All ' + label + ' CDNs exhausted'));
+                }
+                var src = sources[idx];
+                statusEl.textContent = 'Loading ' + label + ' from ' + src.name + '...';
+                return loadScript(src.url, timeoutMs).catch(function(err) {
+                    console.warn(label + ' CDN ' + src.name + ' failed: ' + err.message);
+                    idx++;
+                    return next();
+                });
+            }
+            return next();
+        }
+        
+        // Step 1: load three.js
+        trySources(CDN_SOURCES, 'Three.js r128', 8000)
+            .then(function() {
+                if (typeof THREE === 'undefined') {
+                    throw new Error('THREE global not set after script load');
+                }
+                console.log('Three.js loaded from CDN, version r128');
+                
+                // Step 2: load OrbitControls
+                return trySources(ORBIT_SOURCES, 'OrbitControls', 8000);
+            })
+            .then(function() {
+                if (typeof THREE === 'undefined' || typeof THREE.OrbitControls === 'undefined') {
+                    throw new Error('OrbitControls not registered on THREE');
+                }
+                console.log('OrbitControls loaded');
+                
+                // All loaded — hide loader and init scene
+                document.getElementById('loader-overlay').style.display = 'none';
+                initScene();
+            })
+            .catch(function(err) {
+                console.error('Fatal: ' + err.message);
+                document.querySelector('#loader-overlay .spinner').style.display = 'none';
+                statusEl.textContent = 'Three.js CDN failed';
+                var errEl = document.getElementById('loader-error');
+                errEl.style.display = 'block';
+                errEl.innerHTML =
+                    '<p>Unable to load Three.js from any CDN source.</p>' +
+                    '<p style="margin-top:6px;">Checked: ' + 
+                    CDN_SOURCES.map(function(s) { return s.name; }).join(', ') + '</p>' +
+                    '<p style="margin-top:6px;">Error: ' + err.message + '</p>' +
+                    '<p style="margin-top:8px;color:#a0a0c0;">' +
+                    'Check network/firewall; ensure unpkg.com or jsdelivr.net is reachable.</p>';
+            });
+    })();
+    </script>
+    
+    <!-- ============================================================ -->
+    <!-- Main application (waits for THREE global)                     -->
+    <!-- ============================================================ -->
+    <script>
+    // Called by the loader after THREE + OrbitControls are confirmed loaded
+    function initScene() {
+    
+    // ---- Embedded Data ----
+    var EXPERIMENT_DATA = (function() {
+        var baseline = { accuracy: 0.609, delayMs: 0, overhead: 0, strategy: "baseline", label: "Baseline (no obfuscation)" };
+        var staticPad = { accuracy: 0.570, delayMs: 0, overhead: 127.07, strategy: "staticpad", label: "StaticPad (TLS_TX_RANDOM_PAD)" };
+        
+        var perPhaseJitter = [
+            { accuracy: 0.578, delayMs: 9.7,  overhead: 39.95 }, { accuracy: 0.525, delayMs: 10.3, overhead: 38.82 },
+            { accuracy: 0.547, delayMs: 11.4, overhead: 38.14 }, { accuracy: 0.512, delayMs: 13.6, overhead: 38.59 },
+            { accuracy: 0.588, delayMs: 14.5, overhead: 38.99 }, { accuracy: 0.543, delayMs: 16.8, overhead: 38.48 },
+            { accuracy: 0.523, delayMs: 19.4, overhead: 38.27 }, { accuracy: 0.575, delayMs: 22.1, overhead: 37.08 },
+            { accuracy: 0.600, delayMs: 32.5, overhead: 40.04 }, { accuracy: 0.542, delayMs: 43.8, overhead: 39.39 },
+            { accuracy: 0.592, delayMs: 62.1, overhead: 38.53 }
+        ];
+        var ppLabels = ["hs=0","hs=10","hs=25","hs=50","hs=75","hs=100","hs=150","hs=200","hs=300","hs=500","hs=1000"];
+        
+        var budgetPooling = [
+            { accuracy: 0.612, delayMs: 0,    overhead: 19.06 }, { accuracy: 0.622, delayMs: 0.23, overhead: 20.63 },
+            { accuracy: 0.542, delayMs: 0.79, overhead: 17.30 }, { accuracy: 0.685, delayMs: 2.57, overhead: 19.97 },
+            { accuracy: 0.610, delayMs: 3.44, overhead: 17.34 }, { accuracy: 0.618, delayMs: 5.57, overhead: 19.59 },
+            { accuracy: 0.652, delayMs: 7.47, overhead: 17.25 }, { accuracy: 0.607, delayMs: 11.81, overhead: 20.53 },
+            { accuracy: 0.533, delayMs: 15.90, overhead: 19.41 }, { accuracy: 0.633, delayMs: 19.52, overhead: 18.06 },
+            { accuracy: 0.592, delayMs: 5.61,  overhead: 0     }, { accuracy: 0.570, delayMs: 5.53,  overhead: 2.13  },
+            { accuracy: 0.573, delayMs: 4.96,  overhead: 4.21  }, { accuracy: 0.548, delayMs: 5.60,  overhead: 9.78  },
+            { accuracy: 0.562, delayMs: 6.17,  overhead: 22.03 }, { accuracy: 0.573, delayMs: 4.86,  overhead: 35.49 },
+            { accuracy: 0.627, delayMs: 5.63,  overhead: 77.53 }, { accuracy: 0.642, delayMs: 5.68,  overhead: 141.75 },
+            { accuracy: 0.552, delayMs: 5.02,  overhead: 230.72 }
+        ];
+        var bpLabels = ["J=0","J=100","J=250","J=500","J=750","J=1000","J=1500","J=2000","J=3000","J=5000",
+                        "P=0","P=512","P=1024","P=2048","P=4096","P=8192","P=16384","P=32768","P=65536"];
+        
+        var allPoints = [baseline, staticPad];
+        perPhaseJitter.forEach(function(p,i) {
+            allPoints.push({ accuracy: p.accuracy, delayMs: p.delayMs, overhead: p.overhead,
+                strategy: "perphase", label: "Per-Phase (" + (ppLabels[i]||'') + ",data=20,r=40)" });
+        });
+        budgetPooling.forEach(function(p,i) {
+            var lbl = bpLabels[i]||'';
+            if (i<10) lbl = "BudgetPool (" + lbl + ",P=4096)"; else lbl = "BudgetPool (J=1000," + lbl + ")";
+            allPoints.push({ accuracy: p.accuracy, delayMs: p.delayMs, overhead: p.overhead,
+                strategy: "budgetpool", label: lbl });
+        });
+        
+        return { points: allPoints, baseline: baseline, staticPad: staticPad,
+            maxDelay: 65, maxOverhead: 240, sceneScale: 20, accuracyInvert: true };
+    })();
+    
+    // ---- Helpers ----
+    function mapPoint(p) {
+        var D = EXPERIMENT_DATA;
+        return {
+            x: (p.delayMs / D.maxDelay) * D.sceneScale,
+            y: (1.0 - p.accuracy) * D.sceneScale,
+            z: (p.overhead / D.maxOverhead) * D.sceneScale,
+            rawAccuracy: p.accuracy
+        };
+    }
+    
+    var COLORS  = { baseline:0xffcc00, staticpad:0x00ff88, perphase:0xff6b6b, budgetpool:0x4ea8ff };
+    var LABELS  = { baseline:"Baseline", staticpad:"StaticPad", perphase:"Per-Phase Jitter", budgetpool:"Budget Pooling" };
+    
+    // ---- Scene globals ----
+    var _scene, _camera, _renderer, _controls;
+    var _pointMeshes = [];
+    var _strategyGroups = { baseline:[], staticpad:[], perphase:[], budgetpool:[] };
+    var _raycaster, _mouse;
+    var _gridHelper, _paretoSurface, _axisGroup;
+    
+    // ---- Build ----
+    function buildAxes() {
+        _axisGroup = new THREE.Group();
+        var S = EXPERIMENT_DATA.sceneScale;
+        function line(x1,y1,z1,x2,y2,z2,c) {
+            var g = new THREE.BufferGeometry();
+            g.setAttribute('position', new THREE.Float32BufferAttribute([x1,y1,z1,x2,y2,z2], 3));
+            return new THREE.Line(g, new THREE.LineBasicMaterial({ color:c, transparent:true, opacity:0.7 }));
+        }
+        _axisGroup.add(line(0,0,0, S+2,0,0, 0xff6b6b));
+        _axisGroup.add(line(0,0,0, 0,S+2,0, 0x00ff88));
+        _axisGroup.add(line(0,0,0, 0,0,S+3, 0x4ea8ff));
+        
+        function tick(pos, c) {
+            var m = new THREE.Mesh(new THREE.SphereGeometry(0.15,4,4), new THREE.MeshBasicMaterial({color:c}));
+            m.position.copy(pos); _axisGroup.add(m);
+        }
+        for (var i=0; i<=60; i+=20) tick(new THREE.Vector3((i/65)*S,0,0), 0xff6b6b);
+        for (var a=0.50; a<=0.70; a+=0.05) tick(new THREE.Vector3(0,(1-a)*S,0), 0x00ff88);
+        var maxO=EXPERIMENT_DATA.maxOverhead;
+        for (var o=0; o<=240; o+=60) tick(new THREE.Vector3(0,0,(o/maxO)*S), 0x4ea8ff);
+        
+        function spriteLabel(text, x, y, z, c) {
+            var cv=document.createElement('canvas'); cv.width=256; cv.height=64;
+            var ctx=cv.getContext('2d');
+            ctx.fillStyle=c; ctx.font='bold 28px -apple-system,sans-serif';
+            ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(text,128,32);
+            var t=new THREE.CanvasTexture(cv); t.minFilter=THREE.LinearFilter;
+            var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:t,transparent:true,depthTest:false}));
+            sp.position.set(x,y,z); sp.scale.set(5,1.25,1); return sp;
+        }
+        _axisGroup.add(spriteLabel('Delay (ms)', S/2, -1.5, -0.5, '#ff6b6b'));
+        _axisGroup.add(spriteLabel('1-Accuracy', -1.5, S/2, -0.5, '#00ff88'));
+        _axisGroup.add(spriteLabel('Overhead (B/pkt)', -1.5, -1.5, S/2, '#4ea8ff'));
+        
+        var o=new THREE.Mesh(new THREE.SphereGeometry(0.3,16,16), new THREE.MeshBasicMaterial({color:0xffffff}));
+        o.position.set(0,0,0); _axisGroup.add(o);
+        _scene.add(_axisGroup);
+    }
+    
+    function buildDataPoints() {
+        _pointMeshes.forEach(function(m){_scene.remove(m);});
+        _pointMeshes=[]; _strategyGroups={baseline:[],staticpad:[],perphase:[],budgetpool:[]};
+        
+        EXPERIMENT_DATA.points.forEach(function(p,idx){
+            var pos=mapPoint(p);
+            var color=COLORS[p.strategy]||0xffffff;
+            var sz=parseInt(document.getElementById('pointSize').value)/100;
+            
+            var m=new THREE.Mesh(
+                new THREE.SphereGeometry(sz,16,16),
+                new THREE.MeshPhongMaterial({color:color,emissive:color,emissiveIntensity:0.35,specular:0x333333,shininess:25,transparent:true,opacity:0.85})
+            );
+            m.position.set(pos.x,pos.y,pos.z);
+            m.userData={point:p,index:idx,strategy:p.strategy,color:color};
+            _scene.add(m); _pointMeshes.push(m);
+            if(_strategyGroups[p.strategy]) _strategyGroups[p.strategy].push(m);
+            
+            var r=new THREE.Mesh(
+                new THREE.RingGeometry(sz*1.3,sz*1.6,32),
+                new THREE.MeshBasicMaterial({color:color,side:THREE.DoubleSide,transparent:true,opacity:0.3,depthWrite:false})
+            );
+            r.position.copy(m.position);
+            r.lookAt(new THREE.Vector3(pos.x,pos.y+10,pos.z));
+            r.userData={isGlow:true,parentIdx:idx};
+            _scene.add(r); _pointMeshes.push(r);
+        });
+    }
+    
+    function updatePointAppearance() {
+        var sz=parseInt(document.getElementById('pointSize').value)/100;
+        var op=parseInt(document.getElementById('opacity').value)/100;
+        _pointMeshes.forEach(function(m){
+            if(m.userData.isGlow){m.material.opacity=op*0.35;return;}
+            m.geometry.dispose(); m.geometry=new THREE.SphereGeometry(sz,16,16);
+            m.material.opacity=op;
+        });
+    }
+    
+    // ---- Events ----
+    function onMouseMove(event) {
+        _mouse.x=(event.clientX/window.innerWidth)*2-1;
+        _mouse.y=-(event.clientY/window.innerHeight)*2+1;
+        _raycaster.setFromCamera(_mouse,_camera);
+        var hits=_raycaster.intersectObjects(_pointMeshes.filter(function(m){return !m.userData.isGlow && m.visible;}));
+        var tt=document.getElementById('tooltip');
+        if(hits.length>0){
+            var p=hits[0].object.userData.point;
+            var drop=((EXPERIMENT_DATA.baseline.accuracy-p.accuracy)/EXPERIMENT_DATA.baseline.accuracy*100).toFixed(1);
+            var cHex=COLORS[p.strategy].toString(16);
+            while(cHex.length<6) cHex='0'+cHex;
+            tt.innerHTML=
+                '<div class="tt-strategy" style="color:#'+cHex+';">'+LABELS[p.strategy]+'</div>'+
+                '<div class="tt-row"><span class="tt-label">Accuracy:</span><span class="tt-val">'+(p.accuracy*100).toFixed(1)+'%</span></div>'+
+                '<div class="tt-row"><span class="tt-label">Drop:</span><span class="tt-val">'+drop+'%</span></div>'+
+                '<div class="tt-row"><span class="tt-label">Delay:</span><span class="tt-val">'+p.delayMs.toFixed(1)+' ms</span></div>'+
+                '<div class="tt-row"><span class="tt-label">Overhead:</span><span class="tt-val">'+p.overhead.toFixed(1)+' B/pkt</span></div>'+
+                '<div class="tt-row"><span class="tt-label">Config:</span><span class="tt-val" style="font-size:10px;">'+(p.label||'')+'</span></div>';
+            tt.style.display='block';
+            tt.style.left=(event.clientX+18)+'px';
+            tt.style.top=(event.clientY-10)+'px';
+        } else { tt.style.display='none'; }
+    }
+    
+    function onClick(event) {
+        _mouse.x=(event.clientX/window.innerWidth)*2-1;
+        _mouse.y=-(event.clientY/window.innerHeight)*2+1;
+        _raycaster.setFromCamera(_mouse,_camera);
+        var hits=_raycaster.intersectObjects(_pointMeshes.filter(function(m){return !m.userData.isGlow && m.visible;}));
+        if(hits.length>0){
+            var p=hits[0].object.userData.point;
+            var drop=((EXPERIMENT_DATA.baseline.accuracy-p.accuracy)/EXPERIMENT_DATA.baseline.accuracy*100).toFixed(1);
+            var info=document.getElementById('selected-info');
+            info.innerHTML=
+                '<div class="si-header">'+LABELS[p.strategy]+' &mdash; '+(p.label||'')+'</div>'+
+                'Accuracy: <b>'+(p.accuracy*100).toFixed(1)+'%</b> &nbsp; Drop: <b>'+drop+'%</b> &nbsp; '+
+                'Delay: <b>'+p.delayMs.toFixed(1)+'ms</b> &nbsp; Overhead: <b>'+p.overhead.toFixed(1)+'B/pkt</b>';
+            info.style.display='block';
+            setTimeout(function(){info.style.display='none';},5000);
+        }
+    }
+    
+    function setupEvents() {
+        var ct=document.getElementById('canvas-container');
+        ct.addEventListener('mousemove', onMouseMove);
+        ct.addEventListener('click', onClick);
+        
+        document.getElementById('pointSize').addEventListener('input', function(e){
+            document.getElementById('pointSize-val').textContent=e.target.value;
+            updatePointAppearance();
+        });
+        document.getElementById('opacity').addEventListener('input', function(e){
+            document.getElementById('opacity-val').textContent=e.target.value+'%';
+            updatePointAppearance();
+        });
+        document.getElementById('autoRotate').addEventListener('change', function(e){
+            if(_controls) _controls.autoRotate=e.target.checked;
+        });
+        document.getElementById('showGrid').addEventListener('change', function(e){
+            _gridHelper.visible=e.target.checked;
+        });
+        document.getElementById('showSurface').addEventListener('change', function(e){
+            _paretoSurface.visible=e.target.checked;
+        });
+        
+        document.querySelectorAll('.legend-row').forEach(function(row){
+            row.addEventListener('click', function(){
+                var strat=this.dataset.strategy;
+                this.classList.toggle('dimmed');
+                var vis=!this.classList.contains('dimmed');
+                if(_strategyGroups[strat]) _strategyGroups[strat].forEach(function(m){m.visible=vis;});
+            });
+        });
+        
+        document.getElementById('resetCamera').addEventListener('click', function(){
+            _camera.position.set(25,18,30);
+            if(_controls){_controls.target.set(10,5,6);_controls.update();}
+        });
+        document.getElementById('viewTop').addEventListener('click', function(){
+            _camera.position.set(10,35,6);
+            if(_controls){_controls.target.set(10,5,6);_controls.update();}
+        });
+        document.getElementById('viewSide').addEventListener('click', function(){
+            _camera.position.set(-5,10,28);
+            if(_controls){_controls.target.set(10,5,8);_controls.update();}
+        });
+        
+        window.addEventListener('resize', function(){
+            _camera.aspect=window.innerWidth/window.innerHeight;
+            _camera.updateProjectionMatrix();
+            _renderer.setSize(window.innerWidth,window.innerHeight);
+        });
+    }
+    
+    // ---- Init ----
+    var container=document.getElementById('canvas-container');
+    
+    _scene=new THREE.Scene();
+    _scene.background=new THREE.Color(0x0f0f1e);
+    _scene.fog=new THREE.Fog(0x0f0f1e,30,80);
+    
+    _camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.5,200);
+    _camera.position.set(25,18,30);
+    _camera.lookAt(10,5,6);
+    
+    _renderer=new THREE.WebGLRenderer({antialias:true});
+    _renderer.setSize(window.innerWidth,window.innerHeight);
+    _renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    container.appendChild(_renderer.domElement);
+    
+    _controls=new THREE.OrbitControls(_camera,_renderer.domElement);
+    _controls.enableDamping=true;
+    _controls.dampingFactor=0.08;
+    _controls.autoRotate=true;
+    _controls.autoRotateSpeed=0.4;
+    _controls.target.set(10,5,6);
+    _controls.update();
+    
+    _raycaster=new THREE.Raycaster();
+    _mouse=new THREE.Vector2();
+    
+    _scene.add(new THREE.AmbientLight(0x404060,0.7));
+    var dl=new THREE.DirectionalLight(0xffffff,0.5); dl.position.set(30,30,20); _scene.add(dl);
+    var dl2=new THREE.DirectionalLight(0x8899cc,0.3); dl2.position.set(-20,-10,-20); _scene.add(dl2);
+    
+    buildAxes();
+    _gridHelper=new THREE.GridHelper(28,20,0x2a2a4a,0x1a1a3a);
+    _gridHelper.position.y=-0.1; _scene.add(_gridHelper);
+    
+    var S=EXPERIMENT_DATA.sceneScale;
+    var baselineY=(1.0-EXPERIMENT_DATA.baseline.accuracy)*S;
+    _paretoSurface=new THREE.Mesh(
+        new THREE.PlaneGeometry(S+2,S+3),
+        new THREE.MeshBasicMaterial({color:0xffcc00,side:THREE.DoubleSide,transparent:true,opacity:0.12,depthWrite:false})
+    );
+    _paretoSurface.position.set(S/2,baselineY,S/2+1.5);
+    _scene.add(_paretoSurface);
+    
+    buildDataPoints();
+    setupEvents();
+    
+    function animate(){
+        requestAnimationFrame(animate);
+        _controls.update();
+        _renderer.render(_scene,_camera);
+    }
+    animate();
+    
+    console.log('Traffic Obfuscation 3D Visualizer ready.');
+    console.log('Data points: '+EXPERIMENT_DATA.points.length+' | Strategies: StaticPad / Per-Phase / BudgetPool');
+    
+    } // end initScene
+    </script>
+</body>
+</html>
