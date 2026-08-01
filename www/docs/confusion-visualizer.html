@@ -180,101 +180,11 @@
     
     <div id="selected-info"></div>
     
-    <!-- ============================================================ -->
-    <!-- Robust multi-CDN loader (no document.write)                   -->
-    <!-- ============================================================ -->
+    <!-- Three.js r128 + OrbitControls — local (no CDN dependency) -->
+    <script src="/docs/three-r128.min.js"></script>
+    <script src="/docs/OrbitControls-r128.js"></script>
     <script>
-    (function() {
-        var statusEl = document.getElementById('loader-status');
-        
-        var CDN_SOURCES = [
-            { name: 'unpkg',   url: 'https://unpkg.com/three@0.128.0/build/three.min.js' },
-            { name: 'jsdelivr', url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js' },
-            { name: 'bootcdn',  url: 'https://cdn.bootcdn.net/ajax/libs/three.js/r128/three.min.js' }
-        ];
-        
-        var ORBIT_SOURCES = [
-            { name: 'unpkg',    url: 'https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js' },
-            { name: 'jsdelivr',  url: 'https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js' }
-        ];
-        
-        function loadScript(url, timeoutMs) {
-            return new Promise(function(resolve, reject) {
-                var s = document.createElement('script');
-                s.src = url;
-                s.async = false;
-                var timer = setTimeout(function() {
-                    s.onload = s.onerror = null;
-                    s.remove();
-                    reject(new Error('timeout'));
-                }, timeoutMs || 10000);
-                s.onload = function() {
-                    clearTimeout(timer);
-                    s.remove();
-                    resolve();
-                };
-                s.onerror = function() {
-                    clearTimeout(timer);
-                    s.remove();
-                    reject(new Error('network error'));
-                };
-                document.head.appendChild(s);
-            });
-        }
-        
-        function trySources(sources, label, timeoutMs) {
-            var idx = 0;
-            function next() {
-                if (idx >= sources.length) {
-                    return Promise.reject(new Error('All ' + label + ' CDNs exhausted'));
-                }
-                var src = sources[idx];
-                statusEl.textContent = 'Loading ' + label + ' from ' + src.name + '...';
-                return loadScript(src.url, timeoutMs).catch(function(err) {
-                    console.warn(label + ' CDN ' + src.name + ' failed: ' + err.message);
-                    idx++;
-                    return next();
-                });
-            }
-            return next();
-        }
-        
-        // Step 1: load three.js
-        trySources(CDN_SOURCES, 'Three.js r128', 8000)
-            .then(function() {
-                if (typeof THREE === 'undefined') {
-                    throw new Error('THREE global not set after script load');
-                }
-                console.log('Three.js loaded from CDN, version r128');
-                
-                // Step 2: load OrbitControls
-                return trySources(ORBIT_SOURCES, 'OrbitControls', 8000);
-            })
-            .then(function() {
-                if (typeof THREE === 'undefined' || typeof THREE.OrbitControls === 'undefined') {
-                    throw new Error('OrbitControls not registered on THREE');
-                }
-                console.log('OrbitControls loaded');
-                
-                // All loaded — hide loader and init scene
-                document.getElementById('loader-overlay').style.display = 'none';
-                initScene();
-            })
-            .catch(function(err) {
-                console.error('Fatal: ' + err.message);
-                document.querySelector('#loader-overlay .spinner').style.display = 'none';
-                statusEl.textContent = 'Three.js CDN failed';
-                var errEl = document.getElementById('loader-error');
-                errEl.style.display = 'block';
-                errEl.innerHTML =
-                    '<p>Unable to load Three.js from any CDN source.</p>' +
-                    '<p style="margin-top:6px;">Checked: ' + 
-                    CDN_SOURCES.map(function(s) { return s.name; }).join(', ') + '</p>' +
-                    '<p style="margin-top:6px;">Error: ' + err.message + '</p>' +
-                    '<p style="margin-top:8px;color:#a0a0c0;">' +
-                    'Check network/firewall; ensure unpkg.com or jsdelivr.net is reachable.</p>';
-            });
-    })();
+    document.getElementById('loader-overlay').style.display = 'none';
     </script>
     
     <!-- ============================================================ -->
