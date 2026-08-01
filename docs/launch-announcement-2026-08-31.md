@@ -64,8 +64,8 @@ FIBEMATE answers: *Can one person build, verify, and timestamp-evidence the enti
 ### Reproducibility
 
 - **100 RFC 3161 TSR records** (lg-001~lg-100) — DigiCert + FreeTSA dual authority
-- Every KAT, cross-validation, and release milestone timestamped
-- Audit package: 258KB, 234 files, SHA256 inventory
+- Every KAT, cross-validated, and release milestone timestamped
+- TSR manifest: v4, 131 total entries, SHA256 inventory
 - CI: Nightly ✅ | node-test ✅ | cross-lang ✅ | KAT smoke ✅
 
 ---
@@ -118,8 +118,10 @@ Live demo: [fibemate.net/demo](https://fibemate.net/demo/)
 | ML-KEM cross-validation | 20,000/20,000 (noble + liboqs) |
 | NTT Barrett reduction speedup | 14× |
 | SM2 software TVLA | 36/36 PASS (N=10,000) |
+| ML-KEM-768 TVLA | corrected (V8 JIT artifact, no exploitable leak) |
+| ML-KEM-1024 TVLA | 3/3 PASS (Noble, N=10,000) |
 | TLA+ verified states | 101,467 |
-| TSR evidence records | 100 |
+| TSR evidence records | 131 total (lg-001~lg-100) |
 | CI badges | ✅ all green |
 | Project score | 9.3/10 |
 

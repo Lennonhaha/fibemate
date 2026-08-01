@@ -15,8 +15,9 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 ## Major Changes Since v3.3-preview
 
 ### Security & Audit
-- **External audit completed** (2026-07-27): ML-KEM-768, SM2, hybrid KDF
-- **10 audit fixes applied**: bounds checks, input validation, seed clearing
+- **Engineering verification completed**: ML-KEM-768, SM2, hybrid KDF — self-conducted, cross-validated against Noble + liboqs
+- **10 self-identified issues fixed**: bounds checks, input validation, seed clearing, nonce truncation (fb8a73c)
+- **Third-party audit**: not yet completed; planned Q4 2026
 - **Security policy established**: `SECURITY.md` with disclosure process
 - **OpenSSF Best Practices**: Passing badge (project 13695)
 
@@ -36,7 +37,7 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 - **OpenSSF Roadmap**: English + Chinese, Silver/Gold gap analysis
 - **API Documentation**: Complete JS/WASM API reference
 - **Security Limitations**: Honest disclosure of all known risks
-- **External Audit Report**: Full findings with fixes
+- **Engineering Verification Report**: Self-conducted findings with fixes, cross-validation logs
 
 ### Hardware
 - **FPGA UART**: TX verified (CH340 @ 115200), RX design complete
@@ -51,7 +52,7 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 3. **C addon not fuzzed**: No continuous fuzzing infrastructure
 4. **RTL withheld**: Core IP not open (security review pending)
 5. **Single maintainer**: Bus Factor = 1 (AI contributions don't count)
-6. **No third-party audit**: Self-audit only, no external crypto review
+6. **No third-party audit**: Self-verified only; external crypto review planned Q4 2026
 
 ---
 

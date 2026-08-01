@@ -5,18 +5,18 @@
 ## Pre-Release
 
 - [x] All core tests passing (KAT 10,000 / VWZ 148/148 / FPGA 43/43)
-- [x] TSR cumulative 130+ (lg-001~lg-085+), DigiCert + FreeTSA dual-source
+- [x] TSR cumulative 131 (lg-001~lg-100), DigiCert + FreeTSA dual-source
 - [x] Performance benchmarks documented
 - [x] README / CONTRIBUTING / SECURITY / CODE_OF_CONDUCT / CHANGELOG reviewed
 - [x] CITATION.cff authored
 - [x] BUILD.md (482 lines, full build guite)
 - [x] .github/workflows: CI (ci.yml) / Nightly / Release / Repolinter / Scorecard
 - [x] .github/ISSUE_TEMPLATE: bug_report / feature_request / good-first-issue
-- [ ] License headers on all source files (core files done, audit ongoing)
+- [x] License headers on all source files (SPDX full-repo, BOM 3-layer governance, 662 files 0 BOM)
 
 ## Release Day (2026-08-31)
 
-- [ ] Tag `v3.3.0` on main
+- [x] Tag `v3.3.0` on main (force-updated to `046faf8`)
 - [ ] Create GitHub Release with changelog
 - [ ] Upload WASM artifacts:
   - `lgv2_bg.wasm` (LookingGlass v2.2.3)
@@ -43,4 +43,4 @@
 | FPGA | NTT v5, WNS 9.755ns, L8+L9 43/43 ✅ |
 | TLS Hybrid | IANA #4590, Path C-2 ✅ |
 | TLA+ | Path C-2 formal (7 invariants, 0 deadlock) ✅ |
-| TSR | 130+ items ✅ |
+| TSR | 131 total (lg-001~lg-100) ✅ |

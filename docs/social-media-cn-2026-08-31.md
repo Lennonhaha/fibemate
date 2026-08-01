@@ -58,7 +58,7 @@
 
 #### 可复现性
 
-- **95 份 RFC 3161 时间戳存证**（lg-001~lg-095）— DigiCert + FreeTSA 双机构签发
+- **100 份 RFC 3161 时间戳存证**（lg-001~lg-100）— DigiCert + FreeTSA 双机构签发
 - 每轮 KAT、每轮交叉验证、每个版本里程碑均有 TSR 存证
 - 审计打包：258KB，234 文件，SHA256 文件清单
 
@@ -96,14 +96,12 @@
 | 交叉验证 (noble + liboqs) | 20,000/20,000 |
 | FPGA NTT 回环 | 256/256 |
 | TLA+ 状态探索 | 101,467 |
-| TSR 存证 | 95 份 |
+| TSR 存证 | 100 份 |
 | 测试覆盖率（密码核心） | 93.91% |
 
 ---
 
 ### 路线图
-
-| 时间节点 | 事项 |
 |:---|:---|
 | 2026-08-20 | 编译期隔离实验性模块（Feature Flag） |
 | 2026-08-25 | ML-KEM 交叉验证 CI 门禁就绪 |
@@ -155,7 +153,7 @@ fibemate/
 ├── tla/                    # TLA+ 形式化模型 (Path C-2)
 ├── rust/lgv2/              # LookingGlass v2 (实验)
 ├── rust/vwz-sign-wasm/     # VWZ 签名 (实验)
-├── docs/                   # 15+ 文档 · 95 TSR 存证
+├── docs/                   # 15+ 文档 · 100 TSR 存证
 └── .github/workflows/      # CI/CD 流水线 (3 层)
 ```
 
@@ -178,7 +176,7 @@ const ss = decapsulate(kp.secretKey, enc.ciphertext);
 #### 2. SM2 国密全栈
 - GB/T 32918 签名 + 加密
 - 标量掩码防 SPA：`k' = k + r·N`（64 位随机 r）
-- 软件 TVLA N=10,000，5/5 PASS
+- 软件 TVLA N=10,000，36/36 PASS
 
 #### 3. FPGA NTT 加速器
 - Artix-7 35T (Xilinx)
@@ -194,7 +192,7 @@ TLC: 101,467 states · 26,115 distinct · 7 invariants · 0 violations
 
 #### 5. 时间戳全链存证
 ```
-lg-001~lg-095: DigiCert + FreeTSA 双源 RFC 3161 时间戳
+lg-001~lg-100: DigiCert + FreeTSA 双源 RFC 3161 时间戳
 ```
 
 每份 KAT、每轮交叉验证、每个版本里程碑都有 TSR 存在工程仓库里。密码学的不信任精神，对自身工程也适用。
@@ -256,7 +254,7 @@ node -e "
 - SM2/SM3/SM4 国密套件，SM2 掩码防 SPA，已过软件 TVLA
 - FPGA Artix-7 NTT 加速器，行为模型 43/43 全过
 - TLA+ 形式化验证握手协议（7 条不变量，101K 状态探索）
-- 95 份 RFC 3161 时间戳存证（lg-001~lg-095）
+- 100 份 RFC 3161 时间戳存证（lg-001~lg-100）
 - Barrett 归约常时除法，比 BigInt 快 14×
 
 诚实说：不是安全产品，是工程验证平台。实验模块默认关闭，无安全担保。完整限制见 security-limitations.md。
@@ -329,7 +327,7 @@ FIBEMATE 是一个后量子密码学（PQC）全栈工程验证平台。项目�
 
 ##### 5. 时间戳全链存证
 
-全项目 95 份 RFC 3161 标准时间戳（lg-001~lg-095），覆盖所有 KAT 测试、交叉验证和版本里程碑。DigiCert + FreeTSA 双证书源签发。
+全项目 100 份 RFC 3161 标准时间戳（lg-001~lg-100），覆盖所有 KAT 测试、交叉验证和版本里程碑。DigiCert + FreeTSA 双证书源签发。
 
 ---
 
@@ -369,7 +367,7 @@ TLA+ Formal Model (TLC · 7 invariants)
 | 主语言 | JavaScript (ES2022) + Rust (WASM 绑定) |
 | 运行环境 | Node.js 22 LTS, 所有现代浏览器 |
 | 开源日期 | 2026-08-31 |
-| TSR 存证 | lg-001~lg-095（DigiCert + FreeTSA） |
+| TSR 存证 | lg-001~lg-100（DigiCert + FreeTSA） |
 
 ---
 
@@ -403,7 +401,7 @@ TLA+ Formal Model (TLC · 7 invariants)
 | SM2 TVLA (N=10,000) | 36/36 PASS |
 | FPGA 行为测试 | 43/43 PASS |
 | TLA+ 状态探索 | 101,467 |
-| TSR 存证 | 95 份 |
+| TSR 存证 | 100 份 |
 | 测试覆盖率 | 93.91% |
 | 核心代码行数 | ~355 (ml-kem-768.js) |
 | 文档字数 | 50,000+ |
