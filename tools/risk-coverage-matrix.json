@@ -1,0 +1,269 @@
+{
+  "generated": "2026-08-01T06:49:48.043Z",
+  "version": "1.1",
+  "scope": {
+    "included": [
+      "ML-KEM-768",
+      "SM2",
+      "SM3",
+      "SM4-GCM",
+      "SLH-DSA",
+      "HMAC-SM3",
+      "P-256/ECDH",
+      "FPGA NTT"
+    ],
+    "excluded": [
+      "VWZ (experimental)",
+      "LookingGlass (experimental)"
+    ]
+  },
+  "knownDocFailures": [
+    {
+      "module": "ML-KEM-768",
+      "function": "compress (pre-alloc)",
+      "reason": "Operates on public data during Encaps; documented in README and tvla-9of9-summary.md"
+    },
+    {
+      "module": "SM2",
+      "function": "[jsbn] verify",
+      "reason": "jsbn 28-bit limb variable-time scalar mul; documented as known limitation for pure-JS fallback"
+    },
+    {
+      "module": "SM2",
+      "function": "[jsbn] decrypt",
+      "reason": "Same jsbn variable-time root cause as verify; SM2 decrypt uses SM2_Decrypt → scalarMult"
+    },
+    {
+      "module": "SM2",
+      "function": "[BigInt] verify",
+      "reason": "Native BigInt wNAF verify — timing variance from precomp table access; fixed-length on roadmap"
+    }
+  ],
+  "summary": {
+    "totalModules": 8,
+    "highRisk": 1,
+    "mediumRisk": 4,
+    "lowRisk": 3,
+    "averageCoverage": 64
+  },
+  "matrix": [
+    {
+      "module": "SLH-DSA",
+      "coverageScore": 40,
+      "riskLevel": "high",
+      "riskScore": 30,
+      "tvlaPassRate": null,
+      "tvlaGenuinePassRate": null,
+      "tvlaMaxT": null,
+      "tvlaRawMaxT": null,
+      "tvlaGenuineFailures": 0,
+      "tvlaKnownFailures": 0,
+      "tvlaKnownDetail": [],
+      "tvlaFailures": [],
+      "hasKAT": true,
+      "ciPlatforms": [
+        "ubuntu",
+        "macos",
+        "windows"
+      ],
+      "hasSmoke": false,
+      "hasBenchmark": false,
+      "hasInterop": false,
+      "isHardware": false,
+      "note": "NIST reference C implementation; KAT vectors from fips205/",
+      "summary": "FIPS 205 stateless hash-based signature. NIST reference C implementation. WASM build validated in CI."
+    },
+    {
+      "module": "SM3",
+      "coverageScore": 50,
+      "riskLevel": "medium",
+      "riskScore": 25,
+      "tvlaPassRate": null,
+      "tvlaGenuinePassRate": null,
+      "tvlaMaxT": null,
+      "tvlaRawMaxT": null,
+      "tvlaGenuineFailures": 0,
+      "tvlaKnownFailures": 0,
+      "tvlaKnownDetail": [],
+      "tvlaFailures": [],
+      "hasKAT": true,
+      "ciPlatforms": [
+        "ubuntu",
+        "macos",
+        "windows"
+      ],
+      "hasSmoke": false,
+      "hasBenchmark": true,
+      "hasInterop": false,
+      "isHardware": false,
+      "note": "",
+      "summary": "Chinese national standard hash (≈SHA-256). Pure JS, education/validation use. ~5 KB/s throughput."
+    },
+    {
+      "module": "SM4-GCM",
+      "coverageScore": 50,
+      "riskLevel": "medium",
+      "riskScore": 25,
+      "tvlaPassRate": null,
+      "tvlaGenuinePassRate": null,
+      "tvlaMaxT": null,
+      "tvlaRawMaxT": null,
+      "tvlaGenuineFailures": 0,
+      "tvlaKnownFailures": 0,
+      "tvlaKnownDetail": [],
+      "tvlaFailures": [],
+      "hasKAT": true,
+      "ciPlatforms": [
+        "ubuntu",
+        "macos",
+        "windows"
+      ],
+      "hasSmoke": false,
+      "hasBenchmark": true,
+      "hasInterop": false,
+      "isHardware": false,
+      "note": "",
+      "summary": "Chinese national standard block cipher + GCM mode. Pure JS, ~230 KB/s encrypt throughput."
+    },
+    {
+      "module": "P-256/ECDH",
+      "coverageScore": 50,
+      "riskLevel": "medium",
+      "riskScore": 25,
+      "tvlaPassRate": null,
+      "tvlaGenuinePassRate": null,
+      "tvlaMaxT": null,
+      "tvlaRawMaxT": null,
+      "tvlaGenuineFailures": 0,
+      "tvlaKnownFailures": 0,
+      "tvlaKnownDetail": [],
+      "tvlaFailures": [],
+      "hasKAT": true,
+      "ciPlatforms": [
+        "ubuntu"
+      ],
+      "hasSmoke": true,
+      "hasBenchmark": true,
+      "hasInterop": false,
+      "isHardware": false,
+      "note": "",
+      "summary": "NIST P-256 ECDH for double-ratchet key exchange. No dedicated TVLA (relies on Node.js built-in crypto)."
+    },
+    {
+      "module": "HMAC-SM3",
+      "coverageScore": 60,
+      "riskLevel": "medium",
+      "riskScore": 20,
+      "tvlaPassRate": 100,
+      "tvlaGenuinePassRate": 100,
+      "tvlaMaxT": 3.2,
+      "tvlaRawMaxT": 3.2,
+      "tvlaGenuineFailures": 0,
+      "tvlaKnownFailures": 0,
+      "tvlaKnownDetail": [],
+      "tvlaFailures": [],
+      "hasKAT": true,
+      "ciPlatforms": [
+        "ubuntu"
+      ],
+      "hasSmoke": false,
+      "hasBenchmark": false,
+      "hasInterop": false,
+      "isHardware": false,
+      "note": "",
+      "summary": "HMAC over SM3. TVLA 8/8 ALL PASS. KAT verified via scripts/hmac-sm3-kat.cjs (GBT 32905-2016 vectors, 6 tests)."
+    },
+    {
+      "module": "ML-KEM-768",
+      "coverageScore": 100,
+      "riskLevel": "low",
+      "riskScore": 5,
+      "tvlaPassRate": 100,
+      "tvlaGenuinePassRate": 100,
+      "tvlaMaxT": 0,
+      "tvlaRawMaxT": 23.93,
+      "tvlaGenuineFailures": 0,
+      "tvlaKnownFailures": 1,
+      "tvlaKnownDetail": [
+        {
+          "function": "compress (pre-alloc)",
+          "reason": "fixed coeff (i*13%3329) slower than random; operates on public data during Encaps"
+        }
+      ],
+      "tvlaFailures": [],
+      "hasKAT": true,
+      "ciPlatforms": [
+        "ubuntu",
+        "macos",
+        "windows"
+      ],
+      "hasSmoke": true,
+      "hasBenchmark": true,
+      "hasInterop": true,
+      "isHardware": false,
+      "note": "",
+      "summary": "Flagship PQC KEM. TVLA 8/9 pass (1 known: compress public-data operation). Full CI + interop."
+    },
+    {
+      "module": "SM2",
+      "coverageScore": 90,
+      "riskLevel": "low",
+      "riskScore": 5,
+      "tvlaPassRate": 100,
+      "tvlaGenuinePassRate": 100,
+      "tvlaMaxT": 0,
+      "tvlaRawMaxT": 8.22,
+      "tvlaGenuineFailures": 0,
+      "tvlaKnownFailures": 3,
+      "tvlaKnownDetail": [
+        {
+          "function": "[jsbn] verify",
+          "reason": "jsbn 28-bit limb variable-time scalar mul; documented as known limitation for pure-JS fallback"
+        },
+        {
+          "function": "[jsbn] decrypt",
+          "reason": "Same jsbn variable-time root cause as verify; SM2 decrypt uses SM2_Decrypt → scalarMult"
+        },
+        {
+          "function": "[BigInt] verify",
+          "reason": "Native BigInt wNAF verify — timing variance from precomp table access; fixed-length on roadmap"
+        }
+      ],
+      "tvlaFailures": [],
+      "hasKAT": true,
+      "ciPlatforms": [
+        "ubuntu",
+        "macos",
+        "windows"
+      ],
+      "hasSmoke": true,
+      "hasBenchmark": true,
+      "hasInterop": false,
+      "isHardware": false,
+      "note": "",
+      "summary": "Chinese national standard ECC. jsbn verify/decrypt + BigInt verify have known JS variable-time limitations; BigInt genKey/sign/encrypt/decrypt all pass."
+    },
+    {
+      "module": "FPGA NTT",
+      "coverageScore": 70,
+      "riskLevel": "low",
+      "riskScore": 0,
+      "tvlaPassRate": null,
+      "tvlaGenuinePassRate": null,
+      "tvlaMaxT": null,
+      "tvlaRawMaxT": null,
+      "tvlaGenuineFailures": 0,
+      "tvlaKnownFailures": 0,
+      "tvlaKnownDetail": [],
+      "tvlaFailures": [],
+      "hasKAT": false,
+      "ciPlatforms": [],
+      "hasSmoke": false,
+      "hasBenchmark": false,
+      "hasInterop": false,
+      "isHardware": true,
+      "note": "Hardware module — verified via Vivado timing closure (WNS=9.755ns) + ILA hardware debug",
+      "summary": "Hardware NTT accelerator (Artix-7). Timing closure passed (WNS=9.755ns). Not applicable for software CI/KAT."
+    }
+  ]
+}
