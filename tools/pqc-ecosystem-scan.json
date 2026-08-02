@@ -1,0 +1,2862 @@
+{
+  "score": 94,
+  "totalDeps": 147,
+  "totalFiles": 1135,
+  "highRiskFiles": 73,
+  "pqcFiles": 23,
+  "assessment": {
+    "crypto": {
+      "usageFiles": [
+        "double-ratchet-pq.js",
+        "sm2-bigint-ec.js",
+        "test-tls-hybrid-extension.js",
+        "www/zk/bulletproofs.js",
+        "www/zk/schnorr-verifier.js",
+        "www/zk/zk-browser.js",
+        "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
+        "www/demo/ml-kem-768.js",
+        "www/crypto/ml-kem-768.js",
+        "www/crypto/sm2-bigint-ec.js",
+        "www/crypto/sm2-ec-browser.js",
+        "test/a2a-smoke.js",
+        "test/test-cross-lang-seeded.js",
+        "test/test-cross-lang.js",
+        "test/test-fibemate.js",
+        "test/test-keccak.js",
+        "src/db-sqlite.js",
+        "src/db.js",
+        "src/index.js",
+        "src/pqc-hybrid-server.js",
+        "src/sms-service.js",
+        "src/tls-hybrid-extension.js",
+        "src/lib/constant-time.js",
+        "src/crypto/bloom-filter.js",
+        "src/crypto/pedersen.js",
+        "src/crypto/traffic-shaping.js",
+        "src/crypto/ws-padding.js",
+        "scripts/bench-modinv.js",
+        "scripts/bench-v33.cjs",
+        "scripts/benchmark.cjs",
+        "scripts/ci-mlkem-kat.cjs",
+        "scripts/ecdh-p256-kat.cjs",
+        "scripts/hmac-sm3-kat.cjs",
+        "scripts/p0-04-fix-validation.js",
+        "scripts/quick-bench-sm2.cjs",
+        "scripts/test-sm2-browser-fix.js",
+        "scripts/test-sm2-node-fix.js",
+        "scripts/trace-roundtrip.js",
+        "scripts/tvla-mlkem-1024.mjs",
+        "scripts/verify-gradient-quick.cjs",
+        "scripts/verify-tsr.js",
+        "scripts/tvla/tvla_9of9_corrected.js",
+        "scripts/tvla/tvla_sm2_diagnose.js",
+        "scripts/tvla/tvla_sm2_high_order.js",
+        "scripts/tvla/tvla_sm2_v2.js",
+        "scripts/tvla/tvla_sm2_v3.js",
+        "scripts/tvla/tvla_sm2_v3_masked.js",
+        "reg-server/e2e-test.js",
+        "reg-server/reg-e2e-test.js",
+        "reg-server/server.js",
+        "reg-server/stress-test-v2.js",
+        "packages/pqc-kem/src/ml-kem-768.js",
+        "packages/pqc-kem/scripts/generate-nist-kat.js",
+        "packages/pqc-kem/node_modules/ssri/lib/index.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/install.js",
+        "packages/pqc-kem/node_modules/cacache/lib/entry-index.js",
+        "packages/fml-dsa/test/shakestream.test.js",
+        "mixnet/mix-node.js",
+        "backend/src/index.js",
+        "api/a2a/a2a-core.js"
+      ],
+      "usageCount": 60,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@eslint/js": {
+      "usageFiles": [
+        "eslint.config.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "path": {
+      "usageFiles": [
+        "test-tls-hybrid-extension.js",
+        "www/ui-bindings.js",
+        "www/tests/security/log-analyzer.js",
+        "tools/bloom-merge.js",
+        "tools/bloom-scan.js",
+        "tools/build-risk-assessment.cjs",
+        "tools/pqc-ecosystem-scan.js",
+        "test/test-cross-lang-seeded.js",
+        "test/test-fibemate.js",
+        "src/db-sqlite.js",
+        "src/db.js",
+        "src/index.js",
+        "src/lib/jwt-helper.js",
+        "scripts/bench-diff.js",
+        "scripts/build-demo.js",
+        "scripts/check-bom.cjs",
+        "scripts/ci-mlkem-kat.cjs",
+        "scripts/daily-audit.js",
+        "scripts/discover.cjs",
+        "scripts/mlkem-bench-native.cjs",
+        "scripts/perf-gate.js",
+        "scripts/prep-release.js",
+        "scripts/test-flags-integration.js",
+        "scripts/test-native-addon.cjs",
+        "scripts/test_barrett.js",
+        "scripts/tvla-summary.js",
+        "scripts/verify-tsr.js",
+        "scripts/tvla/tvla_stress_gradient.cjs",
+        "reg-server/stress-test-v2.js",
+        "packages/pqc-kem/scripts/generate-nist-kat.js",
+        "packages/pqc-kem/node_modules/which/lib/index.js",
+        "packages/pqc-kem/node_modules/unique-filename/lib/index.js",
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.cjs",
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.mjs",
+        "packages/pqc-kem/node_modules/tar/dist/esm/list.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/write-entry.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/list.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/write-entry.js",
+        "packages/pqc-kem/node_modules/retry/test/common.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/nopt/lib/type-defs.js",
+        "packages/pqc-kem/node_modules/nopt/bin/nopt.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/build.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/configure.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/create-config-gypi.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/find-node-directory.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/find-visualstudio.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/install.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/node-gyp.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/process-release.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/remove.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/util.js",
+        "packages/pqc-kem/node_modules/node-addon-api/index.js",
+        "packages/pqc-kem/node_modules/node-addon-api/tools/check-napi.js",
+        "packages/pqc-kem/node_modules/node-addon-api/tools/clang-format.js",
+        "packages/pqc-kem/node_modules/node-addon-api/tools/conversion.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/bin.mjs",
+        "packages/pqc-kem/node_modules/fdir/dist/index.cjs",
+        "packages/pqc-kem/node_modules/fdir/dist/index.mjs",
+        "packages/pqc-kem/node_modules/env-paths/index.js",
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/which/which.js",
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/test/basic.js",
+        "packages/pqc-kem/node_modules/cross-spawn/lib/parse.js",
+        "packages/pqc-kem/node_modules/cross-spawn/lib/util/resolveCommand.js",
+        "packages/pqc-kem/node_modules/cacache/lib/entry-index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/rm.js",
+        "packages/pqc-kem/node_modules/cacache/lib/verify.js",
+        "packages/pqc-kem/node_modules/cacache/lib/util/glob.js",
+        "packages/pqc-kem/node_modules/cacache/lib/util/tmp.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/path.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/move-file.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/readdir-scoped.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/with-temp-dir.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/cp/polyfill.js",
+        "packages/fml-dsa/test/fml-dsa.test.js",
+        "packages/fml-dsa/test/kat-siggen-fetch.mjs",
+        "packages/fml-dsa/test/kat-vectors.mjs",
+        "packages/fml-dsa/test/kat-verify-siggen.mjs",
+        "packages/fml-dsa/test/kat-verify.mjs",
+        "packages/fml-dsa/test/noble-oracle.test.js",
+        "packages/fml-dsa/src/core/native.js",
+        "packages/fml-dsa/bench/bench-compare.cjs",
+        "backend/src/index.js"
+      ],
+      "usageCount": 90,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "fs": {
+      "usageFiles": [
+        "www/ui-bindings.js",
+        "www/tests/security/log-analyzer.js",
+        "www/tests/security/realtime-monitor.js",
+        "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
+        "www/crypto/wasm/mlkem-ct-wasm-bridge.js",
+        "tools/bloom-merge.js",
+        "tools/bloom-scan.js",
+        "tools/build-risk-assessment.cjs",
+        "tools/inject-bloom.js",
+        "tools/pqc-ecosystem-scan.js",
+        "test/run-compat-fixtures.mjs",
+        "test/test-cross-lang-seeded.js",
+        "test/test-cross-lang.js",
+        "test/test-fibemate.js",
+        "src/db-sqlite.js",
+        "src/db.js",
+        "src/https-server.js",
+        "src/index.js",
+        "src/lib/jwt-helper.js",
+        "scripts/add-code-review-section.cjs",
+        "scripts/apply-mersenne-reduction.cjs",
+        "scripts/apply-silver-fixes.cjs",
+        "scripts/bench-diff.js",
+        "scripts/build-demo.js",
+        "scripts/check-bom.cjs",
+        "scripts/ci-gm-sm2.cjs",
+        "scripts/ci-gm-sm3.cjs",
+        "scripts/ci-gm-sm4.cjs",
+        "scripts/ci-mlkem-kat.cjs",
+        "scripts/daily-audit.js",
+        "scripts/discover.cjs",
+        "scripts/eiprint-annotation.cjs",
+        "scripts/fix-ratchet.js",
+        "scripts/fix-verify-blinding.cjs",
+        "scripts/fix-vwz-website.cjs",
+        "scripts/kat-bench.js",
+        "scripts/mlkem-bench-native.cjs",
+        "scripts/perf-gate.js",
+        "scripts/prep-release.js",
+        "scripts/sm3-smoke.cjs",
+        "scripts/sm4-smoke.cjs",
+        "scripts/test-flags-integration.js",
+        "scripts/test-native-addon.cjs",
+        "scripts/test-sm2-browser-fix.js",
+        "scripts/test-sm2-node-fix.js",
+        "scripts/test_barrett.js",
+        "scripts/trace-roundtrip.js",
+        "scripts/tvla-mlkem-1024.mjs",
+        "scripts/tvla-summary.js",
+        "scripts/update-index-91.cjs",
+        "scripts/verify-tsr.js",
+        "scripts/tvla/tvla_9of9_corrected.js",
+        "scripts/tvla/tvla_sm2_high_order.js",
+        "scripts/tvla/tvla_sm2_v2.js",
+        "scripts/tvla/tvla_sm2_v3.js",
+        "scripts/tvla/tvla_stress_gradient.cjs",
+        "reg-server/stress-test-v2.js",
+        "packages/sm3-ref/test/sm3-cross-validate.cjs",
+        "packages/pqc-kem/diag-kat.js",
+        "packages/pqc-kem/diag2.js",
+        "packages/pqc-kem/kat-diag.js",
+        "packages/pqc-kem/scripts/generate-nist-kat.js",
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.cjs",
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.mjs",
+        "packages/pqc-kem/node_modules/tar/dist/esm/get-write-flag.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/write-entry.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/write-entry.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/get-write-flag.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/write-entry.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/write-entry.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/find-visualstudio.js",
+        "packages/pqc-kem/node_modules/node-gyp/bin/node-gyp.js",
+        "packages/pqc-kem/node_modules/node-addon-api/tools/check-napi.js",
+        "packages/pqc-kem/node_modules/node-addon-api/tools/conversion.js",
+        "packages/pqc-kem/node_modules/graceful-fs/graceful-fs.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/bin.mjs",
+        "packages/pqc-kem/node_modules/fs-minipass/lib/index.js",
+        "packages/pqc-kem/node_modules/fdir/dist/index.cjs",
+        "packages/pqc-kem/node_modules/fdir/dist/index.mjs",
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/index.js",
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/mode.js",
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/windows.js",
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/test/basic.js",
+        "packages/pqc-kem/node_modules/cross-spawn/lib/util/readShebang.js",
+        "packages/pqc-kem/node_modules/cacache/lib/entry-index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/rm.js",
+        "packages/pqc-kem/node_modules/cacache/lib/verify.js",
+        "packages/pqc-kem/node_modules/cacache/lib/util/tmp.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/read.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/rm.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/move-file.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/readdir-scoped.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/with-temp-dir.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/cp/index.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/cp/polyfill.js",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/commonjs/index.js",
+        "packages/fml-dsa/test/fml-dsa.test.js",
+        "packages/fml-dsa/test/kat-siggen-fetch.mjs",
+        "packages/fml-dsa/test/kat-vectors.mjs",
+        "packages/fml-dsa/test/kat-verify-siggen.mjs",
+        "packages/fml-dsa/test/kat-verify.mjs",
+        "packages/fml-dsa/test/noble-oracle.test.js",
+        "packages/fml-dsa/test/probe-noble-structure.mjs",
+        "packages/fml-dsa/src/core/native.js",
+        "packages/fml-dsa/bench/bench-compare.cjs",
+        "backend/src/index.js"
+      ],
+      "usageCount": 115,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "readline": {
+      "usageFiles": [
+        "www/ui-bindings.js",
+        "www/tests/security/log-analyzer.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "tail": {
+      "usageFiles": [
+        "www/tests/security/realtime-monitor.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "events": {
+      "usageFiles": [
+        "www/tests/security/realtime-monitor.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/parse.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/parse.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/parse.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/parse.js",
+        "packages/pqc-kem/node_modules/socks/typings/client/socksclient.d.ts",
+        "packages/pqc-kem/node_modules/socks/build/client/socksclient.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/node-gyp.js",
+        "packages/pqc-kem/node_modules/minipass-sized/node_modules/minipass/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass-sized/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/minipass-pipeline/index.js",
+        "packages/pqc-kem/node_modules/minipass-pipeline/node_modules/minipass/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass-pipeline/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/minipass-flush/node_modules/minipass/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass-flush/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/fs-minipass/lib/index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js",
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/commonjs/index.js"
+      ],
+      "usageCount": 24,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "child_process": {
+      "usageFiles": [
+        "www/tests/security/realtime-monitor.js",
+        "scripts/bench-proper.js",
+        "scripts/bench-v33.cjs",
+        "scripts/check-bom.cjs",
+        "scripts/debug_decaps_sk.cjs",
+        "scripts/debug_ss_format.cjs",
+        "scripts/discover.cjs",
+        "scripts/fix_verify.cjs",
+        "scripts/js-liboqs-xcross.cjs",
+        "scripts/liboqs-10000.cjs",
+        "scripts/noble-liboqs-xcross.mjs",
+        "scripts/prep-release.js",
+        "scripts/tvla-summary.js",
+        "scripts/verify-tsr.js",
+        "scripts/tvla/tvla_stress_gradient.cjs",
+        "packages/pqc-kem/node_modules/node-gyp/lib/node-gyp.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/util.js",
+        "packages/pqc-kem/node_modules/node-addon-api/tools/check-napi.js",
+        "packages/pqc-kem/node_modules/node-addon-api/tools/clang-format.js",
+        "packages/pqc-kem/node_modules/foreground-child/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/foreground-child/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/foreground-child/dist/esm/proxy-signals.d.ts",
+        "packages/pqc-kem/node_modules/foreground-child/dist/esm/watchdog.d.ts",
+        "packages/pqc-kem/node_modules/foreground-child/dist/esm/watchdog.js",
+        "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/proxy-signals.d.ts",
+        "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/watchdog.d.ts",
+        "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/watchdog.js",
+        "packages/pqc-kem/node_modules/cross-spawn/index.js",
+        "mixnet/healthcheck.js",
+        "mixnet/mix-node.js"
+      ],
+      "usageCount": 32,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "https": {
+      "usageFiles": [
+        "www/tests/security/realtime-monitor.js",
+        "src/dingtalk-alert.js",
+        "src/https-server.js",
+        "src/index.js",
+        "scripts/health-check.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/index.js",
+        "packages/pqc-kem/node_modules/agent-base/dist/helpers.d.ts",
+        "packages/pqc-kem/node_modules/agent-base/dist/helpers.js",
+        "packages/pqc-kem/node_modules/agent-base/dist/index.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 10,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "cypress": {
+      "usageFiles": [
+        "www/tests/e2e/cypress.config.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@noble/post-quantum": {
+      "usageFiles": [
+        "www/noble-pq-bundle/pq_entry.mjs",
+        "www/noble-pq/_crystals.js",
+        "scripts/debug_decaps_noble_vs_js.cjs",
+        "scripts/debug_ss_format.cjs",
+        "scripts/fix_verify.cjs",
+        "scripts/noble-liboqs-xcross.mjs",
+        "scripts/slh-dsa-bench.mjs",
+        "scripts/slh-dsa-smoke.mjs",
+        "scripts/test_barrett.js",
+        "scripts/tvla-mlkem-1024.mjs",
+        "packages/fml-dsa/src/core/ntt.js",
+        "packages/fml-dsa/src/core/sampling.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/hybrid.d.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/hybrid.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/index.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/utils.d.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/utils.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/_crystals.d.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/_crystals.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/hybrid.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/index.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/utils.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/_crystals.ts"
+      ],
+      "usageCount": 23,
+      "type": "PQC",
+      "algorithm": "ML-KEM + ML-DSA + SLH-DSA",
+      "risk": "quantum_safe",
+      "note": "Noble multi-algorithm PQC library, covers all FIPS 203/204/205",
+      "nmInfo": null
+    },
+    "@noble/hashes": {
+      "usageFiles": [
+        "www/noble-pq/index.js",
+        "www/noble-pq/ml-dsa.js",
+        "www/noble-pq/slh-dsa.js",
+        "www/noble-pq/_crystals.js",
+        "www/demo/ml-kem-768.js",
+        "www/crypto/ml-kem-768.js",
+        "www/crypto/sm2-browser.esm.js",
+        "packages/fml-dsa/src/core/sampling.js",
+        "packages/fml-dsa/src/core/shakestream.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/falcon.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/hybrid.d.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/hybrid.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/ml-dsa.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/ml-kem.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/slh-dsa.d.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/slh-dsa.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/utils.d.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/utils.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/_crystals.d.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/_crystals.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/falcon.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/hybrid.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/ml-dsa.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/ml-kem.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/slh-dsa.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/utils.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/_crystals.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/blake2.d.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/blake2.js",
+        "packages/fml-dsa/node_modules/@noble/hashes/blake3.d.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/blake3.js",
+        "packages/fml-dsa/node_modules/@noble/hashes/hkdf.d.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/hkdf.js",
+        "packages/fml-dsa/node_modules/@noble/hashes/hmac.d.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/index.js",
+        "packages/fml-dsa/node_modules/@noble/hashes/pbkdf2.d.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/pbkdf2.js",
+        "packages/fml-dsa/node_modules/@noble/hashes/utils.d.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/utils.js",
+        "packages/fml-dsa/node_modules/@noble/hashes/webcrypto.d.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/webcrypto.js",
+        "packages/fml-dsa/node_modules/@noble/hashes/_md.d.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/_md.js",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/blake2.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/blake3.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/hkdf.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/hmac.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/index.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/pbkdf2.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/utils.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/webcrypto.ts",
+        "packages/fml-dsa/node_modules/@noble/hashes/src/_md.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/bls12-381.js",
+        "packages/fml-dsa/node_modules/@noble/curves/ed25519.js",
+        "packages/fml-dsa/node_modules/@noble/curves/ed448.js",
+        "packages/fml-dsa/node_modules/@noble/curves/misc.js",
+        "packages/fml-dsa/node_modules/@noble/curves/nist.js",
+        "packages/fml-dsa/node_modules/@noble/curves/secp256k1.js",
+        "packages/fml-dsa/node_modules/@noble/curves/utils.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/utils.js",
+        "packages/fml-dsa/node_modules/@noble/curves/src/bls12-381.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/ed25519.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/ed448.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/misc.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/nist.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/secp256k1.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/utils.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/edwards.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/frost.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/hash-to-curve.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/oprf.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/weierstrass.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/edwards.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/edwards.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/frost.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/hash-to-curve.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/hash-to-curve.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/oprf.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/oprf.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/weierstrass.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/weierstrass.js"
+      ],
+      "usageCount": 81,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@noble/curves": {
+      "usageFiles": [
+        "www/noble-pq/ml-dsa.js",
+        "www/noble-pq/_crystals.js",
+        "www/crypto/sm2-browser.esm.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/falcon.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/hybrid.d.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/hybrid.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/ml-dsa.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/_crystals.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/falcon.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/hybrid.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/ml-dsa.ts",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/_crystals.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/ed25519.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/ed25519.js",
+        "packages/fml-dsa/node_modules/@noble/curves/ed448.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/ed448.js",
+        "packages/fml-dsa/node_modules/@noble/curves/index.js",
+        "packages/fml-dsa/node_modules/@noble/curves/misc.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/misc.js",
+        "packages/fml-dsa/node_modules/@noble/curves/nist.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/nist.js",
+        "packages/fml-dsa/node_modules/@noble/curves/secp256k1.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/secp256k1.js",
+        "packages/fml-dsa/node_modules/@noble/curves/utils.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/utils.js",
+        "packages/fml-dsa/node_modules/@noble/curves/src/ed25519.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/ed448.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/index.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/misc.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/nist.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/secp256k1.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/utils.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/bls.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/curve.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/edwards.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/fft.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/hash-to-curve.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/modular.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/montgomery.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/oprf.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/poseidon.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/tower.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/src/abstract/weierstrass.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/bls.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/bls.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/curve.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/curve.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/edwards.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/edwards.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/fft.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/fft.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/hash-to-curve.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/hash-to-curve.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/modular.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/modular.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/montgomery.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/montgomery.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/oprf.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/oprf.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/poseidon.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/poseidon.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/tower.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/tower.js",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/weierstrass.d.ts",
+        "packages/fml-dsa/node_modules/@noble/curves/abstract/weierstrass.js"
+      ],
+      "usageCount": 65,
+      "type": "traditional",
+      "algorithm": "ECDSA/ECDH/EdDSA",
+      "risk": "quantum_vulnerable",
+      "note": "Elliptic curve cryptography — Shor's algorithm vulnerable",
+      "nmInfo": null
+    },
+    "express": {
+      "usageFiles": [
+        "www/js/nexus-integration.js",
+        "test/a2a-smoke.js",
+        "src/index.js",
+        "src/opk-server.js",
+        "src/sms-routes.js",
+        "mixnet/mix-node.js",
+        "mixnet/middle/server.js",
+        "mixnet/exit/server.js",
+        "mixnet/entry/server.js",
+        "backend/src/index.js",
+        "api/a2a/a2a-core.js"
+      ],
+      "usageCount": 11,
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Web framework",
+      "nmInfo": null
+    },
+    "sm-crypto": {
+      "usageFiles": [
+        "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
+        "www/crypto/sm2-browser.js",
+        "scripts/hmac-sm3-kat.cjs",
+        "scripts/tvla/tvla_sm2_diagnose.js",
+        "scripts/tvla/tvla_sm2_high_order.js",
+        "scripts/tvla/tvla_sm2_v2.js",
+        "scripts/tvla/tvla_sm2_v3.js",
+        "scripts/tvla/tvla_sm2_v3_masked.js"
+      ],
+      "usageCount": 8,
+      "type": "traditional",
+      "algorithm": "SM2/SM3/SM4",
+      "risk": "quantum_vulnerable",
+      "note": "Chinese national cryptography — SM2 ECC vulnerable to Shor, SM3/SM4 quantum-safe (hash/symmetric)",
+      "nmInfo": null
+    },
+    "assert": {
+      "usageFiles": [
+        "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
+        "test/compat-fixtures.test.js",
+        "test/test-keccak.js",
+        "scripts/ecdh-p256-kat.cjs",
+        "scripts/hmac-sm3-kat.cjs",
+        "scripts/smoke-test.js",
+        "scripts/test-native-addon.cjs",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/retry/test/common.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/graceful-fs/graceful-fs.js"
+      ],
+      "usageCount": 13,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "x": {
+      "usageFiles": [
+        "tools/pqc-ecosystem-scan.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "module": {
+      "usageFiles": [
+        "test/test-cross-lang-seeded.js",
+        "scripts/test-flags-integration.js",
+        "packages/pqc-kem/node_modules/fdir/dist/index.mjs"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "better-sqlite3": {
+      "usageFiles": [
+        "src/db-sqlite.js"
+      ],
+      "usageCount": 1,
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "No direct crypto exposure",
+      "nmInfo": null
+    },
+    "url": {
+      "usageFiles": [
+        "src/dingtalk-alert.js",
+        "src/index.js",
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.cjs",
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.mjs",
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/nopt/lib/type-defs.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/process-release.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/index.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/request.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/fetch.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/entry.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/key.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/cp/polyfill.js",
+        "packages/fml-dsa/test/fml-dsa.test.js",
+        "packages/fml-dsa/test/kat-siggen-fetch.mjs",
+        "packages/fml-dsa/test/kat-vectors.mjs",
+        "packages/fml-dsa/test/kat-verify-siggen.mjs",
+        "packages/fml-dsa/test/kat-verify.mjs",
+        "packages/fml-dsa/test/noble-oracle.test.js",
+        "packages/fml-dsa/src/core/native.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 26,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "http": {
+      "usageFiles": [
+        "src/https-server.js",
+        "src/index.js",
+        "scripts/health-check.js",
+        "scripts/stress-test.js",
+        "reg-server/e2e-test.js",
+        "reg-server/server.js",
+        "reg-server/stress-test-v2.js",
+        "reg-server/stress-test.js",
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/index.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/response.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/parse-proxy-response.d.ts",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/agent-base/dist/helpers.d.ts",
+        "packages/pqc-kem/node_modules/agent-base/dist/helpers.js",
+        "packages/pqc-kem/node_modules/agent-base/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/agent-base/dist/index.js",
+        "mixnet/healthcheck.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 20,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "ws": {
+      "usageFiles": [
+        "src/index.js",
+        "reg-server/e2e-test.js",
+        "reg-server/reg-e2e-test.js",
+        "reg-server/server.js",
+        "reg-server/wss-test.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 6,
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "WebSocket library",
+      "nmInfo": null
+    },
+    "jsonwebtoken": {
+      "usageFiles": [
+        "src/index.js",
+        "src/sms-routes.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 3,
+      "type": "traditional",
+      "algorithm": "JWT (HS256/RS256/ES256)",
+      "risk": "depends",
+      "note": "Security depends on configured algorithm — RS256/ES256 are quantum vulnerable",
+      "nmInfo": {
+        "name": "jsonwebtoken",
+        "version": "9.0.3",
+        "description": "JSON Web Token implementation (symmetric and asymmetric)",
+        "cryptoScore": 4,
+        "keywords": [
+          "jwt"
+        ],
+        "repository": "https://github.com/auth0/node-jsonwebtoken",
+        "license": "MIT",
+        "deprecated": false,
+        "hasNative": false
+      }
+    },
+    "bcryptjs": {
+      "usageFiles": [
+        "src/index.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 2,
+      "type": "traditional",
+      "algorithm": "bcrypt",
+      "risk": "quantum_weakened",
+      "note": "Password hashing — Grover's algorithm halves effective security bits",
+      "nmInfo": {
+        "name": "bcryptjs",
+        "version": "3.0.3",
+        "description": "Optimized bcrypt in plain JavaScript with zero dependencies, with TypeScript support. Compatible to 'bcrypt'.",
+        "cryptoScore": 7,
+        "keywords": [
+          "password",
+          "auth",
+          "authentication",
+          "encryption"
+        ],
+        "repository": "https://github.com/dcodeIO/bcrypt.js.git",
+        "license": "BSD-3-Clause",
+        "deprecated": false,
+        "hasNative": false
+      }
+    },
+    "uuid": {
+      "usageFiles": [
+        "src/index.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 2,
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "UUID generation",
+      "nmInfo": null
+    },
+    "cors": {
+      "usageFiles": [
+        "src/index.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 2,
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "CORS middleware",
+      "nmInfo": {
+        "name": "cors",
+        "version": "2.8.5",
+        "description": "Node.js CORS middleware",
+        "cryptoScore": 1,
+        "keywords": [
+          "cors"
+        ],
+        "repository": "expressjs/cors",
+        "license": "MIT",
+        "deprecated": false,
+        "hasNative": false
+      }
+    },
+    "helmet": {
+      "usageFiles": [
+        "src/index.js",
+        "backend/src/index.js"
+      ],
+      "usageCount": 2,
+      "type": "security",
+      "algorithm": "HTTP security headers",
+      "risk": "none",
+      "note": "No quantum exposure",
+      "nmInfo": {
+        "name": "helmet",
+        "version": "7.2.0",
+        "description": "help secure Express/Connect apps with various HTTP headers",
+        "cryptoScore": 2,
+        "keywords": [
+          "security",
+          "content-security-policy",
+          "strict-transport-security"
+        ],
+        "repository": "git://github.com/helmetjs/helmet.git",
+        "license": "MIT",
+        "deprecated": false,
+        "hasNative": false
+      }
+    },
+    "@alicloud/dysmsapi20170525": {
+      "usageFiles": [
+        "src/sms-service.js"
+      ],
+      "usageCount": 1,
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Alibaba Cloud SMS API",
+      "nmInfo": null
+    },
+    "@alicloud/openapi-client": {
+      "usageFiles": [
+        "src/sms-service.js"
+      ],
+      "usageCount": 1,
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Alibaba Cloud API client",
+      "nmInfo": null
+    },
+    "perf_hooks": {
+      "usageFiles": [
+        "scripts/bench-proper.js",
+        "scripts/bench-v33.cjs",
+        "scripts/benchmark.cjs",
+        "scripts/slh-dsa-bench.mjs",
+        "scripts/sm3-bench.cjs",
+        "scripts/sm4-bench.cjs",
+        "packages/pqc-kem/native/bench.js",
+        "packages/fml-dsa/bench/bench-compare.cjs"
+      ],
+      "usageCount": 8,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "os": {
+      "usageFiles": [
+        "scripts/bench-v33.cjs",
+        "scripts/benchmark.cjs",
+        "packages/pqc-kem/node_modules/nopt/lib/type-defs.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/build.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/configure.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/find-python.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/install.js",
+        "packages/pqc-kem/node_modules/node-gyp/bin/node-gyp.js",
+        "packages/pqc-kem/node_modules/env-paths/index.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/cp/polyfill.js"
+      ],
+      "usageCount": 10,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "js-sha3": {
+      "usageFiles": [
+        "scripts/kat-nonce-diag.js",
+        "scripts/kat-sha3cmp.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "string-width": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/index.js",
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/string-width/index.d.ts",
+        "packages/pqc-kem/node_modules/wrap-ansi/index.js",
+        "packages/pqc-kem/node_modules/string-width-cjs/index.d.ts",
+        "packages/pqc-kem/node_modules/string-width/index.d.ts",
+        "packages/pqc-kem/node_modules/@isaacs/cliui/index.mjs"
+      ],
+      "usageCount": 6,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "strip-ansi": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/index.js",
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/strip-ansi/index.d.ts",
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/string-width/index.js",
+        "packages/pqc-kem/node_modules/wrap-ansi/index.js",
+        "packages/pqc-kem/node_modules/strip-ansi-cjs/index.d.ts",
+        "packages/pqc-kem/node_modules/strip-ansi/index.d.ts",
+        "packages/pqc-kem/node_modules/string-width-cjs/index.js",
+        "packages/pqc-kem/node_modules/string-width-cjs/node_modules/strip-ansi/index.d.ts",
+        "packages/pqc-kem/node_modules/string-width/index.js",
+        "packages/pqc-kem/node_modules/@isaacs/cliui/index.mjs"
+      ],
+      "usageCount": 10,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "ansi-styles": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/index.js",
+        "packages/pqc-kem/node_modules/wrap-ansi/index.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "ansi-regex": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/strip-ansi/index.js",
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/ansi-regex/index.d.ts",
+        "packages/pqc-kem/node_modules/strip-ansi-cjs/index.js",
+        "packages/pqc-kem/node_modules/strip-ansi-cjs/node_modules/ansi-regex/index.d.ts",
+        "packages/pqc-kem/node_modules/strip-ansi/index.js",
+        "packages/pqc-kem/node_modules/string-width-cjs/node_modules/strip-ansi/index.js",
+        "packages/pqc-kem/node_modules/string-width-cjs/node_modules/ansi-regex/index.d.ts",
+        "packages/pqc-kem/node_modules/ansi-regex/index.d.ts"
+      ],
+      "usageCount": 8,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "is-fullwidth-code-point": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/string-width/index.js",
+        "packages/pqc-kem/node_modules/string-width-cjs/index.js",
+        "packages/pqc-kem/node_modules/is-fullwidth-code-point/index.d.ts"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "emoji-regex": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/string-width/index.js",
+        "packages/pqc-kem/node_modules/string-width-cjs/index.js",
+        "packages/pqc-kem/node_modules/string-width/index.js"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "color-convert": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/ansi-styles/index.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "chalk": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi/index.d.ts"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "wrap-ansi": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/wrap-ansi/index.d.ts",
+        "packages/pqc-kem/node_modules/@isaacs/cliui/index.mjs"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "isexe": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/which/lib/index.js",
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/which/which.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "imurmurhash": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/unique-slug/lib/index.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": {
+        "name": "imurmurhash",
+        "version": "0.1.4",
+        "description": "An incremental implementation of MurmurHash3",
+        "cryptoScore": 2,
+        "keywords": [
+          "hash"
+        ],
+        "repository": "https://github.com/jensyt/imurmurhash-js",
+        "license": "MIT",
+        "deprecated": false,
+        "hasNative": false
+      }
+    },
+    "unique-slug": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/unique-filename/lib/index.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "fdir": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.cjs",
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.mjs"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "picomatch": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.cjs",
+        "packages/pqc-kem/node_modules/tinyglobby/dist/index.mjs",
+        "packages/pqc-kem/node_modules/picomatch/lib/picomatch.js",
+        "packages/pqc-kem/node_modules/picomatch/lib/scan.js",
+        "packages/pqc-kem/node_modules/fdir/dist/index.cjs",
+        "packages/pqc-kem/node_modules/fdir/dist/index.mjs"
+      ],
+      "usageCount": 6,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@isaacs/fs-minipass": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/create.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/extract.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/list.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/replace.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/unpack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/create.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/extract.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/list.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/replace.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.js"
+      ],
+      "usageCount": 10,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:path": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/create.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/header.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/mkdir.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/path-reservations.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/pax.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/replace.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/strip-absolute-path.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/unpack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/create.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/header.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/mkdir.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/path-reservations.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pax.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/replace.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/strip-absolute-path.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/jackspeak/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/jackspeak/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/isexe/dist/esm/win32.js",
+        "packages/pqc-kem/node_modules/isexe/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/isexe/dist/commonjs/win32.js",
+        "packages/pqc-kem/node_modules/chownr/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/chownr/dist/commonjs/index.js"
+      ],
+      "usageCount": 30,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:fs": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/extract.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/list.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/mkdir.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/options.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/replace.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/unpack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/unpack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/extract.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/list.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/mkdir.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/options.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/replace.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/isexe/dist/esm/posix.js",
+        "packages/pqc-kem/node_modules/isexe/dist/esm/win32.js",
+        "packages/pqc-kem/node_modules/isexe/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/isexe/dist/commonjs/posix.js",
+        "packages/pqc-kem/node_modules/isexe/dist/commonjs/win32.js",
+        "packages/pqc-kem/node_modules/chownr/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/chownr/dist/commonjs/index.js"
+      ],
+      "usageCount": 28,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "chownr": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/mkdir.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/mkdir.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minizlib": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/options.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/parse.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/parse.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/options.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/parse.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/parse.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/index.js"
+      ],
+      "usageCount": 11,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minipass": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/read-entry.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/read-entry.js",
+        "packages/pqc-kem/node_modules/tar/dist/esm/warn-method.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/write-entry.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/write-entry.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/read-entry.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/read-entry.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/warn-method.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/write-entry.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/write-entry.js",
+        "packages/pqc-kem/node_modules/ssri/lib/index.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/minizlib/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/minipass-sized/index.js",
+        "packages/pqc-kem/node_modules/minipass-pipeline/index.js",
+        "packages/pqc-kem/node_modules/minipass-flush/index.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/blob.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/body.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/index.js",
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/request.js",
+        "packages/pqc-kem/node_modules/minipass-collect/index.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/entry.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/glob.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/walker.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/walker.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/glob.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/walker.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/walker.js",
+        "packages/pqc-kem/node_modules/fs-minipass/lib/index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/entry-index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/get.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/commonjs/index.js"
+      ],
+      "usageCount": 49,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "yallist": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/esm/pack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.d.ts",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.js"
+      ],
+      "usageCount": 4,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:assert": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/unpack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.js"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:crypto": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/esm/unpack.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.js"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:events": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/minipass/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/minipass/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass/dist/commonjs/index.js"
+      ],
+      "usageCount": 5,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:stream": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/minipass/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/minipass/dist/commonjs/index.js"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:string_decoder": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/minipass/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/minipass/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass/dist/commonjs/index.js"
+      ],
+      "usageCount": 5,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "zlib": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/esm/constants.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/minizlib/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/commonjs/constants.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.js"
+      ],
+      "usageCount": 7,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "buffer": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/tar/dist/commonjs/index.min.js",
+        "packages/pqc-kem/node_modules/smart-buffer/typings/utils.d.ts",
+        "packages/pqc-kem/node_modules/smart-buffer/build/utils.js",
+        "packages/pqc-kem/node_modules/safer-buffer/dangerous.js",
+        "packages/pqc-kem/node_modules/safer-buffer/safer.js",
+        "packages/pqc-kem/node_modules/safer-buffer/tests.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/minizlib/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.js"
+      ],
+      "usageCount": 10,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "eastasianwidth": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/string-width/index.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "socks": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "agent-base": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js"
+      ],
+      "usageCount": 7,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "net": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/socks/typings/common/constants.d.ts",
+        "packages/pqc-kem/node_modules/socks/build/common/helpers.js",
+        "packages/pqc-kem/node_modules/socks/build/client/socksclient.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/agent-base/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/agent-base/dist/index.js",
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js"
+      ],
+      "usageCount": 12,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "debug": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/parse-proxy-response.js",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.js"
+      ],
+      "usageCount": 4,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "dns": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/retry/example/dns.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/options.js",
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/dns.js"
+      ],
+      "usageCount": 4,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "tls": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.js",
+        "packages/pqc-kem/node_modules/agent-base/dist/index.d.ts",
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js"
+      ],
+      "usageCount": 7,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "stream": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks/typings/common/constants.d.ts",
+        "packages/pqc-kem/node_modules/socks/typings/client/socksclient.d.ts",
+        "packages/pqc-kem/node_modules/socks/build/common/helpers.js",
+        "packages/pqc-kem/node_modules/nopt/lib/type-defs.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/install.js",
+        "packages/pqc-kem/node_modules/minipass-sized/node_modules/minipass/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass-sized/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/minipass-pipeline/node_modules/minipass/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass-pipeline/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/minipass-flush/node_modules/minipass/index.d.ts",
+        "packages/pqc-kem/node_modules/minipass-flush/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/iconv-lite/lib/index.js",
+        "packages/pqc-kem/node_modules/https-proxy-agent/dist/parse-proxy-response.d.ts",
+        "packages/pqc-kem/node_modules/graceful-fs/legacy-streams.js",
+        "packages/pqc-kem/node_modules/agent-base/dist/helpers.d.ts",
+        "packages/pqc-kem/node_modules/agent-base/dist/index.d.ts"
+      ],
+      "usageCount": 16,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "ip-address": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks/build/common/helpers.js",
+        "packages/pqc-kem/node_modules/socks/build/client/socksclient.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "smart-buffer": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/socks/build/client/socksclient.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "shebang-regex": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/shebang-regex/index.d.ts",
+        "packages/pqc-kem/node_modules/shebang-command/index.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "tape": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/safer-buffer/tests.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "fake": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/retry/test/common.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "err-code": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/promise-retry/index.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "retry": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/promise-retry/index.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "expect.js": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/promise-retry/test/test.js",
+        "packages/pqc-kem/node_modules/err-code/test/test.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "sleep-promise": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/promise-retry/test/test.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "lru-cache": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/memoization.js",
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/dns.js",
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/index.js",
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/proxy.js"
+      ],
+      "usageCount": 8,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:url": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/path-scurry/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/path-scurry/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/glob.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/glob.js"
+      ],
+      "usageCount": 6,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "path-key": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/path-key/index.d.ts",
+        "packages/pqc-kem/node_modules/cross-spawn/lib/util/resolveCommand.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "package-json-from-dist": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/package-json-from-dist/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/bin.mjs"
+      ],
+      "usageCount": 5,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "p-map": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/p-map/index.d.ts"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "delay": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/p-map/index.d.ts"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "got": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/p-map/index.d.ts"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "abbrev": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/nopt/lib/nopt-lib.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "neostandard": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/eslint.config.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "graceful-fs": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/build.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/clean.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/configure.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/create-config-gypi.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/download.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/install.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/list.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/remove.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/util.js"
+      ],
+      "usageCount": 9,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "tinyglobby": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/build.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "which": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/build.js",
+        "packages/pqc-kem/node_modules/cross-spawn/lib/util/resolveCommand.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "util": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/configure.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/log.js",
+        "packages/pqc-kem/node_modules/jackspeak/dist/esm/parse-args.d.ts",
+        "packages/pqc-kem/node_modules/jackspeak/dist/esm/parse-args.js",
+        "packages/pqc-kem/node_modules/jackspeak/dist/commonjs/parse-args.d.ts",
+        "packages/pqc-kem/node_modules/jackspeak/dist/commonjs/parse-args.js",
+        "packages/pqc-kem/node_modules/graceful-fs/graceful-fs.js",
+        "packages/pqc-kem/node_modules/debug/src/node.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/cp/errors.js"
+      ],
+      "usageCount": 9,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "make-fetch-happen": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/download.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "semver": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/find-python.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/install.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/process-release.js",
+        "packages/pqc-kem/node_modules/node-gyp/lib/remove.js",
+        "packages/pqc-kem/node_modules/@npmcli/fs/lib/common/node.js"
+      ],
+      "usageCount": 5,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "exponential-backoff": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/install.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "tar": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/install.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "proc-log": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/log.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "nopt": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/lib/node-gyp.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "env-paths": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/node-gyp/bin/node-gyp.js",
+        "packages/pqc-kem/node_modules/env-paths/index.d.ts"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "tap": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/minipass-sized/test/basic.js",
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/test/basic.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "string_decoder": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/minipass-sized/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/minipass-pipeline/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/minipass-flush/node_modules/minipass/index.js",
+        "packages/pqc-kem/node_modules/iconv-lite/encodings/internal.js"
+      ],
+      "usageCount": 4,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minipass-sized": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/body.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "encoding": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/minipass-fetch/lib/body.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "brace-expansion": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/minimatch/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/minimatch/dist/commonjs/index.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minipass-fetch": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/fetch.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/index.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/entry.js"
+      ],
+      "usageCount": 4,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minipass-pipeline": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/pipeline.js",
+        "packages/pqc-kem/node_modules/cacache/lib/get.js",
+        "packages/pqc-kem/node_modules/cacache/lib/put.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/read.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
+      ],
+      "usageCount": 5,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "promise-retry": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "ssri": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js",
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/policy.js",
+        "packages/pqc-kem/node_modules/cacache/lib/entry-index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/verify.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/path.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/read.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
+      ],
+      "usageCount": 7,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@npmcli/agent": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minipass-flush": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/entry.js",
+        "packages/pqc-kem/node_modules/cacache/lib/put.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "cacache": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/entry.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "http-cache-semantics": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/policy.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "negotiator": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/policy.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:util": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/jackspeak/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/jackspeak/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/jackspeak/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/jackspeak/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/is-default-value.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/limit-long-syntax.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/negate.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/no-repeated-options.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/simple-hard-coded.js"
+      ],
+      "usageCount": 9,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@isaacs/cliui": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/jackspeak/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/jackspeak/dist/commonjs/index.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@pkgjs/parseargs": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/jackspeak/dist/commonjs/parse-args.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/is-default-value.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/limit-long-syntax.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/negate.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/no-repeated-options.js",
+        "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/simple-hard-coded.js"
+      ],
+      "usageCount": 6,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "safer-buffer": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/iconv-lite/lib/index.js",
+        "packages/pqc-kem/node_modules/iconv-lite/lib/streams.js",
+        "packages/pqc-kem/node_modules/iconv-lite/encodings/dbcs-codec.js",
+        "packages/pqc-kem/node_modules/iconv-lite/encodings/internal.js",
+        "packages/pqc-kem/node_modules/iconv-lite/encodings/sbcs-codec.js",
+        "packages/pqc-kem/node_modules/iconv-lite/encodings/utf16.js",
+        "packages/pqc-kem/node_modules/iconv-lite/encodings/utf32.js",
+        "packages/pqc-kem/node_modules/iconv-lite/encodings/utf7.js"
+      ],
+      "usageCount": 8,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "constants": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/graceful-fs/polyfills.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "foreground-child": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/glob/dist/esm/bin.mjs"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "jackspeak": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/glob/dist/esm/bin.mjs"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minimatch": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/glob/dist/esm/glob.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/glob.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/has-magic.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/ignore.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/ignore.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/pattern.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/pattern.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/processor.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/processor.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/glob.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/glob.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/has-magic.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/ignore.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/ignore.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/index.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/pattern.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/pattern.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/processor.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/processor.js"
+      ],
+      "usageCount": 22,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "path-scurry": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/glob/dist/esm/glob.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/glob.js",
+        "packages/pqc-kem/node_modules/glob/dist/esm/ignore.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/index.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/processor.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/esm/walker.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/glob.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/glob.js",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/ignore.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/index.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/processor.d.ts",
+        "packages/pqc-kem/node_modules/glob/dist/commonjs/walker.d.ts"
+      ],
+      "usageCount": 12,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "node:constants": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/foreground-child/dist/esm/all-signals.js",
+        "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/all-signals.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "cross-spawn": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/foreground-child/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/index.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "signal-exit": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/foreground-child/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/index.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "iconv-lite": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/encoding/lib/encoding.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "ms": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/debug/src/common.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "tty": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/debug/src/node.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "supports-color": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/debug/src/node.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "mkdirp": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/test/basic.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "rimraf": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/test/basic.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "shebang-command": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/cross-spawn/lib/util/readShebang.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "color-name": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/color-convert/conversions.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "unique-filename": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/cacache/lib/entry-index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@npmcli/fs": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/cacache/lib/entry-index.js",
+        "packages/pqc-kem/node_modules/cacache/lib/util/tmp.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minipass-collect": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/cacache/lib/get.js",
+        "packages/pqc-kem/node_modules/cacache/lib/put.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "fs-minipass": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/cacache/lib/verify.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/read.js",
+        "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "glob": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/cacache/lib/util/glob.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "balanced-match": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/brace-expansion/index.js",
+        "packages/pqc-kem/node_modules/brace-expansion/dist/esm/index.js",
+        "packages/pqc-kem/node_modules/brace-expansion/dist/commonjs/index.js"
+      ],
+      "usageCount": 3,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "timers": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "http-proxy-agent": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/proxy.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "https-proxy-agent": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/proxy.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "socks-proxy-agent": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/@npmcli/agent/lib/proxy.js"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "string-width-cjs": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/@isaacs/cliui/build/index.cjs"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "strip-ansi-cjs": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/@isaacs/cliui/build/index.cjs"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "wrap-ansi-cjs": {
+      "usageFiles": [
+        "packages/pqc-kem/node_modules/@isaacs/cliui/build/index.cjs"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@fibemate/pqc-kem": {
+      "usageFiles": [
+        "packages/pqc-kem/native/index.d.ts"
+      ],
+      "usageCount": 1,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "@noble/ciphers": {
+      "usageFiles": [
+        "packages/fml-dsa/node_modules/@noble/post-quantum/falcon.js",
+        "packages/fml-dsa/node_modules/@noble/post-quantum/src/falcon.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/aes.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/aes.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/chacha.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/chacha.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/ff1.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/ff1.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/index.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/salsa.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/salsa.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/utils.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/utils.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/webcrypto.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/webcrypto.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/_arx.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/_arx.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/_poly1305.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/_poly1305.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/_polyval.d.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/_polyval.js",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/aes.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/chacha.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/ff1.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/index.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/salsa.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/utils.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/webcrypto.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/_arx.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/_poly1305.ts",
+        "packages/fml-dsa/node_modules/@noble/ciphers/src/_polyval.ts"
+      ],
+      "usageCount": 31,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    },
+    "minimist": {
+      "usageFiles": [
+        "mixnet/healthcheck.js",
+        "mixnet/mix-node.js"
+      ],
+      "usageCount": 2,
+      "type": "unknown",
+      "algorithm": "unknown",
+      "risk": "unknown",
+      "note": "Not classified — manual review needed",
+      "nmInfo": null
+    }
+  },
+  "nmCryptoPackages": [
+    {
+      "name": "pqc-kyber",
+      "version": "0.7.0",
+      "description": "The post-quantum Kyber key exchange algorithm, written in rust and compiled to wasm",
+      "cryptoScore": 22,
+      "keywords": [
+        "kyber",
+        "post-quantum"
+      ],
+      "repository": "https://github.com/Argyle-Software/kyber",
+      "license": "MIT/Apache-2.0",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "jwa",
+      "version": "2.0.1",
+      "description": "JWA implementation (supports all JWS algorithms)",
+      "cryptoScore": 14,
+      "keywords": [
+        "jwt",
+        "rsa",
+        "ecdsa",
+        "hmac"
+      ],
+      "repository": "git://github.com/brianloveswords/node-jwa.git",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "ecdsa-sig-formatter",
+      "version": "1.0.11",
+      "description": "Translate ECDSA signatures between ASN.1/DER and JOSE-style concatenation",
+      "cryptoScore": 9,
+      "keywords": [
+        "ecdsa",
+        "jwt",
+        "jsonwebtoken"
+      ],
+      "repository": "git+ssh://git@github.com/Brightspace/node-ecdsa-sig-formatter.git",
+      "license": "Apache-2.0",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "cookie-signature",
+      "version": "1.0.6",
+      "description": "Sign and unsign cookies",
+      "cryptoScore": 3,
+      "keywords": [],
+      "repository": "https://github.com/visionmedia/node-cookie-signature.git",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "fast-json-stable-stringify",
+      "version": "2.1.0",
+      "description": "deterministic `JSON.stringify()` - a faster version of substack's json-stable-strigify without jsonify",
+      "cryptoScore": 2,
+      "keywords": [
+        "hash"
+      ],
+      "repository": "git://github.com/epoberezkin/fast-json-stable-stringify.git",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "json-stable-stringify-without-jsonify",
+      "version": "1.0.1",
+      "description": "deterministic JSON.stringify() with custom sorting to get deterministic hashes from stringified results, with no public domain dependencies",
+      "cryptoScore": 2,
+      "keywords": [
+        "hash"
+      ],
+      "repository": "git://github.com/samn/json-stable-stringify.git",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "mongodb-connection-string-url",
+      "version": "7.0.2",
+      "description": "MongoDB connection strings, based on the WhatWG URL API",
+      "cryptoScore": 1,
+      "keywords": [
+        "password"
+      ],
+      "repository": "https://github.com/mongodb-js/mongodb-connection-string-url.git",
+      "license": "Apache-2.0",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "safe-buffer",
+      "version": "5.2.1",
+      "description": "Safer Node.js Buffer API",
+      "cryptoScore": 1,
+      "keywords": [
+        "node security",
+        "security"
+      ],
+      "repository": "git://github.com/feross/safe-buffer.git",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    }
+  ],
+  "nmCryptoPackagesUsed": [
+    {
+      "name": "bcryptjs",
+      "version": "3.0.3",
+      "description": "Optimized bcrypt in plain JavaScript with zero dependencies, with TypeScript support. Compatible to 'bcrypt'.",
+      "cryptoScore": 7,
+      "keywords": [
+        "password",
+        "auth",
+        "authentication",
+        "encryption"
+      ],
+      "repository": "https://github.com/dcodeIO/bcrypt.js.git",
+      "license": "BSD-3-Clause",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "jsonwebtoken",
+      "version": "9.0.3",
+      "description": "JSON Web Token implementation (symmetric and asymmetric)",
+      "cryptoScore": 4,
+      "keywords": [
+        "jwt"
+      ],
+      "repository": "https://github.com/auth0/node-jsonwebtoken",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "helmet",
+      "version": "7.2.0",
+      "description": "help secure Express/Connect apps with various HTTP headers",
+      "cryptoScore": 2,
+      "keywords": [
+        "security",
+        "content-security-policy",
+        "strict-transport-security"
+      ],
+      "repository": "git://github.com/helmetjs/helmet.git",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "imurmurhash",
+      "version": "0.1.4",
+      "description": "An incremental implementation of MurmurHash3",
+      "cryptoScore": 2,
+      "keywords": [
+        "hash"
+      ],
+      "repository": "https://github.com/jensyt/imurmurhash-js",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    },
+    {
+      "name": "cors",
+      "version": "2.8.5",
+      "description": "Node.js CORS middleware",
+      "cryptoScore": 1,
+      "keywords": [
+        "cors"
+      ],
+      "repository": "expressjs/cors",
+      "license": "MIT",
+      "deprecated": false,
+      "hasNative": false
+    }
+  ]
+}
