@@ -58,7 +58,20 @@
             width:18px; height:18px; border-radius:2px; cursor:pointer; transition:transform 0.15s;
             position:relative;
         }
-        .hm-cell:hover { transform:scale(1.5); z-index:5; }
+        .hm-cell:hover { transform:scale(1.5); z-index:5; border:1px solid #fff; }
+        .hm-cell.zero { background:#1a1a2e !important; opacity:1 !important; border:1px dashed #2a2a4a; }
+        /* Heatmap tooltip */
+        #hm-tooltip {
+            position:absolute; pointer-events:none;
+            background:rgba(10,14,23,0.97); border:1px solid #3a3a5a;
+            border-radius:8px; padding:8px 14px; font-size:0.72rem;
+            display:none; max-width:280px; z-index:200;
+            backdrop-filter:blur(8px); box-shadow:0 4px 20px rgba(0,0,0,0.5);
+            white-space:nowrap;
+        }
+        #hm-tooltip .tt-dir { color:#94a3b8; }
+        #hm-tooltip .tt-algo { font-weight:600; }
+        #hm-tooltip .tt-val { font-size:1.1rem; font-weight:700; margin-left:4px; }
         .hm-col-header { writing-mode:vertical-lr; font-size:0.55rem; color:#64748b; width:18px; text-align:center; padding-top:2px; }
 
         /* ─── File table ─── */
@@ -152,8 +165,13 @@
         </div>
         <div class="panel">
             <h2>🗺️ 目录级算法热力图</h2>
-            <p style="font-size:0.72rem;color:#64748b;margin-bottom:0.5rem;">行=目录 · 列=算法 · 颜色深度=文件数量 · 悬停看数值</p>
-            <div id="heatmap"></div>
+            <p style="font-size:0.72rem;color:#64748b;margin-bottom:0.5rem;">行=目录 · 列=算法 · 颜色深度=命中数 · <strong>悬停格子看详情</strong></p>
+            <div id="heatmap" style="position:relative;">
+                <div id="hm-tooltip">
+                    <span class="tt-dir"></span><br>
+                    <span class="tt-algo"></span><span class="tt-val"></span> files
+                </div>
+            </div>
         </div>
     </div>
 
@@ -402,12 +420,42 @@ function dirCount() {
             var v = matrix[d][a] || 0;
             var alpha = maxVal > 0 ? v / maxVal : 0;
             var color = ALGO_COLORS[a] || '#00d4ff';
-            html += '<div class="hm-cell" title="'+d+' × '+a+': '+v+' files" style="background:'+color+';opacity:'+(0.1+alpha*0.9)+';"></div>';
+            var cls = v === 0 ? 'hm-cell zero' : 'hm-cell';
+            html += '<div class="'+cls+'" data-dir="'+d.replace(/"/g,'&quot;')+'" data-algo="'+a+'" data-val="'+v+'"';
+            if (v === 0) {
+                html += ' style="border:1px dashed #2a2a4a;"';
+            } else {
+                html += ' style="background:'+color+';opacity:'+(0.15+alpha*0.85)+';"';
+            }
+            html += '></div>';
         });
         html += '</div></div>';
     });
     html += '</div>';
     container.innerHTML = html;
+
+    // Bind JS-level tooltip for reliable hover on all devices
+    var tt = document.getElementById('hm-tooltip');
+    var cells = container.querySelectorAll('.hm-cell');
+    cells.forEach(function(cell) {
+        cell.addEventListener('mouseenter', function(e) {
+            var d = cell.getAttribute('data-dir') || '';
+            var a = cell.getAttribute('data-algo') || '';
+            var v = cell.getAttribute('data-val') || '0';
+            tt.querySelector('.tt-dir').textContent = d;
+            tt.querySelector('.tt-algo').textContent = a;
+            tt.querySelector('.tt-algo').style.color = ALGO_COLORS[a] || '#e0e0e0';
+            tt.querySelector('.tt-val').textContent = v;
+            tt.style.display = 'block';
+        });
+        cell.addEventListener('mouseleave', function() {
+            tt.style.display = 'none';
+        });
+        cell.addEventListener('mousemove', function(e) {
+            tt.style.left = (e.offsetX + 10) + 'px';
+            tt.style.top = (e.offsetY - 50) + 'px';
+        });
+    });
 })();
 
 // ═══════════ CBOM Grid ═══════════

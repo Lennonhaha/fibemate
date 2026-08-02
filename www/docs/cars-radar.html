@@ -151,12 +151,25 @@
 
         /* ─── Mobile ─── */
         @media (max-width: 768px) {
-            #panel { width: 230px; padding: 12px; top: 8px; left: 8px; }
-            h1 { font-size: 13px; }
-            .overall .score { font-size: 22px; }
+            #panel { width: 200px; padding: 10px 8px; top: 4px; left: 4px; font-size:9px; }
+            #panel.collapsed { width: 32px; padding: 6px; }
+            #panel.collapsed .subtitle, #panel.collapsed .dim-list, #panel.collapsed .overall { display:none; }
+            #panel.collapsed h1 { display:none; }
+            #panel-toggle { display:block !important; position:absolute; top:4px; right:4px; z-index:31; background:rgba(15,15,30,0.9); border:1px solid #3a3a5a; border-radius:6px; color:#00d4ff; font-size:16px; width:28px; height:28px; cursor:pointer; line-height:1; }
+            h1 { font-size: 12px; }
+            .overall .score { font-size: 18px; }
+            .dim-row { font-size:9px; gap:4px; padding:4px 5px; }
             #evidence-panel { width: 100vw; }
-            #legend { gap: 10px; padding: 6px 12px; font-size: 9px; }
-            #improve-toggle { right: 8px; bottom: 80px; font-size: 10px; }
+            #ev-close { padding:6px 12px; font-size:16px; }
+            #ev-header { padding:14px; }
+            #ev-dim-name { font-size:13px; }
+            #ev-list { padding:8px 10px; }
+            .ev-item { padding:10px; }
+            .ev-file-path { font-size:9px; }
+            .ev-code { font-size:9px; max-height:80px; }
+            #legend { gap:6px; padding:5px 10px; font-size:8px; bottom:10px; }
+            #improve-toggle { right:4px; bottom:10px; font-size:9px; padding:5px 10px; }
+            #tooltip { max-width:180px; font-size:10px; }
         }
     </style>
 </head>
@@ -184,6 +197,7 @@
 </div>
 
 <!-- ═══ 左侧评分面板 ═══ -->
+<button id="panel-toggle" onclick="togglePanel()" style="display:none;">☰</button>
 <div id="panel">
     <h1>FIBEMATE · CARS 审计仪表盘</h1>
     <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
@@ -651,6 +665,12 @@
     }
 
     window.closeEvidence = closeEvidence;
+    window.togglePanel = function() {
+        var p = document.getElementById('panel');
+        p.classList.toggle('collapsed');
+        var btn = document.getElementById('panel-toggle');
+        btn.textContent = p.classList.contains('collapsed') ? '▶' : '☰';
+    };
 
     window.addEventListener('mousemove', onMouseMove, { passive:true });
     window.addEventListener('click', onClick);
