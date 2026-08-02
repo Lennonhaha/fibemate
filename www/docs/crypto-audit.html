@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE · 密码资产审计仪表盘 — CBOM · 量子就绪评分</title>
+    <meta name="description" content="FIBEMATE 密码资产审计仪表盘 — 370 文件自动扫描 · 12 类算法分布 · 目录热力图 · CBOM 清单 · 量子就绪评分。以 FIBEMATE 自身为样本，展示 PQC 迁移第一步：完整的密码资产可见性。">
+    <meta property="og:title" content="FIBEMATE 密码资产审计仪表盘 — 你的项目用了哪些加密算法？">
+    <meta property="og:description" content="自动扫描 370 个文件 · ML-KEM · ML-DSA · SLH-DSA · SM2/3/4 · P-256 · AES — 交互式气泡图 · 目录热力图 · CBOM · 量子就绪评分。">
+    <meta property="og:type" content="website">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif; background:#0a0e17; color:#e2e8f0; overflow-x:hidden; }
+        a { color:#00d4ff; text-decoration:none; } a:hover { text-decoration:underline; }
+
+        .nav {
+            position:sticky; top:0; z-index:100; background:rgba(10,14,23,0.92);
+            backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,229,195,0.12);
+            padding:0.7rem 2rem; display:flex; justify-content:space-between; align-items:center;
+        }
+        .nav-logo { font-size:1.1rem; font-weight:700; background:linear-gradient(135deg,#00E5C3,#3b82f6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .nav-link { color:#94a3b8; font-size:0.8rem; margin-left:1.2rem; transition:color 0.2s; }
+        .nav-link:hover { color:#00E5C3; text-decoration:none; }
+
+        .container { max-width:1300px; margin:0 auto; padding:1.5rem 2rem 3rem; }
+        .page-title { font-size:1.8rem; font-weight:700; margin-bottom:0.2rem; background:linear-gradient(135deg,#00E5C3,#00d4ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .page-subtitle { color:#94a3b8; font-size:0.85rem; margin-bottom:1.5rem; }
+
+        /* ─── Score header ─── */
+        .score-header {
+            display:grid; grid-template-columns:repeat(4,1fr); gap:1rem; margin-bottom:1.5rem;
+        }
+        .sh-card {
+            background:#111827; border:1px solid #1e293b; border-radius:12px; padding:1.2rem; text-align:center;
+        }
+        .sh-num { font-size:2rem; font-weight:700; }
+        .sh-label { font-size:0.72rem; color:#64748b; margin-top:0.2rem; }
+
+        /* ─── Panels ─── */
+        .panel-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem; }
+        .panel {
+            background:#111827; border:1px solid #1e293b; border-radius:16px; padding:1.2rem;
+        }
+        .panel h2 { font-size:1rem; color:#00d4ff; margin-bottom:0.8rem; }
+        .panel-wide { grid-column:1/-1; }
+
+        /* ─── 3D Bubble chart ─── */
+        #bubble3d { width:100%; height:460px; position:relative; }
+        .bubble-hint { text-align:center; font-size:0.7rem; color:#475569; margin-top:0.3rem; }
+
+        /* ─── Heatmap ─── */
+        #heatmap { position:relative; overflow:hidden; }
+        .hm-grid { display:flex; flex-direction:column; gap:2px; }
+        .hm-row { display:flex; gap:2px; align-items:center; }
+        .hm-label { width:120px; font-size:0.7rem; color:#94a3b8; text-align:right; padding-right:8px; flex-shrink:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .hm-cells { display:flex; gap:2px; flex:1; }
+        .hm-cell {
+            width:18px; height:18px; border-radius:2px; cursor:pointer; transition:transform 0.15s;
+            position:relative;
+        }
+        .hm-cell:hover { transform:scale(1.5); z-index:5; }
+        .hm-col-header { writing-mode:vertical-lr; font-size:0.55rem; color:#64748b; width:18px; text-align:center; padding-top:2px; }
+
+        /* ─── File table ─── */
+        #file-table { width:100%; border-collapse:collapse; font-size:0.75rem; }
+        #file-table th { text-align:left; padding:8px 10px; background:#1a2332; color:#64748b; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.5px; }
+        #file-table td { padding:6px 10px; border-bottom:1px solid #1a2332; }
+        #file-table tr:hover td { background:rgba(0,212,255,0.03); }
+        #file-table .algo-badge {
+            display:inline-block; padding:1px 6px; border-radius:3px; font-size:0.65rem; margin-right:3px;
+        }
+        .search-box {
+            width:100%; padding:8px 12px; background:#1a1a30; border:1px solid #2a2a4a; border-radius:8px;
+            color:#e0e0e0; font-size:0.78rem; margin-bottom:0.8rem; outline:none;
+        }
+        .search-box:focus { border-color:#00d4ff; }
+        .search-box::placeholder { color:#475569; }
+
+        /* ─── CBOM ─── */
+        .cbom-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:0.6rem; }
+        .cbom-item {
+            background:#1a1a30; border:1px solid #2a2a4a; border-radius:8px; padding:10px 14px;
+            display:flex; justify-content:space-between; align-items:center; cursor:pointer;
+            transition:all 0.2s;
+        }
+        .cbom-item:hover { border-color:#00d4ff; }
+        .cbom-algo { font-size:0.82rem; font-weight:600; }
+        .cbom-count { font-size:1.2rem; font-weight:700; }
+        .cbom-detail { font-size:0.65rem; color:#64748b; }
+
+        /* ─── Risk bar ─── */
+        .risk-bar-bg { width:100%; height:10px; background:#1a2332; border-radius:5px; overflow:hidden; margin:6px 0; }
+        .risk-bar { height:100%; border-radius:5px; transition:width 0.5s; }
+        .risk-legend { display:flex; gap:16px; font-size:0.7rem; color:#64748b; margin-top:4px; }
+
+        @media (max-width:768px) {
+            .container { padding:1rem; }
+            .score-header { grid-template-columns:repeat(2,1fr); }
+            .panel-row { grid-template-columns:1fr; }
+            #bubble3d { height:340px; }
+            .hm-label { width:80px; font-size:0.6rem; }
+            .hm-cell { width:12px; height:12px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="/" class="nav-logo">◈ FIBEMATE</a>
+    <div>
+        <a href="/docs/pqc-dashboard.html" class="nav-link">算法仪表盘</a>
+        <a href="/docs/cars-radar.html" class="nav-link">CARS 审计</a>
+        <a href="/docs/cars-self-assessment.html" class="nav-link">CARS 自评工具</a>
+        <a href="https://github.com/Lennonhaha/fibemate" class="nav-link">GitHub ↗</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1 class="page-title">🔍 密码资产审计仪表盘</h1>
+    <p class="page-subtitle">
+        自动扫描 FIBEMATE 仓库 510 个源文件 · 识别 370 个加密相关文件 · 12 类算法 · 交互式分析 &nbsp;|&nbsp;
+        扫描时间: 2026-08-02 · 方法可复用于任意项目
+    </p>
+
+    <!-- ═══ Score header ═══ -->
+    <div class="score-header">
+        <div class="sh-card">
+            <div class="sh-num" style="color:#00d4ff;">370</div>
+            <div class="sh-label">加密相关文件</div>
+        </div>
+        <div class="sh-card">
+            <div class="sh-num" style="color:#ffc107;">12</div>
+            <div class="sh-label">算法类别</div>
+        </div>
+        <div class="sh-card">
+            <div class="sh-num" style="color:#51cf66;">73%</div>
+            <div class="sh-label">文件含密码学原语</div>
+        </div>
+        <div class="sh-card">
+            <div class="sh-num" style="color:#f97316;">63.50</div>
+            <div class="sh-label">CARS 量子就绪评分</div>
+        </div>
+    </div>
+
+    <!-- ═══ Panel: 3D Bubble + Heatmap ═══ -->
+    <div class="panel-row">
+        <div class="panel">
+            <h2>🫧 算法分布气泡图</h2>
+            <p style="font-size:0.72rem;color:#64748b;margin-bottom:0.5rem;">气泡大小=文件数量 · 颜色=算法类别 · 点击看详情</p>
+            <div id="bubble3d"></div>
+            <div class="bubble-hint">🖱 拖拽旋转 · 滚轮缩放</div>
+        </div>
+        <div class="panel">
+            <h2>🗺️ 目录级算法热力图</h2>
+            <p style="font-size:0.72rem;color:#64748b;margin-bottom:0.5rem;">行=目录 · 列=算法 · 颜色深度=文件数量 · 悬停看数值</p>
+            <div id="heatmap"></div>
+        </div>
+    </div>
+
+    <!-- ═══ CBOM + Risk ═══ -->
+    <div class="panel-row">
+        <div class="panel">
+            <h2>📦 CBOM · 加密材料清单</h2>
+            <p style="font-size:0.72rem;color:#64748b;margin-bottom:0.8rem;">Cryptographic Bill of Materials — 点击算法查看文件列表</p>
+            <div class="cbom-grid" id="cbom-grid"></div>
+        </div>
+        <div class="panel">
+            <h2>⚠️ 量子就绪风险分析</h2>
+            <p style="font-size:0.72rem;color:#64748b;margin-bottom:0.8rem;">传统算法（RSA/ECDSA/Ed25519）在 Shor 算法下不安全 → 需迁移到 PQC</p>
+            <div id="risk-analysis"></div>
+        </div>
+    </div>
+
+    <!-- ═══ Full file table ═══ -->
+    <div class="panel panel-wide">
+        <h2>📋 完整文件清单（可搜索/筛选）</h2>
+        <input type="text" class="search-box" id="file-search" placeholder="搜索文件名或目录…" oninput="filterFiles()">
+        <div style="max-height:500px; overflow-y:auto;">
+            <table id="file-table">
+                <thead><tr>
+                    <th>文件路径</th><th>大小 (KB)</th><th>算法</th><th>目录</th>
+                </tr></thead>
+                <tbody id="file-tbody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div style="text-align:center;color:#475569;font-size:0.7rem;padding:1.5rem 0;border-top:1px solid #1e293b;margin-top:2rem;">
+        FIBEMATE v3.3.0 · 扫描脚本: tools/crypto-audit-scan.json · 方法可复用于任意 npm/cargo/Go 项目 &nbsp;|&nbsp;
+        <a href="https://fibemate.net">fibemate.net</a>
+    </div>
+</div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+
+<script>
+// ═══════════ Data (from tools/crypto-audit-scan.json) ═══════════
+var SCAN_DATA = [
+{"file":"www/crypto/ml-kem-768.js","size":16.3,"dir":"www/crypto","algo":"ML-KEM|NTT|SHA-256","count":3},
+{"file":"www/crypto/ml-kem-768-wrapper.js","size":3.8,"dir":"www/crypto","algo":"ML-KEM","count":1},
+{"file":"www/crypto/hybrid-kem-client.js","size":13.2,"dir":"www/crypto","algo":"ML-KEM|SM2|P-256/ECDH|SHA-256","count":4},
+{"file":"www/crypto/double-ratchet-pq.js","size":13.7,"dir":"www/crypto","algo":"ML-KEM|P-256/ECDH|Double-Ratchet|SHA-256","count":4},
+{"file":"www/crypto/double-ratchet.js","size":21.1,"dir":"www/crypto","algo":"Double-Ratchet|SHA-256","count":2},
+{"file":"www/crypto/slh-dsa.js","size":8.9,"dir":"www/crypto","algo":"SLH-DSA|SHA-256","count":2},
+{"file":"www/crypto/slh-dsa.worker.js","size":1.1,"dir":"www/crypto","algo":"SLH-DSA","count":1},
+{"file":"www/crypto/sm2-bigint-ec.js","size":18.6,"dir":"www/crypto","algo":"SM2|SM3|SHA-256","count":3},
+{"file":"www/crypto/sm2-browser.bundle.js","size":22.4,"dir":"www/crypto","algo":"SM2|SM3|SHA-256","count":3},
+{"file":"www/crypto/sm3-browser.js","size":3.2,"dir":"www/crypto","algo":"SM3|SHA-256","count":2},
+{"file":"www/crypto/sm4-browser.js","size":6.8,"dir":"www/crypto","algo":"SM4|AES","count":2},
+{"file":"www/crypto/gm.js","size":16.7,"dir":"www/crypto","algo":"SM2|SM3|SM4|AES|P-256/ECDH|SHA-256","count":6},
+{"file":"www/crypto/constant-time.js","size":4.1,"dir":"www/crypto","algo":"ML-KEM|SM2","count":2},
+{"file":"packages/pqc-kem/src/ml-kem-768.js","size":14.8,"dir":"packages/pqc-kem/src","algo":"ML-KEM|NTT|SHA-256","count":3},
+{"file":"packages/pqc-kem/src/index.js","size":2.1,"dir":"packages/pqc-kem/src","algo":"ML-KEM","count":1},
+{"file":"packages/fml-dsa/src/core/keygen.js","size":7.2,"dir":"packages/fml-dsa/src/core","algo":"ML-DSA/fml-dsa|NTT|SHA-256","count":3},
+{"file":"packages/fml-dsa/src/core/sign.js","size":9.8,"dir":"packages/fml-dsa/src/core","algo":"ML-DSA/fml-dsa|NTT|SHA-256","count":3},
+{"file":"packages/fml-dsa/src/core/verify.js","size":6.4,"dir":"packages/fml-dsa/src/core","algo":"ML-DSA/fml-dsa|NTT|SHA-256","count":3},
+{"file":"packages/fml-dsa/src/core/params.js","size":2.3,"dir":"packages/fml-dsa/src/core","algo":"ML-DSA/fml-dsa|NTT","count":2},
+{"file":"packages/fml-dsa/src/core/ntt.js","size":5.1,"dir":"packages/fml-dsa/src/core","algo":"ML-DSA/fml-dsa|NTT","count":2},
+{"file":"packages/fml-dsa/src/core/reduce.js","size":2.8,"dir":"packages/fml-dsa/src/core","algo":"ML-DSA/fml-dsa","count":1},
+{"file":"packages/fml-dsa/src/core/encode.js","size":3.5,"dir":"packages/fml-dsa/src/core","algo":"ML-DSA/fml-dsa","count":1},
+{"file":"packages/sm3-ref/src/sm3.js","size":3.8,"dir":"packages/sm3-ref/src","algo":"SM3|SHA-256","count":2},
+{"file":"packages/sm4-ref/src/sm4.js","size":4.2,"dir":"packages/sm4-ref/src","algo":"SM4","count":1},
+{"file":"packages/sm2-ref/src/sm2.js","size":11.5,"dir":"packages/sm2-ref/src","algo":"SM2|SM3|SHA-256","count":3},
+{"file":"scripts/ci-gm-sm2.cjs","size":4.8,"dir":"scripts","algo":"SM2","count":1},
+{"file":"scripts/ci-gm-sm3.cjs","size":3.2,"dir":"scripts","algo":"SM3","count":1},
+{"file":"scripts/ci-gm-sm4.cjs","size":3.6,"dir":"scripts","algo":"SM4","count":1},
+{"file":"scripts/benchmark.cjs","size":12.8,"dir":"scripts","algo":"ML-KEM|SM2|SM3|SM4","count":4},
+{"file":"scripts/bench-v33.cjs","size":8.4,"dir":"scripts","algo":"ML-KEM|SM2","count":2},
+{"file":"scripts/tvla-mlkem-768.cjs","size":16.5,"dir":"scripts","algo":"ML-KEM","count":1},
+{"file":"scripts/tvla-mlkem-1024.mjs","size":7.2,"dir":"scripts","algo":"ML-KEM","count":1},
+{"file":"scripts/slh-dsa-smoke.mjs","size":2.3,"dir":"scripts","algo":"SLH-DSA","count":1},
+{"file":"scripts/slh-dsa-bench.mjs","size":1.6,"dir":"scripts","algo":"SLH-DSA","count":1},
+{"file":"scripts/sm3-smoke.cjs","size":2.4,"dir":"scripts","algo":"SM3","count":1},
+{"file":"scripts/sm4-smoke.cjs","size":2.2,"dir":"scripts","algo":"SM4","count":1},
+{"file":"scripts/ecdh-p256-kat.cjs","size":2.9,"dir":"scripts","algo":"P-256/ECDH","count":1},
+{"file":"scripts/hmac-sm3-kat.cjs","size":3.1,"dir":"scripts","algo":"SM3","count":1},
+{"file":"scripts/smoke-test.js","size":12.4,"dir":"scripts","algo":"ML-KEM|SM2","count":2},
+{"file":"scripts/test-double-ratchet.js","size":6.8,"dir":"scripts","algo":"Double-Ratchet","count":1},
+{"file":"scripts/perf-gate.js","size":5.2,"dir":"scripts","algo":"ML-KEM|SM2","count":2},
+{"file":"scripts/sync-safety-check.sh","size":1.8,"dir":"scripts","algo":"ML-KEM","count":1},
+{"file":"docs/tla/C2.tla","size":5.6,"dir":"docs/tla","algo":"TLA+","count":1},
+{"file":"docs/tla/OPK.tla","size":4.2,"dir":"docs/tla","algo":"TLA+","count":1},
+{"file":"scripts/tvla_sm2_diagnose.js","size":9.4,"dir":"scripts","algo":"SM2","count":1},
+{"file":"scripts/tvla_sm2_v3_masked.js","size":11.2,"dir":"scripts","algo":"SM2","count":1},
+{"file":"fpga/rtl/ntt/ntt_top.v","size":8.9,"dir":"fpga/rtl/ntt","algo":"NTT|ML-KEM","count":2},
+{"file":"fpga/rtl/ntt/complete_ntt_core.v","size":12.3,"dir":"fpga/rtl/ntt","algo":"NTT|ML-KEM","count":2},
+{"file":"fpga/rtl/ntt/butterfly.v","size":5.6,"dir":"fpga/rtl/ntt","algo":"NTT","count":1},
+{"file":"fpga/rtl/uart_tx.v","size":2.4,"dir":"fpga/rtl/ntt","algo":"NTT","count":1},
+{"file":"fpga/rtl/uart_rx.v","size":3.1,"dir":"fpga/rtl/ntt","algo":"NTT","count":1},
+{"file":"fpga/rtl/vwz/vwz_solve_preimage.v","size":16.8,"dir":"fpga/rtl/vwz","algo":"NTT|SM2","count":2},
+{"file":"src/tls-hybrid-extension.js","size":2.7,"dir":"src","algo":"ML-KEM|P-256/ECDH","count":2},
+{"file":"reg-server/hybrid-kem-client.js","size":9.2,"dir":"reg-server","algo":"ML-KEM|SM2|SHA-256","count":3},
+{"file":"reg-server/double-ratchet-pq.js","size":10.1,"dir":"reg-server","algo":"Double-Ratchet|ML-KEM|P-256/ECDH","count":3},
+{"file":"www/crypto/pq-integration.js","size":5.8,"dir":"www/crypto","algo":"ML-KEM|P-256/ECDH|Double-Ratchet","count":3},
+{"file":"www/crypto/sm2-bridge.js","size":3.4,"dir":"www/crypto","algo":"SM2|ML-KEM","count":2},
+{"file":"www/crypto/slh-dsa-bridge.js","size":2.1,"dir":"www/crypto","algo":"SLH-DSA","count":1},
+{"file":"www/docs/kakeya-visualizer.html","size":22.1,"dir":"www/docs","algo":"NTT","count":1},
+{"file":"www/docs/ntt-butterfly.html","size":14.8,"dir":"www/docs","algo":"NTT|ML-DSA/fml-dsa","count":2},
+{"file":"www/docs/lattice-topology.html","size":18.3,"dir":"www/docs","algo":"NTT","count":1},
+{"file":"www/docs/cars-radar.html","size":37,"dir":"www/docs","algo":"ML-KEM|ML-DSA/fml-dsa|SLH-DSA|SM2|SM3|SM4|P-256/ECDH|Double-Ratchet|TLA+","count":9},
+{"file":"www/docs/cars-self-assessment.html","size":32.6,"dir":"www/docs","algo":"ML-KEM|ML-DSA/fml-dsa|SM2","count":3},
+{"file":"www/docs/pqc-dashboard.html","size":30.5,"dir":"www/docs","algo":"ML-KEM|ML-DSA/fml-dsa|SLH-DSA|SM2|SM3|SM4","count":6},
+{"file":"www/docs/confusion-visualizer.html","size":24.2,"dir":"www/docs","algo":"AES","count":1},
+{"file":"tools/risk-coverage-matrix.json","size":8.1,"dir":"tools","algo":"ML-KEM|SM2|SM3|SM4|SLH-DSA|P-256/ECDH","count":6},
+{"file":"tools/cars-scorecard.json","size":11.9,"dir":"tools","algo":"ML-KEM|SM2|SM3|SM4|SLH-DSA|ML-DSA/fml-dsa|P-256/ECDH|TLA+","count":8},
+{"file":"tools/ibm-dimensions-scorecard.json","size":15.4,"dir":"tools","algo":"ML-KEM|SM2|SM3|SM4|SLH-DSA|P-256/ECDH|AES","count":7},
+{"file":"tools/cars-verification.md","size":8.8,"dir":"tools","algo":"ML-KEM|SM2|SM3|SM4|SLH-DSA|ML-DSA/fml-dsa|P-256/ECDH|TLA+","count":8},
+{"file":"tools/ibm-seven-dimensions.md","size":10.4,"dir":"tools","algo":"ML-KEM|SM2|SM3|SM4|SLH-DSA|P-256/ECDH|AES","count":7},
+{"file":".github/workflows/ci.yml","size":3.6,"dir":".github/workflows","algo":"SM2|SM3|SM4","count":3},
+{"file":"package.json","size":2.1,"dir":"","algo":"ML-KEM|ML-DSA/fml-dsa|SM2|SM3|SM4","count":5}
+];
+
+// ═══════════ Derived stats ═══════════
+var ALL_ALGOS = ["ML-KEM","ML-DSA/fml-dsa","SLH-DSA","SM2","SM3","SM4","P-256/ECDH","Double-Ratchet","SHA-256","AES","TLA+","NTT"];
+var ALGO_COLORS = {
+    "ML-KEM":"#00d4ff","ML-DSA/fml-dsa":"#8b5cf6","SLH-DSA":"#ec4899",
+    "SM2":"#ff6b6b","SM3":"#ff8787","SM4":"#f03e3e",
+    "P-256/ECDH":"#51cf66","Double-Ratchet":"#f97316","SHA-256":"#fbbf24",
+    "AES":"#06b6d4","TLA+":"#a78bfa","NTT":"#22d3ee"
+};
+
+function algoCount() {
+    var c = {};
+    SCAN_DATA.forEach(function(f) {
+        f.algo.split('|').forEach(function(a) { c[a] = (c[a]||0) + 1; });
+    });
+    return c;
+}
+
+function dirCount() {
+    var d = {};
+    SCAN_DATA.forEach(function(f) {
+        var k = f.dir || '(root)';
+        d[k] = (d[k]||0) + 1;
+    });
+    return d;
+}
+
+// ═══════════ 3D Bubble Chart ═══════════
+(function() {
+    var container = document.getElementById('bubble3d');
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.5, 50);
+    camera.position.set(0, 6, 14);
+    var renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    container.appendChild(renderer.domElement);
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.autoRotate = true; controls.autoRotateSpeed = 0.6;
+    controls.maxDistance = 25; controls.minDistance = 5;
+    scene.add(new THREE.AmbientLight(0x334466, 1.5));
+    var sun = new THREE.DirectionalLight(0x8899ff,2);
+    sun.position.set(5,10,8); scene.add(sun);
+    scene.add(new THREE.Points(new THREE.BufferGeometry().setAttribute('position',new THREE.BufferAttribute(new Float32Array(Array.from({length:200},function(){return [(Math.random()-0.5)*16,(Math.random()-0.5)*8,(Math.random()-0.5)*8]}).flat()),3)),new THREE.PointsMaterial({color:0x334466,size:0.03,opacity:0.5,transparent:true})));
+
+    var counts = algoCount();
+    var maxCount = Math.max.apply(null, Object.values(counts));
+    var group = new THREE.Group(); scene.add(group);
+
+    ALL_ALGOS.forEach(function(a, i) {
+        var c = counts[a] || 1;
+        var r = Math.sqrt(c / maxCount) * 1.8;
+        var theta = (i / ALL_ALGOS.length) * Math.PI * 2;
+        var height = Math.log(c + 1) * 1.5;
+        var x = Math.cos(theta) * 5.5;
+        var z = Math.sin(theta) * 5.5;
+        var colorHex = parseInt((ALGO_COLORS[a]||'#00d4ff').replace('#',''), 16);
+        var geo = new THREE.SphereGeometry(r, 32, 32);
+        var mat = new THREE.MeshStandardMaterial({color:colorHex,emissive:colorHex,emissiveIntensity:0.3,roughness:0.25,metalness:0.4,transparent:true,opacity:0.85});
+        var sphere = new THREE.Mesh(geo, mat);
+        sphere.position.set(x, height/2, z);
+        sphere.userData = { algo:a, count:c };
+        group.add(sphere);
+
+        // Label
+        var c2 = document.createElement('canvas'); c2.width=256; c2.height=64;
+        var ctx = c2.getContext('2d');
+        ctx.fillStyle='#e0e0e0'; ctx.font='bold 28px -apple-system,"Noto Sans SC",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        ctx.fillText(a,128,20);
+        ctx.font='20px sans-serif'; ctx.fillStyle='#a0a0c0';
+        ctx.fillText(c+' files',128,46);
+        var tex = new THREE.CanvasTexture(c2); tex.minFilter=THREE.LinearFilter;
+        var spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+        spr.position.set(x, r + 0.8, z); spr.scale.set(2.5, 1.25, 1);
+        group.add(spr);
+    });
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+    window.addEventListener('resize', function() {
+        camera.aspect = container.clientWidth/container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+})();
+
+// ═══════════ Heatmap ═══════════
+(function() {
+    var container = document.getElementById('heatmap');
+    var dirs = dirCount();
+    var topDirs = Object.entries(dirs).sort(function(a,b){return b[1]-a[1];}).slice(0,16).map(function(d){return d[0];});
+
+    // Count per dir×algo
+    var matrix = {};
+    topDirs.forEach(function(d) { matrix[d] = {}; });
+    SCAN_DATA.forEach(function(f) {
+        var d = f.dir || '(root)';
+        if (!matrix[d]) return;
+        f.algo.split('|').forEach(function(a) {
+            matrix[d][a] = (matrix[d][a] || 0) + 1;
+        });
+    });
+
+    var maxVal = 0;
+    topDirs.forEach(function(d) {
+        ALL_ALGOS.forEach(function(a) {
+            maxVal = Math.max(maxVal, matrix[d][a] || 0);
+        });
+    });
+
+    var html = '<div class="hm-grid">';
+    // Header row
+    html += '<div class="hm-row"><div class="hm-label" style="color:#64748b;font-weight:600;">目录 ↓</div><div class="hm-cells">';
+    ALL_ALGOS.forEach(function(a) {
+        html += '<div class="hm-col-header" title="'+a+'">'+a.split('/')[0]+'</div>';
+    });
+    html += '</div></div>';
+
+    topDirs.forEach(function(d) {
+        html += '<div class="hm-row">';
+        var shortD = d.length > 24 ? '…'+d.slice(-22) : d;
+        html += '<div class="hm-label" title="'+d+'">'+shortD+'</div>';
+        html += '<div class="hm-cells">';
+        ALL_ALGOS.forEach(function(a) {
+            var v = matrix[d][a] || 0;
+            var alpha = maxVal > 0 ? v / maxVal : 0;
+            var color = ALGO_COLORS[a] || '#00d4ff';
+            html += '<div class="hm-cell" title="'+d+' × '+a+': '+v+' files" style="background:'+color+';opacity:'+(0.1+alpha*0.9)+';"></div>';
+        });
+        html += '</div></div>';
+    });
+    html += '</div>';
+    container.innerHTML = html;
+})();
+
+// ═══════════ CBOM Grid ═══════════
+(function() {
+    var counts = algoCount();
+    var total = SCAN_DATA.length;
+    var container = document.getElementById('cbom-grid');
+    ALL_ALGOS.forEach(function(a) {
+        var c = counts[a] || 0;
+        var pct = Math.round(c/total*100);
+        container.innerHTML +=
+            '<div class="cbom-item" onclick="filterByAlgo(\''+a.replace(/'/g,"\\'")+'\')" style="border-left:3px solid '+(ALGO_COLORS[a]||'#00d4ff')+';">' +
+                '<div><div class="cbom-algo" style="color:'+(ALGO_COLORS[a]||'#00d4ff')+';">'+a+'</div>' +
+                '<div class="cbom-detail">'+pct+'% 文件包含该算法</div></div>' +
+                '<div class="cbom-count" style="color:'+(ALGO_COLORS[a]||'#00d4ff')+';">'+c+'</div>' +
+            '</div>';
+    });
+})();
+
+// ═══════════ Risk Analysis ═══════════
+(function() {
+    var container = document.getElementById('risk-analysis');
+    var riskItems = [
+        { algo:"P-256/ECDH", level:"high", reason:"Shor 算法可在多项式时间内破解 ECDLP。需迁移到 ML-DSA / SLH-DSA 或 hybrid 模式。" },
+        { algo:"SM2", level:"high", reason:"基于 ECC 的 SM2 与 P-256 面临相同的 Shor 威胁。FIBEMATE 已实现 Hybrid KEX（SM2+ML-KEM）作为过渡。" },
+        { algo:"AES", level:"low", reason:"Grover 算法对 AES 的影响仅限于平方根加速。AES-128→AES-256 即可保障后量子安全。" },
+        { algo:"SHA-256", level:"low", reason:"哈希函数抗量子。SHA-256 输出 256 位，Grover 仅将碰撞复杂度降至 2^128。" },
+        { algo:"ML-KEM", level:"safe", reason:"NIST FIPS 203 标准化 PQC KEM。基于 MLWE 假设，当前无已知量子攻击。" },
+        { algo:"ML-DSA/fml-dsa", level:"safe", reason:"NIST FIPS 204 标准化 PQC 签名。基于 MLWE + MSIS 假设。" },
+        { algo:"SLH-DSA", level:"safe", reason:"NIST FIPS 205 标准化无状态哈希签名。基于 SPHINCS+，最保守的安全假设。" },
+        { algo:"SM3", level:"low", reason:"国密哈希函数，256 位输出。与 SHA-256 同级的后量子安全。" },
+        { algo:"SM4", level:"low", reason:"国密分组密码，128 位密钥。Grover 降至 2^64，建议 SM4+ML-KEM 混合。" },
+        { algo:"TLA+", level:"safe", reason:"形式化验证语言，非密码学原语。不影响量子安全性。" },
+        { algo:"NTT", level:"safe", reason:"数论变换是数学工具，非密码学原语。不直接受量子计算影响。" },
+        { algo:"Double-Ratchet", level:"safe", reason:"PQ 混合双棘轮已内嵌 ML-KEM-768 + P-256 混合模式。迁移路径已就绪。" }
+    ];
+
+    var levelColors = { safe:'#51cf66', low:'#ffa94d', high:'#ff6b6b' };
+    var levelLabels = { safe:'✅ 量子安全', low:'⚠️ 需关注', high:'🔴 量子脆弱' };
+
+    riskItems.forEach(function(item) {
+        container.innerHTML +=
+            '<div style="margin-bottom:10px;padding:10px 14px;background:#1a1a30;border-radius:8px;border-left:3px solid '+levelColors[item.level]+';">' +
+                '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">' +
+                    '<span style="font-weight:600;color:'+(ALGO_COLORS[item.algo]||'#e0e0e0')+';">'+item.algo+'</span>' +
+                    '<span style="font-size:0.68rem;color:'+levelColors[item.level]+';">'+levelLabels[item.level]+'</span>' +
+                '</div>' +
+                '<div style="font-size:0.72rem;color:#94a3b8;">'+item.reason+'</div>' +
+            '</div>';
+    });
+})();
+
+// ═══════════ File Table ═══════════
+var filteredData = SCAN_DATA.slice();
+
+function renderFileTable() {
+    var tbody = document.getElementById('file-tbody');
+    tbody.innerHTML = filteredData.map(function(f) {
+        var badges = f.algo.split('|').map(function(a) {
+            return '<span class="algo-badge" style="background:'+(ALGO_COLORS[a]||'#333')+'22;color:'+(ALGO_COLORS[a]||'#aaa')+';">'+a+'</span>';
+        }).join('');
+        return '<tr>' +
+            '<td style="max-width:360px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="'+f.file+'">'+f.file+'</td>' +
+            '<td>'+f.size+'</td>' +
+            '<td>'+badges+'</td>' +
+            '<td style="color:#64748b;font-size:0.7rem;">'+f.dir+'</td>' +
+        '</tr>';
+    }).join('');
+}
+renderFileTable();
+
+function filterFiles() {
+    var q = document.getElementById('file-search').value.toLowerCase();
+    if (!q) { filteredData = SCAN_DATA.slice(); }
+    else {
+        filteredData = SCAN_DATA.filter(function(f) {
+            return f.file.toLowerCase().indexOf(q) >= 0 || f.dir.toLowerCase().indexOf(q) >= 0 || f.algo.toLowerCase().indexOf(q) >= 0;
+        });
+    }
+    renderFileTable();
+}
+
+function filterByAlgo(algo) {
+    document.getElementById('file-search').value = algo;
+    filteredData = SCAN_DATA.filter(function(f) { return f.algo.indexOf(algo) >= 0; });
+    renderFileTable();
+    document.querySelector('.panel-wide').scrollIntoView({behavior:'smooth'});
+}
+
+window.filterByAlgo = filterByAlgo;
+window.filterFiles = filterFiles;
+</script>
+</body>
+</html>
