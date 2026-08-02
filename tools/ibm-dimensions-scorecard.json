@@ -1,0 +1,246 @@
+{
+  "framework": "IBM Research 2026 Application-Level Crypto Agility",
+  "framework_status": "Proposed (pre-publication), first empirical validation on a real project",
+  "assessment_subject": "FIBEMATE v3.3.0 — Post-Quantum Cryptography Full-Stack Engineering Platform",
+  "assessment_date": "2026-08-02",
+  "commit": "090a7b8",
+  "overall_score": 39.40,
+  "max_score": 100,
+  "agility_level": "LOW",
+  "dimensions": {
+    "d1_algorithm_interface_abstraction": {
+      "score": 25,
+      "max": 100,
+      "weight": 0.18,
+      "weighted": 4.50,
+      "description": "Whether algorithms are invoked through abstract interfaces vs direct implementation calls",
+      "finding": "Zero abstraction layer. All call sites directly invoke concrete implementations: SM2.generateKeypair(), MLKEM.encapsulate(), etc.",
+      "evidence": {
+        "direct_calls": {
+          "hybrid_kem_client_js": "14+ direct SM2.xxx / MLKEM.xxx invocations (L111, L135, L163, L224, L260, L306-317)",
+          "gm_js": "gm().SM2.generateKeyPair() L89, gm().SM2.encrypt() L210",
+          "pq_integration_js": "Partial abstraction — PQDoubleRatchet wraps ML-KEM but still imports it directly",
+          "security_levels_js": "Defines 6 security levels but does not map to concrete algorithm providers",
+          "ml_kem_768_wrapper_js": "Thin pass-through wrapper, not an interface abstraction"
+        },
+        "nonexistent": [
+          "Algorithm interface/trait",
+          "KeyExchangeProvider abstract class",
+          "SignatureScheme base class"
+        ]
+      },
+      "root_cause": "Educational design: direct SM2.computeDHKey() is clearer to read than KeyExchangeProvider.derive(keyMaterial). Abstraction would add a layer of indirection that obscures the algorithm internals.",
+      "improvement_hypothetical": "Add AlgorithmRegistry → SM2.validateNegotiation(offer) instead of direct generateKeypair"
+    },
+    "d2_algorithm_configuration_externalization": {
+      "score": 15,
+      "max": 100,
+      "weight": 0.18,
+      "weighted": 2.70,
+      "description": "Whether algorithm parameters are externally configurable vs hardcoded",
+      "finding": "Zero external configuration files. All parameters hardcoded as const in source.",
+      "evidence": {
+        "hardcoded_params": {
+          "ml_kem_768_js_L12": "const N=256, Q=3329, NTT_INV=3303, K=3",
+          "hybrid_kem_client_js_L38_44": "IANA_GROUP_ID=4590, SM2_PK_LEN=65, MLKEM_PK_LEN=1184, CT=1088, SS=32, HYBRID=64",
+          "double_ratchet_pq": "PQ_REKEY_INTERVAL=100 hardcoded constant"
+        },
+        "no_config_files": [
+          "No JSON/YAML/TOML config",
+          "No environment-variable-driven configuration",
+          "No unified config.js entry point"
+        ],
+        "good_practice_sole_exception": {
+          "fml_dsa_paramset": "sign(sk, msg, ctx, paramSet) — paramSet is a runtime function argument enabling ML-DSA-44/65/87 switching. This is the ONLY externally configurable algorithm parameter in the entire codebase."
+        }
+      },
+      "root_cause": "All parameters are algorithmic constants derived from NIST FIPS standards — intended to be immutable for correctness, not flexibility.",
+      "improvement_hypothetical": "config.json { algorithms: { ml-kem: { N:256, K:3, Q:3329 } } } — single-source-of-truth"
+    },
+    "d3_algorithm_version_management": {
+      "score": 40,
+      "max": 100,
+      "weight": 0.14,
+      "weighted": 5.60,
+      "description": "Whether multiple algorithm versions can coexist and be identified",
+      "finding": "Multiple implementations exist for some algorithms, but without version registry or deprecation markers. File-based backup (.v1.3-backup) is the only versioning mechanism.",
+      "evidence": {
+        "multi_track_implementations": {
+          "sm2": {
+            "files": ["sm2-bigint-ec.js", "sm2-browser.js (jsbn)", "sm2-ec-browser.js (simplified)", "sm2-browser.bundle.js/esm.js/cjs.js"],
+            "total": 6,
+            "versioning": "sm2-bigint-ec.js.v1.3-backup — file rename backup, no git tag or semver"
+          },
+          "ml_kem": {
+            "tracks": ["self-developed JS (768)", "C Native Addon (768)", "@noble/post-quantum (1024)"],
+            "total": 3,
+            "note": "Different algorithms (768 vs 1024), not 'same algorithm different versions'"
+          },
+          "ml_dsa": {
+            "tracks": ["fml-dsa (self-developed)", "@noble/post-quantum ml-dsa.js (cross-validation)"],
+            "total": 2,
+            "note": "Noble used for cross-validation only, not officially supported"
+          },
+          "slh_dsa": {
+            "tracks": ["WASM bridge (sole version)"],
+            "total": 1
+          }
+        },
+        "nonexistent": [
+          "Algorithm version registry",
+          "Deprecation markers for old versions",
+          "Recommended/migrated version indicators"
+        ]
+      },
+      "historical_context": "SM2 multi-track is an artifact of implementation evolution (jsbn → BigInt migration), not a designed versioning strategy.",
+      "improvement_hypothetical": "AlgorithmRegistry.register({ name:'SM2', version:'2.0', impl:bigintImpl, deprecated:jsbnImpl })"
+    },
+    "d4_key_format_coupling": {
+      "score": 35,
+      "max": 100,
+      "weight": 0.14,
+      "weighted": 4.90,
+      "description": "Whether key/certificate serialization formats are decoupled from algorithm specifics",
+      "finding": "Key serialization formats deeply bind to algorithm parameters. No Format abstraction layer to negotiate key lengths.",
+      "evidence": {
+        "format_bindings": {
+          "ml_kem_768_pk": "1184B = byteEncode(t_hat, 12) + ρ — hardcoded sizes tied to (N=256, K=3, d=12)",
+          "sm2_pk": "65B uncompressed point (04||x||y) — tied to SM2 curve",
+          "iana_4590_key_share": "2B group_id || 2B sm2_pk_len || SM2_pk(65B) || MLKEM_pk(1184B) — custom binary concatenation",
+          "opk_key_id": "Simple integer ID — decoupled from key content (sole positive)"
+        }
+      },
+      "no_format_abstraction": [
+        "No KeyFormat interface to negotiate length/encoding",
+        "No DER/PEM/CBOR abstraction layer",
+        "Buffer size assumptions scattered across files"
+      ],
+      "impact": "To upgrade ML-KEM-768→1024: must change ALL code reading/writing 1184-byte buffers → ~40-60 lines across multiple files",
+      "improvement_hypothetical": "KeyFormat.deserialize(algo, buffer) → returns {type, key, length} regardless of algorithm"
+    },
+    "d5_protocol_negotiation_capability": {
+      "score": 20,
+      "max": 100,
+      "weight": 0.14,
+      "weighted": 2.80,
+      "description": "Whether runtime algorithm negotiation (capability exchange) is supported",
+      "finding": "Protocol negotiation is effectively a parameter declaration, not capability negotiation. Single-algorithm offers with zero fallback.",
+      "evidence": {
+        "negotiation_patterns": {
+          "gm_js_L183_197": "negotiateWithServer() sends { algorithm:'SM2' } — single option, no alternatives",
+          "double_ratchet_pq_L300": "{ type:'hybrid_x3dh_accept' } — fixed handshake type",
+          "hybrid_kem_client": "SM2+MLKEM-768 fixed combination, no cipher suite list"
+        },
+        "no_negotiation_support": [
+          "No TLS 1.3 supported_groups-style extension",
+          "No custom cipher suite capability list",
+          "No fallback negotiation ('try ML-KEM-1024, fallback to ML-KEM-768')"
+        ],
+        "partial_good_practice": {
+          "message_gm_js": "Supports AES-GCM/SM4-GCM switch, but the decision is caller-side, not negotiated"
+        }
+      },
+      "root_cause": "Educational design: showing 'SM2 + ML-KEM-768 hybrid handshake' is clearest with the full path hardcoded. TLS negotiation state machines would obscure the core algorithm interaction.",
+      "improvement_hypothetical": "ClientHello: supported_kex=[SM2+MLKEM768, P256+MLKEM1024] → ServerHello: selected=SM2+MLKEM768"
+    },
+    "d6_algorithm_replacement_cost": {
+      "score": 30,
+      "max": 100,
+      "weight": 0.12,
+      "weighted": 3.60,
+      "description": "Lines of code and files changed to replace one algorithm with another",
+      "finding": "Algorithm replacement requires touching 7-11 files and re-running full test suites. Only fml-dsa supports runtime switching.",
+      "evidence": {
+        "replacement_scenarios": {
+          "sm2_to_p256": {
+            "files_affected": 11,
+            "lines_to_change": "~50-80",
+            "retest_burden": "100 KAT + 36 TVLA"
+          },
+          "ml_kem_768_to_1024": {
+            "files_affected": 7,
+            "lines_to_change": "~40-60 (12 constants + byteEncode logic + buffer sizes + matVecMul dimensions)",
+            "retest_burden": "10000 KAT + 3 TVLA"
+          },
+          "ml_dsa_65_to_87": {
+            "files_affected": 0,
+            "lines_to_change": 0,
+            "retest_burden": "84 self-tests + 75 KAT",
+            "note": "Runtime parameter switch — best practice in codebase"
+          },
+          "aes_gcm_to_sm4_gcm": {
+            "files_affected": "1-2",
+            "lines_to_change": "~5-10",
+            "retest_burden": "30 KAT"
+          },
+          "change_rekey_interval": {
+            "files_affected": 1,
+            "lines_to_change": 1,
+            "retest_burden": "Roundtrip test"
+          }
+        },
+        "codebase_size": {
+          "total_crypto_js_files": 20,
+          "core_file_loc": "ml-kem-768.js (356) + hybrid-kem-client.js (328) + gm.js (340) = ~1024 lines",
+          "highest_coupling_algorithm": "SM2 — referenced by 11 files",
+          "second_highest_coupling": "MLKEM — referenced by 7 files"
+        }
+      },
+      "sole_good_practice": "fml-dsa runtime parameter set switching (ML-DSA-44/65/87 via function argument) — implemented with later design maturity"
+    },
+    "d7_observability": {
+      "score": 65,
+      "max": 100,
+      "weight": 0.10,
+      "weighted": 6.50,
+      "description": "Whether current algorithm usage is monitorable, auditable, and detectable",
+      "finding": "Offline observability (CI/TSR/KAT/TVLA) is industry-leading. Runtime observability (monitoring, audit logging, anomaly detection) is zero.",
+      "evidence": {
+        "offline_observability": {
+          "code_integrity": "8 CI/CD workflows (ci, ci-native, native-build, nightly-phase1, nightly-phase2, release, repolinter, scorecard) — every push",
+          "cryptographic_correctness": "TSR evidence chain lg-001~100 (DigiCert + FreeTSA dual authority), 100 timestamp records",
+          "security": "TVLA 36/36 (N=10000, WARMUP=2000, THRESH=4.5), 3 implementations × 12 tests",
+          "standard_compliance": "KAT: ML-KEM 10000/10000, SM2 100/100, SM3/SM4 30/30, fml-dsa 75/75",
+          "performance": "benchmark.cjs + perf-gate.js (WARN 20%, FAIL 50%) — every CI run",
+          "dependency": "package-lock.json / npm ci — build-time",
+          "vulnerability_disclosure": "SECURITY.md + VULNERABILITIES.md — security researchers",
+          "daily_audit": "daily-audit.js (7 checks) — manual trigger"
+        },
+        "runtime_observability": {
+          "monitoring": "None — no runtime algorithm usage tracking",
+          "audit_logging": "None — no per-session algorithm audit trail",
+          "anomaly_detection": "None — no automatic degradation alerts"
+        }
+      },
+      "key_insight": "TSR evidence chain is post-hoc verification ('this version of code was correct'), not runtime monitoring ('is the running code being tampered with?'). Verification platform observability = test suite output, not dashboard metrics.",
+      "improvement_hypothetical": "Runtime instrumentation: session.algorithms = { kex:'MLKEM768', sign:'FMLDSA65' } with TSR-anchored audit log"
+    }
+  },
+  "comparison_with_cars": {
+    "cars_overall": 63.50,
+    "ibm_overall": 39.40,
+    "gap_explanation": "CARS is an organizational maturity framework (measuring 'does the org have policy X?'). IBM is a code-level decoupling framework (measuring 'is the API layer algorithm-agnostic?'). FIBEMATE scores higher on organizational readiness (docs/CI/TSR) than code decoupling (hardcoded algorithm calls). This gap is not a contradiction — it precisely quantifies the 'executable textbook' position: documentation and process are mature, but code deliberately avoids abstraction layers for pedagogical clarity.",
+    "dimension_comparison": {
+      "inventory": "CARS=85 vs IBM=N/A — CARS measures what you have, IBM doesn't measure inventory",
+      "agility": "CARS=40 vs IBM_spread=(25+15)=low — IBM splits agility into two finer dimensions, both scoring lower",
+      "key_lifecycle": "CARS=70 vs IBM=35 — CARS sees TLA+ formal verification as a plus, IBM sees hardcoded buffer sizes",
+      "protocol_coupling": "CARS=55 vs IBM=20 — CARS sees 'intentional educational decoupling', IBM sees 'zero cipher suite negotiation'",
+      "org_readiness": "CARS=60 vs IBM=65 — IBM's observability dimension discovers CI/TSR coverage is higher than CARS gives credit for"
+    }
+  },
+  "improvement_roadmap": [
+    { "priority": "P0", "item": "Extract AlgorithmRegistry interface layer", "target_dim": "D1", "code_effort": "~100 new lines", "expected_score_delta": 30, "new_score": 55 },
+    { "priority": "P0", "item": "Create config.json as single source of truth for algorithm parameters", "target_dim": "D2", "code_effort": "~50 new lines", "expected_score_delta": 35, "new_score": 50 },
+    { "priority": "P1", "item": "Implement algorithm negotiation frame (capability list)", "target_dim": "D5", "code_effort": "~30 modified lines", "expected_score_delta": 25, "new_score": 45 },
+    { "priority": "P1", "item": "Key format abstraction layer (KeyFormat interface)", "target_dim": "D4", "code_effort": "~80 new lines", "expected_score_delta": 20, "new_score": 55 },
+    { "priority": "P2", "item": "Algorithm version registry + deprecation markers", "target_dim": "D3", "code_effort": "~40 new lines", "expected_score_delta": 20, "new_score": 60 },
+    { "priority": "P2", "item": "Runtime algorithm usage instrumentation", "target_dim": "D7", "code_effort": "~30 new lines", "expected_score_delta": 10, "new_score": 75 }
+  ],
+  "projected_score_after_improvements": 72.00,
+  "framework_feedback": [
+    "Interface abstraction ≠ code quality: FIBEMATE's SM2.generateKeypair() direct call is a pedagogical virtue, but IBM framework penalizes it as coupling. Suggest adding 'abstraction appropriateness' sub-dimension to distinguish intentional educational coupling from accidental tight coupling.",
+    "Observability should distinguish offline/online: IBM framework does not differentiate CI/KAT/TSR post-hoc evidence from runtime Prometheus/dashboard monitoring. Both serve different security goals.",
+    "Configuration externalization needs hardware exemption: FPGA NTT parameters cannot be 'externalized' because they are synthesized into silicon. Suggest adding hardware platform exemption for embedded/FPGA targets."
+  ],
+  "methodology_note": "All assessment data sourced from FIBEMATE public engineering data. No new tests were run. All code references include file paths and line numbers. IBM framework scoring criteria are derived from the framework's stated principles — since this framework may not have published a final scoring rubric, this report should be treated as an empirical validation proposal, not a definitive rating."
+}
