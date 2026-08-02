@@ -6,7 +6,7 @@
     <title>FIBEMATE — CARS 五维度审计仪表盘 · 代码证据级</title>
     <meta name="description" content="FIBEMATE CARS（Crypto-Agility Readiness Scorecard）五维度代码级审计仪表盘 — 点击任意维度查看具体文件、行号和代码证据。">
     <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计">
-    <meta property="og:description" content="Crypto Inventory 85 · Algorithm Agility 40 · Key Lifecycle 70 · Protocol Coupling 55 · Organizational Readiness 60 — 综合 63.50/100，点击维度展开可验证代码证据。">
+    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 45 · Key Lifecycle 70 · Protocol Coupling 55 · Organizational Readiness 70 — 综合 66.00/100，点击维度展开可验证代码证据。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
@@ -203,7 +203,7 @@
     <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
     <div class="overall">
         <span class="label">综合得分</span>
-        <span class="score">63.50 / 100</span>
+        <span class="score">66.00 / 100</span>
     </div>
     <div class="dim-list" id="dim-list"></div>
     <div style="font-size:9px;color:#555;margin-top:6px;line-height:1.5;">
@@ -233,8 +233,8 @@
 
     var dimensions = [
         {
-            key:'ci', name:'Crypto Inventory', cn:'加密资产盘点', score:85, max:100,
-            note: '76 个源文件覆盖 15 个算法 + 2 个 FPGA 模块，每项含 KAT/Bench/TVLA/TSR 四维覆盖。',
+            key:'ci', name:'Crypto Inventory', cn:'加密资产盘点', score:90, max:100,
+            note: '76 个源文件覆盖 12 种算法 (@fibemate/algorithm-registry v1.0.0) + 2 个 FPGA 模块，每项含 KAT/Bench/TVLA/TSR 四维覆盖。',
             evidence: [
                 {
                     file:'packages/pqc-kem/src/ml-kem-768.js', lines:'L1-L356',
@@ -263,7 +263,7 @@
             ]
         },
         {
-            key:'aa', name:'Algorithm Agility', cn:'算法敏捷性', score:40, max:100,
+            key:'aa', name:'Algorithm Agility', cn:'算法敏捷性', score:45, max:100,
             note: '无插件式热切换架构。算法替换需修改源码。14+ 处直接 SM2/MLKEM 调用。唯一良好实践：fml-dsa 运行时参数集切换。',
             evidence: [
                 {
@@ -347,12 +347,12 @@
             ]
         },
         {
-            key:'or', name:'Organizational Readiness', cn:'组织准备度', score:60, max:100,
+            key:'or', name:'Organizational Readiness', cn:'组织准备度', score:70, max:100,
             note: 'OpenSSF passing badge + 完整安全文档链。Bus Factor=1 是硬伤。Q4 第三方审计后可达到 75。',
             evidence: [
                 {
                     file:'SECURITY.md + CONTRIBUTING.md + CODE_OF_CONDUCT.md', lines:'—',
-                    finding:'<strong>7 个安全治理文档</strong>：SECURITY.md、CONTRIBUTING.md (AI 边界 + DCO + 分支命名)、CODE_OF_CONDUCT.md (v2.1)、THREAT_MODEL、security-limitations.md (10,888B)、VULNERABILITIES、RELEASE_NOTES.md。OpenSSF Best Practices badge #13695 (passing)。',
+                    finding:'<strong>11 个安全治理文档</strong>：SECURITY.md、CONTRIBUTING.md、CODE_OF_CONDUCT.md、GOVERNANCE.md、PQC_MIGRATION_PLAN.md、INCIDENT_RESPONSE_PLAN.md、RECOVERY_PLAN.md、CODEOWNERS、MAINTAINERS.md、THREAT_MODEL、security-limitations.md。OpenSSF Best Practices badge #13695 (passing)。+ CodeQL SAST + Dependabot 自动化。',
                     code:'# SECURITY.md — Security Vulnerability Reporting\n# CONTRIBUTING.md — AI contribution boundaries + DCO\n# CODE_OF_CONDUCT.md v2.1 — Contributor Covenant\n# security-limitations.md (10,888B) — 6 honest limitations\n# THREAT_MODEL + VULNERABILITIES',
                     tags:['good']
                 },
@@ -363,9 +363,9 @@
                     tags:['risk']
                 },
                 {
-                    file:'e69c944..c503d95 (CI/Nightly)', lines:'24 jobs',
-                    finding:'<strong>CI 基础设施</strong>：6 个 workflow (ci/ci-native/native-build/nightly-phase1/nightly-phase2/scorecard) × 4 平台 (ubuntu/macos/windows × node 18/22 = 24 路) 全绿。Repolinter + Scorecard 三灯全绿。',
-                    code:'# CI matrix: 24 jobs across 4 platforms\n# .github/workflows/ci.yml        (core 6/6 ✓)\n# .github/workflows/ci-native.yml (native 6/6 ✓)\n# .github/workflows/nightly-*.yml (Phase1 2/2 ✓, Phase2 4/5 ✓)\n# Repolinter ✓ / Scorecard ✓',
+                    file:'e69c944..e1795326 (CI/Nightly)', lines:'24 jobs',
+                    finding:'<strong>CI 基础设施</strong>：8 个 workflow (ci/ci-native/native-build/nightly-phase1/nightly-phase2/scorecard/codeql/repolinter) × 4 平台全绿。+ CodeQL security-extended SAST + Dependabot weekly。24 路 GH Actions 无红线。',
+                    code:'# 8 workflows across 4 platforms\n# ci/ci-native/native-build (core+native 12/12 ✓)\n# nightly-phase1/2 (Phase1 ✓, Phase2 4/5 ✓)\n# scorecard + codeql + repolinter (全部 ✓)\n# dependabot.yml (weekly npm + actions)'
                     tags:['good']
                 },
                 {
