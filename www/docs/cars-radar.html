@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE — CARS 五维度审计仪表盘 · 代码证据级</title>
     <meta name="description" content="FIBEMATE CARS（Crypto-Agility Readiness Scorecard）五维度代码级审计仪表盘 — 点击任意维度查看具体文件、行号和代码证据。">
-    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计">
-    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 45 · Key Lifecycle 70 · Protocol Coupling 55 · Organizational Readiness 70 — 综合 66.00/100，点击维度展开可验证代码证据。">
+    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 69.20">
+    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 53 · Key Lifecycle 70 · Protocol Coupling 63 · Organizational Readiness 70 — 综合 69.20/100，点击维度展开可验证代码证据。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
@@ -203,7 +203,7 @@
     <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
     <div class="overall">
         <span class="label">综合得分</span>
-        <span class="score">66.00 / 100</span>
+        <span class="score">69.20 / 100</span>
     </div>
     <div class="dim-list" id="dim-list"></div>
     <div style="font-size:9px;color:#555;margin-top:6px;line-height:1.5;">
@@ -216,7 +216,7 @@
 <div id="legend">
     <div class="leg-item"><div class="leg-swatch" style="background:#00d4ff;"></div> 当前得分</div>
     <div class="leg-item"><div class="leg-swatch dashed"></div> 改进路线 (P0+P1)</div>
-    <div class="leg-item" style="color:#ffc107;">→ 88</div>
+    <div class="leg-item" style="color:#ffc107;">→ 80</div>
 </div>
 
 <button id="improve-toggle" onclick="toggleImprovement()">显示改进路线</button>
@@ -268,8 +268,8 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             ]
         },
         {
-            key:'aa', name:'Algorithm Agility', cn:'算法敏捷性', score:45, max:100,
-            note: '无插件式热切换架构。算法替换需修改源码。14+ 处直接 SM2/MLKEM 调用。唯一良好实践：fml-dsa 运行时参数集切换。',
+            key:'aa', name:'Algorithm Agility', cn:'算法敏捷性', score:53, max:100,
+            note: 'ML-KEM 运行时参数集 (params.js) 已落地 + KAT 100/100。FML-DSA 运行时参数集为全库最佳范例。gm.js SM2 硬编码仍需解耦。',
             evidence: [
                 {
                     file:'www/crypto/hybrid-kem-client.js', lines:'L38-L224',
@@ -328,8 +328,8 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             ]
         },
         {
-            key:'pc', name:'Protocol Coupling', cn:'协议耦合度', score:55, max:100,
-            note: '刻意避开标准 TLS 1.3，走应用层混合密钥交换。0 个 TLS 库依赖。解耦但非标准。',
+            key:'pc', name:'Protocol Coupling', cn:'协议耦合度', score:63, max:100,
+            note: '能力通告已落地 (SUPPORTED_ALGORITHMS)。刻意避开 TLS 1.3 走应用层混合 KEX（教育定位）。解耦但非标准。',
             evidence: [
                 {
                     file:'www/crypto/hybrid-kem-client.js', lines:'L38-L42',
@@ -384,7 +384,7 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
     ];
 
     // 改进后预测
-    var improved = [85, 65, 75, 70, 75];
+    var improved = [85, 68, 80, 75, 78];
 
     var N = dimensions.length, maxScore = 100;
     var showImproved = false;
