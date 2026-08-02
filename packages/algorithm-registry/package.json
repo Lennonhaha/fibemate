@@ -1,0 +1,40 @@
+{
+  "name": "@fibemate/algorithm-registry",
+  "version": "1.0.0",
+  "description": "Unified metadata registry for FIBEMATE cryptographic algorithms — versions, security levels, standards, and CBOM classification",
+  "main": "index.js",
+  "types": "index.d.ts",
+  "keywords": [
+    "pqc",
+    "post-quantum",
+    "cryptography",
+    "ml-kem",
+    "slh-dsa",
+    "sm2",
+    "sm3",
+    "sm4",
+    "algorithm-registry",
+    "cbom",
+    "nist",
+    "fips-203",
+    "fips-204",
+    "fips-205"
+  ],
+  "author": "FIBEMATE Team",
+  "license": "GPL-3.0-only",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lennonhaha/fibemate.git",
+    "directory": "packages/algorithm-registry"
+  },
+  "bugs": "https://github.com/Lennonhaha/fibemate/issues",
+  "homepage": "https://fibemate.net/docs/pqc-dashboard.html",
+  "files": [
+    "index.js",
+    "index.d.ts",
+    "src/"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
