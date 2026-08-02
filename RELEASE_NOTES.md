@@ -12,6 +12,30 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 
 ---
 
+## What's Inside
+
+### Post-Quantum Cryptography
+- **ML-KEM-768** (FIPS 203): NTT-domain implementation, KAT 10,000/10,000 Noble cross-validated, C Native Addon ~3,200 ops/s, TVLA 3/3 PASS
+- **fml-dsa** (FIPS 204): Self-developed pure JS ML-DSA-65, KeyGen KAT 75/75, Noble bidirectional cross-validation verified
+- **ML-KEM-1024**: Noble implementation with TVLA 3/3 PASS
+- **SLH-DSA-128s** (FIPS 205): WASM bridge to NIST reference C, 5/5 smoke test
+- **SM2/SM3/SM4** (OSCCA): Pure JS, KAT verified, SM4-GCM cross-language validated
+- **Double Ratchet PQ**: ML-KEM-768 + P-256 hybrid, re-key every 100 messages
+- **TLA+ Formal Verification**: OPK pre-key protocol (3 invariants) + C2 handshake (7 invariants, incl. K3 strong key independence), 101,467 states, 0 violations
+
+### Assessment & Visualization Tools
+- **CARS Self-Assessment**: Interactive 15-question survey → 3D radar chart → exportable HTML report. FIBEMATE baseline: **67.0/100**.
+- **IBM 7-Dimension Self-Assessment**: Code-level crypto-agility audit tool. FIBEMATE baseline: **39.40/100** (deliberate design tradeoffs for educational clarity).
+- **PQC Algorithm Dashboard**: 9 algorithms, 3D bar charts, sortable comparison table, KAT/TVLA coverage.
+- **Quantum Risk Propagation Graph**: 12 algorithms × dependency topology, colored blast radii, click-to-inspect file-level evidence.
+- **Crypto Asset Audit Dashboard**: 370+ files scanned, 12 algorithm classes, directory heatmap, CBOM generation.
+- **PQC Ecosystem Scanner** (`tools/pqc-ecosystem-scan.js`): 147 npm dependencies, 100% classification coverage — reusable on any project.
+
+### External Bias Analysis
+- **CARS internal vs external gap**: 67.0 (self) vs 41 (independent evaluator, 5-min survey).
+  - Key finding: 26-pt gap driven by information invisibility (TLA+ files, security docs hidden below surface), not judgment difference.
+  - Full report: `docs/cars-bias-analysis.md`
+
 ## Major Changes Since v3.3-preview
 
 ### Security & Audit
@@ -38,6 +62,8 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 - **API Documentation**: Complete JS/WASM API reference
 - **Security Limitations**: Honest disclosure of all known risks
 - **Engineering Verification Report**: Self-conducted findings with fixes, cross-validation logs
+- **Dependency Risk Disposition** (`SECURITY.md`): `@noble/curves` (65 refs, quantum vulnerable — test infrastructure only), `bcryptjs` (Grover weakened — demo server)
+- **Good First Issues**: 7 beginner-friendly tasks with file paths, line numbers, and acceptance criteria (`docs/good-first-issues.md`)
 
 ### Hardware
 - **FPGA UART**: TX verified (CH340 @ 115200), RX design complete
@@ -62,14 +88,20 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 # Quick health check
 node scripts/smoke-test.js
 
-# KAT sampling
-node scripts/kat-quick.js --quick
-
 # Full test suite
 npm test
 
 # Performance gate
 node scripts/perf-gate.js
+
+# Dependency crypto audit
+node tools/pqc-ecosystem-scan.js
+
+# CARS self-assessment (browser)
+open www/docs/cars-self-assessment.html
+
+# PQC algorithm dashboard (browser)  
+open www/docs/pqc-dashboard.html
 ```
 
 ---
