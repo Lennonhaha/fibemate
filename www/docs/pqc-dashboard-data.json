@@ -1,0 +1,652 @@
+{
+  "generated": "2026-08-02T13:29:20.717Z",
+  "version": "v3.3.0",
+  "source": "@fibemate/algorithm-registry v1.0.0",
+  "statistics": {
+    "total": 12,
+    "byCategory": {
+      "pqc": 3,
+      "classic": 6,
+      "protocol": 1,
+      "primitive": 1,
+      "verification": 1
+    },
+    "byRisk": {
+      "safe": 9,
+      "warning": 3,
+      "vulnerable": 0
+    },
+    "byMigrationPriority": {
+      "high": 5,
+      "medium": 1,
+      "low": 6
+    },
+    "pqcReady": 5,
+    "nativeImplementations": 4,
+    "fpgaImplementations": 3,
+    "dashboardAlgoCount": 10,
+    "avgCoverage": 68,
+    "lowRisk": 5,
+    "medRisk": 4,
+    "highRisk": 1
+  },
+  "algorithms": [
+    {
+      "id": "mlkem",
+      "name": "ML-KEM-768",
+      "cn": "ML-KEM-768",
+      "type": "KEM",
+      "family": "Post-Quantum KEM",
+      "standard": "FIPS 203",
+      "standards": {
+        "primary": "FIPS 203",
+        "nist": "FIPS 203 (Aug 2024)",
+        "iana": "NamedGroup 0x11ec (X25519MLKEM768)",
+        "ietf": "draft-ietf-tls-hybrid-design"
+      },
+      "cbom": {
+        "classification": "post-quantum",
+        "risk": "safe",
+        "pqcReady": true,
+        "migrationPriority": "high"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "JavaScript",
+          "C",
+          "WASM"
+        ],
+        "native": true,
+        "wasm": true,
+        "fpga": true
+      },
+      "evidence": {
+        "kat": "10000 rounds, 100% pass",
+        "tvla": "36/36 pass (timing side-channel)",
+        "tsr": "TSR lg-001~099"
+      },
+      "icon": "🔑",
+      "color": "#00d4ff",
+      "secLevel": "NIST 3 (≈AES-192)",
+      "nistLevel": 3,
+      "pk": 1184,
+      "sk": 2400,
+      "ct": 1088,
+      "sig": null,
+      "ss": 32,
+      "keygenUs": 103,
+      "encapsUs": 120,
+      "decapsUs": 140,
+      "signUs": null,
+      "verifyUs": null,
+      "opsPerSec": null,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "Native (C addon)",
+      "kat": "10,000/10,000",
+      "tvla": "33/36 (3 known: compress pre-alloc)",
+      "hasKAT": true,
+      "hasTVLA": true,
+      "hasTSR": true,
+      "covScore": 100,
+      "riskScore": 5,
+      "riskLevel": "low"
+    },
+    {
+      "id": "mldsa",
+      "name": "ML-DSA-65",
+      "cn": "ML-DSA-65",
+      "type": "SIG",
+      "family": "Post-Quantum Signature",
+      "standard": "FIPS 204",
+      "standards": {
+        "primary": "FIPS 204",
+        "nist": "FIPS 204 (Aug 2024)"
+      },
+      "cbom": {
+        "classification": "post-quantum",
+        "risk": "safe",
+        "pqcReady": true,
+        "migrationPriority": "high"
+      },
+      "status": "development",
+      "implementation": {
+        "languages": [
+          "JavaScript",
+          "WASM"
+        ],
+        "native": false,
+        "wasm": true,
+        "fpga": false
+      },
+      "evidence": {
+        "kat": "KAT verification in progress",
+        "tvla": null,
+        "tsr": null
+      },
+      "icon": "✍️",
+      "color": "#8b5cf6",
+      "secLevel": "NIST 3 (≈AES-192)",
+      "nistLevel": 3,
+      "pk": null,
+      "sk": null,
+      "ct": null,
+      "sig": null,
+      "ss": null,
+      "keygenUs": null,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": 2400,
+      "verifyUs": 700,
+      "opsPerSec": null,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "fml-dsa (JS), ML-DSA-44",
+      "kat": "270/270 (nonce 随机)",
+      "tvla": "N/A",
+      "hasKAT": true,
+      "hasTVLA": false,
+      "hasTSR": true,
+      "covScore": 70,
+      "riskScore": 8,
+      "riskLevel": "low"
+    },
+    {
+      "id": "slhdsa",
+      "name": "SLH-DSA-128s (SPHINCS+)",
+      "cn": "SLH-DSA-128s (SPHINCS+)",
+      "type": "SIG",
+      "family": "Post-Quantum Signature (Hash-Based)",
+      "standard": "FIPS 205",
+      "standards": {
+        "primary": "FIPS 205",
+        "nist": "FIPS 205 (Aug 2024)"
+      },
+      "cbom": {
+        "classification": "post-quantum",
+        "risk": "safe",
+        "pqcReady": true,
+        "migrationPriority": "medium"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "JavaScript"
+        ],
+        "native": false,
+        "wasm": false,
+        "fpga": false
+      },
+      "evidence": {
+        "kat": "148/148 pass",
+        "tvla": null,
+        "tsr": "TSR lg-001~099"
+      },
+      "icon": "🔏",
+      "color": "#ec4899",
+      "secLevel": "NIST 1 (≈AES-128)",
+      "nistLevel": 1,
+      "pk": 32,
+      "sk": 64,
+      "ct": null,
+      "sig": 7856,
+      "ss": null,
+      "keygenUs": 489400,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": 4199500,
+      "verifyUs": 4200,
+      "opsPerSec": null,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "JS (Noble, WASM bridge)",
+      "kat": "148/148",
+      "tvla": "N/A (归因 WASM/JIT)",
+      "hasKAT": true,
+      "hasTVLA": false,
+      "hasTSR": true,
+      "covScore": 65,
+      "riskScore": 30,
+      "riskLevel": "med"
+    },
+    {
+      "id": "sm2",
+      "name": "SM2 Elliptic Curve",
+      "cn": "SM2 Elliptic Curve",
+      "type": "ECC",
+      "family": "Chinese National Standard",
+      "standard": "GM/T 0003",
+      "standards": {
+        "primary": "GM/T 0003",
+        "gb": "GB/T 32918-2016",
+        "iso": "ISO/IEC 14888-3:2018"
+      },
+      "cbom": {
+        "classification": "classic",
+        "risk": "warning",
+        "pqcReady": false,
+        "migrationPriority": "high",
+        "migrationNote": "Shor-vulnerable, requires hybrid transition"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "JavaScript"
+        ],
+        "native": false,
+        "wasm": false,
+        "fpga": true
+      },
+      "evidence": {
+        "kat": "Internal verification pass",
+        "tvla": "Scalar masking + projective randomization",
+        "tsr": "TSR lg-001~099"
+      },
+      "icon": "🇨🇳",
+      "color": "#ff6b6b",
+      "secLevel": "~128-bit classic",
+      "nistLevel": null,
+      "pk": 64,
+      "sk": 32,
+      "ct": null,
+      "sig": 70,
+      "ss": null,
+      "keygenUs": null,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": 2800,
+      "verifyUs": 1400,
+      "opsPerSec": null,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "纯 JS / C addon, wNAF+Comb G",
+      "kat": "100/100",
+      "tvla": "15/18 (3 documented: jsbn/BigInt)",
+      "hasKAT": true,
+      "hasTVLA": true,
+      "hasTSR": true,
+      "covScore": 90,
+      "riskScore": 5,
+      "riskLevel": "low"
+    },
+    {
+      "id": "sm3",
+      "name": "SM3 Hash Function",
+      "cn": "SM3 Hash Function",
+      "type": "Hash",
+      "family": "Chinese National Standard",
+      "standard": "GM/T 0004",
+      "standards": {
+        "primary": "GM/T 0004",
+        "gb": "GB/T 32905-2016",
+        "iso": "ISO/IEC 10118-3:2018"
+      },
+      "cbom": {
+        "classification": "classic",
+        "risk": "safe",
+        "pqcReady": false,
+        "migrationPriority": "low",
+        "migrationNote": "Grover reduces to 64-bit, acceptable for most applications"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "JavaScript"
+        ],
+        "native": false,
+        "wasm": false,
+        "fpga": false
+      },
+      "evidence": {
+        "kat": "Test vectors verified",
+        "tvla": null,
+        "tsr": null
+      },
+      "icon": "🇨🇳",
+      "color": "#ff8787",
+      "secLevel": "~128-bit classic / 64-bit quantum",
+      "nistLevel": null,
+      "pk": null,
+      "sk": null,
+      "ct": null,
+      "sig": 32,
+      "ss": null,
+      "keygenUs": null,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": null,
+      "verifyUs": null,
+      "opsPerSec": 21272,
+      "opsPerSec3B": 21272,
+      "opsPerSec1140B": 4506,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "纯 JS, 3B/1140B",
+      "kat": "30/30",
+      "tvla": "N/A (哈希无秘密输入)",
+      "hasKAT": true,
+      "hasTVLA": false,
+      "hasTSR": false,
+      "covScore": 65,
+      "riskScore": 25,
+      "riskLevel": "med"
+    },
+    {
+      "id": "sm4",
+      "name": "SM4 Block Cipher",
+      "cn": "SM4 Block Cipher",
+      "type": "AEAD",
+      "family": "Chinese National Standard",
+      "standard": "GM/T 0002",
+      "standards": {
+        "primary": "GM/T 0002",
+        "gb": "GB/T 32907-2016",
+        "iso": "ISO/IEC 18033-3:2010"
+      },
+      "cbom": {
+        "classification": "classic",
+        "risk": "safe",
+        "pqcReady": false,
+        "migrationPriority": "low",
+        "migrationNote": "Grover reduces to 64-bit, acceptable for symmetric encryption"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "JavaScript"
+        ],
+        "native": false,
+        "wasm": false,
+        "fpga": false
+      },
+      "evidence": {
+        "kat": "Test vectors verified",
+        "tvla": null,
+        "tsr": null
+      },
+      "icon": "🇨🇳",
+      "color": "#f03e3e",
+      "secLevel": "~128-bit classic / 64-bit quantum",
+      "nistLevel": null,
+      "pk": null,
+      "sk": 16,
+      "ct": null,
+      "sig": 16,
+      "ss": null,
+      "keygenUs": null,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": null,
+      "verifyUs": null,
+      "opsPerSec": 4879,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": "4,879 ops/s (10B)",
+      "opsPerSecDec": "8,030 ops/s",
+      "perfNote": "纯 JS GCM",
+      "kat": "30/30",
+      "tvla": "N/A",
+      "hasKAT": true,
+      "hasTVLA": false,
+      "hasTSR": false,
+      "covScore": 65,
+      "riskScore": 25,
+      "riskLevel": "med"
+    },
+    {
+      "id": "p256ecdh",
+      "name": "NIST P-256 ECDH",
+      "cn": "NIST P-256 ECDH",
+      "type": "ECC",
+      "family": "Classic Elliptic Curve",
+      "standard": "FIPS 186-4",
+      "standards": {
+        "primary": "FIPS 186-4",
+        "nist": "SP 800-186",
+        "iana": "NamedGroup 0x0017 (secp256r1)"
+      },
+      "cbom": {
+        "classification": "classic",
+        "risk": "warning",
+        "pqcReady": false,
+        "migrationPriority": "high",
+        "migrationNote": "Shor-vulnerable, requires hybrid transition"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "JavaScript",
+          "Native (Node.js crypto)"
+        ],
+        "native": true,
+        "wasm": false,
+        "fpga": false
+      },
+      "evidence": {
+        "kat": "KAT verification pass",
+        "tvla": null,
+        "tsr": null
+      },
+      "icon": "🔐",
+      "color": "#f59e0b",
+      "secLevel": "~128-bit classic",
+      "nistLevel": null,
+      "pk": 65,
+      "sk": 32,
+      "ct": null,
+      "sig": null,
+      "ss": null,
+      "keygenUs": null,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": null,
+      "verifyUs": null,
+      "opsPerSec": null,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "Native (Node.js crypto)",
+      "kat": "Verified",
+      "tvla": "N/A",
+      "hasKAT": true,
+      "hasTVLA": false,
+      "hasTSR": false,
+      "covScore": 50,
+      "riskScore": 40,
+      "riskLevel": "high"
+    },
+    {
+      "id": "sha256",
+      "name": "SHA-256 Hash",
+      "cn": "SHA-256 Hash",
+      "type": "Hash",
+      "family": "SHA-2 Family",
+      "standard": "FIPS 180-4",
+      "standards": {
+        "primary": "FIPS 180-4",
+        "nist": "FIPS 180-4 (SHA-2)"
+      },
+      "cbom": {
+        "classification": "classic",
+        "risk": "safe",
+        "pqcReady": false,
+        "migrationPriority": "low",
+        "migrationNote": "Grover reduces to 64-bit, acceptable for most applications"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "Native (Node.js crypto)"
+        ],
+        "native": true,
+        "wasm": false,
+        "fpga": false
+      },
+      "evidence": {
+        "kat": "NIST test vectors verified",
+        "tvla": null,
+        "tsr": null
+      },
+      "icon": "#️⃣",
+      "color": "#10b981",
+      "secLevel": "~128-bit classic / 64-bit quantum",
+      "nistLevel": null,
+      "pk": null,
+      "sk": null,
+      "ct": null,
+      "sig": null,
+      "ss": null,
+      "keygenUs": null,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": null,
+      "verifyUs": null,
+      "opsPerSec": null,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "Native (Node.js crypto)",
+      "kat": "NIST vectors",
+      "tvla": "N/A",
+      "hasKAT": true,
+      "hasTVLA": false,
+      "hasTSR": false,
+      "covScore": 50,
+      "riskScore": 30,
+      "riskLevel": "med"
+    },
+    {
+      "id": "aes",
+      "name": "AES-256-GCM",
+      "cn": "AES-256-GCM",
+      "type": "AEAD",
+      "family": "AES Family",
+      "standard": "FIPS 197",
+      "standards": {
+        "primary": "FIPS 197",
+        "nist": "SP 800-38D (GCM)"
+      },
+      "cbom": {
+        "classification": "classic",
+        "risk": "safe",
+        "pqcReady": false,
+        "migrationPriority": "low",
+        "migrationNote": "Grover reduces to 128-bit, still secure"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "Native (Node.js crypto)"
+        ],
+        "native": true,
+        "wasm": false,
+        "fpga": false
+      },
+      "evidence": {
+        "kat": "NIST test vectors verified",
+        "tvla": null,
+        "tsr": null
+      },
+      "icon": "🔒",
+      "color": "#22c55e",
+      "secLevel": "~256-bit classic / 128-bit quantum",
+      "nistLevel": null,
+      "pk": null,
+      "sk": 32,
+      "ct": null,
+      "sig": 16,
+      "ss": null,
+      "keygenUs": null,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": null,
+      "verifyUs": null,
+      "opsPerSec": null,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "Native (Node.js crypto, AES-256-GCM)",
+      "kat": "NIST vectors",
+      "tvla": "N/A",
+      "hasKAT": true,
+      "hasTVLA": false,
+      "hasTSR": false,
+      "covScore": 50,
+      "riskScore": 20,
+      "riskLevel": "low"
+    },
+    {
+      "id": "ntt",
+      "name": "Number Theoretic Transform",
+      "cn": "Number Theoretic Transform",
+      "type": "Primitive",
+      "family": "Mathematical Primitive",
+      "standard": "FIPS 203/204 (internal)",
+      "standards": {
+        "primary": "FIPS 203/204 (internal)",
+        "note": "Core primitive for ML-KEM/ML-DSA polynomial operations"
+      },
+      "cbom": {
+        "classification": "primitive",
+        "risk": "safe",
+        "pqcReady": true,
+        "migrationPriority": "low"
+      },
+      "status": "active",
+      "implementation": {
+        "languages": [
+          "JavaScript",
+          "Verilog (FPGA)"
+        ],
+        "native": false,
+        "wasm": true,
+        "fpga": true
+      },
+      "evidence": {
+        "kat": "Internal verification pass",
+        "tvla": "Hardware fault detection (REMO dual butterfly)",
+        "tsr": null
+      },
+      "icon": "⚡",
+      "color": "#a78bfa",
+      "secLevel": "~null-bit classic",
+      "nistLevel": null,
+      "pk": null,
+      "sk": null,
+      "ct": null,
+      "sig": null,
+      "ss": null,
+      "keygenUs": null,
+      "encapsUs": null,
+      "decapsUs": null,
+      "signUs": null,
+      "verifyUs": null,
+      "opsPerSec": null,
+      "opsPerSec3B": null,
+      "opsPerSec1140B": null,
+      "opsPerSecEnc": null,
+      "opsPerSecDec": null,
+      "perfNote": "FPGA @50MHz, ~503 cycles",
+      "kat": "Internal",
+      "tvla": "Hardware fault detection",
+      "hasKAT": true,
+      "hasTVLA": true,
+      "hasTSR": false,
+      "covScore": 70,
+      "riskScore": 5,
+      "riskLevel": "low"
+    }
+  ]
+}

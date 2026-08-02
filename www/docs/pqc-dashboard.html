@@ -4,664 +4,564 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE · PQC 算法体检仪表盘</title>
-    <meta name="description" content="FIBEMATE PQC 算法全维度对比仪表盘 — ML-KEM/ML-DSA/SLH-DSA/SM2/SM3/SM4 的密钥大小、性能、安全等级、风险覆盖率，一站式对比。">
+    <meta name="description" content="FIBEMATE PQC 算法全维度对比仪表盘 — 10 种算法 · 密钥大小 · 性能基准 · 安全等级 · KAT/TVLA/TSR 覆盖率 · CBOM 分类，一站式对比。">
     <meta property="og:title" content="FIBEMATE PQC 算法体检仪表盘 — 全维度对比">
-    <meta property="og:description" content="ML-KEM-768/1024 · ML-DSA-44/65/87 · SLH-DSA-128s · SM2/SM3/SM4-GCM — 密钥大小·性能基准·安全等级·KAT/TVLA 覆盖率，交互式对比。">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://fibemate.net/docs/pqc-dashboard.html">
-    <meta property="og:site_name" content="FIBEMATE PQC Platform">
-    <meta name="twitter:card" content="summary_large_image">
+    <meta property="og:description" content="ML-KEM-768 · ML-DSA-65 · SLH-DSA-128s · SM2/SM3/SM4-GCM · P-256/ECDH · SHA-256 · AES-256-GCM · NTT — 密钥大小 · 性能基准 · 安全等级 · CBOM · KAT/TVLA 覆盖率">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
-            background: #0a0e17; color: #e2e8f0; overflow-x: hidden;
-            min-height: 100vh;
-        }
-        a { color: #00d4ff; text-decoration: none; }
-        a:hover { text-decoration: underline; }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif;background:#0a0e17;color:#e2e8f0;min-height:100vh}
+        a{color:#00d4ff;text-decoration:none}
+        a:hover{text-decoration:underline}
+        .nav-bar{position:sticky;top:0;z-index:100;background:rgba(10,14,23,0.9);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,229,195,0.12);padding:0.8rem 2rem;display:flex;justify-content:space-between;align-items:center}
+        .nav-logo{font-size:1.2rem;font-weight:700;background:linear-gradient(135deg,#00E5C3,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .nav-link{color:#94a3b8;font-size:0.82rem;margin-left:1.5rem;transition:color 0.2s}
+        .nav-link:hover{color:#00E5C3;text-decoration:none}
+        .container{max-width:1400px;margin:0 auto;padding:1.5rem 2rem 3rem}
+        .page-title{font-size:1.8rem;font-weight:700;margin-bottom:0.3rem;background:linear-gradient(135deg,#00E5C3,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .page-subtitle{color:#94a3b8;font-size:0.88rem;margin-bottom:2rem}
+        
+        /* 3D Chart */
+        .chart-panel{background:#111827;border:1px solid #1e293b;border-radius:16px;padding:1.2rem;margin-bottom:2rem}
+        .chart-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;flex-wrap:wrap}
+        .chart-header h2{font-size:1.1rem;color:#00d4ff}
+        .chart-tabs{display:flex;gap:4px;flex-wrap:wrap}
+        .chart-tab{padding:4px 12px;border-radius:6px;font-size:0.75rem;background:transparent;border:1px solid #2a2a4a;color:#a0a0c0;cursor:pointer;transition:all 0.2s}
+        .chart-tab:hover{border-color:#00d4ff;color:#00d4ff}
+        .chart-tab.active{background:rgba(0,212,255,0.12);border-color:#00d4ff;color:#00d4ff}
+        #bar3d{width:100%;height:440px;position:relative}
+        #bar3d canvas{border-radius:8px}
+        .chart-hint{font-size:0.7rem;color:#64748b;text-align:center;margin-top:0.4rem}
 
-        /* ─── Nav ─── */
-        .nav-bar {
-            position: sticky; top: 0; z-index: 100;
-            background: rgba(10,14,23,0.9); backdrop-filter: blur(20px);
-            border-bottom: 1px solid rgba(0,229,195,0.12);
-            padding: 0.8rem 2rem; display: flex; justify-content: space-between;
-            align-items: center;
-        }
-        .nav-logo {
-            font-size: 1.2rem; font-weight: 700;
-            background: linear-gradient(135deg, #00E5C3, #3b82f6);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .nav-link { color: #94a3b8; font-size: 0.82rem; margin-left: 1.5rem; transition: color 0.2s; }
-        .nav-link:hover { color: #00E5C3; text-decoration: none; }
+        /* Score Cards */
+        .score-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:1rem;margin-bottom:2rem}
+        .score-card{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:1rem 1.2rem;cursor:pointer;transition:all 0.25s}
+        .score-card:hover{border-color:#3b82f6;transform:translateY(-2px);box-shadow:0 4px 20px rgba(59,130,246,0.1)}
+        .score-card.selected{border-color:#00d4ff;box-shadow:0 0 16px rgba(0,212,255,0.15)}
+        .sc-icon{font-size:1.6rem;margin-bottom:0.3rem}
+        .sc-name{font-size:0.95rem;font-weight:700}
+        .sc-type{font-size:0.72rem;color:#64748b;margin-bottom:0.6rem}
+        .sc-metrics{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;font-size:0.73rem}
+        .sc-metric{display:flex;justify-content:space-between}
+        .sc-metric .lbl{color:#64748b}
+        .sc-metric .val{font-weight:600}
+        .sc-risk{margin-top:0.6rem;padding:2px 8px;border-radius:4px;font-size:0.68rem;display:inline-block}
+        .sc-risk.low{background:rgba(81,207,102,0.12);color:#51cf66}
+        .sc-risk.med{background:rgba(255,193,7,0.12);color:#ffc107}
+        .sc-risk.high{background:rgba(255,107,107,0.12);color:#ff6b6b}
 
-        /* ─── Layout ─── */
-        .container { max-width: 1400px; margin: 0 auto; padding: 1.5rem 2rem 3rem; }
-        .page-title {
-            font-size: 1.8rem; font-weight: 700; margin-bottom: 0.3rem;
-            background: linear-gradient(135deg, #00E5C3, #00d4ff);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-        .page-subtitle { color: #94a3b8; font-size: 0.88rem; margin-bottom: 2rem; }
+        /* Detail Table */
+        .table-panel{background:#111827;border:1px solid #1e293b;border-radius:16px;padding:1.5rem;margin-bottom:2rem;overflow-x:auto}
+        .table-panel h2{font-size:1.1rem;color:#00d4ff;margin-bottom:1rem}
+        table{width:100%;border-collapse:collapse;font-size:0.78rem}
+        th{text-align:left;padding:10px 12px;background:#1a2332;color:#94a3b8;font-weight:600;font-size:0.72rem;text-transform:uppercase;letter-spacing:0.5px;white-space:nowrap}
+        th.clickable{cursor:pointer;user-select:none}
+        th.clickable:hover{color:#00d4ff}
+        th .sort-arrow{font-size:0.6rem;margin-left:2px;opacity:0.4}
+        th .sort-arrow.asc,.sort-arrow.desc{opacity:1;color:#00d4ff}
+        td{padding:10px 12px;border-bottom:1px solid #1a2332}
+        tr:hover td{background:rgba(0,212,255,0.03)}
+        .td-name{font-weight:600}
+        .td-type{font-size:0.7rem;color:#64748b}
+        .td-val{font-weight:600;font-variant-numeric:tabular-nums}
+        .badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.68rem}
+        .badge.green{background:rgba(81,207,102,0.12);color:#51cf66}
+        .badge.yellow{background:rgba(255,193,7,0.12);color:#ffc107}
+        .badge.blue{background:rgba(59,130,246,0.12);color:#3b82f6}
+        .badge.purple{background:rgba(139,92,246,0.12);color:#8b5cf6}
+        .badge.pink{background:rgba(236,72,153,0.12);color:#ec4899}
+        .badge.orange{background:rgba(245,158,11,0.12);color:#f59e0b}
 
-        /* ─── 3D Chart ─── */
-        .chart-panel {
-            background: #111827; border: 1px solid #1e293b; border-radius: 16px;
-            padding: 1.2rem; margin-bottom: 2rem;
-        }
-        .chart-header {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 0.5rem;
-        }
-        .chart-header h2 { font-size: 1.1rem; color: #00d4ff; }
-        .chart-tabs { display: flex; gap: 4px; }
-        .chart-tab {
-            padding: 4px 12px; border-radius: 6px; font-size: 0.75rem;
-            background: transparent; border: 1px solid #2a2a4a; color: #a0a0c0;
-            cursor: pointer; transition: all 0.2s;
-        }
-        .chart-tab:hover { border-color: #00d4ff; color: #00d4ff; }
-        .chart-tab.active { background: rgba(0,212,255,0.12); border-color: #00d4ff; color: #00d4ff; }
-        #bar3d { width: 100%; height: 440px; position: relative; }
-        #bar3d canvas { border-radius: 8px; }
-        .chart-hint {
-            font-size: 0.7rem; color: #64748b; text-align: center;
-            margin-top: 0.4rem;
-        }
+        /* Verification Grid */
+        .verification-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:1rem;margin-bottom:2rem}
+        .vfy-card{background:#111827;border:1px solid #1e293b;border-radius:12px;padding:1.2rem}
+        .vfy-card h3{font-size:0.95rem;margin-bottom:0.8rem}
+        .vfy-row{display:flex;align-items:center;gap:10px;margin:6px 0;font-size:0.78rem}
+        .vfy-algo{min-width:110px;color:#94a3b8}
+        .vfy-bar-bg{flex:1;height:8px;background:#1a2332;border-radius:4px;overflow:hidden}
+        .vfy-bar{height:100%;border-radius:4px;transition:width 0.4s ease}
+        .vfy-num{min-width:48px;text-align:right;font-weight:600}
 
-        /* ─── Score Cards ─── */
-        .score-row {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 1rem; margin-bottom: 2rem;
-        }
-        .score-card {
-            background: #111827; border: 1px solid #1e293b; border-radius: 12px;
-            padding: 1rem 1.2rem; cursor: pointer;
-            transition: all 0.25s;
-        }
-        .score-card:hover { border-color: #3b82f6; transform: translateY(-2px); box-shadow: 0 4px 20px rgba(59,130,246,0.1); }
-        .score-card.selected { border-color: #00d4ff; box-shadow: 0 0 16px rgba(0,212,255,0.15); }
-        .sc-icon { font-size: 1.6rem; margin-bottom: 0.3rem; }
-        .sc-name { font-size: 0.95rem; font-weight: 700; }
-        .sc-type { font-size: 0.72rem; color: #64748b; margin-bottom: 0.6rem; }
-        .sc-metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 12px; font-size: 0.73rem; }
-        .sc-metric { display: flex; justify-content: space-between; }
-        .sc-metric .lbl { color: #64748b; }
-        .sc-metric .val { font-weight: 600; }
-        .sc-risk { margin-top: 0.6rem; padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; display: inline-block; }
-        .sc-risk.low { background: rgba(81,207,102,0.12); color: #51cf66; }
-        .sc-risk.med { background: rgba(255,193,7,0.12); color: #ffc107; }
-        .sc-risk.high { background: rgba(255,107,107,0.12); color: #ff6b6b; }
+        /* Stats row */
+        .stats-row{display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:2rem}
+        .stat-card{background:#111827;border:1px solid #1e293b;border-radius:10px;padding:0.8rem 1.2rem;min-width:120px;text-align:center}
+        .stat-val{font-size:1.6rem;font-weight:700}
+        .stat-lbl{font-size:0.7rem;color:#64748b;margin-top:2px}
 
-        /* ─── Detail Table ─── */
-        .table-panel {
-            background: #111827; border: 1px solid #1e293b; border-radius: 16px;
-            padding: 1.5rem; margin-bottom: 2rem; overflow-x: auto;
-        }
-        .table-panel h2 { font-size: 1.1rem; color: #00d4ff; margin-bottom: 1rem; }
-        table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
-        th {
-            text-align: left; padding: 10px 12px; background: #1a2332;
-            color: #94a3b8; font-weight: 600; font-size: 0.72rem;
-            text-transform: uppercase; letter-spacing: 0.5px;
-            white-space: nowrap;
-        }
-        th.clickable { cursor: pointer; user-select: none; }
-        th.clickable:hover { color: #00d4ff; }
-        th .sort-arrow { font-size: 0.6rem; margin-left: 2px; opacity: 0.4; }
-        th .sort-arrow.asc, th .sort-arrow.desc { opacity: 1; color: #00d4ff; }
-        td { padding: 10px 12px; border-bottom: 1px solid #1a2332; }
-        tr:hover td { background: rgba(0,212,255,0.03); }
-        .td-name { font-weight: 600; }
-        .td-type { font-size: 0.7rem; color: #64748b; }
-        .td-val { font-weight: 600; font-variant-numeric: tabular-nums; }
-        .td-bar { width: 100%; height: 6px; background: #1a2332; border-radius: 3px; overflow: hidden; }
-        .td-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
-        .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 0.68rem; }
-        .badge.green { background: rgba(81,207,102,0.12); color: #51cf66; }
-        .badge.yellow { background: rgba(255,193,7,0.12); color: #ffc107; }
-        .badge.blue { background: rgba(59,130,246,0.12); color: #3b82f6; }
-        .badge.purple { background: rgba(139,92,246,0.12); color: #8b5cf6; }
-        .badge.pink { background: rgba(236,72,153,0.12); color: #ec4899; }
+        .footer{text-align:center;color:#475569;font-size:0.7rem;padding:1.5rem 0;border-top:1px solid #1e293b;margin-top:2rem}
 
-        /* ─── TVLA/KAT Grid ─── */
-        .verification-grid {
-            display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-            gap: 1rem; margin-bottom: 2rem;
-        }
-        .vfy-card {
-            background: #111827; border: 1px solid #1e293b; border-radius: 12px;
-            padding: 1.2rem;
-        }
-        .vfy-card h3 { font-size: 0.95rem; margin-bottom: 0.8rem; }
-        .vfy-row { display: flex; align-items: center; gap: 10px; margin: 6px 0; font-size: 0.78rem; }
-        .vfy-algo { min-width: 110px; color: #94a3b8; }
-        .vfy-bar-bg { flex: 1; height: 8px; background: #1a2332; border-radius: 4px; overflow: hidden; }
-        .vfy-bar { height: 100%; border-radius: 4px; transition: width 0.4s ease; }
-        .vfy-num { min-width: 42px; text-align: right; font-weight: 600; }
+        .loading{text-align:center;padding:4rem;color:#64748b;font-size:1.2rem}
+        .error-box{text-align:center;padding:4rem;color:#ff6b6b;font-size:1rem}
 
-        /* ─── Footer ─── */
-        .footer {
-            text-align: center; color: #475569; font-size: 0.7rem;
-            padding: 1.5rem 0; border-top: 1px solid #1e293b; margin-top: 2rem;
-        }
-
-        @media (max-width: 768px) {
-            .container { padding: 1rem; }
-            .page-title { font-size: 1.3rem; }
-            #bar3d { height: 320px; }
-            .score-row { grid-template-columns: repeat(2, 1fr); }
-            .verification-grid { grid-template-columns: 1fr; }
+        @media (max-width:768px){
+            .container{padding:1rem}
+            .page-title{font-size:1.3rem}
+            #bar3d{height:320px}
+            .score-row{grid-template-columns:repeat(2,1fr)}
+            .verification-grid{grid-template-columns:1fr}
         }
     </style>
 </head>
 <body>
 
-<!-- ─── Nav ─── -->
+<!-- Nav -->
 <nav class="nav-bar">
     <a href="/" class="nav-logo">◈ FIBEMATE</a>
     <div>
         <a href="/#visualizations" class="nav-link">可视化</a>
         <a href="/docs/cars-radar.html" class="nav-link">CARS 评估</a>
+        <a href="/docs/ibm-seven-radar.html" class="nav-link">IBM 七维</a>
+        <a href="/docs/cbom-viewer.html" class="nav-link">CBOM</a>
         <a href="https://github.com/Lennonhaha/fibemate" class="nav-link">GitHub ↗</a>
     </div>
 </nav>
 
-<div class="container">
+<div class="container" id="root">
     <h1 class="page-title">PQC 算法体检仪表盘</h1>
-    <p class="page-subtitle">
-        9 种算法 · 全维度对比 · 密钥大小 / 性能基准 / 安全等级 / KAT+TVLA+TSR 覆盖率 &nbsp;|&nbsp;
-        数据来源：FIBEMATE v3.3.0 自测基准 · 2026-08-01
+    <p class="page-subtitle" id="subtitle">
+        <span id="algo-count">—</span> 种算法 · 全维度对比 · 密钥大小 / 性能基准 / 安全等级 / CBOM / KAT+TVLA 覆盖率 &nbsp;|&nbsp;
+        数据来源：@fibemate/algorithm-registry v1.0.0 · FIBEMATE v3.3.0
     </p>
-
-    <!-- ═══ 3D 柱状图 ═══ -->
-    <div class="chart-panel">
-        <div class="chart-header">
-            <h2>📊 密钥/签名大小 三维对比</h2>
-            <div class="chart-tabs">
-                <button class="chart-tab active" onclick="switchBarMetric('keySize')">密钥大小</button>
-                <button class="chart-tab" onclick="switchBarMetric('speed')">性能</button>
-                <button class="chart-tab" onclick="switchBarMetric('coverage')">覆盖率</button>
-            </div>
-        </div>
-        <div id="bar3d"></div>
-        <div class="chart-hint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移 · 悬停柱体看详情</div>
-    </div>
-
-    <!-- ═══ 算法卡片 ═══ -->
-    <div class="score-row" id="score-cards"></div>
-
-    <!-- ═══ 详细对比表 ═══ -->
-    <div class="table-panel">
-        <h2>📋 全维度对比表（点击表头排序）</h2>
-        <table id="detail-table">
-            <thead id="table-head"></thead>
-            <tbody id="table-body"></tbody>
-        </table>
-    </div>
-
-    <!-- ═══ KAT / TVLA 覆盖率 ═══ -->
-    <div class="verification-grid" id="verification-panels"></div>
-
-    <div class="footer">
-        FIBEMATE v3.3.0 · GPL-3.0-only · 数据来源：scripts/benchmark.cjs · tools/risk-coverage-matrix.json · scripts/tvla-*.mjs &nbsp;|&nbsp;
-        <a href="https://fibemate.net">fibemate.net</a>
-    </div>
+    <div class="loading">⏳ 加载算法数据中…</div>
 </div>
 
 <script src="lib/three.min.js"></script>
 <script src="lib/OrbitControls.js"></script>
 
 <script>
-// ═══════════════════════════════════════════════════════
-//  算法数据（来自 FIBEMATE v3.3.0 实测 + FIPS 标准）
-// ═══════════════════════════════════════════════════════
-var ALGORITHMS = [
-    {
-        id:'mlkem768', name:'ML-KEM-768', cn:'ML-KEM-768', type:'KEM', family:'ml-kem',
-        standard:'FIPS 203', secLevel:'NIST 3 (≈AES-192)', nistLevel:3,
-        icon:'🔑', color:'#00d4ff', colorHex:0x00d4ff,
-        pk:1184, sk:2400, ct:1088, ss:32,
-        keygenUs:103, encapsUs:120, decapsUs:140,
-        keygenNote:'Native (C addon)', opsPerSec:null,
-        kat:'9/9', tvla:'33/36 (3 known: compress pre-alloc)',
-        covScore:100, riskLevel:'low', riskScore:5,
-        hasKAT:true, hasTVLA:true, hasTSR:true
-    },{
-        id:'mlkem1024', name:'ML-KEM-1024', cn:'ML-KEM-1024', type:'KEM', family:'ml-kem',
-        standard:'FIPS 203', secLevel:'NIST 5 (≈AES-256)', nistLevel:5,
-        icon:'🔑', color:'#00bcd4', colorHex:0x00bcd4,
-        pk:1568, sk:3168, ct:1568, ss:32,
-        keygenUs:564, encapsUs:628, decapsUs:758,
-        keygenNote:'JS (Noble)', opsPerSec:null,
-        kat:'N/A (未自研)', tvla:'3/3 (Noble 实现)',
-        covScore:55, riskLevel:'med', riskScore:20,
-        hasKAT:false, hasTVLA:true, hasTSR:false
-    },{
-        id:'mldsa44', name:'ML-DSA-44', cn:'ML-DSA-44', type:'SIG', family:'ml-dsa',
-        standard:'FIPS 204', secLevel:'NIST 2 (≈AES-128)', nistLevel:2,
-        icon:'✍️', color:'#8b5cf6', colorHex:0x8b5cf6,
-        pk:1312, sk:2560, sig:2420, ss:null,
-        keygenUs:null, signUs:2400, verifyUs:700,
-        keygenNote:'fml-dsa (JS)', opsPerSec:null,
-        kat:'270/270 (nonce 随机)', tvla:'N/A',
-        covScore:70, riskLevel:'low', riskScore:8,
-        hasKAT:true, hasTVLA:false, hasTSR:true
-    },{
-        id:'mldsa65', name:'ML-DSA-65', cn:'ML-DSA-65', type:'SIG', family:'ml-dsa',
-        standard:'FIPS 204', secLevel:'NIST 3 (≈AES-192)', nistLevel:3,
-        icon:'✍️', color:'#7c3aed', colorHex:0x7c3aed,
-        pk:1952, sk:4032, sig:3309, ss:null,
-        keygenUs:null, signUs:6390, verifyUs:2100,
-        keygenNote:'fml-dsa (JS)', opsPerSec:null,
-        kat:'270/270 (nonce 随机)', tvla:'N/A',
-        covScore:75, riskLevel:'low', riskScore:5,
-        hasKAT:true, hasTVLA:false, hasTSR:true
-    },{
-        id:'mldsa87', name:'ML-DSA-87', cn:'ML-DSA-87', type:'SIG', family:'ml-dsa',
-        standard:'FIPS 204', secLevel:'NIST 5 (≈AES-256)', nistLevel:5,
-        icon:'✍️', color:'#6d28d9', colorHex:0x6d28d9,
-        pk:2592, sk:4896, sig:4627, ss:null,
-        keygenUs:null, signUs:null, verifyUs:null,
-        keygenNote:'fml-dsa (JS)', opsPerSec:null,
-        kat:'270/270 (nonce 随机)', tvla:'N/A',
-        covScore:65, riskLevel:'med', riskScore:15,
-        hasKAT:true, hasTVLA:false, hasTSR:true
-    },{
-        id:'slhdsa128s', name:'SLH-DSA-128s', cn:'SLH-DSA-128s', type:'SIG', family:'slh-dsa',
-        standard:'FIPS 205', secLevel:'NIST 1 (≈AES-128)', nistLevel:1,
-        icon:'🔏', color:'#ec4899', colorHex:0xec4899,
-        pk:32, sk:64, sig:7856, ss:null,
-        keygenUs:489400, signUs:4199500, verifyUs:4200,
-        keygenNote:'JS (Noble, WASM bridge)', opsPerSec:null,
-        kat:'N/A (NIST ref)', tvla:'N/A (归因 WASM/JIT)',
-        covScore:65, riskLevel:'med', riskScore:30,
-        hasKAT:false, hasTVLA:false, hasTSR:false
-    },{
-        id:'sm2', name:'SM2', cn:'SM2', type:'SIG+KEM', family:'sm',
-        standard:'GM/T 0003-2012', secLevel:'≈128-bit classic', nistLevel:null,
-        icon:'🇨🇳', color:'#ff6b6b', colorHex:0xff6b6b,
-        pk:64, sk:32, sig:70, ss:null,
-        keygenUs:null, signUs:null, verifyUs:null,
-        keygenNote:'纯 JS / C addon', opsPerSec:null,
-        kat:'100/100', tvla:'15/18 (3 documented: jsbn/BigInt)',
-        covScore:90, riskLevel:'low', riskScore:5,
-        hasKAT:true, hasTVLA:true, hasTSR:true
-    },{
-        id:'sm3', name:'SM3', cn:'SM3', type:'Hash', family:'sm',
-        standard:'GM/T 0004-2012', secLevel:'≈128-bit classic', nistLevel:null,
-        icon:'🇨🇳', color:'#ff8787', colorHex:0xff8787,
-        pk:null, sk:null, sig:32, ss:null,
-        keygenUs:null, signUs:null, verifyUs:null,
-        keygenNote:'纯 JS', opsPerSec:43000,
-        kat:'30/30', tvla:'N/A (哈希无秘密输入)',
-        covScore:65, riskLevel:'med', riskScore:25,
-        hasKAT:true, hasTVLA:false, hasTSR:false
-    },{
-        id:'sm4gcm', name:'SM4-GCM', cn:'SM4-GCM', type:'AEAD', family:'sm',
-        standard:'GM/T 0002-2012', secLevel:'≈128-bit classic', nistLevel:null,
-        icon:'🇨🇳', color:'#f03e3e', colorHex:0xf03e3e,
-        pk:null, sk:16, sig:16, ss:null,
-        keygenUs:null, signUs:null, verifyUs:null,
-        keygenNote:'纯 JS', opsPerSec:9000,
-        kat:'30/30', tvla:'N/A',
-        covScore:65, riskLevel:'med', riskScore:25,
-        hasKAT:true, hasTVLA:false, hasTSR:false
-    }
-];
+(function() {
+    'use strict';
 
-// ═══════════ 3D Bar Chart ═══════════
-var barMetric = 'keySize';
-var barScene, barCamera, barRenderer, barControls, barGroup, barLabelsGroup;
+    var ALGORITHMS = [];
+    var STATISTICS = null;
 
-function initBarChart() {
-    var container = document.getElementById('bar3d');
-    barScene = new THREE.Scene();
-
-    barCamera = new THREE.PerspectiveCamera(40, container.clientWidth / container.clientHeight, 0.5, 60);
-    barCamera.position.set(12, 10, 18);
-    barCamera.lookAt(4.5, 0, 0);
-
-    barRenderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
-    barRenderer.setSize(container.clientWidth, container.clientHeight);
-    barRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    barRenderer.shadowMap.enabled = true;
-    container.appendChild(barRenderer.domElement);
-
-    barControls = new THREE.OrbitControls(barCamera, barRenderer.domElement);
-    barControls.enableDamping = true;
-    barControls.dampingFactor = 0.08;
-    barControls.target.set(4.5, 0, 0);
-    barControls.autoRotate = true;
-    barControls.autoRotateSpeed = 0.4;
-    barControls.maxPolarAngle = Math.PI * 0.55;
-    barControls.minDistance = 6;
-    barControls.maxDistance = 35;
-
-    barScene.add(new THREE.AmbientLight(0x334466, 1.8));
-    var sun = new THREE.DirectionalLight(0x8899ff, 2.5);
-    sun.position.set(8, 14, 10);
-    sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
-    sun.shadow.camera.left = -10; sun.shadow.camera.right = 15;
-    sun.shadow.camera.top = 10; sun.shadow.camera.bottom = -5;
-    barScene.add(sun);
-
-    var fill = new THREE.DirectionalLight(0x2244aa, 0.6);
-    fill.position.set(-5, 2, -3);
-    barScene.add(fill);
-
-    // Floor
-    var floorGeo = new THREE.PlaneGeometry(25, 16);
-    var floorMat = new THREE.MeshStandardMaterial({ color:0x0f1525, roughness:0.9, metalness:0.1 });
-    var floor = new THREE.Mesh(floorGeo, floorMat);
-    floor.rotation.x = -Math.PI/2;
-    floor.position.set(4.5, -0.52, 0);
-    floor.receiveShadow = true;
-    barScene.add(floor);
-
-    // Grid
-    var grid = new THREE.GridHelper(24, 24, 0x1a1a3e, 0x111128);
-    grid.position.set(4.5, -0.5, 0);
-    barScene.add(grid);
-
-    barGroup = new THREE.Group();
-    barScene.add(barGroup);
-    barLabelsGroup = new THREE.Group();
-    barScene.add(barLabelsGroup);
-
-    buildBars();
-
-    window.addEventListener('resize', function() {
-        barCamera.aspect = container.clientWidth / container.clientHeight;
-        barCamera.updateProjectionMatrix();
-        barRenderer.setSize(container.clientWidth, container.clientHeight);
-    });
-}
-
-function switchBarMetric(metric) {
-    barMetric = metric;
-    document.querySelectorAll('.chart-tab').forEach(function(b,i) {
-        b.classList.toggle('active', (i===0 && metric==='keySize') || (i===1 && metric==='speed') || (i===2 && metric==='coverage'));
-    });
-    buildBars();
-}
-
-var BAR_COLORS = [0x00d4ff,0x00bcd4,0x8b5cf6,0x7c3aed,0x6d28d9,0xec4899,0xff6b6b,0xff8787,0xf03e3e];
-
-function buildBars() {
-    while (barGroup.children.length) barGroup.remove(barGroup.children[0]);
-    while (barLabelsGroup.children.length) barLabelsGroup.remove(barLabelsGroup.children[0]);
-
-    var data;
-    if (barMetric === 'keySize') {
-        // Stacked: PK + SK + CT/SIG
-        data = ALGORITHMS.map(function(a) {
-            return [a.pk||0, a.sk||0, a.ct||a.sig||a.ss||0];
-        });
-    } else if (barMetric === 'speed') {
-        // Normalized speed: higher = faster
-        // Use keygen as proxy; for SIG use sign
-        data = ALGORITHMS.map(function(a) {
-            var us = a.keygenUs || a.signUs || 0;
-            if (us === 0) return [0];
-            var speed = Math.min(1e6 / us, 10); // normalize to 0-10
-            return [speed];
-        });
-    } else {
-        // Coverage %
-        data = ALGORITHMS.map(function(a) { return [a.covScore / 10] });
-    }
-
-    var barWidth = 0.7, gap = 0.3;
-    var maxVal = barMetric === 'keySize' ? 10000 : (barMetric === 'speed' ? 10 : 10);
-
-    data.forEach(function(bars, i) {
-        var x = i * (barWidth + gap);
-        var baseY = 0;
-        var subColors = barMetric === 'keySize' ? [0x44aacc,0x3388aa,0x226688] : [BAR_COLORS[i]];
-
-        for (var s = 0; s < bars.length; s++) {
-            var h = (bars[s] / maxVal) * 9;
-            if (h < 0.05) h = 0.05;
-            var geo = new THREE.BoxGeometry(barWidth, h, barWidth);
-            var mat = new THREE.MeshStandardMaterial({
-                color: subColors[s],
-                roughness: 0.3, metalness: 0.4,
-                emissive: subColors[s], emissiveIntensity: 0.2
+    // ═══════════ Fetch Data ═══════════
+    function init() {
+        fetch('pqc-dashboard-data.json?t=' + Date.now())
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                ALGORITHMS = data.algorithms;
+                STATISTICS = data.statistics;
+                ALGORITHMS.forEach(function(a) {
+                    a.colorHex = parseInt(a.color.replace('#','0x'));
+                });
+                buildUI();
+            })
+            .catch(function(e) {
+                showError('无法加载算法数据', e);
             });
-            var box = new THREE.Mesh(geo, mat);
-            box.position.set(x, -0.5 + baseY + h/2, 0);
-            box.castShadow = true; box.receiveShadow = true;
-            box.userData = { algoIdx:i, segment:s, val:bars[s] };
-            barGroup.add(box);
-            baseY += h;
-        }
+    }
 
-        // Label
-        var label = makeTextSprite(ALGORITHMS[i].cn.replace('ML-',''), ALGORITHMS[i].color, 28);
-        label.position.set(x, -1.0, 0);
-        label.scale.set(1.4, 0.7, 1);
-        barLabelsGroup.add(label);
-    });
-}
+    function showError(msg, e) {
+        var root = document.getElementById('root');
+        root.innerHTML = '<h1 class="page-title">PQC 算法体检仪表盘</h1>' +
+            '<div class="error-box">❌ ' + msg + ': ' + (e ? e.message : '未知错误') + '<br><br>' +
+            '<a href="pqc-dashboard-data.json" style="color:#00d4ff">→ 查看原始 JSON 数据</a><br><br>' +
+            '<span style="color:#64748b">提示: 运行 </span><code style="color:#00E5C3">node scripts/generate-dashboard-data.js</code><span style="color:#64748b"> 重新生成数据文件</span>' +
+            '</div>';
+    }
 
-function makeTextSprite(text, color, size) {
-    var c = document.createElement('canvas');
-    c.width = 256; c.height = 128;
-    var ctx = c.getContext('2d');
-    ctx.font = 'bold ' + size + 'px -apple-system,"Noto Sans SC",sans-serif';
-    ctx.fillStyle = color;
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText(text, 128, 64);
-    var tex = new THREE.CanvasTexture(c);
-    tex.minFilter = THREE.LinearFilter;
-    var mat = new THREE.SpriteMaterial({ map:tex, transparent:true });
-    return new THREE.Sprite(mat);
-}
+    function buildUI() {
+        // Remove loading
+        var container = document.getElementById('root');
+        var subtitle = document.getElementById('subtitle');
+        var loading = container.querySelector('.loading');
+        if (loading) loading.remove();
 
-// Raycaster for hover
-var barRaycaster = new THREE.Raycaster();
-var barMouse = new THREE.Vector2();
-function onBarMouseMove(e) {
-    var container = document.getElementById('bar3d');
-    var rect = container.getBoundingClientRect();
-    barMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-    barMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-}
-document.addEventListener('mousemove', onBarMouseMove);
+        // Update count
+        document.getElementById('algo-count').textContent = ALGORITHMS.length;
 
-// ═══════════ Score Cards ═══════════
-function buildScoreCards() {
-    var container = document.getElementById('score-cards');
-    container.innerHTML = '';
-    ALGORITHMS.forEach(function(a, i) {
-        var card = document.createElement('div');
-        card.className = 'score-card';
-        card.setAttribute('data-idx', i);
-        card.onclick = function() { highlightRow(i); };
+        // Build sections
+        buildStats();
+        initBarChart();
+        buildScoreCards();
+        buildTable();
+        buildVerification();
 
-        var riskClass = a.riskLevel === 'low' ? 'low' : (a.riskLevel === 'med' ? 'med' : 'high');
-        var riskLabel = a.riskLevel === 'low' ? '低风险' : (a.riskLevel === 'med' ? '中风险' : '高风险');
+        // Add footer
+        var footer = document.createElement('div');
+        footer.className = 'footer';
+        footer.innerHTML = 'FIBEMATE v3.3.0 · GPL-3.0-only · 数据来源：@fibemate/algorithm-registry v1.0.0 &nbsp;|&nbsp;' +
+            '<a href="/docs/pqc-dashboard-data.json" style="color:#00d4ff">原始 JSON</a> &nbsp;|&nbsp;' +
+            '<a href="https://fibemate.net">fibemate.net</a>';
+        container.appendChild(footer);
+    }
 
-        var perfText = '';
-        if (a.type === 'KEM') {
-            perfText = 'KeyGen: ' + (a.keygenUs < 1000 ? a.keygenUs+'µs' : (a.keygenUs/1000).toFixed(1)+'ms') +
-                       ' · Encap: ' + (a.encapsUs < 1000 ? a.encapsUs+'µs' : (a.encapsUs/1000).toFixed(1)+'ms');
-        } else if (a.type === 'SIG') {
-            perfText = 'Sign: ' + (a.signUs ? (a.signUs < 1000 ? a.signUs+'µs' : (a.signUs/1000).toFixed(1)+'ms') : 'N/A') +
-                       (a.verifyUs ? ' · Verify: ' + (a.verifyUs < 1000 ? a.verifyUs+'µs' : (a.verifyUs/1000).toFixed(1)+'ms') : '');
-        } else {
-            perfText = a.opsPerSec ? (a.opsPerSec >= 1000 ? (a.opsPerSec/1000).toFixed(0)+'K ops/s' : a.opsPerSec+' ops/s') : 'N/A';
-        }
+    // ═══════════ Stats Row ═══════════
+    function buildStats() {
+        if (!STATISTICS) return;
+        var s = STATISTICS;
+        var row = document.createElement('div');
+        row.className = 'stats-row';
+        row.innerHTML =
+            '<div class="stat-card"><div class="stat-val" style="color:#00d4ff">' + s.dashboardAlgoCount + '</div><div class="stat-lbl">算法总数</div></div>' +
+            '<div class="stat-card"><div class="stat-val" style="color:#51cf66">' + s.pqcReady + '</div><div class="stat-lbl">PQC-Ready</div></div>' +
+            '<div class="stat-card"><div class="stat-val" style="color:#f59e0b">' + (s.byRisk.warning||0) + '</div><div class="stat-lbl">需迁移(Warning)</div></div>' +
+            '<div class="stat-card"><div class="stat-val" style="color:#ff6b6b">' + (s.highRisk||0) + '</div><div class="stat-lbl">高风险</div></div>' +
+            '<div class="stat-card"><div class="stat-val" style="color:#8b5cf6">' + s.avgCoverage + '%</div><div class="stat-lbl">平均覆盖率</div></div>' +
+            '<div class="stat-card"><div class="stat-val" style="color:#24d6ff">' + s.fpgaImplementations + '</div><div class="stat-lbl">FPGA 实现</div></div>';
+        var root = document.getElementById('root');
+        root.insertBefore(row, root.querySelector('#subtitle').nextSibling.nextSibling);
+    }
 
-        var keyText = '';
-        if (a.pk) keyText += 'PK: ' + formatBytes(a.pk) + ' ';
-        if (a.sk) keyText += 'SK: ' + formatBytes(a.sk) + ' ';
-        if (a.ct) keyText += 'CT: ' + formatBytes(a.ct);
-        if (a.sig) keyText += 'Sig: ' + formatBytes(a.sig);
+    // ═══════════ 3D Bar Chart ═══════════
+    var barMetric = 'keySize';
+    var barScene, barCamera, barRenderer, barControls, barGroup, barLabelsGroup;
+    var BAR_COLORS = [0x00d4ff,0x8b5cf6,0xec4899,0xff6b6b,0xff8787,0xf03e3e,0xf59e0b,0x10b981,0x22c55e,0xa78bfa,0x94a3b8,0xeab308];
 
-        card.innerHTML =
-            '<div class="sc-icon">' + a.icon + '</div>' +
-            '<div class="sc-name" style="color:' + a.color + '">' + a.cn + '</div>' +
-            '<div class="sc-type">' + a.type + ' · ' + a.standard + '</div>' +
-            '<div class="sc-metrics">' +
-                '<div class="sc-metric"><span class="lbl">安全等级</span><span class="val">' + a.secLevel + '</span></div>' +
-                '<div class="sc-metric"><span class="lbl">覆盖率</span><span class="val">' + a.covScore + '%</span></div>' +
-                '<div class="sc-metric"><span class="lbl">性能</span><span class="val">' + perfText.substring(0, 22) + '</span></div>' +
-                '<div class="sc-metric"><span class="lbl">KAT</span><span class="val">' + (a.hasKAT ? '✅ '+a.kat.split('/')[0] : '❌') + '</span></div>' +
-            '</div>' +
-            '<div style="font-size:0.68rem;color:#64748b;margin-top:0.4rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + keyText + '</div>' +
-            '<span class="sc-risk ' + riskClass + '">' + riskLabel + ' · riskScore ' + a.riskScore + '</span>';
-        container.appendChild(card);
-    });
-}
+    function initBarChart() {
+        BAR_COLORS = ALGORITHMS.map(function(a) { return parseInt(a.color.replace('#','0x')); });
 
-function formatBytes(b) {
-    if (b >= 1024) return (b/1024).toFixed(1) + 'KB';
-    return b + 'B';
-}
+        var container = document.getElementById('bar3d');
+        barScene = new THREE.Scene();
 
-// ═══════════ Detail Table ═══════════
-var sortCol = null, sortAsc = true;
+        barCamera = new THREE.PerspectiveCamera(40, container.clientWidth/container.clientHeight, 0.5, 60);
+        barCamera.position.set(14, 12, 20);
+        barCamera.lookAt(5, 0, 0);
 
-function buildTable() {
-    var cols = ['算法','类型','标准','安全等级','PK','SK','CT/Sig','SS','KeyGen','Enc/Sign','Dec/Verify','ops/s','KAT','TVLA','覆盖率','风险'];
-    var thead = document.getElementById('table-head');
-    thead.innerHTML = '<tr>' + cols.map(function(c,i) {
-        return '<th class="clickable" onclick="sortTable('+i+')">' + c + '<span class="sort-arrow" id="sa'+i+'"></span></th>';
-    }).join('') + '</tr>';
+        barRenderer = new THREE.WebGLRenderer({ antialias:true, alpha:true });
+        barRenderer.setSize(container.clientWidth, container.clientHeight);
+        barRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        barRenderer.shadowMap.enabled = true;
+        container.appendChild(barRenderer.domElement);
 
-    renderTableRows();
-}
+        barControls = new THREE.OrbitControls(barCamera, barRenderer.domElement);
+        barControls.enableDamping = true;
+        barControls.dampingFactor = 0.08;
+        barControls.target.set(ALGORITHMS.length * 0.5 - 0.5, 0, 0);
+        barControls.autoRotate = true;
+        barControls.autoRotateSpeed = 0.3;
+        barControls.maxPolarAngle = Math.PI * 0.55;
+        barControls.minDistance = 6;
+        barControls.maxDistance = 40;
 
-function renderTableRows() {
-    var tbody = document.getElementById('table-body');
-    var rows = ALGORITHMS.map(function(a) {
-        var perfKG = a.keygenUs ? (a.keygenUs < 1000 ? a.keygenUs+'µs' : (a.keygenUs/1000).toFixed(1)+'ms') : '-';
-        var perfEnc = a.encapsUs ? (a.encapsUs < 1000 ? a.encapsUs+'µs' : (a.encapsUs/1000).toFixed(1)+'ms') : (a.signUs ? (a.signUs < 1000 ? a.signUs+'µs' : (a.signUs/1000).toFixed(1)+'ms') : '-');
-        var perfDec = a.decapsUs ? (a.decapsUs < 1000 ? a.decapsUs+'µs' : (a.decapsUs/1000).toFixed(1)+'ms') : (a.verifyUs ? (a.verifyUs < 1000 ? a.verifyUs+'µs' : (a.verifyUs/1000).toFixed(1)+'ms') : '-');
-        var ops = a.opsPerSec ? (a.opsPerSec >= 1000 ? (a.opsPerSec/1000).toFixed(0)+'K' : a.opsPerSec) : '-';
-        var katBadge = a.hasKAT ? '<span class="badge green">'+a.kat+'</span>' : '<span class="badge yellow">-</span>';
-        var tvlaBadge = a.hasTVLA ? '<span class="badge green">'+a.tvla.split('/')[0]+'/'+a.tvla.split('/')[1]+'</span>' : '<span class="badge yellow">N/A</span>';
-        var riskBadge = a.riskLevel==='low' ? '<span class="badge green">'+a.riskLevel+'</span>' : (a.riskLevel==='med' ? '<span class="badge yellow">med</span>' : '<span class="badge" style="background:rgba(255,107,107,0.12);color:#ff6b6b;">high</span>');
+        barScene.add(new THREE.AmbientLight(0x334466, 1.8));
+        var sun = new THREE.DirectionalLight(0x8899ff, 2.5);
+        sun.position.set(10, 16, 12);
+        sun.castShadow = true;
+        sun.shadow.mapSize.set(1024, 1024);
+        barScene.add(sun);
+        var fill = new THREE.DirectionalLight(0x2244aa, 0.6);
+        fill.position.set(-5, 2, -3);
+        barScene.add(fill);
 
-        return [a.cn, a.type, a.standard, a.secLevel, a.pk||'-', a.sk||'-', a.ct||a.sig||'-', a.ss||'-', perfKG, perfEnc, perfDec, ops, katBadge, tvlaBadge, a.covScore+'%', riskBadge];
-    });
+        var floorGeo = new THREE.PlaneGeometry(30, 18);
+        var floor = new THREE.Mesh(floorGeo, new THREE.MeshStandardMaterial({ color:0x0f1525, roughness:0.9, metalness:0.1 }));
+        floor.rotation.x = -Math.PI/2;
+        floor.position.set(ALGORITHMS.length * 0.5 - 0.5, -0.52, 0);
+        floor.receiveShadow = true;
+        barScene.add(floor);
 
-    // Sort
-    if (sortCol !== null) {
-        rows.sort(function(a,b) {
-            var va = a[sortCol], vb = b[sortCol];
-            // Strip HTML
-            if (typeof va === 'string') va = va.replace(/<[^>]*>/g,'');
-            if (typeof vb === 'string') vb = vb.replace(/<[^>]*>/g,'');
-            var na = parseFloat(va), nb = parseFloat(vb);
-            if (!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
-            if (va < vb) return sortAsc ? -1 : 1;
-            if (va > vb) return sortAsc ? 1 : -1;
-            return 0;
+        var grid = new THREE.GridHelper(28, 28, 0x1a1a3e, 0x111128);
+        grid.position.set(ALGORITHMS.length * 0.5 - 0.5, -0.5, 0);
+        barScene.add(grid);
+
+        barGroup = new THREE.Group();
+        barScene.add(barGroup);
+        barLabelsGroup = new THREE.Group();
+        barScene.add(barLabelsGroup);
+
+        buildBars();
+
+        var resizeTimer;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(function() {
+                barCamera.aspect = container.clientWidth / container.clientHeight;
+                barCamera.updateProjectionMatrix();
+                barRenderer.setSize(container.clientWidth, container.clientHeight);
+            }, 100);
         });
     }
 
-    tbody.innerHTML = rows.map(function(r) {
-        return '<tr>' + r.map(function(c) { return '<td>' + c + '</td>'; }).join('') + '</tr>';
-    }).join('');
-
-    // Update arrows
-    for (var i = 0; i < 16; i++) {
-        var el = document.getElementById('sa'+i);
-        if (!el) continue;
-        el.className = 'sort-arrow' + (i === sortCol ? (sortAsc ? ' asc' : ' desc') : '');
-        el.textContent = i === sortCol ? (sortAsc ? '▲' : '▼') : '';
+    function switchBarMetric(metric) {
+        barMetric = metric;
+        var tabs = document.querySelectorAll('.chart-tab');
+        tabs.forEach(function(b,i) {
+            b.classList.toggle('active', (i===0 && metric==='keySize') || (i===1 && metric==='speed') || (i===2 && metric==='coverage'));
+        });
+        buildBars();
     }
-}
 
-function sortTable(col) {
-    if (sortCol === col) sortAsc = !sortAsc;
-    else { sortCol = col; sortAsc = true; }
-    renderTableRows();
-}
+    function buildBars() {
+        while (barGroup.children.length) barGroup.remove(barGroup.children[0]);
+        while (barLabelsGroup.children.length) barLabelsGroup.remove(barLabelsGroup.children[0]);
 
-// ═══════════ Verification Panels ═══════════
-function buildVerification() {
-    var container = document.getElementById('verification-panels');
-
-    // KAT coverage
-    var katHtml = '<div class="vfy-card"><h3 style="color:#51cf66;">✅ KAT 向量覆盖</h3>';
-    ALGORITHMS.forEach(function(a) {
-        if (a.hasKAT) {
-            var parts = a.kat.split('/');
-            var pct = Math.round(parseInt(parts[0]) / parseInt(parts[1]) * 100);
-            katHtml += '<div class="vfy-row"><span class="vfy-algo">' + a.cn + '</span>' +
-                '<div class="vfy-bar-bg"><div class="vfy-bar" style="width:'+pct+'%;background:linear-gradient(90deg,#51cf66,#00d4ff)"></div></div>' +
-                '<span class="vfy-num">'+a.kat+'</span></div>';
+        var data;
+        if (barMetric === 'keySize') {
+            data = ALGORITHMS.map(function(a) {
+                return [a.pk||0, a.sk||0, a.ct||a.sig||a.ss||0];
+            });
+        } else if (barMetric === 'speed') {
+            data = ALGORITHMS.map(function(a) {
+                var us = a.keygenUs || a.signUs || 0;
+                if (us === 0) return [0];
+                return [Math.min(1e6 / us, 10)];
+            });
+        } else {
+            data = ALGORITHMS.map(function(a) { return [a.covScore / 10]; });
         }
-    });
-    katHtml += '</div>';
 
-    // TVLA coverage
-    var tvlaHtml = '<div class="vfy-card"><h3 style="color:#ffc107;">⚡ TVLA 侧信道覆盖</h3>';
-    ALGORITHMS.forEach(function(a) {
-        if (a.hasTVLA) {
+        var barWidth = 0.7, gap = 0.35;
+        var maxVal = barMetric === 'keySize' ? 10000 : (barMetric === 'speed' ? 10 : 10);
+
+        data.forEach(function(bars, i) {
+            var x = i * (barWidth + gap);
+            var baseY = 0;
+            var subColors = barMetric === 'keySize' ? [0x44aacc, 0x3388aa, 0x226688] : [BAR_COLORS[i]];
+
+            for (var s = 0; s < bars.length; s++) {
+                var h = (bars[s] / maxVal) * 9;
+                if (h < 0.05) h = 0.05;
+                var geo = new THREE.BoxGeometry(barWidth, h, barWidth);
+                var mat = new THREE.MeshStandardMaterial({
+                    color: subColors[s],
+                    roughness: 0.3, metalness: 0.4,
+                    emissive: subColors[s], emissiveIntensity: 0.2
+                });
+                var box = new THREE.Mesh(geo, mat);
+                box.position.set(x, -0.5 + baseY + h/2, 0);
+                box.castShadow = true; box.receiveShadow = true;
+                box.userData = { algoIdx:i, segment:s, val:bars[s] };
+                barGroup.add(box);
+                baseY += h;
+            }
+
+            var shortName = ALGORITHMS[i].cn.replace(/ML-KEM-|ML-DSA-|SLH-DSA-| Elliptic Curve| Hash Function| Block Cipher| NIST | Number Theoretic /g,'').substring(0,8);
+            if (shortName.length > 6) shortName = shortName.substring(0,6);
+            var label = makeTextSprite(shortName, ALGORITHMS[i].color, 24);
+            label.position.set(x, -1.0, 0);
+            label.scale.set(1.4, 0.7, 1);
+            barLabelsGroup.add(label);
+        });
+    }
+
+    function makeTextSprite(text, color, size) {
+        var c = document.createElement('canvas');
+        c.width = 256; c.height = 128;
+        var ctx = c.getContext('2d');
+        ctx.font = 'bold ' + size + 'px -apple-system,"Noto Sans SC",sans-serif';
+        ctx.fillStyle = color;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(text, 128, 64);
+        var tex = new THREE.CanvasTexture(c);
+        tex.minFilter = THREE.LinearFilter;
+        return new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true }));
+    }
+
+    var barMouse = new THREE.Vector2();
+    document.addEventListener('mousemove', function(e) {
+        var container = document.getElementById('bar3d');
+        if (!container) return;
+        var rect = container.getBoundingClientRect();
+        barMouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        barMouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    });
+
+    // ═══════════ Score Cards ═══════════
+    function buildScoreCards() {
+        var container = document.getElementById('score-cards');
+        container.innerHTML = '';
+        ALGORITHMS.forEach(function(a, i) {
+            var card = document.createElement('div');
+            card.className = 'score-card';
+            card.setAttribute('data-idx', i);
+            card.onclick = function() { highlightRow(i); };
+
+            var riskClass = a.riskLevel === 'low' ? 'low' : (a.riskLevel === 'med' ? 'med' : 'high');
+            var riskLabel = a.cbom ? a.cbom.risk : (a.riskLevel === 'low' ? '安全' : (a.riskLevel === 'med' ? '注意' : '危险'));
+
+            var perfText = '';
+            if (a.type === 'KEM') {
+                perfText = 'KeyGen: ' + (a.keygenUs ? (a.keygenUs < 1000 ? a.keygenUs+'µs' : (a.keygenUs/1000).toFixed(1)+'ms') : 'N/A') +
+                           ' · Encap: ' + (a.encapsUs ? (a.encapsUs < 1000 ? a.encapsUs+'µs' : (a.encapsUs/1000).toFixed(1)+'ms') : 'N/A');
+            } else if (a.type === 'SIG') {
+                perfText = 'Sign: ' + (a.signUs ? (a.signUs < 1000 ? a.signUs+'µs' : (a.signUs/1000).toFixed(1)+'ms') : 'N/A') +
+                           (a.verifyUs ? ' · Verify: ' + (a.verifyUs < 1000 ? a.verifyUs+'µs' : (a.verifyUs/1000).toFixed(1)+'ms') : '');
+            } else {
+                perfText = a.opsPerSec ? (a.opsPerSec >= 1000 ? (a.opsPerSec/1000).toFixed(0)+'K ops/s' : a.opsPerSec+' ops/s') : (a.perfNote || 'N/A');
+            }
+
+            var keyText = '';
+            if (a.pk) keyText += 'PK: ' + formatBytes(a.pk) + ' ';
+            if (a.sk) keyText += 'SK: ' + formatBytes(a.sk) + ' ';
+            if (a.ct) keyText += 'CT: ' + formatBytes(a.ct);
+            if (a.sig) keyText += 'Sig: ' + formatBytes(a.sig);
+
+            card.innerHTML =
+                '<div class="sc-icon">' + a.icon + '</div>' +
+                '<div class="sc-name" style="color:' + a.color + '">' + a.cn + '</div>' +
+                '<div class="sc-type">' + a.type + ' · ' + a.standard + '</div>' +
+                '<div class="sc-metrics">' +
+                    '<div class="sc-metric"><span class="lbl">安全等级</span><span class="val">' + a.secLevel + '</span></div>' +
+                    '<div class="sc-metric"><span class="lbl">覆盖率</span><span class="val">' + a.covScore + '%</span></div>' +
+                    '<div class="sc-metric"><span class="lbl">性能</span><span class="val">' + perfText.substring(0, 22) + '</span></div>' +
+                    '<div class="sc-metric"><span class="lbl">KAT</span><span class="val">' + (a.hasKAT ? '✅ '+a.kat.split('/')[0] : '❌') + '</span></div>' +
+                '</div>' +
+                '<div style="font-size:0.68rem;color:#64748b;margin-top:0.4rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + keyText + '</div>' +
+                '<span class="sc-risk ' + riskClass + '">' + riskLabel + ' · riskScore ' + a.riskScore + '</span>';
+            container.appendChild(card);
+        });
+    }
+
+    function formatBytes(b) {
+        if (b >= 1024) return (b/1024).toFixed(1) + 'KB';
+        return b + 'B';
+    }
+
+    // ═══════════ Detail Table ═══════════
+    var sortCol = null, sortAsc = true;
+
+    function buildTable() {
+        var cols = ['算法','类型','标准','安全等级','PK','SK','CT/Sig','KeyGen','Enc/Sign','Dec/Verify','KAT','TVLA','覆盖率','风险'];
+        var thead = document.getElementById('table-head');
+        thead.innerHTML = '<tr>' + cols.map(function(c,i) {
+            return '<th class="clickable" onclick="sortTable('+i+')">' + c + '<span class="sort-arrow" id="sa'+i+'"></span></th>';
+        }).join('') + '</tr>';
+        renderTableRows();
+    }
+
+    function renderTableRows() {
+        var tbody = document.getElementById('table-body');
+        var rows = ALGORITHMS.map(function(a) {
+            var perfKG = a.keygenUs ? (a.keygenUs < 1000 ? a.keygenUs+'µs' : (a.keygenUs/1000).toFixed(1)+'ms') : '-';
+            var perfEnc = a.encapsUs ? (a.encapsUs < 1000 ? a.encapsUs+'µs' : (a.encapsUs/1000).toFixed(1)+'ms') : (a.signUs ? (a.signUs < 1000 ? a.signUs+'µs' : (a.signUs/1000).toFixed(1)+'ms') : '-');
+            var perfDec = a.decapsUs ? (a.decapsUs < 1000 ? a.decapsUs+'µs' : (a.decapsUs/1000).toFixed(1)+'ms') : (a.verifyUs ? (a.verifyUs < 1000 ? a.verifyUs+'µs' : (a.verifyUs/1000).toFixed(1)+'ms') : '-');
+            var katBadge = a.hasKAT ? '<span class="badge green">'+a.kat+'</span>' : '<span class="badge yellow">-</span>';
+            var tvlaBadge = a.hasTVLA ? '<span class="badge green">'+a.tvla.split('/')[0]+'/'+a.tvla.split('/')[1]+'</span>' : '<span class="badge yellow">N/A</span>';
+            var riskBadge = a.riskLevel==='low' ? '<span class="badge green">'+a.riskLevel+'</span>' : (a.riskLevel==='med' ? '<span class="badge yellow">med</span>' : '<span class="badge" style="background:rgba(255,107,107,0.12);color:#ff6b6b;">high</span>');
+
+            return [
+                '<span class="td-name" style="color:'+a.color+'">'+a.cn+'</span>',
+                a.type, a.standard, a.secLevel,
+                a.pk||'-', a.sk||'-', a.ct||a.sig||'-',
+                perfKG, perfEnc, perfDec,
+                katBadge, tvlaBadge,
+                a.covScore+'%', riskBadge
+            ];
+        });
+
+        if (sortCol !== null) {
+            rows.sort(function(a,b) {
+                var va = a[sortCol], vb = b[sortCol];
+                if (typeof va === 'string') va = va.replace(/<[^>]*>/g,'');
+                if (typeof vb === 'string') vb = vb.replace(/<[^>]*>/g,'');
+                var na = parseFloat(va), nb = parseFloat(vb);
+                if (!isNaN(na) && !isNaN(nb)) { va = na; vb = nb; }
+                if (va < vb) return sortAsc ? -1 : 1;
+                if (va > vb) return sortAsc ? 1 : -1;
+                return 0;
+            });
+        }
+
+        tbody.innerHTML = rows.map(function(r) {
+            return '<tr>' + r.map(function(c) { return '<td>' + c + '</td>'; }).join('') + '</tr>';
+        }).join('');
+
+        for (var i = 0; i < 14; i++) {
+            var el = document.getElementById('sa'+i);
+            if (!el) continue;
+            el.className = 'sort-arrow' + (i === sortCol ? (sortAsc ? ' asc' : ' desc') : '');
+            el.textContent = i === sortCol ? (sortAsc ? '▲' : '▼') : '';
+        }
+    }
+
+    window.sortTable = function(col) {
+        if (sortCol === col) sortAsc = !sortAsc;
+        else { sortCol = col; sortAsc = true; }
+        renderTableRows();
+    };
+
+    // ═══════════ Verification Panels ═══════════
+    function buildVerification() {
+        var container = document.getElementById('verification-panels');
+
+        // KAT coverage
+        var katHtml = '<div class="vfy-card"><h3 style="color:#51cf66;">✅ KAT 向量覆盖</h3>';
+        ALGORITHMS.forEach(function(a) {
+            if (!a.hasKAT) return;
+            var parts = a.kat.split('/');
+            var num = parseInt(parts[0]);
+            var denom = parseInt(parts[1]);
+            var pct = denom > 0 ? Math.round(num / denom * 100) : 0;
+            var color = pct >= 90 ? '#51cf66' : (pct >= 50 ? '#ffc107' : '#ff6b6b');
+            katHtml += '<div class="vfy-row"><span class="vfy-algo">' + a.cn + '</span>' +
+                '<div class="vfy-bar-bg"><div class="vfy-bar" style="width:'+pct+'%;background:linear-gradient(90deg,'+color+',#00d4ff)"></div></div>' +
+                '<span class="vfy-num">'+a.kat+'</span></div>';
+        });
+        katHtml += '</div>';
+
+        // TVLA coverage
+        var tvlaHtml = '<div class="vfy-card"><h3 style="color:#ffc107;">⚡ TVLA 侧信道覆盖</h3>';
+        var hasAny = false;
+        ALGORITHMS.forEach(function(a) {
+            if (!a.hasTVLA) return;
+            hasAny = true;
             var parts = a.tvla.split('/');
-            var pct = Math.round(parseInt(parts[0]) / parseInt(parts[1]) * 100);
+            var num = parseInt(parts[0]);
+            var denom = parseInt(parts[1]);
+            var pct = isNaN(denom) || denom <= 0 ? 0 : Math.round(num / denom * 100);
             tvlaHtml += '<div class="vfy-row"><span class="vfy-algo">' + a.cn + '</span>' +
                 '<div class="vfy-bar-bg"><div class="vfy-bar" style="width:'+pct+'%;background:linear-gradient(90deg,#ffc107,#ff9800)"></div></div>' +
                 '<span class="vfy-num">'+a.tvla+'</span></div>';
-        }
-    });
-    tvlaHtml += '</div>';
+        });
+        if (!hasAny) tvlaHtml += '<div style="text-align:center;color:#64748b;padding:1rem">暂无 TVLA 数据</div>';
+        tvlaHtml += '</div>';
 
-    // Risk summary
-    var riskHtml = '<div class="vfy-card"><h3 style="color:#ff6b6b;">🎯 风险矩阵概览</h3>';
-    riskHtml += '<div style="font-size:2.5rem;font-weight:700;color:#51cf66;text-align:center;margin:0.5rem 0;">HIGH: 0</div>';
-    riskHtml += '<div style="display:flex;justify-content:center;gap:2rem;font-size:0.82rem;">' +
-        '<span><span style="color:#51cf66;">●</span> LOW: 3</span>' +
-        '<span><span style="color:#ffc107;">●</span> MED: 5</span>' +
-        '</div>';
-    riskHtml += '<div style="text-align:center;margin-top:0.5rem;font-size:1.2rem;color:#00d4ff;">平均覆盖率 71%</div>';
-    riskHtml += '<div style="text-align:center;margin-top:0.5rem;"><a href="/docs/cars-radar.html" style="font-size:0.78rem;color:#00d4ff;">→ CARS 雷达图详情</a></div>';
-    riskHtml += '</div>';
+        // Risk summary
+        var riskHtml = '<div class="vfy-card"><h3 style="color:#ff6b6b;">🎯 风险矩阵概览</h3>';
+        riskHtml += '<div style="font-size:2.5rem;font-weight:700;color:' +
+            ((STATISTICS && (STATISTICS.highRisk||0) > 0) ? '#ff6b6b' : '#51cf66') +
+            ';text-align:center;margin:0.5rem 0;">HIGH: ' + (STATISTICS ? STATISTICS.highRisk||0 : '—') + '</div>';
+        riskHtml += '<div style="display:flex;justify-content:center;gap:2rem;font-size:0.82rem;">' +
+            '<span><span style="color:#51cf66;">●</span> LOW: ' + (STATISTICS ? STATISTICS.lowRisk||0 : '—') + '</span>' +
+            '<span><span style="color:#ffc107;">●</span> MED: ' + (STATISTICS ? STATISTICS.medRisk||0 : '—') + '</span>' +
+            '</div>';
+        riskHtml += '<div style="text-align:center;margin-top:0.5rem;font-size:1.2rem;color:#00d4ff;">平均覆盖率 ' + (STATISTICS ? STATISTICS.avgCoverage : '—') + '%</div>';
+        riskHtml += '<div style="text-align:center;margin-top:0.8rem;">' +
+            '<a href="/docs/cars-radar.html" style="font-size:0.78rem;color:#00d4ff;">→ CARS 雷达图</a> &nbsp;' +
+            '<a href="/docs/ibm-seven-radar.html" style="font-size:0.78rem;color:#00d4ff;">→ IBM 七维评估</a>' +
+            '</div>';
+        riskHtml += '</div>';
 
-    container.innerHTML = katHtml + tvlaHtml + riskHtml;
-}
+        container.innerHTML = katHtml + tvlaHtml + riskHtml;
+    }
 
-// ═══════════ Animate ═══════════
-function animate() {
-    requestAnimationFrame(animate);
-    if (barControls) barControls.update();
-    if (barRenderer && barScene && barCamera) barRenderer.render(barScene, barCamera);
+    function highlightRow(idx) {
+        var cards = document.querySelectorAll('.score-card');
+        cards.forEach(function(c) { c.classList.remove('selected'); });
+        if (cards[idx]) cards[idx].classList.add('selected');
+        var rows = document.querySelectorAll('#table-body tr');
+        if (rows[idx]) rows[idx].scrollIntoView({ behavior:'smooth', block:'center' });
+    }
 
-    // Bar hover
-    if (barRaycaster && barGroup.children.length > 0) {
-        barRaycaster.setFromCamera(barMouse, barCamera);
-        var hits = barRaycaster.intersectObjects(barGroup.children);
-        barGroup.children.forEach(function(c) { c.material.emissiveIntensity = 0.2; });
-        if (hits.length > 0) {
-            hits[0].object.material.emissiveIntensity = 0.8;
+    // ═══════════ Expose for HTML onclick ═══════════
+    window.switchBarMetric = switchBarMetric;
+
+    // ═══════════ Animation Loop ═══════════
+    function animate() {
+        requestAnimationFrame(animate);
+        if (barControls) barControls.update();
+        if (barRenderer && barScene && barCamera) barRenderer.render(barScene, barCamera);
+
+        // Bar hover
+        if (barRaycaster && barGroup && barGroup.children.length > 0) {
+            barRaycaster.setFromCamera(barMouse, barCamera);
+            var hits = barRaycaster.intersectObjects(barGroup.children);
+            barGroup.children.forEach(function(c) { 
+                if (c.material && c.material.emissiveIntensity !== undefined) c.material.emissiveIntensity = 0.2; 
+            });
+            if (hits.length > 0 && hits[0].object.material) {
+                hits[0].object.material.emissiveIntensity = 0.8;
+            }
         }
     }
-}
 
-function highlightRow(idx) {
-    var cards = document.querySelectorAll('.score-card');
-    cards.forEach(function(c) { c.classList.remove('selected'); });
-    if (cards[idx]) cards[idx].classList.add('selected');
+    var barRaycaster = new THREE.Raycaster();
 
-    // Scroll table row into view
-    var rows = document.querySelectorAll('#table-body tr');
-    if (rows[idx]) rows[idx].scrollIntoView({ behavior:'smooth', block:'center' });
-}
-
-// ═══════════ Init ═══════════
-initBarChart();
-buildScoreCards();
-buildTable();
-buildVerification();
-animate();
+    // ═══════════ Start ═══════════
+    init();
+    animate();
+})();
 </script>
 </body>
 </html>
