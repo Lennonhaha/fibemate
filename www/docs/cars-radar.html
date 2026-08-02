@@ -221,10 +221,15 @@
 
 <button id="improve-toggle" onclick="toggleImprovement()">显示改进路线</button>
 
-<script src="lib/three.min.js?v=20260802"></script>
-<script src="lib/OrbitControls.js?v=20260802"></script>
+<script>window.__THREE_LOADED=!1;window.__ORBIT_LOADED=!1;</script>
+<script src="lib/three.min.js?v=20260802" onerror="console.error('FAILED to load three.min.js!')" onload="window.__THREE_LOADED=!0;console.log('three.min.js OK, THREE='+(typeof THREE))"></script>
+<script src="lib/OrbitControls.js?v=20260802" onerror="console.error('FAILED to load OrbitControls.js!')" onload="window.__ORBIT_LOADED=!0;console.log('OrbitControls.js OK, THREE.OrbitControls='+(typeof (window.THREE&&window.THREE.OrbitControls)))"></script>
 
 <script>
+console.log('=== CARS-RADAR DIAG: document.readyState='+document.readyState);
+console.log('  THREE loaded:', typeof THREE!=='undefined');
+console.log('  OrbitControls:', typeof (window.THREE&&THREE.OrbitControls)!=='undefined');
+if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;padding:40px;font-size:24px">✕ THREE.js 加载失败！<br>按 Ctrl+Shift+R 硬刷新</div>'; throw new Error('THREE not loaded'); }
 (function() {
     // ═══════════════════════════════════════════
     //  CARS 维度数据 + 代码证据
@@ -365,7 +370,7 @@
                 {
                     file:'e69c944..e1795326 (CI/Nightly)', lines:'24 jobs',
                     finding:'<strong>CI 基础设施</strong>：8 个 workflow (ci/ci-native/native-build/nightly-phase1/nightly-phase2/scorecard/codeql/repolinter) × 4 平台全绿。+ CodeQL security-extended SAST + Dependabot weekly。24 路 GH Actions 无红线。',
-                    code:'# 8 workflows across 4 platforms\n# ci/ci-native/native-build (core+native 12/12 ✓)\n# nightly-phase1/2 (Phase1 ✓, Phase2 4/5 ✓)\n# scorecard + codeql + repolinter (全部 ✓)\n# dependabot.yml (weekly npm + actions)'
+                    code:'# 8 workflows across 4 platforms\n# ci/ci-native/native-build (core+native 12/12 ✓)\n# nightly-phase1/2 (Phase1 ✓, Phase2 4/5 ✓)\n# scorecard + codeql + repolinter (全部 ✓)\n# dependabot.yml (weekly npm + actions)',
                     tags:['good']
                 },
                 {
