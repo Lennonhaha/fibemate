@@ -1,13 +1,10 @@
 {
-  "totalFiles": 403,
-  "cryptoFiles": 269,
-  "edges": 119,
+  "totalFiles": 405,
+  "cryptoFiles": 271,
+  "edgeCount": 120,
   "blastRadius": {
     "ML-KEM": {
-      "direct": 135,
-      "indirect": 2,
-      "total": 137,
-      "directFiles": [
+      "direct": [
         "api/a2a/a2a-core.js",
         "bindings/python/fibemate_py/fibemate_bridge.js",
         "docs/hmac-sm3-tvla-analysis.html",
@@ -146,16 +143,17 @@
         "www/terms.html",
         "www/test_mlkem.html"
       ],
-      "indirectFiles": [
+      "indirect": [
         "test/test-keccak.js",
         "www/crypto/slh-dsa.worker.js"
+      ],
+      "totalFiles": 139,
+      "downstreamAlgos": [
+        "ML-KEM"
       ]
     },
     "ML-DSA/fml-dsa": {
-      "direct": 50,
-      "indirect": 1,
-      "total": 51,
-      "directFiles": [
+      "direct": [
         "docs/tsa/2026-06-25/index.html",
         "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
         "packages/fml-dsa/bench/bench-compare.cjs",
@@ -208,16 +206,24 @@
         "www/privacy-layers/signature.v2.js",
         "www/vwz-challenge/index.html"
       ],
-      "indirectFiles": [
+      "indirect": [
         "packages/fml-dsa/src/core/all.js",
         "tools/bloom-merge.js"
+      ],
+      "totalFiles": 53,
+      "downstreamAlgos": [
+        "ML-DSA/fml-dsa",
+        "SLH-DSA",
+        "SM2",
+        "SM3",
+        "SM4",
+        "Double-Ratchet",
+        "SHA-256",
+        "AES"
       ]
     },
     "SLH-DSA": {
-      "direct": 33,
-      "indirect": 0,
-      "total": 33,
-      "directFiles": [
+      "direct": [
         "docs/tsa/2026-06-25/index.html",
         "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
         "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
@@ -253,15 +259,23 @@
         "www/privacy-layers/signature.v2.js",
         "www/vwz-challenge/index.html"
       ],
-      "indirectFiles": [
+      "indirect": [
         "tools/bloom-merge.js"
+      ],
+      "totalFiles": 35,
+      "downstreamAlgos": [
+        "ML-DSA/fml-dsa",
+        "SLH-DSA",
+        "SM2",
+        "SM3",
+        "SM4",
+        "Double-Ratchet",
+        "SHA-256",
+        "AES"
       ]
     },
     "SM2": {
-      "direct": 69,
-      "indirect": 4,
-      "total": 73,
-      "directFiles": [
+      "direct": [
         "archives/sm2-versions/sm2-bigint-ec-v1.2.js",
         "archives/sm2-versions/sm2-bigint-ec-v1.3.js",
         "docs/hmac-sm3-tvla-analysis.html",
@@ -333,19 +347,28 @@
         "www/security.html",
         "www/timestamps/index.html"
       ],
-      "indirectFiles": [
+      "indirect": [
         "tools/bloom-merge.js",
         "scripts/ci-gm-sm3.cjs",
         "scripts/hmac-sm3-kat.cjs",
         "scripts/sm3-bench.cjs",
         "scripts/sm3-smoke.cjs"
+      ],
+      "totalFiles": 75,
+      "downstreamAlgos": [
+        "ML-DSA/fml-dsa",
+        "SLH-DSA",
+        "SM2",
+        "SM3",
+        "SM4",
+        "Double-Ratchet",
+        "SHA-256",
+        "AES",
+        "P-256/ECDH"
       ]
     },
     "SM3": {
-      "direct": 45,
-      "indirect": 0,
-      "total": 45,
-      "directFiles": [
+      "direct": [
         "docs/hmac-sm3-tvla-analysis.html",
         "docs/tsa/2026-06-25/index.html",
         "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
@@ -393,15 +416,23 @@
         "www/security.html",
         "www/timestamps/index.html"
       ],
-      "indirectFiles": [
+      "indirect": [
         "tools/bloom-merge.js"
+      ],
+      "totalFiles": 47,
+      "downstreamAlgos": [
+        "ML-DSA/fml-dsa",
+        "SLH-DSA",
+        "SM2",
+        "SM3",
+        "SM4",
+        "Double-Ratchet",
+        "SHA-256",
+        "AES"
       ]
     },
     "SM4": {
-      "direct": 37,
-      "indirect": 0,
-      "total": 37,
-      "directFiles": [
+      "direct": [
         "docs/hmac-sm3-tvla-analysis.html",
         "docs/tsa/2026-06-25/index.html",
         "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
@@ -441,15 +472,23 @@
         "www/modules/e2ee-display.js",
         "www/security.html"
       ],
-      "indirectFiles": [
+      "indirect": [
         "tools/bloom-merge.js"
+      ],
+      "totalFiles": 39,
+      "downstreamAlgos": [
+        "ML-DSA/fml-dsa",
+        "SLH-DSA",
+        "SM2",
+        "SM3",
+        "SM4",
+        "Double-Ratchet",
+        "SHA-256",
+        "AES"
       ]
     },
     "P-256/ECDH": {
-      "direct": 71,
-      "indirect": 30,
-      "total": 101,
-      "directFiles": [
+      "direct": [
         "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
         "double-ratchet-pq.js",
         "double-ratchet.js",
@@ -522,7 +561,7 @@
         "www/zk-identity-proof.js",
         "www/zk-ui-integration.js"
       ],
-      "indirectFiles": [
+      "indirect": [
         "scripts/bench-v33.cjs",
         "scripts/benchmark.cjs",
         "src/index.js",
@@ -555,13 +594,16 @@
         "scripts/sm3-smoke.cjs",
         "scripts/smoke-test.js",
         "test/run-compat-fixtures.mjs"
+      ],
+      "totalFiles": 103,
+      "downstreamAlgos": [
+        "P-256/ECDH",
+        "SHA-256",
+        "SM2"
       ]
     },
     "Double-Ratchet": {
-      "direct": 51,
-      "indirect": 0,
-      "total": 51,
-      "directFiles": [
+      "direct": [
         "docs/tsa/2026-06-25/index.html",
         "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
         "double-ratchet-pq.js",
@@ -615,15 +657,23 @@
         "www/terms-en.html",
         "www/terms.html"
       ],
-      "indirectFiles": [
+      "indirect": [
         "tools/bloom-merge.js"
+      ],
+      "totalFiles": 53,
+      "downstreamAlgos": [
+        "ML-DSA/fml-dsa",
+        "SLH-DSA",
+        "SM2",
+        "SM3",
+        "SM4",
+        "Double-Ratchet",
+        "SHA-256",
+        "AES"
       ]
     },
     "SHA-256": {
-      "direct": 78,
-      "indirect": 3,
-      "total": 81,
-      "directFiles": [
+      "direct": [
         "api/a2a/a2a-core.js",
         "docs/hmac-sm3-tvla-analysis.html",
         "docs/tsa/2026-06-25/index.html",
@@ -704,18 +754,27 @@
         "www/zk-identity-proof.js",
         "www/zk-snarks.js"
       ],
-      "indirectFiles": [
+      "indirect": [
         "src/index.js",
         "scripts/bench-v33.cjs",
         "test-tls-hybrid-extension.js",
         "tools/bloom-merge.js"
+      ],
+      "totalFiles": 83,
+      "downstreamAlgos": [
+        "P-256/ECDH",
+        "SHA-256",
+        "ML-DSA/fml-dsa",
+        "SLH-DSA",
+        "SM2",
+        "SM3",
+        "SM4",
+        "Double-Ratchet",
+        "AES"
       ]
     },
     "AES": {
-      "direct": 39,
-      "indirect": 3,
-      "total": 42,
-      "directFiles": [
+      "direct": [
         "docs/tsa/2026-06-25/index.html",
         "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
         "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
@@ -757,84 +816,36 @@
         "www/security.html",
         "www/terms.html"
       ],
-      "indirectFiles": [
+      "indirect": [
         "double-ratchet-pq.js",
         "tools/bloom-merge.js",
         "scripts/bench-v33.cjs",
         "scripts/benchmark.cjs"
+      ],
+      "totalFiles": 44,
+      "downstreamAlgos": [
+        "AES",
+        "ML-DSA/fml-dsa",
+        "SLH-DSA",
+        "SM2",
+        "SM3",
+        "SM4",
+        "Double-Ratchet",
+        "SHA-256",
+        "P-256/ECDH"
       ]
+    },
+    "NTT": {
+      "direct": [],
+      "indirect": [],
+      "totalFiles": 0,
+      "downstreamAlgos": []
+    },
+    "TLA+": {
+      "direct": [],
+      "indirect": [],
+      "totalFiles": 0,
+      "downstreamAlgos": []
     }
-  },
-  "topEdges": [
-    {
-      "from": "www/crypto/hybrid-kem-client.js",
-      "to": "www/crypto/sm2-bigint-ec.js",
-      "transfer": [
-        "SM2"
-      ]
-    },
-    {
-      "from": "www/crypto/gm.js",
-      "to": "www/crypto/sm2-bigint-ec.js",
-      "transfer": [
-        "SM2"
-      ]
-    },
-    {
-      "from": "reg-server/hybrid-kem-client.js",
-      "to": "packages/pqc-kem/src/ml-kem-768.js",
-      "transfer": [
-        "ML-KEM"
-      ]
-    },
-    {
-      "from": "www/crypto/hybrid-kem-client.js",
-      "to": "packages/pqc-kem/src/ml-kem-768.js",
-      "transfer": [
-        "ML-KEM"
-      ]
-    },
-    {
-      "from": "double-ratchet-pq.js",
-      "to": "packages/pqc-kem/src/ml-kem-768.js",
-      "transfer": [
-        "ML-KEM"
-      ]
-    },
-    {
-      "from": "scripts/benchmark.cjs",
-      "to": "packages/pqc-kem/src/ml-kem-768.js",
-      "transfer": [
-        "ML-KEM"
-      ]
-    },
-    {
-      "from": "scripts/bench-v33.cjs",
-      "to": "packages/pqc-kem/src/ml-kem-768.js",
-      "transfer": [
-        "ML-KEM"
-      ]
-    },
-    {
-      "from": "scripts/perf-gate.js",
-      "to": "packages/pqc-kem/src/ml-kem-768.js",
-      "transfer": [
-        "ML-KEM"
-      ]
-    },
-    {
-      "from": "test/test-fibemate.js",
-      "to": "packages/pqc-kem/src/ml-kem-768.js",
-      "transfer": [
-        "ML-KEM"
-      ]
-    },
-    {
-      "from": "scripts/smoke-test.js",
-      "to": "packages/pqc-kem/src/ml-kem-768.js",
-      "transfer": [
-        "ML-KEM"
-      ]
-    }
-  ]
+  }
 }

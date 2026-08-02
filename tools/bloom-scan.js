@@ -145,3 +145,5 @@ for (const a of algoNames) {
 }
 
 console.log(JSON.stringify({ totalFiles: files.length, cryptoFiles: Object.keys(fileAlgos).length, edgeCount: edges.length, blastRadius }, null, 2));
+// Also write directly to avoid PowerShell BOM corruption
+fs.writeFileSync(path.join(base, 'tools/bloom-scan-output.json'), JSON.stringify({ totalFiles: files.length, cryptoFiles: Object.keys(fileAlgos).length, edgeCount: edges.length, blastRadius }, null, 2), 'utf8');
