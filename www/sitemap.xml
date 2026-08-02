@@ -91,6 +91,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://fibemate.net/docs/pqc-dashboard.html</loc>
+    <lastmod>2026-08-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://fibemate.net/docs/lattice-topology.html</loc>
     <lastmod>2026-07-31</lastmod>
     <changefreq>monthly</changefreq>
