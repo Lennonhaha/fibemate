@@ -9,7 +9,7 @@
 
 ## 执行摘要
 
-FIBEMATE 作为工程验证平台，CARS 综合得分 **62/100**（中等准备度）。最强的维度是 **Crypto Inventory**（85%），完整的加密资产清单和量化基准是学术 CARS 框架里罕见的实证案例。最弱的维度是 **Algorithm Agility**（40%），算法替换需要代码修改、缺乏插件式热切换架构——这是平台定位的合理取舍（"展示算法如何工作"优先于"生产级可替换性"）。**Protocol Coupling**（55%）和 **Key Lifecycle**（70%）处于中游，有 TLA+ 形式化验证支撑但缺乏自动化。**Organizational Readiness**（60%）受益于 OpenSSF passing badge 和完整的安全文档体系，但 Bus Factor=1 和缺少第三方审计是硬伤。
+FIBEMATE 作为工程验证平台，CARS 综合得分 **63.50/100**（中等准备度）。最强的维度是 **Crypto Inventory**（85%），完整的加密资产清单和量化基准是学术 CARS 框架里罕见的实证案例。最弱的维度是 **Algorithm Agility**（40%），算法替换需要代码修改、缺乏插件式热切换架构——这是平台定位的合理取舍（"展示算法如何工作"优先于"生产级可替换性"）。**Protocol Coupling**（55%）和 **Key Lifecycle**（70%）处于中游，有 TLA+ 形式化验证支撑但缺乏自动化。**Organizational Readiness**（60%）受益于 OpenSSF passing badge 和完整的安全文档体系，但 Bus Factor=1 和缺少第三方审计是硬伤。
 
 > ⚠️ **重要前置声明**：本报告是 CARS 框架在真实项目上的**首次实证验证**。CARS 论文提出的五维度框架此前仅经过假设项目验证，FIBEMATE 是第一个将其应用于实际运行中的密码学工程平台的项目。本报告的另一个输出是对 CARS 框架本身的反馈：哪些维度评分标准在真实项目中合理，哪些需要调整。
 
