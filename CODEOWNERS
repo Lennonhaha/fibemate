@@ -1,0 +1,15 @@
+# FIBEMATE Code Owners
+
+# Lone maintainer pattern — all paths route to the sole contributor.
+# When external reviewers join post-2026-08-31 open-source, add them here.
+
+* @Lennonhaha
+
+# Security-sensitive paths (post-audit, add cryptographer reviewers)
+.github/ @Lennonhaha
+SECURITY.md @Lennonhaha
+packages/pqc-kem/ @Lennonhaha
+packages/sm2-ref/ @Lennonhaha
+packages/fml-dsa/ @Lennonhaha
+src/crypto/ @Lennonhaha
+src/tls-hybrid-extension.js @Lennonhaha
