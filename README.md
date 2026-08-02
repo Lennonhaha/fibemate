@@ -1,6 +1,6 @@
-> **FIBEMATE 是一个后量子密码学（PQC）全栈工程验证平台，开源（GPL-3.0），不是聊天软件。**
+> **本仓库是 FIBEMATE PQC 密码学工程验证平台。** 同名社交软件（Rust · 端到端加密 · 独立项目）→ [fibemate.net](https://fibemate.net)
 >
-> ⚠️ **This is NOT the Rust chat app of the same name.** FIBEMATE is an open-source post-quantum cryptography engineering verification platform covering ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa native + Noble cross-validation), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, application-layer hybrid KEX, TLA+ formal verification, and 100 TSR evidence records.
+> **This repo is the FIBEMATE PQC cryptography engineering verification platform.** The chat app of the same name (Rust · E2E encrypted · separate project) lives elsewhere. This platform covers ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa native + Noble cross-validation), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, application-layer hybrid KEX, TLA+ formal verification, and 100 TSR evidence records.
 
 > ⚠️ **安全声明 / Security Notice**
 >
