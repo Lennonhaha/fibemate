@@ -1,0 +1,29 @@
+{
+  "totalFiles": 403,
+  "cryptoFiles": 269,
+  "edges": 119,
+  "blastRadius": {
+    "ML-KEM": {"direct": 135, "indirect": 2, "total": 137},
+    "ML-DSA/fml-dsa": {"direct": 50, "indirect": 1, "total": 51},
+    "SLH-DSA": {"direct": 33, "indirect": 0, "total": 33},
+    "SM2": {"direct": 69, "indirect": 4, "total": 73},
+    "SM3": {"direct": 45, "indirect": 0, "total": 45},
+    "SM4": {"direct": 37, "indirect": 0, "total": 37},
+    "P-256/ECDH": {"direct": 71, "indirect": 30, "total": 101},
+    "Double-Ratchet": {"direct": 51, "indirect": 0, "total": 51},
+    "SHA-256": {"direct": 78, "indirect": 3, "total": 81},
+    "AES": {"direct": 39, "indirect": 3, "total": 42}
+  },
+  "topEdges": [
+    {"from": "www/crypto/hybrid-kem-client.js", "to": "www/crypto/sm2-bigint-ec.js", "transfer": ["SM2"]},
+    {"from": "www/crypto/gm.js", "to": "www/crypto/sm2-bigint-ec.js", "transfer": ["SM2"]},
+    {"from": "reg-server/hybrid-kem-client.js", "to": "packages/pqc-kem/src/ml-kem-768.js", "transfer": ["ML-KEM"]},
+    {"from": "www/crypto/hybrid-kem-client.js", "to": "packages/pqc-kem/src/ml-kem-768.js", "transfer": ["ML-KEM"]},
+    {"from": "double-ratchet-pq.js", "to": "packages/pqc-kem/src/ml-kem-768.js", "transfer": ["ML-KEM"]},
+    {"from": "scripts/benchmark.cjs", "to": "packages/pqc-kem/src/ml-kem-768.js", "transfer": ["ML-KEM"]},
+    {"from": "scripts/bench-v33.cjs", "to": "packages/pqc-kem/src/ml-kem-768.js", "transfer": ["ML-KEM"]},
+    {"from": "scripts/perf-gate.js", "to": "packages/pqc-kem/src/ml-kem-768.js", "transfer": ["ML-KEM"]},
+    {"from": "test/test-fibemate.js", "to": "packages/pqc-kem/src/ml-kem-768.js", "transfer": ["ML-KEM"]},
+    {"from": "scripts/smoke-test.js", "to": "packages/pqc-kem/src/ml-kem-768.js", "transfer": ["ML-KEM"]}
+  ]
+}

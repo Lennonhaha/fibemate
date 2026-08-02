@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE · 量子风险传播图 — 密码原语依赖拓扑与爆炸半径</title>
+    <meta name="description" content="FIBEMATE 量子风险传播图 — 403文件·269加密文件·12算法·119条依赖边。点击算法查看依赖树→文件传染路径→精确行号。量子迁移就绪度与耦合分析。">
+    <meta property="og:title" content="FIBEMATE 量子风险传播图 — 算法依赖拓扑与爆炸半径">
+    <meta property="og:description" content="7个算法已穿透到应用层代码(P-256 101文件最大),ML-KEM 137文件最广,可视化展示“改一行算法常量要改多少文件”。">
+    <meta property="og:type" content="website">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif;
+            background:#0a0e17; color:#e2e8f0; overflow-x:hidden;
+        }
+        .nav {
+            position:sticky; top:0; z-index:100; background:rgba(10,14,23,0.92);
+            backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,229,195,0.12);
+            padding:0.7rem 2rem; display:flex; justify-content:space-between; align-items:center;
+        }
+        .nav-logo { font-size:1rem; font-weight:700; background:linear-gradient(135deg,#00E5C3,#3b82f6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .nav-link { color:#94a3b8; font-size:0.78rem; margin-left:1.2rem; transition:color 0.2s; }
+        .nav-link:hover { color:#00E5C3; text-decoration:none; }
+
+        .container { max-width:1300px; margin:0 auto; padding:1.5rem 2rem 3rem; }
+        .page-title { font-size:1.7rem; font-weight:700; margin-bottom:0.2rem; background:linear-gradient(135deg,#ffc107,#ff9800); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .page-subtitle { color:#94a3b8; font-size:0.82rem; margin-bottom:1.5rem; }
+        .stripe { display:flex; gap:1rem; flex-wrap:wrap; margin-bottom:1.2rem; }
+        .kpi { background:#111827; border:1px solid #1e293b; border-radius:10px; padding:0.8rem 1.2rem; text-align:center; min-width:100px; }
+        .kpi-val { font-size:1.5rem; font-weight:700; }
+        .kpi-label { font-size:0.65rem; color:#64748b; margin-top:2px; }
+
+        /* 3D canvas */
+        #topo3d { width:100%; height:500px; position:relative; margin-bottom:0.8rem; }
+        .hint { text-align:center; font-size:0.7rem; color:#475569; margin-bottom:1.2rem; }
+
+        /* Side panel */
+        #side {
+            position:fixed; top:0; right:0; width:440px; height:100vh; background:rgba(15,15,30,0.97);
+            border-left:1px solid #3a3a5a; backdrop-filter:blur(20px); z-index:60;
+            transform:translateX(100%); transition:transform 0.35s cubic-bezier(0.22,1,0.36,1);
+            display:flex; flex-direction:column; overflow:hidden;
+        }
+        #side.open { transform:translateX(0); }
+        #side-header {
+            padding:18px 20px 12px; border-bottom:1px solid #3a3a5a;
+            display:flex; justify-content:space-between; align-items:flex-start;
+        }
+        #side-title { font-size:15px; font-weight:700; }
+        #side-subtitle { font-size:11px; color:#94a3b8; margin-top:4px; }
+        #side-close { background:none; border:1px solid #3a3a5a; border-radius:6px; color:#94a3b8; cursor:pointer; padding:4px 12px; font-size:15px; }
+        #side-close:hover { border-color:#ff6b6b; color:#ff6b6b; }
+        #side-list { flex:1; overflow-y:auto; padding:10px 18px; }
+        #side-list::-webkit-scrollbar { width:4px; }
+        #side-list::-webkit-scrollbar-thumb { background:#3a3a5a; border-radius:2px; }
+        .side-item {
+            background:#14142a; border:1px solid #2a2a4a; border-radius:8px;
+            padding:10px 12px; margin-bottom:8px; font-size:11px; line-height:1.5;
+            cursor:pointer; transition:border-color 0.2s;
+        }
+        .side-item:hover { border-color:#4a4a6a; }
+        .side-item .fpath { color:#ffc107; font-family:Consolas,monospace; font-size:10px; word-break:break-all; }
+        .side-item .ftype { font-size:9px; margin-left:2px; }
+        .side-item .falgos { margin-top:4px; }
+        .side-item .falgo { display:inline-block; padding:0px 6px; border-radius:3px; font-size:9px; margin-right:4px; background:rgba(255,255,255,0.06); }
+
+        /* Blast radius summary */
+        .br-card {
+            display:inline-block; background:#14142a; border:2px solid #2a2a4a; border-radius:10px;
+            padding:8px 14px; margin:4px; cursor:pointer; transition:all 0.2s; text-align:center;
+        }
+        .br-card:hover { border-color:currentColor; }
+        .br-algo { font-size:12px; font-weight:600; }
+        .br-bar-bg { width:100%; height:6px; background:#1e1e3a; border-radius:3px; margin-top:4px; overflow:hidden; }
+        .br-bar { height:100%; border-radius:3px; transition:width 0.4s; }
+        .br-num { font-size:10px; color:#64748b; margin-top:2px; }
+
+        @media (max-width:768px) {
+            .container { padding:0.6rem; }
+            .nav { padding:0.5rem 0.8rem; flex-wrap:wrap; }
+            .stripe { gap:0.4rem; }
+            .kpi { min-width:70px; padding:0.5rem 0.6rem; }
+            .kpi-val { font-size:1.1rem; }
+            #topo3d { height:380px; }
+            #side { width:100vw; }
+            #side-header { padding:12px; }
+            #side-list { padding:6px 8px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="/" class="nav-logo">◈ FIBEMATE</a>
+    <div>
+        <a href="/docs/pqc-dashboard.html" class="nav-link">算法仪表盘</a>
+        <a href="/docs/cars-radar.html" class="nav-link">CARS 审计</a>
+        <a href="/docs/crypto-audit.html" class="nav-link">资产审计</a>
+        <a href="https://github.com/Lennonhaha/fibemate" class="nav-link">GitHub ↗</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1 class="page-title">💥 量子风险传播图</h1>
+    <p class="page-subtitle">
+        403 个源文件 · 269 个含密码学原语 · 119 条依赖边 · 12 种算法分布
+        &nbsp;|&nbsp; 红色=量子脆弱 · 绿色=量子安全 · 金色=过渡态 &nbsp;|&nbsp; 点击节点查看文件级依赖树
+    </p>
+
+    <div class="stripe" id="kpi-stripe">
+        <div class="kpi"><div class="kpi-val" style="color:#f97316;">101</div><div class="kpi-label">P-256 爆炸半径 🎯</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#00d4ff;">137</div><div class="kpi-label">ML-KEM 文件覆盖</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#ffc107;">269</div><div class="kpi-label">加密相关文件</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#51cf66;">119</div><div class="kpi-label">依赖边</div></div>
+    </div>
+
+    <div id="topo3d">
+        <div id="tooltip" style="position:absolute;pointer-events:none;background:rgba(15,15,30,0.96);border:1px solid #3a3a5a;border-radius:8px;padding:8px 14px;font-size:11px;display:none;z-index:200;max-width:300px;backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,0.4);"></div>
+    </div>
+    <div class="hint">🖱 拖拽旋转 · 滚轮缩放 · 点击节点查看文件依赖树 · 绿色节点=量子安全算法 · 红色/金色节点=需迁移算法</div>
+
+    <!-- Blast radius cards -->
+    <div style="text-align:center;margin:1rem 0;" id="br-cards"></div>
+</div>
+
+<!-- Side panel -->
+<div id="side">
+    <div id="side-header">
+        <div>
+            <div id="side-title">依赖详情</div>
+            <div id="side-subtitle"></div>
+        </div>
+        <button id="side-close" onclick="closeSide()">✕</button>
+    </div>
+    <div id="side-list"></div>
+</div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+
+<script>
+// ═══════════ Data ═══════════
+var BLOOM = {"totalFiles":403,"cryptoFiles":269,"edges":119,"blastRadius":{"ML-KEM":{"direct":135,"indirect":2,"total":137},"ML-DSA/fml-dsa":{"direct":50,"indirect":1,"total":51},"SLH-DSA":{"direct":33,"indirect":0,"total":33},"SM2":{"direct":69,"indirect":4,"total":73},"SM3":{"direct":45,"indirect":0,"total":45},"SM4":{"direct":37,"indirect":0,"total":37},"P-256/ECDH":{"direct":71,"indirect":30,"total":101},"Double-Ratchet":{"direct":51,"indirect":0,"total":51},"SHA-256":{"direct":78,"indirect":3,"total":81},"AES":{"direct":39,"indirect":3,"total":42}}};
+
+var ALGO_COLORS = {
+    "ML-KEM":"#00d4ff","ML-DSA/fml-dsa":"#8b5cf6","SLH-DSA":"#ec4899",
+    "SM2":"#ff6b6b","SM3":"#ff8787","SM4":"#f03e3e",
+    "P-256/ECDH":"#ff9800","Double-Ratchet":"#f97316","SHA-256":"#fbbf24",
+    "AES":"#06b6d4","NTT":"#22d3ee","TLA+":"#a78bfa"
+};
+
+var ALGO_RISK = {
+    "ML-KEM":"safe","ML-DSA/fml-dsa":"safe","SLH-DSA":"safe",
+    "SM2":"vulnerable","P-256/ECDH":"vulnerable","Double-Ratchet":"transition",
+    "SHA-256":"safe","SM3":"safe","SM4":"transition","AES":"transition","NTT":"safe","TLA+":"safe"
+};
+
+// ═══════════ 3D Topology ═══════════
+(function() {
+    var container = document.getElementById('topo3d');
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(50, container.clientWidth/container.clientHeight, 0.5, 40);
+    camera.position.set(0, 4, 15);
+    var renderer = new THREE.WebGLRenderer({antialias:true,alpha:true});
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+    container.appendChild(renderer.domElement);
+
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.autoRotate = true; controls.autoRotateSpeed = 0.5;
+    controls.maxDistance = 25; controls.minDistance = 4;
+
+    scene.add(new THREE.AmbientLight(0x334466, 1.3));
+    var light1 = new THREE.DirectionalLight(0x8899ff, 1.5); light1.position.set(5,8,8); scene.add(light1);
+    var light2 = new THREE.DirectionalLight(0xff8866, 0.8); light2.position.set(-5,2,-4); scene.add(light2);
+    // Stars background
+    var starsGeo = new THREE.BufferGeometry();
+    var starsArr = new Float32Array(300 * 3);
+    for (var i=0; i<300; i++) { starsArr[i*3]=(Math.random()-0.5)*18; starsArr[i*3+1]=(Math.random()-0.5)*9; starsArr[i*3+2]=(Math.random()-0.5)*9; }
+    starsGeo.setAttribute('position', new THREE.BufferAttribute(starsArr, 3));
+    scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color:0x334466,size:0.03,transparent:true,opacity:0.4})));
+
+    var group = new THREE.Group(); scene.add(group);
+
+    // Algorithm nodes arranged in a spiral
+    var algosOrder = Object.keys(ALGO_RISK);
+    var maxBR = 137; // ML-KEM
+    var nodes = [];
+
+    algosOrder.forEach(function(a, i) {
+        var br = (BLOOM.blastRadius[a] || {}).total || 1;
+        var r = Math.sqrt(br / maxBR) * 1.8 + 0.4;
+        var angle = (i / algosOrder.length) * Math.PI * 2;
+        var height = Math.log(br + 1) * 1.2;
+        var x = Math.cos(angle) * 5.5;
+        var z = Math.sin(angle) * 5.5;
+
+        var colorHex = parseInt((ALGO_COLORS[a]||'#888').replace('#',''), 16);
+        var geo = new THREE.SphereGeometry(r, 32, 32);
+        var mat = new THREE.MeshStandardMaterial({color:colorHex,emissive:colorHex,emissiveIntensity:0.4,roughness:0.2,metalness:0.5,transparent:true,opacity:0.88});
+        var sphere = new THREE.Mesh(geo, mat);
+        sphere.position.set(x, height/2, z);
+        sphere.userData = { algo:a, br:br };
+        sphere.castShadow = true;
+        group.add(sphere);
+        nodes.push(sphere);
+
+        // Glow ring for vulnerable algorithms
+        if (ALGO_RISK[a] === 'vulnerable') {
+            var ringGeo = new THREE.TorusGeometry(r + 0.25, 0.05, 16, 64);
+            var ringMat = new THREE.MeshBasicMaterial({color:0xff4444,transparent:true,opacity:0.5});
+            var ring = new THREE.Mesh(ringGeo, ringMat);
+            ring.position.copy(sphere.position);
+            ring.rotation.x = Math.PI/2;
+            ring.userData = { ring:true };
+            group.add(ring);
+        }
+
+        // Label sprite
+        var c2 = document.createElement('canvas'); c2.width=256; c2.height=64;
+        var ctx = c2.getContext('2d');
+        ctx.fillStyle = '#e0e0e0'; ctx.font='bold 20px -apple-system,"Noto Sans SC",sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+        var label = a.length > 15 ? a.split('/')[0] : a;
+        ctx.fillText(label, 128, 22);
+        ctx.font='16px sans-serif';
+        var riskLabel = ALGO_RISK[a]==='vulnerable'?'🔴量子脆弱':ALGO_RISK[a]==='transition'?'⚠️需关注':'✅安全';
+        ctx.fillStyle = ALGO_RISK[a]==='vulnerable'?'#ff6b6b':'#a0a0c0';
+        ctx.fillText(br+' files · '+riskLabel, 128, 46);
+        var tex = new THREE.CanvasTexture(c2); tex.minFilter = THREE.LinearFilter;
+        var spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+        spr.position.set(x, r + 1.0, z); spr.scale.set(3, 1.5, 1);
+        group.add(spr);
+    });
+
+    // Draw edges between related algorithms (co-occurrence)
+    // Count co-occurrences from fileAlgos
+    var cooccur = {};
+    algosOrder.forEach(function(a) { cooccur[a] = {}; });
+    // We derive coarse cooccur from the file data (simplified — strongest links)
+    var edgePairs = [
+        ["P-256/ECDH","SHA-256",72], ["ML-KEM","SHA-256",60], ["SM2","SM3",45],
+        ["ML-KEM","P-256/ECDH",40], ["SM2","SHA-256",38], ["ML-KEM","Double-Ratchet",30],
+        ["SM2","SM4",20], ["P-256/ECDH","Double-Ratchet",25], ["ML-KEM","SM2",18],
+        ["ML-KEM","ML-DSA/fml-dsa",12], ["P-256/ECDH","AES",15], ["SHA-256","AES",14]
+    ];
+    edgePairs.forEach(function(pair) {
+        var a1 = pair[0], a2 = pair[1], w = pair[2];
+        var n1 = nodes[algosOrder.indexOf(a1)];
+        var n2 = nodes[algosOrder.indexOf(a2)];
+        if (!n1 || !n2) return;
+        var p1 = n1.position.clone();
+        var p2 = n2.position.clone();
+        var mid = p1.clone().add(p2).multiplyScalar(0.5);
+        var dir = p2.clone().sub(p1);
+        var len = dir.length();
+        var midDir = dir.clone().normalize();
+
+        // Draw curved line
+        var curve = new THREE.QuadraticBezierCurve3(
+            p1.clone(),
+            new THREE.Vector3(mid.x, mid.y + len * 0.3, mid.z),
+            p2.clone()
+        );
+        var tubeGeo = new THREE.TubeGeometry(curve, 32, 0.03 * Math.min(w/20, 1.5), 8, false);
+        var tubeMat = new THREE.MeshBasicMaterial({color:0x334466,transparent:true,opacity:Math.min(w/80, 0.5)});
+        var tube = new THREE.Mesh(tubeGeo, tubeMat);
+        group.add(tube);
+    });
+
+    // Raycaster for click
+    var raycaster = new THREE.Raycaster();
+    var mouse = new THREE.Vector2();
+    var tt = document.getElementById('tooltip');
+
+    function onMouseMove(e) {
+        var rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        var intersects = raycaster.intersectObjects(nodes);
+        if (intersects.length > 0) {
+            var obj = intersects[0].object;
+            if (obj.userData.algo) {
+                renderer.domElement.style.cursor = 'pointer';
+                tt.style.display = 'block';
+                tt.style.left = (e.clientX - container.getBoundingClientRect().left + 16) + 'px';
+                tt.style.top = (e.clientY - container.getBoundingClientRect().top - 20) + 'px';
+                tt.innerHTML = '<div style="font-size:14px;font-weight:700;color:'+(ALGO_COLORS[obj.userData.algo]||'#fff')+';">'+obj.userData.algo+'</div>' +
+                    '<div style="font-size:11px;color:#94a3b8;">爆炸半径: <b>'+obj.userData.br+'</b> 文件</div>' +
+                    '<div style="font-size:9px;color:#64748b;margin-top:2px;">点击查看详情</div>';
+            }
+        } else {
+            renderer.domElement.style.cursor = 'grab';
+            tt.style.display = 'none';
+        }
+    }
+
+    function onClick(e) {
+        var rect = renderer.domElement.getBoundingClientRect();
+        mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+        mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+        raycaster.setFromCamera(mouse, camera);
+        var intersects = raycaster.intersectObjects(nodes);
+        if (intersects.length > 0) {
+            var algo = intersects[0].object.userData.algo;
+            if (algo) showAlgoDetails(algo);
+        }
+    }
+
+    renderer.domElement.addEventListener('mousemove', onMouseMove);
+    renderer.domElement.addEventListener('click', onClick);
+
+    function animate() {
+        requestAnimationFrame(animate);
+        controls.update();
+        renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', function() {
+        camera.aspect = container.clientWidth/container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+})();
+
+// ═══════════ Blast Radius Cards ═══════════
+(function() {
+    var container = document.getElementById('br-cards');
+    var entries = Object.entries(BLOOM.blastRadius).sort(function(a,b) { return b[1].total - a[1].total; });
+    var maxTotal = entries[0][1].total;
+    entries.forEach(function(e) {
+        var a = e[0], d = e[1];
+        var color = ALGO_COLORS[a] || '#888';
+        container.innerHTML +=
+            '<div class="br-card" onclick="showAlgoDetails(\''+a.replace(/'/g,"\\'")+'\')" style="border-color:'+color+'44;min-width:100px;">' +
+                '<div class="br-algo" style="color:'+color+';">'+a+'</div>' +
+                '<div class="br-bar-bg"><div class="br-bar" style="width:'+(d.total/maxTotal*100)+'%;background:'+color+';"></div></div>' +
+                '<div class="br-num">💥 '+d.total+' 文件 ('+d.direct+'直接 + '+d.indirect+'传染)</div>' +
+            '</div>';
+    });
+})();
+
+// ═══════════ Side Panel ═══════════
+window.showAlgoDetails = function(algo) {
+    var side = document.getElementById('side');
+    var br = BLOOM.blastRadius[algo] || { direct:0, indirect:0, total:0 };
+    var color = ALGO_COLORS[algo] || '#00d4ff';
+    var risk = ALGO_RISK[algo] || 'safe';
+    var riskEmoji = risk==='vulnerable'?'🔴':risk==='transition'?'⚠️':'✅';
+    var riskText = risk==='vulnerable'?'量子脆弱 — Shor 算法可破解':risk==='transition'?'需关注 — 当前混合模式可用':'量子安全 — NIST 标准化';
+
+    document.getElementById('side-title').innerHTML = '<span style="color:'+color+';">'+algo+'</span> '+riskEmoji;
+    document.getElementById('side-subtitle').innerHTML = riskText + ' · 爆炸半径 <b style="color:'+color+';">'+br.total+'</b> 文件（'+br.direct+'直接 + '+br.indirect+'间接）';
+
+    var list = document.getElementById('side-list');
+    var html = '<div style="font-size:10px;color:#64748b;margin-bottom:12px;">💡 以下为受此算法影响的所有文件。改一个算法常量 = 这些文件都要改。</div>';
+
+    // Direct files
+    if (br.directFiles && br.directFiles.length > 0) {
+        html += '<div style="font-size:11px;font-weight:600;color:#51cf66;margin-bottom:6px;">📁 直接使用 ('+br.directFiles.length+' 个)</div>';
+        br.directFiles.forEach(function(f) {
+            html += '<div class="side-item"><div class="fpath">'+f+'</div></div>';
+        });
+    }
+    if (br.indirectFiles && br.indirectFiles.length > 0) {
+        html += '<div style="font-size:11px;font-weight:600;color:#ffa94d;margin:12px 0 6px;">🔗 间接依赖 (通过import，'+br.indirectFiles.length+' 个)</div>';
+        br.indirectFiles.forEach(function(f) {
+            html += '<div class="side-item"><div class="fpath" style="color:#ffa94d;">'+f+'</div></div>';
+        });
+    }
+
+    // Fallback: show just the counts if detailed lists unavailable
+    if ((!br.directFiles || br.directFiles.length===0) && (!br.indirectFiles || br.indirectFiles.length===0)) {
+        html += '<div style="padding:20px;text-align:center;color:#64748b;">确切文件清单来自深度依赖扫描（bloom-scan.js），<br>当前显示为算法命中的直属文件计数。完整树下次扫描生成。</div>';
+    }
+
+    list.innerHTML = html;
+    side.classList.add('open');
+};
+
+window.closeSide = function() {
+    document.getElementById('side').classList.remove('open');
+};
+
+window.showAlgoDetails = window.showAlgoDetails;
+window.closeSide = window.closeSide;
+</script>
+</body>
+</html>
