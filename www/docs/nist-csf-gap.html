@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · NIST CSF 2.0 Gap Analysis — SP 800-53 Mapping</title>
+<meta name="description" content="FIBEMATE NIST CSF 2.0 ↔ SP 800-53 Gap Analysis — Layer 5 regulatory compliance assessment with PQC-specific control mapping per NIST CSWP 48.">
+<meta property="og:title" content="FIBEMATE NIST CSF 2.0 Gap Analysis">
+<meta property="og:description" content="Interactive heatmap mapping FIBEMATE's security artifacts against all 6 CSF Functions & 23 subcategories + SP 800-53 PQC controls. Evidence-backed, exportable.">
+<meta property="og:type" content="website">
+<style>
+/* ============ DESIGN SYSTEM (matches cars-radar & ibm-seven-radar) ============ */
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg-deep:#0a0a1a;--bg-card:#111827;--bg-elevated:#14142a;
+  --border:#1e293b;--border-hover:#3a3a5a;--border-active:#4a4a6a;
+  --text-primary:#e2e8f0;--text-secondary:#94a3b8;--text-muted:#64748b;
+  --accent-cyan:#00d4ff;--accent-purple:#8b5cf6;--accent-pink:#ec4899;
+  --green:#51cf66;--yellow:#f59e0b;--red:#ef4444;
+  --green-bg:rgba(81,207,102,0.12);--yellow-bg:rgba(245,158,11,0.12);--red-bg:rgba(239,68,68,0.12);
+  --green-border:rgba(81,207,102,0.3);--yellow-border:rgba(245,158,11,0.3);--red-border:rgba(239,68,68,0.3);
+  --radius:10px;--radius-sm:6px;
+}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Noto Sans SC',sans-serif;
+  background:var(--bg-deep);color:var(--text-primary);line-height:1.5;min-height:100vh;
+}
+
+/* Nav */
+.nav{
+  position:sticky;top:0;z-index:100;background:rgba(10,10,26,0.94);
+  backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,212,255,0.1);
+  padding:0.7rem 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;
+}
+.nav-logo{font-size:1rem;font-weight:700;background:linear-gradient(135deg,var(--accent-cyan),var(--accent-purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-links{display:flex;gap:1rem;flex-wrap:wrap}
+.nav-link{color:var(--text-muted);font-size:0.75rem;text-decoration:none;transition:color .2s}
+.nav-link:hover{color:var(--accent-cyan)}
+
+/* Layout */
+.container{max-width:1440px;margin:0 auto;padding:1.5rem 2rem 3rem}
+.page-title{
+  font-size:1.6rem;font-weight:700;margin-bottom:0.15rem;
+  background:linear-gradient(135deg,var(--accent-cyan),var(--accent-pink));-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.page-subtitle{color:var(--text-muted);font-size:0.78rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap}
+.badge{
+  display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.65rem;font-weight:600;
+  border:1px solid;white-space:nowrap;
+}
+.badge-pqc{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.badge-draft{border-color:var(--yellow);color:var(--yellow)}
+
+/* Summary Cards */
+.summary-row{
+  display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+  gap:0.8rem;margin-bottom:1.5rem;
+}
+.summary-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1rem 1.2rem;text-align:center;
+}
+.summary-card .sc-value{font-size:2rem;font-weight:800;line-height:1.1}
+.summary-card .sc-label{font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem}
+.sc-green .sc-value{color:var(--green)}.sc-yellow .sc-value{color:var(--yellow)}.sc-red .sc-value{color:var(--red)}
+.sc-cyan .sc-value{color:var(--accent-cyan)}
+
+/* Controls */
+.controls-row{
+  display:flex;gap:0.6rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center;
+}
+.controls-row .btn{padding:0.45rem 1rem;border-radius:var(--radius-sm);font-size:0.75rem;font-weight:600;cursor:pointer;transition:all .2s;border:1px solid var(--border);background:var(--bg-card);color:var(--text-secondary)}
+.controls-row .btn:hover{border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.controls-row .btn.active{background:rgba(0,212,255,0.1);border-color:var(--accent-cyan);color:var(--accent-cyan)}
+.controls-row .btn.export-btn{background:linear-gradient(135deg,var(--accent-cyan),var(--accent-purple));color:#fff;border:none}
+.controls-row .btn.export-btn:hover{box-shadow:0 0 16px rgba(0,212,255,0.3);transform:translateY(-1px)}
+.legend{display:flex;gap:1rem;margin-left:auto;font-size:0.7rem;align-items:center;flex-wrap:wrap}
+.legend-item{display:flex;align-items:center;gap:0.35rem}
+.legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.legend-dot.green{background:var(--green)}.legend-dot.yellow{background:var(--yellow)}.legend-dot.red{background:var(--red)}
+
+/* ============ HEATMAP GRID ============ */
+.heatmap-section{margin-bottom:2.5rem}
+.heatmap-section h3{
+  font-size:1rem;font-weight:700;color:var(--accent-cyan);margin-bottom:0.8rem;
+  padding-bottom:0.4rem;border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:0.5rem;
+}
+.heatmap-section h3 .func-badge{
+  font-size:0.62rem;padding:2px 6px;border-radius:3px;
+  background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.25);color:var(--accent-cyan);
+}
+.heatmap-grid{
+  display:grid;grid-template-columns:repeat(auto-fill, minmax(190px, 1fr));
+  gap:0.6rem;
+}
+.cell{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:0.8rem 0.9rem;cursor:pointer;transition:all .25s;position:relative;
+  overflow:hidden;min-height:90px;display:flex;flex-direction:column;
+}
+.cell::before{
+  content:'';position:absolute;left:0;top:0;width:3px;height:100%;
+  border-radius:3px 0 0 3px;
+}
+.cell:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,0.4);border-color:var(--border-active)}
+.cell:active{transform:translateY(0)}
+
+/* Score colors */
+.cell.score-2{background:var(--green-bg);border-color:var(--green-border)}
+.cell.score-2::before{background:var(--green)}
+.cell.score-2:hover{border-color:var(--green);box-shadow:0 6px 20px rgba(81,207,102,0.15)}
+.cell.score-1{background:var(--yellow-bg);border-color:var(--yellow-border)}
+.cell.score-1::before{background:var(--yellow)}
+.cell.score-1:hover{border-color:var(--yellow);box-shadow:0 6px 20px rgba(245,158,11,0.15)}
+.cell.score-0{background:var(--red-bg);border-color:var(--red-border)}
+.cell.score-0::before{background:var(--red)}
+.cell.score-0:hover{border-color:var(--red);box-shadow:0 6px 20px rgba(239,68,68,0.15)}
+
+.cell .cell-id{font-size:0.75rem;font-weight:700;margin-bottom:0.15rem}
+.cell .cell-name{font-size:0.62rem;color:var(--text-muted);line-height:1.3;margin-bottom:0.35rem}
+.cell .cell-score{
+  font-size:0.6rem;font-weight:700;margin-top:auto;padding-top:0.35rem;
+  border-top:1px solid rgba(255,255,255,0.05);display:flex;justify-content:space-between;align-items:center;
+}
+.cell.score-2 .cell-id{color:var(--green)}.cell.score-2 .cell-score{color:var(--green)}
+.cell.score-1 .cell-id{color:var(--yellow)}.cell.score-1 .cell-score{color:var(--yellow)}
+.cell.score-0 .cell-id{color:var(--red)}.cell.score-0 .cell-score{color:var(--red)}
+.cell .cell-score-icon{font-size:0.85rem}
+
+/* ============ DETAIL PANEL ============ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:200;display:none;backdrop-filter:blur(4px)}
+.overlay.open{display:block}
+.detail-panel{
+  position:fixed;top:0;right:0;width:540px;max-width:100vw;height:100vh;
+  background:rgba(15,15,30,0.98);border-left:1px solid var(--border);
+  backdrop-filter:blur(30px);z-index:210;
+  transform:translateX(100%);transition:transform 0.35s cubic-bezier(0.22,1,0.36,1);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+.detail-panel.open{transform:translateX(0)}
+.dp-header{
+  padding:1.2rem 1.4rem 0.8rem;border-bottom:1px solid var(--border);
+  display:flex;justify-content:space-between;align-items:flex-start;
+}
+.dp-title{font-size:1rem;font-weight:700}
+.dp-score-badge{font-size:0.7rem;font-weight:700;padding:3px 10px;border-radius:4px;margin-top:0.3rem;display:inline-block}
+.dp-close{
+  background:none;border:1px solid var(--border);border-radius:6px;
+  color:var(--text-muted);cursor:pointer;padding:4px 10px;font-size:0.8rem;transition:all .2s;
+}
+.dp-close:hover{border-color:var(--red);color:var(--red)}
+.dp-body{flex:1;overflow-y:auto;padding:1rem 1.4rem}
+.dp-body::-webkit-scrollbar{width:4px}
+.dp-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+.dp-section{margin-bottom:1.2rem}
+.dp-section h4{font-size:0.78rem;font-weight:700;color:var(--accent-cyan);margin-bottom:0.5rem}
+.dp-section p,.dp-section li{font-size:0.73rem;color:var(--text-secondary);line-height:1.6}
+.dp-evidence{font-size:0.7rem;color:var(--text-secondary)}
+.dp-ev-item{
+  background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius-sm);
+  padding:0.6rem 0.7rem;margin-bottom:0.4rem;font-size:0.68rem;
+}
+.dp-ev-item .file{color:var(--yellow);font-family:'SF Mono','Consolas',monospace;font-size:0.65rem;word-break:break-all}
+.dp-sp800{
+  display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.4rem;
+}
+.dp-sp800-tag{
+  font-size:0.6rem;padding:2px 7px;border-radius:3px;border:1px solid;
+  background:rgba(139,92,246,0.08);border-color:rgba(139,92,246,0.3);color:var(--accent-purple);
+}
+.dp-remediation{
+  background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);
+  border-radius:var(--radius-sm);padding:0.7rem;margin-top:0.5rem;
+}
+.dp-remediation h5{font-size:0.7rem;color:var(--accent-cyan);margin-bottom:0.25rem}
+
+/* ============ SP 800-53 TABLE ============ */
+.sp800-section{margin:2rem 0}
+.sp800-section h3{font-size:1rem;font-weight:700;color:var(--accent-purple);margin-bottom:0.8rem}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius)}
+.table-wrap table{width:100%;border-collapse:collapse;font-size:0.72rem}
+.table-wrap th{
+  background:var(--bg-elevated);padding:0.6rem 0.8rem;text-align:left;font-weight:700;
+  border-bottom:1px solid var(--border);color:var(--accent-cyan);white-space:nowrap;font-size:0.68rem;
+}
+.table-wrap td{padding:0.55rem 0.8rem;border-bottom:1px solid rgba(255,255,255,0.04);color:var(--text-secondary)}
+.table-wrap tr:hover td{background:rgba(0,212,255,0.02)}
+.status-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px}
+.status-dot.g{background:var(--green)}.status-dot.y{background:var(--yellow)}.status-dot.r{background:var(--red)}
+
+/* ============ GAP SUMMARY ============ */
+.gap-section{margin:2rem 0}
+.gap-section h3{font-size:1rem;font-weight:700;color:var(--accent-pink);margin-bottom:0.8rem}
+.gap-grid{display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:0.8rem}
+.gap-card{
+  background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);
+  padding:1rem 1.2rem;
+}
+.gap-card h4{font-size:0.82rem;font-weight:700;margin-bottom:0.5rem}
+.gap-card.critical{border-color:var(--red-border)}.gap-card.critical h4{color:var(--red)}
+.gap-card.strength{border-color:var(--green-border)}.gap-card.strength h4{color:var(--green)}
+.gap-card ul{list-style:none;padding:0}
+.gap-card li{font-size:0.72rem;color:var(--text-secondary);padding:0.25rem 0;line-height:1.5}
+.gap-card li::before{content:'• ';color:var(--accent-cyan);font-weight:bold}
+
+/* Footer */
+.footer{text-align:center;padding:2rem 1rem;color:var(--text-muted);font-size:0.65rem;border-top:1px solid rgba(255,255,255,0.04);margin-top:2rem}
+
+/* Tooltip */
+#tooltip{
+  position:fixed;pointer-events:none;background:rgba(15,15,30,0.97);border:1px solid var(--border);
+  border-radius:8px;padding:10px 14px;font-size:0.68rem;display:none;max-width:300px;
+  z-index:300;backdrop-filter:blur(8px);box-shadow:0 4px 20px rgba(0,0,0,0.6);
+}
+#tooltip .tt-title{font-size:0.8rem;font-weight:700;color:var(--accent-cyan);margin-bottom:4px}
+#tooltip .tt-summary{color:var(--text-secondary);line-height:1.4;margin-bottom:4px}
+#tooltip .tt-sp800{color:var(--accent-purple);font-size:0.62rem;margin-top:4px}
+
+/* Mobile */
+@media(max-width:768px){
+  .container{padding:1rem}
+  .nav{padding:0.5rem 0.8rem}
+  .heatmap-grid{grid-template-columns:repeat(auto-fill, minmax(140px, 1fr))}
+  .cell{min-height:78px;padding:0.6rem}
+  .detail-panel{width:100%}
+  .summary-row{grid-template-columns:repeat(2,1fr)}
+  .controls-row .legend{margin-left:0;margin-top:0.3rem;width:100%}
+  .gap-grid{grid-template-columns:1fr}
+}
+
+/* Hidden states */
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <span class="nav-logo">⚛ FIBEMATE · NIST CSF 2.0 Gap Analysis</span>
+  <div class="nav-links">
+    <a class="nav-link" href="cars-radar.html">CARS</a>
+    <a class="nav-link" href="ibm-seven-radar.html">IBM 7-Dim</a>
+    <a class="nav-link" href="pqra-assessment.html">PQRA</a>
+    <a class="nav-link" href="migration-priority.html">Europol</a>
+    <a class="nav-link" href="architecture.html">Architecture</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Header -->
+  <h1 class="page-title">NIST CSF 2.0 → SP 800-53 Gap Analysis</h1>
+  <p class="page-subtitle">
+    <span class="badge badge-pqc">Layer 5 · Regulatory Compliance</span>
+    <span class="badge badge-draft">Mapping: NIST CSWP 48 (PQC ↔ CSF 2.0)</span>
+    <span>FIBEMATE evidence-backed assessment against all 6 Functions · 23 Subcategories · + PQC-specific SP 800-53 controls</span>
+  </p>
+
+  <!-- Summary Cards -->
+  <div class="summary-row">
+    <div class="summary-card sc-cyan">
+      <div class="sc-value" id="overall-percent">--</div>
+      <div class="sc-label">Overall CSF Coverage</div>
+    </div>
+    <div class="summary-card sc-green">
+      <div class="sc-value" id="count-green">--</div>
+      <div class="sc-label">Strong Evidence (Score 2)</div>
+    </div>
+    <div class="summary-card sc-yellow">
+      <div class="sc-value" id="count-yellow">--</div>
+      <div class="sc-label">Partial Evidence (Score 1)</div>
+    </div>
+    <div class="summary-card sc-red">
+      <div class="sc-value" id="count-red">--</div>
+      <div class="sc-label">Critical Gaps (Score 0)</div>
+    </div>
+    <div class="summary-card">
+      <div class="sc-value" style="color:var(--accent-purple)" id="count-sp800">23</div>
+      <div class="sc-label">SP 800-53 Controls Mapped</div>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls-row">
+    <button class="btn active" onclick="setFilter('all')" id="btn-all">All Functions</button>
+    <button class="btn" onclick="setFilter('pqc')" id="btn-pqc">PQC-Relevant Only</button>
+    <button class="btn" onclick="setFilter('gaps')" id="btn-gaps">Gaps Only (Red)</button>
+    <button class="btn export-btn" onclick="exportReport()">📄 Export Report (HTML)</button>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-dot green"></span>Strong</span>
+      <span class="legend-item"><span class="legend-dot yellow"></span>Partial</span>
+      <span class="legend-item"><span class="legend-dot red"></span>Gap</span>
+    </div>
+  </div>
+
+  <!-- ============ HEATMAP ============ -->
+  <div id="heatmap"></div>
+
+  <!-- ============ SP 800-53 TABLE ============ -->
+  <div class="sp800-section" id="sp800-section">
+    <h3>🔐 SP 800-53 Control Mapping (PQC-Relevant, per NIST CSWP 48)</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Control</th><th>Title</th><th>CSF 2.0 Mapping</th><th>FIBEMATE Status</th><th>Evidence</th></tr>
+        </thead>
+        <tbody id="sp800-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ============ GAP SUMMARY ============ -->
+  <div class="gap-section" id="gap-summary-section">
+    <h3>⚠️ Analysis Summary</h3>
+    <div class="gap-grid" id="gap-grid"></div>
+  </div>
+
+  <div class="footer">
+    FIBEMATE NIST CSF 2.0 Gap Analysis · Evidence as of August 2026 · <a href="https://csrc.nist.gov/pubs/cswp/48/ipd" target="_blank" style="color:var(--accent-cyan)">NIST CSWP 48</a> ·
+    <a href="https://www.nist.gov/cyberframework" target="_blank" style="color:var(--accent-cyan)">NIST CSF 2.0</a> ·
+    OpenSSF Project #13695
+  </div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div class="overlay" id="overlay" onclick="closeDetail()"></div>
+<div class="detail-panel" id="detail-panel">
+  <div class="dp-header">
+    <div>
+      <div class="dp-title" id="dp-title">--</div>
+      <div class="dp-score-badge" id="dp-score">--</div>
+    </div>
+    <button class="dp-close" onclick="closeDetail()">✕ Close</button>
+  </div>
+  <div class="dp-body" id="dp-body"></div>
+</div>
+
+<!-- TOOLTIP -->
+<div id="tooltip"></div>
+
+<script>
+// ============ DATA: NIST CSF 2.0 Subcategories + Evidence ============
+// Scoring: 2=Strong(multiple artifacts, automated), 1=Partial(some artifacts, gaps), 0=No evidence(gap)
+// Mapping per NIST CSWP 48 (July 2024): PQC Transition to NIST CSF 2.0
+
+const csfData = [
+  // ─── GOVERN (GV) ───
+  {func:"GOVERN", funcId:"GV", cat:"GV.OC", name:"Organizational Context",
+   score:1, pqc:true,
+   summary:"SECURITY.md exists with reporting process, OpenSSF Best Practices badge (passing). No formal security policy framework or documented organizational security context beyond repository-level governance.",
+   evidence:[
+     {type:"file", text:"SECURITY.md — Reporting process, dependency risk disposition, security history documented"},
+     {type:"badge", text:"OpenSSF Best Practices badge (Project #13695) — passing"},
+     {type:"gap", text:"No formal organizational security charter or context document"}
+   ],
+   sp800:["PL-2"],
+   remediation:"Create a formal organizational security context document defining mission, stakeholders, and regulatory obligations. Implement a security charter aligned with NIST SP 800-53 PL-2."
+  },
+  {func:"GOVERN", funcId:"GV", cat:"GV.RM", name:"Risk Management Strategy",
+   score:1, pqc:true,
+   summary:"security-limitations.md documents P0/P1/P2 risk inventory (10,888 bytes). Bloom-risk analysis identifies P-256 blast radius. However, no formal risk management framework (ISO 31000, NIST RMF) is adopted.",
+   evidence:[
+     {type:"file", text:"security-limitations.md — P0/P1/P2 risk inventory, 10,888 bytes of documented risk assessments"},
+     {type:"file", text:"bloom-risk: P-256 blast radius 103 files (71 direct + 32 indirect)"},
+     {type:"gap", text:"No formal risk management framework adoption (no ISO 31000, NIST RMF alignment)"}
+   ],
+   sp800:["PL-8","RA-2"],
+   remediation:"Adopt NIST RMF methodology. Create a formal PQC transition risk register aligned with NIST CSWP 48 guidance. Document risk tolerance thresholds."
+  },
+  {func:"GOVERN", funcId:"GV", cat:"GV.RR", name:"Roles & Responsibilities",
+   score:0, pqc:true,
+   summary:"Critical gap: Bus Factor = 1 (single maintainer). No documented security roles, responsibilities, or authorities. This is a single point of failure for the entire security governance structure.",
+   evidence:[
+     {type:"gap", text:"Bus Factor = 1 — single maintainer risk, acknowledged in project documentation"},
+     {type:"gap", text:"No documented CISO, security architect, or incident response team roles"},
+     {type:"gap", text:"No defined separation of duties for cryptographic key management"}
+   ],
+   sp800:["AC-2","IA-5"],
+   remediation:"Urgent: Expand maintainer team (target Bus Factor ≥ 3). Define and document security roles: CISO, Security Architect, Incident Response Lead. Establish separation of duties for cryptographic operations."
+  },
+  {func:"GOVERN", funcId:"GV", cat:"GV.RC", name:"Communication",
+   score:1, pqc:false,
+   summary:"SECURITY.md defines reporting process. OpenSSF documentation provides public transparency. No formal crisis communication plan or stakeholder notification procedures.",
+   evidence:[
+     {type:"file", text:"SECURITY.md — security reporting process documented"},
+     {type:"badge", text:"OpenSSF badge provides public-facing transparency"},
+     {type:"gap", text:"No crisis communication or stakeholder notification playbook"}
+   ],
+   sp800:[],
+   remediation:"Develop a crisis communication plan. Document stakeholder notification procedures for security incidents."
+  },
+  {func:"GOVERN", funcId:"GV", cat:"GV.PO", name:"Policies",
+   score:1, pqc:true,
+   summary:"SECURITY.md and security-limitations.md provide foundational policy artifacts. No comprehensive information security policy suite exists covering acceptable use, data classification, and cryptographic standards.",
+   evidence:[
+     {type:"file", text:"SECURITY.md — foundational security policy"},
+     {type:"file", text:"security-limitations.md — risk acceptance documentation"},
+     {type:"gap", text:"Missing: acceptable use policy, data classification policy, cryptographic standards policy"}
+   ],
+   sp800:["PL-2","PL-8"],
+   remediation:"Create comprehensive policy suite: crypto standards policy, data classification policy, acceptable use policy. Align with NIST SP 800-53 PL-2/PL-8."
+  },
+  {func:"GOVERN", funcId:"GV", cat:"GV.SC", name:"Supply Chain Risk Management",
+   score:1, pqc:true,
+   summary:"pqc-ecosystem-scan.json covers 147 npm dependencies with 100% classification. CBOM generated. No formal SCRM program or third-party dependency attestation framework.",
+   evidence:[
+     {type:"file", text:"pqc-ecosystem-scan.json — 147 npm dependencies, 100% classified (no 'unknown')"},
+     {type:"file", text:"CBOM — crypto bill of materials generated from scan"},
+     {type:"gap", text:"No formal SCRM program or dependency attestation chain"}
+   ],
+   sp800:["SA-10","CM-8"],
+   remediation:"Formalize SCRM with dependency attestation. Implement SLSA framework for supply chain integrity. Add SBOM generation to CI pipeline."
+  },
+
+  // ─── IDENTIFY (ID) ───
+  {func:"IDENTIFY", funcId:"ID", cat:"ID.AM", name:"Asset Management",
+   score:1, pqc:true,
+   summary:"crypto-audit-scan.json covers 370+ files across 12 algorithm types. CBOM generated. However, no formal CMDB or asset inventory system. CM-8 (crypto inventory) is critical for PQC migration.",
+   evidence:[
+     {type:"file", text:"crypto-audit-scan.json — 370+ files scanned, 12 algorithm types identified"},
+     {type:"file", text:"CBOM — crypto bill of materials from automated scan"},
+     {type:"file", text:"pqc-ecosystem-scan.json — 147 npm dependencies mapped"},
+     {type:"gap", text:"No formal CMDB or centralized asset inventory (critical for CM-8 compliance)"}
+   ],
+   sp800:["CM-8","RA-2"],
+   remediation:"Implement formal crypto asset inventory management aligned with CM-8. Integrate CBOM generation into CI/CD. Create an automated asset discovery pipeline with periodic refresh."
+  },
+  {func:"IDENTIFY", funcId:"ID", cat:"ID.RA", name:"Risk Assessment",
+   score:1, pqc:true,
+   summary:"Bloom-risk identifies P-256 quantum vulnerability blast radius (103 files). P0/P1/P2 risk inventory maintained. No formal risk assessment methodology or threat modeling framework.",
+   evidence:[
+     {type:"file", text:"bloom-risk — P-256 blast radius 103 files (71 direct + 32 indirect)"},
+     {type:"file", text:"security-limitations.md — P0/P1/P2 risk inventory"},
+     {type:"gap", text:"No formal threat model (STRIDE, PASTA) or risk assessment methodology"}
+   ],
+   sp800:["RA-5"],
+   remediation:"Adopt STRIDE or PASTA threat modeling. Conduct formal quantum threat risk assessment. Map risks to NIST CSF 2.0 subcategories for traceability."
+  },
+  {func:"IDENTIFY", funcId:"ID", cat:"ID.IM", name:"Improvement",
+   score:1, pqc:false,
+   summary:"3 security bugs fixed (samplePoly bounds, nonce truncation, SM2 loop). No formal continuous improvement process or lessons-learned documentation.",
+   evidence:[
+     {type:"file", text:"VULNERABILITIES.md — known vulnerability tracking"},
+     {type:"file", text:"Security history: 3 bugs fixed — samplePoly bounds, nonce truncation, SM2 infinite loop"},
+     {type:"gap", text:"No formal continuous improvement process or post-incident review procedure"}
+   ],
+   sp800:["SI-2"],
+   remediation:"Implement formal post-incident review process. Create a continuous improvement register aligned with SI-2 (flaw remediation)."
+  },
+
+  // ─── PROTECT (PR) ───
+  {func:"PROTECT", funcId:"PR", cat:"PR.AA", name:"Identity Mgmt & Access Control",
+   score:1, pqc:true,
+   summary:"Standard GitHub access controls with branch protection. No documented IAM policy, no multi-factor authentication policy, no privileged access management.",
+   evidence:[
+     {type:"good", text:"GitHub branch protection rules in place"},
+     {type:"gap", text:"No documented IAM policy or access control framework"},
+     {type:"gap", text:"No MFA policy enforcement documentation, no privileged access management"}
+   ],
+   sp800:["AC-2","AC-3","IA-5"],
+   remediation:"Document IAM policy aligned with AC-2/AC-3. Implement and enforce MFA. Define privileged access management procedures."
+  },
+  {func:"PROTECT", funcId:"PR", cat:"PR.DS", name:"Data Security",
+   score:1, pqc:true,
+   summary:"ML-KEM-768 (FIPS 203 NTT-domain), fml-dsa (FIPS 204), SLH-DSA-128s (FIPS 205). TLA+ formal verification (C2.tla 7 invariants, OPK.tla 3 invariants). Gap: non-constant-time JS implementation is a known limitation.",
+   evidence:[
+     {type:"file", text:"ML-KEM-768: FIPS 203 NTT-domain, 10,000-round KAT verified"},
+     {type:"file", text:"fml-dsa: FIPS 204 native JS, cross-Noble interop 84/84 all green"},
+     {type:"file", text:"SLH-DSA-128s: FIPS 205 WASM bridge"},
+     {type:"file", text:"TLA+: C2.tla (7 invariants), OPK.tla (3 invariants)"},
+     {type:"gap", text:"Non-constant-time JS implementation — known limitation, TVLA passed in software but no hardware TVLA"}
+   ],
+   sp800:["SC-8","SC-12","SC-13","IA-7"],
+   remediation:"Address constant-time implementation gap. Pursue FIPS 140-3 validation for cryptographic modules. Complete hardware TVLA testing."
+  },
+  {func:"PROTECT", funcId:"PR", cat:"PR.IR", name:"Awareness & Training",
+   score:0, pqc:false,
+   summary:"No formal security awareness or training program documented. No PQC-specific training materials for developers or users.",
+   evidence:[
+     {type:"gap", text:"No security awareness program documented"},
+     {type:"gap", text:"No PQC developer training materials"},
+     {type:"gap", text:"No user education on quantum threats or PQC migration"}
+   ],
+   sp800:[],
+   remediation:"Create a PQC awareness program. Develop developer training on constant-time coding and side-channel resistance. Publish user-facing PQC migration guides."
+  },
+  {func:"PROTECT", funcId:"PR", cat:"PR.PS", name:"Platform Security",
+   score:1, pqc:true,
+   summary:"CI 24-matrix (ubuntu/macos/windows × node 18/22) all green. TLA+ formal verification. No documented platform security baseline or configuration management policy.",
+   evidence:[
+     {type:"file", text:"CI: 24-matrix (ubuntu/macos/windows × node 18/22), all green"},
+     {type:"file", text:"TLA+: formal verification with C2.tla + OPK.tla"},
+     {type:"gap", text:"No documented platform security baseline or CM-2/CM-4 configuration management policy"}
+   ],
+   sp800:["CM-2","CM-4","SA-10","SC-7"],
+   remediation:"Document platform security baseline configuration. Implement configuration drift detection. Define secure development environment standards per SA-10."
+  },
+  {func:"PROTECT", funcId:"PR", cat:"PR.AT", name:"Technology",
+   score:2, pqc:true,
+   summary:"Full PQC algorithm suite: ML-KEM-768 (FIPS 203), fml-dsa (FIPS 204), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4 (Chinese national). FPGA NTT core (WNS=9.755ns). Extensive test suites with KAT verification.",
+   evidence:[
+     {type:"file", text:"ML-KEM-768: FIPS 203 NTT-domain implementation"},
+     {type:"file", text:"fml-dsa: FIPS 204 native JS, cross-Noble interop"},
+     {type:"file", text:"SLH-DSA-128s: FIPS 205 WASM bridge"},
+     {type:"file", text:"SM2/SM3/SM4: Chinese national cryptography, KAT verified"},
+     {type:"file", text:"FPGA: NTT core (WNS=9.755ns)"}
+   ],
+   sp800:["SC-13","IA-7","SA-11"],
+   remediation:"Maintain and expand algorithm portfolio. Pursue NIST CAVP validation for ML-KEM, fml-dsa, SLH-DSA. Complete FPGA physical TVLA."
+  },
+
+  // ─── DETECT (DE) ───
+  {func:"DETECT", funcId:"DE", cat:"DE.CM", name:"Continuous Monitoring",
+   score:2, pqc:true,
+   summary:"Strong: CI 24-matrix all green, TVLA 36/36 passed (Welch's t-test), Nightly CI, active TSR monitoring. Automated test suite with 10,000-round KAT verification.",
+   evidence:[
+     {type:"file", text:"CI: 24-matrix (ubuntu/macos/windows × node 18/22), 100% passing"},
+     {type:"file", text:"TVLA: 36/36 Welch's t-test passed — software timing side-channel detection"},
+     {type:"file", text:"Nightly CI with full test suite"},
+     {type:"file", text:"TSR: 131 timestamp records with active monitoring"},
+     {type:"file", text:"10,000-round KAT verification for ML-KEM-768"}
+   ],
+   sp800:["CA-7","SI-4"],
+   remediation:"Extend monitoring to include hardware-level side-channel detection. Add continuous integration of CBOM freshness checks. Implement automated regression detection for cryptographic correctness."
+  },
+  {func:"DETECT", funcId:"DE", cat:"DE.AE", name:"Adverse Event Analysis",
+   score:1, pqc:true,
+   summary:"3 security bugs tracked in VULNERABILITIES.md. No formal incident detection system or SIEM-like capability. Security alerts via GitHub advisories.",
+   evidence:[
+     {type:"file", text:"VULNERABILITIES.md — known vulnerability tracking"},
+     {type:"file", text:"GitHub Security Advisories integration"},
+     {type:"gap", text:"No formal incident detection system, no SIEM, no anomaly detection"}
+   ],
+   sp800:["CA-2","SI-5"],
+   remediation:"Implement automated vulnerability scanning in CI. Set up security advisory monitoring pipeline. Create incident detection playbook aligned with CA-2."
+  },
+
+  // ─── RESPOND (RS) ───
+  {func:"RESPOND", funcId:"RS", cat:"RS.MA", name:"Incident Management",
+   score:1, pqc:false,
+   summary:"SECURITY.md defines reporting process. VULNERABILITIES.md tracks known issues. No formal incident management plan or runbook.",
+   evidence:[
+     {type:"file", text:"SECURITY.md — incident reporting process"},
+     {type:"file", text:"VULNERABILITIES.md — vulnerability tracking"},
+     {type:"gap", text:"No formal incident management plan, no runbook, no escalation procedures"}
+   ],
+   sp800:[],
+   remediation:"Develop formal incident management plan with runbook. Define escalation matrix and SLAs. Conduct tabletop exercises."
+  },
+  {func:"RESPOND", funcId:"RS", cat:"RS.AN", name:"Incident Analysis",
+   score:1, pqc:false,
+   summary:"3 bugs analyzed and fixed. No formal root cause analysis (RCA) template or forensic analysis capability.",
+   evidence:[
+     {type:"good", text:"3 historical bugs fully analyzed and remediated"},
+     {type:"gap", text:"No formal RCA template or forensic analysis process"}
+   ],
+   sp800:[],
+   remediation:"Create RCA template. Implement forensic analysis capability. Document analysis procedures."
+  },
+  {func:"RESPOND", funcId:"RS", cat:"RS.CO", name:"Response Communication",
+   score:1, pqc:false,
+   summary:"SECURITY.md reporting process in place. No documented communication plan for incident response, no stakeholder notification matrix.",
+   evidence:[
+     {type:"file", text:"SECURITY.md — security vulnerability reporting"},
+     {type:"gap", text:"No stakeholder notification matrix, no communication plan during incidents"}
+   ],
+   sp800:[],
+   remediation:"Create stakeholder notification matrix. Develop incident communication templates. Define disclosure policy timeline."
+  },
+  {func:"RESPOND", funcId:"RS", cat:"RS.IM", name:"Incident Mitigation",
+   score:1, pqc:false,
+   summary:"Historical bugs fixed promptly. No documented mitigation procedures or containment strategies.",
+   evidence:[
+     {type:"good", text:"Historical fixes: samplePoly bounds, nonce truncation, SM2 loop — all fixed promptly"},
+     {type:"gap", text:"No documented mitigation procedures or containment strategies"}
+   ],
+   sp800:[],
+   remediation:"Document mitigation procedures. Create containment playbooks for common attack vectors (side-channel, implementation bugs)."
+  },
+
+  // ─── RECOVER (RC) ───
+  {func:"RECOVER", funcId:"RC", cat:"RC.RP", name:"Recovery Plan",
+   score:0, pqc:false,
+   summary:"No documented recovery or continuity plan. No backup strategy for cryptographic key material or evidence chain.",
+   evidence:[
+     {type:"gap", text:"No disaster recovery plan documented"},
+     {type:"gap", text:"No business continuity plan for PQC migration rollback"},
+     {type:"gap", text:"No documented backup strategy for crypto artifacts"}
+   ],
+   sp800:[],
+   remediation:"Create disaster recovery plan. Define backup strategy for cryptographic material and TSR evidence. Document rollback procedures for algorithm migration."
+  },
+  {func:"RECOVER", funcId:"RC", cat:"RC.CO", name:"Recovery Communication",
+   score:2, pqc:true,
+   summary:"Strong: TSR 131 total timestamp records, lg-001~100 sequence, DigiCert + FreeTSA dual authority, timestamp-manifest.json v3 with complete chain of custody. This is best-in-class evidence integrity.",
+   evidence:[
+     {type:"file", text:"TSR: 131 total timestamp records, lg-001~100 sequence"},
+     {type:"file", text:"Dual authority: DigiCert + FreeTSA timestamp providers"},
+     {type:"file", text:"timestamp-manifest.json v3 — complete chain of custody"},
+     {type:"file", text:"Evidence stored in docs/tsa/, evidence/tvla/"}
+   ],
+   sp800:["SI-7"],
+   remediation:"Maintain excellent evidence chain. Consider adding third TSA authority for Byzantine fault tolerance. Implement automated evidence integrity verification in CI."
+  }
+];
+
+// ============ SP 800-53 Control Data ============
+const sp800Data = [
+  {id:"AC-2",title:"Account Management",csf:"PR.AA",status:1,evidence:"Standard GitHub access controls, no formal IAM policy"},
+  {id:"AC-3",title:"Access Enforcement",csf:"PR.AA",status:1,evidence:"GitHub branch protection, no RBAC documentation"},
+  {id:"CA-2",title:"Security Assessments",csf:"DE.AE",status:1,evidence:"No formal security assessment program; ad-hoc review"},
+  {id:"CA-7",title:"Continuous Monitoring",csf:"DE.CM",status:2,evidence:"CI 24-matrix all green, TVLA 36/36, Nightly CI, TSR active"},
+  {id:"CM-2",title:"Baseline Configuration",csf:"PR.PS",status:1,evidence:"No documented platform security baseline"},
+  {id:"CM-4",title:"Security Impact Analysis",csf:"PR.PS / ID.IM",status:1,evidence:"Ad-hoc analysis; no formal change impact assessment"},
+  {id:"CM-8",title:"System Component Inventory",csf:"ID.AM",status:1,evidence:"crypto-audit-scan 370+ files, CBOM, but no formal CMDB — PQC-critical gap"},
+  {id:"IA-5",title:"Authenticator Management",csf:"PR.AA",status:1,evidence:"Standard GitHub auth; no MFA policy documentation"},
+  {id:"IA-7",title:"Cryptographic Module Auth",csf:"PR.DS / PR.AT",status:2,evidence:"ML-KEM FIPS 203, fml-dsa FIPS 204, SLH-DSA FIPS 205 — verified implementations"},
+  {id:"PL-2",title:"System Security Plan",csf:"GV.PO / GV.OC",status:1,evidence:"SECURITY.md exists; no comprehensive SSP document"},
+  {id:"PL-8",title:"PQC Transition Planning",csf:"GV.RM",status:0,evidence:"No documented PQC transition plan — only ad-hoc migration — CRITICAL GAP"},
+  {id:"RA-2",title:"Security Categorization",csf:"ID.AM",status:1,evidence:"P0/P1/P2 risk inventory; no formal FIPS 199 categorization"},
+  {id:"RA-5",title:"Vulnerability Scanning",csf:"ID.RA",status:1,evidence:"Bloom-risk identifies P-256 blast radius; no automated vulnerability scanning pipeline"},
+  {id:"SA-10",title:"Developer Config Mgmt",csf:"PR.PS",status:1,evidence:"CI GitHub Actions; no formal dev environment config policy"},
+  {id:"SA-11",title:"Developer Testing",csf:"PR.AT / PR.DS",status:2,evidence:"24-matrix CI, 10,000-round KAT, TLA+ formal verification, TVLA 36/36"},
+  {id:"SC-7",title:"Boundary Protection",csf:"PR.PS",status:1,evidence:"Standard GitHub perimeter; no network-level boundary protection documented"},
+  {id:"SC-8",title:"Transmission Confidentiality",csf:"PR.DS",status:2,evidence:"PQC algorithms implemented for key establishment (ML-KEM) — no deployed TLS"},
+  {id:"SC-12",title:"Cryptographic Key Management",csf:"PR.DS",status:1,evidence:"ML-KEM KEM keys, fml-dsa keygen; no formal KMS or key lifecycle policy"},
+  {id:"SC-13",title:"Cryptographic Protection",csf:"PR.DS / PR.AT",status:0,evidence:"No FIPS 140-3 validation, no NIST CAVP certification — CRITICAL GAP for PQC compliance"},
+  {id:"SI-2",title:"Flaw Remediation",csf:"ID.IM",status:1,evidence:"3 bugs fixed; no formal remediation SLAs or tracking"},
+  {id:"SI-4",title:"System Monitoring",csf:"DE.CM",status:2,evidence:"CI 24-matrix all green, Nightly CI, TVLA, TSR monitoring"},
+  {id:"SI-5",title:"Security Alerts & Advisories",csf:"DE.AE",status:1,evidence:"GitHub Security Advisories; no automated advisory ingestion pipeline"},
+  {id:"SI-7",title:"Software & Info Integrity",csf:"RC.CO / PR.DS",status:2,evidence:"TSR 131 records, dual authority, manifest v3, TLA+ verification — best-in-class"}
+];
+
+// ============ BUILD HEATMAP ============
+const heatmap = document.getElementById('heatmap');
+let currentFilter = 'all';
+
+function buildHeatmap() {
+  const grouped = {};
+  csfData.forEach(c => {
+    if (!grouped[c.func]) grouped[c.func] = [];
+    grouped[c.func].push(c);
+  });
+
+  const funcOrder = ['GOVERN','IDENTIFY','PROTECT','DETECT','RESPOND','RECOVER'];
+  const funcColors = {
+    'GOVERN':'#8b5cf6','IDENTIFY':'#3b82f6','PROTECT':'#10b981',
+    'DETECT':'#f59e0b','RESPOND':'#ef4444','RECOVER':'#06b6d4'
+  };
+
+  let html = '';
+  funcOrder.forEach(func => {
+    const items = grouped[func] || [];
+    const visibleItems = currentFilter === 'all' ? items :
+      currentFilter === 'pqc' ? items.filter(c => c.pqc) :
+      currentFilter === 'gaps' ? items.filter(c => c.score === 0) : items;
+    if (visibleItems.length === 0) return;
+
+    const funcId = items[0].funcId;
+    const color = funcColors[func] || '#00d4ff';
+    html += `<div class="heatmap-section">
+      <h3><span class="func-badge" style="border-color:${color};color:${color}">${funcId}</span> ${func} (${visibleItems.length} subcategories)</h3>
+      <div class="heatmap-grid">`;
+
+    visibleItems.forEach(c => {
+      html += `<div class="cell score-${c.score}" onclick="openDetail('${c.cat}')" onmouseenter="showTooltip(event,'${c.cat}')" onmouseleave="hideTooltip()">
+        <div class="cell-id">${c.cat}</div>
+        <div class="cell-name">${c.name}</div>
+        <div class="cell-score">
+          <span>${c.score===2?'Strong':c.score===1?'Partial':'Gap'}</span>
+          <span class="cell-score-icon">${c.score===2?'🟢':c.score===1?'🟡':'🔴'}</span>
+        </div>
+      </div>`;
+    });
+
+    html += `</div></div>`;
+  });
+
+  heatmap.innerHTML = html;
+  updateSummary();
+}
+
+// ============ BUILD SP 800-53 TABLE ============
+function buildSP800Table() {
+  const tbody = document.getElementById('sp800-tbody');
+  let html = '';
+  sp800Data.forEach(c => {
+    const statusIcon = c.status===2?'<span class="status-dot g"></span>Strong':
+      c.status===1?'<span class="status-dot y"></span>Partial':
+      '<span class="status-dot r"></span>Gap';
+    html += `<tr>
+      <td style="color:var(--accent-purple);font-weight:700;white-space:nowrap">${c.id}</td>
+      <td>${c.title}</td>
+      <td style="white-space:nowrap">${c.csf}</td>
+      <td>${statusIcon} ${c.status===2?'Strong':c.status===1?'Partial':'⚠ Gap'}</td>
+      <td style="font-size:0.65rem">${c.evidence}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+}
+
+// ============ GAP SUMMARY ============
+function buildGapSummary() {
+  const grid = document.getElementById('gap-grid');
+  const gapItems = csfData.filter(c => c.score === 0);
+  const strengthItems = csfData.filter(c => c.score === 2);
+
+  let html = '';
+
+  // Critical Gaps
+  html += `<div class="gap-card critical">
+    <h4>🚨 Top Critical Gaps (Score 0)</h4>
+    <ul>`;
+  gapItems.forEach(c => {
+    html += `<li><strong>${c.cat}: ${c.name}</strong> — ${c.summary.substring(0,120)}${c.summary.length>120?'...':''}</li>`;
+  });
+  html += `</ul></div>`;
+
+  // PQC-Specific Gaps
+  html += `<div class="gap-card critical">
+    <h4>🔑 PQC-Specific Gaps (Critical for Migration)</h4>
+    <ul>
+      <li><strong>PL-8 — PQC Transition Plan:</strong> No documented transition plan exists. Migration is currently ad-hoc, driven by individual algorithm implementations. NIST CSWP 48 explicitly requires a formal PQC transition strategy.</li>
+      <li><strong>CM-8 — Crypto Inventory:</strong> CBOM exists but is not formalized or integrated into a CMDB. Full crypto asset inventory is a prerequisite for any PQC migration.</li>
+      <li><strong>SC-13 — Crypto Module Validation:</strong> No FIPS 140-3 validation or NIST CAVP certification for any FIBEMATE cryptographic module. This is a regulatory blocker for government use.</li>
+      <li><strong>GV.RR — Roles & Responsibilities:</strong> Bus Factor = 1 creates existential risk for the PQC migration program. No one else can maintain or validate the transition.</li>
+    </ul>
+  </div>`;
+
+  // Strengths
+  html += `<div class="gap-card strength">
+    <h4>✅ FIBEMATE Unique Strengths</h4>
+    <ul>
+      <li><strong>DE.CM — Continuous Monitoring:</strong> CI 24-matrix all green, TVLA 36/36 Welch's t-test, Nightly CI — exceeds typical open-source monitoring practices.</li>
+      <li><strong>RC.CO — Evidence Integrity Chain:</strong> TSR 131 records, DigiCert + FreeTSA dual authority, manifest v3 with complete chain of custody — best-in-class for any PQC project.</li>
+      <li><strong>PR.AT — Cryptographic Technology:</strong> Triple FIPS algorithm suite (ML-KEM-768, fml-dsa, SLH-DSA-128s) plus Chinese national crypto, FPGA NTT core, TLA+ formal verification.</li>
+      <li><strong>GV.SC — Supply Chain Visibility:</strong> 147 npm dependencies 100% classified with CBOM generation — rare for open-source projects.</li>
+    </ul>
+  </div>`;
+
+  // Overall Assessment
+  html += `<div class="gap-card" style="border-color:rgba(0,212,255,0.3)">
+    <h4 style="color:var(--accent-cyan)">📋 Overall Assessment</h4>
+    <p style="font-size:0.72rem;color:var(--text-secondary);line-height:1.6">
+      FIBEMATE demonstrates strong technical implementation (PR.AT, DE.CM, RC.CO) with robust evidence chains.
+      However, governance (GV.RR), planning (PL-8), and formal certification (SC-13) are the three critical gaps
+      that block regulatory compliance. These are primarily organizational and process gaps rather than technical deficits.
+      The PQC algorithm suite itself is well-implemented and verified — the gaps are in the compliance infrastructure
+      required by NIST SP 800-53 for government and regulated-industry use.
+    </p>
+  </div>`;
+
+  grid.innerHTML = html;
+}
+
+// ============ UPDATE SUMMARY ============
+function updateSummary() {
+  let visible = csfData;
+  if (currentFilter === 'pqc') visible = csfData.filter(c => c.pqc);
+  if (currentFilter === 'gaps') visible = csfData.filter(c => c.score === 0);
+  if (currentFilter === 'all') visible = csfData;
+
+  const g = visible.filter(c => c.score === 2).length;
+  const y = visible.filter(c => c.score === 1).length;
+  const r = visible.filter(c => c.score === 0).length;
+  const total = visible.length;
+  const pct = total > 0 ? Math.round(((g + y) / total) * 100) : 0;
+
+  document.getElementById('count-green').textContent = g;
+  document.getElementById('count-yellow').textContent = y;
+  document.getElementById('count-red').textContent = r;
+  document.getElementById('overall-percent').textContent = pct + '%';
+}
+
+// ============ FILTER ============
+function setFilter(f) {
+  currentFilter = f;
+  document.querySelectorAll('.controls-row .btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('btn-' + f).classList.add('active');
+  buildHeatmap();
+}
+
+// ============ DETAIL PANEL ============
+function openDetail(cat) {
+  const c = csfData.find(x => x.cat === cat);
+  if (!c) return;
+
+  const panel = document.getElementById('detail-panel');
+  const overlay = document.getElementById('overlay');
+  const title = document.getElementById('dp-title');
+  const scoreEl = document.getElementById('dp-score');
+  const body = document.getElementById('dp-body');
+
+  const scoreLabel = c.score === 2 ? '🟢 Strong Evidence' : c.score === 1 ? '🟡 Partial Evidence' : '🔴 Gap Identified';
+  const scoreStyle = c.score === 2 ? 'background:rgba(81,207,102,0.12);color:#51cf66;border:1px solid rgba(81,207,102,0.3)' :
+    c.score === 1 ? 'background:rgba(245,158,11,0.12);color:#f59e0b;border:1px solid rgba(245,158,11,0.3)' :
+    'background:rgba(239,68,68,0.12);color:#ef4444;border:1px solid rgba(239,68,68,0.3)';
+
+  title.innerHTML = `<span style="color:${c.score===2?'#51cf66':c.score===1?'#f59e0b':'#ef4444'}">${c.cat}</span> ${c.name}`;
+  scoreEl.textContent = scoreLabel;
+  scoreEl.style.cssText = scoreStyle;
+
+  let bodyHTML = '';
+
+  // Summary
+  bodyHTML += `<div class="dp-section">
+    <h4>📝 Summary</h4>
+    <p>${c.summary}</p>
+  </div>`;
+
+  // Evidence
+  bodyHTML += `<div class="dp-section">
+    <h4>🔍 Evidence</h4>`;
+  c.evidence.forEach(e => {
+    const icon = e.type === 'file' ? '📄' : e.type === 'badge' ? '🏅' : e.type === 'good' ? '✅' : '❌';
+    const cls = e.type === 'gap' ? 'style="border-color:rgba(239,68,68,0.3);background:rgba(239,68,68,0.05)"' : '';
+    bodyHTML += `<div class="dp-ev-item" ${cls}>${icon} ${e.type === 'file' ? '<span class="file">' + e.text.split(' — ')[0] + '</span> — ' + e.text.split(' — ').slice(1).join(' — ') : e.text}</div>`;
+  });
+  bodyHTML += `</div>`;
+
+  // SP 800-53 Mapped Controls
+  if (c.sp800 && c.sp800.length > 0) {
+    bodyHTML += `<div class="dp-section">
+      <h4>🔐 Mapped SP 800-53 Controls</h4>
+      <div class="dp-sp800">`;
+    c.sp800.forEach(s => {
+      const sp = sp800Data.find(x => x.id === s);
+      const spStatus = sp ? (sp.status===2?'🟢':sp.status===1?'🟡':'🔴') : '';
+      bodyHTML += `<span class="dp-sp800-tag" title="${sp ? sp.evidence : ''}">${spStatus} ${s}${sp ? ': ' + sp.title : ''}</span>`;
+    });
+    bodyHTML += `</div></div>`;
+  }
+
+  // Remediation
+  bodyHTML += `<div class="dp-section">
+    <h4>🛠 Remediation Recommendations</h4>
+    <div class="dp-remediation">
+      <p>${c.remediation}</p>
+    </div>
+  </div>`;
+
+  body.innerHTML = bodyHTML;
+  panel.classList.add('open');
+  overlay.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDetail() {
+  document.getElementById('detail-panel').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Esc to close
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+// ============ TOOLTIP ============
+function showTooltip(e, cat) {
+  const c = csfData.find(x => x.cat === cat);
+  if (!c) return;
+  const tt = document.getElementById('tooltip');
+  const sp800Str = c.sp800 && c.sp800.length > 0 ? '<div class="tt-sp800">SP 800-53: ' + c.sp800.join(', ') + '</div>' : '';
+  tt.innerHTML = `<div class="tt-title">${c.cat}: ${c.name}</div>
+    <div class="tt-summary">${c.summary.substring(0,150)}${c.summary.length>150?'...':''}</div>${sp800Str}`;
+  tt.style.display = 'block';
+  const x = e.clientX + 16, y = e.clientY - 10;
+  tt.style.left = (x + 300 > window.innerWidth ? x - 316 : x) + 'px';
+  tt.style.top = (y + 120 > window.innerHeight ? y - 130 : y) + 'px';
+}
+
+function hideTooltip() { document.getElementById('tooltip').style.display = 'none'; }
+
+// ============ EXPORT REPORT ============
+function exportReport() {
+  const now = new Date().toISOString().slice(0,10);
+  const green = csfData.filter(c => c.score === 2).length;
+  const yellow = csfData.filter(c => c.score === 1).length;
+  const red = csfData.filter(c => c.score === 0).length;
+  const pct = Math.round(((green + yellow) / csfData.length) * 100);
+
+  let md = `# FIBEMATE — NIST CSF 2.0 Gap Analysis Report\n`;
+  md += `**Generated:** ${now} | **Evidence Date:** August 2026\n`;
+  md += `**Mapping Source:** NIST CSWP 48 (PQC → CSF 2.0) | **OpenSSF Project:** #13695\n\n`;
+  md += `## Overall Coverage: ${pct}%\n`;
+  md += `- 🟢 Strong Evidence: ${green} subcategories\n`;
+  md += `- 🟡 Partial Evidence: ${yellow} subcategories\n`;
+  md += `- 🔴 Critical Gaps: ${red} subcategories\n\n`;
+
+  md += `## Critical Gaps\n`;
+  csfData.filter(c => c.score === 0).forEach(c => {
+    md += `- **${c.cat} (${c.name}):** ${c.summary}\n`;
+  });
+
+  md += `\n## PQC-Specific Gaps (NIST CSWP 48)\n`;
+  md += `- **PL-8:** No PQC transition plan\n`;
+  md += `- **CM-8:** No formal crypto CMDB\n`;
+  md += `- **SC-13:** No FIPS 140-3 / CAVP certification\n`;
+  md += `- **GV.RR:** Bus Factor = 1\n\n`;
+
+  md += `## Strengths\n`;
+  csfData.filter(c => c.score === 2).forEach(c => {
+    md += `- **${c.cat} (${c.name}):** ${c.summary}\n`;
+  });
+
+  md += `\n## SP 800-53 Control Status\n`;
+  sp800Data.forEach(c => {
+    const s = c.status===2?'🟢 Strong':c.status===1?'🟡 Partial':'🔴 Gap';
+    md += `- **${c.id}** ${c.title}: ${s} → ${c.evidence}\n`;
+  });
+
+  md += `\n---\n*Evidence-backed gap analysis. All scores traceable to FIBEMATE project artifacts.*\n`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>FIBEMATE CSF 2.0 Gap Analysis Report</title>
+<style>
+body{font-family:-apple-system,sans-serif;max-width:900px;margin:40px auto;padding:0 20px;background:#0a0a1a;color:#e2e8f0;line-height:1.7}
+h1{color:#00d4ff}h2{color:#8b5cf6;margin-top:2em;border-bottom:1px solid #1e293b;padding-bottom:0.3em}
+h3{color:#51cf66}ul{list-style:none;padding:0}li{padding:0.25em 0;font-size:0.9em}
+.green{color:#51cf66}.yellow{color:#f59e0b}.red{color:#ef4444}
+hr{border:1px solid #1e293b;margin:2em 0}
+.footer{color:#475569;font-size:0.7em}
+</style></head>
+<body>
+${md.split('\n').map(line => {
+  if (line.startsWith('# ')) return '<h1>' + line.slice(2) + '</h1>';
+  if (line.startsWith('## ')) return '<h2>' + line.slice(3) + '</h2>';
+  if (line.startsWith('### ')) return '<h3>' + line.slice(4) + '</h3>';
+  if (line.startsWith('---')) return '<hr>';
+  if (line.startsWith('- ')) return '<li>' + line.slice(2)
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')
+    .replace(/🟢/g,'<span class="green">🟢</span>')
+    .replace(/🟡/g,'<span class="yellow">🟡</span>')
+    .replace(/🔴/g,'<span class="red">🔴</span>')
+    + '</li>';
+  if (line.startsWith('**')) return '<p>' + line.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>') + '</p>';
+  return line ? '<p>' + line + '</p>' : '';
+}).join('\n')}
+</body></html>`;
+
+  const blob = new Blob([html], {type:'text/html'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `FIBEMATE-CSF2-Gap-Report-${now}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// ============ INIT ============
+buildHeatmap();
+buildSP800Table();
+buildGapSummary();
+</script>
+</body>
+</html>
