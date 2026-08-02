@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PQRA 自评工具 · 后量子密码就绪度评估</title>
+    <meta name="description" content="Post-Quantum Readiness Assessment (PQRA) 交互式自评工具 — 52 道题目覆盖 7 个领域，自动生成七轴雷达图，与 FIBEMATE 对比，导出可分享的 HTML 报告。">
+    <meta property="og:title" content="PQRA 自评工具 · 你的组织有多 PQC-Ready？">
+    <meta property="og:description" content="52 题 · 7 领域 · 自动生成 PQRA 七维度雷达图。与 FIBEMATE 对比，映射 NIST/ISO/CNSA 2.0 合规要求。">
+    <meta property="og:type" content="website">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans SC', sans-serif;
+            background: #0a0a1a; color: #e2e8f0; min-height:100vh;
+        }
+
+        /* ─── Nav ─── */
+        .nav { 
+            position:sticky; top:0; z-index:100; background:rgba(10,10,26,0.92);
+            backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,212,255,0.12);
+            padding:0.7rem 2rem; display:flex; justify-content:space-between; align-items:center;
+        }
+        .nav-logo { font-size:1.1rem; font-weight:700; background:linear-gradient(135deg,#00d4ff,#3b82f6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .nav-link { color:#94a3b8; font-size:0.8rem; margin-left:1.2rem; transition:color 0.2s; text-decoration:none; }
+        .nav-link:hover { color:#00d4ff; }
+
+        /* ─── Layout ─── */
+        .container { max-width:1100px; margin:0 auto; padding:2rem 1.5rem 3rem; }
+
+        /* ─── Step indicator ─── */
+        .steps { display:flex; justify-content:center; gap:0; margin-bottom:2rem; flex-wrap:wrap; }
+        .step-dot {
+            width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-size:13px; font-weight:700; border:2px solid #2a2a4a; color:#64748b; background:#111827;
+            transition:all 0.3s; position:relative;
+        }
+        .step-dot.done { border-color:#51cf66; background:rgba(81,207,102,0.12); color:#51cf66; }
+        .step-dot.active { border-color:#00d4ff; background:rgba(0,212,255,0.12); color:#00d4ff; box-shadow:0 0 16px rgba(0,212,255,0.25); }
+        .step-line { width:48px; height:2px; background:#2a2a4a; margin-top:17px; }
+        .step-line.done { background:#51cf66; }
+
+        /* ─── Card ─── */
+        .card {
+            background:#111827; border:1px solid #1e293b; border-radius:16px;
+            padding:2rem 2.5rem; margin-bottom:1.5rem; max-width:800px; margin-left:auto; margin-right:auto;
+        }
+        .card h2 { font-size:1.3rem; margin-bottom:0.5rem; }
+        .card .section-desc { font-size:0.82rem; color:#94a3b8; margin-bottom:1.5rem; line-height:1.6; }
+
+        /* ─── Domain section ─── */
+        .domain-section { margin-bottom:1.5rem; }
+        .domain-header {
+            font-size:0.95rem; font-weight:700; margin-bottom:0.3rem; padding:8px 12px;
+            border-radius:8px; display:flex; align-items:center; gap:10px; cursor:pointer;
+            transition:background 0.2s;
+        }
+        .domain-header:hover { background:rgba(255,255,255,0.03); }
+        .domain-num {
+            width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+            font-size:12px; font-weight:700; flex-shrink:0;
+        }
+        .domain-name { flex:1; font-size:0.88rem; }
+        .domain-progress { font-size:0.7rem; color:#64748b; }
+        .domain-body { padding:0 12px 0 50px; }
+        .domain-collapsed .domain-body { display:none; }
+        .domain-collapsed .domain-toggle { transform:rotate(-90deg); }
+        .domain-toggle { transition:transform 0.2s; color:#64748b; font-size:0.7rem; }
+
+        /* ─── Questions ─── */
+        .q-block { margin-bottom:1rem; padding-bottom:1rem; border-bottom:1px solid #1a2332; }
+        .q-block:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+        .q-label { font-size:0.85rem; font-weight:500; margin-bottom:0.5rem; color:#c8d2e0; }
+        .q-options { display:flex; flex-wrap:wrap; gap:8px; }
+        .q-opt {
+            padding:7px 14px; border-radius:8px; border:1px solid #3a3a5a; background:#1a1a30;
+            font-size:0.76rem; color:#a0a0c0; cursor:pointer; transition:all 0.2s;
+            white-space:nowrap;
+        }
+        .q-opt:hover { border-color:#00d4ff; color:#c0c0d0; }
+        .q-opt.selected { border-color:#00d4ff; background:rgba(0,212,255,0.12); color:#00d4ff; font-weight:600; }
+
+        /* ─── Buttons ─── */
+        .btn-row { display:flex; justify-content:center; gap:12px; margin-top:1.5rem; flex-wrap:wrap; }
+        .btn {
+            padding:10px 28px; border-radius:8px; font-size:0.85rem; font-weight:600;
+            border:none; cursor:pointer; transition:all 0.2s;
+        }
+        .btn-primary { background:linear-gradient(135deg,#00d4ff,#3b82f6); color:#fff; }
+        .btn-primary:hover { box-shadow:0 0 16px rgba(0,212,255,0.3); transform:translateY(-1px); }
+        .btn-secondary { background:transparent; border:1px solid #3a3a5a; color:#a0a0c0; }
+        .btn-secondary:hover { border-color:#00d4ff; color:#00d4ff; }
+        .btn-export { background:linear-gradient(135deg,#f97316,#ef4444); color:#fff; }
+        .btn-export:hover { box-shadow:0 0 16px rgba(249,115,22,0.3); transform:translateY(-1px); }
+        .btn-collapse { padding:6px 14px; font-size:0.72rem; }
+
+        /* ─── Results ─── */
+        #results-section { display:none; }
+        #radar-container { width:100%; height:520px; position:relative; margin-bottom:1rem; }
+        #radar-container canvas { border-radius:12px; }
+        .radar-hint { text-align:center; font-size:0.7rem; color:#475569; margin-top:0.3rem; }
+
+        .comparison-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:1rem; margin:1.5rem 0; }
+        .comp-card {
+            background:#111827; border:1px solid #1e293b; border-radius:12px; padding:1.2rem; text-align:center;
+        }
+        .comp-label { font-size:0.72rem; color:#64748b; margin-bottom:0.3rem; }
+        .comp-score { font-size:2rem; font-weight:700; }
+        .comp-subs { font-size:0.7rem; color:#64748b; margin-top:0.3rem; }
+
+        .maturity-badge {
+            display:inline-block; padding:6px 16px; border-radius:20px; font-size:0.82rem; font-weight:700; margin:1rem 0;
+        }
+
+        .domain-scores-grid { display:grid; grid-template-columns:1fr; gap:0.5rem; margin:1rem 0; }
+        .ds-row { display:flex; align-items:center; gap:10px; padding:6px 10px; background:#1a1a30; border-radius:8px; }
+        .ds-color { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+        .ds-name { font-size:0.78rem; color:#c0c0d0; min-width:180px; }
+        .ds-bar-wrap { flex:1; height:8px; background:#111827; border-radius:4px; overflow:hidden; }
+        .ds-bar { height:100%; border-radius:4px; transition:width 0.6s; }
+        .ds-score { font-size:0.78rem; font-weight:700; min-width:36px; text-align:right; }
+
+        /* ─── NIST mapping table ─── */
+        .mapping-table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.75rem; }
+        .mapping-table th { text-align:left; padding:8px 12px; background:#1a2332; color:#64748b; font-size:0.7rem; border-bottom:1px solid #2a2a4a; }
+        .mapping-table td { padding:8px 12px; border-bottom:1px solid #1a2332; color:#c0c0d0; }
+        .mapping-table .check { color:#51cf66; }
+        .mapping-table .partial { color:#ffc107; }
+        .mapping-table .none { color:#ff6b6b; }
+
+        .improvement-list { margin:1rem 0; }
+        .improv-item {
+            display:flex; align-items:center; gap:10px; padding:8px 12px;
+            background:#1a1a30; border-radius:8px; margin-bottom:6px; font-size:0.78rem;
+        }
+        .improv-icon { font-size:1rem; }
+        .improv-text { flex:1; }
+        .improv-gain { color:#51cf66; font-weight:600; white-space:nowrap; }
+
+        /* ─── Export modal ─── */
+        #export-modal {
+            display:none; position:fixed; inset:0; z-index:200;
+            background:rgba(0,0,0,0.6); align-items:center; justify-content:center;
+        }
+        #export-modal.show { display:flex; }
+        .export-dialog {
+            background:#111827; border:1px solid #3a3a5a; border-radius:16px;
+            padding:2rem; max-width:500px; width:90%; text-align:center;
+        }
+        .export-dialog h3 { font-size:1.1rem; margin-bottom:0.8rem; }
+        .export-dialog p { font-size:0.78rem; color:#94a3b8; margin-bottom:1rem; }
+
+        @media (max-width:768px) {
+            .container { padding:0.6rem; }
+            .card { padding:1rem 0.8rem; }
+            #radar-container { height:340px; }
+            .comparison-grid { grid-template-columns:1fr 1fr; }
+            .q-options { flex-direction:column; }
+            .q-opt { font-size:0.76rem; padding:7px 10px; }
+            .nav { padding:0.5rem 0.8rem; gap:0.6rem; flex-wrap:wrap; }
+            .nav-logo { font-size:0.95rem; }
+            .nav-link { font-size:0.65rem; margin-left:0; }
+            .domain-body { padding:0 4px 0 20px; }
+            .ds-name { min-width:120px; font-size:0.7rem; }
+            .steps { gap:0; }
+            .step-line { width:24px; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="/" class="nav-logo">◈ FIBEMATE</a>
+    <div>
+        <a href="/docs/cars-radar.html" class="nav-link">CARS 仪表盘</a>
+        <a href="/docs/cars-self-assessment.html" class="nav-link">CARS 自评</a>
+        <a href="/docs/pqc-dashboard.html" class="nav-link">算法仪表盘</a>
+        <a href="/docs/pqra-assessment.html" class="nav-link" style="color:#00d4ff;">PQRA</a>
+        <a href="https://github.com/Lennonhaha/fibemate" class="nav-link">GitHub ↗</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <!-- ═══ Step indicator ═══ -->
+    <div class="steps" id="step-indicator">
+        <div class="step-dot active" id="sd1">1</div><div class="step-line" id="sl1"></div>
+        <div class="step-dot" id="sd2">2</div><div class="step-line" id="sl2"></div>
+        <div class="step-dot" id="sd3">3</div><div class="step-line" id="sl3"></div>
+        <div class="step-dot" id="sd4">4</div>
+    </div>
+
+    <!-- ═══ Questionnaire ═══ -->
+    <div id="questionnaire">
+        <div class="card">
+            <h2 style="color:#00d4ff;">📋 PQRA 后量子就绪度自评</h2>
+            <p class="section-desc">
+                52 道选择题 · 7 个领域 · 10-15 分钟完成 · 自动生成七维度雷达图并与 FIBEMATE 对比。<br>
+                所有数据仅在浏览器本地处理，不会上传到任何服务器。
+            </p>
+            <div id="questions-container"></div>
+            <div class="btn-row" style="margin-bottom:0.8rem;">
+                <button class="btn btn-secondary btn-collapse" onclick="toggleAllDomains()">📂 全部展开/折叠</button>
+                <button class="btn btn-secondary" onclick="resetAll()">↺ 重置全部</button>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-primary" id="btn-submit" onclick="calculateAndShow()">🔄 生成我的 PQRA 雷达图</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ Results ═══ -->
+    <div id="results-section">
+        <div class="card">
+            <h2 style="color:#00d4ff;">📊 你的 PQRA 评估结果</h2>
+
+            <!-- Maturity -->
+            <div style="text-align:center;">
+                <div class="maturity-badge" id="maturity-badge" style="background:rgba(0,212,255,0.15);color:#00d4ff;">评估中...</div>
+                <div style="font-size:0.78rem;color:#94a3b8;margin-bottom:1rem;" id="maturity-desc"></div>
+            </div>
+
+            <!-- Radar -->
+            <div id="radar-container"></div>
+            <div class="radar-hint">🖱 拖拽旋转 · 滚轮缩放 · 蓝色=你的组织 · 黄色虚线=FIBEMATE 参照</div>
+            
+            <!-- Score comparison -->
+            <div class="comparison-grid" style="margin-top:1rem;">
+                <div class="comp-card">
+                    <div class="comp-label">🧑‍💻 你的组织</div>
+                    <div class="comp-score" id="your-score" style="color:#00d4ff;">—</div>
+                    <div class="comp-subs" id="your-subs"></div>
+                </div>
+                <div class="comp-card">
+                    <div class="comp-label">🔬 FIBEMATE (参照)</div>
+                    <div class="comp-score" style="color:#ffc107;" id="fibemate-overall">—</div>
+                    <div class="comp-subs" id="fibemate-subs"></div>
+                </div>
+            </div>
+
+            <!-- Domain score bars -->
+            <h3 style="font-size:0.88rem;color:#64748b;margin-bottom:0.6rem;">📊 七领域得分明细</h3>
+            <div class="domain-scores-grid" id="domain-scores-grid"></div>
+
+            <!-- Improvements -->
+            <div style="margin:1rem 0;">
+                <h3 style="font-size:0.88rem;color:#51cf66;margin-bottom:0.6rem;">🔝 优先级最高的改进建议</h3>
+                <div class="improvement-list" id="improvements"></div>
+            </div>
+
+            <!-- NIST/CNSA mapping -->
+            <h3 style="font-size:0.88rem;color:#ffc107;margin-bottom:0.6rem;">📐 NIST / ISO / CNSA 2.0 合规映射</h3>
+            <div style="overflow-x:auto;">
+                <table class="mapping-table" id="mapping-table"></table>
+            </div>
+
+            <div class="btn-row" style="margin-top:1.5rem;">
+                <button class="btn btn-export" onclick="exportReport()">📥 导出自包含 HTML 报告</button>
+                <button class="btn btn-secondary" onclick="backToQuestions()">↩ 修改答案</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ═══ NIST Mapping Table (standalone) ═══ -->
+    <div id="nist-mapping-section" style="display:none;">
+        <div class="card">
+            <h2 style="color:#ffc107;">📐 NIST / ISO / CNSA 2.0 标准需求映射</h2>
+            <p class="section-desc">
+                每道 PQRA 题目映射到其对应的标准要求。✅=完全覆盖 · ◐=部分覆盖 · ✕=未覆盖
+            </p>
+            <div style="overflow-x:auto;" id="nist-table-container"></div>
+        </div>
+    </div>
+</div>
+
+<!-- ═══ Export Modal ═══ -->
+<div id="export-modal">
+    <div class="export-dialog">
+        <h3 style="color:#51cf66;">✅ PQRA 报告已生成</h3>
+        <p>自包含 HTML 报告已下载到本地，可以离线查看、分享给团队，或附在合规文档中。</p>
+        <p style="font-weight:600;color:#ffc107;">你的得分：<span id="modal-score">—</span></p>
+        <button class="btn btn-primary" onclick="closeExportModal()">关闭</button>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+// ═════════════════════════════════════════════════
+//  PQRA — Post-Quantum Readiness Assessment
+//  7 domains × total 52 questions
+// ═════════════════════════════════════════════════
+
+var DOMAINS = [
+    {
+        id:'d1', name:'Crypto Inventory & Discovery', cn:'加密资产盘点与发现',
+        color:'#00d4ff', shortColor:'#00d4ff',
+        desc:'算法资产清单完整性、自动化扫描、CBOM 维护',
+        qs:[
+            {id:'d1q1',text:'是否拥有所有在用加密算法的完整清单？',opts:[
+                {label:'完整清单（含版本和位置）',score:2},{label:'部分文档',score:1},{label:'没有文档记录',score:0}]},
+            {id:'d1q2',text:'是否启用加密依赖自动扫描？',opts:[
+                {label:'自动化 CI 扫描 + 周期性审计',score:2},{label:'手动扫描',score:1},{label:'无自动化扫描',score:0}]},
+            {id:'d1q3',text:'是否维护密码学物料清单 (CBOM)？',opts:[
+                {label:'有完整的 CBOM',score:2},{label:'有算法清单但非 CBOM 格式',score:1},{label:'无',score:0}]},
+            {id:'d1q4',text:'能否识别哪些系统使用了量子脆弱算法？',opts:[
+                {label:'自动化标记 + 分类（对称/非对称/PQC）',score:2},{label:'手动标注',score:1},{label:'无法识别',score:0}]},
+            {id:'d1q5',text:'算法版本是否在资产清单中追踪？',opts:[
+                {label:'版本、参数集、配置全程追踪',score:2},{label:'版本号记录但不追踪变更',score:1},{label:'未追踪',score:0}]},
+            {id:'d1q6',text:'是否追踪密钥存储和使用位置？',opts:[
+                {label:'密钥位置、用途、轮换策略全程可见',score:2},{label:'部分追踪',score:1},{label:'未追踪',score:0}]},
+            {id:'d1q7',text:'加密资产清单是否集成到 CMDB/资产管理系统？',opts:[
+                {label:'完全集成、自动化同步',score:2},{label:'独立维护的双轨制',score:1},{label:'无集成',score:0}]},
+            {id:'d1q8',text:'加密库及其版本是否全部编录？',opts:[
+                {label:'全部编录、含 SBOM 集成',score:2},{label:'部分编录',score:1},{label:'未编录',score:0}]}
+        ]
+    },
+    {
+        id:'d2', name:'Risk Assessment & Prioritization', cn:'风险评估与优先级',
+        color:'#ff6b6b', shortColor:'#ff6b6b',
+        desc:'量子威胁建模、资产分级、迁移紧迫度分析',
+        qs:[
+            {id:'d2q1',text:'是否执行了量子威胁建模？',opts:[
+                {label:'有正式量子威胁模型文档',score:2},{label:'非正式评估',score:1},{label:'未评估',score:0}]},
+            {id:'d2q2',text:'资产是否按量子漏洞严重性分级？',opts:[
+                {label:'自动化分级（高/中/低）含业务影响',score:2},{label:'手动分级',score:1},{label:'未分级',score:0}]},
+            {id:'d2q3',text:'是否有迁移紧迫度矩阵？',opts:[
+                {label:'有数据驱动的紧迫度矩阵',score:2},{label:'有非正式优先级列表',score:1},{label:'无',score:0}]},
+            {id:'d2q4',text:'是否评估"先收割后解密"(HNDL)暴露？',opts:[
+                {label:'已量化 HNDL 风险和数据保质期',score:2},{label:'意识到但未量化',score:1},{label:'未评估',score:0}]},
+            {id:'d2q5',text:'是否识别了最高优先级迁移系统？',opts:[
+                {label:'P0/P1/P2 系统分类完毕',score:2},{label:'部分识别',score:1},{label:'未识别',score:0}]},
+            {id:'d2q6',text:'是否维护加密故障爆炸半径分析？',opts:[
+                {label:'有自动化爆炸半径量化（如 bloom-risk graph）',score:2},{label:'手动分析',score:1},{label:'无',score:0}]},
+            {id:'d2q7',text:'加密风险是否纳入组织风险登记册？',opts:[
+                {label:'已纳入并定期评审',score:2},{label:'计划纳入',score:1},{label:'未纳入',score:0}]},
+            {id:'d2q8',text:'是否估算了加密迁移成本？',opts:[
+                {label:'有详细成本模型和 ROI 分析',score:2},{label:'粗略估算',score:1},{label:'未估算',score:0}]}
+        ]
+    },
+    {
+        id:'d3', name:'Standards & Compliance', cn:'标准与合规对齐',
+        color:'#51cf66', shortColor:'#51cf66',
+        desc:'NIST SP 800-208、FIPS 203-205、ISO、CNSA 2.0 对齐',
+        qs:[
+            {id:'d3q1',text:'是否对齐 NIST SP 800-208（有状态哈希签名）？',opts:[
+                {label:'已对齐并有实现',score:2},{label:'了解但未对齐',score:1},{label:'不了解',score:0}]},
+            {id:'d3q2',text:'是否实现 FIPS 203 (ML-KEM) 兼容模块？',opts:[
+                {label:'已实现并自测通过',score:2},{label:'使用第三方库',score:1},{label:'未实现',score:0}]},
+            {id:'d3q3',text:'是否实现 FIPS 204 (ML-DSA) 兼容模块？',opts:[
+                {label:'已实现并自测通过',score:2},{label:'使用第三方库',score:1},{label:'未实现',score:0}]},
+            {id:'d3q4',text:'是否实现 FIPS 205 (SLH-DSA) 兼容模块？',opts:[
+                {label:'已实现并自测通过',score:2},{label:'使用第三方库',score:1},{label:'未实现',score:0}]},
+            {id:'d3q5',text:'ISO/IEC 14888-4（PQC 签名）是否在路线图上？',opts:[
+                {label:'已在路线图中有时间表',score:2},{label:'评估中',score:1},{label:'未列入路线图',score:0}]},
+            {id:'d3q6',text:'是否跟踪 CNSA 2.0 时间线要求？',opts:[
+                {label:'全面跟踪并比对差距',score:2},{label:'了解要求但未系统跟踪',score:1},{label:'不了解',score:0}]},
+            {id:'d3q7',text:'是否有合规映射文档（标准→实现）？',opts:[
+                {label:'有完整的标准→代码映射',score:2},{label:'有非正式笔记',score:1},{label:'无',score:0}]}
+        ]
+    },
+    {
+        id:'d4', name:'Algorithm Agility & Replaceability', cn:'算法敏捷性与可替换性',
+        color:'#ffa94d', shortColor:'#ffa94d',
+        desc:'抽象层、硬编码移除、算法注册表、运行时切换',
+        qs:[
+            {id:'d4q1',text:'是否有加密算法抽象层？',opts:[
+                {label:'有完整的接口抽象层/插件架构',score:2},{label:'有部分接口抽象',score:1},{label:'硬编码，无抽象',score:0}]},
+            {id:'d4q2',text:'硬编码算法引用是否已移除？',opts:[
+                {label:'全部通过注册表/配置引用',score:2},{label:'部分移除',score:1},{label:'大量硬编码',score:0}]},
+            {id:'d4q3',text:'是否有密码学算法注册表？',opts:[
+                {label:'有自动发现的注册表',score:2},{label:'有静态清单',score:1},{label:'无',score:0}]},
+            {id:'d4q4',text:'算法切换能否通过配置实现（无需代码改动）？',opts:[
+                {label:'纯配置切换，零行代码改动',score:2},{label:'需少量代码改动',score:1},{label:'需大量重写',score:0}]},
+            {id:'d4q5',text:'是否支持运行时算法协商？',opts:[
+                {label:'支持动态能力通告和协商',score:2},{label:'支持编译时选择',score:1},{label:'不支持',score:0}]},
+            {id:'d4q6',text:'协议层与加密实现是否解耦？',opts:[
+                {label:'完全解耦，独立演进',score:2},{label:'部分耦合',score:1},{label:'强耦合',score:0}]},
+            {id:'d4q7',text:'能否在无需完整应用重新部署的情况下部署算法更新？',opts:[
+                {label:'热更新/插件式部署',score:2},{label:'需重启但无需重新部署',score:1},{label:'需完整重新部署',score:0}]},
+            {id:'d4q8',text:'是否有文档化的算法过渡计划？',opts:[
+                {label:'有完整的过渡计划（迁移→并行→退役）',score:2},{label:'有非正式计划',score:1},{label:'无',score:0}]}
+        ]
+    },
+    {
+        id:'d5', name:'Key Management & Lifecycle', cn:'密钥管理与生命周期',
+        color:'#748ffc', shortColor:'#748ffc',
+        desc:'密钥轮换、混合模式、证书迁移、形式化验证',
+        qs:[
+            {id:'d5q1',text:'是否有自动化密钥轮换？',opts:[
+                {label:'有自动化周期轮换 + 事件驱动轮换',score:2},{label:'有手动轮换流程',score:1},{label:'无轮换策略',score:0}]},
+            {id:'d5q2',text:'是否支持混合（经典+PQC）密钥交换模式？',opts:[
+                {label:'已部署混合 KEX',score:2},{label:'原型/实验阶段',score:1},{label:'不支持',score:0}]},
+            {id:'d5q3',text:'是否有 PQC 证书迁移计划？',opts:[
+                {label:'有详细迁移计划和兼容策略',score:2},{label:'意识层面',score:1},{label:'无计划',score:0}]},
+            {id:'d5q4',text:'密钥状态机是否经过形式化验证？',opts:[
+                {label:'TLA+/ProVerif 等形式化验证',score:2},{label:'文档化但未形式化',score:1},{label:'无',score:0}]},
+            {id:'d5q5',text:'是否有密钥版本管理和吊销机制？',opts:[
+                {label:'有版本 + 吊销 + CRL/OCSP 集成',score:2},{label:'有版本但无吊销',score:1},{label:'无',score:0}]},
+            {id:'d5q6',text:'根密钥是否有密钥仪式流程？',opts:[
+                {label:'有正式的多方密钥仪式和审计跟踪',score:2},{label:'有非正式流程',score:1},{label:'无仪式',score:0}]},
+            {id:'d5q7',text:'密钥生成程序是否文档化且可审计？',opts:[
+                {label:'完整文档化 + 自动化审计日志',score:2},{label:'有文档但无自动化审计',score:1},{label:'无',score:0}]}
+        ]
+    },
+    {
+        id:'d6', name:'Testing & Validation', cn:'测试与验证',
+        color:'#e879f9', shortColor:'#e879f9',
+        desc:'KAT、TVLA、跨库互操作、CI集成、模糊测试',
+        qs:[
+            {id:'d6q1',text:'所有算法是否实现已知答案测试 (KAT)？',opts:[
+                {label:'全部算法有 KAT 并 CI 集成',score:2},{label:'部分算法有 KAT',score:1},{label:'无 KAT',score:0}]},
+            {id:'d6q2',text:'是否执行测试向量泄漏评估 (TVLA)？',opts:[
+                {label:'已执行并通过 TVLA（36/36 或等效）',score:2},{label:'执行中',score:1},{label:'未执行',score:0}]},
+            {id:'d6q3',text:'是否进行跨库互操作测试？',opts:[
+                {label:'与多个独立库交叉验证',score:2},{label:'单一库测试',score:1},{label:'无',score:0}]},
+            {id:'d6q4',text:'加密测试是否集成到 CI/CD？',opts:[
+                {label:'全矩阵 CI（多平台 × 多 Node 版本）',score:2},{label:'部分 CI',score:1},{label:'无 CI',score:0}]},
+            {id:'d6q5',text:'加密模块是否实现模糊测试？',opts:[
+                {label:'有持续 fuzzing + 覆盖率追踪',score:2},{label:'有临时 fuzzing',score:1},{label:'无 fuzzing',score:0}]},
+            {id:'d6q6',text:'是否评估侧信道抗性？',opts:[
+                {label:'TVLA + 物理侧信道评估',score:2},{label:'仅软件层面定时分析',score:1},{label:'未评估',score:0}]},
+            {id:'d6q7',text:'是否使用或计划使用 NIST ACVP 测试向量？',opts:[
+                {label:'已集成 ACVP 测试向量',score:2},{label:'计划中',score:1},{label:'不了解',score:0}]}
+        ]
+    },
+    {
+        id:'d7', name:'Governance & Org Readiness', cn:'治理与组织就绪度',
+        color:'#f97316', shortColor:'#f97316',
+        desc:'团队专长、供应商评估、时间表、预算、审计',
+        qs:[
+            {id:'d7q1',text:'团队是否具备 PQC 特定专业知识？',opts:[
+                {label:'有专职 PQC 团队或认证专家',score:2},{label:'有兼职人员或自学',score:1},{label:'无 PQC 专业知识',score:0}]},
+            {id:'d7q2',text:'是否对供应商进行 PQC 就绪度评估？',opts:[
+                {label:'有正式供应商评估表',score:2},{label:'非正式评估',score:1},{label:'未评估',score:0}]},
+            {id:'d7q3',text:'是否有 PQC 迁移时间表及里程碑？',opts:[
+                {label:'有详细的分阶段路线图',score:2},{label:'有大致时间框架',score:1},{label:'无时间表',score:0}]},
+            {id:'d7q4',text:'是否有专项 PQC 预算？',opts:[
+                {label:'有批准预算和资源配置',score:2},{label:'规划中',score:1},{label:'无预算',score:0}]},
+            {id:'d7q5',text:'是否提供 PQC 意识培训？',opts:[
+                {label:'定期培训 + 全员覆盖',score:2},{label:'偶尔分享',score:1},{label:'无培训',score:0}]},
+            {id:'d7q6',text:'是否有第三方审计计划？',opts:[
+                {label:'已完成或已签约审计',score:2},{label:'计划中（有时间表）',score:1},{label:'无计划',score:0}]},
+            {id:'d7q7',text:'是否有加密治理委员会或类似机构？',opts:[
+                {label:'有正式治理委员会及定期会议',score:2},{label:'有非正式决策流程',score:1},{label:'无',score:0}]}
+        ]
+    }
+];
+
+// NIST/CNSA 2.0 mapping
+var STANDARD_MAPPING = [
+    {standard:'NIST SP 800-208',description:'Stateful Hash-Based Signatures',questions:'d1q1,d1q4,d3q1,d3q7,d4q8'},
+    {standard:'FIPS 203 (ML-KEM)',description:'Module-Lattice-Based KEM',questions:'d1q1,d1q2,d3q2,d3q7,d6q1,d6q4,d6q7'},
+    {standard:'FIPS 204 (ML-DSA)',description:'Module-Lattice-Based Digital Signature',questions:'d1q1,d3q3,d3q7,d6q1,d6q3,d6q4,d6q7'},
+    {standard:'FIPS 205 (SLH-DSA)',description:'Stateless Hash-Based Digital Signature',questions:'d1q1,d3q4,d3q7,d6q1,d6q4,d6q7'},
+    {standard:'CNSA 2.0',description:'Commercial National Security Algorithm Suite 2.0',questions:'d1q1,d1q4,d2q1,d2q3,d2q4,d3q6,d3q7,d4q8,d5q2,d5q3,d7q3'},
+    {standard:'ISO/IEC 14888-4',description:'PQC Digital Signatures',questions:'d3q5,d3q7,d6q1,d6q4'},
+    {standard:'NIST SP 800-57 Pt 1',description:'Key Management Guidelines',questions:'d1q6,d5q1,d5q4,d5q5,d5q6,d5q7'},
+    {standard:'NISTIR 8547',description:'Transition to PQC Standards',questions:'d2q1,d2q3,d2q5,d4q8,d5q3,d7q3,d7q4'}
+];
+
+// FIBEMATE pre-filled scores
+var FIBEMATE_SCORES = [90, 75, 80, 40, 50, 85, 55];
+var FIBEMATE_OVERALL = (FIBEMATE_SCORES.reduce(function(a,b){return a+b;},0)/7).toFixed(2);
+
+// N = 7 domains
+var RADAR_N = 7;
+var RADAR_MAX = 100;
+
+// ═══════════ Build Questionnaire ═══════════
+(function buildUI() {
+    var container = document.getElementById('questions-container');
+    var totalQs = 0;
+    DOMAINS.forEach(function(domain, di) {
+        var qCount = domain.qs.length;
+        totalQs += qCount;
+        var html = '<div class="domain-section" id="domain-'+domain.id+'">' +
+            '<div class="domain-header" style="background:rgba('+hexToRgb(domain.color)+',0.06);" onclick="toggleDomain(\''+domain.id+'\')">' +
+                '<div class="domain-num" style="background:rgba('+hexToRgb(domain.color)+',0.15);color:'+domain.color+';">'+(di+1)+'</div>' +
+                '<div class="domain-name" style="color:'+domain.color+';">'+domain.cn+' <span style="font-weight:400;font-size:0.75rem;color:#64748b;">('+domain.name+')</span></div>' +
+                '<div class="domain-progress" id="prog-'+domain.id+'">0/'+qCount+'</div>' +
+                '<div class="domain-toggle">▼</div>' +
+            '</div>' +
+            '<div class="domain-body">' +
+                '<div style="font-size:0.75rem;color:#64748b;margin-bottom:0.8rem;">'+domain.desc+'</div>';
+        domain.qs.forEach(function(q, qi) {
+            html += '<div class="q-block">' +
+                '<div class="q-label">Q'+(qi+1)+'. '+q.text+'</div>' +
+                '<div class="q-options" data-qid="'+q.id+'" data-domain="'+domain.id+'">' +
+                    q.opts.map(function(opt, oi) {
+                        return '<div class="q-opt" data-score="'+opt.score+'" data-idx="'+oi+'" onclick="selectOpt(this)">'+opt.label+'</div>';
+                    }).join('') +
+                '</div>' +
+            '</div>';
+        });
+        html += '</div></div>';
+        container.innerHTML += html;
+    });
+})();
+
+function hexToRgb(hex) {
+    var r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+    return r+','+g+','+b;
+}
+
+function selectOpt(el) {
+    var parent = el.parentElement;
+    var siblings = parent.querySelectorAll('.q-opt');
+    siblings.forEach(function(s) { s.classList.remove('selected'); });
+    el.classList.add('selected');
+    // Update domain progress
+    var domainId = parent.getAttribute('data-domain');
+    updateDomainProgress(domainId);
+}
+
+function updateDomainProgress(domainId) {
+    var domain = DOMAINS.find(function(d){return d.id===domainId;});
+    if (!domain) return;
+    var answered = 0;
+    domain.qs.forEach(function(q) {
+        var container = document.querySelector('.q-options[data-qid="'+q.id+'"]');
+        if (container && container.querySelector('.q-opt.selected')) answered++;
+    });
+    var progEl = document.getElementById('prog-'+domainId);
+    if (progEl) progEl.textContent = answered+'/'+domain.qs.length;
+}
+
+function toggleDomain(id) {
+    var el = document.getElementById('domain-'+id);
+    el.classList.toggle('domain-collapsed');
+}
+
+function toggleAllDomains() {
+    var allCollapsed = true;
+    DOMAINS.forEach(function(d) {
+        var el = document.getElementById('domain-'+d.id);
+        if (!el.classList.contains('domain-collapsed')) allCollapsed = false;
+    });
+    DOMAINS.forEach(function(d) {
+        var el = document.getElementById('domain-'+d.id);
+        if (allCollapsed) el.classList.remove('domain-collapsed');
+        else el.classList.add('domain-collapsed');
+    });
+}
+
+// ═══════════ Scoring ═══════════
+function getAnswers() {
+    var answers = {};
+    var allAnswered = true;
+    DOMAINS.forEach(function(domain) {
+        domain.qs.forEach(function(q) {
+            var container = document.querySelector('.q-options[data-qid="'+q.id+'"]');
+            var selected = container.querySelector('.q-opt.selected');
+            if (selected) {
+                answers[q.id] = parseInt(selected.getAttribute('data-score'));
+            } else {
+                answers[q.id] = null;
+                allAnswered = false;
+            }
+        });
+    });
+    return { answers:answers, complete:allAnswered };
+}
+
+function calcScores(answers) {
+    var domainScores = [];
+    var domainNames = [];
+    DOMAINS.forEach(function(domain) {
+        var total = 0, count = 0, maxPossible = 0;
+        domain.qs.forEach(function(q) {
+            maxPossible += 2; // Each question max score is 2
+            if (answers[q.id] !== null) { total += answers[q.id]; count++; }
+        });
+        // Convert to percentage: total / (count*2) * 100
+        var pct = count > 0 ? Math.round((total / (count * 2)) * 100) : 0;
+        domainScores.push(pct);
+        domainNames.push(domain.cn);
+    });
+    var overall = Math.round(domainScores.reduce(function(a,b){return a+b;},0) / domainScores.length * 100) / 100;
+    return { scores:domainScores, names:domainNames, overall:overall };
+}
+
+// ═══════════ Maturity Level ═══════════
+function getMaturityLevel(overall) {
+    if (overall <= 25) return { level:1, name:'Initial — 初始阶段', cls:'level1',
+        desc:'无 PQC 意识，加密资产无系统管理，无迁移计划。' };
+    if (overall <= 50) return { level:2, name:'Aware — 意识阶段', cls:'level2',
+        desc:'加密资产清单已建立，PQC 规划已启动，标准初步了解。' };
+    if (overall <= 70) return { level:3, name:'Defined — 定义阶段', cls:'level3',
+        desc:'标准已映射，部分 PQC 实现已存在，测试流程初步建立。' };
+    if (overall <= 85) return { level:4, name:'Managed — 管理阶段', cls:'level4',
+        desc:'全面扫描和跟踪，KAT 已验证，CI 集成，治理框架已建立。' };
+    return { level:5, name:'Optimized — 优化阶段', cls:'level5',
+        desc:'第三方审计完成，正式认证取得，自动化迁移就绪，持续优化。' };
+}
+
+function maturityColor(cls) {
+    var map = { level1:'#ff6b6b', level2:'#ffa94d', level3:'#ffc107', level4:'#51cf66', level5:'#00d4ff' };
+    return map[cls] || '#00d4ff';
+}
+
+var DOMAIN_COLORS = DOMAINS.map(function(d){return d.color;});
+
+// ═══════════ 3D Radar ═══════════
+var radarScene, radarCamera, radarRenderer, radarControls;
+var userGroup, fibGroup;
+var nodeSpheres = [];
+
+function initRadar() {
+    var container = document.getElementById('radar-container');
+    if (radarRenderer) { radarRenderer.dispose(); container.innerHTML = ''; }
+
+    radarScene = new THREE.Scene();
+    radarCamera = new THREE.PerspectiveCamera(40, container.clientWidth/container.clientHeight, 0.5, 60);
+    radarCamera.position.set(0, 4, 8);
+    radarCamera.lookAt(0, 0, 0);
+
+    radarRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    radarRenderer.setSize(container.clientWidth, Math.max(container.clientHeight, 450));
+    radarRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(radarRenderer.domElement);
+
+    // Simple orbit controls (manual)
+    radarControls = { autoRotate:true, autoRotateSpeed:0.4, theta:0, phi:0.7, distance:8,
+        targetTheta:0, targetPhi:0.7, targetDistance:8,
+        dragging:false, lastX:0, lastY:0,
+        update:function(dt) {
+            this.theta += (this.targetTheta - this.theta) * 0.1;
+            this.phi += (this.targetPhi - this.phi) * 0.1;
+            this.distance += (this.targetDistance - this.distance) * 0.1;
+            if (this.autoRotate) this.targetTheta += this.autoRotateSpeed * dt;
+            var r = this.distance * Math.cos(this.phi);
+            radarCamera.position.set(r * Math.cos(this.theta), this.distance * Math.sin(this.phi), r * Math.sin(this.theta));
+            radarCamera.lookAt(0, 0, 0);
+        }
+    };
+
+    // Mouse handlers
+    container.addEventListener('mousedown', function(e) {
+        radarControls.dragging = true; radarControls.lastX = e.clientX; radarControls.lastY = e.clientY;
+    });
+    window.addEventListener('mousemove', function(e) {
+        if (!radarControls.dragging) return;
+        var dx = e.clientX - radarControls.lastX, dy = e.clientY - radarControls.lastY;
+        radarControls.autoRotate = false;
+        radarControls.targetTheta -= dx * 0.005;
+        radarControls.targetPhi = Math.max(0.1, Math.min(1.3, radarControls.targetPhi + dy * 0.005));
+        radarControls.lastX = e.clientX; radarControls.lastY = e.clientY;
+    });
+    window.addEventListener('mouseup', function() { radarControls.dragging = false; });
+    container.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        radarControls.targetDistance = Math.max(3.5, Math.min(16, radarControls.targetDistance + e.deltaY * 0.01));
+    }, {passive:false});
+
+    radarScene.add(new THREE.AmbientLight(0x334466, 1.5));
+    var sun = new THREE.DirectionalLight(0x8899ff, 1.2);
+    sun.position.set(5, 8, 5); radarScene.add(sun);
+
+    // Polar grid
+    var grid = new THREE.PolarGridHelper(5.2, 40, 20, 64, 0x1a1a3e, 0x1a1a3e);
+    grid.position.y = -0.5; radarScene.add(grid);
+
+    // Rings
+    for (var lvl=20; lvl<=100; lvl+=20) {
+        var rr = (lvl/RADAR_MAX)*4.5;
+        var rpts = [];
+        for (var i=0; i<RADAR_N; i++) {
+            var a = (i/RADAR_N)*Math.PI*2 - Math.PI/2;
+            rpts.push(new THREE.Vector2(Math.cos(a)*rr, Math.sin(a)*rr));
+        }
+        rpts.push(rpts[0].clone());
+        var rg = new THREE.BufferGeometry();
+        rg.setFromPoints(rpts.map(function(v){return new THREE.Vector3(v.x,0,v.y);}));
+        radarScene.add(new THREE.Line(rg, new THREE.LineBasicMaterial({color:0x2a2a4a,opacity:lvl===100?0.8:0.35,transparent:true})));
+        var s = makeTextSprite(String(lvl), '#3a3a5a', 22);
+        s.position.set(rr+0.2, 0.05, 0); s.scale.set(0.5,0.25,1); radarScene.add(s);
+    }
+
+    // Axes
+    for (var i=0; i<RADAR_N; i++) {
+        var a = (i/RADAR_N)*Math.PI*2 - Math.PI/2;
+        var ex=Math.cos(a)*4.8, ez=Math.sin(a)*4.8;
+        var ag = new THREE.BufferGeometry();
+        ag.setFromPoints([new THREE.Vector3(0,-0.35,0), new THREE.Vector3(ex,-0.35,ez)]);
+        radarScene.add(new THREE.Line(ag, new THREE.LineBasicMaterial({color:0x1a1a3e,opacity:0.5,transparent:true})));
+    }
+
+    userGroup = new THREE.Group(); radarScene.add(userGroup);
+    fibGroup = new THREE.Group(); radarScene.add(fibGroup);
+
+    // Particles
+    var pg = new THREE.BufferGeometry();
+    var pp = new Float32Array(200*3);
+    for (var p=0;p<200;p++) {
+        var rad=1.5+Math.random()*5.5,th=Math.random()*Math.PI*2;
+        pp[p*3]=Math.cos(th)*rad;pp[p*3+1]=(Math.random()-0.5)*1.8;pp[p*3+2]=Math.sin(th)*rad;
+    }
+    pg.setAttribute('position',new THREE.BufferAttribute(pp,3));
+    radarScene.add(new THREE.Points(pg,new THREE.PointsMaterial({color:0x334466,size:0.02,opacity:0.4,transparent:true})));
+
+    // Center
+    var cs = new THREE.Mesh(new THREE.SphereGeometry(0.16,20,20),
+        new THREE.MeshStandardMaterial({color:0xff9800,emissive:0x441100,roughness:0.2,metalness:0.4}));
+    cs.position.y=-0.34; radarScene.add(cs);
+}
+
+function makeTextSprite(text, color, size) {
+    var c=document.createElement('canvas');c.width=256;c.height=128;
+    var ctx=c.getContext('2d');
+    ctx.font='bold '+size+'px -apple-system,"Noto Sans SC",sans-serif';
+    ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.fillText(text,128,64);
+    var tex=new THREE.CanvasTexture(c);tex.minFilter=THREE.LinearFilter;
+    return new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+}
+
+function buildRadar(scores, names) {
+    while (userGroup.children.length) userGroup.remove(userGroup.children[0]);
+    while (fibGroup.children.length) fibGroup.remove(fibGroup.children[0]);
+
+    // User polygon (filled)
+    var pts = [];
+    for (var i=0; i<RADAR_N; i++) {
+        var a = (i/RADAR_N)*Math.PI*2 - Math.PI/2;
+        var r = (scores[i]/RADAR_MAX)*4.5;
+        pts.push(new THREE.Vector2(Math.cos(a)*r, Math.sin(a)*r));
+    }
+    var shape = new THREE.Shape(pts);
+    var sg = new THREE.ShapeGeometry(shape);
+    var sm = new THREE.MeshBasicMaterial({color:0x00d4ff,side:2,transparent:true,opacity:0.25,depthWrite:false});
+    var mesh = new THREE.Mesh(sg,sm);
+    mesh.rotation.x = -Math.PI/2; mesh.position.y = -0.33;
+    userGroup.add(mesh);
+
+    pts.push(pts[0].clone());
+    var og = new THREE.BufferGeometry();
+    og.setFromPoints(pts.map(function(v){return new THREE.Vector3(v.x,-0.33,v.y);}));
+    userGroup.add(new THREE.Line(og, new THREE.LineBasicMaterial({color:0x00d4ff,opacity:0.9,transparent:true})));
+
+    // User nodes
+    nodeSpheres = [];
+    for (var i=0; i<RADAR_N; i++) {
+        var a = (i/RADAR_N)*Math.PI*2 - Math.PI/2;
+        var r = (scores[i]/RADAR_MAX)*4.5;
+        var colorHex = parseInt(DOMAIN_COLORS[i].replace('#',''), 16);
+        var ns = new THREE.Mesh(
+            new THREE.SphereGeometry(0.1,16,16),
+            new THREE.MeshStandardMaterial({color:colorHex,emissive:colorHex,emissiveIntensity:0.4,roughness:0.25})
+        );
+        ns.position.set(Math.cos(a)*r, -0.32, Math.sin(a)*r);
+        userGroup.add(ns);
+        nodeSpheres.push(ns);
+    }
+
+    // FIBEMATE reference (dashed yellow)
+    var fpts = [];
+    for (var i=0; i<RADAR_N; i++) {
+        var a = (i/RADAR_N)*Math.PI*2 - Math.PI/2;
+        fpts.push(new THREE.Vector3(Math.cos(a)*(FIBEMATE_SCORES[i]/RADAR_MAX)*4.5, -0.31, Math.sin(a)*(FIBEMATE_SCORES[i]/RADAR_MAX)*4.5));
+    }
+    fpts.push(fpts[0].clone());
+    var DL=0.25, GL=0.2;
+    for (var s=0; s<RADAR_N; s++) {
+        var st=fpts[s],en=fpts[s+1];
+        var dx=en.x-st.x,dz=en.z-st.z;
+        var seg=Math.sqrt(dx*dx+dz*dz);
+        if (seg<0.001) continue;
+        var nx=dx/seg,nz=dz/seg,drawn=0;
+        while (drawn<seg) {
+            var d0=drawn,d1=Math.min(drawn+DL,seg);
+            var sg2=new THREE.BufferGeometry();
+            sg2.setFromPoints([new THREE.Vector3(st.x+nx*d0,-0.31,st.z+nz*d0), new THREE.Vector3(st.x+nx*d1,-0.31,st.z+nz*d1)]);
+            fibGroup.add(new THREE.Line(sg2,new THREE.LineBasicMaterial({color:0xffc107,opacity:0.55,transparent:true})));
+            drawn=d1+GL;
+        }
+    }
+    for (var i=0;i<RADAR_N;i++) {
+        var dot=new THREE.Mesh(new THREE.SphereGeometry(0.06,10,10),new THREE.MeshBasicMaterial({color:0xffc107}));
+        dot.position.copy(fpts[i]); fibGroup.add(dot);
+    }
+}
+
+// ═══════════ Animate ═══════════
+var clock = new THREE.Clock();
+function animateRadar() {
+    requestAnimationFrame(animateRadar);
+    if (radarControls) {
+        var dt = Math.min(clock.getDelta(), 0.1);
+        radarControls.update(dt);
+    }
+    if (radarRenderer && radarScene && radarCamera) radarRenderer.render(radarScene, radarCamera);
+}
+
+// ═══════════ Domain labels for radar ═══════════
+var domainLabelShort = ['资产盘点','风险评估','标准合规','算法敏捷','密钥管理','测试验证','组织治理'];
+
+// ═══════════ Calculate & Show ═══════════
+function calculateAndShow() {
+    var result = getAnswers();
+    if (!result.complete) {
+        alert('请先完成所有 52 道题目再生成雷达图。（未作答的题目请至少选择一个选项）');
+        return;
+    }
+    var r = calcScores(result.answers);
+
+    // Hide questionnaire, show results
+    document.getElementById('questionnaire').style.display = 'none';
+    document.getElementById('results-section').style.display = 'block';
+
+    // Step indicator
+    document.getElementById('sd1').classList.remove('active'); document.getElementById('sd1').classList.add('done');
+    document.getElementById('sl1').classList.add('done');
+    document.getElementById('sd2').classList.add('active');
+
+    // Overall scores
+    document.getElementById('your-score').textContent = r.overall.toFixed(2);
+    var subs = [];
+    for (var i=0;i<RADAR_N;i++) subs.push(domainLabelShort[i]+': '+r.scores[i]);
+    document.getElementById('your-subs').textContent = subs.join(' · ');
+
+    document.getElementById('fibemate-overall').textContent = FIBEMATE_OVERALL;
+    document.getElementById('fibemate-subs').textContent = 'Inventory 90 · Risk 75 · Standards 80 · Agility 40 · Key 50 · Test 85 · Gov 55';
+
+    // Maturity
+    var maturity = getMaturityLevel(r.overall);
+    var matBadge = document.getElementById('maturity-badge');
+    matBadge.textContent = 'L'+maturity.level+' · '+maturity.name;
+    matBadge.style.background = 'rgba('+hexToRgb(maturityColor(maturity.cls))+',0.15)';
+    matBadge.style.color = maturityColor(maturity.cls);
+    document.getElementById('maturity-desc').textContent = maturity.desc;
+
+    // Domain score bars
+    buildDomainScoreBars(r.scores);
+    buildImprovements(r.scores);
+    buildMappingTable();
+
+    // Init radar
+    initRadar();
+    buildRadar(r.scores, domainLabelShort);
+
+    // Add domain labels
+    for (var i=0; i<RADAR_N; i++) {
+        var a = (i/RADAR_N)*Math.PI*2 - Math.PI/2;
+        var lr = 5.1;
+        var s = makeTextSprite(domainLabelShort[i], DOMAIN_COLORS[i], 22);
+        s.position.set(Math.cos(a)*lr, 0.1, Math.sin(a)*lr);
+        s.scale.set(1.3,0.65,1); radarScene.add(s);
+    }
+
+    document.getElementById('results-section').scrollIntoView({behavior:'smooth'});
+}
+
+function buildDomainScoreBars(scores) {
+    var grid = document.getElementById('domain-scores-grid');
+    grid.innerHTML = DOMAINS.map(function(d, i) {
+        return '<div class="ds-row">' +
+            '<div class="ds-color" style="background:'+d.color+';"></div>' +
+            '<div class="ds-name">'+d.cn+'</div>' +
+            '<div class="ds-bar-wrap"><div class="ds-bar" style="width:'+scores[i]+'%;background:'+d.color+';"></div></div>' +
+            '<div class="ds-score" style="color:'+d.color+';">'+scores[i]+'%</div>' +
+        '</div>';
+    }).join('');
+}
+
+function buildImprovements(scores) {
+    var tips = [
+        { dim:0, threshold:70, icon:'📋', text:'完善加密资产清单：启用自动化 CBOM 生成和周期性扫描', gain:'+10-20%' },
+        { dim:1, threshold:70, icon:'⚠️', text:'执行正式量子威胁建模：量化 HNDL 风险并建立迁移紧迫度矩阵', gain:'+15-25%' },
+        { dim:2, threshold:75, icon:'📐', text:'对齐 CNSA 2.0 时间线：建立标准→实现映射文档', gain:'+10-15%' },
+        { dim:3, threshold:65, icon:'🔌', text:'引入算法抽象层：移除硬编码引用，建立算法注册表', gain:'+20-30%' },
+        { dim:4, threshold:65, icon:'🔑', text:'实施自动化密钥轮换：部署混合 KEX 模式，建立证书迁移计划', gain:'+15-25%' },
+        { dim:5, threshold:75, icon:'🧪', text:'增加模糊测试和侧信道评估：集成 ACVP 测试向量', gain:'+10-15%' },
+        { dim:6, threshold:65, icon:'🏛️', text:'建立 PQC 治理框架：专项预算 + 第三方审计 + 意识培训', gain:'+15-25%' }
+    ];
+
+    var list = [];
+    tips.forEach(function(tip) {
+        if (scores[tip.dim] < tip.threshold) list.push(tip);
+    });
+
+    if (list.length === 0) {
+        var weakest = scores.map(function(s,i){return {i:i,s:s};}).sort(function(a,b){return a.s-b.s;}).slice(0,3);
+        weakest.forEach(function(w) { list.push(tips[w.i]); });
+    }
+
+    document.getElementById('improvements').innerHTML = list.slice(0,5).map(function(t) {
+        return '<div class="improv-item">' +
+            '<span class="improv-icon">'+t.icon+'</span>' +
+            '<span class="improv-text">'+t.text+'</span>' +
+            '<span class="improv-gain">'+t.gain+'</span>' +
+        '</div>';
+    }).join('');
+}
+
+function buildMappingTable() {
+    var result = getAnswers();
+    var answers = result.answers;
+    var table = document.getElementById('mapping-table');
+    var headerHtml = '<thead><tr><th>标准</th><th>描述</th><th>覆盖题目</th><th>你的状态</th></tr></thead><tbody>';
+
+    STANDARD_MAPPING.forEach(function(sm) {
+        var qids = sm.questions.split(',');
+        var covered = 0, total = qids.length;
+        qids.forEach(function(qid) {
+            if (answers[qid] === 2) covered++;
+        });
+        var pct = total > 0 ? Math.round((covered/total)*100) : 0;
+        var icon = pct >= 80 ? '<span class="check">✅</span>' : (pct >= 40 ? '<span class="partial">◐</span>' : '<span class="none">✕</span>');
+        headerHtml += '<tr>' +
+            '<td><strong>'+sm.standard+'</strong></td>' +
+            '<td>'+sm.description+'</td>' +
+            '<td>'+total+' 题</td>' +
+            '<td>'+icon+' '+pct+'% 覆盖</td>' +
+        '</tr>';
+    });
+    table.innerHTML = headerHtml + '</tbody>';
+}
+
+function backToQuestions() {
+    document.getElementById('questionnaire').style.display = 'block';
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('sd2').classList.remove('active');
+    document.getElementById('sd1').classList.add('active');
+    document.getElementById('sd1').classList.remove('done');
+    document.getElementById('sl1').classList.remove('done');
+    if (radarRenderer) { radarRenderer.dispose(); document.getElementById('radar-container').innerHTML = ''; }
+    radarScene = null; radarCamera = null; radarRenderer = null;
+}
+
+function resetAll() {
+    document.querySelectorAll('.q-opt.selected').forEach(function(el) { el.classList.remove('selected'); });
+    document.getElementById('results-section').style.display = 'none';
+    document.getElementById('questionnaire').style.display = 'block';
+    document.querySelectorAll('.step-dot').forEach(function(d,i) {
+        d.classList.remove('done','active');
+        if (i===0) d.classList.add('active');
+    });
+    document.querySelectorAll('.step-line').forEach(function(l) { l.classList.remove('done'); });
+    if (radarRenderer) { radarRenderer.dispose(); document.getElementById('radar-container').innerHTML = ''; }
+    radarScene = null; radarCamera = null; radarRenderer = null;
+    // Reset progress indicators
+    DOMAINS.forEach(function(d) {
+        var progEl = document.getElementById('prog-'+d.id);
+        if (progEl) progEl.textContent = '0/'+d.qs.length;
+    });
+    window.scrollTo({top:0, behavior:'smooth'});
+}
+
+// ═══════════ Export ═══════════
+function exportReport() {
+    var result = getAnswers();
+    if (!result.complete) { alert('请先生成评估结果。'); return; }
+    var r = calcScores(result.answers);
+    var maturity = getMaturityLevel(r.overall);
+
+    var domainRows = DOMAINS.map(function(d,i) {
+        return '<tr><td style="padding:6px 12px;color:#94a3b8;font-size:0.78rem;">'+d.cn+'</td>' +
+            '<td style="padding:6px 12px;"><div style="width:100%;height:10px;background:#1a2332;border-radius:5px;">' +
+            '<div style="width:'+r.scores[i]+'%;height:100%;background:'+d.color+';border-radius:5px;"></div></div></td>' +
+            '<td style="padding:6px 12px;font-weight:700;color:'+d.color+';font-size:0.82rem;">'+r.scores[i]+'%</td></tr>';
+    }).join('');
+
+    var qaRows = DOMAINS.map(function(d) {
+        return '<tr><td colspan="3" style="padding:10px 12px;background:#1a2332;color:'+d.color+';font-weight:700;font-size:0.78rem;">'+(DOMAINS.indexOf(d)+1)+'. '+d.cn+'</td></tr>' +
+        d.qs.map(function(q, qi) {
+            var ans = result.answers[q.id];
+            var label = ans===2 ? '✅ 完成' : (ans===1 ? '◐ 进行中' : '✕ 未开始');
+            return '<tr><td style="padding:4px 12px;font-size:0.72rem;color:#c0c0d0;">Q'+(qi+1)+'. '+q.text+'</td>' +
+                '<td style="padding:4px 12px;font-size:0.7rem;color:'+(ans===2?'#51cf66':(ans===1?'#ffc107':'#ff6b6b'))+';">'+label+'</td></tr>';
+        }).join('');
+    }).join('');
+
+    var mappingRows = STANDARD_MAPPING.map(function(sm) {
+        var qids = sm.questions.split(',');
+        var covered = 0;
+        qids.forEach(function(qid) { if (result.answers[qid] === 2) covered++; });
+        var pct = Math.round((covered/qids.length)*100);
+        return '<tr><td style="padding:4px 12px;">'+sm.standard+'</td><td style="padding:4px 12px;">'+sm.description+'</td><td style="padding:4px 12px;">'+qids.length+' 题</td><td style="padding:4px 12px;">'+pct+'% 覆盖</td></tr>';
+    }).join('');
+
+    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n' +
+        '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n' +
+        '<title>PQRA 后量子就绪度评估报告</title>\n<style>\n' +
+        '*{margin:0;padding:0;box-sizing:border-box}\n' +
+        'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#0a0a1a;color:#e2e8f0;padding:2rem;max-width:800px;margin:0 auto}\n' +
+        'h1{font-size:1.5rem;color:#00d4ff;margin-bottom:0.5rem}\n' +
+        '.meta{font-size:0.75rem;color:#64748b;margin-bottom:1.5rem}\n' +
+        '.score-big{font-size:3rem;font-weight:700;color:#ffc107;text-align:center;margin:1.5rem 0}\n' +
+        'table{width:100%;border-collapse:collapse;margin:1.5rem 0}\n' +
+        'th{text-align:left;padding:8px 12px;background:#1a2332;color:#64748b;font-size:0.72rem;border-bottom:1px solid #2a2a4a}\n' +
+        'td{border-bottom:1px solid #1a2332;font-size:0.75rem}\n' +
+        '.section-title{font-size:1rem;color:#00d4ff;margin:2rem 0 0.6rem;padding-bottom:0.4rem;border-bottom:1px solid #2a2a4a}\n' +
+        '.footer{text-align:center;color:#475569;font-size:0.7rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #1e293b}\n' +
+        '.footer a{color:#00d4ff}\n' +
+        '.mat-badge{display:inline-block;padding:6px 18px;border-radius:20px;font-weight:700;font-size:0.85rem;margin:1rem 0}\n' +
+        '</style>\n</head>\n<body>\n' +
+        '<h1>📊 PQRA 后量子密码就绪度评估报告</h1>\n' +
+        '<div class="meta">FIBEMATE PQRA Tool · 评估时间: '+new Date().toISOString().slice(0,19)+' · 52 题 · 7 领域</div>\n' +
+        '<div class="score-big">'+r.overall.toFixed(2)+' <span style="font-size:1rem;color:#64748b;">/ 100</span></div>\n' +
+        '<div style="text-align:center;"><span class="mat-badge" style="background:rgba('+hexToRgb(maturityColor(maturity.cls))+',0.15);color:'+maturityColor(maturity.cls)+';">L'+maturity.level+' · '+maturity.name+'</span></div>\n' +
+        '<p style="text-align:center;font-size:0.78rem;color:#94a3b8;">'+maturity.desc+'</p>\n' +
+
+        '<table><thead><tr><th>领域</th><th>得分</th><th>百分比</th></tr></thead><tbody>'+domainRows+'</tbody></table>\n' +
+
+        '<div class="section-title">📐 NIST / ISO / CNSA 2.0 合规状态</div>\n' +
+        '<table><thead><tr><th>标准</th><th>描述</th><th>题目数</th><th>覆盖率</th></tr></thead><tbody>'+mappingRows+'</tbody></table>\n' +
+
+        '<div class="section-title">📝 详细答题记录</div>\n' +
+        '<table>'+qaRows+'</table>\n' +
+
+        '<div class="section-title">🔬 FIBEMATE 参照数据</div>\n' +
+        '<p style="font-size:0.76rem;color:#94a3b8;">FIBEMATE 综合得分: '+FIBEMATE_OVERALL+'/100 · Inventory 90 · Risk 75 · Standards 80 · Agility 40 · Key 50 · Test 85 · Gov 55</p>\n' +
+        '<p style="font-size:0.75rem;color:#64748b;">基于 147 依赖项、12 种算法类型、CI 24 路矩阵、TVLA 36/36、TLA+ 形式化验证、bloom-risk graph 的实际数据。</p>\n' +
+
+        '<p style="font-size:0.76rem;color:#94a3b8;margin-top:1.5rem;">评估工具: <a href="https://fibemate.net/docs/pqra-assessment.html" style="color:#00d4ff;">FIBEMATE PQRA Self-Assessment Tool</a> · Post-Quantum Readiness Assessment Framework · 映射 NIST/ISO/CNSA 2.0 合规要求。</p>\n' +
+        '<div class="footer">Generated by <a href="https://fibemate.net">FIBEMATE</a> v3.3.0 · GPL-3.0-only</div>\n' +
+        '</body>\n</html>';
+
+    var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'pqra-assessment-report-'+new Date().toISOString().slice(0,10)+'.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    document.getElementById('modal-score').textContent = r.overall.toFixed(2)+' / 100 · L'+maturity.level+' '+maturity.name;
+    document.getElementById('export-modal').classList.add('show');
+}
+
+function closeExportModal() {
+    document.getElementById('export-modal').classList.remove('show');
+    document.getElementById('sd2').classList.remove('active'); document.getElementById('sd2').classList.add('done');
+    document.getElementById('sl2').classList.add('done');
+    document.getElementById('sd3').classList.add('active');
+}
+
+// Start animation loop
+animateRadar();
+</script>
+
+</body>
+</html>

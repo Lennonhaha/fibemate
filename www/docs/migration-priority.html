@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE · Quantum Migration Priority Matrix — 量子迁移优先级矩阵</title>
+    <meta name="description" content="FIBEMATE 量子迁移优先级矩阵 — Europol 迁移模型 · 12 个算法资产 · 风险×迁移难度散点图 · 交互式优先级排序。量化爆炸半径与量子脆弱性，给出一站式迁移路线图。">
+    <meta property="og:title" content="FIBEMATE 量子迁移优先级矩阵">
+    <meta property="og:description" content="P-256 风险 95 迁移 100 → 最高优先级 · ML-KEM 风险 5 安全 · 12 算法四象限散点图 · 一站式迁移路线图">
+    <meta property="og:type" content="website">
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif;
+            background:#0a0a1a; color:#e2e8f0; overflow-x:hidden;
+        }
+        a { color:#00d4ff; text-decoration:none; } a:hover { text-decoration:underline; }
+
+        .nav {
+            position:sticky; top:0; z-index:100; background:rgba(10,10,26,0.92);
+            backdrop-filter:blur(20px); border-bottom:1px solid rgba(0,212,255,0.12);
+            padding:0.7rem 2rem; display:flex; justify-content:space-between; align-items:center;
+        }
+        .nav-logo { font-size:1rem; font-weight:700; background:linear-gradient(135deg,#00d4ff,#8b5cf6); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .nav-link { color:#94a3b8; font-size:0.78rem; margin-left:1.2rem; transition:color 0.2s; }
+        .nav-link:hover { color:#00d4ff; text-decoration:none; }
+
+        .container { max-width:1360px; margin:0 auto; padding:1.5rem 2rem 3rem; }
+        .page-title { font-size:1.7rem; font-weight:700; margin-bottom:0.2rem; background:linear-gradient(135deg,#ff5252,#ff9800,#00d4ff); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .page-subtitle { color:#94a3b8; font-size:0.82rem; margin-bottom:1.5rem; }
+
+        /* ─── KPI row ─── */
+        .kpi-row { display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1.2rem; }
+        .kpi { background:#111126; border:1px solid #1e1e3a; border-radius:10px; padding:0.7rem 1.1rem; text-align:center; min-width:90px; flex:1; }
+        .kpi-val { font-size:1.4rem; font-weight:700; }
+        .kpi-label { font-size:0.63rem; color:#64748b; margin-top:2px; text-transform:uppercase; letter-spacing:0.5px;}
+
+        /* ─── Main layout ─── */
+        .main-grid { display:grid; grid-template-columns:1fr 380px; gap:1rem; margin-bottom:1.5rem; }
+        .plot-panel {
+            background:#111126; border:1px solid #1e1e3a; border-radius:16px;
+            padding:1.2rem; position:relative;
+        }
+        .plot-panel h2 { font-size:1rem; color:#00d4ff; margin-bottom:0.6rem; }
+        .plot-wrap { position:relative; }
+        #scatter { display:block; width:100%; cursor:crosshair; border-radius:8px; }
+
+        /* ─── Tooltip ─── */
+        #tooltip {
+            position:absolute; pointer-events:none;
+            background:rgba(10,10,26,0.97); border:1px solid #3a3a5a;
+            border-radius:10px; padding:12px 16px; font-size:11px;
+            display:none; max-width:300px; z-index:200;
+            backdrop-filter:blur(12px); box-shadow:0 6px 24px rgba(0,0,0,0.5);
+        }
+        #tooltip .tt-name { font-size:14px; font-weight:700; margin-bottom:4px; }
+        #tooltip .tt-row { font-size:10px; color:#94a3b8; line-height:1.6; }
+        #tooltip .tt-action { margin-top:6px; padding:4px 8px; background:#1a1a3a; border-radius:4px; font-size:10px; font-weight:600; }
+
+        /* ─── Legend ─── */
+        .legend-row { display:flex; gap:12px; flex-wrap:wrap; align-items:center; margin-top:0.8rem; font-size:0.7rem; color:#94a3b8; }
+        .leg-dot { width:10px; height:10px; border-radius:50%; display:inline-block; margin-right:4px; }
+        .leg-size { display:inline-block; border-radius:50%; border:1px solid #3a3a5a; margin:0 6px; vertical-align:middle; }
+
+        /* ─── Side panel ─── */
+        .side-panel {
+            background:#111126; border:1px solid #1e1e3a; border-radius:16px;
+            padding:1rem; display:flex; flex-direction:column; gap:0.8rem;
+        }
+        .side-panel h2 { font-size:0.95rem; color:#00d4ff; }
+        .filter-btn {
+            padding:5px 12px; border-radius:16px; border:1px solid #2a2a4a; background:transparent;
+            color:#94a3b8; font-size:0.7rem; cursor:pointer; transition:all 0.2s; margin-right:4px; margin-bottom:4px;
+        }
+        .filter-btn:hover { border-color:#00d4ff; color:#00d4ff; }
+        .filter-btn.active { background:#00d4ff22; border-color:#00d4ff; color:#00d4ff; }
+
+        /* ─── Ranking table ─── */
+        #ranking-table { width:100%; border-collapse:collapse; font-size:0.72rem; }
+        #ranking-table th {
+            text-align:left; padding:6px 8px; background:#1a1a36; color:#64748b;
+            font-size:0.65rem; text-transform:uppercase; letter-spacing:0.5px;
+        }
+        #ranking-table td { padding:7px 8px; border-bottom:1px solid #1a1a36; }
+        #ranking-table tr:hover td { background:rgba(0,212,255,0.03); }
+        .rank-badge { display:inline-block; width:20px; height:20px; border-radius:50%; text-align:center; line-height:20px; font-size:10px; font-weight:700; }
+        .rank-1 { background:#ff5252; }
+        .rank-2 { background:#ff9800; }
+        .rank-3 { background:#ffc107; color:#111; }
+
+        /* ─── Priority bar ─── */
+        .prio-bar-bg { width:100%; height:5px; background:#1e1e3a; border-radius:3px; overflow:hidden; margin-top:2px; }
+        .prio-bar { height:100%; border-radius:3px; transition:width 0.5s; }
+
+        /* ─── Detail panel ─── */
+        #detail-overlay {
+            position:fixed; top:0; left:0; right:0; bottom:0;
+            background:rgba(0,0,0,0.5); z-index:300;
+            display:none; justify-content:center; align-items:center;
+        }
+        #detail-overlay.show { display:flex; }
+        #detail-panel {
+            background:#111126; border:1px solid #2a2a5a; border-radius:16px;
+            width:90%; max-width:640px; max-height:80vh; overflow-y:auto;
+            padding:1.5rem; box-shadow:0 12px 48px rgba(0,0,0,0.6);
+        }
+        #detail-panel h3 { font-size:1.1rem; margin-bottom:0.8rem; }
+        #detail-panel h4 { font-size:0.85rem; color:#00d4ff; margin:1rem 0 0.5rem; }
+        .metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-bottom:0.8rem; }
+        .metric-item { background:#1a1a36; border-radius:8px; padding:8px 12px; }
+        .metric-label { font-size:0.65rem; color:#64748b; }
+        .metric-val { font-size:1.1rem; font-weight:700; }
+        .migration-path { background:#1a1a36; border-left:3px solid #00d4ff; border-radius:0 8px 8px 0; padding:10px 14px; margin:6px 0; font-size:0.78rem; line-height:1.5; }
+        .migration-path .mp-from { color:#ffa94d; font-weight:600; }
+        .migration-path .mp-arrow { color:#00d4ff; margin:0 6px; }
+        .migration-path .mp-to { color:#51cf66; font-weight:600; }
+        .file-list { max-height:200px; overflow-y:auto; font-size:0.7rem; }
+        .file-item { padding:3px 8px; font-family:Consolas,monospace; font-size:0.68rem; color:#94a3b8; border-bottom:1px solid #1a1a36; }
+        .file-item.direct { color:#51cf66; }
+        .file-item.indirect { color:#ffa94d; }
+        .close-btn {
+            float:right; background:none; border:1px solid #3a3a5a; border-radius:6px;
+            color:#94a3b8; cursor:pointer; padding:4px 14px; font-size:14px;
+        }
+        .close-btn:hover { border-color:#ff6b6b; color:#ff6b6b; }
+
+        /* ─── Quadrant summary ─── */
+        .quad-summary { display:grid; grid-template-columns:1fr 1fr; gap:0.6rem; margin-top:0.8rem; }
+        .quad-card { padding:8px 10px; border-radius:8px; font-size:0.7rem; }
+        .quad-card .quad-label { font-weight:700; font-size:0.75rem; margin-bottom:2px; }
+        .quad-card .quad-count { font-size:0.65rem; color:#94a3b8; }
+
+        @media (max-width:900px) {
+            .container { padding:0.8rem; }
+            .main-grid { grid-template-columns:1fr; }
+            .metric-grid { grid-template-columns:1fr; }
+            #detail-panel { width:95%; max-height:85vh; }
+        }
+    </style>
+</head>
+<body>
+
+<nav class="nav">
+    <a href="/" class="nav-logo">◈ FIBEMATE</a>
+    <div>
+        <a href="/docs/pqc-dashboard.html" class="nav-link">算法仪表盘</a>
+        <a href="/docs/bloom-risk.html" class="nav-link">风险传播图</a>
+        <a href="/docs/crypto-audit.html" class="nav-link">资产审计</a>
+        <a href="https://github.com/Lennonhaha/fibemate" class="nav-link">GitHub ↗</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1 class="page-title">🎯 量子迁移优先级矩阵</h1>
+    <p class="page-subtitle">
+        Europol 迁移模型 · 12 个密码学资产 · 双向评分（量子风险 × 迁移难度）· 爆炸半径量化
+        &nbsp;|&nbsp; 红=量子脆弱 · 黄=需关注 · 绿=量子安全
+    </p>
+
+    <div class="kpi-row">
+        <div class="kpi"><div class="kpi-val" style="color:#ff5252;">4</div><div class="kpi-label">高优先级 🔴 立即行动</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#ff9800;">3</div><div class="kpi-label">需监控 🟡 规划路线</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#ffa94d;">2</div><div class="kpi-label">快速赢取 🟠 近期迁移</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#51cf66;">3</div><div class="kpi-label">低优先级 🟢 延后</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#00d4ff;">76.5</div><div class="kpi-label">加权优先指数</div></div>
+    </div>
+
+    <!-- ═══ Main Grid ═══ -->
+    <div class="main-grid">
+        <!-- Plot -->
+        <div class="plot-panel">
+            <h2>📊 迁移优先级散点图 — Quantum Migration Priority Matrix</h2>
+            <div class="plot-wrap">
+                <canvas id="scatter"></canvas>
+                <div id="tooltip">
+                    <div class="tt-name"></div>
+                    <div class="tt-row"></div>
+                    <div class="tt-action"></div>
+                </div>
+            </div>
+            <div class="legend-row">
+                <span><span class="leg-dot" style="background:#ff5252;"></span> 量子脆弱</span>
+                <span><span class="leg-dot" style="background:#ffa94d;"></span> 需关注</span>
+                <span><span class="leg-dot" style="background:#51cf66;"></span> 量子安全</span>
+                <span style="margin-left:8px;">大小:</span>
+                <span class="leg-size" style="width:8px;height:8px;"></span> 15
+                <span class="leg-size" style="width:16px;height:16px;"></span> 50
+                <span class="leg-size" style="width:26px;height:26px;"></span> 139 files
+                <span style="margin-left:24px;font-size:0.65rem;color:#64748b;">🖱 悬停看详情 · 点击打开完整面板</span>
+            </div>
+            <!-- Quadrant summary -->
+            <div class="quad-summary">
+                <div class="quad-card" style="background:rgba(255,82,82,0.08);border:1px solid rgba(255,82,82,0.2);">
+                    <div class="quad-label" style="color:#ff5252;">🔥 HIGH PRIORITY — 立即行动</div>
+                    <div class="quad-count">高风险 + 高迁移难度 → 迁移投资回报最高</div>
+                </div>
+                <div class="quad-card" style="background:rgba(255,169,77,0.08);border:1px solid rgba(255,169,77,0.2);">
+                    <div class="quad-label" style="color:#ffa94d;">📋 MONITOR — 规划路线</div>
+                    <div class="quad-count">低风险但高迁移难度 → 列入长期路线图</div>
+                </div>
+                <div class="quad-card" style="background:rgba(255,152,0,0.08);border:1px solid rgba(255,152,0,0.2);">
+                    <div class="quad-label" style="color:#ff9800;">⚡ QUICK WIN — 快速替换</div>
+                    <div class="quad-count">高风险但低迁移难度 → 近期快速完成</div>
+                </div>
+                <div class="quad-card" style="background:rgba(81,207,102,0.08);border:1px solid rgba(81,207,102,0.2);">
+                    <div class="quad-label" style="color:#51cf66;">✅ LOW PRIORITY — 延后处理</div>
+                    <div class="quad-count">低风险 + 低迁移难度 → 资源有限时最后处理</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Side panel: filters + ranking -->
+        <div class="side-panel">
+            <h2>🎛️ 过滤器</h2>
+            <div>
+                <button class="filter-btn active" onclick="setFilter('all',this)">全部 (12)</button>
+                <button class="filter-btn" onclick="setFilter('vulnerable',this)">🔴 量子脆弱</button>
+                <button class="filter-btn" onclick="setFilter('weakened',this)">🟡 需关注</button>
+                <button class="filter-btn" onclick="setFilter('safe',this)">🟢 量子安全</button>
+            </div>
+            <div style="font-size:0.7rem;color:#64748b;margin-top:4px;">
+                加权评分 = 量子风险 × 0.6 + 迁移难度 × 0.4
+            </div>
+
+            <h2>🏆 迁移优先级排序</h2>
+            <div style="max-height:420px;overflow-y:auto;">
+                <table id="ranking-table">
+                    <thead><tr>
+                        <th>#</th><th>算法</th><th style="width:60px;">风险</th><th style="width:60px;">难度</th><th style="width:60px;">加权</th>
+                    </tr></thead>
+                    <tbody id="ranking-tbody"></tbody>
+                </table>
+            </div>
+
+            <h2>📋 迁移行动建议</h2>
+            <div id="action-list" style="font-size:0.72rem;line-height:1.6;color:#94a3b8;"></div>
+        </div>
+    </div>
+
+    <div style="text-align:center;color:#475569;font-size:0.7rem;padding:1.5rem 0;border-top:1px solid #1e1e3a;margin-top:1rem;">
+        FIBEMATE v3.3.0 · Europol Migration Priority Model · 数据来源: bloom-scan.js 爆炸半径分析 &nbsp;|&nbsp;
+        <a href="https://fibemate.net">fibemate.net</a>
+    </div>
+</div>
+
+<!-- ═══ Detail Overlay ═══ -->
+<div id="detail-overlay" onclick="if(event.target===this)closeDetail()">
+    <div id="detail-panel"></div>
+</div>
+
+<script>
+// ═══════════ Data ═══════════
+var ASSETS = [
+    {
+        id: "P-256/ECDH",
+        displayName: "P-256 / ECDH",
+        quantumRisk: 95,
+        migrationTime: 100,
+        directFiles: 71,
+        indirectFiles: 32,
+        totalFiles: 103,
+        dependencyDepth: 6,
+        dataSensitivity: 95,
+        riskLevel: "vulnerable",
+        algorithmFamily: "Elliptic Curve Diffie-Hellman",
+        quantumThreat: "Shor 算法可在多项式时间内破解 ECDLP。P-256 是完全量子脆弱的。",
+        migrationPath: "ML-KEM-768 Hybrid KEM（已在 hybrid-kem-client.js 中部分实现）",
+        migrationDetail: "将 P-256/ECDH 密钥交换替换为 ML-KEM-768（FIPS 203）。保留 P-256 作为 hybrid 模式中的传统背书，过渡期后完全移除。",
+        bloomRiskNote: "最大传染链：103 个文件（71 直接 + 32 间接），依赖深度 6，是代码库中耦合最深的传统算法。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "SM2",
+        displayName: "SM2",
+        quantumRisk: 90,
+        migrationTime: 72,
+        directFiles: 69,
+        indirectFiles: 6,
+        totalFiles: 75,
+        dependencyDepth: 4,
+        dataSensitivity: 90,
+        riskLevel: "vulnerable",
+        algorithmFamily: "国密椭圆曲线签名/密钥交换",
+        quantumThreat: "SM2 基于 ECC，与 P-256 面临相同的 Shor 威胁。国密体系中的核心脆弱点。",
+        migrationPath: "签名: SM2 → fml-dsa (ML-DSA-65) · 加密: SM2 → ML-KEM",
+        migrationDetail: "SM2 签名用 fml-dsa（ML-DSA-65，FIPS 204）替换。SM2 密钥交换用 ML-KEM-768 替换。可利用现有 GM prehash 桥接层（gm.js, sm2-bridge.js）实现平滑过渡。",
+        bloomRiskNote: "75 个文件受影响，主要分布在 www/crypto/ 和 scripts/ 目录。SM2-browser 系列文件需要同时更新。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "SHA-256",
+        displayName: "SHA-256",
+        quantumRisk: 60,
+        migrationTime: 80,
+        directFiles: 78,
+        indirectFiles: 5,
+        totalFiles: 83,
+        dependencyDepth: 3,
+        dataSensitivity: 30,
+        riskLevel: "weakened",
+        algorithmFamily: "Secure Hash Algorithm",
+        quantumThreat: "Grover 算法使碰撞复杂度从 2^256 降至 2^128。128 位安全性仍然足够，但部分 NIST 建议迁移到更大输出。",
+        migrationPath: "SHA-256 → SHA-384 / SHA-512 或 SHAKE-256（按需）",
+        migrationDetail: "SHA-256 本身在量子模型下仍提供 128 位安全性。迁移仅在需要更高安全等级的上下文中（如哈希签名、Merkle 树根）执行。多数场景中 SHA-256 可以保留。",
+        bloomRiskNote: "83 个文件广泛引用 SHA-256，但主要是辅助用途（HMAC、密钥派生），风险可控。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "SM4",
+        displayName: "SM4",
+        quantumRisk: 35,
+        migrationTime: 43,
+        directFiles: 37,
+        indirectFiles: 4,
+        totalFiles: 41,
+        dependencyDepth: 1,
+        dataSensitivity: 30,
+        riskLevel: "weakened",
+        algorithmFamily: "国密分组密码",
+        quantumThreat: "Grover 算法将 128 位密钥安全性降至 2^64。长期来看需要升级到 256 位密钥或 PQC 混合。",
+        migrationPath: "SM4 → ML-KEM 封装密钥 + SM4（Hybrid）或 SM4-CTR-256",
+        migrationDetail: "SM4 可与 ML-KEM 结合进行 hybrid 加密。长期方案：实现 SM4-CTR with 256-bit 密钥。中短期内 GM 场景保留 SM4 配合 ML-KEM 密钥封装。",
+        bloomRiskNote: "41 个文件，主要用于 HTTP 消息体加密和 GM 场景（gm.js, message-gm.js）。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "SM3",
+        displayName: "SM3",
+        quantumRisk: 30,
+        migrationTime: 48,
+        directFiles: 45,
+        indirectFiles: 0,
+        totalFiles: 45,
+        dependencyDepth: 1,
+        dataSensitivity: 20,
+        riskLevel: "safe",
+        algorithmFamily: "国密哈希函数",
+        quantumThreat: "256 位输出。Grover 将原像复杂度降至 2^128。后量子安全，无需紧急迁移。",
+        migrationPath: "SM3 → 保留（256-bit 输出已后量子安全）",
+        migrationDetail: "SM3 的 256-bit 输出面对 Grover 算法仍有 128-bit 原像安全性。无需迁移。仅在 National Algorithm 政策要求升级时考虑 SM3-512 变体。",
+        bloomRiskNote: "45 个文件，主要集中在 GM 工具链和 TVLA 分析脚本。风险低。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "AES",
+        displayName: "AES",
+        quantumRisk: 25,
+        migrationTime: 38,
+        directFiles: 39,
+        indirectFiles: 3,
+        totalFiles: 42,
+        dependencyDepth: 1,
+        dataSensitivity: 40,
+        riskLevel: "weakened",
+        algorithmFamily: "Advanced Encryption Standard",
+        quantumThreat: "AES-128 在 Grover 下安全性降至 2^64。AES-256 仍提供 2^128 量子安全性。",
+        migrationPath: "AES-128 → AES-256（Grover 安全）",
+        migrationDetail: "将 AES-128 模式替换为 AES-256-GCM。FIBEMATE 中 AES 主要用于消息加密和会话层，迁移相对直接。需审计所有 AES 调用点确认密钥长度。",
+        bloomRiskNote: "42 个文件涉及 AES，但多数是间接引用或文档。核心加密路径在 privacy-layers/ 和模块文件中。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "Double-Ratchet",
+        displayName: "Double-Ratchet",
+        quantumRisk: 20,
+        migrationTime: 55,
+        directFiles: 51,
+        indirectFiles: 0,
+        totalFiles: 51,
+        dependencyDepth: 1,
+        dataSensitivity: 60,
+        riskLevel: "safe",
+        algorithmFamily: "Signal Protocol 双棘轮",
+        quantumThreat: "已有 PQ 变体 double-ratchet-pq.js（内嵌 ML-KEM-768）。传统版本 double-ratchet.js 使用 P-256，已可升级。",
+        migrationPath: "传统 Double-Ratchet → PQ Double-Ratchet（已就绪 double-ratchet-pq.js）",
+        migrationDetail: "double-ratchet-pq.js 已实现 ML-KEM-768 + P-256 hybrid 模式。只需将调用方从 double-ratchet.js 迁移到 double-ratchet-pq.js 即可。此迁移基本上是配置切换。",
+        bloomRiskNote: "51 个文件引用 Double-Ratchet。迁移路径清晰，已在 reg-server/ 中验证。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "ML-KEM",
+        displayName: "ML-KEM",
+        quantumRisk: 5,
+        migrationTime: 100,
+        directFiles: 137,
+        indirectFiles: 2,
+        totalFiles: 139,
+        dependencyDepth: 1,
+        dataSensitivity: 95,
+        riskLevel: "safe",
+        algorithmFamily: "NIST FIPS 203 PQC KEM (MLWE-based)",
+        quantumThreat: "NIST 标准化 PQC 算法。基于 MLWE（Module Learning With Errors），当前无已知量子攻击。量子安全。",
+        migrationPath: "✅ 无需迁移 — 已是目标 PQC 算法",
+        migrationDetail: "ML-KEM-768 已被 NIST 标准化为 FIPS 203。FIBEMATE 已全面集成。作为 PQC 迁移的目标算法，需确保所有实现为最新规范版本。",
+        bloomRiskNote: "139 个文件：代码库中覆盖最广的算法。这实际上是积极信号 — PQC 已深入集成。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "ML-DSA/fml-dsa",
+        displayName: "ML-DSA / fml-dsa",
+        quantumRisk: 5,
+        migrationTime: 55,
+        directFiles: 50,
+        indirectFiles: 1,
+        totalFiles: 51,
+        dependencyDepth: 1,
+        dataSensitivity: 50,
+        riskLevel: "safe",
+        algorithmFamily: "NIST FIPS 204 PQC 签名 (MLWE+MSIS)",
+        quantumThreat: "NIST 标准化 PQC 签名算法。基于 MLWE + MSIS 假设。量子安全，无需迁移。",
+        migrationPath: "✅ 无需迁移 — 已是目标 PQC 算法",
+        migrationDetail: "ML-DSA-65（FIPS 204）已被 FIBEMATE 的 fml-dsa 包实现。作为签名迁移的目标方案。确保 KAT 向量与 NIST 标准一致。",
+        bloomRiskNote: "51 个文件，主要通过 fml-dsa 包和 noble-pq 捆绑提供。量子安全核心算法。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "SLH-DSA",
+        displayName: "SLH-DSA",
+        quantumRisk: 5,
+        migrationTime: 25,
+        directFiles: 33,
+        indirectFiles: 0,
+        totalFiles: 33,
+        dependencyDepth: 1,
+        dataSensitivity: 40,
+        riskLevel: "safe",
+        algorithmFamily: "NIST FIPS 205 无状态哈希签名 (SPHINCS+)",
+        quantumThreat: "NIST 标准化 PQC 签名算法。基于 SPHINCS+，最保守的安全假设（仅依赖哈希函数安全性）。量子安全。",
+        migrationPath: "✅ 无需迁移 — 最保守的 PQC 签名方案",
+        migrationDetail: "SLH-DSA（FIPS 205）作为 ML-DSA 的保守替代方案。仅在需要最高安全保证的签名场景中使用（性能开销较大）。",
+        bloomRiskNote: "33 个文件，主要作为备用签名方案。爆炸半径最小，已量子安全。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "bcrypt",
+        displayName: "bcrypt",
+        quantumRisk: 55,
+        migrationTime: 30,
+        directFiles: 8,
+        indirectFiles: 0,
+        totalFiles: 8,
+        dependencyDepth: 1,
+        dataSensitivity: 70,
+        riskLevel: "vulnerable",
+        algorithmFamily: "密码哈希函数 (Blowfish-derived)",
+        quantumThreat: "bcrypt 的抗 GPU/ASIC 特性在量子场景下失效。Grover 算法对密码搜索的加速效果显著。",
+        migrationPath: "bcrypt → Argon2id（后量子安全的密码哈希）",
+        migrationDetail: "替换为 Argon2id（内存硬 + 抗量子）。Argon2 的 memory-hard 特性对量子加速有天然的抵抗。bcrypt 在量子模型下仅相当于 92-bit 安全性。",
+        bloomRiskNote: "仅 8 个文件引用 bcrypt（auth 模块）。迁移范围小、风险可控，属于快速赢取。",
+        directFiles: [],
+        indirectFiles: []
+    },
+    {
+        id: "AES-128",
+        displayName: "AES-128",
+        quantumRisk: 30,
+        migrationTime: 20,
+        directFiles: 12,
+        indirectFiles: 0,
+        totalFiles: 12,
+        dependencyDepth: 1,
+        dataSensitivity: 25,
+        riskLevel: "vulnerable",
+        algorithmFamily: "Advanced Encryption Standard 128-bit",
+        quantumThreat: "Grover 算法将安全性从 2^128 降至 2^64。在量子模型下安全性不足。",
+        migrationPath: "AES-128 → AES-256",
+        migrationDetail: "直接替换密钥长度。AES-128 调用点有限，迁移成本低。建议一次性审计所有 AES 密钥长度配置。",
+        bloomRiskNote: "仅 12 个文件。快速赢取场景 — 高量子风险、低迁移难度。",
+        directFiles: [],
+        indirectFiles: []
+    }
+];
+
+// ═══════════ Enrich with bloom-risk data ═══════════
+var BLOOM_DATA = {"ML-KEM":{"direct":135,"indirect":2,"total":137,"directFiles":["api/a2a/a2a-core.js","bindings/python/fibemate_py/fibemate_bridge.js","docs/hmac-sm3-tvla-analysis.html","docs/tsa/2026-06-25/index.html","docs/tsa/2026-07-21/fibemate-website-2026-07-21.html","docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html","double-ratchet-pq.js","fuzz/fuzz_bytecodec.cjs","fuzz/fuzz_decapsulate.cjs","fuzz/fuzz_encapsulate.cjs","lib/keccak.js","packages/pqc-kem/diag-kat.js","packages/pqc-kem/diag2.js","packages/pqc-kem/index.js","packages/pqc-kem/kat-diag.js","packages/pqc-kem/native/bench.js","packages/pqc-kem/scripts/generate-nist-kat.js","packages/pqc-kem/src/hybrid.js","packages/pqc-kem/src/ml-kem-768.js","reg-server/hybrid-kem-client.js","reg-server/stress-test-v2.js","reg-server/stress-test.js","scripts/bench-proper.js","scripts/bench-v33.cjs","scripts/benchmark.cjs","scripts/build-demo.js","scripts/ci-mlkem-kat.cjs","scripts/daily-audit.js","scripts/debug_decaps_noble_vs_js.cjs","scripts/debug_decaps_sk.cjs","scripts/debug_ss_format.cjs","scripts/discover.cjs","scripts/fix-ratchet.js","scripts/fix_verify.cjs","scripts/health-check.js","scripts/js-liboqs-xcross.cjs","scripts/kat-bench.js","scripts/kat-jasmin-compare.js","scripts/kat-quick.js","scripts/kat500.js","scripts/liboqs-10000.cjs","scripts/micro-profile.js","scripts/mlkem-bench-native.cjs","scripts/noble-liboqs-xcross.mjs","scripts/p0-04-fix-validation.js","scripts/perf-gate.js","scripts/prep-release.js","scripts/profile-mlkem.js","scripts/smoke-test.js","scripts/stress-test.js","scripts/test-domain.js","scripts/test-native-addon.cjs","scripts/test_barrett.js","scripts/trace-roundtrip.js","scripts/tvla/tvla_9of9_corrected.js","scripts/tvla-mlkem-1024.mjs","scripts/update-index-91.cjs","src/crypto/ml-kem-768-td.js","src/index.js","src/pqc-hybrid-server.js","src/tls-hybrid-extension.js","test/a2a-smoke.js","test/compat-fixtures.test.js","test/run-compat-fixtures.mjs","test/smoke-crypto.js","test/test-cross-lang-seeded.js","test/test-cross-lang.js","test/test-fibemate.js","test-tls-hybrid-extension.js","tools/bloom-merge.js","tools/bloom-scan.js","tools/build-risk-assessment.cjs","www/bench/wasm-bench.html","www/blog.html","www/crypto/crypto/ml-kem-768-wrapper.js","www/crypto/crypto/pq-integration.js","www/crypto/hybrid-kem-client.js","www/crypto/ml-kem-768-wrapper.js","www/crypto/ml-kem-768.js","www/crypto/pq-integration.js","www/crypto/pq-test-electron.js","www/crypto/slh-dsa.js","www/crypto/test-ml-kem-kat.html","www/crypto/wasm/fibemate_pq_wasm.js","www/crypto/wasm/mlkem-ct-wasm-bridge.js","www/demo/index.html","www/demo/ml-kem-768.js","www/dev-portfolio.html","www/disclaimer-en.html","www/disclaimer.html","www/docs/API.html","www/docs/architecture.html","www/docs/bloom-risk.html","www/docs/cars-radar.html","www/docs/crypto-audit.html","www/docs/FAQ.html","www/docs/fpga-report.html","www/docs/kakeya-perron.html","www/docs/pqc-dashboard.html","www/docs/pqc-readiness.html","www/docs/publications.html","www/docs/sm2-optimization.html","www/docs/sm2-tvla-analysis.html","www/docs/tsa/2026-06-28/pqc-readiness-20260628.html","www/docs/tsa/2026-07-01/blog-4590-fix.html","www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html","www/docs/tsa/2026-07-01/security-4590-fix.html","www/docs/tsa/2026-07-09/lg-058.html","www/docs/tvla/index.html","www/fibemate_pq_wasm.js","www/index-beian.html","www/index.html","www/js/app.js","www/js/nexus-community.js","www/kat-10000.html","www/kat-purejs-10000.html","www/kat_diag.html","www/kat_quick.html","www/kyber_nt_v3.js","www/landing-new.html","www/m.html","www/ml-kem-hybrid-integration.js","www/modules/e2ee-display.js","www/modules/keys.js","www/modules/settings.js","www/nexus-community.js","www/noble-pq/ml-dsa.js","www/noble-pq/_crystals.js","www/pqc-hybrid-e2e.html","www/security-block.html","www/security.html","www/session-manager.js","www/settings.html","www/sm-v12.js","www/terms-en.html","www/terms.html","www/test_mlkem.html"],"indirectFiles":["test/test-keccak.js","www/crypto/slh-dsa.worker.js"]},"ML-DSA/fml-dsa":{"direct":["packages/fml-dsa/src/core/encode.js","packages/fml-dsa/src/core/keygen.js","packages/fml-dsa/src/core/modmul.js","packages/fml-dsa/src/core/native.js","packages/fml-dsa/src/core/ntt.js","packages/fml-dsa/src/core/params.js","packages/fml-dsa/src/core/polyvec.js","packages/fml-dsa/src/core/precomputed.js","packages/fml-dsa/src/core/reduce.js","packages/fml-dsa/src/core/sampling.js","packages/fml-dsa/src/core/shakestream.js","packages/fml-dsa/src/core/sign.js","packages/fml-dsa/src/core/verify.js","packages/fml-dsa/src/index.js","packages/fml-dsa/test/cross-noble.test.js","packages/fml-dsa/test/debug-hint3.js","packages/fml-dsa/test/edge.test.js","packages/fml-dsa/test/fml-dsa.test.js","packages/fml-dsa/test/input-validation.test.js","packages/fml-dsa/test/kat-siggen-fetch.mjs","packages/fml-dsa/test/kat-vectors.mjs","packages/fml-dsa/test/kat-verify-siggen.mjs","packages/fml-dsa/test/kat-verify.mjs","packages/fml-dsa/test/noble-oracle.test.js","packages/fml-dsa/test/ntt.test.js","packages/fml-dsa/test/probe-noble-structure.mjs","packages/fml-dsa/test/shakestream.test.js","packages/fml-dsa/test/tvla-timing.test.js"],"indirect":["packages/fml-dsa/src/core/all.js"],"total":51},"SLH-DSA":{"direct":["scripts/slh-dsa-bench.mjs","scripts/slh-dsa-smoke.mjs","www/crypto/crypto/pq-integration.js","www/crypto/message-gm.js","www/crypto/pq-integration.js","www/crypto/slh-dsa.js","www/crypto/slh-dsa.worker.js","www/docs/API.html","www/docs/architecture.html","www/docs/bloom-risk.html","www/docs/cars-radar.html","www/docs/crypto-audit.html","www/docs/pqc-dashboard.html","www/docs/pqc-readiness.html","www/docs/sm2-frontend-verification.html","www/index.html","www/noble-pq/slh-dsa.js","www/noble-pq-bundle/pq_entry.mjs","www/noble-pq-bundle/slh-dsa.js","www/noble-pq-bundle/unified.js","www/privacy-layers/index.js","www/privacy-layers/signature.js","www/privacy-layers/signature.v2.js","www/vwz-challenge/index.html"],"indirect":[],"total":33},"SM2":{"direct":["archives/sm2-versions/sm2-bigint-ec-v1.2.js","archives/sm2-versions/sm2-bigint-ec-v1.3.js","reg-server/hybrid-kem-client.js","scripts/apply-mersenne-reduction.cjs","scripts/ci-gm-sm2.cjs","scripts/fix-verify-blinding.cjs","scripts/perf-gate.js","scripts/smoke-test.js","scripts/test-sm2-browser-fix.js","scripts/test-sm2-node-fix.js","scripts/tvla/tvla_sm2_diagnose.js","scripts/tvla/tvla_sm2_high_order.js","scripts/tvla/tvla_sm2_v2.js","scripts/tvla/tvla_sm2_v3.js","scripts/tvla/tvla_sm2_v3_masked.js","scripts/tvla/tvla_stress_gradient.cjs","sm2-bigint-ec.js","src/pqc-hybrid-server.js","src/tls-hybrid-extension.js","test-tls-hybrid-extension.js","www/crypto/gm.js","www/crypto/hybrid-kem-client.js","www/crypto/message-gm.js","www/crypto/sm2-bigint-ec.js","www/crypto/sm2-bridge.js","www/crypto/sm2-browser.bundle.js","www/crypto/sm2-browser.cjs.js","www/crypto/sm2-browser.esm.js","www/crypto/sm2-browser.js","www/crypto/sm2-ec-browser.js","www/crypto/sm3-browser.js","www/docs/API.html","www/docs/architecture.html","www/docs/bloom-risk.html","www/docs/cars-radar.html","www/docs/crypto-audit.html","www/docs/pqc-dashboard.html","www/docs/sm2-frontend-verification.html","www/docs/sm2-optimization.html","www/docs/sm2-tvla-analysis.html","www/gm-test.html","www/index.html","www/js/crypto/sm3.js","www/modules/e2ee-display.js","www/security.html","www/timestamps/index.html"],"indirect":["scripts/ci-gm-sm3.cjs","scripts/hmac-sm3-kat.cjs","scripts/sm3-bench.cjs","scripts/sm3-smoke.cjs","tools/bloom-merge.js"],"total":73},"SM3":{"direct":["packages/sm3-ref/test/sm3-cross-validate.cjs","reg-server/hybrid-kem-client.js","scripts/ci-gm-sm3.cjs","scripts/hmac-sm3-kat.cjs","scripts/sm3-bench.cjs","scripts/sm3-smoke.cjs","scripts/smoke-test.js","www/crypto/gm.js","www/crypto/hybrid-kem-client.js","www/crypto/message-gm.js","www/crypto/sm2-bridge.js","www/crypto/sm3-browser.js","www/docs/architecture.html","www/docs/bloom-risk.html","www/docs/crypto-audit.html","www/docs/pqc-dashboard.html","www/docs/sm2-frontend-verification.html","www/docs/sm2-optimization.html","www/docs/sm2-tvla-analysis.html","www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js","www/gm-test.html","www/index.html","www/js/crypto/sm3.js","www/js/sm3_implementation.js","www/modules/e2ee-display.js","www/security.html","www/timestamps/index.html"],"indirect":[],"total":45},"SM4":{"direct":["scripts/ci-gm-sm4.cjs","scripts/perf-gate.js","scripts/sm4-bench.cjs","scripts/sm4-smoke.cjs","scripts/smoke-test.js","www/crypto/gm.js","www/crypto/message-gm.js","www/crypto/sm4-browser.js","www/docs/API.html","www/docs/architecture.html","www/docs/bloom-risk.html","www/docs/crypto-audit.html","www/docs/pqc-dashboard.html","www/docs/sm2-frontend-verification.html","www/docs/sm2-tvla-analysis.html","www/gm-chat.html","www/gm-test.html","www/index.html","www/modules/e2ee-display.js","www/security.html"],"indirect":[],"total":37},"P-256/ECDH":{"direct":["double-ratchet-pq.js","double-ratchet.js","message-crypto.js","packages/fml-dsa/test/kat-verify-siggen.mjs","packages/pqc-kem/src/hybrid.js","packages/pqc-kem/src/ml-kem-768.js","reg-server/hybrid-kem-client.js","reg-server/stress-test-v2.js","scripts/ecdh-p256-kat.cjs","scripts/test-sm2-browser-fix.js","src/crypto/ml-kem-768-td.js","src/pqc-hybrid-server.js","src/tls-hybrid-extension.js","test-tls-hybrid-extension.js","www/crypto/crypto/ml-kem-768-wrapper.js","www/crypto/crypto/pq-integration.js","www/crypto/hybrid-kem-client.js","www/crypto/message-gm.js","www/crypto/ml-kem-768-wrapper.js","www/crypto/pq-integration.js","www/crypto/security-levels.js","www/crypto/sm2-bridge.js","www/crypto/sm2-ec-browser.js","www/crypto/sm3-browser.js","www/crypto/wasm/fibemate_pq_wasm.js","www/docs/API.html","www/docs/architecture.html","www/docs/bloom-risk.html","www/docs/cars-radar.html","www/docs/crypto-audit.html","www/docs/pqc-readiness.html","www/docs/sm2-optimization.html","www/docs/sm2-tvla-analysis.html","www/fibemate_pq_wasm.js","www/index-beian.html","www/index.html","www/js/app.js","www/js/core/ws-handler.js","www/js/message-crypto.js","www/js/nexus-community.js","www/js/p2p-core.js","www/js/ui/e2ee-status.js","www/js/zk-ui-integration.js","www/main-tiled.html","www/message-crypto.js","www/ml-kem-hybrid-integration.js","www/modules/backend.js","www/modules/keys.js","www/modules/privacy.js","www/nexus-community.js","www/p2p-core.js","www/privacy-layers/index.js","www/privacy-layers/mix-config.js","www/privacy-layers/mixnet-router.js","www/terms.html","www/zk/schnorr-prover-v2.js","www/zk/schnorr-prover.js","www/zk/zk-integration.js","www/zk-auth-poseidon.js","www/zk-identity-proof.js","www/zk-ui-integration.js"],"indirect":["api/a2a/a2a-core.js","bindings/python/fibemate_py/fibemate_bridge.js","fuzz/fuzz_bytecodec.cjs","fuzz/fuzz_decapsulate.cjs","fuzz/fuzz_encapsulate.cjs","packages/pqc-kem/index.js","packages/pqc-kem/kat-diag.js","packages/pqc-kem/scripts/generate-nist-kat.js","scripts/bench-proper.js","scripts/bench-v33.cjs","scripts/benchmark.cjs","scripts/debug_decaps_noble_vs_js.cjs","scripts/debug_decaps_sk.cjs","scripts/fix_verify.cjs","scripts/js-liboqs-xcross.cjs","scripts/liboqs-10000.cjs","scripts/micro-profile.js","scripts/perf-gate.js","scripts/prep-release.js","scripts/profile-mlkem.js","scripts/smoke-test.js","scripts/test-domain.js","src/index.js","test/a2a-smoke.js","test/smoke-crypto.js","test/test-cross-lang-seeded.js","test/test-cross-lang.js","test/run-compat-fixtures.mjs"],"total":101},"Double-Ratchet":{"direct":["double-ratchet-pq.js","double-ratchet.js","message-crypto.js","reg-server/hybrid-kem-client.js","scripts/bench-v33.cjs","scripts/benchmark.cjs","scripts/fix-ratchet.js","src/index.js","www/article.html","www/bridge_test.html","www/crypto/crypto/pq-integration.js","www/crypto/hybrid-kem-client.js","www/crypto/message-gm.js","www/crypto/pq-integration.js","www/crypto/security-levels.js","www/crypto/wasm/fibemate_pq_wasm.js","www/dev-portfolio.html","www/e2ee-indicator.js","www/fibemate_pq_wasm.js","www/index-beian.html","www/index.html","www/js/message-crypto.js","www/js/nexus-community.js","www/js/p2p-core.js","www/landing-new.html","www/legacy-crypto-bridge.js","www/main-tiled.html","www/message-crypto.js","www/modules/e2ee-display.js","www/modules/privacy.js","www/modules/voice-message.js","www/nexus-community.js","www/p2p-core.js","www/privacy-en.html","www/privacy-layers/index.js","www/privacy.html","www/session-manager.js","www/settings.html","www/sm-v12.js","www/terms-en.html","www/terms.html"],"indirect":[],"total":51},"SHA-256":{"direct":["api/a2a/a2a-core.js","double-ratchet-pq.js","double-ratchet.js","packages/pqc-kem/scripts/generate-nist-kat.js","reg-server/hybrid-kem-client.js","scripts/add-code-review-section.cjs","scripts/benchmark.cjs","scripts/test-sm2-browser-fix.js","scripts/test-sm2-node-fix.js","scripts/tvla/tvla_sm2_diagnose.js","scripts/tvla/tvla_sm2_v2.js","scripts/tvla/tvla_sm2_v3.js","scripts/tvla/tvla_sm2_v3_masked.js","scripts/verify-tsr.js","src/crypto/bloom-filter.js","src/crypto/pedersen.js","src/pqc-hybrid-server.js","src/tls-hybrid-extension.js","test/a2a-smoke.js","test/test-fibemate.js","www/crypto/crypto/ml-kem-768-wrapper.js","www/crypto/gm.js","www/crypto/hybrid-kem-client.js","www/crypto/ml-kem-768-wrapper.js","www/crypto/sm2-browser.esm.js","www/crypto/wasm/fibemate_pq_wasm.js","www/docs/bloom-risk.html","www/docs/crypto-audit.html","www/docs/pqc-readiness.html","www/docs/sm2-optimization.html","www/docs/sm2-tvla-analysis.html","www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js","www/fibemate_pq_wasm.js","www/index.html","www/js/app.js","www/js/nexus-community.js","www/js/performance-optimization.js","www/js/secure-key-storage.js","www/js/sm3_implementation.js","www/js/zk-ui-integration.js","www/kyber_nt_v3.js","www/modules/backend.js","www/modules/quantum/quantum-crypto.js","www/nexus-community.js","www/noble-pq/index.js","www/noble-pq/slh-dsa.js","www/noble-pq-bundle/slh-dsa.js","www/noble-pq-bundle/unified.js","www/performance-optimization.js","www/pqc-hybrid-e2e.html","www/privacy-layers/device-binding.js","www/privacy-layers/encrypted-file-transfer.js","www/privacy-layers/index.js","www/privacy-layers/key-rotation.js","www/privacy-layers/pir-search.js","www/privacy-layers/safety-numbers.js","www/security.html","www/timestamps/index.html","www/zk/bulletproofs.js","www/zk/schnorr-prover-v2.js","www/zk/schnorr-prover.js","www/zk/schnorr-verifier.js","www/zk/zk-browser.js","www/zk-auth-poseidon.js","www/zk-identity-proof.js","www/zk-snarks.js"],"indirect":["scripts/bench-v33.cjs","src/index.js","test-tls-hybrid-extension.js","tools/bloom-merge.js"],"total":81},"AES":{"direct":["double-ratchet.js","src/index.js","test/a2a-smoke.js","www/crypto/gm.js","www/docs/API.html","www/docs/bloom-risk.html","www/docs/crypto-audit.html","www/docs/pqc-dashboard.html","www/docs/pqc-readiness.html","www/index-beian.html","www/index.html","www/js/app.js","www/js/nexus-community.js","www/js/p2p-core.js","www/js/performance-optimization.js","www/js/secure-key-storage.js","www/modules/backend.js","www/modules/quantum/quantum-crypto.js","www/nexus-community.js","www/p2p-core.js","www/performance-optimization.js","www/privacy-layers/encrypted-file-transfer.js","www/privacy-layers/index.js","www/privacy-layers/key-rotation.js","www/privacy-layers/mixnet-router.js","www/privacy-layers/offline-messages.js","www/privacy-layers/pir-search.js","www/security.html","www/terms.html"],"indirect":["double-ratchet-pq.js","tools/bloom-merge.js","scripts/bench-v33.cjs","scripts/benchmark.cjs"],"total":42}};
+
+// Enrich assets with bloom data
+ASSETS.forEach(function(a) {
+    var bd = BLOOM_DATA[a.id];
+    if (bd) {
+        a.directFiles = Array.isArray(bd.direct) ? bd.direct : (bd.directFiles || []);
+        a.indirectFiles = Array.isArray(bd.indirect) ? bd.indirect : (bd.indirectFiles || []);
+    }
+});
+
+// ═══════════ Scatter Plot (Canvas 2D) ═══════════
+var canvas = document.getElementById('scatter');
+var ctx = canvas.getContext('2d');
+var tt = document.getElementById('tooltip');
+var currentFilter = 'all';
+var hoveredAsset = null;
+var plotData = [];
+
+function setFilter(f, btn) {
+    currentFilter = f;
+    document.querySelectorAll('.filter-btn').forEach(function(b) { b.classList.remove('active'); });
+    btn.classList.add('active');
+    filterAndRender();
+}
+
+function getFilteredAssets() {
+    if (currentFilter === 'all') return ASSETS;
+    return ASSETS.filter(function(a) { return a.riskLevel === currentFilter; });
+}
+
+function filterAndRender() {
+    renderScatter();
+    renderRanking();
+}
+
+// Layout constants
+var MARGIN = { top: 30, right: 40, bottom: 50, left: 70 };
+var AXIS_MIN = -5;
+var AXIS_MAX = 105;
+
+// Quadrant colors
+var Q_COLORS = {
+    tr: 'rgba(255,82,82,0.06)',    // top-right: HIGH
+    tl: 'rgba(255,169,77,0.06)',   // top-left: MONITOR
+    br: 'rgba(255,152,0,0.06)',    // bottom-right: QUICK WIN
+    bl: 'rgba(81,207,102,0.06)'    // bottom-left: LOW
+};
+
+// Risk level -> bubble color
+function bubbleColor(a) {
+    if (a.riskLevel === 'vulnerable') return '#ff5252';
+    if (a.riskLevel === 'weakened') return '#ffa94d';
+    return '#51cf66';
+}
+
+function bubbleGlow(a) {
+    if (a.riskLevel === 'vulnerable') return 'rgba(255,82,82,0.3)';
+    if (a.riskLevel === 'weakened') return 'rgba(255,169,77,0.3)';
+    return 'rgba(81,207,102,0.3)';
+}
+
+function resizeCanvas() {
+    var container = canvas.parentElement;
+    var w = container.clientWidth;
+    var ratio = 0.75;
+    var h = Math.max(480, w * ratio);
+    var dpr = window.devicePixelRatio || 1;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = w + 'px';
+    canvas.style.height = h + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    plotData = { w: w, h: h };
+    filterAndRender();
+}
+
+function px(rx, ry) {
+    var pw = plotData.w, ph = plotData.h;
+    return {
+        x: MARGIN.left + (rx - AXIS_MIN) / (AXIS_MAX - AXIS_MIN) * (pw - MARGIN.left - MARGIN.right),
+        y: ph - MARGIN.bottom - (ry - AXIS_MIN) / (AXIS_MAX - AXIS_MIN) * (ph - MARGIN.top - MARGIN.bottom)
+    };
+}
+
+function invPx(px_val, py_val) {
+    var pw = plotData.w, ph = plotData.h;
+    return {
+        rx: AXIS_MIN + (px_val - MARGIN.left) / (pw - MARGIN.left - MARGIN.right) * (AXIS_MAX - AXIS_MIN),
+        ry: AXIS_MIN + (ph - MARGIN.bottom - py_val) / (ph - MARGIN.top - MARGIN.bottom) * (AXIS_MAX - AXIS_MIN)
+    };
+}
+
+function drawQuadrants() {
+    var pw = plotData.w, ph = plotData.h;
+    var midX = (MARGIN.left + pw - MARGIN.right) / 2;
+    var midY = (ph - MARGIN.bottom + MARGIN.top) / 2;
+
+    // Fill quadrants
+    ctx.fillStyle = Q_COLORS.tr;
+    ctx.fillRect(midX, MARGIN.top, pw - MARGIN.right - midX, midY - MARGIN.top);
+
+    ctx.fillStyle = Q_COLORS.tl;
+    ctx.fillRect(MARGIN.left, MARGIN.top, midX - MARGIN.left, midY - MARGIN.top);
+
+    ctx.fillStyle = Q_COLORS.br;
+    ctx.fillRect(midX, midY, pw - MARGIN.right - midX, ph - MARGIN.bottom - midY);
+
+    ctx.fillStyle = Q_COLORS.bl;
+    ctx.fillRect(MARGIN.left, midY, midX - MARGIN.left, ph - MARGIN.bottom - midY);
+
+    // Quadrant borders
+    ctx.strokeStyle = 'rgba(100,100,140,0.3)';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([4, 6]);
+    ctx.beginPath();
+    ctx.moveTo(midX, MARGIN.top);
+    ctx.lineTo(midX, ph - MARGIN.bottom);
+    ctx.moveTo(MARGIN.left, midY);
+    ctx.lineTo(pw - MARGIN.right, midY);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Quadrant labels
+    ctx.font = '11px -apple-system,"Noto Sans SC",sans-serif';
+    ctx.textAlign = 'center';
+
+    ctx.fillStyle = 'rgba(255,82,82,0.5)';
+    ctx.fillText('🔥 HIGH PRIORITY', midX + (pw - MARGIN.right - midX) / 2, MARGIN.top + 18);
+
+    ctx.fillStyle = 'rgba(255,169,77,0.5)';
+    ctx.fillText('📋 MONITOR', MARGIN.left + (midX - MARGIN.left) / 2, MARGIN.top + 18);
+
+    ctx.fillStyle = 'rgba(255,152,0,0.5)';
+    ctx.fillText('⚡ QUICK WIN', midX + (pw - MARGIN.right - midX) / 2, ph - MARGIN.bottom - 14);
+
+    ctx.fillStyle = 'rgba(81,207,102,0.5)';
+    ctx.fillText('✅ LOW PRIORITY', MARGIN.left + (midX - MARGIN.left) / 2, ph - MARGIN.bottom - 14);
+}
+
+function drawAxes() {
+    var pw = plotData.w, ph = plotData.h;
+    var ax0 = px(AXIS_MIN, AXIS_MIN);
+    var ax1 = px(AXIS_MAX, AXIS_MAX);
+
+    // Axis lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(ax0.x, ax0.y);
+    ctx.lineTo(ax1.x, ax0.y); // X axis
+    ctx.moveTo(ax0.x, ax0.y);
+    ctx.lineTo(ax0.x, ax1.y); // Y axis
+    ctx.stroke();
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.lineWidth = 0.5;
+    for (var v = 0; v <= 100; v += 20) {
+        var gx = px(v, 0);
+        ctx.beginPath();
+        ctx.moveTo(gx.x, MARGIN.top);
+        ctx.lineTo(gx.x, ph - MARGIN.bottom);
+        ctx.stroke();
+        var gy = px(0, v);
+        ctx.beginPath();
+        ctx.moveTo(MARGIN.left, gy.y);
+        ctx.lineTo(pw - MARGIN.right, gy.y);
+        ctx.stroke();
+    }
+
+    // Tick marks and labels
+    ctx.font = '11px -apple-system,"Noto Sans SC",sans-serif';
+    ctx.fillStyle = '#64748b';
+    ctx.textAlign = 'center';
+
+    for (var v = 0; v <= 100; v += 20) {
+        var gx = px(v, 0);
+        ctx.fillText(v, gx.x, ax0.y + 18);
+        var gy = px(0, v);
+        ctx.textAlign = 'right';
+        ctx.fillText(v, MARGIN.left - 10, gy.y + 4);
+        ctx.textAlign = 'center';
+    }
+
+    // Axis labels
+    var cx = (MARGIN.left + pw - MARGIN.right) / 2;
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 13px -apple-system,"Noto Sans SC",sans-serif';
+    ctx.fillText('量子风险评分 (Quantum Risk Score)', cx, ph - 6);
+
+    ctx.save();
+    ctx.translate(14, (MARGIN.top + ph - MARGIN.bottom) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.font = 'bold 13px -apple-system,"Noto Sans SC",sans-serif';
+    ctx.fillStyle = '#e2e8f0';
+    ctx.textAlign = 'center';
+    ctx.fillText('迁移难度评分 (Migration Time Score)', 0, 0);
+    ctx.restore();
+
+    // Axis arrow hints
+    ctx.fillStyle = '#64748b';
+    ctx.font = '10px -apple-system,sans-serif';
+    ctx.textAlign = 'right';
+    ctx.fillText('低风险 ←', MARGIN.left + 55, MARGIN.top + 18);
+    ctx.textAlign = 'left';
+    ctx.fillText('→ 高风险', pw - MARGIN.right - 55, MARGIN.top + 18);
+
+    ctx.textAlign = 'right';
+    ctx.save();
+    ctx.fillText('难迁移 ↑', MARGIN.left - 4, MARGIN.top + 55);
+    ctx.fillText('易迁移 ↓', MARGIN.left - 4, ph - MARGIN.bottom - 65);
+    ctx.restore();
+}
+
+function renderScatter() {
+    if (!plotData.w) return;
+    var pw = plotData.w, ph = plotData.h;
+    ctx.clearRect(0, 0, pw, ph);
+
+    // Background
+    ctx.fillStyle = '#0a0a1a';
+    ctx.fillRect(0, 0, pw, ph);
+
+    drawQuadrants();
+    drawAxes();
+
+    var assets = getFilteredAssets();
+    var maxRadius = Math.max.apply(null, assets.map(function(a) { return a.totalFiles; }));
+
+    // Draw bubbles
+    assets.forEach(function(a) {
+        var pos = px(a.quantumRisk, a.migrationTime);
+        var radius = 10 + (a.totalFiles / maxRadius) * 40;
+
+        // Glow
+        var glowGrad = ctx.createRadialGradient(pos.x, pos.y, radius * 0.4, pos.x, pos.y, radius * 1.5);
+        glowGrad.addColorStop(0, bubbleGlow(a));
+        glowGrad.addColorStop(1, 'transparent');
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius * 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = glowGrad;
+        ctx.fill();
+
+        // Bubble
+        var grad = ctx.createRadialGradient(pos.x - radius*0.3, pos.y - radius*0.3, radius*0.1, pos.x, pos.y, radius);
+        grad.addColorStop(0, 'rgba(255,255,255,0.2)');
+        grad.addColorStop(0.5, bubbleColor(a));
+        grad.addColorStop(1, 'rgba(0,0,0,0.4)');
+        ctx.beginPath();
+        ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+
+        // Border
+        ctx.strokeStyle = bubbleColor(a);
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // If vulnerable, add an extra pulse ring
+        if (a.riskLevel === 'vulnerable') {
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, radius + 3, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(255,82,82,0.3)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([3, 5]);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+
+        // Label (short)
+        ctx.font = 'bold 11px -apple-system,"Noto Sans SC",sans-serif';
+        ctx.fillStyle = '#fff';
+        ctx.textAlign = 'center';
+        var label = a.displayName.length > 12 ? a.displayName.split('/')[0] : a.displayName;
+        ctx.fillText(label, pos.x, pos.y + radius + 14);
+
+        // File count in bubble (if large enough)
+        if (radius > 20) {
+            ctx.font = 'bold 10px -apple-system,sans-serif';
+            ctx.fillStyle = 'rgba(255,255,255,0.8)';
+            ctx.fillText(a.totalFiles, pos.x, pos.y + 3);
+        }
+
+        // Store for hit detection
+        a._px = pos.x;
+        a._py = pos.y;
+        a._r = radius;
+    });
+
+    // Legend quadrant labels above plot
+    // (handled in drawQuadrants)
+}
+
+function renderRanking() {
+    var assets = getFilteredAssets();
+    // Calculate weighted priority
+    var ranked = assets.map(function(a) {
+        return {
+            id: a.id,
+            displayName: a.displayName,
+            quantumRisk: a.quantumRisk,
+            migrationTime: a.migrationTime,
+            riskLevel: a.riskLevel,
+            weighted: Math.round(a.quantumRisk * 0.6 + a.migrationTime * 0.4),
+            color: bubbleColor(a)
+        };
+    }).sort(function(a, b) { return b.weighted - a.weighted; });
+
+    var tbody = document.getElementById('ranking-tbody');
+    var maxWeighted = ranked.length > 0 ? ranked[0].weighted : 1;
+
+    tbody.innerHTML = ranked.map(function(r, i) {
+        var rankClass = '';
+        if (i === 0) rankClass = 'rank-1';
+        else if (i === 1) rankClass = 'rank-2';
+        else if (i === 2) rankClass = 'rank-3';
+        return '<tr onclick="showDetail(\'' + r.id.replace(/'/g,"\\'") + '\')" style="cursor:pointer;">' +
+            '<td><span class="rank-badge ' + rankClass + '">' + (i+1) + '</span></td>' +
+            '<td style="color:' + r.color + ';">' + r.displayName + '</td>' +
+            '<td>' + r.quantumRisk + '</td>' +
+            '<td>' + r.migrationTime + '</td>' +
+            '<td>' +
+                '<span style="font-weight:700;font-size:0.85rem;">' + r.weighted + '</span>' +
+                '<div class="prio-bar-bg"><div class="prio-bar" style="width:' + (r.weighted/maxWeighted*100) + '%;background:' + r.color + ';"></div></div>' +
+            '</td>' +
+        '</tr>';
+    }).join('');
+
+    // Build action list
+    var actionList = document.getElementById('action-list');
+    var top5 = ranked.slice(0, 5);
+    actionList.innerHTML = top5.map(function(r, i) {
+        var asset = ASSETS.find(function(a) { return a.id === r.id; });
+        var emoji = i === 0 ? '🔴' : i === 1 ? '🟠' : i === 2 ? '🟡' : '🟢';
+        var action = (asset && asset.migrationPath) ? asset.migrationPath.split('·')[0] : '';
+        return '<div style="margin-bottom:8px;padding:8px 10px;background:#1a1a36;border-radius:8px;border-left:3px solid ' + r.color + ';">' +
+            '<div style="font-weight:600;">' + emoji + ' #' + (i+1) + ' <span style="color:' + r.color + ';">' + r.displayName + '</span></div>' +
+            '<div style="font-size:0.68rem;color:#94a3b8;">' + action + '</div>' +
+            '<div style="font-size:0.65rem;color:#64748b;">加权评分: ' + r.weighted + ' (风险' + r.quantumRisk + '×0.6 + 难度' + r.migrationTime + '×0.4)</div>' +
+            '</div>';
+    }).join('');
+}
+
+// ═══════════ Hit Detection & Interactivity ═══════════
+function getAssetAt(mx, my) {
+    var assets = getFilteredAssets();
+    for (var i = assets.length - 1; i >= 0; i--) {
+        var a = assets[i];
+        if (a._px == null) continue;
+        var dx = mx - a._px;
+        var dy = my - a._py;
+        if (dx * dx + dy * dy <= (a._r + 6) * (a._r + 6)) {
+            return a;
+        }
+    }
+    return null;
+}
+
+canvas.addEventListener('mousemove', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var asset = getAssetAt(mx, my);
+
+    if (asset) {
+        hoveredAsset = asset;
+        canvas.style.cursor = 'pointer';
+        tt.style.display = 'block';
+
+        // Position tooltip
+        var containerRect = canvas.parentElement.getBoundingClientRect();
+        var left = e.clientX - containerRect.left + 16;
+        var top = e.clientY - containerRect.top - 20;
+
+        // Keep tooltip on screen
+        if (left + 310 > containerRect.width) left -= 330;
+        if (top < 0) top = 10;
+
+        tt.style.left = left + 'px';
+        tt.style.top = top + 'px';
+
+        var riskLabel = asset.riskLevel === 'vulnerable' ? '🔴 量子脆弱' : asset.riskLevel === 'weakened' ? '🟡 需关注' : '🟢 量子安全';
+        var quadrantLabel = '';
+        if (asset.quantumRisk >= 50 && asset.migrationTime >= 50) quadrantLabel = '🔥 高优先级 — 立即行动';
+        else if (asset.quantumRisk < 50 && asset.migrationTime >= 50) quadrantLabel = '📋 需监控 — 规划路线';
+        else if (asset.quantumRisk >= 50 && asset.migrationTime < 50) quadrantLabel = '⚡ 快速赢取 — 近期完成';
+        else quadrantLabel = '✅ 低优先级 — 延后处理';
+
+        tt.querySelector('.tt-name').innerHTML = '<span style="color:' + bubbleColor(asset) + ';">' + asset.displayName + '</span>';
+        tt.querySelector('.tt-row').innerHTML =
+            '类型: ' + asset.algorithmFamily + '<br>' +
+            riskLabel + '<br>' +
+            '量子风险: <b>' + asset.quantumRisk + '</b> · 迁移难度: <b>' + asset.migrationTime + '</b><br>' +
+            '爆炸半径: <b>' + asset.totalFiles + '</b> 文件 (' + asset.directFiles.length + '直接 + ' + asset.indirectFiles.length + '间接)<br>' +
+            '依赖深度: ' + asset.dependencyDepth + ' · 数据敏感度: ' + asset.dataSensitivity;
+        tt.querySelector('.tt-action').innerHTML = quadrantLabel + '<br><span style="font-size:9px;color:#64748b;">点击查看完整迁移路径</span>';
+    } else {
+        hoveredAsset = null;
+        canvas.style.cursor = 'crosshair';
+        tt.style.display = 'none';
+    }
+});
+
+canvas.addEventListener('click', function(e) {
+    var rect = canvas.getBoundingClientRect();
+    var mx = e.clientX - rect.left;
+    var my = e.clientY - rect.top;
+    var asset = getAssetAt(mx, my);
+    if (asset) showDetail(asset.id);
+});
+
+canvas.addEventListener('mouseleave', function() {
+    hoveredAsset = null;
+    tt.style.display = 'none';
+});
+
+// ═══════════ Detail Panel ═══════════
+function showDetail(algoId) {
+    var asset = ASSETS.find(function(a) { return a.id === algoId; });
+    if (!asset) return;
+
+    var overlay = document.getElementById('detail-overlay');
+    var panel = document.getElementById('detail-panel');
+    var color = bubbleColor(asset);
+    var riskEmoji = asset.riskLevel === 'vulnerable' ? '🔴' : asset.riskLevel === 'weakened' ? '🟡' : '🟢';
+
+    var weighted = Math.round(asset.quantumRisk * 0.6 + asset.migrationTime * 0.4);
+    var rank = getFilteredAssets()
+        .map(function(a) { return { id: a.id, w: Math.round(a.quantumRisk*0.6 + a.migrationTime*0.4) }; })
+        .sort(function(a,b) { return b.w - a.w; });
+    var rankNum = rank.findIndex(function(r) { return r.id === algoId; }) + 1;
+
+    // File list preview (first 15 direct, first 5 indirect)
+    var directFiles = (asset.directFiles || []).slice(0, 15);
+    var indirectFiles = (asset.indirectFiles || []).slice(0, 5);
+    var directRemain = Math.max(0, (asset.directFiles || []).length - 15);
+    var indirectRemain = Math.max(0, (asset.indirectFiles || []).length - 5);
+
+    panel.innerHTML =
+        '<button class="close-btn" onclick="closeDetail()">✕ 关闭</button>' +
+        '<h3 style="color:' + color + ';">' + riskEmoji + ' ' + asset.displayName + ' <span style="font-size:0.7rem;color:#64748b;">优先级 #' + rankNum + '</span></h3>' +
+
+        '<div class="metric-grid">' +
+            '<div class="metric-item"><div class="metric-label">量子风险评分</div><div class="metric-val" style="color:#ff5252;">' + asset.quantumRisk + '/100</div></div>' +
+            '<div class="metric-item"><div class="metric-label">迁移难度评分</div><div class="metric-val" style="color:#ffa94d;">' + asset.migrationTime + '/100</div></div>' +
+            '<div class="metric-item"><div class="metric-label">加权优先级指数</div><div class="metric-val" style="color:' + color + ';">' + weighted + '</div></div>' +
+            '<div class="metric-item"><div class="metric-label">爆炸半径</div><div class="metric-val" style="color:#00d4ff;">' + asset.totalFiles + ' files</div></div>' +
+            '<div class="metric-item"><div class="metric-label">直接文件</div><div class="metric-val">' + asset.directFiles.length + '</div></div>' +
+            '<div class="metric-item"><div class="metric-label">间接依赖</div><div class="metric-val">' + asset.indirectFiles.length + '</div></div>' +
+            '<div class="metric-item"><div class="metric-label">最大依赖深度</div><div class="metric-val">' + asset.dependencyDepth + ' hops</div></div>' +
+            '<div class="metric-item"><div class="metric-label">数据敏感度</div><div class="metric-val">' + asset.dataSensitivity + '/100</div></div>' +
+        '</div>' +
+
+        '<h4>⚡ 量子威胁</h4>' +
+        '<p style="font-size:0.78rem;color:#94a3b8;line-height:1.6;">' + asset.quantumThreat + '</p>' +
+
+        '<h4>🛤️ 推荐迁移路径</h4>' +
+        '<div class="migration-path">' +
+            '<span class="mp-from">' + asset.displayName + '</span>' +
+            '<span class="mp-arrow">→</span>' +
+            '<span class="mp-to">' + asset.migrationPath + '</span>' +
+        '</div>' +
+        '<p style="font-size:0.75rem;color:#94a3b8;line-height:1.5;margin-top:6px;">' + asset.migrationDetail + '</p>' +
+
+        '<h4>💥 爆炸半径分析</h4>' +
+        '<p style="font-size:0.75rem;color:#94a3b8;margin-bottom:8px;">' + asset.bloomRiskNote + '</p>' +
+
+        (directFiles.length > 0 ? '<div style="font-size:0.72rem;font-weight:600;color:#51cf66;margin-top:10px;">📁 直接使用文件 (' + asset.directFiles.length + ')</div>' +
+        '<div class="file-list">' + directFiles.map(function(f) { return '<div class="file-item direct">' + f + '</div>'; }).join('') +
+        (directRemain > 0 ? '<div style="padding:6px;text-align:center;color:#64748b;font-size:0.65rem;">… 还有 ' + directRemain + ' 个文件（完整列表见风险传播图）</div>' : '') +
+        '</div>' : '') +
+
+        (indirectFiles.length > 0 ? '<div style="font-size:0.72rem;font-weight:600;color:#ffa94d;margin-top:10px;">🔗 间接依赖文件 (' + asset.indirectFiles.length + ')</div>' +
+        '<div class="file-list">' + indirectFiles.map(function(f) { return '<div class="file-item indirect">' + f + '</div>'; }).join('') +
+        (indirectRemain > 0 ? '<div style="padding:6px;text-align:center;color:#64748b;font-size:0.65rem;">… 还有 ' + indirectRemain + ' 个文件</div>' : '') +
+        '</div>' : '') +
+        '';
+
+    overlay.classList.add('show');
+}
+
+function closeDetail() {
+    document.getElementById('detail-overlay').classList.remove('show');
+}
+
+// ═══════════ Init ═══════════
+window.addEventListener('resize', function() {
+    resizeCanvas();
+});
+
+window.addEventListener('load', function() {
+    resizeCanvas();
+});
+
+// Keyboard close
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeDetail();
+});
+
+// Expose globals for onclick handlers
+window.setFilter = setFilter;
+window.showDetail = showDetail;
+window.closeDetail = closeDetail;
+</script>
+</body>
+</html>
