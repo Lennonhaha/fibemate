@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE · 量子风险传播图 — 密码原语依赖拓扑与爆炸半径</title>
-    <meta name="description" content="FIBEMATE 量子风险传播图 — 403文件·269加密文件·12算法·119条依赖边。点击算法查看依赖树→文件传染路径→精确行号。量子迁移就绪度与耦合分析。">
+    <meta name="description" content="FIBEMATE 量子风险传播图 — 403文件·269加密文件·12算法·119条依赖边。点击算法查看依赖树→文件依赖路径→精确行号。量子迁移就绪度与耦合分析。">
     <meta property="og:title" content="FIBEMATE 量子风险传播图 — 算法依赖拓扑与爆炸半径">
     <meta property="og:description" content="7个算法已穿透到应用层代码(P-256 101文件最大),ML-KEM 137文件最广,可视化展示“改一行算法常量要改多少文件”。">
     <meta property="og:type" content="website">
@@ -339,7 +339,7 @@ var ALGO_RISK = {
             '<div class="br-card" onclick="showAlgoDetails(\''+a.replace(/'/g,"\\'")+'\')" style="border-color:'+color+'44;min-width:100px;">' +
                 '<div class="br-algo" style="color:'+color+';">'+a+'</div>' +
                 '<div class="br-bar-bg"><div class="br-bar" style="width:'+(d.total/maxTotal*100)+'%;background:'+color+';"></div></div>' +
-                '<div class="br-num">💥 '+d.total+' 文件 ('+d.direct+'直接 + '+d.indirect+'传染)</div>' +
+                '<div class="br-num">💥 '+d.total+' 文件 ('+d.direct+'直接 + '+d.indirect+'间接引用)</div>' +
             '</div>';
     });
 })();

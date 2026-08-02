@@ -77,7 +77,7 @@ const { generateKeypair, encapsulate, decapsulate, sha3_256 } = require('./kem-i
 - hybrid KEM 握手 roundtrip 正常（`node test/test-fibemate.js`）
 - 新算法（如 ML-KEM-1024）只需修改 `kem-interface.js` 一行 require 即可替换
 
-**背景**：量子风险传播图显示 `hybrid.js` → `ml-kem-768.js` 是 P-256 传染链（爆炸半径 103）的源头。接口抽象 = 切掉传染链 = IBM 维度 1 提升。
+**背景**：量子风险传播图显示 `hybrid.js` → `ml-kem-768.js` 是 P-256 依赖链（爆炸半径 103）的源头。接口抽象 = 切掉传染链 = IBM 维度 1 提升。
 
 ---
 
