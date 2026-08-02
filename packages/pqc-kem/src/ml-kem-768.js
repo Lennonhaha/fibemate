@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
- * ML-KEM-768 â€?Constant-time hardened reference implementation
+ * ML-KEM-768 ï¿½?Constant-time hardened reference implementation
  *
  * Derived from the original FIBEMATE time-domain implementation.
  * Changes relative to the original:
@@ -15,18 +15,25 @@
  * Use the WASM path for production workloads; this file is for auditability.
  */
 
-const KYBER_N = 256;
-const KYBER_Q = 3329;
-const KYBER_ETA1 = 2;
-const KYBER_ETA2 = 2;
-const KYBER_DU = 10;
-const KYBER_DV = 4;
-const KYBER_K = 3;
-const KYBER_PUBLICKEYBYTES = 1184;
-const KYBER_SECRETKEYBYTES = 2400;
-const KYBER_CIPHERTEXTBYTES = 1088;
-const KYBER_SSBYTES = 32;
-const KYBER_QHALF = 1664; // Math.floor(KYBER_Q / 2), constant-time friendly
+// Runtime parameter set (AA: algorithm agility â€” switchable without recompile)
+const { getParams, listParamSets, MLKEM_PARAMS } = require('./params');
+let KYBER_N, KYBER_Q, KYBER_K, KYBER_ETA1, KYBER_ETA2, KYBER_DU, KYBER_DV,
+    KYBER_PUBLICKEYBYTES, KYBER_SECRETKEYBYTES, KYBER_CIPHERTEXTBYTES, KYBER_SSBYTES, KYBER_QHALF;
+let _currentParamSet = 'ML-KEM-768';
+
+function loadParams(paramSet) {
+    const p = getParams(paramSet);
+    KYBER_N = p.N; KYBER_Q = p.Q; KYBER_K = p.k;
+    KYBER_ETA1 = p.eta1; KYBER_ETA2 = p.eta2;
+    KYBER_DU = p.du; KYBER_DV = p.dv;
+    KYBER_PUBLICKEYBYTES = p.ekBytes;
+    KYBER_SECRETKEYBYTES = p.dkBytes;
+    KYBER_CIPHERTEXTBYTES = p.ctBytes;
+    KYBER_SSBYTES = p.ssBytes;
+    KYBER_QHALF = p.qHalf;
+    _currentParamSet = paramSet;
+}
+loadParams(_currentParamSet);  // default: ML-KEM-768
 
 // Detect WebCrypto (globalThis.crypto in browsers, require('crypto').webcrypto in Node)
 const _webcrypto = (typeof crypto !== 'undefined' && crypto.getRandomValues) ? crypto : null;
@@ -179,12 +186,12 @@ function zeroizeI16(a) { for (let i = 0; i < a.length; i++) a[i] = 0; }
 function zeroizePolyVec(v) { for (let i = 0; i < v.length; i++) zeroizeI16(v[i]); }
 
 // ============================================================================
-// Modular arithmetic (WARNING: not truly constant-time in pure JS â€?JIT may reorder.
+// Modular arithmetic (WARNING: not truly constant-time in pure JS ï¿½?JIT may reorder.
 // This file is for auditability; use the WASM path for production workloads.)
 // ============================================================================
 /**
  * Modular addition in Z_Q. Returns (a+b) mod 3329.
- * WARNING: ternary-based â€?not truly CT in pure JS.
+ * WARNING: ternary-based ï¿½?not truly CT in pure JS.
  * @param {number} a
  * @param {number} b
  * @returns {number} (a+b) mod 3329
@@ -193,7 +200,7 @@ function modAdd(a, b) { const r = a + b; return r >= KYBER_Q ? r - KYBER_Q : r <
 
 /**
  * Modular subtraction in Z_Q. Returns (a-b) mod 3329.
- * WARNING: ternary-based â€?not truly CT in pure JS.
+ * WARNING: ternary-based ï¿½?not truly CT in pure JS.
  * @param {number} a
  * @param {number} b
  * @returns {number} (a-b) mod 3329
@@ -209,17 +216,17 @@ function modSub(a, b) { const r = a - b; return r < 0 ? r + KYBER_Q : r; }
 function modMul(a, b) { let r = Number((BigInt(a) * BigInt(b)) % BigInt(KYBER_Q)); return r < 0 ? r + KYBER_Q : r; }
 
 // ============================================================================
-// Polynomial multiplication â€?Constant-time negacyclic convolution
+// Polynomial multiplication ï¿½?Constant-time negacyclic convolution
 // Z_Q[x]/(x^256+1): (f*g)[k] = sum_{i+j=k} f[i]*g[j] - sum_{i+j=k+256} f[i]*g[j]
 //
 // REMOVED: zero-coefficient skips (`if (f[i] === 0) continue`).
 // Timing now depends only on KYBER_N and KYBER_K, not on secret data.
 // ============================================================================
 /**
- * Polynomial multiplication in Z_Q[x]/(x^256+1) â€?negacyclic convolution.
+ * Polynomial multiplication in Z_Q[x]/(x^256+1) ï¿½?negacyclic convolution.
  * Constant-time: no coefficient skips, no early exits. ~65536 modMul ops.
- * @param {Int16Array} f â€?256 coefficients
- * @param {Int16Array} g â€?256 coefficients
+ * @param {Int16Array} f ï¿½?256 coefficients
+ * @param {Int16Array} g ï¿½?256 coefficients
  * @returns {Int16Array} f*g mod (x^256+1)
  */
 function polyMul(f, g) {
@@ -239,15 +246,15 @@ function polyMul(f, g) {
 }
 
 // ============================================================================
-// Matrix/Vector operations â€?ALL in time domain
+// Matrix/Vector operations ï¿½?ALL in time domain
 // ============================================================================
 
 /**
  * Matrix-vector multiplication over R_q = Z_Q[x]/(x^256+1).
  * r[i] = sum_{j=0}^{k-1} A[i][j] * s[j]
- * @param {Int16Array[][]} A â€?kÃ—k polynomial matrix
- * @param {Int16Array[]} s â€?k-vector of polynomials
- * @param {number} k â€?dimension (3 for ML-KEM-768)
+ * @param {Int16Array[][]} A ï¿½?kÃ—k polynomial matrix
+ * @param {Int16Array[]} s ï¿½?k-vector of polynomials
+ * @param {number} k ï¿½?dimension (3 for ML-KEM-768)
  * @returns {Int16Array[]} A*s
  */
 function matVecMul(A, s, k) {
@@ -267,7 +274,7 @@ function matVecMul(A, s, k) {
  * Vector dot product over R_q. r = sum a[i] * b[i].
  * @param {Int16Array[]} a
  * @param {Int16Array[]} b
- * @param {number} k â€?dimension
+ * @param {number} k ï¿½?dimension
  * @returns {Int16Array} dot product polynomial
  */
 function vecDot(a, b, k) {
@@ -283,7 +290,7 @@ function vecDot(a, b, k) {
  * Vector addition over R_q. r[i] = a[i] + b[i] (coefficient-wise).
  * @param {Int16Array[]} a
  * @param {Int16Array[]} b
- * @param {number} k â€?dimension
+ * @param {number} k ï¿½?dimension
  * @returns {Int16Array[]}
  */
 function vecAdd(a, b, k) {
@@ -301,9 +308,9 @@ function vecAdd(a, b, k) {
 
 /**
  * Bit-serialize polynomial coefficients to bytes.
- * d=12 â†?384 bytes; d=4 â†?128 bytes; d=10 â†?320 bytes.
- * @param {Int16Array} f â€?256 coefficients in Z_Q
- * @param {number} d â€?bits per coefficient
+ * d=12 ï¿½?384 bytes; d=4 ï¿½?128 bytes; d=10 ï¿½?320 bytes.
+ * @param {Int16Array} f ï¿½?256 coefficients in Z_Q
+ * @param {number} d ï¿½?bits per coefficient
  * @returns {Uint8Array} 32*d bytes
  */
 function byteEncode(f, d) {
@@ -320,8 +327,8 @@ function byteEncode(f, d) {
 
 /**
  * Bit-deserialize bytes back to polynomial coefficients.
- * @param {Uint8Array} data â€?serialized bytes
- * @param {number} d â€?bits per coefficient
+ * @param {Uint8Array} data ï¿½?serialized bytes
+ * @param {number} d ï¿½?bits per coefficient
  * @returns {Int16Array} 256 coefficients
  */
 function byteDecode(data, d) {
@@ -340,8 +347,8 @@ function byteDecode(data, d) {
 /**
  * Compress polynomial coefficients from Z_Q to d-bit representation.
  * c = round((2^d / Q) * x) mod 2^d
- * @param {Int16Array} f â€?256 coefficients in Z_Q
- * @param {number} d â€?target bits (10 for u, 4 for v)
+ * @param {Int16Array} f ï¿½?256 coefficients in Z_Q
+ * @param {number} d ï¿½?target bits (10 for u, 4 for v)
  * @returns {Int16Array} d-bit coefficients
  */
 function compress(f, d) {
@@ -356,8 +363,8 @@ function compress(f, d) {
 /**
  * Decompress d-bit representation back to approximate Z_Q coefficients.
  * x = round((Q / 2^d) * c)
- * @param {Int16Array} g â€?d-bit coefficients
- * @param {number} d â€?bits (10 or 4)
+ * @param {Int16Array} g ï¿½?d-bit coefficients
+ * @param {number} d ï¿½?bits (10 or 4)
  * @returns {Int16Array} approximate Z_Q coefficients
  */
 function decompress(g, d) {
@@ -371,8 +378,8 @@ function decompress(g, d) {
 /**
  * Centered Binomial Distribution with Î·=2.
  * Samples 256 coefficients from 128 bytes of input.
- * Each coefficient = HWâ‚?even nibble) - HWâ‚?odd nibble).
- * @param {Uint8Array} buf â€?128 bytes of random input
+ * Each coefficient = HWï¿½?even nibble) - HWï¿½?odd nibble).
+ * @param {Uint8Array} buf ï¿½?128 bytes of random input
  * @returns {Int16Array} 256 coefficients in [-2,2]
  */
 function cbd2(buf) {
@@ -387,9 +394,9 @@ function cbd2(buf) {
 
 /**
  * Uniformly sample a polynomial in Z_Q[x]/(x^256+1).
- * Uses SHAKE-128 XOF with rejection sampling (p â‰?0.65 acceptance).
- * @param {Uint8Array} seed â€?32-byte domain separator (Ï or Ïƒ)
- * @param {number} nonce â€?row/col index for matrix position
+ * Uses SHAKE-128 XOF with rejection sampling (p ï¿½?0.65 acceptance).
+ * @param {Uint8Array} seed ï¿½?32-byte domain separator (Ï or Ïƒ)
+ * @param {number} nonce ï¿½?row/col index for matrix position
  * @returns {Int16Array} 256 coefficients in [0, Q-1]
  */
 function samplePoly(seed, nonce) {
@@ -407,7 +414,7 @@ function samplePoly(seed, nonce) {
 }
 
 // ============================================================================
-// KeyGen, Encaps, Decaps â€?Pure Time Domain
+// KeyGen, Encaps, Decaps ï¿½?Pure Time Domain
 // ============================================================================
 
 /**
@@ -469,7 +476,7 @@ function generateKeypair() {
 /**
  * ML-KEM-768 encapsulation.
  *
- * @param {Uint8Array} publicKey â€?1184 bytes
+ * @param {Uint8Array} publicKey ï¿½?1184 bytes
  * @returns {{ciphertext: Uint8Array, sharedSecret: Uint8Array}}
  */
 function encapsulate(publicKey) {
@@ -535,11 +542,11 @@ function encapsulate(publicKey) {
 }
 
 /**
- * ML-KEM-768 decapsulation â€?constant-time hardened.
+ * ML-KEM-768 decapsulation ï¿½?constant-time hardened.
  *
- * @param {Uint8Array} secretKey â€?2400 bytes
- * @param {Uint8Array} ciphertext â€?1088 bytes
- * @returns {Uint8Array} sharedSecret â€?32 bytes
+ * @param {Uint8Array} secretKey ï¿½?2400 bytes
+ * @param {Uint8Array} ciphertext ï¿½?1088 bytes
+ * @returns {Uint8Array} sharedSecret ï¿½?32 bytes
  */
 function decapsulate(secretKey, ciphertext) {
     if (secretKey.length !== KYBER_SECRETKEYBYTES) throw new RangeError(`secretKey must be ${KYBER_SECRETKEYBYTES} bytes, got ${secretKey.length}`);
@@ -694,15 +701,21 @@ const MLKEM768 = {
     encapsulate,
     decapsulate,
     HybridKeyExchange,
-    PUBLIC_KEY_BYTES: KYBER_PUBLICKEYBYTES,
-    SECRET_KEY_BYTES: KYBER_SECRETKEYBYTES,
-    CIPHERTEXT_BYTES: KYBER_CIPHERTEXTBYTES,
-    SHARED_SECRET_BYTES: KYBER_SSBYTES,
+    get PUBLIC_KEY_BYTES() { return KYBER_PUBLICKEYBYTES; },
+    get SECRET_KEY_BYTES() { return KYBER_SECRETKEYBYTES; },
+    get CIPHERTEXT_BYTES() { return KYBER_CIPHERTEXTBYTES; },
+    get SHARED_SECRET_BYTES() { return KYBER_SSBYTES; },
     // Expose helpers for test/audit
     ctSelectU8,
     ctEqMask,
     zeroizeU8,
-    polyMul
+    polyMul,
+    // Algorithm agility â€” runtime parameter switching
+    get currentParamSet() { return _currentParamSet; },
+    loadParams,               // switch parameter set at runtime
+    listParamSets,
+    getParams,
+    MLKEM_PARAMS
 };
 
 if (typeof window !== 'undefined') window.MLKEM768 = MLKEM768;
