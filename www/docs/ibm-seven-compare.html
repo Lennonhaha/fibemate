@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IBM 七维对比工具 · 多项目密码敏捷性对比</title>
+<meta name="description" content="IBM Research 2026 Application-Level Crypto Agility · 7维度多项目对比工具 · 3D叠加雷达图 · 差异热力图 · 对比分析表">
+<meta property="og:title" content="FIBEMATE · IBM 七维多项目对比工具">
+<meta property="og:description" content="IBM Research 2026 七维框架多项目对比 · FIBEMATE 39.40 基准 · 叠加雷达图 · 差异热力图">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif;background:#0a0a1a;color:#e2e8f0;overflow-x:hidden}
+
+/* ─── Nav ─── */
+.nav{position:sticky;top:0;z-index:100;background:rgba(10,10,26,0.94);backdrop-filter:blur(20px);border-bottom:1px solid rgba(0,212,255,0.12);padding:0.7rem 2rem;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.nav-logo{font-size:1rem;font-weight:700;background:linear-gradient(135deg,#00d4ff,#8b5cf6);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.nav-link{color:#94a3b8;font-size:0.78rem;margin-left:1.2rem;transition:color .2s;text-decoration:none}
+.nav-link:hover{color:#00d4ff}
+
+/* ─── Container ─── */
+.container{max-width:1400px;margin:0 auto;padding:1.5rem 2rem 3rem}
+.page-title{font-size:1.8rem;font-weight:700;margin-bottom:0.2rem;background:linear-gradient(135deg,#00d4ff,#8b5cf6,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.page-subtitle{color:#94a3b8;font-size:0.82rem;margin-bottom:1.5rem}
+
+/* ─── Mode tabs ─── */
+.mode-tabs{display:flex;gap:0;margin-bottom:1.5rem;border-radius:10px;overflow:hidden;border:1px solid #2a2a4a}
+.mode-tab{flex:1;padding:0.7rem 1rem;text-align:center;cursor:pointer;font-size:0.82rem;font-weight:600;background:#0f0f1e;color:#64748b;transition:all .2s;border:none}
+.mode-tab.active{background:#141430;color:#00d4ff;box-shadow:inset 0 -2px 0 #00d4ff}
+.mode-tab:hover:not(.active){color:#a0a0c0}
+
+/* ─── Project Manager Panel ─── */
+.panel{background:#111827;border:1px solid #1e293b;border-radius:16px;padding:1.5rem;margin-bottom:1.5rem}
+.panel h3{font-size:1.05rem;margin-bottom:0.8rem;color:#00d4ff}
+.project-grid{display:flex;flex-wrap:wrap;gap:1rem;margin-bottom:1rem}
+.project-card{flex:1;min-width:260px;max-width:340px;background:#0f0f1e;border:1px solid #2a2a4a;border-radius:12px;padding:1rem;position:relative;transition:all .2s}
+.project-card:hover{border-color:#3a3a5a}
+.project-card.fibemate{border-color:rgba(251,191,36,0.35);background:rgba(251,191,36,0.03)}
+.project-name-input{width:100%;background:transparent;border:none;border-bottom:1px solid #2a2a4a;color:#e2e8f0;font-size:0.9rem;font-weight:700;padding:0.3rem 0;margin-bottom:0.6rem;outline:none}
+.project-name-input:focus{border-bottom-color:#00d4ff}
+.project-name-input.fibemate{color:#fbbf24;border-bottom-color:rgba(251,191,36,0.3)}
+.dim-inputs{display:flex;flex-direction:column;gap:0.35rem}
+.dim-input-row{display:flex;align-items:center;gap:0.5rem}
+.dim-input-label{font-size:0.65rem;color:#64748b;width:90px;text-align:right;flex-shrink:0}
+.dim-input-slider{-webkit-appearance:none;flex:1;height:4px;background:#1e293b;border-radius:2px;outline:none}
+.dim-input-slider::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:#00d4ff;cursor:pointer;border:2px solid #0a0a1a}
+.dim-input-val{width:30px;font-size:0.7rem;font-weight:700;text-align:center;color:#00d4ff}
+.card-actions{display:flex;gap:0.4rem;margin-top:0.6rem;justify-content:flex-end}
+.card-btn{padding:4px 10px;border-radius:6px;font-size:0.65rem;cursor:pointer;border:1px solid #2a2a4a;background:transparent;color:#94a3b8;transition:all .2s}
+.card-btn:hover{border-color:#00d4ff;color:#00d4ff}
+.card-btn.danger:hover{border-color:#ff6b6b;color:#ff6b6b}
+.project-overall{font-size:0.7rem;color:#64748b;text-align:right;margin-top:0.3rem}
+.btn-row{display:flex;gap:0.7rem;flex-wrap:wrap;justify-content:center;margin:1.2rem 0}
+.btn{padding:0.55rem 1.4rem;border-radius:8px;font-size:0.8rem;font-weight:600;cursor:pointer;transition:all .2s;border:none}
+.btn-primary{background:linear-gradient(135deg,#00d4ff,#6366f1);color:#fff}
+.btn-primary:hover{box-shadow:0 0 16px rgba(0,212,255,0.3);transform:translateY(-1px)}
+.btn-accent{background:linear-gradient(135deg,#8b5cf6,#ec4899);color:#fff}
+.btn-accent:hover{box-shadow:0 0 16px rgba(139,92,246,0.3);transform:translateY(-1px)}
+.btn-outline{background:transparent;border:1px solid #3a3a5a;color:#94a3b8}
+.btn-outline:hover{border-color:#00d4ff;color:#00d4ff}
+.btn-export{background:linear-gradient(135deg,#f97316,#ef4444);color:#fff}
+.btn-export:hover{box-shadow:0 0 16px rgba(249,115,22,0.3);transform:translateY(-1px)}
+.add-project-row{display:flex;gap:0.5rem;align-items:center;margin-bottom:0.8rem}
+.add-project-input{flex:1;background:#0f0f1e;border:1px solid #2a2a4a;border-radius:8px;color:#e2e8f0;font-size:0.8rem;padding:0.5rem 0.8rem;outline:none;max-width:240px}
+.add-project-input:focus{border-color:#00d4ff}
+.add-project-btn{padding:0.5rem 1rem;border-radius:8px;font-size:0.78rem;font-weight:600;cursor:pointer;border:none;background:linear-gradient(135deg,#00d4ff,#6366f1);color:#fff;white-space:nowrap}
+
+/* ─── 3D Radar ─── */
+#radar3d{width:100%;height:500px;position:relative;margin:1.2rem 0;background:rgba(10,10,26,0.5);border-radius:12px;border:1px solid #1e293b;overflow:hidden}
+#radar3d .tooltip{position:absolute;pointer-events:none;background:rgba(15,15,30,0.98);border:1px solid #3a3a5a;border-radius:8px;padding:6px 12px;font-size:10px;display:none;z-index:200;max-width:280px;backdrop-filter:blur(8px);box-shadow:0 4px 16px rgba(0,0,0,0.4)}
+.hint{text-align:center;font-size:0.7rem;color:#475569;margin:0.3rem 0 0.8rem}
+
+/* ─── Legend ─── */
+.legend{display:flex;flex-wrap:wrap;gap:1rem;justify-content:center;margin-bottom:1.2rem;padding:0.8rem;background:#0f0f1e;border-radius:10px;border:1px solid #2a2a4a}
+.legend-item{display:flex;align-items:center;gap:0.5rem;cursor:pointer;padding:4px 10px;border-radius:6px;transition:all .2s;font-size:0.75rem}
+.legend-item:hover{background:rgba(255,255,255,0.04)}
+.legend-item.off{opacity:0.35}
+.legend-dot{width:10px;height:10px;border-radius:50%}
+.legend-name{color:#e2e8f0}
+.legend-score{color:#64748b;font-size:0.65rem}
+
+/* ─── Heatmap ─── */
+.heatmap{overflow-x:auto;margin:1.5rem 0}
+.heatmap table{width:100%;border-collapse:collapse;min-width:700px}
+.heatmap th,.heatmap td{padding:8px 12px;text-align:center;font-size:0.75rem;border:1px solid #1e293b}
+.heatmap th{background:#0f0f1e;color:#64748b;font-weight:600;position:sticky;top:0;z-index:1}
+.heatmap th:first-child{text-align:left;min-width:140px}
+.heatmap td:first-child{text-align:left;font-weight:600;color:#e2e8f0}
+.heatmap .fib-row{background:rgba(251,191,36,0.04)}
+.heatmap .fib-row td:first-child{color:#fbbf24}
+.cell-diff{font-weight:700;padding:4px 8px;border-radius:4px;font-size:0.7rem;display:inline-block;min-width:44px}
+.cell-better{background:rgba(34,197,94,0.15);color:#22c55e}
+.cell-worse{background:rgba(239,68,68,0.15);color:#ef4444}
+.cell-same{background:rgba(100,116,139,0.1);color:#94a3b8}
+
+/* ─── Comparison Table ─── */
+.comparison-table{overflow-x:auto;margin:1.5rem 0}
+.comparison-table table{width:100%;border-collapse:collapse;min-width:700px}
+.comparison-table th,.comparison-table td{padding:10px 14px;text-align:center;font-size:0.78rem;border:1px solid #1e293b}
+.comparison-table th{background:#0f0f1e;color:#94a3b8;cursor:pointer;user-select:none;font-weight:600;white-space:nowrap}
+.comparison-table th:hover{color:#00d4ff}
+.comparison-table th:first-child{text-align:left;min-width:160px;cursor:default}
+.comparison-table th:first-child:hover{color:#94a3b8}
+.comparison-table th.sorted{color:#00d4ff}
+.comparison-table td:first-child{text-align:left;font-weight:600;font-size:0.72rem}
+.comparison-table td{font-weight:600}
+.comparison-table .highlight-cell{box-shadow:inset 0 0 0 2px #fbbf24;border-radius:4px}
+.comparison-table .dim-weight{font-size:0.62rem;color:#475569;font-weight:400}
+.evidence-row td{background:#080812;font-size:0.68rem;color:#64748b;text-align:left;padding:6px 14px;line-height:1.4;font-weight:400}
+.evidence-row td:first-child{font-weight:400;color:#475569}
+
+/* ─── Footer ─── */
+.footer{text-align:center;padding:2rem 1rem;color:#475569;font-size:0.68rem}
+
+@media(max-width:768px){
+.container{padding:0.6rem}
+.nav{padding:0.5rem 0.8rem}
+.nav-link{margin-left:0.5rem;font-size:0.68rem}
+.project-grid{flex-direction:column}
+.project-card{max-width:100%}
+#radar3d{height:380px}
+.heatmap th,.heatmap td,.comparison-table th,.comparison-table td{padding:5px 6px;font-size:0.65rem}
+.legend{gap:0.4rem}
+.legend-item{font-size:0.68rem}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+<a href="/" class="nav-logo">◈ FIBEMATE</a>
+<div>
+<a href="/docs/pqc-dashboard.html" class="nav-link">算法仪表盘</a>
+<a href="/docs/cars-radar.html" class="nav-link">CARS 审计</a>
+<a href="/docs/ibm-seven-radar.html" class="nav-link">七维自评</a>
+<a href="https://github.com/Lennonhaha/fibemate" class="nav-link">GitHub ↗</a>
+</div>
+</nav>
+
+<div class="container">
+<h1 class="page-title">📐 IBM 七维多项目对比工具</h1>
+<p class="page-subtitle">
+IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 多项目 7 维度对比 · FIBEMATE <b style="color:#fbbf24">39.40</b> 基准 · 叠加雷达图 · 差异热力图
+</p>
+
+<div class="mode-tabs">
+<button class="mode-tab active" onclick="switchTab('config')">⚙️ 项目管理</button>
+<button class="mode-tab" onclick="switchTab('radar')">📊 3D 雷达对比</button>
+<button class="mode-tab" onclick="switchTab('heatmap')">🔥 差异热力图</button>
+<button class="mode-tab" onclick="switchTab('analysis')">📋 对比分析表</button>
+</div>
+
+<!-- ═══════ Tab: Config ═══════ -->
+<div id="tab-config">
+<div class="panel">
+<h3>📁 项目配置 — 添加要对比的密码学项目</h3>
+<div class="add-project-row">
+<input class="add-project-input" id="new-project-name" placeholder="输入项目名称..." maxlength="30">
+<button class="add-project-btn" onclick="addProject()">+ 添加项目</button>
+<button class="btn btn-outline" onclick="resetAll()" style="font-size:0.7rem;padding:0.5rem 1rem">↺ 重置</button>
+</div>
+<div class="project-grid" id="project-grid"></div>
+<div class="btn-row">
+<button class="btn btn-primary" onclick="switchTab('radar');updateAllViews()">📊 查看雷达对比</button>
+</div>
+</div>
+</div>
+
+<!-- ═══════ Tab: Radar ═══════ -->
+<div id="tab-radar" style="display:none">
+<div class="panel">
+<h3>📊 3D 七轴雷达 — 多项目叠加对比</h3>
+<div id="radar3d"><div class="tooltip" id="radar-tooltip"></div></div>
+<div class="hint">🖱 拖拽旋转 · 滚轮缩放 · <span style="color:#fbbf24">⚠ 黄色虚线 = FIBEMATE 基准 39.40</span></div>
+<div class="legend" id="radar-legend"></div>
+<div class="btn-row">
+<button class="btn btn-outline" onclick="switchTab('config')">← 返回配置</button>
+<button class="btn btn-primary" onclick="switchTab('heatmap');updateAllViews()">🔥 查看差异热力图</button>
+</div>
+</div>
+</div>
+
+<!-- ═══════ Tab: Heatmap ═══════ -->
+<div id="tab-heatmap" style="display:none">
+<div class="panel">
+<h3>🔥 差异热力图 — 各维度与 FIBEMATE 基准的差值</h3>
+<p style="font-size:0.72rem;color:#64748b;margin-bottom:1rem;">🟢 绿色 = 优于 FIBEMATE · 🔴 红色 = 低于 FIBEMATE · ⚪ 灰色 = 接近 · 悬停查看精确值</p>
+<div class="heatmap" id="heatmap-container"></div>
+<div class="btn-row">
+<button class="btn btn-outline" onclick="switchTab('radar')">← 返回雷达图</button>
+<button class="btn btn-primary" onclick="switchTab('analysis');updateAllViews()">📋 查看对比分析表</button>
+</div>
+</div>
+</div>
+
+<!-- ═══════ Tab: Analysis ═══════ -->
+<div id="tab-analysis" style="display:none">
+<div class="panel">
+<h3>📋 对比分析表 — 维度 × 项目 · 含 FIBEMATE 实证依据</h3>
+<p style="font-size:0.72rem;color:#64748b;margin-bottom:1rem;">点击列头排序 · <span style="color:#fbbf24">🟡 高亮</span> = 该维度与 FIBEMATE 偏差最大的项目</p>
+<div class="comparison-table" id="comparison-container"></div>
+<div class="btn-row">
+<button class="btn btn-outline" onclick="switchTab('heatmap')">← 返回热力图</button>
+<button class="btn btn-export" onclick="exportReport()">📥 导出对比报告 (HTML)</button>
+</div>
+</div>
+</div>
+
+<div class="btn-row" style="margin-top:0">
+<button class="btn btn-export" onclick="exportReport()" style="font-size:0.78rem">📥 导出自包含 HTML 对比报告</button>
+</div>
+
+</div>
+
+<div class="footer">
+IBM 七维框架 (2026) · 首个真实 PQC 工程平台实证验证 · FIBEMATE 开源 (GPL-3.0)
+</div>
+
+<script src="lib/three.min.js"></script>
+<script src="lib/OrbitControls.js"></script>
+
+<script>
+// ═══════════════════════════════════════
+//  IBM 7-Dimension Multi-Project Compare
+// ═══════════════════════════════════════
+
+var DIMS = [
+    {id:'d1',name:'接口抽象度',short:'接口抽象',weight:0.18,
+     evidence:'零抽象层 — 14+ 处直接调用 SM2.generateKeypair() / MLKEM.encapsulate()，无 AlgorithmProvider 接口'},
+    {id:'d2',name:'配置外部化',short:'配置外部化',weight:0.18,
+     evidence:'全部硬编码 — const N=256, Q=3329, IANA_GROUP_ID=4590，零 JSON/YAML 配置文件'},
+    {id:'d3',name:'版本管理',short:'版本管理',weight:0.14,
+     evidence:'文件级版本 — sm2-bigint-ec.js.v1.3-backup，无 semver registry，无弃用标记'},
+    {id:'d4',name:'格式耦合',short:'格式耦合',weight:0.14,
+     evidence:'格式绑定算法 — MLKEM PK=1184B 硬编码，SM2 PK=65B，无 KeyFormat 抽象层'},
+    {id:'d5',name:'协议协商',short:'协议协商',weight:0.14,
+     evidence:'零协商 — gm.js negotiateWithServer() 只发 {algorithm:"SM2"}，无 cipher suite 列表'},
+    {id:'d6',name:'替换成本',short:'替换成本',weight:0.12,
+     evidence:'高成本 — SM2→P256 需改 11 文件 ~50-80 行，MLKEM 768→1024 需改 7 文件 ~40-60 行'},
+    {id:'d7',name:'可观测性',short:'可观测性',weight:0.10,
+     evidence:'离线优秀 — CI/CD + TSR + TVLA 36/36 + KAT 10000，但零运行时监控'}
+];
+
+var FIBEMATE_SCORES = {d1:25,d2:15,d3:40,d4:35,d5:20,d6:30,d7:65};
+var FIBEMATE_OVERALL = 39.40;
+
+// Project colors (FIBEMATE is always yellow-dashed)
+var PROJECT_PALETTE = [
+    '#00d4ff','#8b5cf6','#22c55e','#f97316','#ef4444','#ec4899','#06b6d4','#a855f7',
+    '#84cc16','#f59e0b','#14b8a6','#6366f1','#e11d48','#0ea5e9','#d946ef'
+];
+
+// Pre-loaded example projects
+var EXAMPLE_PROJECTS = [
+    {
+        id:'fibemate', name:'FIBEMATE', locked:true,
+        scores:{d1:25,d2:15,d3:40,d4:35,d5:20,d6:30,d7:65},
+        color:'#fbbf24', isFibemate:true
+    },
+    {
+        id:'openssl', name:'OpenSSL', locked:false,
+        scores:{d1:40,d2:55,d3:75,d4:60,d5:70,d6:50,d7:80},
+        color:PROJECT_PALETTE[0]
+    },
+    {
+        id:'liboqs', name:'liboqs', locked:false,
+        scores:{d1:55,d2:45,d3:40,d4:50,d5:30,d6:25,d7:55},
+        color:PROJECT_PALETTE[1]
+    },
+    {
+        id:'bc', name:'Bouncy Castle', locked:false,
+        scores:{d1:35,d2:30,d3:65,d4:45,d5:35,d6:40,d7:50},
+        color:PROJECT_PALETTE[2]
+    }
+];
+
+var projects = JSON.parse(JSON.stringify(EXAMPLE_PROJECTS));
+var nextColorIdx = 3;
+
+// ═══════════ Project Management ═══════════
+function calcOverall(scores) {
+    var total = 0;
+    DIMS.forEach(function(d) { total += (scores[d.id]||0) * d.weight; });
+    return Math.round(total * 10) / 10;
+}
+
+function renderProjectCards() {
+    var grid = document.getElementById('project-grid');
+    var html = '';
+    projects.forEach(function(p, idx) {
+        var overall = calcOverall(p.scores);
+        var colorStyle = p.isFibemate ? 'color:#fbbf24' : 'color:'+p.color;
+        html += '<div class="project-card'+(p.isFibemate?' fibemate':'')+'">'+
+            '<input class="project-name-input'+(p.isFibemate?' fibemate':'')+'" '+
+                'value="'+p.name+'" '+(p.locked?'readonly':'')+
+                ' onchange="updateProjectName(\''+p.id+'\',this.value)" placeholder="项目名称">';
+        DIMS.forEach(function(d) {
+            html += '<div class="dim-input-row">'+
+                '<span class="dim-input-label">'+d.short+'</span>'+
+                '<input type="range" class="dim-input-slider" min="0" max="100" value="'+(p.scores[d.id]||0)+'" '+
+                    'oninput="updateProjectScore(\''+p.id+'\',\''+d.id+'\',this.value);this.nextElementSibling.textContent=this.value" '+
+                    'style="'+colorStyle.replace('color','--thumb-color').replace(':',':')+'">'+
+                '<span class="dim-input-val">'+(p.scores[d.id]||0)+'</span>'+
+            '</div>';
+        });
+        html += '<div class="project-overall">加权总分: <b style="'+colorStyle+'">'+overall+'</b></div>';
+        if(!p.locked) {
+            html += '<div class="card-actions">'+
+                '<button class="card-btn danger" onclick="deleteProject(\''+p.id+'\')">✕ 删除</button>'+
+            '</div>';
+        }
+        html += '</div>';
+    });
+    grid.innerHTML = html;
+}
+
+function addProject() {
+    var nameInput = document.getElementById('new-project-name');
+    var name = nameInput.value.trim();
+    if(!name) { alert('请输入项目名称'); return; }
+    var id = 'proj_' + Date.now();
+    var color = PROJECT_PALETTE[nextColorIdx % PROJECT_PALETTE.length];
+    nextColorIdx++;
+    projects.push({
+        id:id, name:name, locked:false,
+        scores:{d1:50,d2:50,d3:50,d4:50,d5:50,d6:50,d7:50},
+        color:color, isFibemate:false
+    });
+    nameInput.value = '';
+    renderProjectCards();
+}
+
+function deleteProject(id) {
+    if(!confirm('确定删除此项目？')) return;
+    projects = projects.filter(function(p) { return p.id !== id; });
+    renderProjectCards();
+}
+
+function updateProjectName(id, name) {
+    var p = projects.find(function(x) { return x.id === id; });
+    if(p) p.name = name;
+}
+
+function updateProjectScore(projId, dimId, val) {
+    var p = projects.find(function(x) { return x.id === projId; });
+    if(p) { p.scores[dimId] = parseInt(val); }
+    // Update overall display
+    var card = document.querySelectorAll('.project-card')[projects.findIndex(function(x){return x.id===projId})];
+    if(card) {
+        var overallEl = card.querySelector('.project-overall b');
+        if(overallEl) overallEl.textContent = calcOverall(p.scores);
+    }
+}
+
+function resetAll() {
+    if(!confirm('确定重置所有项目配置？这将恢复默认示例项目。')) return;
+    projects = JSON.parse(JSON.stringify(EXAMPLE_PROJECTS));
+    nextColorIdx = 3;
+    renderProjectCards();
+}
+
+// ═══════════ Tab Switching ═══════════
+var currentTab = 'config';
+function switchTab(tab) {
+    currentTab = tab;
+    ['config','radar','heatmap','analysis'].forEach(function(t) {
+        document.getElementById('tab-'+t).style.display = t===tab ? '' : 'none';
+    });
+    document.querySelectorAll('.mode-tab').forEach(function(el, i) {
+        var tabs = ['config','radar','heatmap','analysis'];
+        el.classList.toggle('active', tabs[i] === tab);
+    });
+    if(tab === 'radar') buildRadar();
+    if(tab === 'heatmap') buildHeatmap();
+    if(tab === 'analysis') buildAnalysis();
+}
+
+function updateAllViews() {
+    if(currentTab === 'radar') buildRadar();
+    if(currentTab === 'heatmap') buildHeatmap();
+    if(currentTab === 'analysis') buildAnalysis();
+}
+
+// ═══════════ 3D Seven-Axis Radar ═══════════
+var radarScene, radarCamera, radarRenderer, radarControls;
+var projectGroups = [];
+
+function buildRadar() {
+    var container = document.getElementById('radar3d');
+    // Clear existing
+    var children = container.children;
+    for(var i = children.length-1; i >= 0; i--) {
+        if(children[i].id !== 'radar-tooltip') container.removeChild(children[i]);
+    }
+    
+    var w = container.clientWidth, h = container.clientHeight;
+    
+    radarScene = new THREE.Scene();
+    radarCamera = new THREE.PerspectiveCamera(42, w/h, 0.5, 30);
+    radarCamera.position.set(0, 5.5, 9);
+    radarCamera.lookAt(0, 0, 0);
+    
+    radarRenderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+    radarRenderer.setSize(w, h);
+    radarRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(radarRenderer.domElement);
+    
+    radarControls = new THREE.OrbitControls(radarCamera, radarRenderer.domElement);
+    radarControls.enableDamping = true; radarControls.dampingFactor = 0.08;
+    radarControls.autoRotate = true; radarControls.autoRotateSpeed = 0.35;
+    radarControls.maxDistance = 18; radarControls.minDistance = 3;
+    
+    radarScene.add(new THREE.AmbientLight(0x334466, 1.4));
+    var l1 = new THREE.DirectionalLight(0x8899ff, 1.3); l1.position.set(5,8,8); radarScene.add(l1);
+    var l2 = new THREE.DirectionalLight(0x8866ff, 0.5); l2.position.set(-5,2,-4); radarScene.add(l2);
+    
+    var group = new THREE.Group(); radarScene.add(group);
+    
+    var n = 7, radius = 4.2;
+    
+    // Reference rings
+    for(var r=1; r<=4; r++) {
+        var ringGeo = new THREE.RingGeometry(r-0.03, r+0.03, n*6);
+        var ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({color:0x2a2a4a,side:THREE.DoubleSide,transparent:true,opacity:0.45}));
+        ring.rotation.x = -Math.PI/2;
+        group.add(ring);
+        // Ring label
+        var lbl = makeSprite(String(r*25), '#3a3a5a', 22);
+        lbl.position.set(r, 0.15, 0); lbl.scale.set(0.5,0.25,1);
+        group.add(lbl);
+    }
+    
+    // Grid floor
+    var gridHelper = new THREE.GridHelper(10, 10, 0x2a2a4a, 0x12122a);
+    gridHelper.position.y = -3.8;
+    radarScene.add(gridHelper);
+    
+    // Axis lines and labels
+    DIMS.forEach(function(d, i) {
+        var angle = (i/n) * Math.PI * 2 - Math.PI/2;
+        // Axis line
+        var pts = [new THREE.Vector3(0,0,0), new THREE.Vector3(Math.cos(angle)*radius, 0, Math.sin(angle)*radius)];
+        var lineGeo = new THREE.BufferGeometry().setFromPoints(pts);
+        group.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({color:0x2a2a4a,transparent:true,opacity:0.5})));
+        
+        // Label
+        var tip = radius + 0.8;
+        var spr = makeSprite(d.short, '#e0e0e0', 22);
+        spr.position.set(Math.cos(angle)*tip, 0.2, Math.sin(angle)*tip);
+        spr.scale.set(1.2,0.55,1);
+        group.add(spr);
+    });
+    
+    // Draw each project
+    projectGroups = [];
+    projects.forEach(function(p, pi) {
+        var scores = DIMS.map(function(d){ return (p.scores[d.id]/100) * radius; });
+        var colorHex = parseInt(p.color.replace('#',''), 16);
+        
+        var pGroup = new THREE.Group();
+        var visible = true;
+        projectGroups.push({group:pGroup, visible:visible, id:p.id});
+        
+        // Polygon fill
+        var verts = [0,0,0];
+        for(var i=0; i<n; i++) {
+            var angle = (i/n) * Math.PI * 2 - Math.PI/2;
+            verts.push(Math.cos(angle)*scores[i], 0, Math.sin(angle)*scores[i]);
+        }
+        var indices = [];
+        for(var i=0; i<n; i++) indices.push(0, i+1, ((i+1)%n)+1);
+        var geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.Float32BufferAttribute(verts, 3));
+        geo.setIndex(indices);
+        geo.computeVertexNormals();
+        
+        if(p.isFibemate) {
+            // Dashed outline + semi-transparent fill
+            var mat = new THREE.MeshStandardMaterial({color:colorHex,emissive:colorHex,emissiveIntensity:0.3,roughness:0.4,transparent:true,opacity:0.18,side:THREE.DoubleSide,depthWrite:false});
+            pGroup.add(new THREE.Mesh(geo, mat));
+            
+            // Dashed outline
+            var dashPts = [];
+            for(var i=0; i<=n; i++) {
+                var a = ((i%n)/n) * Math.PI * 2 - Math.PI/2;
+                dashPts.push(new THREE.Vector3(Math.cos(a)*scores[i%n], 0.04, Math.sin(a)*scores[i%n]));
+            }
+            var dGeo = new THREE.BufferGeometry().setFromPoints(dashPts);
+            var dashLine = new THREE.Line(dGeo, new THREE.LineDashedMaterial({color:colorHex,dashSize:0.3,gapSize:0.2,linewidth:1,transparent:true,opacity:0.8}));
+            dashLine.computeLineDistances();
+            pGroup.add(dashLine);
+            
+            // Small dots at each vertex
+            for(var i=0; i<n; i++) {
+                var a = (i/n) * Math.PI * 2 - Math.PI/2;
+                var dot = new THREE.Mesh(new THREE.SphereGeometry(0.08,8,8), new THREE.MeshBasicMaterial({color:colorHex}));
+                dot.position.set(Math.cos(a)*scores[i], 0.04, Math.sin(a)*scores[i]);
+                pGroup.add(dot);
+            }
+        } else {
+            // Solid fill + outline
+            var mat = new THREE.MeshStandardMaterial({color:colorHex,emissive:colorHex,emissiveIntensity:0.25,roughness:0.4,transparent:true,opacity:0.3,side:THREE.DoubleSide,depthWrite:false});
+            pGroup.add(new THREE.Mesh(geo, mat));
+            
+            var oPts = [];
+            for(var i=0; i<=n; i++) {
+                var a = ((i%n)/n) * Math.PI * 2 - Math.PI/2;
+                oPts.push(new THREE.Vector3(Math.cos(a)*scores[i%n], 0.03, Math.sin(a)*scores[i%n]));
+            }
+            var oGeo = new THREE.BufferGeometry().setFromPoints(oPts);
+            pGroup.add(new THREE.Line(oGeo, new THREE.LineBasicMaterial({color:colorHex,linewidth:1,transparent:true,opacity:0.9})));
+            
+            // Node spheres
+            for(var i=0; i<n; i++) {
+                var a = (i/n) * Math.PI * 2 - Math.PI/2;
+                var ns = new THREE.Mesh(new THREE.SphereGeometry(0.09,12,12), new THREE.MeshStandardMaterial({color:colorHex,emissive:colorHex,emissiveIntensity:0.5,roughness:0.2}));
+                ns.position.set(Math.cos(a)*scores[i], 0.04, Math.sin(a)*scores[i]);
+                pGroup.add(ns);
+            }
+        }
+        
+        group.add(pGroup);
+    });
+    
+    // Center sphere
+    var cs = new THREE.Mesh(new THREE.SphereGeometry(0.18,32,32), new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xffffff,emissiveIntensity:0.4,roughness:0.1}));
+    group.add(cs);
+    
+    buildRadarLegend();
+    
+    // Animation
+    var lastAnimate = animateRadar;
+    function animateRadar() {
+        requestAnimationFrame(animateRadar);
+        if(radarControls) radarControls.update();
+        if(radarRenderer && radarScene && radarCamera) radarRenderer.render(radarScene, radarCamera);
+    }
+    // Stop previous animation loop by not calling it again — Three.js handles this
+    // We use a fresh animate reference
+    if(!window._radarAnimating) {
+        window._radarAnimating = true;
+        (function loop() {
+            if(!radarRenderer || !radarScene || !radarCamera) { window._radarAnimating = false; return; }
+            requestAnimationFrame(loop);
+            radarControls.update();
+            radarRenderer.render(radarScene, radarCamera);
+        })();
+    }
+    
+    window.addEventListener('resize', function() {
+        if(!radarRenderer || !radarCamera) return;
+        var cw = container.clientWidth, ch = container.clientHeight;
+        radarCamera.aspect = cw/Math.max(ch,1);
+        radarCamera.updateProjectionMatrix();
+        radarRenderer.setSize(cw, ch);
+    });
+}
+
+function makeSprite(text, color, size) {
+    var c = document.createElement('canvas'); c.width=256; c.height=64;
+    var ctx = c.getContext('2d');
+    ctx.fillStyle = color; ctx.font = 'bold '+size+'px -apple-system,"Noto Sans SC",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(text, 128, 32);
+    var tex = new THREE.CanvasTexture(c); tex.minFilter = THREE.LinearFilter;
+    return new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+}
+
+function buildRadarLegend() {
+    var legend = document.getElementById('radar-legend');
+    var html = '';
+    projects.forEach(function(p, pi) {
+        var overall = calcOverall(p.scores);
+        html += '<div class="legend-item" id="legend-'+p.id+'" onclick="toggleProject(\''+p.id+'\')">'+
+            '<div class="legend-dot" style="background:'+p.color+'"></div>'+
+            '<span class="legend-name">'+p.name+'</span>'+
+            '<span class="legend-score">'+overall+'</span>'+
+        '</div>';
+    });
+    legend.innerHTML = html;
+}
+
+function toggleProject(id) {
+    var pg = projectGroups.find(function(g) { return g.id === id; });
+    if(!pg) return;
+    pg.visible = !pg.visible;
+    pg.group.visible = pg.visible;
+    var legendItem = document.getElementById('legend-'+id);
+    if(legendItem) legendItem.classList.toggle('off', !pg.visible);
+}
+
+// ═══════════ Heatmap ═══════════
+function buildHeatmap() {
+    var container = document.getElementById('heatmap-container');
+    // Header row
+    var html = '<table><thead><tr><th>项目</th>';
+    DIMS.forEach(function(d) {
+        html += '<th>'+d.short+'<br><span style="font-size:0.6rem;color:#475569">'+Math.round(d.weight*100)+'%</span></th>';
+    });
+    html += '<th>加权总分</th></tr></thead><tbody>';
+    
+    projects.forEach(function(p) {
+        var fibRow = p.isFibemate;
+        html += '<tr class="'+(fibRow?'fib-row':'')+'"><td>'+(p.isFibemate?'⭐ ':'')+p.name+'</td>';
+        var overall = calcOverall(p.scores);
+        DIMS.forEach(function(d) {
+            var score = p.scores[d.id]||0;
+            var fib = FIBEMATE_SCORES[d.id];
+            var diff = score - fib;
+            var cls, symbol;
+            if(diff > 5) { cls = 'cell-better'; symbol = '+'+diff; }
+            else if(diff < -5) { cls = 'cell-worse'; symbol = diff; }
+            else { cls = 'cell-same'; symbol = (diff>=0?'+':'')+diff; }
+            html += '<td><span class="cell-diff '+cls+'" title="'+p.name+': '+score+' | FIBEMATE: '+fib+' | 差值: '+symbol+'">'+score+' <small style="opacity:0.6">'+symbol+'</small></span></td>';
+        });
+        html += '<td style="font-weight:700;color:'+p.color+'">'+overall+'</td></tr>';
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+// ═══════════ Analysis Table ═══════════
+var analysisSortDim = null, analysisSortAsc = true;
+
+function buildAnalysis() {
+    var container = document.getElementById('comparison-container');
+    // Header
+    var html = '<table><thead><tr><th>维度</th>';
+    projects.forEach(function(p) {
+        html += '<th style="color:'+p.color+'">'+(p.isFibemate?'⭐ ':'')+p.name+'</th>';
+    });
+    html += '<th class="sortable'+(analysisSortDim==='maxdiff'?' sorted':'')+'" onclick="sortAnalysisBy(\'maxdiff\')" title="最大偏差">🜁 偏差 ↕</th></tr></thead><tbody>';
+    
+    var rows = [];
+    DIMS.forEach(function(d) {
+        var row = {dim:d, cells:[]};
+        var fibScore = FIBEMATE_SCORES[d.id];
+        var maxDiff = 0, maxProjId = null;
+        
+        projects.forEach(function(p) {
+            var score = p.scores[d.id]||0;
+            var diff = score - fibScore;
+            if(Math.abs(diff) > Math.abs(maxDiff)) { maxDiff = diff; maxProjId = p.id; }
+            var cls = diff > 5 ? 'color:#22c55e' : diff < -5 ? 'color:#ef4444' : '';
+            row.cells.push({projId:p.id, score:score, diff:diff, cls:cls});
+        });
+        row.maxDiff = maxDiff;
+        row.maxProjId = maxProjId;
+        rows.push(row);
+    });
+    
+    // Sort
+    if(analysisSortDim === 'maxdiff') {
+        rows.sort(function(a,b) { return analysisSortAsc ? Math.abs(a.maxDiff)-Math.abs(b.maxDiff) : Math.abs(b.maxDiff)-Math.abs(a.maxDiff); });
+    }
+    
+    rows.forEach(function(row) {
+        var d = row.dim;
+        html += '<tr><td>'+d.name+' <span class="dim-weight">('+Math.round(d.weight*100)+'%)</span></td>';
+        row.cells.forEach(function(cell) {
+            var highlight = cell.projId === row.maxProjId && Math.abs(cell.diff) > 0 ? ' highlight-cell' : '';
+            html += '<td style="'+cell.cls+'" class="'+highlight+'">'+cell.score+' <small style="opacity:0.5">'+(cell.diff>=0?'+':'')+cell.diff+'</small></td>';
+        });
+        html += '<td style="font-size:0.68rem;color:#64748b">'+(row.maxDiff>=0?'+':'')+row.maxDiff+'</td></tr>';
+        
+        // Evidence row
+        html += '<tr class="evidence-row"><td style="font-size:0.62rem">📎 FIBEMATE 实证</td>';
+        projects.forEach(function() {
+            html += '<td style="font-size:0.62rem">'+d.evidence+'</td>';
+        });
+        html += '<td></td></tr>';
+    });
+    
+    html += '</tbody></table>';
+    container.innerHTML = html;
+}
+
+function sortAnalysisBy(key) {
+    if(analysisSortDim === key) { analysisSortAsc = !analysisSortAsc; }
+    else { analysisSortDim = key; analysisSortAsc = true; }
+    buildAnalysis();
+}
+
+// ═══════════ Export ═══════════
+function exportReport() {
+    var html = '<!DOCTYPE html>\n<html lang="zh-CN">\n<head>\n<meta charset="UTF-8">\n'+
+        '<meta name="viewport" content="width=device-width,initial-scale=1.0">\n'+
+        '<title>IBM 七维密码敏捷性对比报告</title>\n<style>\n'+
+        '*{margin:0;padding:0;box-sizing:border-box}\n'+
+        'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans SC",sans-serif;background:#0a0a1a;color:#e2e8f0;padding:2rem;max-width:960px;margin:0 auto}\n'+
+        'h1{font-size:1.5rem;color:#00d4ff;margin-bottom:0.3rem}\n'+
+        '.meta{font-size:0.72rem;color:#64748b;margin-bottom:1.5rem}\n'+
+        'h2{font-size:1.1rem;color:#8b5cf6;margin:1.5rem 0 0.8rem;border-bottom:1px solid #1e293b;padding-bottom:0.4rem}\n'+
+        'table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.82rem}\n'+
+        'th{background:#0f0f1e;color:#64748b;padding:8px 12px;text-align:center;font-weight:600;border:1px solid #1e293b}\n'+
+        'th:first-child{text-align:left}\n'+
+        'td{padding:8px 12px;text-align:center;border:1px solid #1e293b;font-weight:600}\n'+
+        'td:first-child{text-align:left;font-weight:600}\n'+
+        '.better{color:#22c55e}\n.worse{color:#ef4444}\n.neutral{color:#94a3b8}\n'+
+        '.score-big{font-size:2.2rem;font-weight:700}\n'+
+        '.project-grid{display:flex;gap:1rem;flex-wrap:wrap;margin:1rem 0}\n'+
+        '.project-box{flex:1;min-width:180px;background:#0f0f1e;border:1px solid #1e293b;border-radius:10px;padding:1rem;text-align:center}\n'+
+        '.project-box .name{font-size:0.9rem;font-weight:700;margin-bottom:0.3rem}\n'+
+        '.project-box .score{font-size:1.6rem;font-weight:700}\n'+
+        '.project-box .badge{font-size:0.62rem;color:#64748b;margin-top:0.2rem}\n'+
+        '.evidence{font-size:0.7rem;color:#64748b;line-height:1.5}\n'+
+        '.footer{text-align:center;color:#475569;font-size:0.65rem;margin-top:2rem;padding-top:1rem;border-top:1px solid #1e293b}\n'+
+        '.footer a{color:#00d4ff}\n'+
+        '</style>\n</head>\n<body>\n';
+    
+    html += '<h1>📐 IBM 七维密码敏捷性对比报告</h1>\n';
+    html += '<div class="meta">框架: IBM Research 2026 Application-Level Crypto Agility'+
+        ' · FIBEMATE 开源 (GPL-3.0) · 生成时间: '+new Date().toISOString().slice(0,19)+'</div>\n';
+    
+    // Project summaries
+    html += '<h2>📊 项目总览</h2>\n<div class="project-grid">\n';
+    projects.forEach(function(p) {
+        var overall = calcOverall(p.scores);
+        var level = overall < 35 ? 'LOW' : overall < 60 ? 'MODERATE' : 'HIGH';
+        html += '<div class="project-box">'+
+            '<div class="name" style="color:'+p.color+'">'+(p.isFibemate?'⭐ ':'')+p.name+'</div>'+
+            '<div class="score" style="color:'+p.color+'">'+overall+'</div>'+
+            '<div class="badge">'+level+'</div></div>\n';
+    });
+    html += '</div>\n';
+    
+    // Comparison table
+    html += '<h2>📋 七维度详细对比</h2>\n<table><thead><tr><th>维度</th><th>权重</th>';
+    projects.forEach(function(p) {
+        html += '<th style="color:'+p.color+'">'+p.name+'</th>';
+    });
+    html += '</tr></thead><tbody>\n';
+    
+    DIMS.forEach(function(d) {
+        var fib = FIBEMATE_SCORES[d.id];
+        html += '<tr><td>'+d.name+'</td><td style="color:#64748b">'+Math.round(d.weight*100)+'%</td>';
+        projects.forEach(function(p) {
+            var s = p.scores[d.id]||0;
+            var diff = s - fib;
+            var cls = diff > 5 ? 'better' : diff < -5 ? 'worse' : 'neutral';
+            html += '<td class="'+cls+'">'+s+' <small>('+(diff>=0?'+':'')+diff+')</small></td>';
+        });
+        html += '</tr>\n';
+    });
+    html += '</tbody></table>\n';
+    
+    // Evidence
+    html += '<h2>📎 FIBEMATE 各维度实证依据</h2>\n';
+    DIMS.forEach(function(d) {
+        html += '<p class="evidence"><strong>'+d.name+':</strong> '+d.evidence+'</p>\n';
+    });
+    
+    html += '<div class="footer">由 <a href="https://fibemate.net/docs/ibm-seven-compare.html">FIBEMATE IBM 七维对比工具</a> 生成 · v3.3.0 · GPL-3.0-only</div>\n';
+    html += '</body>\n</html>';
+    
+    var blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'ibm-seven-compare-report-'+new Date().toISOString().slice(0,10)+'.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+}
+
+// ═══════════ Init ═══════════
+renderProjectCards();
+</script>
+</body>
+</html>
