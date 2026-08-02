@@ -1,0 +1,188 @@
+{
+  "framework": "CARS (Crypto-Agility Readiness Score)",
+  "framework_reference": "Krämer et al., Five-Dimensional Assessment Framework",
+  "assessment_subject": "FIBEMATE v3.3.0 — Post-Quantum Cryptography Full-Stack Engineering Platform",
+  "assessment_date": "2026-08-02",
+  "commit": "f465fba",
+  "novelty": "First empirical application of CARS framework to a real running PQC engineering project",
+  "overall_score": 63.50,
+  "max_score": 100,
+  "readiness_level": "MODERATE",
+  "dimensions": {
+    "crypto_inventory": {
+      "score": 85,
+      "max": 100,
+      "weight": 0.25,
+      "weighted": 21.25,
+      "algorithms": {
+        "pqc": {
+          "ml_kem_768": {
+            "standard": "FIPS 203",
+            "impl": "JS native + C Native Addon",
+            "verification": "KAT 10000/10000 Noble cross-validated, TVLA 3/3 PASS"
+          },
+          "ml_kem_1024": {
+            "standard": "FIPS 203",
+            "impl": "Noble @noble/post-quantum",
+            "verification": "TVLA 3/3 PASS (Noble impl, not self-developed)"
+          },
+          "ml_dsa_65_fml_dsa": {
+            "standard": "FIPS 204",
+            "impl": "Pure JS self-developed (fml-dsa)",
+            "verification": "84/84 self-test, KeyGen KAT 75/75, Noble bidirectional cross-validation"
+          },
+          "slh_dsa_128s": {
+            "standard": "FIPS 205",
+            "impl": "WASM bridge (NIST reference C)",
+            "verification": "5/5 smoke test, benchmark data"
+          }
+        },
+        "chinese_crypto": {
+          "sm2": {
+            "standard": "GB/T 32918",
+            "impl": "Pure JS (BigInt + jsbn dual-track)",
+            "verification": "KAT 100/100, TVLA 36/36 (3 impls × 12 tests)"
+          },
+          "sm3": {
+            "standard": "GB/T 32905",
+            "impl": "Pure JS",
+            "verification": "KAT 30/30 cross-language verified, bench ~5KB/s"
+          },
+          "sm4_gcm": {
+            "standard": "GB/T 32907",
+            "impl": "Pure JS",
+            "verification": "KAT 30/30, bench ~230KB/s"
+          }
+        },
+        "traditional": {
+          "p256_ecdh": { "purpose": "Double Ratchet DH layer", "impl": "Node.js built-in crypto" },
+          "aes_256_gcm": { "purpose": "Message encryption", "impl": "WebCrypto / Node crypto" },
+          "hmac_sm3": { "purpose": "Chinese MAC", "impl": "Pure JS (KAT 6/6)" },
+          "sha_256": { "purpose": "HKDF key derivation", "impl": "Node.js built-in crypto" },
+          "shake_128_256": { "purpose": "fml-dsa internals", "impl": "JS implementation" }
+        }
+      },
+      "hardware": {
+        "ntt_accelerator": { "platform": "Artix-7 FPGA", "status": "WNS 9.755ns, ~500 LUTs, ~1500 FFs, ILA verified" },
+        "vwz_bram_solver": { "platform": "Artix-7 FPGA", "status": "Behavioral model 5/5 PASS (experimental, default-off)" }
+      },
+      "protocols": {
+        "hybrid_kem": "SM2 + ML-KEM-768, IANA #4590 format, application-layer",
+        "double_ratchet_pq": "ML-KEM-768 + P-256, re-key every 100 messages",
+        "opk_prekey": "TLA+ formal verification, 3 invariants (O1/O2/O3), one-time consumption"
+      },
+      "notes": {
+        "strength": "Complete and quantifiable — every algorithm has KAT results, benchmark data, TVLA reports",
+        "weakness": "No automated asset scanner; partial third-party implementations (SLH-DSA WASM, Noble ML-KEM-1024)",
+        "cars_feedback": "CARS assumes 'documented inventory' is enough; FIBEMATE's KAT/Bench/TVLA/TSR evidence exceeds expectations → suggest adding 'verifiability' sub-dimension"
+      }
+    },
+    "algorithm_agility": {
+      "score": 40,
+      "max": 100,
+      "weight": 0.20,
+      "weighted": 8.00,
+      "components": {
+        "hybrid_kem_combinations": { "replaceable": false, "method": "Hardcoded in hybrid-kem-client.js (SM2+ML-KEM-768)" },
+        "double_ratchet_dh_layer": { "replaceable": "partial", "method": "PQ_REKEY_INTERVAL=100 adjustable; P-256→other requires code change" },
+        "message_encryption": { "replaceable": "partial", "method": "AES-GCM hardcoded; message-gm.js supports SM4 switch" },
+        "signature_algorithms": { "replaceable": false, "method": "SM2 hardcoded in gm.js, verification logic coupled" },
+        "ntt_domain_params": { "replaceable": false, "method": "q=3329 compile-time constant; parameter change requires recompilation" }
+      },
+      "hot_swap_architecture": "FIBEMATE has no pluggable algorithm registry. gm.js:183 negotiateWithServer() is application-layer negotiation, not an algorithm registry.",
+      "agility_is_low_but_rationale": "As an 'executable textbook', demonstrating each algorithm independently is more valuable than runtime switching. FIBEMATE's agility is in side-by-side comparison (ML-KEM vs SM2, fml-dsa vs SLH-DSA), not runtime replacement.",
+      "cars_feedback": "CARS Algorithm Agility assumes a production system needing runtime migration. Suggest adding 'cross-algorithm comparison capability' as a supplement for education/verification projects."
+    },
+    "key_lifecycle": {
+      "score": 70,
+      "max": 100,
+      "weight": 0.20,
+      "weighted": 14.00,
+      "lifecycle": {
+        "generation": "HybridKEM.generateKeypair() (SM2+ML-KEM hybrid ephemeral)",
+        "distribution": "OPK pre-key protocol (one-time upload, one-time consumption)",
+        "derivation": "HKDF-SHA-256 (extract+expand)",
+        "rotation": "Double Ratchet PQ_REKEY_INTERVAL=100",
+        "forward_secrecy": "P-256 ECDH per-message ratchet",
+        "post_compromise_security": "ML-KEM re-key every 100 messages",
+        "destruction": "Session reset / OPK state machine consumed→burned"
+      },
+      "formal_verification": {
+        "opk": "TLA+ 3 invariants verified (O1_NoDoubleConsume, O2_ConsumedExists, O3_CountCorrect)",
+        "c2_handshake": "TLA+ 7 invariants verified (incl. K3 strong key independence)"
+      },
+      "notes": {
+        "strength": "OPK protocol has full TLA+ formal verification; ephemeral key pattern avoids reuse",
+        "weakness": "Re-key interval (100 messages) lacks quantitative security derivation; no key expiration alerts; no audit logging",
+        "cars_feedback": "CARS Key Lifecycle focuses on 'does the org have a key management policy'. FIBEMATE uses TLA+ formal proofs instead of written policy — this is stricter. Suggest adding 'formal verification' as a Key Lifecycle bonus."
+      }
+    },
+    "protocol_coupling": {
+      "score": 55,
+      "max": 100,
+      "weight": 0.15,
+      "weighted": 8.25,
+      "coupling_analysis": {
+        "hybrid_kem_handshake": { "coupling": "tight", "reason": "SM2+ML-KEM-768 fixed combination" },
+        "double_ratchet": { "coupling": "medium", "reason": "P-256 fixed, ML-KEM re-key interval adjustable" },
+        "message_encryption": { "coupling": "medium", "reason": "AES-GCM hardcoded, SM4-GCM fallback path exists" },
+        "tls_integration": { "coupling": null, "reason": "No standard TLS integration; application-layer custom protocol" }
+      },
+      "design_rationale": "FIBEMATE deliberately stays away from standard TLS 1.3 — showing how hybrid KEM works at application layer is more educational than patching OpenSSL.",
+      "notes": {
+        "strength": "Each protocol component independently testable; IANA #4590 format compliance",
+        "weakness": "No cipher suite negotiation; zero forward compatibility; no interop testing",
+        "cars_feedback": "CARS Protocol Coupling assumes standard protocol (TLS/SSH) usage. FIBEMATE's educational decoupling trades standard compliance for pedagogical clarity. Suggest distinguishing 'protocol standards compliance' from 'educational transparency'."
+      }
+    },
+    "organizational_readiness": {
+      "score": 60,
+      "max": 100,
+      "weight": 0.20,
+      "weighted": 12.00,
+      "subdimensions": {
+        "security_policy": { "status": true, "evidence": "SECURITY.md" },
+        "threat_model": { "status": true, "evidence": "THREAT_MODEL.md + security-model.md (QROM)" },
+        "vulnerability_disclosure": { "status": true, "evidence": "VULNERABILITIES.md + security@fibemate.net" },
+        "contribution_workflow": { "status": true, "evidence": "CONTRIBUTING.md (DCO, branch naming, AI boundaries)" },
+        "code_of_conduct": { "status": true, "evidence": "CODE_OF_CONDUCT.md v2.1" },
+        "governance": { "status": true, "evidence": "GOVERNANCE.md" },
+        "ci_cd": { "status": true, "evidence": "CI 6/6 + Nightly Phase1 2/2 + Phase2 4/5" },
+        "license_compliance": { "status": true, "evidence": "GPL-3.0-only + SPDX all files + BOM 3-layer governance" },
+        "openssf_best_practices": { "status": true, "evidence": "passing badge, project #13695" },
+        "reproducible_build": { "status": true, "evidence": "scripts/reproduce-build.sh, lockfiles pinned" },
+        "third_party_audit": { "status": false, "note": "Earliest Q4 2026" },
+        "bus_factor": { "status": "critical", "value": 1, "note": "Single-person project; post-open-source improvement expected" },
+        "community_activity": { "status": false, "note": "Not yet open-sourced (8/31 unlock)" },
+        "automated_dependency_scanning": { "status": false, "note": "Dependabot not enabled; npm audit 11 vulnerabilities unaddressed" }
+      },
+      "known_limitations": [
+        "Pure JS implementations are not constant-time",
+        "No hardware side-channel countermeasures (software TVLA only)",
+        "C Native Addon not fuzzed",
+        "RTL source code withheld pending security review"
+      ],
+      "notes": {
+        "strength": "Security documentation system complete; CI/Nightly all green; OpenSSF passing badge",
+        "weakness": "Bus Factor=1 (hard wound); zero third-party audit; dependency scanning missing",
+        "cars_feedback": "CARS Organization Readiness assumes multi-person team. FIBEMATE meets multi-person standards in docs/CI/SBOM but Bus Factor=1 exposes fundamental difference. Suggest adding single/small-team adjustment factor."
+      }
+    }
+  },
+  "improvement_roadmap": [
+    { "priority": "P0", "item": "Third-party security audit (Q4 2026)", "target_dimension": "Org Readiness", "expected_gain": 15 },
+    { "priority": "P1", "item": "Build algorithm registry prototype (pluggable hot-swap)", "target_dimension": "Algorithm Agility", "expected_gain": 25 },
+    { "priority": "P1", "item": "Enable Dependabot + fix npm audit", "target_dimension": "Org Readiness", "expected_gain": 5 },
+    { "priority": "P2", "item": "Community contributor onboarding (Bus Factor→2+)", "target_dimension": "Org Readiness", "expected_gain": 10 },
+    { "priority": "P2", "item": "Quantitative derivation of key rotation interval", "target_dimension": "Key Lifecycle", "expected_gain": 10 },
+    { "priority": "P3", "item": "IETF/standard protocol integration PoC", "target_dimension": "Protocol Coupling", "expected_gain": 15 }
+  ],
+  "projected_score_after_improvements": 88.00,
+  "cars_framework_feedback": [
+    "Algorithm Agility dimension does not fit education/verification platforms — suggest 'cross-algorithm comparison capability' sub-dimension",
+    "Key Lifecycle dimension misses formal verification bonus — TLA+ model proofs are stricter than written policy",
+    "Protocol Coupling dimension does not distinguish 'standards compliance' from 'educational transparency' — application-layer custom protocols may be intentional design",
+    "Organizational Readiness dimension lacks single/small-team adjustment factor — Bus Factor=1 but docs/CI/SPDX-complete case is unscorable"
+  ],
+  "methodology_note": "All scoring data sourced from FIBEMATE public engineering data (CI logs, KAT results, TLA+ models, security docs, source structure). No new tests were run — all data existed at lock commit f465fba (2026-08-01). This is the first empirical application of the CARS framework to a real running PQC engineering project."
+}
