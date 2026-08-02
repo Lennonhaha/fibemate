@@ -48,7 +48,31 @@ Given the project's educational nature, we follow a **coordinated disclosure** a
 
 - [Security Limitations](docs/security-limitations.md)
 - [OpenSSF Best Practices](docs/openssf-roadmap.md)
-- [External Audit Report](docs/ml-kem-768-external-audit-2026-07-27.md)
+- [Security Audit (Self-Conducted)](docs/ml-kem-768-external-audit-2026-07-27.md)
+- [PQC Ecosystem Scan](tools/pqc-ecosystem-scan.json) — 147 dependencies, automated crypto audit
+- [CARS Readiness Assessment](docs/cars-bias-analysis.md) — external-vs-internal scoring
+
+## Dependency Risk Disposition
+
+### @noble/curves (65 source references) — Quantum Vulnerable
+
+**Risk**: Provides ECDSA/ECDH/EdDSA primitives (P-256, P-384, P-521, Ed25519). All elliptic curve cryptography is vulnerable to Shor's algorithm on a CRQC (cryptographically relevant quantum computer).
+
+**Current usage in FIBEMATE**: Referenced in `packages/pqc-kem/` test infrastructure and cross-validation scripts only. **Not used** in core cryptographic paths — the double ratchet uses Node.js built-in crypto for P-256 ECDH, not `@noble/curves`.
+
+**Disposition**: Accept (low risk). The package is a transitive test dependency, not a runtime cryptographic dependency. Verify with: `node tools/pqc-ecosystem-scan.js` — filtered by `risk=quantum_vulnerable` shows actual source-level usage.
+
+**Migration plan** (Q4 2026): Remove from `devDependencies` by replacing test-vector validation with KAT-based checks that don't require ECC libraries.
+
+### bcryptjs (2 source references) — Quantum Weakened
+
+**Risk**: bcrypt is a password hashing function. Grover's algorithm halves the effective security bits of any brute-force search, including bcrypt iterations. However, bcrypt's work factor can simply be doubled (e.g., cost factor 10→11) to compensate.
+
+**Current usage in FIBEMATE**: Used in `reg-server/` for demo user registration hashing. This is a demo server, not a production authentication system.
+
+**Disposition**: Accept (educational demo). The demo server is for protocol illustration only. No real user credentials are stored. Increase cost factor from 10→12 as a defensive measure if the demo server ever leaves localhost.
+
+**Migration plan** (Q4 2026): Replace with Argon2id if the registration server becomes non-demo.
 
 ## Scope of This Policy
 
