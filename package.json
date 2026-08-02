@@ -42,7 +42,7 @@
     "test": "test"
   },
   "devDependencies": {
-    "eslint": "^9.7.0"
+    "eslint": "^10.8.0"
   },
   "repository": {
     "type": "git",
