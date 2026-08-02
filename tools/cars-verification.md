@@ -1,6 +1,6 @@
 # CARS (Crypto-Agility Readiness Score) — FIBEMATE v3.3.0 自评报告
 
-**评估日期**：2026-08-02（v2 scanner-augmented）  
+**评估日期**：2026-08-02（v3, 100% scanner coverage）  
 **评估对象**：FIBEMATE 后量子密码学全栈工程验证平台  
 **评估方法**：CARS 五维度框架 + PQC 生态扫描器（`tools/pqc-ecosystem-scan.js`）自动化审计  
 **CARS 论文参考**：Krämer et al., "Crypto-Agility Readiness Score (CARS) — A Five-Dimensional Assessment Framework"
@@ -9,9 +9,11 @@
 
 ## 执行摘要
 
-FIBEMATE 作为工程验证平台，CARS v2 综合得分 **65.35/100**（中等准备度，较 v1 的 63.50 提升 1.85 分）。提升全部来自 PQC 生态扫描器的集成——自动化扫描工具将 Crypto Inventory 从 85 升至 **90**，Organizational Readiness 从 60 升至 **63**（依赖扫描从"无"变为"部分自动化"）。
+FIBEMATE 作为工程验证平台，CARS v3 综合得分 **67.0/100**（中等准备度，较 v2 的 65.35 提升 1.65 分，较 v1 的 63.50 提升 3.5 分）。提升全部来自 PQC 生态扫描器的分类覆盖率改进——从 37%（93/147 未知）到 **100%（0 未知）**，哈希库、对称密码、Node 内置模块、基础设施包已全部归类。
 
-最强的维度仍是 **Crypto Inventory**（90%），PQC 生态扫描器提供了 147 依赖 × 1,135 源码引用的机器审计，73 个高风险源文件和 23 个 PQC 文件已量化。最弱的维度仍是 **Algorithm Agility**（40%），算法替换需要代码修改、缺乏插件式热切换架构——这是"可执行教科书"定位的合理取舍。其他维度不变：Key Lifecycle 70%（TLA+ 形式化验证）、Protocol Coupling 55%（应用层自定义协议）、Organizational Readiness 63%（OpenSSF passing + 扫描器）。
+最强的维度仍是 **Crypto Inventory**（95%），PQC 生态扫描器提供了 147 依赖 × 1,138 源码引用的完整分类审计。最弱的维度仍是 **Algorithm Agility**（40%），算法替换需要代码修改、缺乏插件式热切换架构——这是"可执行教科书"定位的合理取舍。其他维度：Key Lifecycle 70%（TLA+ 形式化验证）、Protocol Coupling 55%（应用层自定义协议）、Organizational Readiness 65%（OpenSSF passing + 扫描器 100% 覆盖）。
+
+**v3 新增**：外部人独立填写的 CARS 自评问卷结果为 **41/100**（偏差 -26）。分析报告见 `docs/cars-bias-analysis.md`。核心发现：偏差集中来自信息不可见性（Key Lifecycle -70、Org Readiness -30、Crypto Inventory -20），而非判断差异。这暴露了 CARS 自评工具的设计缺陷——对比页只展示分数不展示证据文件路径。
 
 > ⚠️ **前置声明**：本报告是 CARS 框架在真实项目上的**首次实证验证**（v1）和**首次与自动化扫描工具集成**（v2）。PQC 生态扫描器的加入使 CARS 从"手工填表"升级为"机器审计 + 手工评审"，建议 CARS 框架增加"自动化审计覆盖率"子维度。
 

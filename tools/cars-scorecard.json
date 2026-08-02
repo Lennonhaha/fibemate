@@ -3,17 +3,17 @@
   "framework_reference": "Krämer et al., Five-Dimensional Assessment Framework",
   "assessment_subject": "FIBEMATE v3.3.0 — Post-Quantum Cryptography Full-Stack Engineering Platform",
   "assessment_date": "2026-08-02",
-  "commit": "4fa5751",
+  "commit": "1cddeab",
   "novelty": "First empirical application of CARS framework to a real running PQC engineering project",
-  "overall_score": 65.35,
+  "overall_score": 67.0,
   "max_score": 100,
   "readiness_level": "MODERATE",
   "dimensions": {
     "crypto_inventory": {
-      "score": 90,
+      "score": 95,
       "max": 100,
       "weight": 0.25,
-      "weighted": 22.5,
+      "weighted": 23.75,
       "algorithms": {
         "pqc": {
           "ml_kem_768": {
@@ -104,9 +104,11 @@
             "cryptoPackagesUsed": 5,
             "highRiskSourceFiles": 73,
             "pqcSourceFiles": 23,
-            "readinessScore": 94
+            "readinessScore": 94,
+          "coverage": "100% (147/147 deps classified)"
           },
-          "value": "Automated scanner replaces manual inventory — every crypto dependency and source reference is now machine-auditable and reproducible in CI."
+          "value": "Automated scanner replaces manual inventory — every crypto dependency and source reference is now machine-auditable and reproducible in CI.",
+          "v3_update": "Scanner classification coverage 37% → 100% (93 unknown → 0). Hash libraries (@noble/hashes 81 refs, js-sha3), symmetric ciphers (@noble/ciphers 31 refs, ssri), and 70 infrastructure packages all classified. This lifts Crypto Inventory from 90→95 (+5)."
         }
       }
     },
@@ -196,10 +198,10 @@
       }
     },
     "organizational_readiness": {
-      "score": 63,
+      "score": 65,
       "max": 100,
       "weight": 0.2,
-      "weighted": 12.6,
+      "weighted": 13.0,
       "subdimensions": {
         "security_policy": {
           "status": true,
@@ -255,8 +257,9 @@
           "note": "Not yet open-sourced (8/31 unlock)"
         },
         "automated_dependency_scanning": {
-          "status": "partial",
-          "note": "pqc-ecosystem-scan.js available; Dependabot not yet enabled"
+          "status": true,
+          "note": "pqc-ecosystem-scan.js with 100% dep coverage (147/147); Dependabot not yet enabled",
+          "v3_update": "Coverage 37% → 100% with hash/cipher/builtin/infrastructure classification rules"
         }
       },
       "known_limitations": [
@@ -324,6 +327,11 @@
     "Organizational Readiness dimension lacks single/small-team adjustment factor — Bus Factor=1 but docs/CI/SPDX-complete case is unscorable"
   ],
   "methodology_note": "All scoring data sourced from FIBEMATE public engineering data (CI logs, KAT results, TLA+ models, security docs, source structure). No new tests were run — all data existed at lock commit f465fba (2026-08-01). This is the first empirical application of the CARS framework to a real running PQC engineering project.",
-  "version": "v2 (scanner-augmented)",
-  "scanner_data_source": "tools/pqc-ecosystem-scan.js output"
+  "version": "v3 (100% scanner coverage)",
+  "scanner_data_source": "tools/pqc-ecosystem-scan.js output",
+  "changelog": {
+    "v1": "Initial CARS assessment based on manual inventory (score 63.50)",
+    "v2": "Added pqc-ecosystem-scan.js output; Crypto Inventory 85→90, Org Readiness 60→63, composite 65.35",
+    "v3": "Scanner classification 100% coverage (147/147 deps); Crypto Inventory 90→95, Org Readiness 63→65, composite 67.0"
+  }
 }
