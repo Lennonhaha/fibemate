@@ -180,9 +180,16 @@ const MessageGM = (() => {
   // ============================================================
   // SM2 密钥协商 — 客户端 ↔ 服务端
   // ============================================================
-  async function negotiateWithServer(serverUrl) {
+  // Supported algorithms in preference order (AA: algorithm agility)
+  const SUPPORTED_ALGORITHMS = [
+    'ML-KEM-768',   // PQC hybrid preferred
+    'SM2',          // GM fallback
+    'P-256'         // Classic ECDH as last resort
+  ];
+
+  async function negotiateWithServer(serverUrl, preferredAlgorithms = SUPPORTED_ALGORITHMS) {
     const keyPair = await getOrCreateClientKeyPair();
-    console.log('[MessageGM] SM2 协商...');
+    console.log('[MessageGM] 协商... prefAlgos=' + preferredAlgorithms.join(','));
 
     const token = localStorage.getItem('fk_token');
     const response = await fetch(`${serverUrl}/api/negotiate`, {
@@ -193,7 +200,8 @@ const MessageGM = (() => {
       },
       body: JSON.stringify({
         clientPublicKey: keyPair.publicKey,
-        algorithm: 'SM2'
+        algorithms: preferredAlgorithms,       // capability advertisement (AA)
+        algorithm: preferredAlgorithms[0]      // legacy: preferred algorithm
       })
     });
 
