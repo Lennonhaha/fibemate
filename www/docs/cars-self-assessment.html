@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -6,7 +6,7 @@
     <title>CARS 自评工具 · 开源项目密码敏捷性评估</title>
     <meta name="description" content="Crypto-Agility Readiness Scorecard 交互式自评工具 — 5 分钟为你的开源项目生成 CARS 雷达图，与 FIBEMATE 匿名对比，导出可分享的 HTML 报告。">
     <meta property="og:title" content="CARS 自评工具 · 你的项目有多 PQC-Ready？">
-    <meta property="og:description" content="5 分钟 · 15 题 · 自动生成 CARS 五维度雷达图。与 FIBEMATE 63.50 对比，导出可分享报告。">
+    <meta property="og:description" content="5 分钟 · 15 题 · 自动生成 CARS 五维度雷达图。与 FIBEMATE 66.00 对比，导出可分享报告。">
     <meta property="og:type" content="website">
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
@@ -153,7 +153,7 @@
         <div class="card">
             <h2 style="color:#00d4ff;">📋 CARS 密码敏捷性自评</h2>
             <p class="section-desc">
-                15 道选择题 · 5 分钟完成 · 自动生成五维度雷达图并与 FIBEMATE（63.50/100）对比。<br>
+                15 道选择题 · 5 分钟完成 · 自动生成五维度雷达图并与 FIBEMATE（66.00/100）对比。<br>
                 所有数据仅在浏览器本地处理，不会上传到任何服务器。
             </p>
             <div id="questions-container"></div>
@@ -169,7 +169,7 @@
         <div class="card">
             <h2 style="color:#00d4ff;">📊 你的 CARS 评估结果</h2>
             <div id="radar-container"></div>
-            <div class="radar-hint">🖱 拖拽旋转 · 滚轮缩放 · 蓝色=你的项目 · 橙色=FIBEMATE 63.50</div>
+            <div class="radar-hint">🖱 拖拽旋转 · 滚轮缩放 · 蓝色=你的项目 · 橙色=FIBEMATE 66.00</div>
             
             <div class="comparison-grid" style="margin-top:1rem;">
                 <div class="comp-card">
@@ -179,7 +179,7 @@
                 </div>
                 <div class="comp-card">
                     <div class="comp-label">🔬 FIBEMATE (参照)</div>
-                    <div class="comp-score" style="color:#ffc107;">63.50</div>
+                    <div class="comp-score" style="color:#ffc107;">66.00</div>
                     <div class="comp-subs">HIGH 0 · MED 5 · LOW 3 · avg 71%</div>
                 </div>
             </div>
@@ -406,7 +406,7 @@ function calcScores(answers) {
 
 // ═══════════ FIBEMATE reference ═══════════
 var FIBEMATE_SCORES = [85, 40, 70, 55, 60];
-var FIBEMATE_OVERALL = 63.50;
+var FIBEMATE_OVERALL = 66.00;
 
 // ═══════════ 3D Radar ═══════════
 var radarScene, radarCamera, radarRenderer, radarControls;
@@ -709,7 +709,7 @@ function exportReport() {
         '<div class="score-big">'+r.overall.toFixed(2)+' <span style="font-size:1rem;color:#64748b;">/ 100</span></div>\n' +
         '<div class="compare">' +
         '<div class="comp-box"><div class="lbl">🧑‍💻 你的项目</div><div class="val" style="color:#00d4ff;">'+r.overall.toFixed(2)+'</div></div>' +
-        '<div class="comp-box"><div class="lbl">🔬 FIBEMATE (参照)</div><div class="val" style="color:#ffc107;">63.50</div></div>' +
+        '<div class="comp-box"><div class="lbl">🔬 FIBEMATE (参照)</div><div class="val" style="color:#ffc107;">66.00</div></div>' +
         '</div>\n' +
         '<table><thead><tr><th>维度</th><th>得分</th><th>分值</th></tr></thead><tbody>'+dimRows+'</tbody></table>\n' +
         '<p style="font-size:0.78rem;color:#94a3b8;">评估工具: <a href="https://fibemate.net/docs/cars-self-assessment.html">FIBEMATE CARS Self-Assessment Tool</a> · 基于 Crypto-Agility Readiness Scorecard 框架 · 首次在真实 PQC 项目上实证。</p>\n' +
