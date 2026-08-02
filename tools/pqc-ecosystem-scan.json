@@ -1,7 +1,7 @@
 {
   "score": 94,
   "totalDeps": 147,
-  "totalFiles": 1135,
+  "totalFiles": 1140,
   "highRiskFiles": 73,
   "pqcFiles": 23,
   "assessment": {
@@ -69,10 +69,10 @@
         "api/a2a/a2a-core.js"
       ],
       "usageCount": 60,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js crypto (OpenSSL wrapper, not a standalone library)",
       "nmInfo": null
     },
     "@eslint/js": {
@@ -80,10 +80,10 @@
         "eslint.config.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "path": {
@@ -180,10 +180,10 @@
         "backend/src/index.js"
       ],
       "usageCount": 90,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js path",
       "nmInfo": null
     },
     "fs": {
@@ -196,8 +196,10 @@
         "tools/bloom-merge.js",
         "tools/bloom-scan.js",
         "tools/build-risk-assessment.cjs",
+        "tools/fix-ecosystem-html.js",
         "tools/inject-bloom.js",
         "tools/pqc-ecosystem-scan.js",
+        "tools/verify-embed.js",
         "test/run-compat-fixtures.mjs",
         "test/test-cross-lang-seeded.js",
         "test/test-cross-lang.js",
@@ -210,6 +212,7 @@
         "scripts/add-code-review-section.cjs",
         "scripts/apply-mersenne-reduction.cjs",
         "scripts/apply-silver-fixes.cjs",
+        "scripts/batch-classify.js",
         "scripts/bench-diff.js",
         "scripts/build-demo.js",
         "scripts/check-bom.cjs",
@@ -225,6 +228,7 @@
         "scripts/fix-vwz-website.cjs",
         "scripts/kat-bench.js",
         "scripts/mlkem-bench-native.cjs",
+        "scripts/patch-scanner-classify.js",
         "scripts/perf-gate.js",
         "scripts/prep-release.js",
         "scripts/sm3-smoke.cjs",
@@ -237,6 +241,7 @@
         "scripts/trace-roundtrip.js",
         "scripts/tvla-mlkem-1024.mjs",
         "scripts/tvla-summary.js",
+        "scripts/update-cars-v2.js",
         "scripts/update-index-91.cjs",
         "scripts/verify-tsr.js",
         "scripts/tvla/tvla_9of9_corrected.js",
@@ -304,11 +309,11 @@
         "packages/fml-dsa/bench/bench-compare.cjs",
         "backend/src/index.js"
       ],
-      "usageCount": 115,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "usageCount": 120,
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js filesystem",
       "nmInfo": null
     },
     "readline": {
@@ -317,10 +322,10 @@
         "www/tests/security/log-analyzer.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js readline",
       "nmInfo": null
     },
     "tail": {
@@ -328,10 +333,10 @@
         "www/tests/security/realtime-monitor.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "events": {
@@ -362,10 +367,10 @@
         "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/commonjs/index.js"
       ],
       "usageCount": 24,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js events",
       "nmInfo": null
     },
     "child_process": {
@@ -404,10 +409,10 @@
         "mixnet/mix-node.js"
       ],
       "usageCount": 32,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js child process",
       "nmInfo": null
     },
     "https": {
@@ -424,10 +429,10 @@
         "backend/src/index.js"
       ],
       "usageCount": 10,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js HTTPS (TLS via OpenSSL, not a standalone library)",
       "nmInfo": null
     },
     "cypress": {
@@ -435,10 +440,10 @@
         "www/tests/e2e/cypress.config.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "@noble/post-quantum": {
@@ -559,10 +564,10 @@
         "packages/fml-dsa/node_modules/@noble/curves/abstract/weierstrass.js"
       ],
       "usageCount": 81,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "hash",
+      "algorithm": "SHA-2/SHA-3/HMAC/PBKDF2/scrypt",
+      "risk": "quantum_safe",
+      "note": "Grover halves effective bits but preimage/collision resistance intact",
       "nmInfo": null
     },
     "@noble/curves": {
@@ -696,10 +701,10 @@
         "packages/pqc-kem/node_modules/graceful-fs/graceful-fs.js"
       ],
       "usageCount": 13,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js assert",
       "nmInfo": null
     },
     "x": {
@@ -707,10 +712,10 @@
         "tools/pqc-ecosystem-scan.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "module": {
@@ -720,10 +725,10 @@
         "packages/pqc-kem/node_modules/fdir/dist/index.mjs"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "better-sqlite3": {
@@ -767,10 +772,10 @@
         "backend/src/index.js"
       ],
       "usageCount": 26,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js URL",
       "nmInfo": null
     },
     "http": {
@@ -797,10 +802,10 @@
         "backend/src/index.js"
       ],
       "usageCount": 20,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js HTTP",
       "nmInfo": null
     },
     "ws": {
@@ -967,10 +972,10 @@
         "packages/fml-dsa/bench/bench-compare.cjs"
       ],
       "usageCount": 8,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js performance hooks",
       "nmInfo": null
     },
     "os": {
@@ -987,10 +992,10 @@
         "packages/pqc-kem/node_modules/@npmcli/fs/lib/cp/polyfill.js"
       ],
       "usageCount": 10,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js OS",
       "nmInfo": null
     },
     "js-sha3": {
@@ -999,10 +1004,10 @@
         "scripts/kat-sha3cmp.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "hash",
+      "algorithm": "SHA-3",
+      "risk": "quantum_safe",
+      "note": "SHA-3 implementation — Grover-only threat, no known quantum preimage attack",
       "nmInfo": null
     },
     "string-width": {
@@ -1015,10 +1020,10 @@
         "packages/pqc-kem/node_modules/@isaacs/cliui/index.mjs"
       ],
       "usageCount": 6,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "strip-ansi": {
@@ -1035,10 +1040,10 @@
         "packages/pqc-kem/node_modules/@isaacs/cliui/index.mjs"
       ],
       "usageCount": 10,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Terminal output",
       "nmInfo": null
     },
     "ansi-styles": {
@@ -1047,10 +1052,10 @@
         "packages/pqc-kem/node_modules/wrap-ansi/index.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "ansi-regex": {
@@ -1065,10 +1070,10 @@
         "packages/pqc-kem/node_modules/ansi-regex/index.d.ts"
       ],
       "usageCount": 8,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Terminal output",
       "nmInfo": null
     },
     "is-fullwidth-code-point": {
@@ -1078,10 +1083,10 @@
         "packages/pqc-kem/node_modules/is-fullwidth-code-point/index.d.ts"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "emoji-regex": {
@@ -1091,10 +1096,10 @@
         "packages/pqc-kem/node_modules/string-width/index.js"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "color-convert": {
@@ -1102,10 +1107,10 @@
         "packages/pqc-kem/node_modules/wrap-ansi-cjs/node_modules/ansi-styles/index.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Color utility",
       "nmInfo": null
     },
     "chalk": {
@@ -1113,10 +1118,10 @@
         "packages/pqc-kem/node_modules/wrap-ansi/index.d.ts"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "wrap-ansi": {
@@ -1125,10 +1130,10 @@
         "packages/pqc-kem/node_modules/@isaacs/cliui/index.mjs"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "isexe": {
@@ -1137,10 +1142,10 @@
         "packages/pqc-kem/node_modules/cross-spawn/node_modules/which/which.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "imurmurhash": {
@@ -1148,10 +1153,10 @@
         "packages/pqc-kem/node_modules/unique-slug/lib/index.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "hash",
+      "algorithm": "MurmurHash3",
+      "risk": "none",
+      "note": "Non-cryptographic hash — no quantum relevance",
       "nmInfo": {
         "name": "imurmurhash",
         "version": "0.1.4",
@@ -1171,10 +1176,10 @@
         "packages/pqc-kem/node_modules/unique-filename/lib/index.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Slug generator",
       "nmInfo": null
     },
     "fdir": {
@@ -1183,10 +1188,10 @@
         "packages/pqc-kem/node_modules/tinyglobby/dist/index.mjs"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "picomatch": {
@@ -1199,10 +1204,10 @@
         "packages/pqc-kem/node_modules/fdir/dist/index.mjs"
       ],
       "usageCount": 6,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Glob matcher",
       "nmInfo": null
     },
     "@isaacs/fs-minipass": {
@@ -1219,10 +1224,10 @@
         "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.js"
       ],
       "usageCount": 10,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Stream utility",
       "nmInfo": null
     },
     "node:path": {
@@ -1259,10 +1264,10 @@
         "packages/pqc-kem/node_modules/chownr/dist/commonjs/index.js"
       ],
       "usageCount": 30,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js path (ESM)",
       "nmInfo": null
     },
     "node:fs": {
@@ -1297,10 +1302,10 @@
         "packages/pqc-kem/node_modules/chownr/dist/commonjs/index.js"
       ],
       "usageCount": 28,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js filesystem (ESM)",
       "nmInfo": null
     },
     "chownr": {
@@ -1309,10 +1314,10 @@
         "packages/pqc-kem/node_modules/tar/dist/commonjs/mkdir.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "minizlib": {
@@ -1330,10 +1335,10 @@
         "packages/pqc-kem/node_modules/minipass-fetch/lib/index.js"
       ],
       "usageCount": 11,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "zlib wrapper",
       "nmInfo": null
     },
     "minipass": {
@@ -1389,10 +1394,10 @@
         "packages/pqc-kem/node_modules/@isaacs/fs-minipass/dist/commonjs/index.js"
       ],
       "usageCount": 49,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Stream utility",
       "nmInfo": null
     },
     "yallist": {
@@ -1403,10 +1408,10 @@
         "packages/pqc-kem/node_modules/tar/dist/commonjs/pack.js"
       ],
       "usageCount": 4,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Linked list",
       "nmInfo": null
     },
     "node:assert": {
@@ -1416,10 +1421,10 @@
         "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.js"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js assert (ESM)",
       "nmInfo": null
     },
     "node:crypto": {
@@ -1429,10 +1434,10 @@
         "packages/pqc-kem/node_modules/tar/dist/commonjs/unpack.js"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js crypto (ESM)",
       "nmInfo": null
     },
     "node:events": {
@@ -1444,10 +1449,10 @@
         "packages/pqc-kem/node_modules/minipass/dist/commonjs/index.js"
       ],
       "usageCount": 5,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js events (ESM)",
       "nmInfo": null
     },
     "node:stream": {
@@ -1457,10 +1462,10 @@
         "packages/pqc-kem/node_modules/minipass/dist/commonjs/index.js"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js stream (ESM)",
       "nmInfo": null
     },
     "node:string_decoder": {
@@ -1472,10 +1477,10 @@
         "packages/pqc-kem/node_modules/minipass/dist/commonjs/index.js"
       ],
       "usageCount": 5,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "zlib": {
@@ -1489,10 +1494,10 @@
         "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.js"
       ],
       "usageCount": 7,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js zlib",
       "nmInfo": null
     },
     "buffer": {
@@ -1509,10 +1514,10 @@
         "packages/pqc-kem/node_modules/minizlib/dist/commonjs/index.js"
       ],
       "usageCount": 10,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js buffer",
       "nmInfo": null
     },
     "eastasianwidth": {
@@ -1520,10 +1525,10 @@
         "packages/pqc-kem/node_modules/string-width/index.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "socks": {
@@ -1532,10 +1537,10 @@
         "packages/pqc-kem/node_modules/socks-proxy-agent/dist/index.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "agent-base": {
@@ -1549,10 +1554,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js"
       ],
       "usageCount": 7,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "HTTP agent base class",
       "nmInfo": null
     },
     "net": {
@@ -1571,10 +1576,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js"
       ],
       "usageCount": 12,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js net",
       "nmInfo": null
     },
     "debug": {
@@ -1585,10 +1590,10 @@
         "packages/pqc-kem/node_modules/http-proxy-agent/dist/index.js"
       ],
       "usageCount": 4,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Logging utility",
       "nmInfo": null
     },
     "dns": {
@@ -1599,10 +1604,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/dns.js"
       ],
       "usageCount": 4,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js DNS",
       "nmInfo": null
     },
     "tls": {
@@ -1616,10 +1621,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js"
       ],
       "usageCount": 7,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js TLS",
       "nmInfo": null
     },
     "stream": {
@@ -1642,10 +1647,10 @@
         "packages/pqc-kem/node_modules/agent-base/dist/index.d.ts"
       ],
       "usageCount": 16,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js stream",
       "nmInfo": null
     },
     "ip-address": {
@@ -1654,10 +1659,10 @@
         "packages/pqc-kem/node_modules/socks/build/client/socksclient.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "smart-buffer": {
@@ -1665,10 +1670,10 @@
         "packages/pqc-kem/node_modules/socks/build/client/socksclient.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "shebang-regex": {
@@ -1677,10 +1682,10 @@
         "packages/pqc-kem/node_modules/shebang-command/index.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "tape": {
@@ -1688,10 +1693,10 @@
         "packages/pqc-kem/node_modules/safer-buffer/tests.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "fake": {
@@ -1699,10 +1704,10 @@
         "packages/pqc-kem/node_modules/retry/test/common.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "err-code": {
@@ -1710,10 +1715,10 @@
         "packages/pqc-kem/node_modules/promise-retry/index.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Error code utility",
       "nmInfo": null
     },
     "retry": {
@@ -1721,10 +1726,10 @@
         "packages/pqc-kem/node_modules/promise-retry/index.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Retry logic",
       "nmInfo": null
     },
     "expect.js": {
@@ -1733,10 +1738,10 @@
         "packages/pqc-kem/node_modules/err-code/test/test.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "sleep-promise": {
@@ -1744,10 +1749,10 @@
         "packages/pqc-kem/node_modules/promise-retry/test/test.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "lru-cache": {
@@ -1762,10 +1767,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/proxy.js"
       ],
       "usageCount": 8,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Cache utility",
       "nmInfo": null
     },
     "node:url": {
@@ -1778,10 +1783,10 @@
         "packages/pqc-kem/node_modules/glob/dist/commonjs/glob.js"
       ],
       "usageCount": 6,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js URL (ESM)",
       "nmInfo": null
     },
     "path-key": {
@@ -1790,10 +1795,10 @@
         "packages/pqc-kem/node_modules/cross-spawn/lib/util/resolveCommand.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "package-json-from-dist": {
@@ -1805,10 +1810,10 @@
         "packages/pqc-kem/node_modules/glob/dist/esm/bin.mjs"
       ],
       "usageCount": 5,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "p-map": {
@@ -1816,10 +1821,10 @@
         "packages/pqc-kem/node_modules/p-map/index.d.ts"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "delay": {
@@ -1827,10 +1832,10 @@
         "packages/pqc-kem/node_modules/p-map/index.d.ts"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "got": {
@@ -1838,10 +1843,10 @@
         "packages/pqc-kem/node_modules/p-map/index.d.ts"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "abbrev": {
@@ -1849,10 +1854,10 @@
         "packages/pqc-kem/node_modules/nopt/lib/nopt-lib.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "neostandard": {
@@ -1860,10 +1865,10 @@
         "packages/pqc-kem/node_modules/node-gyp/eslint.config.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "graceful-fs": {
@@ -1879,10 +1884,10 @@
         "packages/pqc-kem/node_modules/node-gyp/lib/util.js"
       ],
       "usageCount": 9,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "fs wrapper",
       "nmInfo": null
     },
     "tinyglobby": {
@@ -1890,10 +1895,10 @@
         "packages/pqc-kem/node_modules/node-gyp/lib/build.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "which": {
@@ -1902,10 +1907,10 @@
         "packages/pqc-kem/node_modules/cross-spawn/lib/util/resolveCommand.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "util": {
@@ -1921,10 +1926,10 @@
         "packages/pqc-kem/node_modules/@npmcli/fs/lib/cp/errors.js"
       ],
       "usageCount": 9,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js util",
       "nmInfo": null
     },
     "make-fetch-happen": {
@@ -1932,10 +1937,10 @@
         "packages/pqc-kem/node_modules/node-gyp/lib/download.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "semver": {
@@ -1947,10 +1952,10 @@
         "packages/pqc-kem/node_modules/@npmcli/fs/lib/common/node.js"
       ],
       "usageCount": 5,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Version parsing",
       "nmInfo": null
     },
     "exponential-backoff": {
@@ -1958,10 +1963,10 @@
         "packages/pqc-kem/node_modules/node-gyp/lib/install.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "tar": {
@@ -1969,10 +1974,10 @@
         "packages/pqc-kem/node_modules/node-gyp/lib/install.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Archive tool",
       "nmInfo": null
     },
     "proc-log": {
@@ -1981,10 +1986,10 @@
         "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "nopt": {
@@ -1992,10 +1997,10 @@
         "packages/pqc-kem/node_modules/node-gyp/lib/node-gyp.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "env-paths": {
@@ -2004,10 +2009,10 @@
         "packages/pqc-kem/node_modules/env-paths/index.d.ts"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "tap": {
@@ -2016,10 +2021,10 @@
         "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/test/basic.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "string_decoder": {
@@ -2030,10 +2035,10 @@
         "packages/pqc-kem/node_modules/iconv-lite/encodings/internal.js"
       ],
       "usageCount": 4,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "String decoder",
       "nmInfo": null
     },
     "minipass-sized": {
@@ -2041,10 +2046,10 @@
         "packages/pqc-kem/node_modules/minipass-fetch/lib/body.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "encoding": {
@@ -2052,10 +2057,10 @@
         "packages/pqc-kem/node_modules/minipass-fetch/lib/body.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "brace-expansion": {
@@ -2064,10 +2069,10 @@
         "packages/pqc-kem/node_modules/minimatch/dist/commonjs/index.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Glob expansion",
       "nmInfo": null
     },
     "minipass-fetch": {
@@ -2078,10 +2083,10 @@
         "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/entry.js"
       ],
       "usageCount": 4,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "minipass-pipeline": {
@@ -2093,10 +2098,10 @@
         "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
       ],
       "usageCount": 5,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "promise-retry": {
@@ -2104,10 +2109,10 @@
         "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Promise retry",
       "nmInfo": null
     },
     "ssri": {
@@ -2121,10 +2126,10 @@
         "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
       ],
       "usageCount": 7,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "infra",
+      "algorithm": "SHA-512 SRI",
+      "risk": "quantum_safe",
+      "note": "Subresource integrity — hash-based",
       "nmInfo": null
     },
     "@npmcli/agent": {
@@ -2132,10 +2137,10 @@
         "packages/pqc-kem/node_modules/make-fetch-happen/lib/remote.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "minipass-flush": {
@@ -2145,10 +2150,10 @@
         "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "cacache": {
@@ -2156,10 +2161,10 @@
         "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/entry.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "http-cache-semantics": {
@@ -2167,10 +2172,10 @@
         "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/policy.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "negotiator": {
@@ -2178,10 +2183,10 @@
         "packages/pqc-kem/node_modules/make-fetch-happen/lib/cache/policy.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "HTTP content negotiation",
       "nmInfo": null
     },
     "node:util": {
@@ -2197,10 +2202,10 @@
         "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/simple-hard-coded.js"
       ],
       "usageCount": 9,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js util (ESM)",
       "nmInfo": null
     },
     "@isaacs/cliui": {
@@ -2209,10 +2214,10 @@
         "packages/pqc-kem/node_modules/jackspeak/dist/commonjs/index.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "@pkgjs/parseargs": {
@@ -2225,10 +2230,10 @@
         "packages/pqc-kem/node_modules/@pkgjs/parseargs/examples/simple-hard-coded.js"
       ],
       "usageCount": 6,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "safer-buffer": {
@@ -2243,10 +2248,10 @@
         "packages/pqc-kem/node_modules/iconv-lite/encodings/utf7.js"
       ],
       "usageCount": 8,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Buffer safety",
       "nmInfo": null
     },
     "constants": {
@@ -2254,10 +2259,10 @@
         "packages/pqc-kem/node_modules/graceful-fs/polyfills.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "foreground-child": {
@@ -2265,10 +2270,10 @@
         "packages/pqc-kem/node_modules/glob/dist/esm/bin.mjs"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "jackspeak": {
@@ -2276,10 +2281,10 @@
         "packages/pqc-kem/node_modules/glob/dist/esm/bin.mjs"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Argument parser",
       "nmInfo": null
     },
     "minimatch": {
@@ -2308,10 +2313,10 @@
         "packages/pqc-kem/node_modules/glob/dist/commonjs/processor.js"
       ],
       "usageCount": 22,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Glob matching",
       "nmInfo": null
     },
     "path-scurry": {
@@ -2330,10 +2335,10 @@
         "packages/pqc-kem/node_modules/glob/dist/commonjs/walker.d.ts"
       ],
       "usageCount": 12,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Path traversal utility",
       "nmInfo": null
     },
     "node:constants": {
@@ -2342,10 +2347,10 @@
         "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/all-signals.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "cross-spawn": {
@@ -2354,10 +2359,10 @@
         "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/index.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "signal-exit": {
@@ -2366,10 +2371,10 @@
         "packages/pqc-kem/node_modules/foreground-child/dist/commonjs/index.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "iconv-lite": {
@@ -2377,10 +2382,10 @@
         "packages/pqc-kem/node_modules/encoding/lib/encoding.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Character encoding",
       "nmInfo": null
     },
     "ms": {
@@ -2388,10 +2393,10 @@
         "packages/pqc-kem/node_modules/debug/src/common.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Time conversion",
       "nmInfo": null
     },
     "tty": {
@@ -2399,10 +2404,10 @@
         "packages/pqc-kem/node_modules/debug/src/node.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "supports-color": {
@@ -2410,10 +2415,10 @@
         "packages/pqc-kem/node_modules/debug/src/node.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Terminal detection",
       "nmInfo": null
     },
     "mkdirp": {
@@ -2421,10 +2426,10 @@
         "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/test/basic.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "rimraf": {
@@ -2432,10 +2437,10 @@
         "packages/pqc-kem/node_modules/cross-spawn/node_modules/isexe/test/basic.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "shebang-command": {
@@ -2443,10 +2448,10 @@
         "packages/pqc-kem/node_modules/cross-spawn/lib/util/readShebang.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "color-name": {
@@ -2454,10 +2459,10 @@
         "packages/pqc-kem/node_modules/color-convert/conversions.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Color utility",
       "nmInfo": null
     },
     "unique-filename": {
@@ -2466,10 +2471,10 @@
         "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Filename generator",
       "nmInfo": null
     },
     "@npmcli/fs": {
@@ -2479,10 +2484,10 @@
         "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "minipass-collect": {
@@ -2491,10 +2496,10 @@
         "packages/pqc-kem/node_modules/cacache/lib/put.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "fs-minipass": {
@@ -2504,10 +2509,10 @@
         "packages/pqc-kem/node_modules/cacache/lib/content/write.js"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "glob": {
@@ -2515,10 +2520,10 @@
         "packages/pqc-kem/node_modules/cacache/lib/util/glob.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "balanced-match": {
@@ -2528,10 +2533,10 @@
         "packages/pqc-kem/node_modules/brace-expansion/dist/commonjs/index.js"
       ],
       "usageCount": 3,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "String matching",
       "nmInfo": null
     },
     "timers": {
@@ -2539,10 +2544,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/agents.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "builtin",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Node.js timers",
       "nmInfo": null
     },
     "http-proxy-agent": {
@@ -2550,10 +2555,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/proxy.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "https-proxy-agent": {
@@ -2561,10 +2566,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/proxy.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "socks-proxy-agent": {
@@ -2572,10 +2577,10 @@
         "packages/pqc-kem/node_modules/@npmcli/agent/lib/proxy.js"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "string-width-cjs": {
@@ -2583,10 +2588,10 @@
         "packages/pqc-kem/node_modules/@isaacs/cliui/build/index.cjs"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "strip-ansi-cjs": {
@@ -2594,10 +2599,10 @@
         "packages/pqc-kem/node_modules/@isaacs/cliui/build/index.cjs"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "wrap-ansi-cjs": {
@@ -2605,10 +2610,10 @@
         "packages/pqc-kem/node_modules/@isaacs/cliui/build/index.cjs"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "@fibemate/pqc-kem": {
@@ -2616,10 +2621,10 @@
         "packages/pqc-kem/native/index.d.ts"
       ],
       "usageCount": 1,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     },
     "@noble/ciphers": {
@@ -2657,10 +2662,10 @@
         "packages/fml-dsa/node_modules/@noble/ciphers/src/_polyval.ts"
       ],
       "usageCount": 31,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "cipher",
+      "algorithm": "AES/Salsa20/ChaCha",
+      "risk": "quantum_safe",
+      "note": "Symmetric ciphers — Grover halves effective key length only",
       "nmInfo": null
     },
     "minimist": {
@@ -2669,10 +2674,10 @@
         "mixnet/mix-node.js"
       ],
       "usageCount": 2,
-      "type": "unknown",
-      "algorithm": "unknown",
-      "risk": "unknown",
-      "note": "Not classified — manual review needed",
+      "type": "none",
+      "algorithm": "N/A",
+      "risk": "none",
+      "note": "Infrastructure utility — no crypto relevance",
       "nmInfo": null
     }
   },
