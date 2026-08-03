@@ -3,10 +3,10 @@
 // Pattern: match fml-dsa/src/core/params.js — runtime-switchable, not compile-time constants
 
 // Shared across all ML-KEM parameter sets
-export const Q = 3329;             // prime modulus (FIPS 203 §4.1)
-export const N = 256;              // ring dimension x^256+1
-export const SEED_BYTES = 32;      // d || z (two 256-bit seeds)
-export const SS_BYTES = 32;        // shared secret output length
+const Q = 3329;             // prime modulus (FIPS 203 §4.1)
+const N = 256;              // ring dimension x^256+1
+const SEED_BYTES = 32;      // d || z (two 256-bit seeds)
+const SS_BYTES = 32;        // shared secret output length
 
 /**
  * ML-KEM parameter sets (FIPS 203 §4, Table 1)
@@ -21,7 +21,7 @@ export const SS_BYTES = 32;        // shared secret output length
  *   dk  = 768k + 96     (decapsulation key, incl. 32B z + 32B ek_hash + 32B ρ)
  *   c   = 32(du*k + dv*k) + 32  (ciphertext, incl. 32B commitment hash)
  */
-export const MLKEM_PARAMS = {
+const MLKEM_PARAMS = {
   'ML-KEM-512': {
     k: 2,
     eta1: 3,
@@ -70,7 +70,7 @@ export const MLKEM_PARAMS = {
  *   paramSet: 'ML-KEM-512' | 'ML-KEM-768' | 'ML-KEM-1024'
  * Returns a frozen object with all run-time parameters + derived constants.
  */
-export function getParams(paramSet = 'ML-KEM-768') {
+function getParams(paramSet = 'ML-KEM-768') {
   const p = MLKEM_PARAMS[paramSet];
   if (!p) throw new Error(`Unknown ML-KEM parameter set: ${paramSet}`);
 
@@ -107,13 +107,21 @@ export function getParams(paramSet = 'ML-KEM-768') {
 /**
  * listParamSets() → array of available parameter set names
  */
-export function listParamSets() {
+function listParamSets() {
   return Object.keys(MLKEM_PARAMS);
 }
 
 /**
  * validateParamSet(name) → bool
  */
-export function validateParamSet(name) {
+function validateParamSet(name) {
   return name in MLKEM_PARAMS;
 }
+
+module.exports = {
+  Q, N, SEED_BYTES, SS_BYTES,
+  MLKEM_PARAMS,
+  getParams,
+  listParamSets,
+  validateParamSet
+};
