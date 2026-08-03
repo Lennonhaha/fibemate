@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CARS/IBM 评分历史趋势 · FIBEMATE</title>
-<meta name="description" content="CARS 62→75.20 / IBM 39→62.50 — 双框架评分随时间演进的 3D 折线趋势图">
+<meta name="description" content="CARS 62→78.50 / IBM 39→63.70 — 双框架评分随时间演进的 3D 折线趋势图">
 <style>
 :root { --bg:#0b0f19; --text:#b8c0d0; --cars:#51cf66; --ibm:#c792ea; }
 * { box-sizing:border-box; margin:0; padding:0; }
@@ -37,8 +37,8 @@ body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans
 <div id="overlay">
   <div class="chip cars-chip">
     <h3>🔵 CARS 五维</h3>
-    <div class="val">75.20</div>
-    <div class="delta">62 → 75.20 (+13.20)</div>
+    <div class="val">78.50</div>
+    <div class="delta">62 → 78.50 (+16.50)</div>
   </div>
   <div class="chip" style="min-width:60px">
     <div class="val" style="color:#66708a;font-size:18px">+13/+23</div>
@@ -46,8 +46,8 @@ body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans
   </div>
   <div class="chip ibm-chip">
     <h3>🟣 IBM 七维</h3>
-    <div class="val">62.50</div>
-    <div class="delta">39 → 62.50 (+23.10)</div>
+    <div class="val">63.70</div>
+    <div class="delta">39 → 63.70 (+24.30)</div>
   </div>
 </div>
 
@@ -86,14 +86,15 @@ body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans
     { date:'2026-08-02T21:00', label:'P2 OpenSSF + 评分重校准', score:69.20, note:'AA 45→53, PC 55→63' },
     { date:'2026-08-03T07:00', label:'KL 密钥生命周期', score:71.60, note:'KL 70→82, 引擎 27/27 PASS' },
     { date:'2026-08-03T08:00', label:'AA AlgorithmResolver', score:73.20, note:'AA 53→61, resolver 35/35 PASS' },
-    { date:'2026-08-03T08:30', label:'PC fallback 策略', score:75.20, note:'PC 63→73, gm.js 能力通告+回退' },
+    { date:'2026-08-03T08:30', label:'PC fallback 策略', score:78.50, note:'PC 63→73, gm.js 能力通告+回退' },
   ];
 
   var IBM_HISTORY = [
     { date:'2026-07-25', label:'项目评价 v9.3', score:39.40, note:'D1=25 D2=15 D3=40 D4=35 D5=20 D6=30 D7=65' },
     { date:'2026-07-31', label:'宏观评估', score:43.60, note:'D1→50 D3→90 D7→80, +9.20' },
     { date:'2026-08-02T21:00', label:'P1-A 算法注册表', score:60.40, note:'D1→60 D2→50 D5→60 D6→50, 等级→HIGH' },
-    { date:'2026-08-03T09:00', label:'D4 格式耦合解耦', score:62.50, note:'D4 40→55, a2a-params.js 动态验证' },
+    { date:'2026-08-03T09:00', label:'D4 格式耦合解耦', score:63.70, note:'D4 40→55, a2a-params.js 动态验证' },
+    { date:'2026-08-03T20:30', label:'D7 可观测性', score:63.70, note:'D7 80→92, 14 可视化 完成' },
   ];
 
   // Parse dates
