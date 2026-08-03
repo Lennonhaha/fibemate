@@ -8,7 +8,7 @@
     <meta property="og:title" content="IBM 七维密码敏捷性自评工具">
     <meta property="og:description" content="IBM Research 2026 Application-Level Crypto Agility · 7维度交互式自评向导 · 3D雷达图 · 与 FIBEMATE 62.50 对比">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
+    <meta property="og:url" content="https://fibemate.net/docs/ibm-seven-radar.html">
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="IBM 七维密码敏捷性自评工具">
@@ -199,11 +199,11 @@
 <!-- ═══ 左侧评分面板 ═══ -->
 <button id="panel-toggle" onclick="togglePanel()" style="display:none;">☰</button>
 <div id="panel">
-    <h1>FIBEMATE · CARS 审计仪表盘</h1>
-    <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
+    <h1>FIBEMATE · IBM 七维密码敏捷性评估</h1>
+    <div class="subtitle">IBM Research 2026 Application-Level Crypto Agility<br>7 维度交互式自评 — 点击展开可验证证据</div>
     <div class="overall">
         <span class="label">综合得分</span>
-        <span class="score">75.20 / 100</span>
+        <span class="score">62.50 / 100</span>
     </div>
     <div class="dim-list" id="dim-list"></div>
     <div style="font-size:9px;color:#555;margin-top:6px;line-height:1.5;">
@@ -216,7 +216,7 @@
 <div id="legend">
     <div class="leg-item"><div class="leg-swatch" style="background:#00d4ff;"></div> 当前得分</div>
     <div class="leg-item"><div class="leg-swatch dashed"></div> 改进路线 (P0+P1)</div>
-    <div class="leg-item" style="color:#ffc107;">→ 80</div>
+    <div class="leg-item" style="color:#ffc107;">→ 75</div>
 </div>
 
 <button id="improve-toggle" onclick="toggleImprovement()">显示改进路线</button>
@@ -226,7 +226,7 @@
 <script src="lib/OrbitControls.js?v=20260803d" onerror="console.error('FAILED to load OrbitControls.js!')" onload="window.__ORBIT_LOADED=!0;console.log('OrbitControls.js OK, THREE.OrbitControls='+(typeof (window.THREE&&window.THREE.OrbitControls)))"></script>
 
 <script>
-console.log('=== CARS-RADAR DIAG: document.readyState='+document.readyState);
+console.log('=== IBM-RADAR DIAG: document.readyState='+document.readyState);
 console.log('  THREE loaded:', typeof THREE!=='undefined');
 console.log('  OrbitControls:', typeof (window.THREE&&THREE.OrbitControls)!=='undefined');
 if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;padding:40px;font-size:24px">✕ THREE.js 加载失败！<br>按 Ctrl+Shift+R 硬刷新</div>'; throw new Error('THREE not loaded'); }
