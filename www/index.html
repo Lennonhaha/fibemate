@@ -1231,6 +1231,103 @@
          >打开审计仪表盘 &#8594;</a>
     </div>
 
+
+
+<!-- ═══════════ 工程可视化工具集 ═══════════ -->
+    <section class="features" id="engineering-viz" style="margin-top:1rem;">
+      <div class="section-badge" style="background:rgba(0,212,255,0.08);border:2px solid rgba(0,212,255,0.3);">🔷 工程可视化工具集</div>
+      <h2 style="font-size:1.5rem;">14 个三维交互面板 · 代码证据驱动</h2>
+      <p class="section-subtitle" style="max-width:700px;margin:0 auto 1.5rem;font-size:0.9rem;color:#8b949e;">
+        评分审计 · 性能基准 · 依赖风险 · FPGA 硬件 · 时间轴演进 — 全部基于 git 仓库真实数据
+      </p>
+      <div class="features-grid" style="grid-template-columns: repeat(3, 1fr);">
+        <div class="feature-card" style="border-top: 3px solid #a78bfa;">
+          <div class="feature-icon">🔄</div>
+          <div class="feature-title">CARS vs IBM 双框架雷达</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">CARS 五维 + IBM 七维并排对比<br>同一 3D 场景双雷达 · 评分卡片 · 维度差距高亮</div>
+          <a href="/docs/cars-vs-ibm.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #a78bfa; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #51cf66;">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-title">PQC 性能基准</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">5 算法 × 4 后端对数刻度柱状图<br>48µs~4.2s · C Native/WASM/纯JS/Addon</div>
+          <a href="/docs/pqc-benchmark.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #51cf66; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #c792ea;">
+          <div class="feature-icon">🛡</div>
+          <div class="feature-title">TVLA 侧信道看板</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">5 算法 31/36 PASS · t-test 阈值 4.5<br>ML-KEM · SM2 · HMAC-SM3 · 硬件故障检测</div>
+          <a href="/docs/tvla-dashboard.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #c792ea; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #ff6b6b;">
+          <div class="feature-icon">↔</div>
+          <div class="feature-title">经典 vs PQC 并排</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">8 维度左右并排 3D 对比<br>@noble/curves P-256 vs @noble/post-quantum</div>
+          <a href="/docs/classic-vs-pqc.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #ff6b6b; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #ffd43b;">
+          <div class="feature-icon">📈</div>
+          <div class="feature-title">CARS/IBM 评分趋势</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">双线 3D 时间轴 · 7 个 CARS 里程碑<br>62→78.50 (+16.50) · CatmullRom 平滑</div>
+          <a href="/docs/cars-ibm-trend.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #ffd43b; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #51cf66;">
+          <div class="feature-icon">🌳</div>
+          <div class="feature-title">3D 算法族谱树</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">18 节点 6 分支径向布局<br>对称/非对称/哈希/PQC/硬件/协议</div>
+          <a href="/docs/algo-family-tree.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #51cf66; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #ffa94d;">
+          <div class="feature-icon">🔗</div>
+          <div class="feature-title">供应链依赖风险图</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">12 算法 × 21 边 × 370 文件<br>节点风险着色 · SHA-256 全网枢纽</div>
+          <a href="/docs/supply-chain-risk.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #ffa94d; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #00d4ff;">
+          <div class="feature-icon">🔲</div>
+          <div class="feature-title">FPGA 资源热力图</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">Artix-7 6 模块×4 资源 3D 柱状图<br>NTT pipe2 · LUT/FF/BRAM/DSP 利用率</div>
+          <a href="/docs/fpga-heatmap.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #00d4ff; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #51cf66;">
+          <div class="feature-icon">🏎</div>
+          <div class="feature-title">双后端性能对比</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">纯JS vs WASM vs Native 加速比<br>ML-KEM 27× · SLH-DSA 4.2s 签名</div>
+          <a href="/docs/backend-benchmark.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #51cf66; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #ffd43b;">
+          <div class="feature-icon">⏳</div>
+          <div class="feature-title">项目演进时间轴</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">25 里程碑 4 阶段螺旋 3D 时间轴<br>5月基础→8月冲刺 · 进度动画</div>
+          <a href="/docs/project-timeline.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #ffd43b; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #c792ea;">
+          <div class="feature-icon">🔐</div>
+          <div class="feature-title">PQC 安全等级对比</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">10 算法 · 4 可切换指标<br>FIPS 203/204/205 · 经典 vs 量子 bit</div>
+          <a href="/docs/pqc-security-levels.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #c792ea; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+        <div class="feature-card" style="border-top: 3px solid #00d4ff;">
+          <div class="feature-icon">🔍</div>
+          <div class="feature-title">交互式依赖下钻</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">10 算法 18 边 · 点击→右侧详情面板<br>尺寸/性能/KAT/依赖/风险 全维度</div>
+          <a href="/docs/dependency-drilldown.html" class="proof-link"
+             style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #00d4ff; text-decoration: underline;">打开可视化 &#8594;</a>
+        </div>
+      </div>
+    </section>
+
 <!-- ═══ 量子风险传播图 ═══ -->
   <div class="feature-card" style="margin: 0 auto 1.5rem; max-width: 860px; border-top: 3px solid #f97316;">
     <div class="feature-icon">💥</div>
@@ -1267,7 +1364,7 @@
     <div class="feature-title">IBM 七维密码敏捷性自评工具</div>
     <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">
       <strong>IBM Research 2026 Application-Level Crypto Agility</strong><br>
-      7 维度交互式自评向导 · 3D 雷达图 · 与 FIBEMATE <span style="color:#8b5cf6;font-weight:700;">62.50</span> 对比<br>
+      7 维度交互式自评向导 · 3D 雷达图 · 与 FIBEMATE <span style="color:#8b5cf6;font-weight:700;">63.70</span> 对比<br>
       接口抽象 · 配置外部化 · 版本管理 · 格式耦合 · 协议协商 · 替换成本 · 可观测性<br>
       <em>首个在真实 PQC 工程平台上的实证验证 — 导出自包含 HTML 报告</em>
     </div>
@@ -1281,7 +1378,7 @@
       <div class="proof-item" style="border-left: 4px solid #00d4ff;">
         <div class="proof-title">📊 IBM 七维多项目横向对比</div>
         <div class="proof-desc">
-          输入任意项目的 7 维自评分数 → 双雷达图叠加（蓝色=你的项目，黄色虚线=FIBEMATE 62.50）<br>
+          输入任意项目的 7 维自评分数 → 双雷达图叠加（蓝色=你的项目，黄色虚线=FIBEMATE 63.70）<br>
           <em>预填 OpenSSL / liboqs / Bouncy Castle 示例 · 差异热力图 · 导出报告</em>
         </div>
         <a href="/docs/ibm-seven-compare.html" class="proof-link"
