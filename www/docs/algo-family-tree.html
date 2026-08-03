@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>3D 算法族谱树 · FIBEMATE</title>
+<meta name="description" content="密码算法全家族谱系 — 对称/非对称/哈希/PQC/硬件/协议 六分支 3D 层级关系图">
+<style>
+:root { --bg:#0b0f19; --card:#131827; --border:#1f2a44; --text:#b8c0d0; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; }
+
+#top-bar { position:fixed; z-index:10; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:10px; }
+.chip { background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:10px; padding:8px 14px; text-align:center; }
+.chip .num { font-size:20px; font-weight:800; line-height:1.1; }
+.chip .lbl { font-size:9px; color:#66708a; letter-spacing:0.5px; }
+
+#legend { position:fixed; z-index:10; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:14px; background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:20px; padding:8px 18px; font-size:10px; }
+.leg { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:9px; height:9px; border-radius:50%; }
+
+#tooltip { display:none; position:fixed; z-index:20; pointer-events:none; background:rgba(11,15,25,0.95); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:10px; color:var(--text); max-width:260px; }
+#tooltip .head { font-size:13px; font-weight:600; margin-bottom:4px; }
+#tooltip .kv { display:flex; justify-content:space-between; gap:14px; color:#66708a; font-size:10px; }
+#tooltip .kv .v { color:#d0d6e6; font-weight:600; }
+
+#footer { position:fixed; z-index:10; bottom:12px; right:16px; font-size:10px; color:#66708a; }
+#footer a { color:#0ea5e9; text-decoration:none; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="top-bar">
+  <div class="chip" style="border-color:#51cf66"><div class="num">18</div><div class="lbl">算法节点</div></div>
+  <div class="chip" style="border-color:#0ea5e9"><div class="num">6</div><div class="lbl">分支</div></div>
+  <div class="chip" style="border-color:#c792ea"><div class="num">3</div><div class="lbl">层级深</div></div>
+</div>
+
+<div id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#51cf66;box-shadow:0 0 4px #51cf66"></div> 对称</div>
+  <div class="leg"><div class="leg-dot" style="background:#ffa94d;box-shadow:0 0 4px #ffa94d"></div> 非对称</div>
+  <div class="leg"><div class="leg-dot" style="background:#ff6b6b;box-shadow:0 0 4px #ff6b6b"></div> 哈希</div>
+  <div class="leg"><div class="leg-dot" style="background:#c792ea;box-shadow:0 0 4px #c792ea"></div> PQC</div>
+  <div class="leg"><div class="leg-dot" style="background:#0ea5e9;box-shadow:0 0 4px #0ea5e9"></div> 硬件</div>
+  <div class="leg"><div class="leg-dot" style="background:#bac8e0;box-shadow:0 0 4px #bac8e0"></div> 协议</div>
+  <span style="color:#66708a;margin-left:8px">🖱 拖拽旋转 · 滚轮缩放 · 悬停节点</span>
+</div>
+
+<div id="footer"><a href="/docs/pqc-dashboard.html">仪表盘</a> · <a href="/docs/cars-radar.html">CARS</a></div>
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function(){
+if(typeof THREE==='undefined'){document.body.innerHTML='<div style="color:#e44;padding:40px;text-align:center;margin-top:20vh"><b>&#x2715;</b> THREE.js 未加载</div>';return;}
+
+// ═══════ Tree Data ═══════
+// categories + colors
+var CAT = {
+  symmetric:'#51cf66', asymmetric:'#ffa94d', hash:'#ff6b6b',
+  pqc:'#c792ea', protocol:'#bac8e0', hardware:'#0ea5e9', root:'#6b7394', verification:'#5c7cfa'
+};
+var CAT_LABEL = {
+  symmetric:'对称密码', asymmetric:'非对称密码', hash:'哈希函数',
+  pqc:'后量子 PQC', protocol:'协议', hardware:'硬件加速', root:'密码学', verification:'形式化验证'
+};
+
+// Tree nodes — id, parent, label, category, detail
+var TREE = [
+  // Root
+  { id:'crypto', parent:null, label:'密码学', cat:'root', detail:'FIBEMATE 算法全集 · 18 节点 6 分支', ctx:'全部算法' },
+  // Branches
+  { id:'sym', parent:'crypto', label:'对称密码', cat:'symmetric', ctx:'流/块加密' },
+  { id:'asym', parent:'crypto', label:'非对称密码', cat:'asymmetric', ctx:'公钥/签名' },
+  { id:'hash', parent:'crypto', label:'哈希函数', cat:'hash', ctx:'摘要/认证' },
+  { id:'pqc', parent:'crypto', label:'后量子密码', cat:'pqc', ctx:'FIPS 203/204/205' },
+  { id:'hw', parent:'crypto', label:'硬件加速', cat:'hardware', ctx:'FPGA/ILA' },
+  { id:'proto', parent:'crypto', label:'协议层', cat:'protocol', ctx:'双棘轮/混合KEX' },
+
+  // Symmetric leaves
+  { id:'aes', parent:'sym', label:'AES-256-GCM', cat:'symmetric', detail:'FIPS 197 · 量子安全 128-bit', ctx:'块密码' },
+  { id:'sm4', parent:'sym', label:'SM4-GCM', cat:'symmetric', detail:'GM/T 0002 · 纯 JS 实现', ctx:'国密块密码' },
+
+  // Asymmetric leaves
+  { id:'p256', parent:'asym', label:'P-256 ECDH', cat:'asymmetric', detail:'NIST SP 800-56A · 经典安全', ctx:'密钥交换 (Shor 脆弱)' },
+  { id:'sm2', parent:'asym', label:'SM2', cat:'asymmetric', detail:'GM/T 0003 · jsbn+BigInt 双后端', ctx:'国密签名/加密' },
+
+  // Hash leaves
+  { id:'sha256', parent:'hash', label:'SHA-256', cat:'hash', detail:'FIPS 180-4 · 量子安全', ctx:'哈希原语' },
+  { id:'sm3', parent:'hash', label:'SM3', cat:'hash', detail:'GM/T 0004 · SM2/SM4 配套', ctx:'国密哈希' },
+
+  // PQC leaves
+  { id:'mlkem', parent:'pqc', label:'ML-KEM-768', cat:'pqc', detail:'FIPS 203 · C/WASM 双后端 · KAT 10000', ctx:'密钥封装' },
+  { id:'mldsa', parent:'pqc', label:'ML-DSA-65/87', cat:'pqc', detail:'FIPS 204 · fml-dsa 实现 · KAT 270', ctx:'数字签名' },
+  { id:'slhdsa', parent:'pqc', label:'SLH-DSA-128s', cat:'pqc', detail:'FIPS 205 · WASM · Sig 7856B', ctx:'无状态签名' },
+
+  // Hardware
+  { id:'ntt', parent:'hw', label:'NTT 硬件', cat:'hardware', detail:'FPGA Artix-7 · BRAM 查表 · ILA+L4', ctx:'蝶形变换加速器' },
+
+  // Protocol
+  { id:'dr', parent:'proto', label:'Double-Ratchet', cat:'protocol', detail:'ML-KEM X3DH + P-256 · 100 msg rekey', ctx:'端到端加密' },
+  { id:'tla', parent:'proto', label:'TLA+ Path C-2', cat:'verification', detail:'7 不变量 · 101k states · ROM/QROM', ctx:'混合KEM安全性验证' },
+];
+
+// Build node map
+var nodeMap = {};
+TREE.forEach(function(n){ nodeMap[n.id]=n; });
+
+// ═══════ 3D Layout — radial tree ═══════
+// Root at center, branches on concentric rings
+// Ring 0: root
+// Ring 1: 6 branches evenly spaced
+// Ring 2: leaves under each branch, fan out
+
+var RING_GAP = 4.5;
+var RING1_R = RING_GAP;
+var RING2_R = RING1_R + RING_GAP;
+var branchAngle = (2*Math.PI)/6;
+
+// Assign positions
+nodeMap['crypto'].pos = {x:0, y:4.5, z:0, ring:0};
+
+var branchOrder = ['sym','asym','hash','pqc','hw','proto'];
+branchOrder.forEach(function(id, i){
+  var a = i * branchAngle - Math.PI/2;
+  nodeMap[id].pos = {
+    x: Math.cos(a)*RING1_R,
+    y: RING1_R*0.3 + 1.8,
+    z: Math.sin(a)*RING1_R,
+    ring:1, angle:a
+  };
+});
+
+// Assign leaf positions under each branch
+var leavesByBranch = {};
+TREE.forEach(function(n){
+  if (n.parent && nodeMap[n.parent] && nodeMap[n.parent].ring===1) {
+    if (!leavesByBranch[n.parent]) leavesByBranch[n.parent] = [];
+    leavesByBranch[n.parent].push(n);
+  }
+});
+
+Object.keys(leavesByBranch).forEach(function(branchId){
+  var branch = nodeMap[branchId];
+  var leaves = leavesByBranch[branchId];
+  var spread = Math.min(1.2, leaves.length*0.55);
+  var startAngle = branch.angle - spread/2;
+  leaves.forEach(function(leaf, i){
+    var a = startAngle + (spread/(leaves.length>1?leaves.length-1:1))*i;
+    leaf.pos = {
+      x: Math.cos(a)*RING2_R + (Math.cos(branch.angle)*0.8),
+      y: RING2_R*0.15 + 0.3,
+      z: Math.sin(a)*RING2_R + (Math.sin(branch.angle)*0.8),
+      ring:2, angle:a
+    };
+  });
+});
+
+// ═══════ Scene ═══════
+var W=innerWidth,H=innerHeight;
+var scene=new THREE.Scene();
+scene.background=new THREE.Color('#0b0f19');
+scene.fog=new THREE.Fog('#0b0f19',20,60);
+
+var camera=new THREE.PerspectiveCamera(45,W/H,0.5,100);
+camera.position.set(-4,10,20); camera.lookAt(0,2,0);
+
+var renderer=new THREE.WebGLRenderer({antialias:true,alpha:false});
+renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.3;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.08;
+controls.autoRotate=true; controls.autoRotateSpeed=0.2;
+controls.minDistance=5; controls.maxDistance=50; controls.target.set(0,2,0); controls.update();
+
+scene.add(new THREE.AmbientLight('#334466',2.5));
+scene.add(new THREE.DirectionalLight('#ccddff',2.5)).position.set(15,20,12);
+scene.add(new THREE.DirectionalLight('#556688',1.0)).position.set(-10,5,-5);
+
+// Stars
+var sg=new THREE.BufferGeometry(); var sp=new Float32Array(300*3);
+for(var i=0;i<300*3;i+=3){sp[i]=(Math.random()-0.5)*30;sp[i+1]=(Math.random()-0.5)*22;sp[i+2]=(Math.random()-0.5)*20;}
+sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:'#334466',size:0.04,opacity:0.4,transparent:true})));
+
+// Floor
+var floor=new THREE.Mesh(new THREE.PlaneGeometry(28,22),new THREE.MeshStandardMaterial({color:'#111522',roughness:0.9,metalness:0}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-2.5; floor.receiveShadow=true; scene.add(floor);
+
+// ═══════ Draw edges ═══════
+var allNodes3d=[];
+var allEdges=[];
+var edgeMat=new THREE.LineBasicMaterial({color:'#1f2a44',transparent:true,opacity:0.5});
+
+TREE.forEach(function(n){
+  if(!n.parent) return;
+  var from=nodeMap[n.parent].pos, to=n.pos;
+  // Bezier curve edge
+  var mid={x:(from.x+to.x)/2, y:Math.min(from.y,to.y)-0.6, z:(from.z+to.z)/2};
+  var curve=new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(from.x,from.y,from.z),
+    new THREE.Vector3(mid.x,mid.y,mid.z),
+    new THREE.Vector3(to.x,to.y,to.z)
+  );
+  var pts=curve.getPoints(20);
+  var geo=new THREE.BufferGeometry().setFromPoints(pts);
+  var line=new THREE.Line(geo,edgeMat);
+  scene.add(line);
+  allEdges.push(line);
+
+  // Flow particle on edge
+  var dotGeo=new THREE.SphereGeometry(0.04,4,4);
+  var dotMat=new THREE.MeshBasicMaterial({color:CAT[n.cat]||'#66708a',transparent:true,opacity:0.6,depthWrite:false});
+  var dot=new THREE.Mesh(dotGeo,dotMat);
+  dot.userData={curve:curve,phase:Math.random()*Math.PI*2};
+  scene.add(dot);
+  allEdges.push(dot);
+});
+
+// ═══════ Draw nodes ═══════
+TREE.forEach(function(n){
+  var p=n.pos, isRoot=!n.parent, isBranch=nodeMap[n.id]&&leavesByBranch[n.id];
+  var col=CAT[n.cat]||'#66708a';
+  var size=isRoot?0.5:(isBranch?0.35:0.22);
+
+  // Main sphere
+  var geo=new THREE.SphereGeometry(size,isRoot?32:24,isRoot?16:12);
+  var mat=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(col), roughness:0.15, metalness:0.6,
+    emissive:new THREE.Color(col), emissiveIntensity:isBranch?0.4:(isRoot?0.6:0.25),
+  });
+  var node=new THREE.Mesh(geo,mat);
+  node.position.set(p.x,p.y,p.z);
+  node.userData=n;
+  scene.add(node);
+  allNodes3d.push(node);
+
+  // Outer glow ring
+  var ringGeo=new THREE.TorusGeometry(size*1.25,0.025,8,isBranch?36:24);
+  var ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({color:new THREE.Color(col),transparent:true,opacity:0.4,depthWrite:false}));
+  ring.position.set(p.x,p.y,p.z); ring.rotation.x=Math.PI/2;
+  scene.add(ring);
+
+  // Label sprite
+  var canvas=document.createElement('canvas'); canvas.width=256; canvas.height=64;
+  var ctx=canvas.getContext('2d');
+  ctx.font=(isRoot?'bold 20px':'14px')+' "Segoe UI","PingFang SC",sans-serif';
+  ctx.textAlign='center'; ctx.fillStyle='#d0d6e6';
+  ctx.fillText(n.label,128,isRoot?38:28);
+  if(n.ctx) { ctx.font='10px "Segoe UI",sans-serif'; ctx.fillStyle='#66708a'; ctx.fillText(n.ctx,128,44); }
+  var tex=new THREE.CanvasTexture(canvas); tex.minFilter=THREE.LinearFilter;
+  var sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+  sprite.position.set(p.x,p.y+(size+0.6),p.z);
+  sprite.scale.set(isBranch?2.8:2.0,isBranch?0.7:0.5,1);
+  scene.add(sprite);
+
+  // Branch-specific: halo ring on floor
+  if(isBranch){
+    var haloGeo=new THREE.TorusGeometry(RING1_R,0.02,8,64);
+    var halo=new THREE.Mesh(haloGeo,new THREE.MeshBasicMaterial({color:'#1f2a44',transparent:true,opacity:0.3}));
+    halo.rotation.x=Math.PI/2; halo.position.y=-2.48; scene.add(halo);
+  }
+});
+
+// ═══════ Raycaster ═══════
+var tooltip=document.getElementById('tooltip');
+var raycaster=new THREE.Raycaster(); raycaster.params.Points.threshold=0.3; raycaster.params.Line={threshold:0.3};
+var mouse=new THREE.Vector2(); var hovered=null;
+
+window.addEventListener('mousemove',function(ev){
+  mouse.x=(ev.clientX/W)*2-1; mouse.y=-(ev.clientY/H)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  var hits=raycaster.intersectObjects(allNodes3d);
+  if(hits.length>0){
+    var d=hits[0].object.userData;
+    if(hovered!==hits[0].object){
+      if(hovered) hovered.material.emissiveIntensity=(!hovered.userData.parent?0.6:(nodeMap[hovered.userData.id]&&leavesByBranch[hovered.userData.id]?0.4:0.25));
+      hovered=hits[0].object;
+      hovered.material.emissiveIntensity=1.0;
+      document.body.style.cursor='pointer';
+    }
+    var col=CAT[d.cat]||'#66708a';
+    tooltip.style.display='block';
+    tooltip.innerHTML='<div class="head" style="color:'+col+'">'+d.label+'</div>'+
+      '<div class="kv"><span>分类</span><span class="v" style="color:'+col+'">'+(CAT_LABEL[d.cat]||'')+'</span></div>'+
+      (d.detail?'<div class="kv"><span>详情</span><span class="v">'+d.detail+'</span></div>':'')+
+      (d.ctx?'<div class="kv"><span>上下文</span><span class="v">'+d.ctx+'</span></div>':'')+
+      (!d.parent?'<div class="kv"><span>子节点</span><span class="v">6 分支</span></div>':'');
+    tooltip.style.left=(ev.clientX+16)+'px'; tooltip.style.top=(ev.clientY-80)+'px';
+  } else {
+    if(hovered){hovered.material.emissiveIntensity=(!hovered.userData.parent?0.6:(nodeMap[hovered.userData.id]&&leavesByBranch[hovered.userData.id]?0.4:0.25));hovered=null;}
+    document.body.style.cursor=''; tooltip.style.display='none';
+  }
+});
+
+// ═══════ Animate edge particles ═══════
+function animate(){
+  requestAnimationFrame(animate);
+  var t=performance.now()*0.001;
+  allEdges.forEach(function(o){
+    if(!o.userData||!o.userData.curve) return;
+    var ph=(o.userData.phase+t*0.8)%(Math.PI*2);
+    var pt=o.userData.curve.getPointAt(0.5+0.5*Math.sin(ph));
+    o.position.copy(pt);
+  });
+  controls.update();
+  renderer.render(scene,camera);
+}
+window.addEventListener('resize',function(){W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);});
+animate();
+console.log('✅ Algorithm Family Tree — 18 nodes, 6 branches, 3 rings loaded');
+})();
+</script>
+</body>
+</html>
