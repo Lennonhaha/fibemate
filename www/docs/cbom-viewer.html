@@ -90,7 +90,7 @@ function risk(a){
   if(d.qWeak&&d.qWeak.indexOf(name)>=0)return{label:"量子弱化",cls:"badge-weak"};
   if(d.qSafe&&d.qSafe.indexOf(name)>=0)return{label:"量子安全",cls:"badge-safe"};
   return{label:"未分类",cls:"badge-weak"}
-}}
+}
 function sortTable(col){
   if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1}
   renderTable();
