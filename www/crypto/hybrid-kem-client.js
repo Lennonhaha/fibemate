@@ -34,14 +34,22 @@
   const MLKEM = (typeof window !== 'undefined' && window.MLKEM768)
     || (typeof module !== 'undefined' && module.exports && require('./ml-kem-768'));
 
-  // ---- 常量 ----
-  const IANA_GROUP_ID = 4590;          // SM2+MLKEM768 hybrid
-  const SM2_PK_LEN = 65;               // SM2 uncompressed point
-  const MLKEM_PK_LEN = 1184;           // ML-KEM-768 public key
-  const MLKEM_CT_LEN = 1088;           // ML-KEM-768 ciphertext
-  const MLKEM_SS_LEN = 32;             // ML-KEM-768 shared secret
-  const SM2_SS_LEN = 32;               // SM2 ECDH shared secret (X coordinate)
-  const HYBRID_SS_LEN = 64;            // Concatenated: SM2_SS(32) || MLKEM_SS(32)
+  // ---- 参数解析器（消除硬编码常量，AA: 算法敏捷性） ----
+  // 优先级: window.AlgorithmResolver > global.AlgorithmResolver > require
+  const R = (typeof window !== 'undefined' && window.AlgorithmResolver)
+    || (typeof module !== 'undefined' && global.AlgorithmResolver)
+    || null;
+
+  // ── 以下 getter 从 AlgorithmResolver 运行时获取参数 ──
+  // 回退：如果 resolver 未加载，使用默认值（保持兼容性）
+  function ianaGroupId() { return (R && R.ianaGroup('ML-KEM-768')) || 4590; }
+  function sm2PkLen() { return (R && R.pkSize('SM2')) || 65; }
+  function mlkemPkLen() { return (R && R.pkSize('ML-KEM-768')) || 1184; }
+  function mlkemCtLen() { return (R && R.ctSize('ML-KEM-768')) || 1088; }
+  function mlkemSsLen() { return (R && R.ssSize('ML-KEM-768')) || 32; }
+  function sm2SsLen() { return (R && R.ssSize('SM2')) || 32; }
+  function hybridSsLen() { return sm2SsLen() + mlkemSsLen(); }
+  function kemParamsObj() { return R ? R.kemParams('ML-KEM-768') : null; }
 
   // ---- 简化版 HKDF（不依赖 Node crypto） ----
   function hkdfExtract(salt, ikm) {
@@ -166,7 +174,7 @@
       // 格式: [2B group_id][2B sm2_pk_len=65][SM2_pk=65B][MLKEM_pk=1184B]
       const sm2LenBuf = new Uint8Array(2);
       const dv = new DataView(sm2LenBuf.buffer);
-      dv.setUint16(0, SM2_PK_LEN, false);  // big-endian
+      dv.setUint16(0, sm2PkLen(), false);  // big-endian
 
       function serialize() {
         return concat(
@@ -192,11 +200,11 @@
       if (keyShare.length < 2) throw new Error('keyShare too short');
       const dv = new DataView(keyShare.buffer, keyShare.byteOffset);
       const sm2Len = dv.getUint16(0, false);  // big-endian
-      if (keyShare.length < 2 + sm2Len + MLKEM_PK_LEN) {
-        throw new Error(`keyShare length mismatch: expected ${2 + sm2Len + MLKEM_PK_LEN}, got ${keyShare.length}`);
+      if (keyShare.length < 2 + sm2Len + mlkemPkLen()) {
+        throw new Error(`keyShare length mismatch: expected ${2 + sm2Len + mlkemPkLen()}, got ${keyShare.length}`);
       }
       const sm2Pk = keyShare.slice(2, 2 + sm2Len);
-      const mlkemPk = keyShare.slice(2 + sm2Len, 2 + sm2Len + MLKEM_PK_LEN);
+      const mlkemPk = keyShare.slice(2 + sm2Len, 2 + sm2Len + mlkemPkLen());
       return { sm2Pk, mlkemPk };
     },
 
@@ -283,14 +291,14 @@
     },
 
     // ---- 导出常量 ----
-    IANA_GROUP_ID,
-    HYBRID_KEY_SHARE_LEN: 2 + SM2_PK_LEN + MLKEM_PK_LEN,  // 1253
-    SM2_PK_LEN,
-    MLKEM_PK_LEN,
-    MLKEM_CT_LEN,
-    MLKEM_SS_LEN,
-    SM2_SS_LEN,
-    HYBRID_SS_LEN,
+    ianaGroupId(),
+    HYBRID_KEY_SHARE_LEN: 2 + sm2PkLen() + mlkemPkLen(),  // 1253
+    sm2PkLen(),
+    mlkemPkLen(),
+    mlkemCtLen(),
+    mlkemSsLen(),
+    sm2SsLen(),
+    hybridSsLen(),
 
     // ---- 测试：自检 ----
     async selfTest() {

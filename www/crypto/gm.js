@@ -181,50 +181,116 @@ const MessageGM = (() => {
   // SM2 密钥协商 — 客户端 ↔ 服务端
   // ============================================================
   // Supported algorithms in preference order (AA: algorithm agility)
-  const SUPPORTED_ALGORITHMS = [
-    'ML-KEM-768',   // PQC hybrid preferred
-    'SM2',          // GM fallback
-    'P-256'         // Classic ECDH as last resort
-  ];
+  function getSupportedAlgorithms() {
+    // Use AlgorithmResolver if available, otherwise fallback to static list
+    try {
+      if (typeof AlgorithmResolver !== 'undefined' && AlgorithmResolver.preferredAlgorithms) {
+        return AlgorithmResolver.preferredAlgorithms();
+      }
+    } catch (e) { /* resolver not loaded, use defaults */ }
+    return ['ML-KEM-768', 'SM2', 'P-256'];
+  }
 
-  async function negotiateWithServer(serverUrl, preferredAlgorithms = SUPPORTED_ALGORITHMS) {
-    const keyPair = await getOrCreateClientKeyPair();
-    console.log('[MessageGM] 协商... prefAlgos=' + preferredAlgorithms.join(','));
+  const SUPPORTED_ALGORITHMS = getSupportedAlgorithms();
 
-    const token = localStorage.getItem('fk_token');
-    const response = await fetch(`${serverUrl}/api/negotiate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-      },
-      body: JSON.stringify({
-        clientPublicKey: keyPair.publicKey,
-        algorithms: preferredAlgorithms,       // capability advertisement (AA)
-        algorithm: preferredAlgorithms[0]      // legacy: preferred algorithm
-      })
-    });
+  /**
+   * 算法协商 — 带自动回退策略 (AA: Algorithm Agility)
+   *
+   * 1. 从 AlgorithmResolver 获取优先级列表（PQC first）
+   * 2. 逐算法尝试握手
+   * 3. 第一个成功即返回，全失败则抛异常
+   * 4. 支持能力通告（body.algorithms）+ 传统首选（body.algorithm）
+   *
+   * @param {string} serverUrl
+   * @param {string[]?} preferredAlgorithms — 自定义算法顺序，默认从 resolver 取
+   * @param {object?} opts.fallback — 回退策略:
+   *   'fail-fast': 仅尝试首选算法（传统行为）
+   *   'try-all': 逐算法尝试直到成功（默认）
+   *   'exclude': 排除特定数组（如排除 P-256 risky）
+   */
+  async function negotiateWithServer(serverUrl, preferredAlgorithms, opts) {
+    opts = opts || {};
+    var fallback = opts.fallback || 'try-all';
+    var exclude = opts.exclude || [];
 
-    if (!response.ok) throw new Error(`[MessageGM] 协商失败: HTTP ${response.status}`);
-    const data = await response.json();
-    _serverPublicKey = data.serverPublicKey;
+    // Determine algorithm list
+    var algoList = preferredAlgorithms || getSupportedAlgorithms();
+    // Filter out excluded algorithms
+    if (exclude.length > 0) {
+      algoList = algoList.filter(function(a) { return exclude.indexOf(a) === -1; });
+    }
+    if (algoList.length === 0) {
+      throw new Error('[MessageGM] 无可用的协商算法（全部被排除）');
+    }
 
-    // 生成 128-bit SM4 session key
-    _sm4SessionKey = AEGM.randomHex(16);
-    _sessionId = `gm_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    _sessionState = SESSION_ACTIVE;
+    var keyPair = await getOrCreateClientKeyPair();
+    var token = localStorage.getItem('fk_token');
 
-    // SM2 加密 session key → 发送给服务器
-    const encryptedKey = gm().SM2.encrypt(_sm4SessionKey, _serverPublicKey);
+    // ── 回退循环：逐算法尝试 ──
+    var lastError = null;
+    var tryList = (fallback === 'fail-fast') ? [algoList[0]] : algoList;
 
-    console.log(`[MessageGM] 协商完成, session=${_sessionId.substring(0,24)}`);
+    console.log('[MessageGM] 协商开始 — 策略=' + fallback + ' 候选=' + tryList.join(','));
 
-    return {
-      sessionId: _sessionId,
-      encryptedKey,
-      clientPublicKey: keyPair.publicKey,
-      algorithm: 'SM2+SM4-αGCM'
-    };
+    for (var i = 0; i < tryList.length; i++) {
+      var algo = tryList[i];
+      try {
+        console.log('[MessageGM] 尝试: ' + algo + ' (' + (i+1) + '/' + tryList.length + ')');
+
+        var response = await fetch(serverUrl + '/api/negotiate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Negotiate-Algorithm': algo,
+            ...(token ? { 'Authorization': 'Bearer ' + token } : {})
+          },
+          body: JSON.stringify({
+            clientPublicKey: keyPair.publicKey,
+            algorithms: tryList,           // capability advertisement (AA)
+            algorithm: algo,               // preferred in this round
+            fallback_enabled: fallback === 'try-all'
+          })
+        });
+
+        if (!response.ok) {
+          var errText = 'HTTP ' + response.status;
+          try { var body = await response.json(); if (body.error) errText = body.error; } catch (e) {}
+          throw new Error(errText);
+        }
+
+        var data = await response.json();
+        _serverPublicKey = data.serverPublicKey;
+
+        // 生成 128-bit SM4 session key
+        _sm4SessionKey = AEGM.randomHex(16);
+        _sessionId = 'gm_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        _sessionState = SESSION_ACTIVE;
+
+        // SM2 加密 session key → 发送给服务器
+        var encryptedKey = gm().SM2.encrypt(_sm4SessionKey, _serverPublicKey);
+
+        console.log('[MessageGM] ✓ 协商成功: ' + algo + ' session=' + _sessionId.substring(0, 24));
+
+        return {
+          sessionId: _sessionId,
+          encryptedKey: encryptedKey,
+          clientPublicKey: keyPair.publicKey,
+          algorithm: algo + '+SM4-αGCM',
+          negotiated: algo,
+          retries: i
+        };
+
+      } catch (e) {
+        lastError = e;
+        console.warn('[MessageGM] ✗ 协商失败: ' + algo + ' — ' + e.message);
+        // Continue to next algorithm (unless fail-fast)
+        if (fallback === 'fail-fast') break;
+      }
+    }
+
+    // All algorithms failed — structured error
+    var tried = tryList.join(', ');
+    throw new Error('[MessageGM] 协商失败 — 已尝试: ' + tried + '。最后错误: ' + (lastError ? lastError.message : 'unknown'));
   }
 
   function setSessionKey(sm4Key) {
