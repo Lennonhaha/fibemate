@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE — CARS 五维度审计仪表盘 · 代码证据级</title>
     <meta name="description" content="FIBEMATE CARS（Crypto-Agility Readiness Scorecard）五维度代码级审计仪表盘 — 点击任意维度查看具体文件、行号和代码证据。">
-    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 69.20">
-    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 53 · Key Lifecycle 70 · Protocol Coupling 63 · Organizational Readiness 70 — 综合 69.20/100，点击维度展开可验证代码证据。">
+    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 71.60">
+    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 53 · Key Lifecycle 82 · Protocol Coupling 63 · Organizational Readiness 70 — 综合 71.60/100，点击维度展开可验证代码证据。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
@@ -203,7 +203,7 @@
     <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
     <div class="overall">
         <span class="label">综合得分</span>
-        <span class="score">69.20 / 100</span>
+        <span class="score">71.60 / 100</span>
     </div>
     <div class="dim-list" id="dim-list"></div>
     <div style="font-size:9px;color:#555;margin-top:6px;line-height:1.5;">
@@ -298,8 +298,8 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             ]
         },
         {
-            key:'kl', name:'Key Lifecycle', cn:'密钥生命周期', score:70, max:100,
-            note: 'TLA+ 形式化验证 10 条不变量覆盖密钥状态机。CARS 框架未预期的加分项。但缺乏自动化轮换机制。',
+            key:'kl', name:'Key Lifecycle', cn:'密钥生命周期', score:82, max:100,
+            note: 'KeyLifecycleManager 引擎 (27/27 PASS) + KLSession 双棘轮集成 (35/35 PASS)。自动轮换/吊销/审计全链路就绪。TLA+ 10 条不变量覆盖密钥状态机。',
             evidence: [
                 {
                     file:'docs/tla/C2.tla', lines:'L1-L128',
@@ -314,17 +314,24 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
                     tags:['good']
                 },
                 {
+                    file:'packages/key-lifecycle/index.js', lines:'589 lines',
+                    finding:'<strong>KeyLifecycleManager 引擎 27/27 PASS</strong>：九 API · 六机制 (bootstrap/rotate/emergencyRotate/revokeKey/encryptUsed/decryptUsed/auditReport/exportState/importState)。时间+消息计数双触发自动轮换。TTL 吊销列表。',
+                    code:'// Nine APIs, six mechanisms\nclass KeyLifecycleManager {\n  bootstrap/key/algorithm  // Init root key\n  rotate/key/reason        // Scheduled rotation\n  emergencyRotate/key      // Immediate revoke + rotate\n  revokeKey/version,reason // Manual revocation\n  encryptUsed/             // Tag + rotation trigger\n  decryptUsed/version      // Usage + revocation check\n  auditReport/             // Full audit trail',
+                    tags:['good','info']
+                },
+                {
+                    file:'packages/key-lifecycle/double-ratchet-integration.js', lines:'195 lines',
+                    finding:'<strong>KLSession 集成层 35/35 PASS</strong>：PQRatchetSession 封装 KeyLifecycleManager。encrypt 前 rotationNeeded 检查 → decrypt 前 isRevoked 检查 → serialize 保留 KL 状态。',
+                    code:'class KLSession extends PQRatchetSession {\n  async encrypt/plaintext {\n    const s = this.kl.encryptUsed/;  // trigger check\n    return await super.encrypt/plaintext;\n  }\n  async decrypt/header,ct,iv {\n    if /this.kl.isRevoked/header._kl_version// throw;\n    return await super.decrypt/header,ct,iv;\n  }',
+                    tags:['good']
+                },
+                {
                     file:'packages/double-ratchet-pq.js', lines:'L290-L310',
                     finding:'<strong>PQ 混合双棘轮</strong>：ML-KEM-768 + P-256 hybrid X3DH 握手，双向 4 轮消息加密解密全通。棘轮步进触发密钥刷新，前向安全性由 DH 棘轮保证。',
                     code:'// PQ Hybrid Double Ratchet\n// Init: ML-KEM-768 + P-256 hybrid X3DH\nconst sharedSecret = await hybrid_x3dh_handshake(alice, bob);\n\n// Ratchet step (every message)\nfunction ratchetStep(state, dhPubKey) {\n  // DH ratchet → new root key\n  // Symmetric ratchet → new message keys',
                     tags:['good']
                 },
-                {
-                    file:'N/A (设计层面)', lines:'—',
-                    finding:'<strong>缺失：自动化密钥轮换</strong>。无定时轮换策略、无密钥版本管理、无吊销机制。所有密钥生命周期管理依赖手动操作。这是从 70 分提升到 85+ 分的主要路径。',
-                    code:'// TODO (P1): 自动化密钥轮换\n// - 定时触发 DH ratchet 重置\n// - 密钥版本号 + 吊销列表\n// - 前向安全性生命周期策略\n// 估计收益: +10-15 分',
-                    tags:['risk']
-                }
+                
             ]
         },
         {
@@ -384,7 +391,7 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
     ];
 
     // 改进后预测
-    var improved = [85, 68, 80, 75, 78];
+    var improved = [85, 68, 85, 75, 78];
 
     var N = dimensions.length, maxScore = 100;
     var showImproved = false;
