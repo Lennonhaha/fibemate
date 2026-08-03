@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PQC 算法性能基准 · FIBEMATE</title>
+<meta name="description" content="ML-KEM/SM2/SLH-DSA 多后端性能基准对比 — C Native · 纯JS · WASM，keygen/encaps/decaps/sign/verify">
+<style>
+:root { --bg:#0b0e17; --card:#151827; --border:#1e2444; --text:#bcc0cf; --accent:#00d4ff; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; }
+#ui { position:fixed; z-index:10; }
+#top { top:12px; left:50%; transform:translateX(-50%); display:flex; gap:12px; }
+#top .chip {
+  background:var(--card); border:1px solid var(--border); border-radius:10px;
+  padding:10px 18px; text-align:center; min-width:80px;
+}
+.chip h4 { font-size:10px; color:#6b7394; letter-spacing:0.5px; margin-bottom:2px; }
+.chip .val { font-size:22px; font-weight:700; color:#e0e4f0; }
+#legend { bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:16px; background:var(--card); border:1px solid var(--border); border-radius:20px; padding:8px 20px; font-size:11px; }
+.leg-row { display:flex; align-items:center; gap:6px; }
+.leg-box { width:24px; height:12px; border-radius:3px; }
+#footer { bottom:12px; right:16px; font-size:10px; color:#6b7394; }
+#tooltip { display:none; position:fixed; z-index:20; pointer-events:none; background:rgba(11,14,23,0.94); border:1px solid var(--border); border-radius:8px; padding:8px 12px; font-size:11px; color:var(--text); }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+<canvas id="bar3d" style="display:none"></canvas>
+
+<div id="ui">
+  <div id="top">
+    <div class="chip"><h4>算法</h4><div class="val">4</div></div>
+    <div class="chip"><h4>后端</h4><div class="val">4</div></div>
+    <div class="chip"><h4>最快</h4><div class="val" style="color:#51cf66">48µs</div></div>
+    <div class="chip"><h4>跨度</h4><div class="val" style="color:#ffa94d">48µs→4.2s</div></div>
+  </div>
+  <div id="legend">
+    <div class="leg-row"><div class="leg-box" style="background:#51cf66"></div> C Native</div>
+    <div class="leg-row"><div class="leg-box" style="background:#74c0fc"></div> 纯 JavaScript</div>
+    <div class="leg-row"><div class="leg-box" style="background:#c792ea"></div> WASM</div>
+    <div class="leg-row"><div class="leg-box" style="background:#ffa94d"></div> Node Addon</div>
+    <div style="color:#6b7394;margin-left:8px">🖱 拖拽旋转 · 滚轮缩放 · 右键平移</div>
+  </div>
+  <div id="footer">
+    <a href="/docs/pqc-dashboard.html" style="color:var(--accent);text-decoration:none">PQC 仪表盘</a>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function() {
+  if (typeof THREE === 'undefined') {
+    document.body.innerHTML = '<div style="color:#e44;padding:40px;text-align:center;margin-top:20vh"><b>✕</b> THREE.js 未加载<br><small>Ctrl+Shift+R 硬刷新</small></div>';
+    return;
+  }
+
+  // ═══════ Data ═══════
+  // Categories = operation types; Groups = backends; Bars per station = one per algo
+  var BACKENDS = [
+    { id:'native', label:'C Native', color:'#51cf66' },
+    { id:'wasm', label:'WASM', color:'#c792ea' },
+    { id:'js', label:'纯 JavaScript', color:'#74c0fc' },
+    { id:'addon', label:'Node Addon', color:'#ffa94d' },
+  ];
+
+  // Each algorithm × backend × operation → time in MICROSECONDS
+  var DATA = [
+    { algo:'ML-KEM-768', op:'keygen', backend:'native', us:48, label:'KeyGen' },
+    { algo:'ML-KEM-768', op:'encaps', backend:'native', us:51, label:'Encaps' },
+    { algo:'ML-KEM-768', op:'decaps', backend:'native', us:105, label:'Decaps' },
+    { algo:'ML-KEM-768', op:'keygen', backend:'js', us:1300, label:'KeyGen' },
+    { algo:'ML-KEM-768', op:'encaps', backend:'js', us:1800, label:'Encaps' },
+    { algo:'ML-KEM-768', op:'decaps', backend:'js', us:2500, label:'Decaps' },
+    { algo:'SM2', op:'sign', backend:'js', us:4900, label:'Sign' },
+    { algo:'SM2', op:'encrypt', backend:'js', us:4500, label:'Encrypt' },
+    { algo:'SM2', op:'decrypt', backend:'js', us:2300, label:'Decrypt' },
+    { algo:'SM2', op:'sign', backend:'addon', us:2800, label:'Sign (opt)' },
+    { algo:'SM2', op:'encrypt', backend:'addon', us:3100, label:'Encrypt (opt)' },
+    { algo:'SLH-DSA-128s', op:'sign', backend:'wasm', us:4199500, label:'Sign' },
+    { algo:'SLH-DSA-128s', op:'verify', backend:'wasm', us:4200, label:'Verify' },
+    { algo:'SLH-DSA-128s', op:'keygen', backend:'wasm', us:3500000, label:'KeyGen' },
+    { algo:'SM4-GCM', op:'encrypt', backend:'js', us:205, label:'Encrypt (2300B)' },
+    { algo:'SM4-GCM', op:'decrypt', backend:'js', us:125, label:'Decrypt (2300B)' },
+    { algo:'SM3', op:'hash', backend:'js', us:47, label:'Hash (1140B)' },
+  ];
+
+  // Group into stations: each station = one (algorithm, operation) pair
+  var algos = ['ML-KEM-768','SM2','SLH-DSA-128s','SM4-GCM','SM3'];
+  var ops = ['keygen','encaps','decaps','sign','verify','encrypt','decrypt','hash'];
+  var stations = [];
+
+  for (var ai=0; ai<algos.length; ai++) {
+    var algo = algos[ai];
+    for (var oi=0; oi<ops.length; oi++) {
+      var op = ops[oi];
+      var entries = DATA.filter(function(d){ return d.algo===algo && d.op===op; });
+      if (entries.length === 0) continue;
+      stations.push({ algo:algo, op:entries[0].label, entries:entries });
+    }
+  }
+  var N = stations.length;
+
+  // ═══════ Scene ═══════
+  var W = window.innerWidth, H = window.innerHeight;
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color('#0b0e17');
+  scene.fog = new THREE.Fog('#0b0e17', 30, 80);
+
+  var camera = new THREE.PerspectiveCamera(45, W/H, 0.5, 120);
+  camera.position.set(18, 14, 28);
+  camera.lookAt(0, 0, 0);
+
+  var renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.25;
+  controls.minDistance = 8;
+  controls.maxDistance = 60;
+  controls.target.set((N-1)*0.7, 0, 0);
+  controls.update();
+
+  // Lighting
+  scene.add(new THREE.AmbientLight('#334466', 2.5));
+  var dLight = new THREE.DirectionalLight('#ccddff', 2.0);
+  dLight.position.set(15, 20, 12);
+  scene.add(dLight);
+  var bLight = new THREE.DirectionalLight('#446688', 0.8);
+  bLight.position.set(-8, 5, -5);
+  scene.add(bLight);
+
+  // Floor
+  var floorGeo = new THREE.PlaneGeometry(N*2.5, 20);
+  var floorMat = new THREE.MeshStandardMaterial({ color:'#111522', roughness:0.9, metalness:0 });
+  var floor = new THREE.Mesh(floorGeo, floorMat);
+  floor.rotation.x = -Math.PI/2;
+  floor.position.set((N-1)*0.7, -0.02, 0);
+  floor.receiveShadow = true;
+  scene.add(floor);
+
+  // Grid lines on floor
+  var gridHelper = new THREE.PolarGridHelper(10, 60, 20, 256, '#1c2240', '#1c2240');
+  gridHelper.position.set((N-1)*0.7, -0.01, 0);
+  scene.add(gridHelper);
+
+  // ═══════ Log scale helper ═══════
+  // Map microseconds → bar height: log10(us+1) → h
+  // 48us ~ 1.68, 4.2s=4,200,000us ~ 6.62 → scaled to maxH=10
+  var MAX_LOG = Math.log10(4200000);
+  function usToHeight(us) {
+    return (Math.log10(us+1) / MAX_LOG) * 10;
+  }
+
+  // ═══════ Build bars ═══════
+  var stationWidth = 1.8; // space per station
+  var barGap = 0.15;
+  var barW = 0.3;
+  var allBars = []; // for raycaster hover
+
+  var BAR_COLORS = {};
+  BACKENDS.forEach(function(b){ BAR_COLORS[b.id] = b.color; });
+
+  for (var si=0; si<N; si++) {
+    var station = stations[si];
+    var entries = station.entries;
+    var nBars = entries.length;
+    var groupW = nBars * barW + (nBars-1) * barGap;
+    var startX = si * stationWidth - groupW/2;
+    var baseZ = 0;
+
+    for (var bi=0; bi<nBars; bi++) {
+      var e = entries[bi];
+      var h = usToHeight(e.us);
+      var be = new THREE.BoxGeometry(barW, Math.max(h, 0.02), barW, 1, 1, 1);
+      var mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(BAR_COLORS[e.backend]),
+        roughness: 0.35,
+        metalness: 0.4,
+        emissive: new THREE.Color(BAR_COLORS[e.backend]),
+        emissiveIntensity: 0.15,
+      });
+      var bar = new THREE.Mesh(be, mat);
+      bar.position.set(startX + bi*(barW+barGap), h/2, baseZ);
+      bar.castShadow = true;
+      bar.receiveShadow = true;
+      bar.userData = {
+        algo: station.algo,
+        op: e.label,
+        backend: e.backend,
+        us: e.us,
+        height: h,
+      };
+      scene.add(bar);
+      allBars.push(bar);
+
+      // Glow outline
+      var edgeGeo = new THREE.EdgesGeometry(be);
+      var edgeLine = new THREE.LineSegments(edgeGeo,
+        new THREE.LineBasicMaterial({ color:new THREE.Color(BAR_COLORS[e.backend]), transparent:true, opacity:0.3 })
+      );
+      edgeLine.position.copy(bar.position);
+      scene.add(edgeLine);
+    }
+
+    // Station label — ground text
+    var lblGeo = new THREE.SphereGeometry(0.08, 6, 4);
+    var lblDot = new THREE.Mesh(lblGeo, new THREE.MeshBasicMaterial({ color:'#6b7394' }));
+    lblDot.position.set(si * stationWidth, 0.03, -1.2);
+    scene.add(lblDot);
+  }
+
+  // ═══════ Height ticks (log annotations as rings) ═══════
+  var TICK_US = [1, 10, 50, 100, 500, 1000, 5000, 10000, 100000, 1000000, 5000000,];
+  var tickGroup = new THREE.Group();
+  for (var ti=0; ti<TICK_US.length; ti++) {
+    var us = TICK_US[ti];
+    var y = usToHeight(us);
+    if (y > 10.5) break;
+    var ringGeo = new THREE.TorusGeometry(0.03, 0.005, 8, 32);
+    var ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ color:'#334466' }));
+    ring.position.set(-1, y, 0);
+    tickGroup.add(ring);
+  }
+  scene.add(tickGroup);
+
+  // ═══════ Algo group separators ═══════
+  var algoRanges = [];
+  var currentAlgo = stations[0].algo;
+  var rangeStart = -stationWidth/2;
+  for (var si=1; si<=N; si++) {
+    if (si===N || stations[si].algo !== currentAlgo) {
+      algoRanges.push({ algo:currentAlgo, start:rangeStart, end:(si-1)*stationWidth+stationWidth/2 });
+      if (si < N) {
+        currentAlgo = stations[si].algo;
+        rangeStart = si*stationWidth - stationWidth/2;
+      }
+    }
+  }
+
+  algoRanges.forEach(function(r) {
+    // Ground plane under each algo group
+    var midX = (r.start+r.end)/2;
+    var w = r.end - r.start + 0.8;
+    var planeGeo = new THREE.PlaneGeometry(w, 2.5);
+    var planeMat = new THREE.MeshBasicMaterial({ color:'#151829', transparent:true, opacity:0.2, side:THREE.DoubleSide, depthWrite:false });
+    var plane = new THREE.Mesh(planeGeo, planeMat);
+    plane.rotation.x = -Math.PI/2;
+    plane.position.set(midX, 0.005, 0);
+    scene.add(plane);
+  });
+
+  // ═══════ Raycaster hover ═══════
+  var tooltip = document.getElementById('tooltip');
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2();
+  var hoveredBar = null;
+
+  function formatTime(us) {
+    if (us >= 1000000) return (us/1000000).toFixed(1)+'s';
+    if (us >= 1000) return (us/1000).toFixed(1)+'ms';
+    return us+'µs';
+  }
+
+  window.addEventListener('mousemove', function(ev) {
+    mouse.x = (ev.clientX/W)*2-1;
+    mouse.y = -(ev.clientY/H)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    var hits = raycaster.intersectObjects(allBars);
+    if (hits.length>0) {
+      var d = hits[0].object.userData;
+      if (hoveredBar !== hits[0].object) {
+        if (hoveredBar) { hoveredBar.material.emissiveIntensity=0.15; }
+        hoveredBar = hits[0].object;
+        hoveredBar.material.emissiveIntensity = 0.7;
+        document.body.style.cursor = 'pointer';
+      }
+      tooltip.style.display = 'block';
+      tooltip.innerHTML = '<strong style="color:'+BAR_COLORS[d.backend]+'">'+d.algo+'</strong> · '+
+        d.op+'<br><span style="color:#8a8fa4">'+d.backend+'</span> → <strong>'+formatTime(d.us)+'</strong>';
+      tooltip.style.left = (ev.clientX+16)+'px';
+      tooltip.style.top = (ev.clientY-40)+'px';
+    } else {
+      if (hoveredBar) { hoveredBar.material.emissiveIntensity=0.15; hoveredBar=null; }
+      document.body.style.cursor = '';
+      tooltip.style.display = 'none';
+    }
+  });
+
+  // ═══════ Animate ═══════
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  window.addEventListener('resize', function() {
+    W = window.innerWidth; H = window.innerHeight;
+    camera.aspect = W/H; camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  });
+
+  animate();
+  console.log('✅ PQC Benchmark Bar Chart loaded — '+N+' stations, '+allBars.length+' bars');
+})();
+</script>
+</body>
+</html>
