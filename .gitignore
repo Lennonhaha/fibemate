@@ -332,3 +332,5 @@ packages/pqc-kem/native/build/
 *.d
 __pycache__/
 .eslintrc.json
+
+fibemate-mobile/
