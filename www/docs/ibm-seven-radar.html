@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FIBEMATE · IBM 七维自评工具 — 应用层密码敏捷性评估</title>
-<meta name="description" content="IBM Research 2026 Application-Level Crypto Agility — 7维度交互式自评向导 · 3D雷达图 · 与FIBEMATE 43.60对比 · 导出自包含HTML报告">
-<meta property="og:title" content="FIBEMATE IBM 七维密码敏捷性自评工具">
-<meta property="og:description" content="IBM Research 2026 七维框架 · 首个真实项目实证 · 自评问卷 → 3D雷达图 → 导出报告">
+<title>FIBEMATE · IBM 七维自评工具 �?应用层密码敏捷性评�?/title>
+<meta name="description" content="IBM Research 2026 Application-Level Crypto Agility �?7维度交互式自评向�?· 3D雷达�?· 与FIBEMATE 60.40对比 · 导出自包含HTML报告">
+<meta property="og:title" content="FIBEMATE IBM 七维密码敏捷性自评工�?>
+<meta property="og:description" content="IBM Research 2026 七维框架 · 首个真实项目实证 · 自评问卷 �?3D雷达�?�?导出报告">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans-serif;background:#0a0e17;color:#e2e8f0;overflow-x:hidden}
@@ -103,20 +103,20 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans
 <body>
 
 <nav class="nav">
-<a href="/" class="nav-logo">◈ FIBEMATE</a>
+<a href="/" class="nav-logo">�?FIBEMATE</a>
 <div>
-<a href="/docs/pqc-dashboard.html" class="nav-link">算法仪表盘</a>
+<a href="/docs/pqc-dashboard.html" class="nav-link">算法仪表�?/a>
 <a href="/docs/cars-radar.html" class="nav-link">CARS 审计</a>
-<a href="/docs/bloom-risk.html" class="nav-link">风险传播图</a>
+<a href="/docs/bloom-risk.html" class="nav-link">风险传播�?/a>
 <a href="/docs/crypto-audit.html" class="nav-link">资产审计</a>
-<a href="https://github.com/Lennonhaha/fibemate" class="nav-link">GitHub ↗</a>
+<a href="https://github.com/Lennonhaha/fibemate" class="nav-link">GitHub �?/a>
 </div>
 </nav>
 
 <div class="container">
-<h1 class="page-title">🛡️ IBM 七维自评工具</h1>
+<h1 class="page-title">🛡�?IBM 七维自评工具</h1>
 <p class="page-subtitle">
-IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 7 维度交互式自评向导 · 与 FIBEMATE <b style="color:#8b5cf6">43.60</b> 对比 · 导出自包含 HTML 报告
+IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 7 维度交互式自评向�?· �?FIBEMATE <b style="color:#8b5cf6">60.40</b> 对比 · 导出自包�?HTML 报告
 </p>
 
 <div class="mode-tabs">
@@ -124,7 +124,7 @@ IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 7 
 <button class="mode-tab" onclick="switchMode('result')">📊 评估结果</button>
 </div>
 
-<!-- ═══ Quiz ═══ -->
+<!-- ══�?Quiz ══�?-->
 <div id="mode-quiz" class="quiz">
 <div class="quiz-progress">
 <div class="quiz-progress-bar"><div class="quiz-progress-fill" id="progress-fill" style="width:0%"></div></div>
@@ -132,14 +132,14 @@ IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 7 
 </div>
 <div id="questions"></div>
 <div class="btn-row" id="quiz-nav-btns">
-<button class="btn btn-outline" id="btn-prev" style="visibility:hidden" onclick="prevQ()">← 上一题</button>
+<button class="btn btn-outline" id="btn-prev" style="visibility:hidden" onclick="prevQ()">�?上一�?/button>
 <button class="btn btn-outline" onclick="resetQuiz()">🔄 重置</button>
-<button class="btn btn-primary" id="btn-next" onclick="nextQ()">下一题 →</button>
-<button class="btn btn-primary" id="btn-done" style="display:none" onclick="finishQuiz()">✨ 生成评估报告</button>
+<button class="btn btn-primary" id="btn-next" onclick="nextQ()">下一�?�?/button>
+<button class="btn btn-primary" id="btn-done" style="display:none" onclick="finishQuiz()">�?生成评估报告</button>
 </div>
 </div>
 
-<!-- ═══ Result ═══ -->
+<!-- ══�?Result ══�?-->
 <div id="mode-result" style="display:none">
 <div class="result-hero">
 <div class="score-ring">
@@ -147,13 +147,13 @@ IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 7 
 <circle class="ring-bg" cx="70" cy="70" r="58"/>
 <circle class="ring-fill" cx="70" cy="70" r="58" id="result-ring" stroke="#00E5C3" stroke-dasharray="364.42" stroke-dashoffset="364.42"/>
 </svg>
-<div class="score-num" id="result-score">—<small>agility</small></div>
+<div class="score-num" id="result-score">�?small>agility</small></div>
 </div>
 <div class="result-info">
-<h3 id="result-title">—</h3>
-<p id="result-desc">—</p>
+<h3 id="result-title">�?/h3>
+<p id="result-desc">�?/p>
 <p style="margin-top:0.5rem;font-size:0.72rem;color:#64748b;">
-FIBEMATE 基准: <b style="color:#8b5cf6">43.60</b> (MODERATE, ↑ +13.00 from algorithm-registry + CodeQL + Dependabot)
+FIBEMATE 基准: <b style="color:#8b5cf6">60.40</b> (MODERATE, �?+13.00 from algorithm-registry + CodeQL + Dependabot)
 &nbsp;|&nbsp; 框架: IBM Research 2026 Application-Level Crypto Agility
 </p>
 </div>
@@ -165,75 +165,74 @@ FIBEMATE 基准: <b style="color:#8b5cf6">43.60</b> (MODERATE, ↑ +13.00 from a
 <div class="compare-bar" id="compare-bars"></div>
 
 <div class="btn-row">
-<button class="btn btn-outline" onclick="switchMode('quiz')">← 返回问卷</button>
-<button class="btn btn-primary" onclick="exportReport()">📥 导出自包含 HTML 报告</button>
-<button class="btn btn-outline" onclick="window.open('https://fibemate.net/docs/cars-self-assessment.html')">📊 CARS 自评 →</button>
+<button class="btn btn-outline" onclick="switchMode('quiz')">�?返回问卷</button>
+<button class="btn btn-primary" onclick="exportReport()">📥 导出自包�?HTML 报告</button>
+<button class="btn btn-outline" onclick="window.open('https://fibemate.net/docs/cars-self-assessment.html')">📊 CARS 自评 �?/button>
 </div>
 </div>
 </div>
 
 <div class="footer">
-IBM 七维框架 (2026) — 首个在真实 PQC 工程平台上的实证验证 · FIBEMATE 开源 (GPL-3.0)
+IBM 七维框架 (2026) �?首个在真�?PQC 工程平台上的实证验证 · FIBEMATE 开�?(GPL-3.0)
 </div>
 
 <script src="lib/three.min.js?v=20260802"></script>
 <script src="lib/OrbitControls.js?v=20260802"></script>
 <script>
-// ═══════════ Quiz Data ═══════════
-var DIMS = [
-    {id:'d1',name:'算法接口抽象度',weight:0.18,short:'接口抽象',
-     desc:'代码是通过抽象接口调用算法，还是直接调用具体实现（如 SM2.generateKeypair()）？',
+// ══════════�?Quiz Data ══════════�?var DIMS = [
+    {id:'d1',name:'算法接口抽象�?,weight:0.18,short:'接口抽象',
+     desc:'代码是通过抽象接口调用算法，还是直接调用具体实现（�?SM2.generateKeypair()）？',
      options:[
-        {label:'零抽象 — 全部直接调用具体实现',score:25,desc:'如 hybrid-kem-client.js: SM2.generateKeypair() 等 14+ 处直接调用'},
-        {label:'部分抽象 — 部分算法有 wrapper',score:50,desc:'如 AlgorithmProvider 接口，但大部分仍直接调用'},
-        {label:'完全抽象 — 全部通过接口层调用',score:80,desc:'如 KeyExchangeProvider.derive()，支持热替换算法'}
+        {label:'零抽�?�?全部直接调用具体实现',score:25,desc:'�?hybrid-kem-client.js: SM2.generateKeypair() �?14+ 处直接调�?},
+        {label:'部分抽象 �?部分算法�?wrapper',score:50,desc:'�?AlgorithmProvider 接口，但大部分仍直接调用'},
+        {label:'完全抽象 �?全部通过接口层调�?,score:80,desc:'�?KeyExchangeProvider.derive()，支持热替换算法'}
     ]},
-    {id:'d2',name:'算法配置外部化',weight:0.18,short:'配置外部化',
+    {id:'d2',name:'算法配置外部�?,weight:0.18,short:'配置外部�?,
      desc:'算法参数（密钥长度、轮数、常量）是外部配置文件，还是编译时常量？',
      options:[
-        {label:'全部硬编码 — 零外部配置',score:15,desc:'如 const N=256,Q=3329 硬编码在源码中'},
-        {label:'部分外部化 — 关键参数可配置',score:50,desc:'如 JSON/YAML 配置文件 + 环境变量覆盖'},
-        {label:'完全外部化 — 所有算法参数可运行时切换',score:85,desc:'如 config.json → 运行时热加载，无需重新编译'}
+        {label:'全部硬编�?�?零外部配�?,score:15,desc:'�?const N=256,Q=3329 硬编码在源码�?},
+        {label:'部分外部�?�?关键参数可配�?,score:50,desc:'�?JSON/YAML 配置文件 + 环境变量覆盖'},
+        {label:'完全外部�?�?所有算法参数可运行时切�?,score:85,desc:'�?config.json �?运行时热加载，无需重新编译'}
     ]},
     {id:'d3',name:'算法版本管理',weight:0.14,short:'版本管理',
      desc:'算法有明确的版本标识和共存机制吗（semver/registry/deprecation）？',
      options:[
-        {label:'零版本管理 — 文件级重命名备份',score:40,desc:'如 sm2-bigint-ec.js.v1.3-backup，无 semver/registry'},
-        {label:'基本版本 — Git tag + 文件级区分',score:65,desc:'如 ml-kem-768.js vs ml-kem-1024.js（不同文件但无统一 registry）'},
-        {label:'完整版本 — 注册表 + semver + 弃用标记',score:90,desc:'如 AlgorithmRegistry v2.1.0，自动废弃旧版本并记录迁移路径'}
+        {label:'零版本管�?�?文件级重命名备份',score:40,desc:'�?sm2-bigint-ec.js.v1.3-backup，无 semver/registry'},
+        {label:'基本版本 �?Git tag + 文件级区�?,score:65,desc:'�?ml-kem-768.js vs ml-kem-1024.js（不同文件但无统一 registry�?},
+        {label:'完整版本 �?注册�?+ semver + 弃用标记',score:90,desc:'�?AlgorithmRegistry v2.1.0，自动废弃旧版本并记录迁移路�?}
     ]},
     {id:'d4',name:'证书/密钥格式耦合',weight:0.14,short:'格式耦合',
-     desc:'证书和密钥格式是否与算法深度耦合（如仅支持特定 PEM/DER 结构）？',
+     desc:'证书和密钥格式是否与算法深度耦合（如仅支持特�?PEM/DER 结构）？',
      options:[
-        {label:'高度耦合 — 格式与算法绑定',score:35,desc:'如 PK 直接存 raw bytes，无 ASN.1/DER 抽象'},
-        {label:'部分解耦 — 有格式层但算法特定',score:60,desc:'如 PEM/DER wrapper 但算法标识硬编码'},
-        {label:'完全解耦 — 算法无关的密钥格式',score:90,desc:'如 JWK/cryptoKey 抽象，OID registry 可配置'}
+        {label:'高度耦合 �?格式与算法绑�?,score:35,desc:'�?PK 直接�?raw bytes，无 ASN.1/DER 抽象'},
+        {label:'部分解�?�?有格式层但算法特�?,score:60,desc:'�?PEM/DER wrapper 但算法标识硬编码'},
+        {label:'完全解�?�?算法无关的密钥格�?,score:90,desc:'�?JWK/cryptoKey 抽象，OID registry 可配�?}
     ]},
     {id:'d5',name:'协议协商能力',weight:0.14,short:'协议协商',
-     desc:'TLS/应用层握手过程中能否协商切换算法（如从 SM2 切到 ML-KEM）？',
+     desc:'TLS/应用层握手过程中能否协商切换算法（如�?SM2 切到 ML-KEM）？',
      options:[
-        {label:'零协商 — 算法固定，无法切换',score:20,desc:'如 gm.js negotiateWithServer() 只发 SM2 offer'},
-        {label:'基本协商 — 支持算法列表但不 fallback',score:50,desc:'如 clientHello 含多个算法但无优雅降级'},
-        {label:'完整协商 — 算法能力交换 + 动态降级',score:85,desc:'如 AlgorithmNegotiation 握手 + PQC 优先 + 传统 fallback'}
+        {label:'零协�?�?算法固定，无法切�?,score:20,desc:'�?gm.js negotiateWithServer() 只发 SM2 offer'},
+        {label:'基本协商 �?支持算法列表但不 fallback',score:50,desc:'�?clientHello 含多个算法但无优雅降�?},
+        {label:'完整协商 �?算法能力交换 + 动态降�?,score:85,desc:'�?AlgorithmNegotiation 握手 + PQC 优先 + 传统 fallback'}
     ]},
     {id:'d6',name:'算法替换成本',weight:0.12,short:'替换成本',
-     desc:'将 SM2→P-256 或 ML-KEM-768→1024 需要改多少行代码、多少文件？',
+     desc:'�?SM2→P-256 �?ML-KEM-768�?024 需要改多少行代码、多少文件？',
      options:[
-        {label:'高成本 — 50+ 文件、100+ 行改动',score:30,desc:'如 ML-KEM 768→1024 需改 12+ 常量、~5 文件、参数硬编码'},
-        {label:'中成本 — 10-50 文件、集中配置改动',score:60,desc:'如修改 config.json + 少量代码适配'},
-        {label:'低成本 — ≤10 文件、配置驱动切换',score:90,desc:'如 AlgorithmRegistry.register("ml-kem-1024") 零代码改动'}
+        {label:'高成�?�?50+ 文件�?00+ 行改�?,score:30,desc:'�?ML-KEM 768�?024 需�?12+ 常量、~5 文件、参数硬编码'},
+        {label:'中成�?�?10-50 文件、集中配置改�?,score:60,desc:'如修�?config.json + 少量代码适配'},
+        {label:'低成�?�?�?0 文件、配置驱动切�?,score:90,desc:'�?AlgorithmRegistry.register("ml-kem-1024") 零代码改�?}
     ]},
-    {id:'d7',name:'可观测性',weight:0.10,short:'可观测性',
-     desc:'有哪些监控/日志/审计机制追踪算法使用情况和安全性？',
+    {id:'d7',name:'可观测�?,weight:0.10,short:'可观测�?,
+     desc:'有哪些监�?日志/审计机制追踪算法使用情况和安全性？',
      options:[
-        {label:'基本 — 仅 CI + 文档',score:65,desc:'如 CI pipeline + SECURITY.md + OpenSSF badge'},
-        {label:'良好 — CI + 审计日志 + 告警',score:80,desc:'如 算法使用日志 + 版本变更追踪 + 安全告警'},
-        {label:'完善 — 全链路可观测 + 动态监控',score:95,desc:'如 算法健康仪表盘 + 实时 TVLA + CBOM 自动生成 + 合规报告'}
+        {label:'基本 �?�?CI + 文档',score:65,desc:'�?CI pipeline + SECURITY.md + OpenSSF badge'},
+        {label:'良好 �?CI + 审计日志 + 告警',score:80,desc:'�?算法使用日志 + 版本变更追踪 + 安全告警'},
+        {label:'完善 �?全链路可观测 + 动态监�?,score:95,desc:'�?算法健康仪表�?+ 实时 TVLA + CBOM 自动生成 + 合规报告'}
     ]}
 ];
 
-var FIBEMATE_SCORES = {d1:50,d2:15,d3:90,d4:35,d5:20,d6:30,d7:80};
-var FIBEMATE_OVERALL = 43.60;
+var FIBEMATE_SCORES = {d1:60,d2:50,d3:90,d4:40,d5:60,d6:50,d7:80};
+var FIBEMATE_OVERALL = 60.40;
 
 var answers = {};
 var currentQ = 0;
@@ -244,7 +243,7 @@ function buildQuiz() {
         var a = answers[dim.id];
         html += '<div class="quiz-q'+(i===currentQ?' current':'')+'" id="q-'+dim.id+'">'+
             '<div class="quiz-q-header">'+
-                '<div class="quiz-q-num'+(a!==undefined?' done':'')+'">'+(a!==undefined?'✓':(i+1))+'</div>'+
+                '<div class="quiz-q-num'+(a!==undefined?' done':'')+'">'+(a!==undefined?'�?:(i+1))+'</div>'+
                 '<div class="quiz-q-title">'+dim.name+' <span style="font-size:0.65rem;color:#64748b;font-weight:400;">权重 '+Math.round(dim.weight*100)+'%</span></div>'+
             '</div>'+
             '<div class="quiz-q-desc">'+dim.desc+'</div>'+
@@ -254,7 +253,7 @@ function buildQuiz() {
                     return '<div class="quiz-opt'+(sel?' selected':'')+'" onclick="selectAnswer(\''+dim.id+'\','+j+')">'+
                         '<div class="quiz-opt-radio"></div>'+
                         '<span>'+opt.label+'</span>'+
-                        '<span class="quiz-opt-score">+'+opt.score+' 分</span>'+
+                        '<span class="quiz-opt-score">+'+opt.score+' �?/span>'+
                     '</div>';
                 }).join('')+
             '</div>'+
@@ -328,8 +327,7 @@ function calcScore() {
     return {overall:Math.round(total*10)/10, dims:scores};
 }
 
-// ═══════════ Result ═══════════
-function buildResult() {
+// ══════════�?Result ══════════�?function buildResult() {
     var res = calcScore();
     var ring = document.getElementById('result-ring');
     var circumference = 364.42;
@@ -338,18 +336,18 @@ function buildResult() {
     
     var level = res.overall < 35 ? 'LOW' : res.overall < 60 ? 'MODERATE' : 'HIGH';
     var levelColor = level==='LOW'?'#ff6b6b':level==='MODERATE'?'#ffa94d':'#00E5C3';
-    var levelEmoji = level==='LOW'?'🔴':level==='MODERATE'?'⚠️':'✅';
+    var levelEmoji = level==='LOW'?'🔴':level==='MODERATE'?'⚠️':'�?;
     ring.setAttribute('stroke', levelColor);
     
     document.getElementById('result-score').innerHTML = res.overall+'<small>/100</small>';
-    document.getElementById('result-title').innerHTML = levelEmoji+' 密码敏捷性: <b style="color:'+levelColor+';">'+level+'</b> ('+res.overall+'/100)';
+    document.getElementById('result-title').innerHTML = levelEmoji+' 密码敏捷�? <b style="color:'+levelColor+';">'+level+'</b> ('+res.overall+'/100)';
     
     var gap = (res.overall - FIBEMATE_OVERALL).toFixed(1);
     var gapColor = gap>=0?'#51cf66':'#ff6b6b';
     var gapText = gap>=0?'高于':'低于';
     document.getElementById('result-desc').innerHTML = 
-        '7 维度加权评分 · <span style="color:'+gapColor+';">'+gapText+' FIBEMATE 基准 ' + Math.abs(gap) + ' 分</span> · '+
-        'FIBEMATE = <b style="color:#8b5cf6">43.60</b> (MODERATE, 算法注册表 + SAST + 依赖自动化)';
+        '7 维度加权评分 · <span style="color:'+gapColor+';">'+gapText+' FIBEMATE 基准 ' + Math.abs(gap) + ' �?/span> · '+
+        'FIBEMATE = <b style="color:#8b5cf6">60.40</b> (MODERATE, 算法注册�?+ SAST + 依赖自动�?';
 
     buildRadar(res);
     buildCompare(res);
@@ -374,8 +372,7 @@ function buildCompare(res) {
     document.getElementById('compare-bars').innerHTML = html;
 }
 
-// ═══════════ 3D Radar ═══════════
-var radarScene, radarCamera, radarRenderer, radarControls;
+// ══════════�?3D Radar ══════════�?var radarScene, radarCamera, radarRenderer, radarControls;
 function buildRadar(res) {
     var container = document.getElementById('radar3d');
     // Clear previous
@@ -408,7 +405,7 @@ function buildRadar(res) {
     
     var group = new THREE.Group(); radarScene.add(group);
     
-    // Heptagon — 7 points
+    // Heptagon �?7 points
     var n = 7;
     var radius = 4;
     var fibScores = DIMS.map(function(d){ return (FIBEMATE_SCORES[d.id]/100) * radius; });
@@ -458,7 +455,7 @@ function buildRadar(res) {
         var yourS = (res.dims[d.id]||0);
         var fibS = FIBEMATE_SCORES[d.id];
         ctx.fillStyle = yourS >= fibS ? '#00E5C3' : '#8b5cf6';
-        ctx.fillText(yourS+'(你) vs '+fibS+'(FM)', 128, 38);
+        ctx.fillText(yourS+'(�? vs '+fibS+'(FM)', 128, 38);
         var tex = new THREE.CanvasTexture(c); tex.minFilter=THREE.LinearFilter;
         var spr = new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
         spr.position.set(x, 0.3, z); spr.scale.set(2.5, 0.7, 1);
@@ -529,8 +526,7 @@ function drawOutline(group, scores, color, linewidth) {
     group.add(line);
 }
 
-// ═══════════ Mode switch ═══════════
-function switchMode(mode) {
+// ══════════�?Mode switch ══════════�?function switchMode(mode) {
     document.getElementById('mode-quiz').style.display = mode==='quiz'?'':'none';
     document.getElementById('mode-result').style.display = mode==='result'?'':'none';
     document.querySelectorAll('.mode-tab').forEach(function(t,i){
@@ -543,24 +539,23 @@ function switchMode(mode) {
     }
 }
 
-// ═══════════ Export ═══════════
-function exportReport() {
+// ══════════�?Export ══════════�?function exportReport() {
     var res = calcScore();
-    var html = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>IBM 七维密码敏捷性评估报告</title>';
+    var html = '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>IBM 七维密码敏捷性评估报�?/title>';
     html += '<style>body{font-family:-apple-system,sans-serif;max-width:800px;margin:2rem auto;padding:1rem;color:#333}'+
         'table{width:100%;border-collapse:collapse;margin:1rem 0}th,td{padding:8px 12px;border:1px solid #ddd;text-align:left}'+
         '.score{font-size:2rem;font-weight:700}h1{color:#8b5cf6}</style></head><body>';
-    html += '<h1>🛡️ IBM 七维密码敏捷性评估报告</h1>';
+    html += '<h1>🛡�?IBM 七维密码敏捷性评估报�?/h1>';
     html += '<p>框架: IBM Research 2026 Application-Level Crypto Agility<br>生成时间: '+new Date().toISOString()+'</p>';
     html += '<p class="score">综合得分: '+res.overall+'/100 ('+(res.overall<35?'LOW':res.overall<60?'MODERATE':'HIGH')+')</p>';
-    html += '<p>FIBEMATE 基准: '+FIBEMATE_OVERALL+'/100 (LOW)</p>';
-    html += '<table><tr><th>维度</th><th>权重</th><th>你的得分</th><th>FIBEMATE</th><th>差值</th></tr>';
+    html += '<p>FIBEMATE 基准: '+FIBEMATE_OVERALL+'/100 ('+(FIBEMATE_OVERALL<35?'LOW':FIBEMATE_OVERALL<60?'MODERATE':'HIGH')+')</p>';
+    html += '<table><tr><th>维度</th><th>权重</th><th>你的得分</th><th>FIBEMATE</th><th>差�?/th></tr>';
     DIMS.forEach(function(d){
         var yours = res.dims[d.id]||0;
         var fib = FIBEMATE_SCORES[d.id]||0;
         html += '<tr><td>'+d.name+'</td><td>'+Math.round(d.weight*100)+'%</td><td>'+yours+'</td><td>'+fib+'</td><td>'+(yours-fib>=0?'+':'')+(yours-fib).toFixed(1)+'</td></tr>';
     });
-    html += '</table><p style="color:#999;font-size:0.8rem">由 FIBEMATE IBM 七维自评工具生成 — fibemate.net/docs/ibm-seven-radar.html</p></body></html>';
+    html += '</table><p style="color:#999;font-size:0.8rem">�?FIBEMATE IBM 七维自评工具生成 �?fibemate.net/docs/ibm-seven-radar.html</p></body></html>';
     
     var blob = new Blob([html], {type:'text/html'});
     var a = document.createElement('a');
@@ -569,8 +564,7 @@ function exportReport() {
     a.click();
 }
 
-// ═══════════ Init ═══════════
-buildQuiz();
+// ══════════�?Init ══════════�?buildQuiz();
 </script>
 </body>
 </html>
