@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE — CARS 五维度审计仪表盘 · 代码证据级</title>
     <meta name="description" content="FIBEMATE CARS（Crypto-Agility Readiness Scorecard）五维度代码级审计仪表盘 — 点击任意维度查看具体文件、行号和代码证据。">
-    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 75.20">
+    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 78.50">
     <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 73 · Organizational Readiness 70 — 综合 75.20/100，点击维度展开可验证代码证据。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
@@ -190,7 +190,9 @@
             <div id="ev-dim-name">选择维度</div>
             <div id="ev-dim-score"></div>
         </div>
-        <button id="ev-close" onclick="closeEvidence()">✕</button>
+        <button id="ev-close" onclick="closeEvidence()">✕
+<div id="kb-hint" style="position:fixed;z-index:30;bottom:60px;right:16px;font-size:10px;color:#4a4a6a;text-align:right;line-height:1.6;">⌨ 键盘: <b style="color:#00d4ff">1-5</b> 选维度 · <b style="color:#ffc107">S</b> 改进线 · <b style="color:#66708a">R</b> 重置视角 · <b style="color:#66708a">E</b> 导出截图</div>
+</button>
     </div>
     <div id="ev-summary"></div>
     <div id="ev-list"></div>
@@ -402,7 +404,7 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
     ];
 
     // 改进后预测
-    var improved = [85, 73, 85, 80, 78];
+    var improved = [88, 73, 85, 80, 78];;
 
     var N = dimensions.length, maxScore = 100;
     var showImproved = false;
@@ -737,7 +739,43 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
 
     // ═══════════ Animate ═══════════
     var clock = new THREE.Clock();
-    function animate() {
+    var spotlightTarget = null, spotlightStart = null, spotlightTimer = 0;
+function focusDimension(idx) {
+    var dim = dimensions[idx];
+    var angle = (idx / N) * Math.PI * 2 - Math.PI / 2;
+    var r = (dim.score / maxScore) * 4.5;
+    var cx = Math.cos(angle) * r, cz = Math.sin(angle) * r;
+    spotlightTarget = { x: cx, y: 0.5, z: cz + 2 };
+    spotlightStart = { x: controls.target.x, y: controls.target.y, z: controls.target.z };
+    spotlightTimer = 0;
+    activeDim = idx;
+}
+function resetView() {
+    spotlightTarget = { x: 0, y: 0, z: 0 };
+    spotlightStart = { x: controls.target.x, y: controls.target.y, z: controls.target.z };
+    spotlightTimer = 0;
+    activeDim = -1;
+}
+function exportScreenshot() {
+    var oldBg = scene.background;
+    scene.background = new THREE.Color("#0b0f19");
+    renderer.render(scene, camera);
+    var dataURL = renderer.domElement.toDataURL("image/png");
+    scene.background = oldBg;
+    var a = document.createElement("a");
+    a.href = dataURL; a.download = "cars-radar-" + new Date().toISOString().slice(0,10) + ".png";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+document.addEventListener("keydown", function(e) {
+    var key = e.key.toLowerCase();
+    if (key >= "1" && key <= String(N)) { focusDimension(parseInt(key) - 1); return; }
+    if (key === "s") { toggleImprovement(); return; }
+    if (key === "r") { resetView(); return; }
+    if (key === "e") { exportScreenshot(); return; }
+});
+console.log("⌨ Keyboard: 1-5 select dim, S=improved, R=reset, E=export");
+
+function animate() {
         requestAnimationFrame(animate);
         var dt = Math.min(clock.getDelta(), 0.1);
         controls.update();
@@ -750,6 +788,16 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
                 ns.position.y = -0.33 + Math.sin(Date.now()*0.003+i*1.2)*0.03;
             }
         });
+                // Spotlight lerp
+        if (spotlightTarget) {
+            spotlightTimer += 0.03;
+            var t = Math.min(spotlightTimer, 1);
+            t = t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+            controls.target.x = spotlightStart.x + (spotlightTarget.x - spotlightStart.x) * t;
+            controls.target.y = spotlightStart.y + (spotlightTarget.y - spotlightStart.y) * t;
+            controls.target.z = spotlightStart.z + (spotlightTarget.z - spotlightStart.z) * t;
+            if (t >= 1) spotlightTarget = null;
+        }
         renderer.render(scene, camera);
     }
 
