@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE — CARS 五维度审计仪表盘 · 代码证据级</title>
     <meta name="description" content="FIBEMATE CARS（Crypto-Agility Readiness Scorecard）五维度代码级审计仪表盘 — 点击任意维度查看具体文件、行号和代码证据。">
-    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 73.20">
-    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 63 · Organizational Readiness 70 — 综合 73.20/100，点击维度展开可验证代码证据。">
+    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 75.20">
+    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 73 · Organizational Readiness 70 — 综合 75.20/100，点击维度展开可验证代码证据。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
@@ -203,7 +203,7 @@
     <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
     <div class="overall">
         <span class="label">综合得分</span>
-        <span class="score">73.20 / 100</span>
+        <span class="score">75.20 / 100</span>
     </div>
     <div class="dim-list" id="dim-list"></div>
     <div style="font-size:9px;color:#555;margin-top:6px;line-height:1.5;">
@@ -335,12 +335,23 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             ]
         },
         {
-            key:'pc', name:'Protocol Coupling', cn:'协议耦合度', score:63, max:100,
-            note: '能力通告已落地 (SUPPORTED_ALGORITHMS)。刻意避开 TLS 1.3 走应用层混合 KEX（教育定位）。解耦但非标准。',
+            key:'pc', name:'Protocol Coupling', cn:'协议耦合度', score:73, max:100,
+            note: 'IANA group 运行时解析 (AlgorithmResolver) + 回退策略 (fail-fast/try-all/exclude)。能力通告保留。应用层混合 KEX（教育定位）。解耦但非标准。',
             evidence: [
                 {
-                    file:'www/crypto/hybrid-kem-client.js', lines:'L38-L42',
-                    finding:'<strong>IANA 组号硬编码 L38</strong>：GROUP_ID=4590 (SM2+MLKEM768 hybrid)。ML-KEM 参数全部编译时常量 (PK=1184、CT=1088、SS=32)。密钥交换发生在应用层，不依赖 TLS 握手。',
+                    file:'www/crypto/hybrid-kem-client.js', lines:'L38-L56',
+                    finding:'<strong>IANA 组号运行时解析</strong>：全部 7 个硬编码常量（GROUP_ID/PK_LEN/CT_LEN/SS_LEN）替换为 AlgorithmResolver 运行时 getter。resolver 未加载时自动回退默认值，保持兼容。',
+                    code:'// PC: IANA group + key sizes from runtime resolver\nconst R = AlgorithmResolver;\nfunction ianaGroupId() { return R.ianaGroup(\'ML-KEM-768\') || 4590; }\nfunction mlkemPkLen() { return R.pkSize(\'ML-KEM-768\') || 1184; }\nfunction mlkemCtLen() { return R.ctSize(\'ML-KEM-768\') || 1088; }\n// ... 7 getter functions, zero hardcoded constants',
+                    tags:['good','info']
+                },
+                {
+                    file:'www/crypto/gm.js', lines:'L181-L293',
+                    finding:'<strong>回退策略落地 (AA)</strong>：AlgorithmResolver 动态获取算法优先级列表。fail-fast (传统行为) / try-all (逐算法,默认) / exclude (排除特定算法) 三种策略。全失败时结构化报错（列出尝试算法+最后错误）。',
+                    code:'// PC: fallback retry loop\nvar tryList = (fallback === \'fail-fast\') ? [algoList[0]] : algoList;\nfor (var i = 0; i < tryList.length; i++) {\n  try { /* negotiate with tryList[i] */ return result; }\n  catch(e) { lastError=e; /* try next */ }\n}\nthrow Error(\'协商失败 — 已尝试: \' + tried + \'。最后错误: \' + lastError.message);',
+                    tags:['good']
+                },
+                {
+                    file:'www/crypto/hybrid-kem-client.js', lines:'L38-L42',</strong>：GROUP_ID=4590 (SM2+MLKEM768 hybrid)。ML-KEM 参数全部编译时常量 (PK=1184、CT=1088、SS=32)。密钥交换发生在应用层，不依赖 TLS 握手。',
                     code:'// Application-layer hybrid KEX (not TLS 1.3)\nconst IANA_GROUP_ID = 4590;  // SM2 + MLKEM768 hybrid\nconst MLKEM_PK_LEN = 1184, MLKEM_CT_LEN = 1088;\nconst MLKEM_SS_LEN = 32;\n\n// 密钥交换在应用层自主协商',
                     tags:['info']
                 },
@@ -391,7 +402,7 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
     ];
 
     // 改进后预测
-    var improved = [85, 73, 85, 75, 78];
+    var improved = [85, 73, 85, 80, 78];
 
     var N = dimensions.length, maxScore = 100;
     var showImproved = false;
