@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FPGA 资源利用率热力图 · FIBEMATE</title>
+<meta name="description" content="Artix-7 XC7A35T 资源利用率热力图 — NTT pipe2 · Masked Wrapper · HW Monitor · 6 模块 3D 热力矩阵">
+<style>
+:root { --bg:#0b0f19; --card:#131827; --border:#1f2a44; --text:#b8c0d0; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; }
+#panel { position:fixed; z-index:10; top:12px; left:12px; background:rgba(19,24,39,0.88); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:12px; padding:14px 18px; font-size:11px; max-width:220px; }
+#panel h1 { font-size:14px; color:#e0e5f0; margin-bottom:4px; }
+#panel .sub { font-size:10px; color:#66708a; }
+#panel .spec { margin-top:10px; display:flex; flex-wrap:wrap; gap:6px; }
+#panel .spec .chip { background:rgba(255,255,255,0.04); padding:3px 8px; border-radius:5px; font-size:9px; color:#8890a8; }
+#panel .spec .chip.green { color:#51cf66; }
+#panel .spec .chip.warn { color:#ffa94d; }
+
+#legend { position:fixed; z-index:10; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; background:rgba(19,24,39,0.88); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:20px; padding:8px 14px; font-size:10px; }
+.leg { display:flex; align-items:center; gap:5px; }
+.leg-box { width:10px; height:10px; border-radius:2px; }
+
+#tooltip { display:none; position:fixed; z-index:20; pointer-events:none; background:rgba(11,15,25,0.95); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:10px; color:var(--text); max-width:240px; }
+#tooltip .head { font-size:12px; font-weight:600; margin-bottom:4px; }
+#tooltip .kv { display:flex; justify-content:space-between; gap:12px; color:#66708a; }
+#tooltip .kv .v { color:#d0d6e6; }
+
+#footer { position:fixed; z-index:10; bottom:12px; right:16px; font-size:10px; color:#66708a; }
+#footer a { color:#0ea5e9; text-decoration:none; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="panel">
+  <h1>🔲 FPGA 资源热力图</h1>
+  <div class="sub">Artix-7 XC7A35T-1CPG236C</div>
+  <div class="spec">
+    <span class="chip green">L4 GREEN</span>
+    <span class="chip warn">WNS 9.755ns</span>
+    <span class="chip">50MHz</span>
+    <span class="chip">v5.3</span>
+    <span class="chip">6 模块</span>
+  </div>
+</div>
+
+<div id="legend">
+  <div class="leg"><div class="leg-box" style="background:#51cf66"></div> &lt;25%</div>
+  <div class="leg"><div class="leg-box" style="background:#ffd43b"></div> 25-50%</div>
+  <div class="leg"><div class="leg-box" style="background:#ffa94d"></div> 50-75%</div>
+  <div class="leg"><div class="leg-box" style="background:#ff4444"></div> &gt;75%</div>
+  <span style="color:#66708a;margin-left:8px">🖱 拖拽旋转 · 滚轮缩放 · 悬停方块</span>
+</div>
+
+<div id="footer"><a href="/docs/algorithm-tree.html">族谱</a> · <a href="/docs/supply-chain-risk.html">供应链</a></div>
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function(){
+if(typeof THREE==='undefined'){document.body.innerHTML='<div style="color:#e44;padding:40px;text-align:center;margin-top:20vh"><b>&#x2715;</b> THREE.js 未加载</div>';return;}
+
+// ═══════ DATA ═══════
+// Modules: rows (6) × resource types (4 cols: LUT/FF/BRAM/DSP) — percentage used
+var MODULES = [
+  { name:'NTT pipe2', status:'256/256 PASS',
+    lut:10.8, ff:27.3, bram:4, dsp:77,
+    detail:'DIT/DIF butterflies · 2 BRAM36 · 70 DSP48E1 · 13-cycle mask pipeline' },
+  { name:'Masked Wrapper', status:'synthesized',
+    lut:2.4, ff:3.6, bram:0, dsp:0,
+    detail:'mask_ram.v 256×13-bit dual-port · LFSR PRNG · unmask→BF→prng→remask→writeback' },
+  { name:'Fault Protect', status:'L1+L2+L3',
+    lut:1.15, ff:0.4, bram:0, dsp:0,
+    detail:'L1 RAM parity · L2 REMO dual-compute · L3 cycle watchdog · fault_alert counter' },
+  { name:'HW Monitor', status:'deployed',
+    lut:0.58, ff:0.19, bram:0, dsp:0,
+    detail:'fault_alert counter · HW→SW signal bridge · top-level endpoint' },
+  { name:'LFSR PRNG', status:'synthesized',
+    lut:0.87, ff:0.53, bram:0, dsp:0,
+    detail:'on-chip true-random seed → LFSR expansion · masking source' },
+  { name:'VWZ Lambda ROM', status:'5/5 behavioral',
+    lut:2.4, ff:3.6, bram:2, dsp:1.1,
+    detail:'BRAM36 ROM · $readmemh from .hex · λ^x table lookup · mod_mult shares NTT DSP' },
+];
+
+// Individual LUT/FF/BRAM/DSP counts
+var RAW_COUNTS = {
+  'NTT pipe2':       { lut:2240, ff:11376, bram:2, dsp:70 },
+  'Masked Wrapper':  { lut:500,  ff:1500,  bram:0, dsp:0 },
+  'Fault Protect':   { lut:238,  ff:166,   bram:0, dsp:0 },
+  'HW Monitor':      { lut:120,  ff:80,    bram:0, dsp:0 },
+  'LFSR PRNG':       { lut:180,  ff:220,   bram:0, dsp:0 },
+  'VWZ Lambda ROM':  { lut:500,  ff:1500,  bram:1, dsp:1 },
+};
+
+var RESOURCE_NAMES = ['LUT','FF','BRAM36','DSP48E1'];
+var TOTAL = { lut:20800, ff:41600, bram:50, dsp:90 };
+
+function heatColor(pct) {
+  if (pct >= 75) return '#ff4444';
+  if (pct >= 50) return '#ffa94d';
+  if (pct >= 25) return '#ffd43b';
+  return '#51cf66';
+}
+
+// ═══════ Scene ═══════
+var W=innerWidth,H=innerHeight;
+var scene=new THREE.Scene(); scene.background=new THREE.Color('#0b0f19'); scene.fog=new THREE.Fog('#0b0f19',18,55);
+var camera=new THREE.PerspectiveCamera(45,W/H,0.5,100); camera.position.set(2,5,14); camera.lookAt(0,-1,0);
+
+var renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.3;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.08; controls.autoRotate=true; controls.autoRotateSpeed=0.3;
+controls.minDistance=4; controls.maxDistance=40; controls.target.set(0,-1,0); controls.update();
+
+scene.add(new THREE.AmbientLight('#334466',2.5));
+var dl=new THREE.DirectionalLight('#ccddff',2.5); dl.position.set(10,15,10); scene.add(dl);
+var bl=new THREE.DirectionalLight('#556688',1); bl.position.set(-5,3,-5); scene.add(bl);
+
+var floor=new THREE.Mesh(new THREE.PlaneGeometry(16,12),new THREE.MeshStandardMaterial({color:'#111522',roughness:0.9,metalness:0}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-3.5; floor.receiveShadow=true; scene.add(floor);
+
+// ═══════ Heatmap grid: rows=modules, cols=resources, height=% used ═══════
+var N=MODULES.length, M=RESOURCE_NAMES.length;
+var cellW=0.6, cellD=0.5, cellGapX=0.15, cellGapZ=0.15;
+var totalW=N*(cellW+cellGapX), totalD=M*(cellD+cellGapZ);
+var startX=-totalW/2+cellW/2, startZ=-totalD/2+cellD/2;
+var maxH=6;
+var allCubes=[];
+
+for (var ri=0; ri<N; ri++) {
+  var mod=MODULES[ri];
+  var vals=[mod.lut, mod.ff, mod.bram, mod.dsp];
+  var keys=['lut','ff','bram','dsp'];
+
+  for (var ci=0; ci<M; ci++) {
+    var pct=vals[ci];
+    var h=Math.max(pct/100*maxH, 0.04);
+    var col=heatColor(pct);
+    var x=startX + ri*(cellW+cellGapX);
+    var z=startZ + ci*(cellD+cellGapZ);
+
+    var geo=new THREE.BoxGeometry(cellW, h, cellD, 1,1,1);
+    var mat=new THREE.MeshStandardMaterial({
+      color:new THREE.Color(col), roughness:0.3, metalness:0.5,
+      emissive:new THREE.Color(col), emissiveIntensity:0.3,
+    });
+    var cube=new THREE.Mesh(geo,mat);
+    cube.position.set(x, h/2, z);
+    cube.castShadow=true; cube.receiveShadow=true;
+    cube.userData={ module:mod.name, resource:RESOURCE_NAMES[ci], pct:pct, key:keys[ci], status:mod.status, detail:mod.detail };
+    scene.add(cube); allCubes.push(cube);
+
+    // Edge glow
+    var eGeo=new THREE.EdgesGeometry(geo);
+    var eline=new THREE.LineSegments(eGeo,new THREE.LineBasicMaterial({color:new THREE.Color(col),transparent:true,opacity:0.3}));
+    eline.position.copy(cube.position); scene.add(eline);
+
+    // Label above
+    var canvas=document.createElement('canvas'); canvas.width=128; canvas.height=32;
+    var ctx=canvas.getContext('2d');
+    ctx.font='bold 13px "Segoe UI",sans-serif'; ctx.textAlign='center'; ctx.fillStyle=col;
+    ctx.fillText(pct.toFixed(1)+'%',64,20);
+    var tex=new THREE.CanvasTexture(canvas); tex.minFilter=THREE.LinearFilter;
+    var sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+    sprite.position.set(x, h+0.4, z); sprite.scale.set(0.8,0.2,1); scene.add(sprite);
+  }
+}
+
+// ═══════ Axis labels ═══════
+// Row labels (modules) along X
+MODULES.forEach(function(mod,i){
+  var canvas=document.createElement('canvas'); canvas.width=256; canvas.height=64;
+  var ctx=canvas.getContext('2d');
+  ctx.font='11px "Segoe UI","PingFang SC",sans-serif'; ctx.textAlign='center'; ctx.fillStyle='#8890a8';
+  ctx.fillText(mod.name,128,16);
+  ctx.font='9px "Segoe UI",sans-serif'; ctx.fillStyle='#66708a';
+  ctx.fillText(mod.status,128,32);
+  var tex=new THREE.CanvasTexture(canvas); tex.minFilter=THREE.LinearFilter;
+  var sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+  sprite.position.set(startX+i*(cellW+cellGapX), -0.3, -totalD/2-1.2);
+  sprite.scale.set(2.0,0.5,1); scene.add(sprite);
+});
+
+// Col labels (resources) along Z
+RESOURCE_NAMES.forEach(function(name,j){
+  var canvas=document.createElement('canvas'); canvas.width=128; canvas.height=32;
+  var ctx=canvas.getContext('2d');
+  ctx.font='bold 12px "Segoe UI",sans-serif'; ctx.textAlign='center'; ctx.fillStyle='#b0b8d0';
+  ctx.fillText(name,64,20);
+  var tex=new THREE.CanvasTexture(canvas); tex.minFilter=THREE.LinearFilter;
+  var sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+  sprite.position.set(-totalW/2-1.2, -0.3, startZ+j*(cellD+cellGapZ));
+  sprite.scale.set(0.9,0.22,1); scene.add(sprite);
+});
+
+// Total bar at far right
+var totals={lut:18.2,ff:35.6,bram:6,dsp:78.1};
+var tkeys=['lut','ff','bram','dsp'];
+tkeys.forEach(function(k,j){
+  var pct=totals[k];
+  var h=Math.max(pct/100*maxH,0.04);
+  var col=heatColor(pct);
+  var x=startX+N*(cellW+cellGapX);
+  var z=startZ+j*(cellD+cellGapZ);
+  var geo=new THREE.BoxGeometry(cellW,h,cellD,1,1,1);
+  var mat=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(col), roughness:0.2, metalness:0.7,
+    emissive:new THREE.Color(col), emissiveIntensity:0.4
+  });
+  var cube=new THREE.Mesh(geo,mat);
+  cube.position.set(x,h/2,z);
+  cube.castShadow=true;
+  cube.userData={ module:'TOTAL', resource:RESOURCE_NAMES[j], pct:pct, key:k, status:'', detail:'3778 LUT / 14842 FF / 3 BRAM / 71 DSP' };
+  scene.add(cube); allCubes.push(cube);
+});
+
+// Total label
+var tcanvas=document.createElement('canvas'); tcanvas.width=128; tcanvas.height=32;
+var tctx=tcanvas.getContext('2d');
+tctx.font='bold 12px "Segoe UI",sans-serif'; tctx.textAlign='center'; tctx.fillStyle='#e0e5f0';
+tctx.fillText('总计',64,20);
+var ttex=new THREE.CanvasTexture(tcanvas); ttex.minFilter=THREE.LinearFilter;
+var tsprite=new THREE.Sprite(new THREE.SpriteMaterial({map:ttex,transparent:true,depthTest:false,depthWrite:false}));
+tsprite.position.set(startX+N*(cellW+cellGapX), -0.3, -totalD/2-1.2);
+tsprite.scale.set(0.6,0.15,1); scene.add(tsprite);
+
+// ═══════ Raycaster ═══════
+var tooltip=document.getElementById('tooltip'), mouse=new THREE.Vector2(), hovered=null;
+var raycaster=new THREE.Raycaster();
+
+window.addEventListener('mousemove',function(ev){
+  mouse.x=(ev.clientX/W)*2-1; mouse.y=-(ev.clientY/H)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  var hits=raycaster.intersectObjects(allCubes);
+  if(hits.length>0){
+    var d=hits[0].object.userData;
+    if(hovered!==hits[0].object){
+      if(hovered) hovered.material.emissiveIntensity=hovered.userData.module==='TOTAL'?0.4:0.3;
+      hovered=hits[0].object; hovered.material.emissiveIntensity=0.9;
+      document.body.style.cursor='pointer';
+    }
+    var isTotal=d.module==='TOTAL';
+    var pctLabel=d.pct.toFixed(1)+'%';
+    var raw=isTotal?'':(RAW_COUNTS[d.module]||{})[d.key]||'';
+    tooltip.style.display='block';
+    tooltip.innerHTML='<div class="head" style="color:'+heatColor(d.pct)+'">'+d.module+' · '+d.resource+'</div>'+
+      '<div class="kv"><span>利用率</span><span class="v">'+pctLabel+(raw?' ('+raw+')':'')+'</span></div>'+
+      (d.status?'<div class="kv"><span>状态</span><span class="v">'+d.status+'</span></div>':'')+
+      (d.detail?'<div class="kv"><span>详情</span><span class="v">'+d.detail+'</span></div>':'');
+    tooltip.style.left=(ev.clientX+16)+'px'; tooltip.style.top=(ev.clientY-70)+'px';
+  } else {
+    if(hovered){hovered.material.emissiveIntensity=hovered.userData.module==='TOTAL'?0.4:0.3;hovered=null;}
+    document.body.style.cursor=''; tooltip.style.display='none';
+  }
+});
+
+// ═══════ Animate ═══════
+function animate(){requestAnimationFrame(animate); controls.update(); renderer.render(scene,camera);}
+window.addEventListener('resize',function(){W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);});
+animate();
+console.log('✅ FPGA Heatmap — 6 modules, 4 resources, Artix-7 XC7A35T loaded');
+})();
+</script>
+</body>
+</html>

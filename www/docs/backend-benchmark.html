@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>双后端性能对比 · FIBEMATE</title>
+<meta name="description" content="纯JS vs WASM vs Native — ML-KEM/SM2/SLH-DSA 多后端性能加速比 3D 对比">
+<style>
+:root { --bg:#0b0f19; --card:#131827; --border:#1f2a44; --text:#b8c0d0; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; }
+
+#top { position:fixed; z-index:10; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:10px; }
+.chip { background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:10px; padding:8px 14px; text-align:center; }
+.chip .num { font-size:20px; font-weight:800; }
+.chip .lbl { font-size:9px; color:#66708a; letter-spacing:0.5px; }
+
+#legend { position:fixed; z-index:10; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:12px; background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:20px; padding:8px 16px; font-size:10px; }
+.leg { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:9px; height:9px; border-radius:50%; }
+
+#tooltip { display:none; position:fixed; z-index:20; pointer-events:none; background:rgba(11,15,25,0.95); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:10px; color:var(--text); max-width:240px; }
+#tooltip .head { font-size:12px; font-weight:600; margin-bottom:4px; }
+#tooltip .kv { display:flex; justify-content:space-between; gap:12px; color:#66708a; }
+#tooltip .kv .v { color:#d0d6e6; }
+
+#footer { position:fixed; z-index:10; bottom:12px; right:16px; font-size:10px; color:#66708a; }
+#footer a { color:#0ea5e9; text-decoration:none; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="top">
+  <div class="chip"><div class="num" style="color:#51cf66">3</div><div class="lbl">算法</div></div>
+  <div class="chip"><div class="num" style="color:#c792ea">3</div><div class="lbl">后端类型</div></div>
+  <div class="chip"><div class="num" style="color:#ffa94d">29×</div><div class="lbl">最大提速</div></div>
+</div>
+
+<div id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#74c0fc;box-shadow:0 0 4px #74c0fc"></div> 纯 JavaScript</div>
+  <div class="leg"><div class="leg-dot" style="background:#c792ea;box-shadow:0 0 4px #c792ea"></div> WASM</div>
+  <div class="leg"><div class="leg-dot" style="background:#51cf66;box-shadow:0 0 4px #51cf66"></div> Native/C Addon</div>
+  <span style="color:#66708a;margin-left:8px">🖱 拖拽旋转 · 悬停查看加速比</span>
+</div>
+
+<div id="footer"><a href="/docs/pqc-benchmark.html">PQC 基准</a> · <a href="/docs/fpga-heatmap.html">FPGA</a></div>
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function(){
+if(typeof THREE==='undefined'){document.body.innerHTML='<div style="color:#e44;padding:40px;text-align:center;margin-top:20vh"><b>&#x2715;</b> THREE.js 未加载</div>';return;}
+
+// ═══════ Data ═══════
+// Per algorithm, per operation, each backend's speed in µs (microseconds)
+var BE = { js:'#74c0fc', wasm:'#c792ea', native:'#51cf66', addon:'#51cf66' };
+var BE_LABEL = { js:'纯 JS', wasm:'WASM', native:'Native', addon:'Node Addon' };
+
+// Stations: one per algorithm-operation
+var STATIONS = [
+  // ML-KEM-768
+  { algo:'ML-KEM-768', op:'KeyGen', ops: [
+    { be:'js', us:1300, label:'纯 JS (Noble)' },
+    { be:'native', us:48, label:'C Native', speedup:'27×' },
+  ]},
+  { algo:'ML-KEM-768', op:'Encaps', ops: [
+    { be:'js', us:1800, label:'纯 JS' },
+    { be:'native', us:51, label:'C Native', speedup:'35×' },
+  ]},
+  { algo:'ML-KEM-768', op:'Decaps', ops: [
+    { be:'js', us:2500, label:'纯 JS' },
+    { be:'native', us:105, label:'C Native', speedup:'24×' },
+  ]},
+  // SM2
+  { algo:'SM2', op:'Sign', ops: [
+    { be:'js', us:4900, label:'纯 JS (jsbn)' },
+    { be:'addon', us:2800, label:'wNAF+BigInt (1.8×)', speedup:'1.8×' },
+  ]},
+  { algo:'SM2', op:'Encrypt', ops: [
+    { be:'js', us:4500, label:'纯 JS (jsbn)' },
+    { be:'addon', us:3100, label:'wNAF+BigInt (1.5×)', speedup:'1.5×' },
+  ]},
+  { algo:'SM2', op:'Decrypt', ops: [
+    { be:'js', us:2300, label:'纯 JS (jsbn)' },
+    { be:'addon', us:380, label:'wNAF+BigInt (6.1×)', speedup:'6.1×' },
+  ]},
+  // SLH-DSA-128s
+  { algo:'SLH-DSA-128s', op:'KeyGen', ops: [
+    { be:'wasm', us:3500000, label:'WASM (Noble)', speedup:'—' },
+  ]},
+  { algo:'SLH-DSA-128s', op:'Sign', ops: [
+    { be:'wasm', us:4199500, label:'WASM (4.2s)', speedup:'—' },
+  ]},
+  { algo:'SLH-DSA-128s', op:'Verify', ops: [
+    { be:'wasm', us:4200, label:'WASM', speedup:'—' },
+  ]},
+];
+var N = STATIONS.length;
+
+// ═══════ Scene ═══════
+var W=innerWidth,H=innerHeight;
+var scene=new THREE.Scene(); scene.background=new THREE.Color('#0b0f19'); scene.fog=new THREE.Fog('#0b0f19',18,55);
+var camera=new THREE.PerspectiveCamera(45,W/H,0.5,100); camera.position.set(0,4,16); camera.lookAt(0,0,0);
+
+var renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.3;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.08; controls.autoRotate=true; controls.autoRotateSpeed=0.25;
+controls.minDistance=4; controls.maxDistance=45; controls.target.set((N-1)*0.55, 0, 0); controls.update();
+
+scene.add(new THREE.AmbientLight('#334466',2.5));
+scene.add(new THREE.DirectionalLight('#ccddff',2.5)).position.set(15,20,12);
+scene.add(new THREE.DirectionalLight('#556688',1)).position.set(-8,3,-5);
+
+var floor=new THREE.Mesh(new THREE.PlaneGeometry(N*2.5,12),new THREE.MeshStandardMaterial({color:'#111522',roughness:0.9,metalness:0}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-0.02; floor.receiveShadow=true; scene.add(floor);
+
+// ═══════ Log-scale Y axis ═══════
+// 48µs → 4,200,000µs
+var MAX_US = 4200000;
+var MAX_H = 8;
+function usToH(us) { return Math.max((Math.log10(us+1) / Math.log10(MAX_US)) * MAX_H, 0.04); }
+
+var stationGap = 1.6;
+var barW = 0.22;
+var allBars = [];
+
+STATIONS.forEach(function(st, si) {
+  var nBars = st.ops.length;
+  var totalBw = nBars * barW + (nBars-1) * 0.08;
+  var startX = si * stationGap - totalBw/2;
+
+  st.ops.forEach(function(op, bi) {
+    var h = usToH(op.us);
+    var col = BE[op.be] || '#66708a';
+    var cx = startX + bi*(barW+0.08);
+
+    var geo = new THREE.BoxGeometry(barW, h, barW, 1, 1, 1);
+    var mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(col), roughness: 0.25, metalness: 0.5,
+      emissive: new THREE.Color(col), emissiveIntensity: 0.25,
+    });
+    var bar = new THREE.Mesh(geo, mat);
+    bar.position.set(cx, h/2, 0);
+    bar.castShadow = true;
+    bar.userData = { algo: st.algo, op: st.op, be: op.be, us: op.us, label: op.label, speedup: op.speedup || '' };
+    scene.add(bar); allBars.push(bar);
+
+    // Edge
+    var eGeo = new THREE.EdgesGeometry(geo);
+    var el = new THREE.LineSegments(eGeo, new THREE.LineBasicMaterial({ color: new THREE.Color(col), transparent: true, opacity: 0.3 }));
+    el.position.copy(bar.position); scene.add(el);
+
+    // Value label
+    var canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 32;
+    var ctx = canvas.getContext('2d');
+    var txt = op.us >= 1000000 ? (op.us/1000000).toFixed(1)+'s' : op.us >= 1000 ? (op.us/1000).toFixed(1)+'ms' : op.us+'us';
+    ctx.font = 'bold 12px "Segoe UI",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = col;
+    ctx.fillText(txt, 64, 20);
+    var tex = new THREE.CanvasTexture(canvas); tex.minFilter = THREE.LinearFilter;
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+    sp.position.set(cx, h + 0.4, 0); sp.scale.set(0.7, 0.17, 1); scene.add(sp);
+  });
+
+  // Station label
+  var canvas2 = document.createElement('canvas'); canvas2.width = 256; canvas2.height = 40;
+  var ctx2 = canvas2.getContext('2d');
+  ctx2.font = 'bold 12px "Segoe UI","PingFang SC",sans-serif'; ctx2.textAlign = 'center'; ctx2.fillStyle = '#8890a8';
+  ctx2.fillText(st.algo + ' · ' + st.op, 128, 22);
+  ctx2.font = '9px "Segoe UI",sans-serif'; ctx2.fillStyle = '#66708a';
+  var maxOp = st.ops.reduce(function(a,b){return b.us>a.us?b:a});
+  ctx2.fillText('最大提速 '+(maxOp.speedup||'—'), 128, 36);
+  var tex2 = new THREE.CanvasTexture(canvas2); tex2.minFilter = THREE.LinearFilter;
+  var sp2 = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex2, transparent: true, depthTest: false, depthWrite: false }));
+  sp2.position.set(si * stationGap, -0.4, -1.2); sp2.scale.set(1.8, 0.28, 1); scene.add(sp2);
+});
+
+// ═══════ Speedup bridges ═══════
+STATIONS.forEach(function(st, si) {
+  if (st.ops.length < 2) return;
+  var h0 = usToH(st.ops[0].us);
+  var h1 = usToH(st.ops[st.ops.length-1].us);
+  var totalBw = st.ops.length * barW + (st.ops.length-1) * 0.08;
+  var startX = si * stationGap - totalBw/2;
+  var x0 = startX;
+  var z0 = barW + 0.1;
+  var x1 = startX + (st.ops.length-1)*(barW+0.08);
+
+  // Bridge arc
+  var mid = { x: (x0+x1)/2, y: Math.max(h0, h1) + 1.2, z: z0 };
+  var curve = new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(x0, h0, z0),
+    new THREE.Vector3(mid.x, mid.y, mid.z),
+    new THREE.Vector3(x1, h1, z0)
+  );
+  var pts = curve.getPoints(20);
+  var geo = new THREE.BufferGeometry().setFromPoints(pts);
+  scene.add(new THREE.Line(geo, new THREE.LineBasicMaterial({ color: BE[st.ops[st.ops.length-1].be], transparent: true, opacity: 0.5 })));
+
+  // Speedup badge
+  var spdup = st.ops[st.ops.length-1].speedup;
+  if (spdup && spdup !== '—') {
+    var badgeCanvas = document.createElement('canvas'); badgeCanvas.width = 128; badgeCanvas.height = 32;
+    var bctx = badgeCanvas.getContext('2d');
+    bctx.font = 'bold 14px "Segoe UI",sans-serif'; bctx.textAlign = 'center'; bctx.fillStyle = '#ffa94d';
+    bctx.fillText(spdup, 64, 20);
+    var btex = new THREE.CanvasTexture(badgeCanvas); btex.minFilter = THREE.LinearFilter;
+    var bsp = new THREE.Sprite(new THREE.SpriteMaterial({ map: btex, transparent: true, depthTest: false, depthWrite: false }));
+    bsp.position.set(mid.x, mid.y + 0.3, mid.z); bsp.scale.set(0.6, 0.15, 1); scene.add(bsp);
+  }
+});
+
+// ═══════ Raycaster ═══════
+var tooltip = document.getElementById('tooltip'), mouse = new THREE.Vector2(), hovered = null;
+var raycaster = new THREE.Raycaster();
+
+window.addEventListener('mousemove', function(ev) {
+  mouse.x = (ev.clientX/W)*2-1; mouse.y = -(ev.clientY/H)*2+1;
+  raycaster.setFromCamera(mouse, camera);
+  var hits = raycaster.intersectObjects(allBars);
+  if (hits.length > 0) {
+    var d = hits[0].object.userData;
+    if (hovered !== hits[0].object) {
+      if (hovered) hovered.material.emissiveIntensity = 0.25;
+      hovered = hits[0].object; hovered.material.emissiveIntensity = 0.9;
+      document.body.style.cursor = 'pointer';
+    }
+    var col = BE[d.be];
+    var txt = d.us >= 1000000 ? (d.us/1000000).toFixed(2)+'s' : d.us >= 1000 ? (d.us/1000).toFixed(1)+'ms' : d.us+'us';
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = '<div class="head" style="color:'+col+'">'+d.algo+' · '+d.op+'</div>'+
+      '<div class="kv"><span>后端</span><span class="v" style="color:'+col+'">'+BE_LABEL[d.be]+'</span></div>'+
+      '<div class="kv"><span>耗时</span><span class="v">'+txt+'</span></div>'+
+      (d.speedup && d.speedup !== '—' ? '<div class="kv"><span>加速比</span><span class="v" style="color:#ffa94d">'+d.speedup+'</span></div>' : '')+
+      (d.label ? '<div class="kv"><span>说明</span><span class="v">'+d.label+'</span></div>' : '');
+    tooltip.style.left = (ev.clientX+16)+'px'; tooltip.style.top = (ev.clientY-70)+'px';
+  } else {
+    if (hovered) { hovered.material.emissiveIntensity = 0.25; hovered = null; }
+    document.body.style.cursor = ''; tooltip.style.display = 'none';
+  }
+});
+
+function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+window.addEventListener('resize', function() { W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H); });
+animate();
+console.log('✅ Dual-backend benchmark loaded — '+STATIONS.length+' stations, '+allBars.length+' bars');
+})();
+</script>
+</body>
+</html>
