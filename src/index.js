@@ -23,8 +23,8 @@ const { UnifiedTrafficObfuscator } = require('./crypto/unified-traffic-obfuscato
 const Database = require('./db-sqlite');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
+const uuidv4 = crypto.randomUUID;
 const path = require('path');
 const fs = require('fs');
 // ML-KEM-768 native addon (FIPS 203 verified)
