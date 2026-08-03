@@ -11,7 +11,7 @@
     <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级">
+    <meta name="twitter:title" content="IBM 七维密码敏捷性自评工具">
     <meta name="twitter:description" content="IBM Research 2026 框架 · 7 维度交互式自评向导 · 与 FIBEMATE 62.50 对比 · 导出自包含 HTML 报告">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -232,9 +232,9 @@ console.log('  OrbitControls:', typeof (window.THREE&&THREE.OrbitControls)!=='un
 if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;padding:40px;font-size:24px">✕ THREE.js 加载失败！<br>按 Ctrl+Shift+R 硬刷新</div>'; throw new Error('THREE not loaded'); }
 (function() {
     // ═══════════════════════════════════════════
-    //  CARS 维度数据 + 代码证据
+    //  IBM 七维数据 + 代码证据
     // ═══════════════════════════════════════════
-    var DIM_COLORS = ['#00d4ff','#ff6b6b','#51cf66','#ffa94d','#748ffc'];
+    var DIM_COLORS = ['#00d4ff','#ff6b6b','#51cf66','#ffa94d','#748ffc','#c792ea','#82aaff'];
 
     var dimensions = [
         {
@@ -296,6 +296,9 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
     ];
 
     // 改进后预测
+    var FIBEMATE_OVERALL = 62.50;
+    var FIBEMATE_SCORES = {d1:60,d2:50,d3:90,d4:55,d5:60,d6:50,d7:80};
+
     var improved = [75,65,95,70,75,70,90];
 
     var N = dimensions.length, maxScore = 100;
