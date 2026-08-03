@@ -15,16 +15,26 @@
 
 # FIBEMATE — 后量子密码学全栈工程验证平台 / Post-Quantum Cryptography Full-Stack Engineering Platform
 
+> **Math → Code → Hardware** — FIBEMATE is not a library. It's a full-stack validation platform that shows you *how* PQC works at every layer.
+>
+> - 📐 **Math**: NTT butterfly, lattice topology, Kakeya sets — all 3D interactive
+> - 💻 **Code**: Pure JS reference + WASM + C Native — performance comparison at a glance
+> - 🔧 **Hardware**: FPGA synthesis + ILA verification — resource heatmap and timing
+>
+> You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
+>
+> **14 interactive visualizations** · 12 algorithms · 11 security governance docs · 100+ timestamped evidence records · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
+
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
-[![Version](https://img.shields.io/badge/version-3.3_preview-brightgreen.svg)](https://fibemate.net)
+[![Version](https://img.shields.io/badge/version-3.3.0-brightgreen.svg)](https://fibemate.net)
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
 > ⚠️ **OpenSSF passing certifies engineering hygiene (CI, docs, license), not cryptographic correctness or security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
 
-**v3.3-preview** · 2026-07-31 · TSR: lg-001~100 (100 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3.0** · 2026-08-03 · TSR: lg-001~126 (126 records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -37,6 +47,7 @@
 | If you are... | Jump to |
 | :--- | :--- |
 | 🔒 **Engineering evaluation** | → [🟢 Verified Components](#-verified-components-default-on--self-tested) · [Security Model](#security-model) · [Known Limitations](#known-limitations) |
+| 📊 **Scorecards & Dashboards** | → [CARS/IBM 评分](https://fibemate.net/docs/cars-radar.html) · [PQC Dashboard](https://fibemate.net/docs/pqc-dashboard.html) · [All Visualizations](#-visualization-dashboards-14-pages) |
 | 🔬 **Researching VWZ / LookingGlass** | → [🔬 Experimental Research Components](#-experimental-research-components-default-off--no-security-guarantees) · [VWZ ePrint](#-publications) |
 | 🛠️ **Building / running** | → [Quick Start](#quick-start) · [BUILD.md](BUILD.md) |
 | 🤔 **Questioning ML-KEM interoperability** | → [ML-KEM-768 Wire Format](#ml-kem-768-wire-format) |
@@ -496,6 +507,32 @@ FIBEMATE welcomes contributions from the PQC community. Here's how to get involv
 - **Discussions** — Join the conversation on [GitHub Discussions](https://github.com/Lennonhaha/fibemate/discussions)
 - **Security** — Report vulnerabilities privately via [SECURITY.md](./SECURITY.md)
 - **Citation** — If you use FIBEMATE in your work, cite via [CITATION.cff](./CITATION.cff)
+
+---
+
+## 🎨 Visualization Dashboards (14 pages)
+
+All dashboards live at **[fibemate.net/docs/](https://fibemate.net/docs/)** — no install, just a browser.
+
+| Category | Dashboard | Description |
+|:---|:---|:---|
+| 🎯 Scorecard | `cars-radar.html` | CARS 5-dimension 3D radar (keyboard controls: 1-5, S, R, E) |
+| 🎯 Scorecard | `ibm-seven-radar.html` | IBM 7-dimension 3D radar with weighted scoring |
+| 🎯 Scorecard | `cars-vs-ibm.html` | Dual-framework side-by-side 3D comparison |
+| 📊 Dashboard | `pqc-dashboard.html` | PQC readiness — coverage, KAT, TVLA, risk matrix |
+| 📊 Dashboard | `pqc-benchmark.html` | Performance benchmark (log scale, 4 backends) |
+| 📊 Dashboard | `backend-benchmark.html` | C Native vs Pure JS comparison |
+| 📊 Dashboard | `classic-vs-pqc.html` | Classic vs PQC 8-dimension side-by-side |
+| 🔬 Analysis | `tvla-dashboard.html` | TVLA side-channel test status (5 algos, 31/36 PASS) |
+| 🔬 Analysis | `supply-chain-risk.html` | Supply chain dependency risk graph (12 nodes, 370 files) |
+| 🔬 Analysis | `dependency-drilldown.html` | Click → full detail panel per algorithm |
+| 🔬 Analysis | `fpga-heatmap.html` | FPGA resource heatmap (LUT/FF/BRAM/DSP, A7-35T) |
+| 📈 Trend | `cars-ibm-trend.html` | CARS/IBM score trend 3D timeline |
+| 📈 Trend | `project-timeline.html` | Project evolution spiral (25 milestones, 4 phases) |
+| 🗺️ Overview | `algo-family-tree.html` | 3D algorithm family tree (18 nodes, 6 branches) |
+| 🗺️ Overview | `pqc-security-levels.html` | PQC security level comparison (10 algos, 4 metrics) |
+
+**Current scores**: CARS **78.50** · IBM **63.70 HIGH** — [see scoring details](https://fibemate.net/docs/cars-radar.html)
 
 ---
 
