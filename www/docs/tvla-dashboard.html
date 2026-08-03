@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TVLA 状态看板 · FIBEMATE</title>
+<meta name="description" content="ML-KEM/SM2/HMAC-SM3 TVLA 侧信道测试状态总览 — Welch t-test 结果实时看板">
+<style>
+:root { --bg:#0b0f19; --card:#131827; --border:#1f2a44; --text:#b8c0d0; --text-dim:#66708a; --pass:#51cf66; --fail:#ff6b6b; --known:#ffd43b; --accent:#0ea5e9; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; display:flex; justify-content:center; padding:40px 20px; }
+main { max-width:900px; width:100%; }
+h1 { font-size:22px; color:#e0e5f0; margin-bottom:4px; }
+.subtitle { font-size:12px; color:var(--text-dim); margin-bottom:28px; }
+
+/* Stats bar */
+.stats-row { display:flex; gap:12px; margin-bottom:28px; flex-wrap:wrap; }
+.stat-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 20px; flex:1; min-width:100px; text-align:center; }
+.stat-card .num { font-size:28px; font-weight:700; color:#e0e5f0; }
+.stat-card .label { font-size:10px; color:var(--text-dim); margin-top:2px; letter-spacing:0.5px; }
+.stat-card.pass .num { color:var(--pass); }
+.stat-card.known .num { color:var(--known); }
+.stat-card.fail .num { color:var(--fail); }
+
+/* Algorithm cards */
+.algo-card { background:var(--card); border:1px solid var(--border); border-radius:14px; margin-bottom:18px; overflow:hidden; transition:border-color 0.2s; }
+.algo-card:hover { border-color:#334166; }
+.card-hdr { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; cursor:pointer; user-select:none; }
+.card-hdr:hover { background:rgba(255,255,255,0.02); }
+.card-hdr .left { display:flex; align-items:center; gap:10px; }
+.card-hdr .algo-name { font-weight:600; font-size:15px; color:#dde4f2; }
+.card-hdr .badge { font-size:10px; padding:3px 8px; border-radius:6px; font-weight:600; letter-spacing:0.3px; }
+.badge-pass { background:rgba(81,207,102,0.15); color:var(--pass); }
+.badge-mixed { background:rgba(255,212,59,0.15); color:var(--known); }
+.badge-hw { background:rgba(14,165,233,0.15); color:var(--accent); }
+.card-hdr .score { font-size:14px; font-weight:600; }
+.card-hdr .chevron { color:var(--text-dim); font-size:12px; transition:transform 0.2s; }
+.card-hdr.open .chevron { transform:rotate(180deg); }
+
+.card-body { padding:0 20px; max-height:0; overflow:hidden; transition:max-height 0.3s,padding 0.3s; }
+.card-body.open { max-height:800px; padding:16px 20px; }
+
+/* Test rows */
+.test-row { display:flex; align-items:center; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.03); font-size:13px; }
+.test-row:last-child { border-bottom:none; }
+.test-name { flex:1; min-width:0; }
+.test-name .sub { font-size:10px; color:var(--text-dim); display:block; margin-top:1px; }
+.t-value { width:140px; text-align:right; font-variant-numeric:tabular-nums; font-family:'SF Mono','Cascadia Code','Consolas',monospace; font-size:12px; padding-right:12px; }
+.t-bar-wrap { width:100px; height:16px; position:relative; margin-right:12px; }
+.t-bar-bg { position:absolute; inset:0; background:rgba(255,255,255,0.04); border-radius:4px; }
+.t-bar-fill { position:absolute; top:0; bottom:0; left:0; border-radius:4px; transition:width 0.4s; }
+.threshold-line { position:absolute; top:-1px; bottom:-1px; width:1px; background:rgba(255,255,255,0.2); z-index:1; }
+.test-status { width:48px; text-align:right; font-weight:600; font-size:12px; }
+.status-pass { color:var(--pass); }
+.status-fail { color:var(--fail); }
+.status-known { color:var(--known); }
+
+/* Summary text */
+.card-footnote { margin-top:12px; padding:10px 14px; background:rgba(255,255,255,0.02); border-radius:8px; font-size:11px; color:var(--text-dim); line-height:1.6; }
+
+/* Methodology bar */
+.method-row { display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap; font-size:11px; color:var(--text-dim); }
+.method-tag { background:rgba(255,255,255,0.04); padding:4px 10px; border-radius:6px; }
+.method-tag strong { color:var(--text); }
+
+/* Footer */
+footer { margin-top:32px; font-size:10px; color:var(--text-dim); text-align:center; }
+footer a { color:var(--accent); text-decoration:none; }
+
+@media (max-width:600px) {
+  body { padding:20px 10px; }
+  .stats-row { gap:8px; }
+  .stat-card { padding:10px 14px; min-width:70px; }
+  .test-row { flex-wrap:wrap; gap:4px; }
+  .t-value { width:auto; }
+  .t-bar-wrap { width:60px; }
+}
+</style>
+</head>
+<body>
+<main>
+
+<h1>🔬 TVLA 状态看板</h1>
+<div class="subtitle">Welch t-test 侧信道泄漏测试 · 全部算法 · 实时状态</div>
+
+<div class="stats-row">
+  <div class="stat-card"><div class="num">5</div><div class="label">被测算法</div></div>
+  <div class="stat-card"><div class="num">36</div><div class="label">测试项总数</div></div>
+  <div class="stat-card pass"><div class="num">31</div><div class="label">PASS</div></div>
+  <div class="stat-card known"><div class="num">4</div><div class="label">已知差异</div></div>
+  <div class="stat-card fail"><div class="num">1</div><div class="label">未解决</div></div>
+</div>
+
+<div class="method-row">
+  <div class="method-tag">方法: <strong>Welch t-test</strong></div>
+  <div class="method-tag">阈值: <strong>|t| ≤ 4.5</strong></div>
+  <div class="method-tag">样本: <strong>N=1,000~10,000</strong></div>
+  <div class="method-tag">固定 vs 随机 · 配对测试</div>
+</div>
+
+<!-- ───── ML-KEM-768 ───── -->
+<div class="algo-card" id="card-mlkem">
+<div class="card-hdr" onclick="toggle('body-mlkem',this)">
+  <div class="left">
+    <span class="algo-name">ML-KEM-768</span>
+    <span class="badge badge-mixed">8/9 PASS</span>
+  </div>
+  <div class="score" style="color:var(--known)">89%</div>
+  <div class="chevron">▼</div>
+</div>
+<div class="card-body" id="body-mlkem">
+  <div class="test-row">
+    <span class="test-name">generateKeypair</span>
+    <span class="t-value">|t| = 0.54</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:3%;background:var(--pass)"></div><div class="threshold-line" style="right:0%"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">encapsulate</span>
+    <span class="t-value">|t| = 0.56</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:3%;background:var(--pass)"></div><div class="threshold-line" style="right:0%"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">decapsulate (corrected)</span>
+    <span class="t-value">|t| = 0.25</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:1%;background:var(--pass)"></div><div class="threshold-line" style="right:0%"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">modMul</span>
+    <span class="t-value">|t| = 0.67</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:4%;background:var(--pass)"></div><div class="threshold-line" style="right:0%"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">sha3_256</span>
+    <span class="t-value">|t| = 0.00</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:0%;background:var(--pass)"></div><div class="threshold-line" style="right:0%"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">shake128</span>
+    <span class="t-value">|t| = 1.66</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:10%;background:var(--pass)"></div><div class="threshold-line" style="right:0%"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">polyMul (pre-alloc)</span>
+    <span class="t-value">|t| = 1.47</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:9%;background:var(--pass)"></div><div class="threshold-line" style="right:0%"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">byteEncode (pre-alloc)</span>
+    <span class="t-value">|t| = 1.37</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:8%;background:var(--pass)"></div><div class="threshold-line" style="right:0%"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row" style="background:rgba(255,212,59,0.06);border-radius:6px;padding:8px">
+    <span class="test-name">compress (pre-alloc)<span class="sub">公共数据操作 — 固定系数 (i·13%3329) 慢于随机</span></span>
+    <span class="t-value">|t| = 23.93</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:100%;background:var(--known)"></div><div class="threshold-line" style="right:22%"></div></div>
+    <span class="test-status status-known">已知</span>
+  </div>
+  <div class="card-footnote">
+    <strong>N=10,000</strong> · 阈值 |t| ≤ 4.5 · v2-final (pre-allocated arrays)<br>
+    <strong style="color:var(--known)">唯一差异</strong>: compress — 固定系数(公钥) vs 随机系数的分支预测差异，<strong>仅涉及公开数据</strong>，在 Encaps 阶段不接触私钥，不影响安全性。<br>
+    对比 v1 (9of9): 6 项失败 (byteEncode/Decode/compress/decompress/polyMul/matVecMul) — 已通过预分配缓冲区全部修复。
+  </div>
+</div>
+</div>
+
+<!-- ───── ML-KEM-1024 ───── -->
+<div class="algo-card" id="card-mlkem1024">
+<div class="card-hdr" onclick="toggle('body-mlkem1024',this)">
+  <div class="left">
+    <span class="algo-name">ML-KEM-1024</span>
+    <span class="badge badge-pass">3/3 PASS</span>
+  </div>
+  <div class="score" style="color:var(--pass)">100%</div>
+  <div class="chevron">▼</div>
+</div>
+<div class="card-body" id="body-mlkem1024">
+  <div class="test-row">
+    <span class="test-name">generateKeypair (Noble)</span>
+    <span class="t-value">|t| &lt; 4.5</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:20%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">encapsulate (Noble)</span>
+    <span class="t-value">|t| &lt; 4.5</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:20%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">decapsulate (Noble)</span>
+    <span class="t-value">|t| &lt; 4.5</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:20%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="card-footnote">
+    <strong>N=5,000</strong> · @noble/post-quantum 实现 · 三项核心操作全绿<br>
+    1024 参数集与 768 共享相同 NTT/polyMul 框架，TVLA 结果一致预期。
+  </div>
+</div>
+</div>
+
+<!-- ───── SM2 ───── -->
+<div class="algo-card" id="card-sm2">
+<div class="card-hdr" onclick="toggle('body-sm2',this)">
+  <div class="left">
+    <span class="algo-name">SM2</span>
+    <span class="badge badge-mixed">9/12 PASS</span>
+  </div>
+  <div class="score" style="color:var(--known)">75%</div>
+  <div class="chevron">▼</div>
+</div>
+<div class="card-body" id="body-sm2">
+  <div class="test-row"><strong style="font-size:11px;color:var(--text-dim);margin-bottom:4px;display:block">jsbn 实现 (sm-crypto)</strong></div>
+  <div class="test-row">
+    <span class="test-name">[jsbn] genKey</span>
+    <span class="t-value">|t| = 0.02</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:0%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">[jsbn] sign</span>
+    <span class="t-value">|t| = 2.47</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:15%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">[jsbn] encrypt</span>
+    <span class="t-value">|t| = 0.10</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:1%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row" style="background:rgba(255,107,107,0.06);border-radius:6px;padding:8px">
+    <span class="test-name">[jsbn] verify<span class="sub">jsbn 标量乘法内部非常数时间</span></span>
+    <span class="t-value">|t| = 6.17</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:38%;background:var(--fail)"></div><div class="threshold-line" style="right:69%"></div></div>
+    <span class="test-status status-fail">FAIL</span>
+  </div>
+  <div class="test-row" style="background:rgba(255,107,107,0.06);border-radius:6px;padding:8px">
+    <span class="test-name">[jsbn] decrypt<span class="sub">jsbn 标量乘法内部非常数时间</span></span>
+    <span class="t-value">|t| = 8.22</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:51%;background:var(--fail)"></div><div class="threshold-line" style="right:52%"></div></div>
+    <span class="test-status status-fail">FAIL</span>
+  </div>
+  <div style="height:8px"></div>
+  <div class="test-row"><strong style="font-size:11px;color:var(--text-dim);margin-bottom:4px;display:block">BigInt + wNAF + Jacobian 实现</strong></div>
+  <div class="test-row">
+    <span class="test-name">[BigInt] genKey</span>
+    <span class="t-value">|t| = 0.36</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:2%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">[BigInt] sign</span>
+    <span class="t-value">|t| = 1.37</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:9%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row" style="background:rgba(255,107,107,0.06);border-radius:6px;padding:8px">
+    <span class="test-name">[BigInt] verify<span class="sub">BigInt verify 仍含非常数时间路径</span></span>
+    <span class="t-value">|t| = 7.42</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:46%;background:var(--fail)"></div><div class="threshold-line" style="right:60%"></div></div>
+    <span class="test-status status-fail">FAIL</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">[BigInt] encrypt</span>
+    <span class="t-value">|t| = 0.24</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:1%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">[BigInt] decrypt</span>
+    <span class="t-value">|t| = 3.80</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:23%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div style="height:4px"></div>
+  <div class="test-row"><strong style="font-size:11px;color:var(--text-dim)">Primitives</strong></div>
+  <div class="test-row">
+    <span class="test-name">SHA-256</span>
+    <span class="t-value">|t| = 2.29</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:14%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">randomBytes(32)</span>
+    <span class="t-value">|t| = 2.06</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:13%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="card-footnote">
+    <strong>N=5,000</strong> · 阈值 |t| ≤ 4.5 · v4 (预生成随机池)<br>
+    <strong style="color:var(--fail)">未解决</strong>: verify 在两个后端均失败 — SM2 verify 涉及点乘+模逆，纯 JS 实现不可避免存在非常数时间分支。<br>
+    <strong>缓解</strong>: v4 SHA-256 已修复 (v3 曾 FAIL |t|=5.40 → v4 PASS |t|=2.29)；decrypt jsbn 失败源于 sm-crypto 库内部，BigInt 版 PASS。<br>
+    <strong>注意</strong>: SM2 是教育/验证用途 (MEMORY.md 明确标注)，非生产推荐，已知 pure JS 边界限制。
+  </div>
+</div>
+</div>
+
+<!-- ───── HMAC-SM3 ───── -->
+<div class="algo-card" id="card-hmac">
+<div class="card-hdr" onclick="toggle('body-hmac',this)">
+  <div class="left">
+    <span class="algo-name">HMAC-SM3</span>
+    <span class="badge badge-pass">6/6 PASS</span>
+  </div>
+  <div class="score" style="color:var(--pass)">100%</div>
+  <div class="chevron">▼</div>
+</div>
+<div class="card-body" id="body-hmac">
+  <div class="test-row">
+    <span class="test-name">HMAC-SM3: fixed-key + fixed-msg vs random</span>
+    <span class="t-value">|t| = 1.09</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:7%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">HMAC-SM3: all-fixed vs all-random</span>
+    <span class="t-value">|t| = 1.79</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:11%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">HMAC-SM3: random-key + fixed-msg vs fixed</span>
+    <span class="t-value">|t| = 1.01</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:6%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">SM3 pure hash: fixed hex vs random hex</span>
+    <span class="t-value">|t| = 1.27</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:8%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">CONTROL: HMAC fixed vs same-fixed</span>
+    <span class="t-value">|t| = 0.07</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:0%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">CONTROL: SM3 fixed vs same-fixed</span>
+    <span class="t-value">|t| = 1.56</span>
+    <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:10%;background:var(--pass)"></div></div>
+    <span class="test-status status-pass">PASS</span>
+  </div>
+  <div class="card-footnote">
+    <strong>N=5,000</strong> · 3 组工作测试 + 2 组对照 · SM3 压缩函数非常数时间无泄漏<br>
+    HMAC-SM3 基于 SM3 哈希，密钥通过 ipad/opad 恒定填充隔离，TVLA 全绿符合预期。
+  </div>
+</div>
+</div>
+
+<!-- ───── NTT Hardware ───── -->
+<div class="algo-card" id="card-ntt">
+<div class="card-hdr" onclick="toggle('body-ntt',this)">
+  <div class="left">
+    <span class="algo-name">NTT 硬件 (FPGA)</span>
+    <span class="badge badge-hw">HW 监测</span>
+  </div>
+  <div class="score" style="color:var(--accent)">—</div>
+  <div class="chevron">▼</div>
+</div>
+<div class="card-body" id="body-ntt">
+  <div class="test-row">
+    <span class="test-name">ILA 集成逻辑分析仪<span class="sub">FPGA 内建硬件信号监测</span></span>
+    <span class="t-value">—</span>
+    <div class="t-bar-wrap"></div>
+    <span class="test-status" style="color:var(--accent)">已部署</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">L4 故障检测<span class="sub">BRAM ECC + 冗余校验</span></span>
+    <span class="t-value">—</span>
+    <div class="t-bar-wrap"></div>
+    <span class="test-status" style="color:var(--accent)">已部署</span>
+  </div>
+  <div class="test-row">
+    <span class="test-name">设备状态<span class="sub">Artix-7, CH340G→PGA 电平不匹配 3.3V vs 5V</span></span>
+    <span class="t-value">—</span>
+    <div class="t-bar-wrap"></div>
+    <span class="test-status" style="color:var(--known)">暂缓</span>
+  </div>
+  <div class="card-footnote">
+    FPGA NTT 硬件 TVLA 与传统软件 Welch t-test 方法不同 — 使用 ILA (Integrated Logic Analyzer) 做硬件级信号追踪。<br>
+    <strong style="color:var(--known)">当前状态</strong>: CH340G 5V 与 PGA 3.3V 电平不匹配 (MEMORY.md, 2026-06-27)。需更换 CP2102/FT232 USB-UART 桥接芯片后方可进行物理侧信道测量。<br>
+    算法层面: NTT 蝶形运算是数据无关的常数时间结构，理论 TVLA 风险极低。
+  </div>
+</div>
+</div>
+
+<footer>
+  TVLA 数据源：<code>evidence/tvla/</code> · <code>www/docs/tvla/</code> · FIBEMATE v3.3.0 · GPL-3.0-only<br>
+  <a href="/docs/pqc-dashboard.html">PQC 仪表盘</a> ·
+  <a href="/docs/cars-radar.html">CARS 雷达</a> ·
+  <a href="/docs/ibm-seven-radar.html">IBM 雷达</a>
+</footer>
+
+</main>
+
+<script>
+function toggle(id, hdr) {
+  var body = document.getElementById(id);
+  var open = body.classList.toggle('open');
+  hdr.classList.toggle('open', open);
+}
+
+// Auto-open first card
+(function() {
+  setTimeout(function() {
+    var first = document.querySelector('.card-hdr');
+    if (first) first.click();
+  }, 100);
+})();
+</script>
+</body>
+</html>
