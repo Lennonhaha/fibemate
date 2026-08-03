@@ -24,7 +24,10 @@
           "primitive": "KEM"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "safe"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -697,7 +700,10 @@
           "primitive": "MATH"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "safe"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -1254,7 +1260,10 @@
           "primitive": "HASH"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "weak"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -1647,7 +1656,10 @@
           "primitive": "SIGN"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "vulnerable"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -2024,7 +2036,10 @@
           "primitive": "ECC"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "vulnerable"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -2329,7 +2344,10 @@
           "primitive": "PROTO"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "weak"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -2618,7 +2636,10 @@
           "primitive": "HASH"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "weak"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -2883,7 +2904,10 @@
           "primitive": "SIGN"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "safe"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -3112,7 +3136,10 @@
           "primitive": "SYM"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "weak"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -3289,7 +3316,10 @@
           "primitive": "SYM"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "safe"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -3462,7 +3492,10 @@
           "primitive": "SIGN"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "safe"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -3611,7 +3644,10 @@
           "primitive": "PROTO"
         },
         "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested"
+        "certificationLevel": "known-answer-tested",
+        "quantumSecurity": {
+          "level": "safe"
+        }
       },
       "evidence": {
         "occurrences": [
@@ -3801,5 +3837,23 @@
         "algo-11"
       ]
     }
+  ],
+  "qSafe": [
+    "ML-KEM",
+    "NTT",
+    "ML-DSA/fml-dsa",
+    "AES",
+    "SLH-DSA",
+    "TLA+"
+  ],
+  "qVul": [
+    "SM2",
+    "P-256/ECDH"
+  ],
+  "qWeak": [
+    "SHA-256",
+    "Double-Ratchet",
+    "SM3",
+    "SM4"
   ]
 }
