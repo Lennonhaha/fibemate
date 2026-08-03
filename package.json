@@ -29,7 +29,7 @@
     "mongoose": "9.6.2",
     "node-addon-api": "8.7.0",
     "sm-crypto": "0.4.0",
-    "ws": "8.21.0"
+    "ws": "8.21.1"
   },
   "overrides": {
     "jsonpath": "1.1.1",
