@@ -34,7 +34,8 @@
   },
   "overrides": {
     "jsonpath": "1.1.1",
-    "bfj": "8.0.0"
+    "bfj": "8.0.0",
+    "js-yaml": "4.1.1"
   },
   "directories": {
     "doc": "docs",
