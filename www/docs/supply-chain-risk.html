@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>供应链依赖风险图 · FIBEMATE</title>
+<meta name="description" content="密码算法供应链风险热力图 — 370 文件引用 / 12 算法节点 / CBOM CycloneDX 风险溯源">
+<style>
+:root { --bg:#0b0f19; --card:#131827; --border:#1f2a44; --text:#b8c0d0; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; }
+
+#top-bar { position:fixed; z-index:10; top:12px; left:50%; transform:translateX(-50%); display:flex; gap:10px; }
+.chip { background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:10px; padding:8px 14px; text-align:center; }
+.chip .num { font-size:20px; font-weight:800; line-height:1.1; }
+.chip .lbl { font-size:9px; color:#66708a; letter-spacing:0.5px; }
+
+#legend { position:fixed; z-index:10; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:14px; background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:20px; padding:8px 18px; font-size:10px; }
+.leg { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:9px; height:9px; border-radius:50%; }
+
+#tooltip { display:none; position:fixed; z-index:20; pointer-events:none; background:rgba(11,15,25,0.95); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:10px; color:var(--text); max-width:260px; }
+#tooltip .head { font-size:13px; font-weight:600; margin-bottom:4px; }
+#tooltip .kv { display:flex; justify-content:space-between; gap:14px; color:#66708a; }
+#tooltip .kv .v { color:#d0d6e6; font-weight:600; }
+
+#footer { position:fixed; z-index:10; bottom:12px; right:16px; font-size:10px; color:#66708a; }
+#footer a { color:#0ea5e9; text-decoration:none; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="top-bar">
+  <div class="chip"><div class="num">12</div><div class="lbl">算法节点</div></div>
+  <div class="chip"><div class="num">370</div><div class="lbl">引用文件</div></div>
+  <div class="chip" style="border-color:#ffa94d"><div class="num" style="color:#ffa94d">0.8%</div><div class="lbl">脆弱率</div></div>
+</div>
+
+<div id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#51cf66;box-shadow:0 0 4px #51cf66"></div> 安全</div>
+  <div class="leg"><div class="leg-dot" style="background:#ffd43b;box-shadow:0 0 4px #ffd43b"></div> 警告</div>
+  <div class="leg"><div class="leg-dot" style="background:#ff6b6b;box-shadow:0 0 4px #ff6b6b"></div> 脆弱</div>
+  <span style="color:#66708a;margin-left:8px">🖱 拖拽旋转 · 滚轮缩放 · 节点大小 = 引用文件数</span>
+</div>
+
+<div id="footer"><a href="/docs/cbom-viewer.html">CBOM</a> · <a href="/docs/pqc-dashboard.html">仪表盘</a></div>
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function(){
+if(typeof THREE==='undefined'){document.body.innerHTML='<div style="color:#e44;padding:40px;text-align:center;margin-top:20vh"><b>&#x2715;</b> THREE.js 未加载</div>';return;}
+
+// ═══════ Data — algorithm nodes + risk + file counts ═══════
+var NODES = [
+  { id:'mlkem', label:'ML-KEM-768', cat:'pqc', risk:'safe', score:5, files:164, pk:1184, sk:2400,
+    detail:'FIPS 203 · C/WASM双后端 · KAT 10,000' },
+  { id:'sha256', label:'SHA-256', cat:'hash', risk:'safe', score:30, files:94, pk:0, sk:0,
+    detail:'FIPS 180-4 · 量子安全 · 94处引用' },
+  { id:'ntt', label:'NTT', cat:'hardware', risk:'safe', score:5, files:135, pk:0, sk:0,
+    detail:'FPGA Artix-7 · BRAM查表 · ILA+L4' },
+  { id:'sm2', label:'SM2', cat:'asym', risk:'safe', score:5, files:90, pk:64, sk:32,
+    detail:'GM/T 0003 · jsbn+BigInt · 教育用途' },
+  { id:'sm3', label:'SM3', cat:'hash', risk:'warning', score:25, files:52, pk:0, sk:0,
+    detail:'GM/T 0004 · SM2配套' },
+  { id:'p256', label:'P-256 ECDH', cat:'asym', risk:'vulnerable', score:40, files:65, pk:65, sk:32,
+    detail:'NIST SP 800-56A · Shor脆弱 · 需迁移' },
+  { id:'dr', label:'Double-Ratchet', cat:'protocol', risk:'warning', score:25, files:12, pk:0, sk:0,
+    detail:'ML-KEM X3DH · 100条rekey' },
+  { id:'mldsa', label:'ML-DSA-65', cat:'pqc', risk:'safe', score:8, files:47, pk:1952, sk:4032,
+    detail:'FIPS 204 · fml-dsa · KAT 270' },
+  { id:'sm4', label:'SM4-GCM', cat:'sym', risk:'warning', score:25, files:39, pk:0, sk:0,
+    detail:'GM/T 0002 · 纯JS' },
+  { id:'aes', label:'AES-256-GCM', cat:'sym', risk:'safe', score:20, files:39, pk:0, sk:0,
+    detail:'FIPS 197 · 量子安全' },
+  { id:'slhdsa', label:'SLH-DSA-128s', cat:'pqc', risk:'safe', score:30, files:28, pk:32, sk:64,
+    detail:'FIPS 205 · WASM · Sig=7856B' },
+  { id:'tla', label:'TLA+ Path C-2', cat:'verification', risk:'safe', score:5, files:8, pk:0, sk:0,
+    detail:'7不变量 · 101k states · ROM/QROM' },
+];
+
+var RISK_COLOR = { safe:'#51cf66', warning:'#ffd43b', vulnerable:'#ff6b6b' };
+var RISK_GLOW = { safe:'rgba(81,207,102,0.4)', warning:'rgba(255,212,59,0.4)', vulnerable:'rgba(255,107,107,0.4)' };
+
+// Compute edges from CBOM: SHA-256 used by everyone, P-256/SM2 share arithmetic, etc.
+var EDGES = [
+  { from:'sha256', to:'mlkem', weight:2, label:'CBOM依赖' },
+  { from:'sha256', to:'mldsa', weight:1, label:'CBOM依赖' },
+  { from:'sha256', to:'slhdsa', weight:1, label:'CBOM依赖' },
+  { from:'sha256', to:'sm2', weight:1, label:'CBOM依赖' },
+  { from:'sha256', to:'sm3', weight:2, label:'国密配套' },
+  { from:'sha256', to:'sm4', weight:1, label:'CBOM依赖' },
+  { from:'sha256', to:'aes', weight:1, label:'CBOM依赖' },
+  { from:'sha256', to:'p256', weight:1, label:'CBOM依赖' },
+  { from:'sha256', to:'dr', weight:1, label:'HKDF内部' },
+  { from:'sha256', to:'ntt', weight:1, label:'CBOM依赖' },
+  { from:'sha256', to:'tla', weight:1, label:'引用' },
+  { from:'sm2', to:'p256', weight:3, label:'椭圆曲线共享' },
+  { from:'sm2', to:'dr', weight:1, label:'SM2签名' },
+  { from:'sm3', to:'sm2', weight:3, label:'SM3→SM2签名' },
+  { from:'sm3', to:'sm4', weight:2, label:'SM3 MAC' },
+  { from:'sm4', to:'dr', weight:1, label:'消息加密' },
+  { from:'mlkem', to:'dr', weight:3, label:'X3DH握手' },
+  { from:'p256', to:'dr', weight:2, label:'双棘轮' },
+  { from:'mlkem', to:'ntt', weight:1, label:'NTT加速' },
+  { from:'mldsa', to:'ntt', weight:1, label:'NTT加速' },
+  { from:'mlkem', to:'tla', weight:2, label:'KEM安全验证' },
+];
+
+var nodeMap={}; NODES.forEach(function(n){nodeMap[n.id]=n;});
+
+// ═══════ 3D Layout — sphere with SHA-256 at center, others in concentric rings ═══════
+var CENTER = { id:'sha256' };
+var shaNode = nodeMap['sha256'];
+
+// Place nodes: radial from center to risk-based orbit
+// Inner ring: high-connection nodes (sm2, sm3, p256, mlkem)
+// Outer ring: leaf nodes (aes, sm4, slhdsa, mldsa, dr, tla, ntt)
+
+var innerRing = ['sm2','sm3','p256','mlkem','ntt'];
+var outerRing = ['aes','sm4','slhdsa','mldsa','dr','tla'];
+
+var R1=4.5, R2=8, Y0=0;
+var nInner=innerRing.length, nOuter=outerRing.length;
+
+nodeMap['sha256'].tp = { x:0, y:Y0+1.5, z:0 };
+
+innerRing.forEach(function(id,i){
+  var a=(2*Math.PI/nInner)*i - Math.PI/2;
+  nodeMap[id].tp={ x:Math.cos(a)*R1, y:Y0+Math.sin(i*1.2)*0.8, z:Math.sin(a)*R1 };
+});
+outerRing.forEach(function(id,i){
+  var a=(2*Math.PI/nOuter)*i - Math.PI/2;
+  nodeMap[id].tp={ x:Math.cos(a)*R2, y:Y0-0.5, z:Math.sin(a)*R2 };
+});
+
+// ═══════ Scene ═══════
+var W=innerWidth,H=innerHeight;
+var scene=new THREE.Scene(); scene.background=new THREE.Color('#0b0f19'); scene.fog=new THREE.Fog('#0b0f19',20,60);
+
+var camera=new THREE.PerspectiveCamera(45,W/H,0.5,100); camera.position.set(-4,6,18); camera.lookAt(0,0,0);
+
+var renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.3;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.08; controls.autoRotate=true; controls.autoRotateSpeed=0.2;
+controls.minDistance=5; controls.maxDistance=50; controls.target.set(0,0.5,0); controls.update();
+
+scene.add(new THREE.AmbientLight('#334466',2.5));
+var dl=new THREE.DirectionalLight('#ccddff',2.5); dl.position.set(15,20,12); scene.add(dl);
+var bl=new THREE.DirectionalLight('#556688',1); bl.position.set(-10,3,-8); scene.add(bl);
+
+var floor=new THREE.Mesh(new THREE.PlaneGeometry(25,20),new THREE.MeshStandardMaterial({color:'#111522',roughness:0.9,metalness:0}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-2; floor.receiveShadow=true; scene.add(floor);
+
+// Stars
+var sg=new THREE.BufferGeometry(); var sp=new Float32Array(200*3);
+for(var i=0;i<200*3;i+=3){sp[i]=(Math.random()-0.5)*30;sp[i+1]=(Math.random()-0.5)*15;sp[i+2]=(Math.random()-0.5)*18;}
+sg.setAttribute('position',new THREE.BufferAttribute(sp,3));
+scene.add(new THREE.Points(sg,new THREE.PointsMaterial({color:'#334466',size:0.05,opacity:0.3,transparent:true})));
+
+// ═══════ Draw edges ═══════
+var allNodes3d=[], allParticles=[];
+EDGES.forEach(function(e){
+  var from=nodeMap[e.from].tp, to=nodeMap[e.to].tp;
+  var mid={x:(from.x+to.x)/2,y:Math.min(from.y,to.y)-0.5,z:(from.z+to.z)/2};
+  var curve=new THREE.QuadraticBezierCurve3(
+    new THREE.Vector3(from.x,from.y,from.z),new THREE.Vector3(mid.x,mid.y,mid.z),new THREE.Vector3(to.x,to.y,to.z)
+  );
+  var pts=curve.getPoints(16);
+  var geo=new THREE.BufferGeometry().setFromPoints(pts);
+  var opacity=0.15+e.weight*0.05;
+  scene.add(new THREE.Line(geo,new THREE.LineBasicMaterial({color:'#1f2a44',transparent:true,opacity:opacity})));
+
+  // Flow particle
+  var dot=new THREE.Mesh(new THREE.SphereGeometry(0.03,4,4),
+    new THREE.MeshBasicMaterial({color:RISK_COLOR[nodeMap[e.to].risk],transparent:true,opacity:0.5,depthWrite:false}));
+  dot.userData={curve:curve,phase:Math.random()*Math.PI*2};
+  scene.add(dot);
+  allParticles.push(dot);
+});
+
+// ═══════ Draw nodes ═══════
+var MAX_FILES=164; // ML-KEM max
+NODES.forEach(function(n){
+  var p=n.tp, col=RISK_COLOR[n.risk];
+  var size=0.25+(n.files/MAX_FILES)*1.0; // size proportional to file count
+
+  // Base sphere
+  var geo=new THREE.SphereGeometry(size,28,14);
+  var mat=new THREE.MeshStandardMaterial({
+    color:new THREE.Color(col), roughness:0.15, metalness:0.6,
+    emissive:new THREE.Color(col), emissiveIntensity:0.3,
+  });
+  var node=new THREE.Mesh(geo,mat); node.position.set(p.x,p.y,p.z); node.userData=n;
+  scene.add(node); allNodes3d.push(node);
+
+  // Risk glow aura
+  var auraGeo=new THREE.SphereGeometry(size*1.35,24,12);
+  var aura=new THREE.Mesh(auraGeo,new THREE.MeshBasicMaterial({
+    color:new THREE.Color(col), transparent:true, opacity:0.12, depthWrite:false
+  }));
+  aura.position.set(p.x,p.y,p.z); scene.add(aura);
+
+  // Ring on risk boundary
+  var ringGeo=new THREE.TorusGeometry(size*1.2,0.025,8,28);
+  var ring=new THREE.Mesh(ringGeo,new THREE.MeshBasicMaterial({
+    color:new THREE.Color(col), transparent:true, opacity:0.35, depthWrite:false
+  }));
+  ring.position.set(p.x,p.y,p.z); ring.rotation.x=Math.PI/2; scene.add(ring);
+
+  // Label sprite
+  var canvas=document.createElement('canvas'); canvas.width=256; canvas.height=64;
+  var ctx=canvas.getContext('2d');
+  ctx.font='bold 14px "Segoe UI","PingFang SC",sans-serif'; ctx.textAlign='center'; ctx.fillStyle='#d0d6e6';
+  ctx.fillText(n.label,128,28);
+  ctx.font='10px "Segoe UI",sans-serif'; ctx.fillStyle='#66708a';
+  ctx.fillText(n.files+' 文件引用',128,44);
+  var tex=new THREE.CanvasTexture(canvas); tex.minFilter=THREE.LinearFilter;
+  var sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+  sprite.position.set(p.x,p.y+(size+0.6),p.z); sprite.scale.set(2.2,0.54,1);
+  scene.add(sprite);
+});
+
+// ═══════ Center glow ring ═══════
+var crGeo=new THREE.TorusGeometry(R1+0.2,0.04,8,64);
+var crRing=new THREE.Mesh(crGeo,new THREE.MeshBasicMaterial({color:'#334466',transparent:true,opacity:0.3}));
+crRing.rotation.x=Math.PI/2; crRing.position.y=-2; scene.add(crRing);
+var cr2Geo=new THREE.TorusGeometry(R2+0.5,0.03,8,80);
+var cr2Ring=new THREE.Mesh(cr2Geo,new THREE.MeshBasicMaterial({color:'#1f2a44',transparent:true,opacity:0.2}));
+cr2Ring.rotation.x=Math.PI/2; cr2Ring.position.y=-2; scene.add(cr2Ring);
+
+// ═══════ Raycaster ═══════
+var tooltip=document.getElementById('tooltip'), mouse=new THREE.Vector2(), hovered=null;
+var raycaster=new THREE.Raycaster();
+
+window.addEventListener('mousemove',function(ev){
+  mouse.x=(ev.clientX/W)*2-1; mouse.y=-(ev.clientY/H)*2+1;
+  raycaster.setFromCamera(mouse,camera);
+  var hits=raycaster.intersectObjects(allNodes3d);
+  if(hits.length>0){
+    var d=hits[0].object.userData;
+    if(hovered!==hits[0].object){
+      if(hovered) hovered.material.emissiveIntensity=0.3;
+      hovered=hits[0].object; hovered.material.emissiveIntensity=0.9;
+      document.body.style.cursor='pointer';
+    }
+    var col=RISK_COLOR[d.risk];
+    var riskLabels={safe:'🟢 安全',warning:'🟡 警告',vulnerable:'🔴 脆弱'};
+    var riskEdgeLabels={safe:'无已知风险',warning:'需关注',vulnerable:'需迁移'};
+    tooltip.style.display='block';
+    tooltip.innerHTML='<div class="head" style="color:'+col+'">'+d.label+'</div>'+
+      '<div class="kv"><span>风险</span><span class="v" style="color:'+col+'">'+riskLabels[d.risk]+' ('+riskEdgeLabels[d.risk]+')</span></div>'+
+      '<div class="kv"><span>引用文件</span><span class="v">'+d.files+'</span></div>'+
+      '<div class="kv"><span>风险评分</span><span class="v">'+d.score+'/100</span></div>'+
+      d.detail?'<div class="kv"><span>详情</span><span class="v">'+d.detail+'</span></div>':'';
+    tooltip.style.left=(ev.clientX+16)+'px'; tooltip.style.top=(ev.clientY-80)+'px';
+  } else {
+    if(hovered){hovered.material.emissiveIntensity=0.3;hovered=null;}
+    document.body.style.cursor=''; tooltip.style.display='none';
+  }
+});
+
+// ═══════ Animate ═══════
+function animate(){
+  requestAnimationFrame(animate);
+  var t=performance.now()*0.001;
+  allParticles.forEach(function(o){
+    if(!o.userData||!o.userData.curve) return;
+    var ph=(o.userData.phase+t*0.6)%(Math.PI*2);
+    o.position.copy(o.userData.curve.getPointAt(0.5+0.5*Math.sin(ph)));
+  });
+  controls.update(); renderer.render(scene,camera);
+}
+window.addEventListener('resize',function(){W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H);});
+animate();
+console.log('✅ Supply Chain Risk Graph — 12 nodes, 21 edges loaded');
+})();
+</script>
+</body>
+</html>
