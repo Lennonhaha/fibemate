@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CARS vs IBM 双框架雷达对比 · FIBEMATE</title>
+<meta name="description" content="CARS 75.20/100 · IBM 62.50/100 — 五维 vs 七维密码学评估框架同屏对比">
+<meta property="og:title" content="CARS vs IBM 双框架雷达 · FIBEMATE">
+<meta property="og:description" content="CARS 75.20 · IBM 62.50 — 双框架密码成熟度对比">
+<style>
+:root { --bg:#0f0f1a; --card:#1a1a2e; --border:#2a2a4a; --text:#c5c5d2; --text-dim:#7a7a8c; --accent:#00d4ff; --cars-color:#51cf66; --ibm-color:#c792ea; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; z-index:0; }
+#ui { position:fixed; z-index:10; pointer-events:none; }
+#ui>* { pointer-events:auto; }
+
+/* Score overlays - top center */
+#score-overlay {
+  top:16px; left:50%; transform:translateX(-50%);
+  display:flex; gap:20px;
+}
+.score-card {
+  background:var(--card); border:1px solid var(--border); border-radius:14px;
+  padding:16px 24px; text-align:center; min-width:160px;
+  backdrop-filter:blur(8px);
+}
+.score-card h3 { font-size:13px; margin-bottom:4px; letter-spacing:1px; }
+.score-card .big { font-size:36px; font-weight:800; line-height:1; margin:4px 0; }
+.score-card .delta { font-size:10px; color:var(--text-dim); }
+.cars-card h3, .cars-card .big { color:var(--cars-color); }
+.ibm-card h3, .ibm-card .big { color:var(--ibm-color); }
+
+/* Legend */
+#legend {
+  bottom:24px; left:50%; transform:translateX(-50%);
+  display:flex; gap:16px;
+  background:var(--card); border:1px solid var(--border); border-radius:20px;
+  padding:8px 20px; font-size:11px;
+}
+.leg-item { display:flex; align-items:center; gap:6px; }
+.leg-dot { width:10px; height:10px; border-radius:50%; }
+.leg-dot.cars { background:var(--cars-color); box-shadow:0 0 8px var(--cars-color); }
+.leg-dot.ibm { background:var(--ibm-color); box-shadow:0 0 8px var(--ibm-color); }
+
+/* Tooltip */
+#tooltip {
+  display:none; position:fixed; z-index:20; pointer-events:none;
+  background:rgba(15,15,26,0.94); border:1px solid var(--border); border-radius:8px;
+  padding:8px 12px; font-size:10px; color:var(--text-dim);
+  box-shadow:0 4px 16px rgba(0,0,0,0.5);
+  white-space:nowrap;
+}
+
+/* Footer */
+#footer {
+  bottom:12px; right:16px; font-size:10px; color:var(--text-dim);
+}
+#footer a { color:var(--accent); text-decoration:none; }
+
+/* Responsive */
+@media (max-width:800px) {
+  #score-overlay { flex-direction:column; gap:8px; }
+  .score-card { min-width:140px; padding:10px 16px; }
+  .score-card .big { font-size:28px; }
+}
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div id="ui">
+  <div id="score-overlay">
+    <div class="score-card cars-card">
+      <h3>🔵 CARS 五维</h3>
+      <div class="big">75.20</div>
+      <div class="delta">/ 100 · Crypto Agility Rating</div>
+    </div>
+    <div class="score-card ibm-card">
+      <h3>🟣 IBM 七维</h3>
+      <div class="big">62.50</div>
+      <div class="delta">/ 100 · HIGH · Crypto Maturity</div>
+    </div>
+  </div>
+
+  <div id="legend">
+    <div class="leg-item"><div class="leg-dot cars"></div> CARS (5维)</div>
+    <div class="leg-item"><div class="leg-dot ibm"></div> IBM (7维)</div>
+    <div style="color:var(--text-dim);margin-left:8px">🖱 拖拽旋转 · 滚轮缩放</div>
+  </div>
+
+  <div id="footer">
+    <a href="/docs/cars-radar.html">CARS 详情</a> ·
+    <a href="/docs/ibm-seven-radar.html">IBM 详情</a> ·
+    <a href="/docs/cbom-graph.html">CBOM 图</a>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function() {
+  if (typeof THREE === 'undefined') {
+    document.body.innerHTML = '<div style="color:red;padding:40px;text-align:center;margin-top:20vh">✕ THREE.js 未能加载<br><small>请 Ctrl+Shift+R 硬刷新</small></div>';
+    return;
+  }
+
+  // ═══════════ Data ═══════════
+  var CARS = {
+    name: 'CARS',
+    color: '#51cf66',
+    title: 'Crypto Agility Rating System',
+    overall: 75.20,
+    dimensions: [
+      { key:'CI', label:'加密清单', short:'Crypto Inventory', score:90, max:100 },
+      { key:'AA', label:'算法敏捷性', short:'Algorithm Agility', score:61, max:100 },
+      { key:'KL', label:'密钥生命周期', short:'Key Lifecycle', score:82, max:100 },
+      { key:'PC', label:'协议耦合度', short:'Protocol Coupling', score:73, max:100 },
+      { key:'OR', label:'组织准备度', short:'Organizational Readiness', score:70, max:100 },
+    ],
+  };
+
+  var IBM = {
+    name: 'IBM 7-Dim',
+    color: '#c792ea',
+    title: 'Crypto Maturity Framework',
+    overall: 62.50,
+    dimensions: [
+      { key:'D1', label:'接口抽象', short:'Interface Abstraction', score:60, max:100 },
+      { key:'D2', label:'配置外部化', short:'Config Externalization', score:50, max:100 },
+      { key:'D3', label:'版本管理', short:'Version Management', score:90, max:100 },
+      { key:'D4', label:'格式耦合', short:'Format Coupling', score:55, max:100 },
+      { key:'D5', label:'协议协商', short:'Protocol Negotiation', score:60, max:100 },
+      { key:'D6', label:'替换成本', short:'Replacement Cost', score:50, max:100 },
+      { key:'D7', label:'可观测性', short:'Observability', score:80, max:100 },
+    ],
+  };
+
+  // ═══════════ Scene ═══════════
+  var W = window.innerWidth, H = window.innerHeight;
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color('#0f0f1a');
+  scene.fog = new THREE.Fog('#0f0f1a', 20, 50);
+
+  var camera = new THREE.PerspectiveCamera(50, W/H, 0.5, 100);
+  camera.position.set(0, 8, 22);
+  camera.lookAt(0, 0, 0);
+
+  var renderer = new THREE.WebGLRenderer({ antialias:true, alpha:false });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
+  document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.3;
+  controls.minDistance = 8;
+  controls.maxDistance = 50;
+  controls.target.set(0, 0, 0);
+  controls.update();
+
+  // Lighting
+  scene.add(new THREE.AmbientLight('#334466', 2.0));
+  var dLight = new THREE.DirectionalLight('#aaccff', 1.5);
+  dLight.position.set(10, 15, 10);
+  scene.add(dLight);
+
+  // Stars
+  var starsGeo = new THREE.BufferGeometry();
+  var starPos = new Float32Array(400*3);
+  for (var i=0;i<400*3;i+=3){starPos[i]=(Math.random()-0.5)*40;starPos[i+1]=(Math.random()-0.5)*30;starPos[i+2]=(Math.random()-0.5)*30;}
+  starsGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+  scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color:'#334466',size:0.05,transparent:true,opacity:0.5})));
+
+  // Grids (two, offset)
+  var gridMat = new THREE.ShaderMaterial({
+    uniforms:{uColor:{value:new THREE.Color('#1a1a3a')}},
+    vertexShader:'varying vec2 vUv;void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);vUv=position.xz;}',
+    fragmentShader:'varying vec2 vUv;uniform vec3 uColor;void main(){float d=mod(length(vUv),1.0);float a=smoothstep(0.02,0.0,abs(d-0.5));gl_FragColor=vec4(uColor,a*0.3);}',
+    transparent:true,depthWrite:false
+  });
+
+  var planeGeo = new THREE.PlaneGeometry(18, 18);
+  var grid1 = new THREE.Mesh(planeGeo, gridMat);
+  grid1.rotation.x = -Math.PI/2;
+  grid1.position.set(-5.5, -6, 0);
+  scene.add(grid1);
+
+  var grid2 = new THREE.Mesh(planeGeo, gridMat);
+  grid2.rotation.x = -Math.PI/2;
+  grid2.position.set(5.5, -6, 0);
+  scene.add(grid2);
+
+  // ═══════════ Radar builder ═══════════
+  function buildRadar(dims, color, offsetX) {
+    var group = new THREE.Group();
+    group.position.set(offsetX, 0, 0);
+    var N = dims.length;
+    var maxR = 5;
+    var angleStep = (Math.PI*2)/N;
+    var startAngle = -Math.PI/2; // top
+
+    // Grid rings
+    for (var ring=1; ring<=5; ring++) {
+      var r = ring;
+      var pts = [];
+      for (var i=0; i<=N; i++) {
+        var a = startAngle + i*angleStep;
+        pts.push(new THREE.Vector3(Math.cos(a)*r, Math.sin(a)*r, 0));
+      }
+      var ringGeo = new THREE.BufferGeometry().setFromPoints(pts);
+      var ringMat = new THREE.LineBasicMaterial({color:new THREE.Color(color),transparent:true,opacity:0.15+(ring===5?0.25:0)});
+      group.add(new THREE.Line(ringGeo, ringMat));
+    }
+
+    // Axis spokes
+    for (var i=0; i<N; i++) {
+      var a = startAngle + i*angleStep;
+      var end = new THREE.Vector3(Math.cos(a)*maxR, Math.sin(a)*maxR, 0);
+      var spokeGeo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), end]);
+      group.add(new THREE.Line(spokeGeo, new THREE.LineBasicMaterial({color:new THREE.Color(color),transparent:true,opacity:0.25})));
+    }
+
+    // Axis labels (small spheres at tips)
+    for (var i=0; i<N; i++) {
+      var a = startAngle + i*angleStep;
+      var pos = new THREE.Vector3(Math.cos(a)*(maxR+0.6), Math.sin(a)*(maxR+0.6), 0);
+      var dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.08, 8, 6),
+        new THREE.MeshBasicMaterial({color:'#7a7a8c'})
+      );
+      dot.position.copy(pos);
+      group.add(dot);
+    }
+
+    // Score fill — polygon
+    var scorePts = [];
+    var scorePts3D = [];
+    for (var i=0; i<=N; i++) {
+      var idx = i % N;
+      var a = startAngle + idx*angleStep;
+      var r = (dims[idx].score/dims[idx].max) * maxR;
+      scorePts.push(new THREE.Vector2(Math.cos(a)*r, Math.sin(a)*r));
+      scorePts3D.push(new THREE.Vector3(Math.cos(a)*r, Math.sin(a)*r, 0));
+    }
+
+    // Fill shape (using ShapeGeometry)
+    var shape = new THREE.Shape(scorePts);
+    var fillGeo = new THREE.ShapeGeometry(shape);
+    var fillMat = new THREE.MeshBasicMaterial({color:new THREE.Color(color),transparent:true,opacity:0.18,side:THREE.DoubleSide,depthWrite:false});
+    group.add(new THREE.Mesh(fillGeo, fillMat));
+
+    // Score outline
+    var outlineGeo = new THREE.BufferGeometry().setFromPoints(scorePts3D);
+    var outlineMat = new THREE.LineBasicMaterial({color:new THREE.Color(color),linewidth:1});
+    group.add(new THREE.Line(outlineGeo, outlineMat));
+
+    // Score dots
+    for (var i=0; i<N; i++) {
+      var a = startAngle + i*angleStep;
+      var r = (dims[i].score/dims[i].max) * maxR;
+      var dot = new THREE.Mesh(
+        new THREE.SphereGeometry(0.12, 12, 8),
+        new THREE.MeshStandardMaterial({color:new THREE.Color(color),roughness:0.2,metalness:0.5,emissive:new THREE.Color(color),emissiveIntensity:0.6})
+      );
+      dot.position.set(Math.cos(a)*r, Math.sin(a)*r, 0.05);
+      dot.userData = {dim: dims[i], framework: N===5?'CARS':'IBM', color: color};
+      group.add(dot);
+    }
+
+    return group;
+  }
+
+  // ═══════════ Build ═══════════
+  var carsRadar = buildRadar(CARS.dimensions, CARS.color, -5.5);
+  scene.add(carsRadar);
+
+  var ibmRadar = buildRadar(IBM.dimensions, IBM.color, 5.5);
+  scene.add(ibmRadar);
+
+  // Framework labels (CSS positioned)
+  // We'll use 3D text via sprites for simplicity
+  function makeLabel(text, pos, color) {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 64;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = color; ctx.font = 'bold 28px "Segoe UI","PingFang SC",sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(text, 128, 38);
+    var tex = new THREE.CanvasTexture(canvas);
+    tex.minFilter = THREE.LinearFilter;
+    var mat = new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.8,depthTest:false,depthWrite:false});
+    var sprite = new THREE.Sprite(mat);
+    sprite.position.copy(pos);
+    sprite.scale.set(3, 0.75, 1);
+    return sprite;
+  }
+
+  scene.add(makeLabel('CARS 五维', new THREE.Vector3(-5.5, 6, 0), CARS.color));
+  scene.add(makeLabel('IBM 七维', new THREE.Vector3(5.5, 6, 0), IBM.color));
+
+  // ═══════════ Raycaster ═══════════
+  var tooltip = document.getElementById('tooltip');
+  var raycaster = new THREE.Raycaster();
+  var mouse = new THREE.Vector2();
+  var hovered = null;
+
+  // Collect all score dots for hover
+  var allDots = [];
+  carsRadar.traverse(function(c){ if(c.userData.dim) allDots.push(c); });
+  ibmRadar.traverse(function(c){ if(c.userData.dim) allDots.push(c); });
+
+  window.addEventListener('mousemove', function(ev) {
+    mouse.x = (ev.clientX/W)*2-1;
+    mouse.y = -(ev.clientY/H)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    var hits = raycaster.intersectObjects(allDots);
+    if (hits.length>0) {
+      var d = hits[0].object.userData;
+      if (hovered !== hits[0].object) {
+        if (hovered) hovered.material.emissiveIntensity = 0.6;
+        hovered = hits[0].object;
+        hovered.material.emissiveIntensity = 1.0;
+        document.body.style.cursor = 'pointer';
+        tooltip.style.display = 'block';
+        tooltip.innerHTML = '<strong style="color:'+d.color+'">'+d.framework+' · '+d.dim.key+'</strong><br>'+d.dim.label+': <strong>'+d.dim.score+'/'+d.dim.max+'</strong>';
+        tooltip.style.left = (ev.clientX+16)+'px';
+        tooltip.style.top = (ev.clientY-40)+'px';
+      }
+    } else {
+      if (hovered) { hovered.material.emissiveIntensity = 0.6; hovered = null; }
+      document.body.style.cursor = '';
+      tooltip.style.display = 'none';
+    }
+  });
+
+  // ═══════════ Animation ═══════════
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  window.addEventListener('resize', function() {
+    W = window.innerWidth; H = window.innerHeight;
+    camera.aspect = W/H; camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  });
+
+  animate();
+  console.log('✅ CARS vs IBM 双框架雷达 — 加载完成');
+})();
+</script>
+</body>
+</html>
