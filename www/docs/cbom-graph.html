@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBOM 力导向图 — 加密依赖关系可视化</title>
+<meta name="description" content="12 算法节点 · 14 条加密依赖 · 3D 力导向图 · PQC/经典/协议 三色分层">
+<meta property="og:title" content="CBOM 力导向图 · FIBEMATE">
+<meta property="og:description" content="12 算法 · 14 依赖 · 3D 力导向可视化">
+<style>
+:root { --bg:#0f0f1a; --card:#1a1a2e; --border:#2a2a4a; --text:#c5c5d2; --text-dim:#7a7a8c; --accent:#00d4ff; --green:#51cf66; --yellow:#ffa94d; --red:#ff6b6b; --purple:#c792ea; --blue:#748ffc; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; z-index:0; }
+#ui { position:fixed; z-index:10; pointer-events:none; }
+#ui > * { pointer-events:auto; }
+
+/* Legend */
+#legend-panel {
+  top:16px; left:16px;
+  background:var(--card); border:1px solid var(--border); border-radius:10px;
+  padding:12px 14px; font-size:11px; max-width:240px;
+}
+#legend-panel h3 { font-size:13px; margin-bottom:8px; color:var(--accent); }
+.leg-row { display:flex; align-items:center; gap:6px; margin:4px 0; }
+.leg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.leg-label { color:var(--text-dim); }
+
+/* Info tooltip */
+#tooltip {
+  display:none; position:fixed; z-index:20; pointer-events:none;
+  background:rgba(15,15,26,0.94); border:1px solid var(--border); border-radius:8px;
+  padding:10px 14px; font-size:11px; max-width:260px;
+  box-shadow:0 4px 20px rgba(0,0,0,0.6);
+}
+#tooltip .tt-name { font-size:14px; font-weight:700; color:var(--accent); margin-bottom:4px; }
+#tooltip .tt-row { color:var(--text-dim); font-size:10px; margin:2px 0; }
+#tooltip .tt-row strong { color:var(--text); }
+
+/* Controls */
+#controls {
+  bottom:20px; left:50%; transform:translateX(-50%);
+  display:flex; gap:8px;
+}
+.ctrl-btn {
+  background:var(--card); border:1px solid var(--border); border-radius:20px;
+  padding:5px 14px; font-size:11px; color:var(--text-dim); cursor:pointer;
+  font-family:inherit; transition:all .2s;
+}
+.ctrl-btn:hover { border-color:var(--accent); color:var(--accent); }
+.ctrl-btn.active { background:var(--accent); color:#000; border-color:var(--accent); font-weight:600; }
+
+/* Edge stats bar */
+#stats-bar {
+  top:16px; right:16px;
+  background:var(--card); border:1px solid var(--border); border-radius:10px;
+  padding:10px 14px; font-size:10px; text-align:right;
+}
+#stats-bar .stat-num { font-size:20px; font-weight:800; }
+#stats-bar .stat-label { color:var(--text-dim); font-size:9px; }
+
+/* Footer link */
+#footer {
+  bottom:12px; right:16px;
+  font-size:10px; color:var(--text-dim);
+}
+#footer a { color:var(--accent); text-decoration:none; }
+</style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<!-- Legend -->
+<div id="ui">
+  <div id="legend-panel">
+    <h3>📦 CBOM 力导向图</h3>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--accent)"></div><span class="leg-label">PQC 后量子 (3)</span></div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--yellow)"></div><span class="leg-label">经典算法 (6)</span></div>
+    <div class="leg-row"><div class="leg-dot" style="background:var(--purple)"></div><span class="leg-label">协议/原语/验证 (3)</span></div>
+    <div style="margin-top:8px;font-size:10px;color:var(--text-dim)">
+      🖱 拖拽旋转 · 滚轮缩放<br>
+      右键平移 · 悬停看详情
+    </div>
+  </div>
+
+  <div id="stats-bar">
+    <div><strong  class="stat-num" style="color:var(--accent)" id="st-nodes">-</strong> <span class="stat-label">节点</span></div>
+    <div style="margin-top:4px"><strong class="stat-num" style="color:var(--green)" id="st-edges">-</strong> <span class="stat-label">边</span></div>
+  </div>
+
+  <div id="controls">
+    <button class="ctrl-btn active" data-mode="both">全部</button>
+    <button class="ctrl-btn" data-mode="deps">仅依赖</button>
+    <button class="ctrl-btn" data-mode="pqc">仅 PQC</button>
+    <button class="ctrl-btn" data-mode="classic">仅经典</button>
+    <button class="ctrl-btn" onclick="resetCamera()">重置视角</button>
+  </div>
+
+  <div id="footer">
+    <a href="/docs/cbom-viewer.html">CBOM 详情</a> ·
+    <a href="/docs/cryptolaw-assessment.html">密码法合规</a>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function() {
+  if (typeof THREE === 'undefined') {
+    document.body.innerHTML = '<div style="color:red;padding:40px;font-size:20px;text-align:center;margin-top:20vh">✕ THREE.js 未能加载<br><small style="font-size:14px">请 Ctrl+Shift+R 硬刷新</small></div>';
+    return;
+  }
+
+  // ═══════════ 场景 ═══════════
+  var W = window.innerWidth, H = window.innerHeight;
+  var scene = new THREE.Scene();
+  scene.background = new THREE.Color('#0f0f1a');
+  scene.fog = new THREE.Fog('#0f0f1a', 30, 80);
+
+  var camera = new THREE.PerspectiveCamera(55, W/H, 0.5, 200);
+  camera.position.set(8, 6, 18);
+  camera.lookAt(0, 0, 0);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.2;
+  document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 5;
+  controls.maxDistance = 40;
+  controls.target.set(0, 0, 0);
+  controls.update();
+
+  // Lighting
+  scene.add(new THREE.AmbientLight('#334466', 1.6));
+  var dLight = new THREE.DirectionalLight('#aaccff', 1.2);
+  dLight.position.set(10, 15, 10);
+  scene.add(dLight);
+  var backLight = new THREE.DirectionalLight('#223344', 0.4);
+  backLight.position.set(-5, -2, -8);
+  scene.add(backLight);
+
+  // Starfield
+  var starsGeo = new THREE.BufferGeometry();
+  var starPos = new Float32Array(600*3);
+  for (var i=0; i<600*3; i+=3) { starPos[i]=(Math.random()-0.5)*60; starPos[i+1]=(Math.random()-0.5)*40; starPos[i+2]=(Math.random()-0.5)*50; }
+  starsGeo.setAttribute('position', new THREE.BufferAttribute(starPos, 3));
+  scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({color:'#334466', size:0.06, transparent:true, opacity:0.6})));
+
+  // Grid
+  var grid = new THREE.PolarGridHelper(14, 24, 16, 120, '#1a1a3a', '#1a1a2e');
+  grid.position.y = -7;
+  scene.add(grid);
+
+  // ═══════════ 数据 ═══════════
+  var tooltip = document.getElementById('tooltip');
+  var nodeMeshes = [], nodeData = [], edgeLines = [], edgeParticles = [];
+  var activeFilter = 'both';
+
+  function showTooltip(ev, n) {
+    var riskColor = n.risk === 'vulnerable' ? 'var(--red)' : n.risk === 'warning' ? 'var(--yellow)' : 'var(--green)';
+    tooltip.innerHTML =
+      '<div class="tt-name" style="color:'+n.color+'">'+n.name+'</div>'+
+      '<div class="tt-row">类别: <strong>'+n.category+'</strong> | 风险: <strong style="color:'+riskColor+'">'+n.risk+'</strong></div>'+
+      '<div class="tt-row">标准: <strong>'+n.standard+'</strong></div>'+
+      (n.quantumSecurity ? '<div class="tt-row">量子安全: <strong>'+n.quantumSecurity+' bits</strong></div>' : '')+
+      '<div class="tt-row">引用文件: <strong>'+n.fileCount+'</strong></div>';
+    tooltip.style.display = 'block';
+    tooltip.style.left = (ev.clientX+16)+'px';
+    tooltip.style.top = (ev.clientY-60)+'px';
+  }
+
+  function hideTooltip() { tooltip.style.display = 'none'; }
+
+  // Raycaster
+  var raycaster = new THREE.Raycaster();
+  raycaster.params.Points.threshold = 0.3;
+  raycaster.params.Line = { threshold: 0.1 };
+  var mouse = new THREE.Vector2();
+  var hoveredNode = null;
+
+  window.addEventListener('mousemove', function(ev) {
+    mouse.x = (ev.clientX/W)*2-1;
+    mouse.y = -(ev.clientY/H)*2+1;
+    raycaster.setFromCamera(mouse, camera);
+    var hits = raycaster.intersectObjects(nodeMeshes);
+    if (hits.length > 0) {
+      var obj = hits[0].object;
+      if (hoveredNode !== obj) {
+        if (hoveredNode) hoveredNode.material.emissive.set('#000000');
+        hoveredNode = obj;
+        hoveredNode.material.emissive.set('#ffffff');
+        hoveredNode.material.emissiveIntensity = 0.5;
+        document.body.style.cursor = 'pointer';
+        showTooltip(ev, obj.userData.data);
+      }
+    } else {
+      if (hoveredNode) {
+        hoveredNode.material.emissive.set('#000000');
+        hoveredNode = null;
+        document.body.style.cursor = '';
+        hideTooltip();
+      }
+    }
+  });
+
+  window.addEventListener('resize', function() {
+    W = window.innerWidth; H = window.innerHeight;
+    camera.aspect = W/H; camera.updateProjectionMatrix();
+    renderer.setSize(W, H);
+  });
+
+  // ═══════════ 力导向引擎 ═══════════
+  function ForceGraph(nodes, edges) {
+    this.nodes = nodes;
+    this.edges = edges;
+    this.positions = [];
+    this.velocities = [];
+    var self = this;
+
+    // Init positions in a Fibonacci sphere
+    var goldenAngle = Math.PI*(3-Math.sqrt(5));
+    nodes.forEach(function(n, i) {
+      var theta = goldenAngle * i;
+      var phi = Math.asin(-1 + 2*(i+0.5)/nodes.length);
+      self.positions.push(new THREE.Vector3(
+        5*Math.cos(theta)*Math.cos(phi),
+        4*Math.sin(phi),
+        5*Math.sin(theta)*Math.cos(phi)
+      ));
+      self.velocities.push(new THREE.Vector3(0,0,0));
+    });
+
+    this.simulate = function(dt) {
+      var forces = [];
+      for (var i=0; i<nodes.length; i++) forces.push(new THREE.Vector3(0,0,0));
+
+      // Repulsion
+      for (var i=0; i<nodes.length; i++) {
+        for (var j=i+1; j<nodes.length; j++) {
+          var d = self.positions[i].clone().sub(self.positions[j]);
+          var dist = d.length() + 0.01;
+          var force = 120/(dist*dist);
+          d.normalize().multiplyScalar(force*dt);
+          forces[i].add(d);
+          forces[j].sub(d);
+        }
+      }
+
+      // Attraction (edges)
+      for (var e=0; e<edges.length; e++) {
+        var si = edges[e].sourceIdx;
+        var ti = edges[e].targetIdx;
+        var d = self.positions[ti].clone().sub(self.positions[si]);
+        var dist = d.length() + 0.01;
+        var idealLen = edges[e].idealLen || 3;
+        var force = (dist - idealLen) * edges[e].weight * 0.04 * dt;
+        d.normalize().multiplyScalar(force);
+        forces[si].add(d);
+        forces[ti].sub(d);
+      }
+
+      // Center gravity
+      for (var i=0; i<nodes.length; i++) {
+        forces[i].add(self.positions[i].clone().multiplyScalar(-0.02*dt));
+      }
+
+      // Apply
+      for (var i=0; i<nodes.length; i++) {
+        self.velocities[i].add(forces[i]).multiplyScalar(0.92);
+        self.positions[i].add(self.velocities[i]);
+      }
+    };
+  }
+
+  // ═══════════ 渲染 ═══════════
+  var graph = null;
+  var allNodes = [], allEdges = [];
+  var sphereGeo = new THREE.SphereGeometry(0.28, 24, 16);
+  var ringGeo = new THREE.TorusGeometry(0.32, 0.04, 8, 24);
+  var starGeo = new THREE.IcosahedronGeometry(0.22, 0);
+
+  function createGraph(data) {
+    // Clear old
+    nodeMeshes.forEach(function(m) { scene.remove(m); });
+    edgeLines.forEach(function(l) { scene.remove(l); });
+    edgeParticles.forEach(function(p) { scene.remove(p); });
+    nodeMeshes = []; edgeLines = []; edgeParticles = []; nodeData = [];
+    allNodes = []; allEdges = [];
+
+    // Nodes
+    data.nodes.forEach(function(n, i) {
+      var geo;
+      if (n.risk === 'vulnerable') geo = ringGeo;
+      else if (n.risk === 'warning') geo = starGeo;
+      else geo = sphereGeo;
+
+      var mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color(n.color),
+        roughness: 0.3,
+        metalness: 0.5,
+        emissive: new THREE.Color('#000000'),
+        emissiveIntensity: 0,
+      });
+      var mesh = new THREE.Mesh(geo, mat);
+      mesh.userData.data = n;
+      mesh.userData.idx = i;
+      scene.add(mesh);
+      nodeMeshes.push(mesh);
+      nodeData.push(n);
+      allNodes.push({ id: n.id, name: n.name, category: n.category, risk: n.risk, color: n.color, standard: n.standard, quantumSecurity: n.quantumSecurity, fileCount: n.fileCount });
+    });
+
+    // Edges
+    data.edges.forEach(function(e) {
+      var si = -1, ti = -1;
+      for (var i=0; i<allNodes.length; i++) {
+        if (allNodes[i].id === e.source) si = i;
+        if (allNodes[i].id === e.target) ti = i;
+      }
+      if (si === -1 || ti === -1) return;
+
+      allEdges.push({
+        source: e.source, target: e.target,
+        sourceIdx: si, targetIdx: ti,
+        weight: e.weight || 0.5,
+        idealLen: (e.weight||0.5) < 0.5 ? 5 : (e.weight||1) < 1 ? 4 : 2.8,
+        label: e.label, evidence: e.evidence,
+      });
+
+      // Curved tube
+      var curve = new THREE.CubicBezierCurve3(
+        new THREE.Vector3(0,0,0), new THREE.Vector3(0,1,0), new THREE.Vector3(0,-1,0), new THREE.Vector3(0,0,1)
+      );
+      var tubeGeo = new THREE.TubeGeometry(curve, 16, 0.03, 6, false);
+      var tubeMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(e.weight>1?'#4488aa':'#334466'), transparent:true, opacity:0.5 });
+      var tube = new THREE.Mesh(tubeGeo, tubeMat);
+      tube.userData = { sourceIdx: si, targetIdx: ti, sourceId: e.source, targetId: e.target, sourcePos: new THREE.Vector3(), targetPos: new THREE.Vector3() };
+      scene.add(tube);
+      edgeLines.push(tube);
+
+      // Flow particle
+      var pGeo = new THREE.SphereGeometry(0.06, 6, 4);
+      var pMat = new THREE.MeshBasicMaterial({ color: new THREE.Color(e.weight>1?'#66ccff':'#446688') });
+      var particle = new THREE.Mesh(pGeo, pMat);
+      particle.userData = { edgeIdx: allEdges.length-1, t: Math.random(), sourceId: e.source, targetId: e.target };
+      scene.add(particle);
+      edgeParticles.push(particle);
+    });
+
+    graph = new ForceGraph(allNodes, allEdges);
+    document.getElementById('st-nodes').textContent = allNodes.length;
+    document.getElementById('st-edges').textContent = allEdges.length;
+
+    // Labels (canvas sprites)
+    // Note: skipped for performance — labels show on hover via tooltip
+  }
+
+  function updateTubes() {
+    if (!graph) return;
+    var eps = edgeParticles;
+    for (var i=0; i<edgeLines.length; i++) {
+      var tube = edgeLines[i];
+      var ud = tube.userData;
+      var sp = graph.positions[ud.sourceIdx];
+      var tp = graph.positions[ud.targetIdx];
+      if (!sp || !tp) continue;
+      ud.sourcePos.copy(sp); ud.targetPos.copy(tp);
+
+      var mid = sp.clone().add(tp).multiplyScalar(0.5);
+      var dir = tp.clone().sub(sp);
+      var len = dir.length();
+      dir.normalize();
+      var perp = new THREE.Vector3(-dir.y, dir.x, 0).normalize().multiplyScalar(len*0.2);
+      var cp1 = sp.clone().add(dir.clone().multiplyScalar(len*0.25)).add(perp);
+      var cp2 = tp.clone().sub(dir.clone().multiplyScalar(len*0.25)).add(perp);
+
+      // Update tube by rebuilding geometry
+      var curve = new THREE.CubicBezierCurve3(sp.clone(), cp1, cp2, tp.clone());
+      tube.geometry.dispose();
+      tube.geometry = new THREE.TubeGeometry(curve, 16, 0.03, 6, false);
+    }
+
+    // Update particles
+    for (var j=0; j<eps.length; j++) {
+      var p = eps[j];
+      p.userData.t = (p.userData.t + 0.003) % 1;
+      var e = allEdges[p.userData.edgeIdx];
+      if (!e) continue;
+      var sp = graph.positions[e.sourceIdx];
+      var tp = graph.positions[e.targetIdx];
+      if (!sp || !tp) continue;
+      var t = p.userData.t;
+      var len = tp.clone().sub(sp).length();
+      var perp2 = new THREE.Vector3(-(tp.y-sp.y), (tp.x-sp.x), 0).normalize().multiplyScalar(len*0.2);
+      var mid2 = sp.clone().add(tp).multiplyScalar(0.5);
+      var c1 = sp.clone().add(mid2.clone().sub(sp).multiplyScalar(0.25)).add(perp2);
+      var c2 = tp.clone().sub(tp.clone().sub(mid2).multiplyScalar(0.25)).add(perp2);
+      // bezier point at t
+      var oneMinusT = 1-t;
+      var pt = sp.clone().multiplyScalar(oneMinusT*oneMinusT*oneMinusT)
+        .add(c1.clone().multiplyScalar(3*oneMinusT*oneMinusT*t))
+        .add(c2.clone().multiplyScalar(3*oneMinusT*t*t))
+        .add(tp.clone().multiplyScalar(t*t*t));
+      p.position.copy(pt);
+    }
+  }
+
+  // ═══════════ 滤镜 ═══════════
+  function applyFilter(mode) {
+    activeFilter = mode;
+    var visNodes = {};
+    if (mode === 'both') {
+      allNodes.forEach(function(n) { visNodes[n.id] = true; });
+    } else if (mode === 'deps') {
+      allEdges.forEach(function(e) { visNodes[e.source] = true; visNodes[e.target] = true; });
+    } else if (mode === 'pqc') {
+      allNodes.forEach(function(n) { if (n.category === 'pqc-kem' || n.category === 'pqc-sig') visNodes[n.id] = true; });
+    } else if (mode === 'classic') {
+      allNodes.forEach(function(n) { if (n.category.startsWith('classic')) visNodes[n.id] = true; });
+    }
+
+    var visSet = new Set(Object.keys(visNodes));
+    nodeMeshes.forEach(function(m, i) {
+      var n = allNodes[i];
+      m.visible = visSet.has(n.id);
+    });
+    edgeLines.forEach(function(l) {
+      var ud = l.userData;
+      l.visible = visSet.has(ud.sourceId) && visSet.has(ud.targetId);
+    });
+    edgeParticles.forEach(function(p) {
+      var ud = p.userData;
+      p.visible = visSet.has(ud.sourceId) && visSet.has(ud.targetId);
+    });
+
+    // Update buttons
+    document.querySelectorAll('.ctrl-btn[data-mode]').forEach(function(b) {
+      b.classList.toggle('active', b.dataset.mode === mode);
+    });
+  }
+
+  document.querySelectorAll('.ctrl-btn[data-mode]').forEach(function(b) {
+    b.addEventListener('click', function() { applyFilter(this.dataset.mode); });
+  });
+
+  window.resetCamera = function() {
+    camera.position.set(8, 6, 18);
+    controls.target.set(0, 0, 0);
+    controls.update();
+  };
+
+  // ═══════════ 循环 ═══════════
+  var clock = new THREE.Clock();
+
+  function animate() {
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    controls.update();
+
+    if (graph) {
+      // Simulate
+      for (var step=0; step<3; step++) graph.simulate(dt/3);
+
+      // Update mesh positions
+      for (var i=0; i<nodeMeshes.length; i++) {
+        if (!nodeMeshes[i].visible) continue;
+        nodeMeshes[i].position.copy(graph.positions[i]);
+      }
+
+      // Update tubes (every 2 frames for perf)
+      if (!animate._frameCnt) animate._frameCnt = 0;
+      animate._frameCnt++;
+      if (animate._frameCnt % 2 === 0) updateTubes();
+    }
+
+    renderer.render(scene, camera);
+  }
+
+  // ═══════════ 加载 ═══════════
+  fetch('cbom-graph-data.json?t='+Date.now())
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.nodes || !data.edges) throw new Error('Invalid data');
+      createGraph(data);
+
+      // Lightweight labels using CSS positioning (projection approach)
+      // Omitted for perf — hover tooltip is sufficient
+    })
+    .catch(function(err) {
+      document.body.innerHTML = '<div style="color:var(--red);padding:40px;font-size:18px;text-align:center;margin-top:20vh">✕ 无法加载 CBOM 图数据<br><small style="font-size:13px">'+err.message+'</small><br><br><a href="/docs/cbom-viewer.html" style="color:var(--accent);font-size:13px">→ 打开 CBOM 表格视图</a></div>';
+      return;
+    });
+
+  animate();
+})();
+</script>
+</body>
+</html>

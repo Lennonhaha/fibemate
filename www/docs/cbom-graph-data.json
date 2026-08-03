@@ -1,0 +1,285 @@
+{
+  "version": "v1.0.0",
+  "source": "@fibemate/cbom-force-graph",
+  "generatedAt": "2026-08-03T11:22:58.464Z",
+  "nodes": [
+    {
+      "id": "ml-kem-768",
+      "name": "ML-KEM-768",
+      "category": "pqc-kem",
+      "color": "#aaa",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "FIPS 203",
+      "quantumSecurity": 128,
+      "classicalSecurity": 192,
+      "group": 0.9166666666666666
+    },
+    {
+      "id": "ml-dsa-65",
+      "name": "ML-DSA-65",
+      "category": "pqc-sig",
+      "color": "#aaa",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "FIPS 204",
+      "quantumSecurity": 128,
+      "classicalSecurity": 192,
+      "group": 0.8333333333333334
+    },
+    {
+      "id": "slh-dsa-128s",
+      "name": "SLH-DSA-128s (SPHINCS+)",
+      "category": "pqc-sig",
+      "color": "#aaa",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "FIPS 205",
+      "quantumSecurity": 128,
+      "classicalSecurity": 128,
+      "group": 0.75
+    },
+    {
+      "id": "sm2-p256",
+      "name": "SM2 Elliptic Curve",
+      "category": "classic-ecc",
+      "color": "#aaa",
+      "risk": "warning",
+      "radius": 0.6,
+      "fileCount": 0,
+      "standard": "GM/T 0003",
+      "quantumSecurity": "",
+      "classicalSecurity": 128,
+      "group": 0.6666666666666666
+    },
+    {
+      "id": "sm3-hash",
+      "name": "SM3 Hash Function",
+      "category": "classic-hash",
+      "color": "#aaa",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "GM/T 0004",
+      "quantumSecurity": 64,
+      "classicalSecurity": 128,
+      "group": 0.5833333333333334
+    },
+    {
+      "id": "sm4-block",
+      "name": "SM4 Block Cipher",
+      "category": "classic-sym",
+      "color": "#aaa",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "GM/T 0002",
+      "quantumSecurity": 64,
+      "classicalSecurity": 128,
+      "group": 0.5
+    },
+    {
+      "id": "p256-ecdh",
+      "name": "NIST P-256 ECDH",
+      "category": "classic-ecc",
+      "color": "#aaa",
+      "risk": "warning",
+      "radius": 0.6,
+      "fileCount": 0,
+      "standard": "FIPS 186-4",
+      "quantumSecurity": "",
+      "classicalSecurity": 128,
+      "group": 0.4166666666666667
+    },
+    {
+      "id": "sha-256",
+      "name": "SHA-256 Hash",
+      "category": "classic-hash",
+      "color": "#aaa",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "FIPS 180-4",
+      "quantumSecurity": 64,
+      "classicalSecurity": 128,
+      "group": 0.3333333333333333
+    },
+    {
+      "id": "aes-256-gcm",
+      "name": "AES-256-GCM",
+      "category": "classic-sym",
+      "color": "#aaa",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "FIPS 197",
+      "quantumSecurity": 128,
+      "classicalSecurity": 256,
+      "group": 0.25
+    },
+    {
+      "id": "double-ratchet",
+      "name": "Double Ratchet Protocol",
+      "category": "protocol",
+      "color": "#c792ea",
+      "risk": "warning",
+      "radius": 0.6,
+      "fileCount": 0,
+      "standard": "Signal Protocol",
+      "quantumSecurity": "",
+      "classicalSecurity": 128,
+      "group": 0.16666666666666666
+    },
+    {
+      "id": "ntt-core",
+      "name": "Number Theoretic Transform",
+      "category": "primitive",
+      "color": "#748ffc",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "FIPS 203/204 (internal)",
+      "quantumSecurity": "",
+      "classicalSecurity": "",
+      "group": 0.08333333333333333
+    },
+    {
+      "id": "tla-spec",
+      "name": "TLA+ Formal Specification",
+      "category": "verification",
+      "color": "#51cf66",
+      "risk": "safe",
+      "radius": 0.4,
+      "fileCount": 0,
+      "standard": "Lamport TLA+",
+      "quantumSecurity": "",
+      "classicalSecurity": "",
+      "group": 0
+    }
+  ],
+  "edges": [
+    {
+      "source": "ml-kem-768",
+      "target": "sha-256",
+      "weight": 1.5,
+      "label": "HKDF/SHAKE",
+      "evidence": "packages/pqc-kem/src/ml-kem-768.js:hashG/hashH"
+    },
+    {
+      "source": "ml-kem-768",
+      "target": "ntt-core",
+      "weight": 1.5,
+      "label": "多项式乘法",
+      "evidence": "packages/pqc-kem/src/ml-kem-768-ntt.js"
+    },
+    {
+      "source": "sm2-p256",
+      "target": "sm3-hash",
+      "weight": 1,
+      "label": "签名哈希",
+      "evidence": "packages/sm2-ref/: Z_A=SM3(ENTLA||ID||a||b||G||P)"
+    },
+    {
+      "source": "sm2-p256",
+      "target": "p256-ecdh",
+      "weight": 0.5,
+      "label": "ECC 同类",
+      "evidence": "www/crypto/gm.js: SM2 fallback 链"
+    },
+    {
+      "source": "double-ratchet",
+      "target": "ml-kem-768",
+      "weight": 1.5,
+      "label": "X3DH 根密钥",
+      "evidence": "packages/double-ratchet-pq.js:hybridX3DH"
+    },
+    {
+      "source": "double-ratchet",
+      "target": "p256-ecdh",
+      "weight": 1,
+      "label": "消息棘轮",
+      "evidence": "packages/double-ratchet-pq.js: DH ratchet"
+    },
+    {
+      "source": "double-ratchet",
+      "target": "sha-256",
+      "weight": 1,
+      "label": "HKDF",
+      "evidence": "packages/double-ratchet-pq.js:hkdfSync"
+    },
+    {
+      "source": "sm4-block",
+      "target": "aes-256-gcm",
+      "weight": 0.5,
+      "label": "GM 对称对比",
+      "evidence": "www/crypto/message-gm.js:SM4-αGCM"
+    },
+    {
+      "source": "ml-dsa-65",
+      "target": "sha-256",
+      "weight": 1,
+      "label": "签名哈希",
+      "evidence": "packages/fml-dsa/: SHAKE-256"
+    },
+    {
+      "source": "slh-dsa-128s",
+      "target": "sha-256",
+      "weight": 1,
+      "label": "签名哈希",
+      "evidence": "packages/pqc-kem/: SHAKE"
+    },
+    {
+      "source": "p256-ecdh",
+      "target": "sha-256",
+      "weight": 0.8,
+      "label": "KDF",
+      "evidence": "www/crypto/gm.js: ecdh+hkdf"
+    },
+    {
+      "source": "ml-kem-768",
+      "target": "double-ratchet",
+      "weight": 0.3,
+      "label": "被引用",
+      "evidence": "packages/key-lifecycle/"
+    },
+    {
+      "source": "tla-spec",
+      "target": "ml-kem-768",
+      "weight": 0.3,
+      "label": "形式化验证",
+      "evidence": "formal-verification-L4/C2.tla"
+    },
+    {
+      "source": "tla-spec",
+      "target": "p256-ecdh",
+      "weight": 0.3,
+      "label": "形式化验证",
+      "evidence": "formal-verification-L4/C2.tla"
+    }
+  ],
+  "stats": {
+    "nodeCount": 12,
+    "edgeCount": 14,
+    "maxWeight": 1.5,
+    "avgWeight": 0.87
+  },
+  "legends": {
+    "nodeCategories": {
+      "pqc": "#00d4ff",
+      "classic": "#ffa94d",
+      "protocol": "#c792ea",
+      "primitive": "#748ffc",
+      "verification": "#51cf66"
+    },
+    "edgeWeights": {
+      "1.5": "核心依赖（KDF/多项式/根密钥）",
+      "1.0": "直接依赖（哈希/棘轮）",
+      "0.8": "间接依赖",
+      "0.5": "同类对比",
+      "0.3": "形式化/间接引用"
+    }
+  }
+}
