@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE — CARS 五维度审计仪表盘 · 代码证据级</title>
     <meta name="description" content="FIBEMATE CARS（Crypto-Agility Readiness Scorecard）五维度代码级审计仪表盘 — 点击任意维度查看具体文件、行号和代码证据。">
-    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 71.60">
-    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 53 · Key Lifecycle 82 · Protocol Coupling 63 · Organizational Readiness 70 — 综合 71.60/100，点击维度展开可验证代码证据。">
+    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 73.20">
+    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 63 · Organizational Readiness 70 — 综合 73.20/100，点击维度展开可验证代码证据。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
@@ -203,7 +203,7 @@
     <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
     <div class="overall">
         <span class="label">综合得分</span>
-        <span class="score">71.60 / 100</span>
+        <span class="score">73.20 / 100</span>
     </div>
     <div class="dim-list" id="dim-list"></div>
     <div style="font-size:9px;color:#555;margin-top:6px;line-height:1.5;">
@@ -268,8 +268,8 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             ]
         },
         {
-            key:'aa', name:'Algorithm Agility', cn:'算法敏捷性', score:53, max:100,
-            note: 'ML-KEM 运行时参数集 (params.js) 已落地 + KAT 100/100。FML-DSA 运行时参数集为全库最佳范例。gm.js SM2 硬编码仍需解耦。',
+            key:'aa', name:'Algorithm Agility', cn:'算法敏捷性', score:61, max:100,
+            note: 'AlgorithmResolver 运行时参数解析器 (35/35 PASS)。ML-KEM params.js 运行时切换。FML-DSA 运行时参数集为全库最佳范例。gm.js 硬编码仅剩 3 处（SM2 keygen/sign/encrypt）。',
             evidence: [
                 {
                     file:'www/crypto/hybrid-kem-client.js', lines:'L38-L224',
@@ -391,7 +391,7 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
     ];
 
     // 改进后预测
-    var improved = [85, 68, 85, 75, 78];
+    var improved = [85, 73, 85, 75, 78];
 
     var N = dimensions.length, maxScore = 100;
     var showImproved = false;
