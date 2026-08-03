@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FIBEMATE · IBM 七维自评工具 �?应用层密码敏捷性评�?/title>
-<meta name="description" content="IBM Research 2026 Application-Level Crypto Agility �?7维度交互式自评向�?· 3D雷达�?· 与FIBEMATE 60.40对比 · 导出自包含HTML报告">
+<meta name="description" content="IBM Research 2026 Application-Level Crypto Agility �?7维度交互式自评向�?· 3D雷达�?· 与FIBEMATE 62.50对比 · 导出自包含HTML报告">
 <meta property="og:title" content="FIBEMATE IBM 七维密码敏捷性自评工�?>
 <meta property="og:description" content="IBM Research 2026 七维框架 · 首个真实项目实证 · 自评问卷 �?3D雷达�?�?导出报告">
 <style>
@@ -116,7 +116,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','Noto Sans SC',sans
 <div class="container">
 <h1 class="page-title">🛡�?IBM 七维自评工具</h1>
 <p class="page-subtitle">
-IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 7 维度交互式自评向�?· �?FIBEMATE <b style="color:#8b5cf6">60.40</b> 对比 · 导出自包�?HTML 报告
+IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 7 维度交互式自评向�?· �?FIBEMATE <b style="color:#8b5cf6">62.50</b> 对比 · 导出自包�?HTML 报告
 </p>
 
 <div class="mode-tabs">
@@ -153,7 +153,7 @@ IBM Research 2026 <strong>Application-Level Crypto Agility</strong> 框架 · 7 
 <h3 id="result-title">�?/h3>
 <p id="result-desc">�?/p>
 <p style="margin-top:0.5rem;font-size:0.72rem;color:#64748b;">
-FIBEMATE 基准: <b style="color:#8b5cf6">60.40</b> (MODERATE, �?+13.00 from algorithm-registry + CodeQL + Dependabot)
+FIBEMATE 基准: <b style="color:#8b5cf6">62.50</b> (MODERATE, �?+13.00 from algorithm-registry + CodeQL + Dependabot)
 &nbsp;|&nbsp; 框架: IBM Research 2026 Application-Level Crypto Agility
 </p>
 </div>
@@ -231,8 +231,8 @@ IBM 七维框架 (2026) �?首个在真�?PQC 工程平台上的实证验证 �
     ]}
 ];
 
-var FIBEMATE_SCORES = {d1:60,d2:50,d3:90,d4:40,d5:60,d6:50,d7:80};
-var FIBEMATE_OVERALL = 60.40;
+var FIBEMATE_SCORES = {d1:60,d2:50,d3:90,d4:55,d5:60,d6:50,d7:80};
+var FIBEMATE_OVERALL = 62.50;
 
 var answers = {};
 var currentQ = 0;
@@ -347,7 +347,7 @@ function calcScore() {
     var gapText = gap>=0?'高于':'低于';
     document.getElementById('result-desc').innerHTML = 
         '7 维度加权评分 · <span style="color:'+gapColor+';">'+gapText+' FIBEMATE 基准 ' + Math.abs(gap) + ' �?/span> · '+
-        'FIBEMATE = <b style="color:#8b5cf6">60.40</b> (MODERATE, 算法注册�?+ SAST + 依赖自动�?';
+        'FIBEMATE = <b style="color:#8b5cf6">62.50</b> (MODERATE, 算法注册�?+ SAST + 依赖自动�?';
 
     buildRadar(res);
     buildCompare(res);

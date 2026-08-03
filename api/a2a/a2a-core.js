@@ -20,6 +20,9 @@ const express = require('express');
 const crypto = require('crypto');
 const { generateKeypair, encapsulate, decapsulate } = require('../../packages/pqc-kem/src/ml-kem-768.js');
 
+// D4 format-coupling fix: runtime PK size resolution, not hardcoded
+const { mlkemPkLen, mlkemPkLenValid } = require('./a2a-params');
+
 // ---- Constants ----
 const A2A_VERSION = '1.0';
 const MAX_MESSAGE_SIZE = 64 * 1024; // 64KB
@@ -101,8 +104,9 @@ router.post('/handshake', (req, res) => {
     }
 
     const pkBuf = Buffer.from(publicKey, 'base64');
-    if (pkBuf.length !== 1184) {
-      return res.status(400).json({ error: `invalid publicKey length: ${pkBuf.length}, expected 1184` });
+    const expectedPkLen = mlkemPkLen();
+    if (!mlkemPkLenValid(pkBuf.length)) {
+      return res.status(400).json({ error: `invalid publicKey length: ${pkBuf.length}, expected ${expectedPkLen} (ML-KEM-768) or 1568 (ML-KEM-1024)` });
     }
 
     // Register or update peer

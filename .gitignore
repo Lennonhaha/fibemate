@@ -136,6 +136,7 @@ www/*.bak.*
 www/*.bak_*
 archive/
 api/
+!api/a2a/
 experimental/
 #public/
 kat_results/
