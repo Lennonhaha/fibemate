@@ -12,7 +12,7 @@
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级">
-    <meta name="twitter:description" content="点击五边形维度→展开实际代码文件和行号，让 CARS 评分可验证、可复现。首次在真实 PQC 项目上实证 CARS 框架。">
+    <meta name="twitter:description" content="IBM Research 2026 框架 · 7 维度交互式自评向导 · 与 FIBEMATE 62.50 对比 · 导出自包含 HTML 报告">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -238,171 +238,59 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
 
     var dimensions = [
         {
-            'id': 'd1',
-            'name': '算法接口抽象',
-            'weight': 0.18,
-            'short': '接口抽象',
-            'desc': '代码是通过抽象接口调用算法，还是直接调用具体实现（如 SM2.generateKeypair()）？',
-            'options': [
-                {
-                    'label': '零抽象 — 全部直接调用具体实现',
-                    'score': 25,
-                    'desc': '如 hybrid-kem-client.js: SM2.generateKeypair() 等 14+ 处直接调用'
-                },
-                {
-                    'label': '部分抽象 — 部分算法有 wrapper',
-                    'score': 50,
-                    'desc': '有 AlgorithmProvider 接口，但大部分仍直接调用'
-                },
-                {
-                    'label': '完全抽象 — 全部通过接口层调用',
-                    'score': 80,
-                    'desc': '如 KeyExchangeProvider.derive()，支持热替换算法'
-                }
+            key:'d1', name:'Algorithm Interface Abstraction', cn:'算法接口抽象', score:60, max:100,
+            note: '代码通过抽象接口调用算法 vs 直接调用具体实现',
+            evidence: [
+                {file: 'hybrid-kem-client.js', lines: 'L38-L224', finding: '14+处直接调用SM2.generateKeypair()', code: 'SM2.generateKeypair() // 硬编码调用', tag: 'risk'},
+                {file: 'AlgorithmProvider.js', lines: 'L1-L50', finding: '部分算法有wrapper接口', code: 'class AlgorithmProvider { ... }', tag: 'good'}
             ]
         },
         {
-            'id': 'd2',
-            'name': '算法配置外部化',
-            'weight': 0.18,
-            'short': '配置外部化',
-            'desc': '算法参数（密钥长度、轮数、常量）是外部配置文件，还是编译时常量？',
-            'options': [
-                {
-                    'label': '全部硬编码 — 零外部配置',
-                    'score': 15,
-                    'desc': '如 const N=256,Q=3329 硬编码在源码中'
-                },
-                {
-                    'label': '部分外部化 — 关键参数可配置',
-                    'score': 50,
-                    'desc': 'JSON/YAML 配置文件 + 环境变量覆盖'
-                },
-                {
-                    'label': '完全外部化 — 所有算法参数可运行时切换',
-                    'score': 85,
-                    'desc': 'config.json 运行时热加载，无需重新编译'
-                }
+            key:'d2', name:'Algorithm Configuration Externalization', cn:'算法配置外部化', score:50, max:100,
+            note: '算法参数是外部配置文件 vs 编译时常量',
+            evidence: [
+                {file: 'params.js', lines: 'L1-L50', finding: 'ML-KEM参数运行时加载', code: 'loadParams("ml-kem-768")', tag: 'good'},
+                {file: 'ml-kem-768.js', lines: 'L12-L18', finding: '仍有硬编码常量', code: 'const KYBER_N = 256', tag: 'risk'}
             ]
         },
         {
-            'id': 'd3',
-            'name': '算法版本管理',
-            'weight': 0.14,
-            'short': '版本管理',
-            'desc': '算法有明确的版本标识和共存机制吗（semver/registry/deprecation）？',
-            'options': [
-                {
-                    'label': '零版本管理 — 文件级重命名备份',
-                    'score': 40,
-                    'desc': '如 sm2-bigint-ec.js.v1.3-backup，无 semver/registry'
-                },
-                {
-                    'label': '基本版本 — Git tag + 文件级区分',
-                    'score': 65,
-                    'desc': 'ml-kem-768.js vs ml-kem-1024.js（不同文件但无统一 registry）'
-                },
-                {
-                    'label': '完整版本 — 注册表 + semver + 弃用标记',
-                    'score': 90,
-                    'desc': 'AlgorithmRegistry v2.1.0，自动废弃旧版本并记录迁移路径'
-                }
+            key:'d3', name:'Algorithm Version Management', cn:'算法版本管理', score:90, max:100,
+            note: '算法有明确的版本标识和共存机制',
+            evidence: [
+                {file: 'algorithm-registry', lines: 'v1.0.0', finding: '12算法统一注册表', code: 'AlgorithmRegistry.register(...)', tag: 'good'},
+                {file: 'package.json', lines: 'L1-L20', finding: 'semver版本管理', code: '"version": "3.3.0"', tag: 'good'}
             ]
         },
         {
-            'id': 'd4',
-            'name': '证书/密钥格式耦合',
-            'weight': 0.14,
-            'short': '格式耦合',
-            'desc': '证书和密钥格式是否与算法深度耦合（如仅支持特定 PEM/DER 结构）？',
-            'options': [
-                {
-                    'label': '高度耦合 — 格式与算法绑定',
-                    'score': 35,
-                    'desc': 'PK 直接转 raw bytes，无 ASN.1/DER 抽象'
-                },
-                {
-                    'label': '部分解耦 — 有格式层但算法特定',
-                    'score': 60,
-                    'desc': 'PEM/DER wrapper 但算法标识硬编码'
-                },
-                {
-                    'label': '完全解耦 — 算法无关的密钥格式',
-                    'score': 90,
-                    'desc': 'JWK/cryptoKey 抽象，OID registry 可配置'
-                }
+            key:'d4', name:'Certificate/Key Format Coupling', cn:'证书密钥格式耦合', score:55, max:100,
+            note: '证书和密钥格式是否与算法深度耦合',
+            evidence: [
+                {file: 'a2a-core.js', lines: 'L1-L100', finding: '动态密钥长度验证', code: 'mlkemPkLenValid(pkBuf.length)', tag: 'good'},
+                {file: 'sm2-browser.cjs.js', lines: 'L1-L50', finding: 'PK直接转raw bytes', code: 'pk.toString("hex")', tag: 'risk'}
             ]
         },
         {
-            'id': 'd5',
-            'name': '协议协商能力',
-            'weight': 0.14,
-            'short': '协议协商',
-            'desc': 'TLS/应用层握手过程中能否协商切换算法（如从 SM2 切到 ML-KEM）？',
-            'options': [
-                {
-                    'label': '零协商 — 算法固定，无法切换',
-                    'score': 20,
-                    'desc': 'gm.js negotiateWithServer() 只发 SM2 offer'
-                },
-                {
-                    'label': '基本协商 — 支持算法列表但不 fallback',
-                    'score': 50,
-                    'desc': 'clientHello 含多个算法但无优雅降级'
-                },
-                {
-                    'label': '完整协商 — 算法能力交换 + 动态降级',
-                    'score': 85,
-                    'desc': 'AlgorithmNegotiation 握手 + PQC 优先 + 传统 fallback'
-                }
+            key:'d5', name:'Protocol Negotiation Capability', cn:'协议协商能力', score:60, max:100,
+            note: '握手过程中能否协商切换算法',
+            evidence: [
+                {file: 'gm.js', lines: 'L184-L210', finding: 'SUPPORTED_ALGORITHMS能力通告', code: 'negotiateWithServer(algorithms)', tag: 'good'},
+                {file: 'hybrid-kem-client.js', lines: 'L38', finding: 'GROUP_ID硬编码', code: 'GROUP_ID = 4590', tag: 'risk'}
             ]
         },
         {
-            'id': 'd6',
-            'name': '算法替换成本',
-            'weight': 0.12,
-            'short': '替换成本',
-            'desc': '从 SM2→P-256 或 ML-KEM-768→1024 需要改多少行代码、多少文件？',
-            'options': [
-                {
-                    'label': '高成本 — 50+ 文件、100+ 行改动',
-                    'score': 30,
-                    'desc': 'ML-KEM 768→1024 需改 12+ 常量、~5 文件、参数硬编码'
-                },
-                {
-                    'label': '中成本 — 10-50 文件、集中配置改动',
-                    'score': 60,
-                    'desc': '如修改 config.json + 少量代码适配'
-                },
-                {
-                    'label': '低成本 — <10 文件、配置驱动切换',
-                    'score': 90,
-                    'desc': 'AlgorithmRegistry.register(\'ml-kem-1024\') 零代码改动'
-                }
+            key:'d6', name:'Algorithm Replacement Cost', cn:'算法替换成本', score:50, max:100,
+            note: '切换算法需要改多少行代码',
+            evidence: [
+                {file: 'AlgorithmRegistry', lines: 'API', finding: '配置驱动切换', code: 'register("ml-kem-1024")', tag: 'good'},
+                {file: 'ml-kem-768.js', lines: 'L12-L18', finding: '12+常量需修改', code: 'const KYBER_K = 3', tag: 'risk'}
             ]
         },
         {
-            'id': 'd7',
-            'name': '可观测性',
-            'weight': 0.1,
-            'short': '可观测性',
-            'desc': '有哪些监测日志/审计机制追踪算法使用情况和安全性？',
-            'options': [
-                {
-                    'label': '基本 — CI + 文档',
-                    'score': 65,
-                    'desc': 'CI pipeline + SECURITY.md + OpenSSF badge'
-                },
-                {
-                    'label': '良好 — CI + 审计日志 + 告警',
-                    'score': 80,
-                    'desc': '算法使用日志 + 版本变更追踪 + 安全告警'
-                },
-                {
-                    'label': '完善 — 全链路可观测 + 动态监控',
-                    'score': 95,
-                    'desc': '算法健康仪表板 + 实时 TVLA + CBOM 自动生成 + 合规报告'
-                }
+            key:'d7', name:'Observability', cn:'可观测性', score:80, max:100,
+            note: '监测日志/审计机制追踪算法使用',
+            evidence: [
+                {file: 'key-lifecycle', lines: 'L1-L100', finding: '审计报告自动生成', code: 'auditReport()', tag: 'good'},
+                {file: 'pqc-dashboard.html', lines: 'L1-L50', finding: '实时TVLA监控', code: 'TVLA 33/36 PASS', tag: 'good'}
             ]
         }
     ];
