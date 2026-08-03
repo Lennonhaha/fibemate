@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>项目演进时间轴 · FIBEMATE</title>
+<meta name="description" content="FIBEMATE 项目演进 3D 时间轴 — 2026-05 ~ 2026-08 从 ML-KEM 参考实现到全栈可视化平台">
+<style>
+:root { --bg:#0b0f19; --card:#131827; --border:#1f2a44; --text:#b8c0d0; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; }
+
+#panel { position:fixed; z-index:10; top:12px; left:12px; background:rgba(19,24,39,0.88); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:12px; padding:12px 16px; max-width:200px; }
+#panel h1 { font-size:14px; color:#e0e5f0; margin-bottom:2px; }
+#panel .sub { font-size:10px; color:#66708a; }
+#panel .stat { margin-top:8px; font-size:10px; color:#66708a; line-height:1.5; }
+#panel .stat b { color:#00d4ff; }
+
+#tooltip { display:none; position:fixed; z-index:20; pointer-events:none; background:rgba(11,15,25,0.95); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:10px; color:var(--text); max-width:260px; }
+#tooltip .head { font-size:13px; font-weight:600; margin-bottom:4px; }
+#tooltip .body { color:#8890a8; line-height:1.5; }
+#tooltip .tag { display:inline-block; background:rgba(0,212,255,0.15); color:#00d4ff; padding:1px 6px; border-radius:4px; font-size:8px; margin-top:3px; margin-right:3px; }
+
+#legend { position:fixed; z-index:10; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:20px; padding:8px 14px; font-size:10px; }
+.leg { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:9px; height:9px; border-radius:50%; }
+
+#footer { position:fixed; z-index:10; bottom:12px; right:16px; font-size:10px; color:#66708a; }
+#footer a { color:#0ea5e9; text-decoration:none; }
+
+#progress { position:fixed; z-index:10; bottom:60px; right:16px; font-size:9px; color:#66708a; text-align:right; }
+#progress .bar { width:120px; height:4px; background:#1f2a44; border-radius:2px; margin-top:4px; overflow:hidden; }
+#progress .fill { height:100%; background:linear-gradient(90deg,#51cf66,#00d4ff); border-radius:2px; transition:width 0.3s; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="panel">
+  <h1>⏳ 项目演进时间轴</h1>
+  <div class="sub">2026-05 → 2026-08 · 4 个月</div>
+  <div class="stat">里程碑 <b>25</b> · Commits <b>490+</b></div>
+  <div class="stat">TSR <b>100</b> · 文件 <b>370</b></div>
+</div>
+
+<div id="progress"><span id="progress-label">第 1/4 阶段</span><div class="bar"><div class="fill" id="progress-fill" style="width:25%"></div></div></div>
+
+<div id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#51cf66;box-shadow:0 0 4px #51cf66"></div> 密码学核心</div>
+  <div class="leg"><div class="leg-dot" style="background:#c792ea;box-shadow:0 0 4px #c792ea"></div> 硬件/FPGA</div>
+  <div class="leg"><div class="leg-dot" style="background:#ffd43b;box-shadow:0 0 4px #ffd43b"></div> 可视化/工具</div>
+  <div class="leg"><div class="leg-dot" style="background:#ff6b6b;box-shadow:0 0 4px #ff6b6b"></div> 里程碑</div>
+  <span style="color:#66708a;margin-left:8px">🖱 拖拽旋转 · 滚轮缩放 · 悬停节点</span>
+</div>
+
+<div id="footer"><a href="/docs/algo-family-tree.html">族谱</a> · <a href="/docs/cars-ibm-trend.html">趋势</a></div>
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function(){
+if(typeof THREE==='undefined'){document.body.innerHTML='<div style="color:#e44;padding:40px;text-align:center;margin-top:20vh"><b>&#x2715;</b> THREE.js 未加载</div>';return;}
+
+// ═══════ Timeline Data ═══════
+// month 0=May, 1=June, 2=July, 3=August
+var MILESTONES = [
+  // Phase 1: Foundation (May)
+  { month:0, day:0, cat:'core', label:'ML-KEM-768', desc:'FIPS 203 参考实现 · NTT/inverse/polyMul · Noble 互通验证', tags:['FIPS 203','NTT'] },
+  { month:0, day:0.5, cat:'core', label:'SM2/3/4 国密', desc:'纯 JS 实现 · GM/T 标准 · jsbn/BigInt 三后端', tags:['国密','纯JS'] },
+  { month:0, day:0.7, cat:'tool', label:'PQC Readiness 页', desc:'首个仪表盘 · 算法覆盖矩阵 · KAT/TVLA 状态', tags:['仪表盘'] },
+
+  // Phase 2: Deep Dive (June)
+  { month:1, day:0, cat:'fpga', label:'FPGA NTT 综合', desc:'Artix-7 pipe2 · 256/256 PASS · BRAM36+DSP48E1', tags:['FPGA','256/256'] },
+  { month:1, day:0.2, cat:'core', label:'SM2 TVLA', desc:'侧信道泄漏测试 · 15/18 PASS · jsbn 3 个已知差异', tags:['TVLA','侧信道'] },
+  { month:1, day:0.3, cat:'fpga', label:'VWZ FPGA BRAM', desc:'Lambda ROM · $readmemh · k=8 求解器 · 35-state FSM', tags:['FPGA','BRAM'] },
+  { month:1, day:0.45, cat:'core', label:'LookingGlass v1', desc:'多层级混淆层 · DMTH 安全模型 · STM32 C 框架', tags:['DMTH','混淆'] },
+  { month:1, day:0.6, cat:'milestone', label:'TSR 体系建立', desc:'DigiCert+FreeTSA 双机构 · lg-001~050 · 50 份时间戳', tags:['TSR','证据链'] },
+  { month:1, day:0.75, cat:'core', label:'路径 C TLS 混合', desc:'ML-KEM-768 + X25519 混合 KEX · SM2 加密通道', tags:['TLS','hybrid'] },
+  { month:1, day:0.85, cat:'milestone', label:'SM2 性能调优', desc:'wNAF(w=4)+Comb G 表 · sign≥3× 提速 · 混合加密闭环', tags:['性能','wNAF'] },
+
+  // Phase 3: Production (July)
+  { month:2, day:0, cat:'core', label:'SLH-DSA-128s', desc:'FIPS 205 · WASM 编译 · 签名 17KB · Noble 互通', tags:['FIPS 205','WASM'] },
+  { month:2, day:0.1, cat:'core', label:'fml-dsa 互操作', desc:'NTT 本原根 ζ=7 修正 · Noble 交叉验证 7/7 · 位反转修正', tags:['互操作','NTT'] },
+  { month:2, day:0.25, cat:'core', label:'双棘轮 PQ', desc:'ML-KEM X3DH + P-256 双棘轮 · 100条 rekey · 35/35 PASS', tags:['DoubleRatchet','PQ'] },
+  { month:2, day:0.4, cat:'milestone', label:'TLA+ 形式验证', desc:'Path C-2 状态机 · 7 不变量 · 101k states · 0 违例', tags:['TLA+','形式化'] },
+  { month:2, day:0.55, cat:'fpga', label:'FPGA Masked Wrapper', desc:'加法掩码 · LFSR PRNG · mask_ram.v · L1+L2+L3 故障保护', tags:['FPGA','掩码'] },
+  { month:2, day:0.7, cat:'tool', label:'CBOM 可视化', desc:'CycloneDX JSON → 交互式查看器 · 12 算法 370 文件', tags:['CBOM','CycloneDX'] },
+  { month:2, day:0.8, cat:'milestone', label:'UART 最终修复', desc:'引脚冲突 U2/V2→T19/N19 · CH340 外置 · FPGA alive', tags:['FPGA','UART'] },
+
+  // Phase 4: Visualization & Launch Prep (August)
+  { month:3, day:0, cat:'tool', label:'算法注册表', desc:'npm 包 · 12 算法元数据 · 9 API · IBM D5+D7 +13', tags:['registry','npm'] },
+  { month:3, day:0.15, cat:'milestone', label:'OpenSSF Silver', desc:'CodeQL+SAST · Dependabot · CODEOWNERS · Scorecard', tags:['OpenSSF','安全'] },
+  { month:3, day:0.25, cat:'tool', label:'可视化爆发', desc:'10 个 3D 页面 · 力导向图/热力图/趋势/族谱', tags:['3D','可视化'] },
+  { month:3, day:0.4, cat:'core', label:'密钥生命周期', desc:'KeyLifecycleManager · 双棘轮集成 · 自动轮换+撤销', tags:['KL','旋转'] },
+  { month:3, day:0.5, cat:'core', label:'算法敏捷性', desc:'params.js 运行时参数集 · AlgorithmResolver · 能力通告', tags:['AA','params'] },
+  { month:3, day:0.6, cat:'tool', label:'CARS+IBM 评估', desc:'CARS 78.50 · IBM 63.70 HIGH · 双框架自动化审计', tags:['CARS','IBM'] },
+  { month:3, day:0.75, cat:'milestone', label:'CBOM Diff', desc:'Git 版本间依赖变化检测 · CI 友好退出码', tags:['CBOM','CI'] },
+  { month:3, day:0.9, cat:'milestone', label:'8/31 开源', desc:'倒计时 28 天 · 12 个可视化 · 100 TSR · 全绿 CI', tags:['开源','v3.3'] },
+];
+
+var CAT_COLORS = { core:'#51cf66', fpga:'#c792ea', tool:'#ffd43b', milestone:'#ff6b6b' };
+var CAT_NAMES = { core:'密码学核心', fpga:'硬件/FPGA', tool:'可视化/工具', milestone:'里程碑' };
+var MONTH_NAMES = ['2026-05','2026-06','2026-07','2026-08'];
+var MONTH_SHORT = ['5月','6月','7月','8月'];
+
+// ═══════ Scene ═══════
+var W=innerWidth,H=innerHeight;
+var scene=new THREE.Scene(); scene.background=new THREE.Color('#0b0f19'); scene.fog=new THREE.Fog('#0b0f19',20,60);
+
+var camera=new THREE.PerspectiveCamera(45,W/H,0.5,100); camera.position.set(-4,8,20); camera.lookAt(0,-1,0);
+
+var renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.3;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.08; controls.autoRotate=true; controls.autoRotateSpeed=0.15;
+controls.minDistance=5; controls.maxDistance=50; controls.target.set(0,-1,0); controls.update();
+
+scene.add(new THREE.AmbientLight('#334466',2.5));
+scene.add(new THREE.DirectionalLight('#ccddff',2.5)).position.set(12,15,10);
+scene.add(new THREE.DirectionalLight('#556688',1)).position.set(-6,3,-6);
+
+var floor=new THREE.Mesh(new THREE.PlaneGeometry(24,16),new THREE.MeshStandardMaterial({color:'#111522',roughness:0.9,metalness:0}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-3.5; floor.receiveShadow=true; scene.add(floor);
+
+// ═══════ Spiral timeline ═══════
+// X-axis: month 0-3 (left to right)
+// Y-axis: day within month (stacked vertically)
+// Z-axis: category ring offset
+
+var X_SPAN = 12; // total X span for 4 months
+var X_PER_MONTH = X_SPAN / 4;
+var X_START = -X_SPAN/2 + X_PER_MONTH/2;
+var Y_BASE = -1.5;
+var Y_PER_MS = 6;
+
+var allNodes = [];
+
+// Draw month zone separators
+for (var m = 0; m < 4; m++) {
+  var mx = X_START + m*X_PER_MONTH;
+  // Vertical line
+  var lineGeo = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(mx - X_PER_MONTH/2, Y_BASE-0.5, 0),
+    new THREE.Vector3(mx - X_PER_MONTH/2, Y_BASE+Y_PER_MS+1, 0)
+  ]);
+  scene.add(new THREE.Line(lineGeo, new THREE.LineBasicMaterial({color:'#1f2a44',transparent:true,opacity:0.4})));
+
+  // Month label
+  var canvas = document.createElement('canvas'); canvas.width=128; canvas.height=32;
+  var ctx = canvas.getContext('2d');
+  ctx.font='bold 12px "Segoe UI",sans-serif'; ctx.textAlign='center'; ctx.fillStyle='#66708a';
+  ctx.fillText(MONTH_NAMES[m],64,20);
+  var tex = new THREE.CanvasTexture(canvas); tex.minFilter=THREE.LinearFilter;
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false,depthWrite:false}));
+  sp.position.set(mx, Y_BASE-0.8, -3.5); sp.scale.set(1.2,0.3,1); scene.add(sp);
+}
+
+// === Spiral path (helix through time) ===
+var spiralPts = [];
+var totalMs = MILESTONES.length;
+var substeps = 60;
+for (var i = 0; i <= substeps; i++) {
+  var t = i / substeps;
+  var m = t * 4; // across 4 months
+  var x = -X_SPAN/2 + m * X_PER_MONTH;
+  var y = Y_BASE + (t * Y_PER_MS);
+  var z = Math.sin(t * Math.PI * 2) * 2;
+  spiralPts.push(new THREE.Vector3(x, y, z));
+}
+var spiralGeo = new THREE.BufferGeometry().setFromPoints(spiralPts);
+scene.add(new THREE.Line(spiralGeo, new THREE.LineBasicMaterial({color:'#1f2a44',transparent:true,opacity:0.25})));
+
+// === Place milestones ===
+MILESTONES.forEach(function(ms, i) {
+  var t = (ms.month + ms.day) / 4; // 0..1
+  var x = -X_SPAN/2 + (ms.month + ms.day) * X_PER_MONTH;
+  var y = Y_BASE + t * Y_PER_MS;
+  var z = Math.sin(t * Math.PI * 2) * 2;
+
+  var col = CAT_COLORS[ms.cat];
+  var size = ms.cat === 'milestone' ? 0.28 : 0.16;
+
+  // Node sphere
+  var geo = new THREE.SphereGeometry(size, 20, 10);
+  var mat = new THREE.MeshStandardMaterial({
+    color: new THREE.Color(col), roughness: 0.2, metalness: 0.5,
+    emissive: new THREE.Color(col), emissiveIntensity: 0.35
+  });
+  var node = new THREE.Mesh(geo, mat);
+  node.position.set(x, y, z);
+  node.userData = ms;
+  scene.add(node); allNodes.push(node);
+
+  // Glow ring for milestones
+  if (ms.cat === 'milestone') {
+    var ringGeo = new THREE.TorusGeometry(size*1.4, 0.03, 8, 24);
+    var ring = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({color: col, transparent:true, opacity:0.4, depthWrite:false}));
+    ring.position.set(x, y, z); scene.add(ring);
+  }
+
+  // Label sprite
+  var canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 48;
+  var ctx = canvas.getContext('2d');
+  ctx.font = 'bold 12px "Segoe UI","PingFang SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = col;
+  ctx.fillText(ms.label, 128, 18);
+  ctx.font = '9px "Segoe UI",sans-serif'; ctx.fillStyle = '#66708a';
+  ctx.fillText(MONTH_NAMES[ms.month] + (ms.day*30).toFixed(0) + '日', 128, 32);
+  var tex = new THREE.CanvasTexture(canvas); tex.minFilter = THREE.LinearFilter;
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false, depthWrite: false}));
+  sp.position.set(x, y + (size+0.3), z); sp.scale.set(1.6, 0.3, 1); scene.add(sp);
+
+  // Phase marker for category changes
+  if (i > 0 && MILESTONES[i-1].cat !== ms.cat) {
+    var lGeo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(x, y+size+0.1, z),
+      new THREE.Vector3(x-0.3, y+size+0.1, z)
+    ]);
+    scene.add(new THREE.Line(lGeo, new THREE.LineBasicMaterial({color: col, transparent:true, opacity:0.2})));
+  }
+});
+
+// ═══════ Phase summary banners ═══════
+var PHASES = [
+  { month:0, label:'基础建设', sub:'ML-KEM · 国密 · 仪表盘' },
+  { month:1, label:'深度突破', sub:'FPGA NTT · TVLA · TSR' },
+  { month:2, label:'生产就绪', sub:'TLA+ · 双棘轮 · CBOM' },
+  { month:3, label:'开源冲刺', sub:'可视化 ×10 · KL · 评分' },
+];
+PHASES.forEach(function(p) {
+  var canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 64;
+  var ctx = canvas.getContext('2d');
+  ctx.font = 'bold 14px "Segoe UI","PingFang SC",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#e0e5f0';
+  ctx.fillText(p.label, 128, 24);
+  ctx.font = '10px "Segoe UI",sans-serif'; ctx.fillStyle = '#66708a';
+  ctx.fillText(p.sub, 128, 44);
+  var tex = new THREE.CanvasTexture(canvas); tex.minFilter = THREE.LinearFilter;
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent:true, depthTest:false, depthWrite:false}));
+  var mx = X_START + p.month*X_PER_MONTH;
+  sp.position.set(mx, Y_BASE+Y_PER_MS+0.5, -3); sp.scale.set(2.2, 0.48, 1); scene.add(sp);
+});
+
+// ═══════ Raycaster ═══════
+var tooltip = document.getElementById('tooltip'), mouse = new THREE.Vector2(), hovered = null;
+var raycaster = new THREE.Raycaster();
+
+window.addEventListener('mousemove', function(ev) {
+  mouse.x = (ev.clientX/W)*2-1; mouse.y = -(ev.clientY/H)*2+1;
+  raycaster.setFromCamera(mouse, camera);
+  var hits = raycaster.intersectObjects(allNodes);
+  if (hits.length > 0) {
+    var d = hits[0].object.userData;
+    if (hovered !== hits[0].object) {
+      if (hovered) hovered.material.emissiveIntensity = 0.35;
+      hovered = hits[0].object; hovered.material.emissiveIntensity = 0.9;
+      document.body.style.cursor = 'pointer';
+    }
+    var col = CAT_COLORS[d.cat];
+    var tagsHtml = (d.tags||[]).map(function(t){return '<span class="tag">'+t+'</span>'}).join('');
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = '<div class="head" style="color:'+col+'">'+d.label+' · '+MONTH_NAMES[d.month]+'</div>'+
+      '<div class="body">'+d.desc+'</div>'+
+      '<div>'+tagsHtml+'</div>';
+    tooltip.style.left = (ev.clientX+16)+'px'; tooltip.style.top = (ev.clientY-60)+'px';
+  } else {
+    if (hovered) { hovered.material.emissiveIntensity = 0.35; hovered = null; }
+    document.body.style.cursor = ''; tooltip.style.display = 'none';
+  }
+});
+
+// ═══════ Progress update ═══════
+var progressEl = document.getElementById('progress-fill');
+var progressLabel = document.getElementById('progress-label');
+var phases = ['第 1/4 阶段 · 基础建设','第 2/4 阶段 · 深度突破','第 3/4 阶段 · 生产就绪','第 4/4 阶段 · 开源冲刺'];
+var phaseWidths = ['25%','50%','75%','100%'];
+var phaseIdx = 0;
+setInterval(function() {
+  phaseIdx = (phaseIdx + 1) % 4;
+  progressLabel.textContent = phases[phaseIdx];
+  progressEl.style.width = phaseWidths[phaseIdx];
+}, 5000);
+
+function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+window.addEventListener('resize', function() { W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H); });
+animate();
+console.log('✅ Project Evolution Timeline — '+MILESTONES.length+' milestones across 4 phases');
+})();
+</script>
+</body>
+</html>

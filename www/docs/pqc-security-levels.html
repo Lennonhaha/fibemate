@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PQC 安全等级对比 · FIBEMATE</title>
+<meta name="description" content="ML-KEM vs ML-DSA vs SLH-DSA — NIST FIPS 203/204/205 安全等级、密钥/签名尺寸、性能 3D 并排对比">
+<style>
+:root { --bg:#0b0f19; --card:#131827; --border:#1f2a44; --text:#b8c0d0; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); color:var(--text); overflow:hidden; height:100vh; }
+#canvas-container { position:fixed; inset:0; }
+
+#panel { position:fixed; z-index:10; top:12px; left:12px; background:rgba(19,24,39,0.88); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:12px; padding:12px 16px; max-width:200px; }
+#panel h1 { font-size:14px; color:#e0e5f0; margin-bottom:4px; }
+#panel .sub { font-size:10px; color:#66708a; line-height:1.5; }
+#panel .sub b { color:#00d4ff; }
+
+#legend { position:fixed; z-index:10; bottom:20px; left:50%; transform:translateX(-50%); display:flex; gap:10px; background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:20px; padding:8px 14px; font-size:10px; }
+.leg { display:flex; align-items:center; gap:5px; }
+.leg-dot { width:9px; height:9px; border-radius:50%; }
+
+#tooltip { display:none; position:fixed; z-index:20; pointer-events:none; background:rgba(11,15,25,0.95); border:1px solid var(--border); border-radius:8px; padding:10px 14px; font-size:10px; color:var(--text); max-width:240px; }
+#tooltip .head { font-size:13px; font-weight:600; margin-bottom:4px; }
+#tooltip .kv { display:flex; justify-content:space-between; gap:12px; color:#66708a; }
+#tooltip .kv .v { color:#d0d6e6; }
+
+#metrics { position:fixed; z-index:10; top:12px; right:12px; display:flex; flex-direction:column; gap:6px; }
+#metrics .mbtn { background:rgba(19,24,39,0.85); backdrop-filter:blur(12px); border:1px solid var(--border); border-radius:8px; padding:6px 12px; color:#66708a; font-size:10px; cursor:pointer; transition:all 0.2s; text-align:center; }
+#metrics .mbtn:hover { border-color:#00d4ff; color:#00d4ff; }
+#metrics .mbtn.active { border-color:#00d4ff; color:#00d4ff; background:rgba(0,212,255,0.1); }
+
+#footer { position:fixed; z-index:10; bottom:12px; right:16px; font-size:10px; color:#66708a; }
+#footer a { color:#0ea5e9; text-decoration:none; }
+</style>
+</head>
+<body>
+<div id="canvas-container"></div>
+
+<div id="panel">
+  <h1>🔐 PQC 安全等级</h1>
+  <div class="sub">NIST FIPS 203·204·205 · <b>经典 128</b> vs <b>量子 64-128</b></div>
+</div>
+
+<div id="metrics">
+  <button class="mbtn active" onclick="switchMetric('keysize')">密钥尺寸</button>
+  <button class="mbtn" onclick="switchMetric('sigsize')">签名/密文</button>
+  <button class="mbtn" onclick="switchMetric('speed')">性能</button>
+  <button class="mbtn" onclick="switchMetric('security')">安全等级</button>
+</div>
+
+<div id="legend">
+  <div class="leg"><div class="leg-dot" style="background:#51cf66;box-shadow:0 0 4px #51cf66"></div> ML-KEM</div>
+  <div class="leg"><div class="leg-dot" style="background:#c792ea;box-shadow:0 0 4px #c792ea"></div> ML-DSA</div>
+  <div class="leg"><div class="leg-dot" style="background:#ffd43b;box-shadow:0 0 4px #ffd43b"></div> SLH-DSA</div>
+  <div class="leg"><div class="leg-dot" style="background:#ff6b6b;box-shadow:0 0 4px #ff6b6b"></div> Classic (对比)</div>
+  <span style="color:#66708a;margin-left:8px">🖱 拖拽旋转</span>
+</div>
+
+<div id="footer"><a href="/docs/pqc-benchmark.html">基准</a> · <a href="/docs/project-timeline.html">时间轴</a></div>
+<div id="tooltip"></div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+
+<script>
+(function(){
+if(typeof THREE==='undefined'){document.body.innerHTML='<div style="color:#e44;padding:40px;text-align:center;margin-top:20vh"><b>&#x2715;</b> THREE.js 未加载</div>';return;}
+
+// ═══════ Algorithm data ═══════
+var ALGOS = [
+  // ML-KEM family
+  { id:'mlkem512', name:'ML-KEM-512', family:'ML-KEM', cat:'kem', fips:'FIPS 203',
+    cl:128, ql:64, pk:800, sk:1632, ct:768, ss:32,
+    keygen:48, enc:51, dec:105, size:'SMALL' },
+  { id:'mlkem768', name:'ML-KEM-768', family:'ML-KEM', cat:'kem', fips:'FIPS 203',
+    cl:192, ql:128, pk:1184, sk:2400, ct:1088, ss:32,
+    keygen:103, enc:120, dec:140, size:'MEDIUM' },
+  { id:'mlkem1024', name:'ML-KEM-1024', family:'ML-KEM', cat:'kem', fips:'FIPS 203',
+    cl:256, ql:128, pk:1568, sk:3168, ct:1568, ss:32,
+    keygen:180, enc:210, dec:240, size:'LARGE' },
+
+  // ML-DSA family
+  { id:'mldsa44', name:'ML-DSA-44', family:'ML-DSA', cat:'sig', fips:'FIPS 204',
+    cl:128, ql:64, pk:1312, sk:2560, sig:2420, ss:0,
+    keygen:1200, enc:null, dec:null, sig_us:1200, verify:500, size:'SMALL' },
+  { id:'mldsa65', name:'ML-DSA-65', family:'ML-DSA', cat:'sig', fips:'FIPS 204',
+    cl:192, ql:128, pk:1952, sk:4032, sig:3309, ss:0,
+    keygen:2400, enc:null, dec:null, sig_us:2400, verify:700, size:'MEDIUM' },
+  { id:'mldsa87', name:'ML-DSA-87', family:'ML-DSA', cat:'sig', fips:'FIPS 204',
+    cl:256, ql:128, pk:2592, sk:4896, sig:4627, ss:0,
+    keygen:3800, enc:null, dec:null, sig_us:3800, verify:1050, size:'LARGE' },
+
+  // SLH-DSA family
+  { id:'slhdsa128s', name:'SLH-DSA-128s', family:'SLH-DSA', cat:'sig', fips:'FIPS 205',
+    cl:128, ql:64, pk:32, sk:64, sig:7856, ss:0,
+    keygen:489400, enc:null, dec:null, sig_us:4199500, verify:4200, size:'SMALL-pk' },
+  { id:'slhdsa128f', name:'SLH-DSA-128f', family:'SLH-DSA', cat:'sig', fips:'FIPS 205',
+    cl:128, ql:64, pk:32, sk:64, sig:17088, ss:0,
+    keygen:120000, enc:null, dec:null, sig_us:800000, verify:1500, size:'FAST-sig' },
+
+  // Classic comparison
+  { id:'p256', name:'P-256 ECDH', family:'ECDH', cat:'classic', fips:'SP 800-56A',
+    cl:128, ql:0, pk:65, sk:32, ct:65, ss:32,
+    keygen:200, enc:250, dec:200, size:'TINY', note:'Shor 脆弱 (量子 0-bit)' },
+  { id:'rsa2048', name:'RSA-2048', family:'RSA', cat:'classic', fips:'SP 800-56B',
+    cl:112, ql:0, pk:294, sk:1192, sig:256, ss:0,
+    keygen:180000, enc:null, dec:null, sig_us:3500, verify:200, size:'MEDIUM', note:'Shor 脆弱' },
+];
+
+var FAM_COLORS = { 'ML-KEM':'#51cf66', 'ML-DSA':'#c792ea', 'SLH-DSA':'#ffd43b', 'ECDH':'#ff6b6b', 'RSA':'#ff8787' };
+
+// ═══════ Scene ═══════
+var W=innerWidth,H=innerHeight;
+var scene=new THREE.Scene(); scene.background=new THREE.Color('#0b0f19'); scene.fog=new THREE.Fog('#0b0f19',18,55);
+var camera=new THREE.PerspectiveCamera(45,W/H,0.5,100); camera.position.set(2,6,18); camera.lookAt(0,-1,0);
+
+var renderer=new THREE.WebGLRenderer({antialias:true}); renderer.setSize(W,H); renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=1.3;
+document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+var controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.08; controls.autoRotate=true; controls.autoRotateSpeed=0.3;
+controls.minDistance=4; controls.maxDistance=45; controls.target.set(0,-1,0); controls.update();
+
+scene.add(new THREE.AmbientLight('#334466',2.5));
+var dl=new THREE.DirectionalLight('#ccddff',2.5); dl.position.set(12,15,10); scene.add(dl);
+scene.add(new THREE.DirectionalLight('#556688',1)).position.set(-6,3,-6);
+
+var floor=new THREE.Mesh(new THREE.PlaneGeometry(24,16),new THREE.MeshStandardMaterial({color:'#111522',roughness:0.9,metalness:0}));
+floor.rotation.x=-Math.PI/2; floor.position.y=-4; floor.receiveShadow=true; scene.add(floor);
+
+// ═══════ Current metric ═══════
+var currentMetric = 'keysize';
+var allBars = [];
+var allLabels = [];
+
+// Build bars for current metric
+function getMetric(alg, metric) {
+  switch(metric) {
+    case 'keysize': return alg.pk + alg.sk; // total key material
+    case 'sigsize': return (alg.cat==='kem') ? (alg.ct||0) : (alg.sig||0);
+    case 'speed': return (alg.cat==='kem') ? (alg.keygen||100) : (alg.sig_us||alg.keygen||1000);
+    case 'security': return alg.ql; // quantum bits
+    default: return 100;
+  }
+}
+
+var metricNames = { keysize:'密钥尺寸 (PK+SK bytes)', sigsize:'签名/密文尺寸 (bytes)', speed:'操作耗时 (µs)', security:'量子安全等级 (bits)' };
+var metricMaxCache = {};
+
+function getMax(metric) {
+  if (metricMaxCache[metric]) return metricMaxCache[metric];
+  var mx = 0;
+  ALGOS.forEach(function(a) { mx = Math.max(mx, getMetric(a, metric)); });
+  metricMaxCache[metric] = mx;
+  return mx;
+}
+
+function clearScene() {
+  allBars.forEach(function(b) { scene.remove(b); });
+  allLabels.forEach(function(l) { scene.remove(l); });
+  allBars = []; allLabels = [];
+}
+
+function formatVal(val, metric) {
+  if (metric === 'speed') return val >= 1000000 ? (val/1000000).toFixed(1)+'s' : val >= 1000 ? (val/1000).toFixed(1)+'ms' : val+'µs';
+  if (metric === 'security') return val === 0 ? '0 (Broken)' : val+' bits';
+  return val+' B';
+}
+
+function buildViz(metric) {
+  clearScene();
+  var maxVal = getMax(metric);
+  var MAX_H = 7;
+  var colGap = 1.8, rowGap = 1.3;
+  var N = ALGOS.length;
+
+  ALGOS.forEach(function(alg, i) {
+    var val = getMetric(alg, metric);
+    var h = Math.max((val / maxVal) * MAX_H, 0.04);
+    var col = FAM_COLORS[alg.family] || '#66708a';
+    var x = (i % 5) * colGap - ((Math.min(N,5)-1)*colGap)/2;
+    var z = Math.floor(i / 5) * rowGap;
+    var w = 0.4, d = 0.4;
+
+    var geo = new THREE.BoxGeometry(w, h, d, 1, 1, 1);
+    var mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(col), roughness: 0.25, metalness: 0.5,
+      emissive: new THREE.Color(col), emissiveIntensity: 0.3,
+    });
+    var bar = new THREE.Mesh(geo, mat);
+    bar.position.set(x, h/2, z);
+    bar.castShadow = true;
+    bar.userData = { alg: alg, metric: metric, val: val, col: col };
+    scene.add(bar); allBars.push(bar);
+
+    // Edge glow
+    var eGeo = new THREE.EdgesGeometry(geo);
+    var el = new THREE.LineSegments(eGeo, new THREE.LineBasicMaterial({ color: new THREE.Color(col), transparent: true, opacity: 0.3 }));
+    el.position.copy(bar.position); scene.add(el);
+
+    // Value label
+    var canvas = document.createElement('canvas'); canvas.width = 128; canvas.height = 32;
+    var ctx = canvas.getContext('2d');
+    ctx.font = 'bold 12px "Segoe UI",sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = col;
+    ctx.fillText(formatVal(val, metric), 64, 20);
+    var tex = new THREE.CanvasTexture(canvas); tex.minFilter = THREE.LinearFilter;
+    var sp = new THREE.Sprite(new THREE.SpriteMaterial({map: tex, transparent: true, depthTest: false, depthWrite: false}));
+    sp.position.set(x, h+0.4, z); sp.scale.set(0.7, 0.17, 1); scene.add(sp); allLabels.push(sp);
+
+    // Name label below
+    var canvas2 = document.createElement('canvas'); canvas2.width = 256; canvas2.height = 48;
+    var ctx2 = canvas2.getContext('2d');
+    ctx2.font = 'bold 11px "Segoe UI","PingFang SC",sans-serif'; ctx2.textAlign = 'center'; ctx2.fillStyle = '#8890a8';
+    ctx2.fillText(alg.name, 128, 18);
+    ctx2.font = '9px "Segoe UI",sans-serif'; ctx2.fillStyle = '#66708a';
+    var sub = alg.fips + (alg.ql?(' · Q:'+alg.ql+'b'):'');
+    if (alg.note) sub = alg.note;
+    ctx2.fillText(sub, 128, 32);
+    var tex2 = new THREE.CanvasTexture(canvas2); tex2.minFilter = THREE.LinearFilter;
+    var sp2 = new THREE.Sprite(new THREE.SpriteMaterial({map: tex2, transparent: true, depthTest: false, depthWrite: false}));
+    sp2.position.set(x, -0.35, z-0.3); sp2.scale.set(1.5, 0.28, 1); scene.add(sp2); allLabels.push(sp2);
+  });
+
+  // Metric title
+  var tcanvas = document.createElement('canvas'); tcanvas.width = 512; tcanvas.height = 40;
+  var tctx = tcanvas.getContext('2d');
+  tctx.font = 'bold 14px "Segoe UI","PingFang SC",sans-serif'; tctx.textAlign = 'center'; tctx.fillStyle = '#e0e5f0';
+  tctx.fillText(metricNames[metric], 256, 26);
+  var ttex = new THREE.CanvasTexture(tcanvas); ttex.minFilter = THREE.LinearFilter;
+  var tSp = new THREE.Sprite(new THREE.SpriteMaterial({map: ttex, transparent: true, depthTest: false, depthWrite: false}));
+  tSp.position.set(0, -1.0, -4); tSp.scale.set(4, 0.3, 1); scene.add(tSp); allLabels.push(tSp);
+}
+
+function switchMetric(metric) {
+  currentMetric = metric;
+  document.querySelectorAll('.mbtn').forEach(function(b){b.classList.remove('active');});
+  document.querySelector('.mbtn:nth-child('+({keysize:1,sigsize:2,speed:3,security:4}[metric])+')').classList.add('active');
+  buildViz(metric);
+}
+
+// ═══════ Raycaster ═══════
+var tooltip = document.getElementById('tooltip'), mouse = new THREE.Vector2(), hovered = null;
+var raycaster = new THREE.Raycaster();
+
+window.addEventListener('mousemove', function(ev) {
+  mouse.x = (ev.clientX/W)*2-1; mouse.y = -(ev.clientY/H)*2+1;
+  raycaster.setFromCamera(mouse, camera);
+  var hits = raycaster.intersectObjects(allBars);
+  if (hits.length > 0) {
+    var d = hits[0].object.userData;
+    if (hovered !== hits[0].object) {
+      if (hovered) hovered.material.emissiveIntensity = 0.3;
+      hovered = hits[0].object; hovered.material.emissiveIntensity = 0.9;
+      document.body.style.cursor = 'pointer';
+    }
+    var alg = d.alg;
+    tooltip.style.display = 'block';
+    tooltip.innerHTML = '<div class="head" style="color:'+d.col+'">'+alg.name+'</div>'+
+      '<div class="kv"><span>标准</span><span class="v">'+alg.fips+'</span></div>'+
+      '<div class="kv"><span>Classical</span><span class="v">'+alg.cl+' bits</span></div>'+
+      '<div class="kv"><span>Quantum</span><span class="v" style="color:'+(alg.ql===0?'#ff6b6b':'#51cf66')+'">'+alg.ql+' bits</span></div>'+
+      '<div class="kv"><span>PK</span><span class="v">'+alg.pk+' B</span></div>'+
+      '<div class="kv"><span>SK</span><span class="v">'+alg.sk+' B</span></div>'+
+      (alg.ct ? '<div class="kv"><span>CT</span><span class="v">'+alg.ct+' B</span></div>' : '')+
+      (alg.sig ? '<div class="kv"><span>签名</span><span class="v">'+alg.sig+' B</span></div>' : '');
+    tooltip.style.left = (ev.clientX+16)+'px'; tooltip.style.top = (ev.clientY-90)+'px';
+  } else {
+    if (hovered) { hovered.material.emissiveIntensity = 0.3; hovered = null; }
+    document.body.style.cursor = ''; tooltip.style.display = 'none';
+  }
+});
+
+// ═══════ Init ═══════
+buildViz('keysize');
+window.switchMetric = switchMetric;
+
+function animate() { requestAnimationFrame(animate); controls.update(); renderer.render(scene, camera); }
+window.addEventListener('resize', function() { W=innerWidth;H=innerHeight;camera.aspect=W/H;camera.updateProjectionMatrix();renderer.setSize(W,H); });
+animate();
+console.log('✅ PQC Security Level comparison — '+ALGOS.length+' algorithms, 4 metrics, FIPS 203/204/205');
+})();
+</script>
+</body>
+</html>
