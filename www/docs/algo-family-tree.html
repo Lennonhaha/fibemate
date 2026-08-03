@@ -200,7 +200,8 @@ var edgeMat=new THREE.LineBasicMaterial({color:'#1f2a44',transparent:true,opacit
 
 TREE.forEach(function(n){
   if(!n.parent) return;
-  var from=nodeMap[n.parent].pos, to=n.pos;
+  var from=nodeMap[n.parent]?nodeMap[n.parent].pos:null, to=n.pos;
+  if(!from||!to){console.warn('skip edge:',n.id,'from=',n.parent,'to=',n.id);return;}
   // Bezier curve edge
   var mid={x:(from.x+to.x)/2, y:Math.min(from.y,to.y)-0.6, z:(from.z+to.z)/2};
   var curve=new THREE.QuadraticBezierCurve3(
