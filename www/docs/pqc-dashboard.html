@@ -170,16 +170,33 @@
         // Update count
         document.getElementById('algo-count').textContent = ALGORITHMS.length;
 
-        // Build sections
+        // Build sections — create ALL DOM containers before building
         buildStats();
 
-        // Create 3D chart container (required before initBarChart)
+        // 1. 3D chart panel
         var chartPanel = document.createElement('div');
-        chartPanel.id = 'chart-panel';
         chartPanel.className = 'chart-panel';
         chartPanel.innerHTML = '<div class="chart-header"><h2>📊 算法全维度 3D 对比</h2><div class="chart-tabs" id="chart-tabs"></div></div><div id="bar3d"></div><div class="chart-hint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移 · 点击色块切换算法</div>';
         container.appendChild(chartPanel);
 
+        // 2. Score cards container
+        var scoreCards = document.createElement('div');
+        scoreCards.id = 'score-cards';
+        scoreCards.className = 'score-row';
+        container.appendChild(scoreCards);
+
+        // 3. Table panel
+        var tablePanel = document.createElement('div');
+        tablePanel.className = 'table-panel';
+        tablePanel.innerHTML = '<h2>📋 全维度对比表 (12 项指标 · 可排序)</h2><table><thead id="table-head"></thead><tbody id="table-body"></tbody></table>';
+        container.appendChild(tablePanel);
+
+        // 4. Verification panels
+        var vp = document.createElement('div');
+        vp.id = 'verification-panels';
+        container.appendChild(vp);
+
+        // Now build all sections
         initBarChart();
         buildScoreCards();
         buildTable();
