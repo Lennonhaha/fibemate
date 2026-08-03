@@ -81,12 +81,16 @@ var d; try { d = JSON.parse(DATA); } catch(e) { console.error("DATA parse error:
 var sortCol=3,sortDir=-1;
 
 function risk(a){
-  if(!d||!d.qVul||!d.qWeak||!d.qSafe)return{label:"数据加载中",cls:"badge-weak"};
-  if(d.qVul.indexOf(a)>=0)return{label:"量子脆弱",cls:"badge-vul"};
-  if(d.qWeak.indexOf(a)>=0)return{label:"量子弱化",cls:"badge-weak"};
-  if(d.qSafe.indexOf(a)>=0)return{label:"量子安全",cls:"badge-safe"};
-  return{label:"未分类",cls:"badge-weak"};
-}
+  var name=(typeof a==="string")?a:(a&&a.name)||"";
+  var level=(a&&a.cryptoProperties&&a.cryptoProperties.quantumSecurity&&a.cryptoProperties.quantumSecurity.level)||"";
+  if(level==="safe")return{label:"量子安全",cls:"badge-safe"};
+  if(level==="vulnerable")return{label:"量子脆弱",cls:"badge-vul"};
+  if(level==="weak")return{label:"量子弱化",cls:"badge-weak"};
+  if(d.qVul&&d.qVul.indexOf(name)>=0)return{label:"量子脆弱",cls:"badge-vul"};
+  if(d.qWeak&&d.qWeak.indexOf(name)>=0)return{label:"量子弱化",cls:"badge-weak"};
+  if(d.qSafe&&d.qSafe.indexOf(name)>=0)return{label:"量子安全",cls:"badge-safe"};
+  return{label:"未分类",cls:"badge-weak"}
+}}
 function sortTable(col){
   if(sortCol===col)sortDir*=-1;else{sortCol=col;sortDir=-1}
   renderTable();
