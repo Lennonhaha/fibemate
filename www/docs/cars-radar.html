@@ -273,25 +273,25 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             evidence: [
                 {
                     file:'www/crypto/hybrid-kem-client.js', lines:'L38-L224',
-                    finding:'<strong>14+ 处硬编码算法调用</strong>。SM2.generateKeypair(L111)、MLKEM.generateKeypair(L163)、MLKEM.encapsulate(L224)、SM2.decrypt 等均直接引用全局对象，零抽象层。',
+                    finding:'&lt;strong&gt;14+ 处硬编码算法调用&lt;/strong&gt;。SM2.generateKeypair(L111)、MLKEM.generateKeypair(L163)、MLKEM.encapsulate(L224)、SM2.decrypt 等均直接引用全局对象，零抽象层。',
                     code:'// L111-112: 直接调用 SM2 全局对象\nconst sm2Key = SM2.generateKeypair();\nconst sm2PubHex = SM2.pk2hex(sm2Key.publicKey);\n\n// L163-164: 直接调用 MLKEM 全局对象\nconst mlkem = MLKEM.keygen();\nconst pkBytes = mlkem.publicKey;\n\n// L224: encapsulate 用硬编码常量\nconst encapResult = MLKEM.encapsulate(peerMLKEMPK);',
                     tags:['risk','info']
                 },
                 {
                     file:'www/crypto/gm.js', lines:'L89, L183, L210',
-                    finding:'<strong>gm.js negotiateWithServer</strong> 走应用层协商 (POST /api/negotiate)，非算法注册表。SM2 全局对象引用贯穿 encrypt/decrypt。',
+                    finding:'&lt;strong&gt;gm.js negotiateWithServer&lt;/strong&gt; 走应用层协商 (POST /api/negotiate)，非算法注册表。SM2 全局对象引用贯穿 encrypt/decrypt。',
                     code:'// L89: 算法选择硬编码\nconst sm2 = gm().SM2;\nconst keypair = sm2.generateKeyPair();\n\n// L183: 应用层协商，非算法注册表\nasync negotiateWithServer(serverUrl, algorithm) {\n  // 硬编码 algorithm = "SM2"',
                     tags:['risk']
                 },
                 {
                     file:'packages/pqc-kem/src/ml-kem-768.js', lines:'L12-L18',
-                    finding:'<strong>12 个编译时常量硬编码</strong>。N=256、K=3、DU=10、DV=4、PK=1184B — ML-KEM-768→1024 需改 ~12 处，且 byteEncode 切分逻辑耦合。',
+                    finding:'&lt;strong&gt;12 个编译时常量硬编码&lt;/strong&gt;。N=256、K=3、DU=10、DV=4、PK=1184B — ML-KEM-768→1024 需改 ~12 处，且 byteEncode 切分逻辑耦合。',
                     code:'// 硬编码常量 (ML-KEM-768 专用)\nconst N = 256, Q = 3329, K = 3;\nconst DU = 10, DV = 4;  // 1024: DU=11, DV=5\nconst BAR_K = 24, BAR_MU = 5039;\nconst NTT_INV = 3303;',
                     tags:['risk']
                 },
                 {
                     file:'packages/fml-dsa/src/core/params.js', lines:'L1-L32',
-                    finding:'<strong>✅ 良好实践：fml-dsa 运行时参数集</strong>。ML-DSA-44→65→87 切换只需改 `paramSet` 参数，零行代码改动。FIBEMATE 全库最佳解耦范例。',
+                    finding:'&lt;strong&gt;✅ 良好实践：fml-dsa 运行时参数集&lt;/strong&gt;。ML-DSA-44→65→87 切换只需改 `paramSet` 参数，零行代码改动。FIBEMATE 全库最佳解耦范例。',
                     code:'// 运行时参数集切换 (全库最佳实践)\nexport const PARAMS = {\n  "ML-DSA-44": { N:256, Q:8380417, τ:39, λ:128, ... },\n  "ML-DSA-65": { N:256, Q:8380417, τ:49, λ:192, ... },\n  "ML-DSA-87": { N:256, Q:8380417, τ:60, λ:256, ... }\n};',
                     tags:['good']
                 }
@@ -303,31 +303,31 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             evidence: [
                 {
                     file:'docs/tla/C2.tla', lines:'L1-L128',
-                    finding:'<strong>7 条不变量全部通过 TLC 模型检查</strong>：TypeOK、K1_NoPrematureActive、K2_ServerKeyPrecondition、K3_WeakKeyIndependence、K4、K5、K3_StrongKeyIndependence、K3p_Strong。101,467 states · 0 violations。',
+                    finding:'<strong>7 条不变量全部通过 TLC 模型检查：TypeOK、K1_NoPrematureActive、K2_ServerKeyPrecondition、K3_WeakKeyIndependence、K4、K5、K3_StrongKeyIndependence、K3p_Strong。101,467 states · 0 violations。',
                     code:'(* K3 Strong Key Independence *)\nInvariant_K3_StrongKeyIndependence ==\n  \\A i,j \\in 1..MaxSessions:\n    (i /= j /\\ key[i] # 0 /\\ key[j] # 0\n     => key[i] # key[j])\n\n(* TLC: 101,467 states · 26,115 distinct · 0 violations *)',
                     tags:['good','info']
                 },
                 {
                     file:'docs/tla/OPK.tla', lines:'L1-L94',
-                    finding:'<strong>One-Time Pre-Key 模型</strong>：3 条不变量 O1_NoDoubleConsume、O2_ConsumedExists、O3_CountCorrect。与 C2 组合覆盖完整的密钥生命周期（生成→分发→使用→销毁）。',
+                    finding:'<strong>One-Time Pre-Key 模型：3 条不变量 O1_NoDoubleConsume、O2_ConsumedExists、O3_CountCorrect。与 C2 组合覆盖完整的密钥生命周期（生成→分发→使用→销毁）。',
                     code:'(* O1: 同一 pre-key 不会被消费两次 *)\nInvariant_O1_NoDoubleConsume ==\n  \\A k \\in Keys: consumed[k] <= generated[k]\n\n(* O2: 被消费的 key 必须先存在 *)\nInvariant_O2_ConsumedExists ==\n  \\A k \\in Keys: consumed[k] > 0 => generated[k] > 0',
                     tags:['good']
                 },
                 {
                     file:'packages/key-lifecycle/index.js', lines:'589 lines',
-                    finding:'<strong>KeyLifecycleManager 引擎 27/27 PASS</strong>：九 API · 六机制 (bootstrap/rotate/emergencyRotate/revokeKey/encryptUsed/decryptUsed/auditReport/exportState/importState)。时间+消息计数双触发自动轮换。TTL 吊销列表。',
+                    finding:'<strong>KeyLifecycleManager 引擎 27/27 PASS：九 API · 六机制 (bootstrap/rotate/emergencyRotate/revokeKey/encryptUsed/decryptUsed/auditReport/exportState/importState)。时间+消息计数双触发自动轮换。TTL 吊销列表。',
                     code:'// Nine APIs, six mechanisms\nclass KeyLifecycleManager {\n  bootstrap/key/algorithm  // Init root key\n  rotate/key/reason        // Scheduled rotation\n  emergencyRotate/key      // Immediate revoke + rotate\n  revokeKey/version,reason // Manual revocation\n  encryptUsed/             // Tag + rotation trigger\n  decryptUsed/version      // Usage + revocation check\n  auditReport/             // Full audit trail',
                     tags:['good','info']
                 },
                 {
                     file:'packages/key-lifecycle/double-ratchet-integration.js', lines:'195 lines',
-                    finding:'<strong>KLSession 集成层 35/35 PASS</strong>：PQRatchetSession 封装 KeyLifecycleManager。encrypt 前 rotationNeeded 检查 → decrypt 前 isRevoked 检查 → serialize 保留 KL 状态。',
+                    finding:'<strong>KLSession 集成层 35/35 PASS：PQRatchetSession 封装 KeyLifecycleManager。encrypt 前 rotationNeeded 检查 → decrypt 前 isRevoked 检查 → serialize 保留 KL 状态。',
                     code:'class KLSession extends PQRatchetSession {\n  async encrypt/plaintext {\n    const s = this.kl.encryptUsed/;  // trigger check\n    return await super.encrypt/plaintext;\n  }\n  async decrypt/header,ct,iv {\n    if /this.kl.isRevoked/header._kl_version// throw;\n    return await super.decrypt/header,ct,iv;\n  }',
                     tags:['good']
                 },
                 {
                     file:'packages/double-ratchet-pq.js', lines:'L290-L310',
-                    finding:'<strong>PQ 混合双棘轮</strong>：ML-KEM-768 + P-256 hybrid X3DH 握手，双向 4 轮消息加密解密全通。棘轮步进触发密钥刷新，前向安全性由 DH 棘轮保证。',
+                    finding:'<strong>PQ 混合双棘轮：ML-KEM-768 + P-256 hybrid X3DH 握手，双向 4 轮消息加密解密全通。棘轮步进触发密钥刷新，前向安全性由 DH 棘轮保证。',
                     code:'// PQ Hybrid Double Ratchet\n// Init: ML-KEM-768 + P-256 hybrid X3DH\nconst sharedSecret = await hybrid_x3dh_handshake(alice, bob);\n\n// Ratchet step (every message)\nfunction ratchetStep(state, dhPubKey) {\n  // DH ratchet → new root key\n  // Symmetric ratchet → new message keys',
                     tags:['good']
                 },
@@ -340,30 +340,30 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             evidence: [
                 {
                     file:'www/crypto/hybrid-kem-client.js', lines:'L38-L56',
-                    finding:'<strong>IANA 组号运行时解析</strong>：全部 7 个硬编码常量（GROUP_ID/PK_LEN/CT_LEN/SS_LEN）替换为 AlgorithmResolver 运行时 getter。resolver 未加载时自动回退默认值，保持兼容。',
+                    finding:'<strong>IANA 组号运行时解析：全部 7 个硬编码常量（GROUP_ID/PK_LEN/CT_LEN/SS_LEN）替换为 AlgorithmResolver 运行时 getter。resolver 未加载时自动回退默认值，保持兼容。',
                     code:'// PC: IANA group + key sizes from runtime resolver\nconst R = AlgorithmResolver;\nfunction ianaGroupId() { return R.ianaGroup(\'ML-KEM-768\') || 4590; }\nfunction mlkemPkLen() { return R.pkSize(\'ML-KEM-768\') || 1184; }\nfunction mlkemCtLen() { return R.ctSize(\'ML-KEM-768\') || 1088; }\n// ... 7 getter functions, zero hardcoded constants',
                     tags:['good','info']
                 },
                 {
                     file:'www/crypto/gm.js', lines:'L181-L293',
-                    finding:'<strong>回退策略落地 (AA)</strong>：AlgorithmResolver 动态获取算法优先级列表。fail-fast (传统行为) / try-all (逐算法,默认) / exclude (排除特定算法) 三种策略。全失败时结构化报错（列出尝试算法+最后错误）。',
+                    finding:'<strong>回退策略落地 (AA)：AlgorithmResolver 动态获取算法优先级列表。fail-fast (传统行为) / try-all (逐算法,默认) / exclude (排除特定算法) 三种策略。全失败时结构化报错（列出尝试算法+最后错误）。',
                     code:'// PC: fallback retry loop\nvar tryList = (fallback === \'fail-fast\') ? [algoList[0]] : algoList;\nfor (var i = 0; i < tryList.length; i++) {\n  try { /* negotiate with tryList[i] */ return result; }\n  catch(e) { lastError=e; /* try next */ }\n}\nthrow Error(\'协商失败 — 已尝试: \' + tried + \'。最后错误: \' + lastError.message);',
                     tags:['good']
                 },
                 {
-                    file:'www/crypto/hybrid-kem-client.js', lines:'L38-L42',</strong>：GROUP_ID=4590 (SM2+MLKEM768 hybrid)。ML-KEM 参数全部编译时常量 (PK=1184、CT=1088、SS=32)。密钥交换发生在应用层，不依赖 TLS 握手。',
-                    code:'// Application-layer hybrid KEX (not TLS 1.3)\nconst IANA_GROUP_ID = 4590;  // SM2 + MLKEM768 hybrid\nconst MLKEM_PK_LEN = 1184, MLKEM_CT_LEN = 1088;\nconst MLKEM_SS_LEN = 32;\n\n// 密钥交换在应用层自主协商',
+                    file:'www/crypto/hybrid-kem-client.js', lines:'L38-L42',
+                    note:'GROUP_ID=4590 (SM2+MLKEM768 hybrid)。ML-KEM 参数全部编译时常量 (PK=1184、CT=1088、SS=32)。密钥交换发生在应用层，不依赖 TLS 握手。',    code:'// Application-layer hybrid KEX (not TLS 1.3)\nconst IANA_GROUP_ID = 4590;  // SM2 + MLKEM768 hybrid\nconst MLKEM_PK_LEN = 1184, MLKEM_CT_LEN = 1088;\nconst MLKEM_SS_LEN = 32;\n\n// 密钥交换在应用层自主协商',
                     tags:['info']
                 },
                 {
                     file:'src/tls-hybrid-extension.js', lines:'L1-L68',
-                    finding:'<strong>应用层自定义协商</strong>。非标准 TLS 1.3 Extension。FIBEMATE 明确选择不走 TLS 层混合（教育定位 — "理解 PQC 如何工作"而非"取代标准 TLS"）。',
+                    finding:'应用层自定义协商（见下方代码注释）。非标准 TLS 1.3 Extension。FIBEMATE 明确选择不走 TLS 层混合（教育定位 — "理解 PQC 如何工作"而非"取代标准 TLS"）。',
                     code:'// NOT a standard TLS 1.3 extension\n// This is an application-layer demonstration\n// showing how hybrid KEX works conceptually\n// ↓ standard TLS 1.3 混合路线已搁置',
                     tags:['good']
                 },
                 {
                     file:'www/crypto/gm.js', lines:'L183-L220',
-                    finding:'<strong>协议协商硬编码为 "SM2"</strong>。POST /api/negotiate 无备选算法列表、无回退策略、无能力通告。协议层与算法身份强耦合。',
+                    finding:'&lt;strong&gt;协议协商硬编码为 "SM2"&lt;/strong&gt;。POST /api/negotiate 无备选算法列表、无回退策略、无能力通告。协议层与算法身份强耦合。',
                     code:'// L183: 协商函数硬编码算法\nasync negotiateWithServer(serverUrl, algorithm = "SM2") {\n  const clientPubKey = SM2.generateKeypair().publicKey;\n  const body = { clientPublicKey, algorithm };\n  const resp = await fetch(serverUrl, { method: "POST", body });',
                     tags:['risk']
                 }
@@ -375,25 +375,25 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             evidence: [
                 {
                     file:'SECURITY.md + CONTRIBUTING.md + CODE_OF_CONDUCT.md', lines:'—',
-                    finding:'<strong>11 个安全治理文档</strong>：SECURITY.md、CONTRIBUTING.md、CODE_OF_CONDUCT.md、GOVERNANCE.md、PQC_MIGRATION_PLAN.md、INCIDENT_RESPONSE_PLAN.md、RECOVERY_PLAN.md、CODEOWNERS、MAINTAINERS.md、THREAT_MODEL、security-limitations.md。OpenSSF Best Practices badge #13695 (passing)。+ CodeQL SAST + Dependabot 自动化。',
+                    finding:'<strong>11 个安全治理文档：SECURITY.md、CONTRIBUTING.md、CODE_OF_CONDUCT.md、GOVERNANCE.md、PQC_MIGRATION_PLAN.md、INCIDENT_RESPONSE_PLAN.md、RECOVERY_PLAN.md、CODEOWNERS、MAINTAINERS.md、THREAT_MODEL、security-limitations.md。OpenSSF Best Practices badge #13695 (passing)。+ CodeQL SAST + Dependabot 自动化。',
                     code:'# SECURITY.md — Security Vulnerability Reporting\n# CONTRIBUTING.md — AI contribution boundaries + DCO\n# CODE_OF_CONDUCT.md v2.1 — Contributor Covenant\n# security-limitations.md (10,888B) — 6 honest limitations\n# THREAT_MODEL + VULNERABILITIES',
                     tags:['good']
                 },
                 {
                     file:'git log analysis', lines:'476 commits',
-                    finding:'<strong>⚠️ Bus Factor = 1 (硬伤)</strong>：全 476 commits 来自同一邮箱 27202998@qq.com + AI agent (dev@fibemate.net)。所有贡献者可归约到 1 个自然人。这是从 OpenSSF Silver 到 Gold 的最大阻塞项。',
+                    finding:'<strong>⚠️ Bus Factor = 1 (硬伤)：全 476 commits 来自同一邮箱 27202998@qq.com + AI agent (dev@fibemate.net)。所有贡献者可归约到 1 个自然人。这是从 OpenSSF Silver 到 Gold 的最大阻塞项。',
                     code:'$ git shortlog -sn --all\n 275  FIBEMATE <dev@fibemate.net>     (AI agent)\n  39  Tianhe Liu <...@fibemate.net>\n   3  Lennonhaha <27202998@qq.com>\n  15+ liuguowei1983 <27202998@qq.com>\n─────────────────────────────\n  Bus Factor = 1  (经邮箱去重证实)',
                     tags:['risk']
                 },
                 {
                     file:'e69c944..e1795326 (CI/Nightly)', lines:'24 jobs',
-                    finding:'<strong>CI 基础设施</strong>：8 个 workflow (ci/ci-native/native-build/nightly-phase1/nightly-phase2/scorecard/codeql/repolinter) × 4 平台全绿。+ CodeQL security-extended SAST + Dependabot weekly。24 路 GH Actions 无红线。',
+                    finding:'<strong>CI 基础设施：8 个 workflow (ci/ci-native/native-build/nightly-phase1/nightly-phase2/scorecard/codeql/repolinter) × 4 平台全绿。+ CodeQL security-extended SAST + Dependabot weekly。24 路 GH Actions 无红线。',
                     code:'# 8 workflows across 4 platforms\n# ci/ci-native/native-build (core+native 12/12 ✓)\n# nightly-phase1/2 (Phase1 ✓, Phase2 4/5 ✓)\n# scorecard + codeql + repolinter (全部 ✓)\n# dependabot.yml (weekly npm + actions)',
                     tags:['good']
                 },
                 {
                     file:'N/A (外部流程)', lines:'—',
-                    finding:'<strong>缺失：第三方独立审计</strong> (Q4 2026 最早)。KAT/TVLA 均为内部证据，未经外部同行评审。这是从 "工程验证平台" 到 "可信资产" 的<strong>唯一不可绕过的一步</strong>。',
+                    finding:'&lt;strong&gt;缺失：第三方独立审计&lt;/strong&gt; (Q4 2026 最早)。KAT/TVLA 均为内部证据，未经外部同行评审。这是从 "工程验证平台" 到 "可信资产" 的&lt;strong&gt;唯一不可绕过的一步&lt;/strong&gt;。',
                     code:'// P0 (Q4 2026): 第三方密码学审计\n// - 核心原语语义审查 (ML-KEM/KDF/NTT)\n// - 混合 KEM 拼接安全性\n// - TLA+ 模型与实现一致性\n// - 侧信道: 物理 TVLA (FPGA/STM32)\n// 估计收益: +10-15 CARS 分',
                     tags:['risk']
                 }
