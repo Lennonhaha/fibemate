@@ -1,0 +1,31 @@
+[
+  {
+    "date": "2026-08-03T12:07:41.994Z",
+    "gitHash": "dea81aea",
+    "delta": {},
+    "snapshots": [
+      {
+        "id": "cars-radar",
+        "score": 75.2,
+        "scoreLabel": "CARS",
+        "file": "cars-radar-20260803.html",
+        "size": 45457,
+        "sha256": "a4639bbcf6113920cfa064608b55cc02f888727da0181dbf7e9d865eb5decb3e",
+        "gitHash": "dea81aea",
+        "date": "2026-08-03T12:07:41.994Z",
+        "sourcePath": "www/docs/cars-radar.html"
+      },
+      {
+        "id": "ibm-seven",
+        "score": 62.5,
+        "scoreLabel": "IBM",
+        "file": "ibm-seven-20260803.html",
+        "size": 32833,
+        "sha256": "c231e1e2e391ccf2663684c216c70114ff0ff67a4dc2d4af49a4b0412e5e769d",
+        "gitHash": "dea81aea",
+        "date": "2026-08-03T12:07:41.994Z",
+        "sourcePath": "www/docs/ibm-seven-radar.html"
+      }
+    ]
+  }
+]

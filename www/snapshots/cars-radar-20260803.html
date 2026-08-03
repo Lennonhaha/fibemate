@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FIBEMATE — CARS 五维度审计仪表盘 · 代码证据级</title>
+    <meta name="description" content="FIBEMATE CARS（Crypto-Agility Readiness Scorecard）五维度代码级审计仪表盘 — 点击任意维度查看具体文件、行号和代码证据。">
+    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 75.20">
+    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 73 · Organizational Readiness 70 — 综合 75.20/100，点击维度展开可验证代码证据。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
+    <meta property="og:site_name" content="FIBEMATE PQC Platform">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级">
+    <meta name="twitter:description" content="点击五边形维度→展开实际代码文件和行号，让 CARS 评分可验证、可复现。首次在真实 PQC 项目上实证 CARS 框架。">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Noto Sans SC', sans-serif;
+            background: #0f0f1e; color: #e0e0e0; overflow: hidden;
+        }
+        #canvas-container { position: absolute; inset: 0; z-index: 0; }
+
+        /* ─── Evidence panel (right side) ─── */
+        #evidence-panel {
+            position: absolute; top: 0; right: 0; width: 420px; height: 100vh;
+            background: rgba(15,15,30,0.96); border-left: 1px solid #3a3a5a;
+            backdrop-filter: blur(20px); z-index: 50;
+            transform: translateX(100%); transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+        #evidence-panel.open { transform: translateX(0); }
+        #ev-header {
+            padding: 20px 20px 14px;
+            border-bottom: 1px solid #3a3a5a;
+            display: flex; justify-content: space-between; align-items: flex-start;
+        }
+        #ev-dim-name { font-size: 15px; font-weight: bold; color: #00d4ff; }
+        #ev-dim-score { font-size: 12px; color: #a0a0c0; margin-top: 4px; }
+        #ev-close {
+            background: none; border: 1px solid #3a3a5a; border-radius: 6px;
+            color: #a0a0c0; cursor: pointer; padding: 4px 10px; font-size: 14px;
+            transition: all 0.2s;
+        }
+        #ev-close:hover { border-color: #ff6b6b; color: #ff6b6b; }
+        #ev-summary {
+            padding: 10px 20px; font-size: 12px; color: #a0a0c0; line-height: 1.6;
+            border-bottom: 1px solid #2a2a4a;
+        }
+        #ev-list {
+            flex: 1; overflow-y: auto; padding: 10px 16px;
+        }
+        #ev-list::-webkit-scrollbar { width: 4px; }
+        #ev-list::-webkit-scrollbar-thumb { background: #3a3a5a; border-radius: 2px; }
+        .ev-item {
+            background: #14142a; border: 1px solid #2a2a4a; border-radius: 10px;
+            padding: 14px; margin-bottom: 10px; transition: border-color 0.2s;
+        }
+        .ev-item:hover { border-color: #4a4a6a; }
+        .ev-file {
+            display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+        }
+        .ev-file-icon { font-size: 14px; }
+        .ev-file-path { font-size: 11px; color: #ffc107; font-family: 'SF Mono','Consolas',monospace; word-break: break-all; }
+        .ev-file-lines { font-size: 10px; color: #64748b; margin-left: auto; white-space: nowrap; }
+        .ev-finding { font-size: 11px; color: #c0c0d0; line-height: 1.5; margin-bottom: 6px; }
+        .ev-finding strong { color: #e0e0e0; }
+        .ev-code {
+            background: #08081a; border: 1px solid #2a2a4a; border-radius: 6px;
+            padding: 10px 12px; font-family: 'SF Mono','Consolas','Courier New',monospace;
+            font-size: 10.5px; line-height: 1.5; color: #a0a0c0; overflow-x: auto;
+            white-space: pre; max-height: 120px; overflow-y: auto;
+        }
+        .ev-code .kw { color: #c792ea; }
+        .ev-code .fn { color: #82aaff; }
+        .ev-code .num { color: #f78c6c; }
+        .ev-code .str { color: #c3e88d; }
+        .ev-code .cm { color: #546e7a; }
+        .ev-code .hl { color: #ffc107; }
+        .ev-tag {
+            display: inline-block; padding: 1px 6px; border-radius: 3px;
+            font-size: 9px; margin-right: 4px;
+        }
+        .ev-tag.risk { background: rgba(255,107,107,0.15); color: #ff6b6b; }
+        .ev-tag.good { background: rgba(81,207,102,0.15); color: #51cf66; }
+        .ev-tag.info { background: rgba(59,130,246,0.15); color: #3b82f6; }
+
+        /* ─── Hover tooltip ─── */
+        #tooltip {
+            position: absolute; pointer-events: none;
+            background: rgba(15,15,30,0.95); border: 1px solid #3a3a5a;
+            border-radius: 8px; padding: 10px 14px; font-size: 11px;
+            display: none; max-width: 260px; z-index: 200;
+            backdrop-filter: blur(8px); box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+        #tooltip .tt-name { font-size: 13px; font-weight: bold; color: #00d4ff; margin-bottom: 4px; }
+        #tooltip .tt-score { font-weight: bold; font-size: 18px; }
+        #tooltip .tt-hint { font-size: 10px; color: #64748b; margin-top: 4px; }
+
+        /* ─── Left panel ─── */
+        #panel {
+            position: absolute; top: 20px; left: 20px;
+            background: rgba(15,15,30,0.92); border: 1px solid #3a3a5a;
+            border-radius: 12px; padding: 18px; width: 280px; z-index: 30;
+            backdrop-filter: blur(10px); box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 { font-size: 15px; margin-bottom: 4px; color: #00d4ff; }
+        .subtitle { font-size: 10px; color: #a0a0c0; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px solid #3a3a5a; }
+        .overall { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .overall .label { font-size: 11px; color: #a0a0c0; }
+        .overall .score {
+            font-size: 26px; font-weight: bold;
+            background: linear-gradient(135deg, #ffc107, #ff9800);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        .dim-list { margin-bottom: 10px; }
+        .dim-row {
+            display: flex; align-items: center; padding: 6px 8px; font-size: 10.5px;
+            cursor: pointer; border-radius: 6px; transition: all 0.2s;
+            gap: 8px; margin-bottom: 2px;
+        }
+        .dim-row:hover { background: rgba(0,212,255,0.08); }
+        .dim-row.active { background: rgba(0,212,255,0.14); border: 1px solid rgba(0,212,255,0.3); }
+        .dim-row .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .dim-row .dim-name { flex: 1; color: #c0c0d0; }
+        .dim-row .dim-score { font-weight: bold; min-width: 26px; text-align: right; }
+        .dim-row .dim-arrow { color: #4a4a6a; font-size: 9px; opacity: 0; }
+        .dim-row:hover .dim-arrow { opacity: 1; color: #00d4ff; }
+
+        /* ─── Legend + controls ─── */
+        #legend {
+            position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 16px; align-items: center;
+            background: rgba(15,15,30,0.92); border: 1px solid #3a3a5a;
+            border-radius: 8px; padding: 8px 16px; font-size: 10px; z-index: 30;
+            backdrop-filter: blur(10px);
+        }
+        #legend .leg-item { display: flex; align-items: center; gap: 5px; }
+        #legend .leg-swatch { width: 20px; height: 2px; }
+        #legend .leg-swatch.dashed { border-top: 2px dashed #ffc107; width: 20px; background: transparent; }
+
+        #improve-toggle {
+            position: absolute; bottom: 30px; right: 30px;
+            background: rgba(15,15,30,0.92); border: 1px solid #3a3a5a;
+            border-radius: 8px; padding: 7px 14px; color: #00d4ff;
+            font-size: 11px; cursor: pointer; z-index: 30;
+            backdrop-filter: blur(10px); transition: all 0.2s;
+        }
+        #improve-toggle:hover { border-color: #00d4ff; box-shadow: 0 0 12px rgba(0,212,255,0.2); }
+        #improve-toggle.active { background: rgba(0,212,255,0.15); border-color: #00d4ff; }
+
+        /* ─── Mobile ─── */
+        @media (max-width: 768px) {
+            #panel { width: 200px; padding: 10px 8px; top: 4px; left: 4px; font-size:9px; }
+            #panel.collapsed { width: 32px; padding: 6px; }
+            #panel.collapsed .subtitle, #panel.collapsed .dim-list, #panel.collapsed .overall { display:none; }
+            #panel.collapsed h1 { display:none; }
+            #panel-toggle { display:block !important; position:absolute; top:4px; right:4px; z-index:31; background:rgba(15,15,30,0.9); border:1px solid #3a3a5a; border-radius:6px; color:#00d4ff; font-size:16px; width:28px; height:28px; cursor:pointer; line-height:1; }
+            h1 { font-size: 12px; }
+            .overall .score { font-size: 18px; }
+            .dim-row { font-size:9px; gap:4px; padding:4px 5px; }
+            #evidence-panel { width: 100vw; }
+            #ev-close { padding:6px 12px; font-size:16px; }
+            #ev-header { padding:14px; }
+            #ev-dim-name { font-size:13px; }
+            #ev-list { padding:8px 10px; }
+            .ev-item { padding:10px; }
+            .ev-file-path { font-size:9px; }
+            .ev-code { font-size:9px; max-height:80px; }
+            #legend { gap:6px; padding:5px 10px; font-size:8px; bottom:10px; }
+            #improve-toggle { right:4px; bottom:10px; font-size:9px; padding:5px 10px; }
+            #tooltip { max-width:180px; font-size:10px; }
+        }
+    </style>
+</head>
+<body>
+
+<div id="canvas-container"></div>
+
+<div id="tooltip">
+    <div class="tt-name"></div>
+    <div class="tt-score"></div>
+    <div class="tt-hint">点击节点 → 查看代码证据</div>
+</div>
+
+<!-- ═══ 证据面板 (右侧抽屉) ═══ -->
+<div id="evidence-panel">
+    <div id="ev-header">
+        <div>
+            <div id="ev-dim-name">选择维度</div>
+            <div id="ev-dim-score"></div>
+        </div>
+        <button id="ev-close" onclick="closeEvidence()">✕</button>
+    </div>
+    <div id="ev-summary"></div>
+    <div id="ev-list"></div>
+</div>
+
+<!-- ═══ 左侧评分面板 ═══ -->
+<button id="panel-toggle" onclick="togglePanel()" style="display:none;">☰</button>
+<div id="panel">
+    <h1>FIBEMATE · CARS 审计仪表盘</h1>
+    <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
+    <div class="overall">
+        <span class="label">综合得分</span>
+        <span class="score">75.20 / 100</span>
+    </div>
+    <div class="dim-list" id="dim-list"></div>
+    <div style="font-size:9px;color:#555;margin-top:6px;line-height:1.5;">
+        🖱 拖拽旋转 · 滚轮缩放 · 右键平移<br>
+        悬停节点看分数 ·<strong> 点击节点 → 代码证据</strong>
+    </div>
+</div>
+
+<!-- ═══ Legend ═══ -->
+<div id="legend">
+    <div class="leg-item"><div class="leg-swatch" style="background:#00d4ff;"></div> 当前得分</div>
+    <div class="leg-item"><div class="leg-swatch dashed"></div> 改进路线 (P0+P1)</div>
+    <div class="leg-item" style="color:#ffc107;">→ 80</div>
+</div>
+
+<button id="improve-toggle" onclick="toggleImprovement()">显示改进路线</button>
+
+<script>window.__THREE_LOADED=!1;window.__ORBIT_LOADED=!1;</script>
+<script src="lib/three.min.js?v=20260802" onerror="console.error('FAILED to load three.min.js!')" onload="window.__THREE_LOADED=!0;console.log('three.min.js OK, THREE='+(typeof THREE))"></script>
+<script src="lib/OrbitControls.js?v=20260802" onerror="console.error('FAILED to load OrbitControls.js!')" onload="window.__ORBIT_LOADED=!0;console.log('OrbitControls.js OK, THREE.OrbitControls='+(typeof (window.THREE&&window.THREE.OrbitControls)))"></script>
+
+<script>
+console.log('=== CARS-RADAR DIAG: document.readyState='+document.readyState);
+console.log('  THREE loaded:', typeof THREE!=='undefined');
+console.log('  OrbitControls:', typeof (window.THREE&&THREE.OrbitControls)!=='undefined');
+if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;padding:40px;font-size:24px">✕ THREE.js 加载失败！<br>按 Ctrl+Shift+R 硬刷新</div>'; throw new Error('THREE not loaded'); }
+(function() {
+    // ═══════════════════════════════════════════
+    //  CARS 维度数据 + 代码证据
+    // ═══════════════════════════════════════════
+    var DIM_COLORS = ['#00d4ff','#ff6b6b','#51cf66','#ffa94d','#748ffc'];
+
+    var dimensions = [
+        {
+            key:'ci', name:'Crypto Inventory', cn:'加密资产盘点', score:90, max:100,
+            note: '76 个源文件覆盖 12 种算法 (@fibemate/algorithm-registry v1.0.0) + 2 个 FPGA 模块，每项含 KAT/Bench/TVLA/TSR 四维覆盖。',
+            evidence: [
+                {
+                    file:'packages/pqc-kem/src/ml-kem-768.js', lines:'L1-L356',
+                    finding:'核心 KEM 实现，356 行纯 JS。含 NTT forward/inverse、polyMul、matVecMul、barrettReduce 等全部底层原语。在 Noble+liboqs 上做过 10000/10000 交叉验证。',
+                    code:'// ML-KEM-768 (FIPS 203)\nconst N = 256, Q = 3329, K = 3;\nconst DU = 10, DV = 4;\nconst POLY_BYTES = 384, PK_BYTES = 1184;\nconst SK_BYTES = 2400, CT_BYTES = 1088;',
+                    tags:['good']
+                },
+                {
+                    file:'packages/fml-dsa/src/core/{keygen,sign,verify}.js', lines:'L1-L285',
+                    finding:'fml-dsa — FIPS 204 ML-DSA-65 自研实现，三参数集 (44/65/87) 84/84 自测 + Noble 交叉验证双向全过。NTT 核常量 ζ=1753。',
+                    code:'// ML-DSA-65 (FIPS 204) N=256 Q=8380417\nconst ζ = 1753, INV_N = 8347681;\nconst τ = 49, λ = 192, d = 13;\nconst T1_BITS = 10, POLY_T1_PACKED = 320;',
+                    tags:['good']
+                },
+                {
+                    file:'www/crypto/ (22 files)', lines:'~1024 行',
+                    finding:'浏览器端加密完整栈：slh-dsa.js (WASM bridge)、sm2-bigint-ec.js、sm2-browser.bundle.js、sm3-browser.js、sm4-browser.js、ml-kem-768.js、hybrid-kem-client.js、double-ratchet-pq.js 等。',
+                    code:'// 22 个浏览器加密文件\n// 覆盖: ML-KEM, SLH-DSA, SM2/3/4, Hybrid KEX, Double Ratchet PQ\n// 每个算法有对应 KAT 测试脚本',
+                    tags:['good']
+                },
+                {
+                    file:'fpga/rtl/ntt/*.v + pkg/*.v', lines:'~380 行',
+                    finding:'FPGA NTT 加速器：complete_ntt_core.v、ntt_top.v (WNS=9.755ns Vivado timing closure)。ILA 硬件调试验证通过，UART 物理打通。',
+                    code:'// FPGA NTT Accelerator (Artix-7 A7-35T)\n// WNS = 9.755ns (Vivado timing closure)\n// ILA hardware debug verified\nmodule ntt_top #(parameter N=256, Q=3329)...',
+                    tags:['good']
+                }
+            ]
+        },
+        {
+            key:'aa', name:'Algorithm Agility', cn:'算法敏捷性', score:61, max:100,
+            note: 'AlgorithmResolver 运行时参数解析器 (35/35 PASS)。ML-KEM params.js 运行时切换。FML-DSA 运行时参数集为全库最佳范例。gm.js 硬编码仅剩 3 处（SM2 keygen/sign/encrypt）。',
+            evidence: [
+                {
+                    file:'www/crypto/hybrid-kem-client.js', lines:'L38-L224',
+                    finding:'&lt;strong&gt;14+ 处硬编码算法调用&lt;/strong&gt;。SM2.generateKeypair(L111)、MLKEM.generateKeypair(L163)、MLKEM.encapsulate(L224)、SM2.decrypt 等均直接引用全局对象，零抽象层。',
+                    code:'// L111-112: 直接调用 SM2 全局对象\nconst sm2Key = SM2.generateKeypair();\nconst sm2PubHex = SM2.pk2hex(sm2Key.publicKey);\n\n// L163-164: 直接调用 MLKEM 全局对象\nconst mlkem = MLKEM.keygen();\nconst pkBytes = mlkem.publicKey;\n\n// L224: encapsulate 用硬编码常量\nconst encapResult = MLKEM.encapsulate(peerMLKEMPK);',
+                    tags:['risk','info']
+                },
+                {
+                    file:'www/crypto/gm.js', lines:'L89, L183, L210',
+                    finding:'&lt;strong&gt;gm.js negotiateWithServer&lt;/strong&gt; 走应用层协商 (POST /api/negotiate)，非算法注册表。SM2 全局对象引用贯穿 encrypt/decrypt。',
+                    code:'// L89: 算法选择硬编码\nconst sm2 = gm().SM2;\nconst keypair = sm2.generateKeyPair();\n\n// L183: 应用层协商，非算法注册表\nasync negotiateWithServer(serverUrl, algorithm) {\n  // 硬编码 algorithm = "SM2"',
+                    tags:['risk']
+                },
+                {
+                    file:'packages/pqc-kem/src/ml-kem-768.js', lines:'L12-L18',
+                    finding:'&lt;strong&gt;12 个编译时常量硬编码&lt;/strong&gt;。N=256、K=3、DU=10、DV=4、PK=1184B — ML-KEM-768→1024 需改 ~12 处，且 byteEncode 切分逻辑耦合。',
+                    code:'// 硬编码常量 (ML-KEM-768 专用)\nconst N = 256, Q = 3329, K = 3;\nconst DU = 10, DV = 4;  // 1024: DU=11, DV=5\nconst BAR_K = 24, BAR_MU = 5039;\nconst NTT_INV = 3303;',
+                    tags:['risk']
+                },
+                {
+                    file:'packages/fml-dsa/src/core/params.js', lines:'L1-L32',
+                    finding:'&lt;strong&gt;✅ 良好实践：fml-dsa 运行时参数集&lt;/strong&gt;。ML-DSA-44→65→87 切换只需改 `paramSet` 参数，零行代码改动。FIBEMATE 全库最佳解耦范例。',
+                    code:'// 运行时参数集切换 (全库最佳实践)\nexport const PARAMS = {\n  "ML-DSA-44": { N:256, Q:8380417, τ:39, λ:128, ... },\n  "ML-DSA-65": { N:256, Q:8380417, τ:49, λ:192, ... },\n  "ML-DSA-87": { N:256, Q:8380417, τ:60, λ:256, ... }\n};',
+                    tags:['good']
+                }
+            ]
+        },
+        {
+            key:'kl', name:'Key Lifecycle', cn:'密钥生命周期', score:82, max:100,
+            note: 'KeyLifecycleManager 引擎 (27/27 PASS) + KLSession 双棘轮集成 (35/35 PASS)。自动轮换/吊销/审计全链路就绪。TLA+ 10 条不变量覆盖密钥状态机。',
+            evidence: [
+                {
+                    file:'docs/tla/C2.tla', lines:'L1-L128',
+                    finding:'<strong>7 条不变量全部通过 TLC 模型检查：TypeOK、K1_NoPrematureActive、K2_ServerKeyPrecondition、K3_WeakKeyIndependence、K4、K5、K3_StrongKeyIndependence、K3p_Strong。101,467 states · 0 violations。',
+                    code:'(* K3 Strong Key Independence *)\nInvariant_K3_StrongKeyIndependence ==\n  \\A i,j \\in 1..MaxSessions:\n    (i /= j /\\ key[i] # 0 /\\ key[j] # 0\n     => key[i] # key[j])\n\n(* TLC: 101,467 states · 26,115 distinct · 0 violations *)',
+                    tags:['good','info']
+                },
+                {
+                    file:'docs/tla/OPK.tla', lines:'L1-L94',
+                    finding:'<strong>One-Time Pre-Key 模型：3 条不变量 O1_NoDoubleConsume、O2_ConsumedExists、O3_CountCorrect。与 C2 组合覆盖完整的密钥生命周期（生成→分发→使用→销毁）。',
+                    code:'(* O1: 同一 pre-key 不会被消费两次 *)\nInvariant_O1_NoDoubleConsume ==\n  \\A k \\in Keys: consumed[k] <= generated[k]\n\n(* O2: 被消费的 key 必须先存在 *)\nInvariant_O2_ConsumedExists ==\n  \\A k \\in Keys: consumed[k] > 0 => generated[k] > 0',
+                    tags:['good']
+                },
+                {
+                    file:'packages/key-lifecycle/index.js', lines:'589 lines',
+                    finding:'<strong>KeyLifecycleManager 引擎 27/27 PASS：九 API · 六机制 (bootstrap/rotate/emergencyRotate/revokeKey/encryptUsed/decryptUsed/auditReport/exportState/importState)。时间+消息计数双触发自动轮换。TTL 吊销列表。',
+                    code:'// Nine APIs, six mechanisms\nclass KeyLifecycleManager {\n  bootstrap/key/algorithm  // Init root key\n  rotate/key/reason        // Scheduled rotation\n  emergencyRotate/key      // Immediate revoke + rotate\n  revokeKey/version,reason // Manual revocation\n  encryptUsed/             // Tag + rotation trigger\n  decryptUsed/version      // Usage + revocation check\n  auditReport/             // Full audit trail',
+                    tags:['good','info']
+                },
+                {
+                    file:'packages/key-lifecycle/double-ratchet-integration.js', lines:'195 lines',
+                    finding:'<strong>KLSession 集成层 35/35 PASS：PQRatchetSession 封装 KeyLifecycleManager。encrypt 前 rotationNeeded 检查 → decrypt 前 isRevoked 检查 → serialize 保留 KL 状态。',
+                    code:'class KLSession extends PQRatchetSession {\n  async encrypt/plaintext {\n    const s = this.kl.encryptUsed/;  // trigger check\n    return await super.encrypt/plaintext;\n  }\n  async decrypt/header,ct,iv {\n    if /this.kl.isRevoked/header._kl_version// throw;\n    return await super.decrypt/header,ct,iv;\n  }',
+                    tags:['good']
+                },
+                {
+                    file:'packages/double-ratchet-pq.js', lines:'L290-L310',
+                    finding:'<strong>PQ 混合双棘轮：ML-KEM-768 + P-256 hybrid X3DH 握手，双向 4 轮消息加密解密全通。棘轮步进触发密钥刷新，前向安全性由 DH 棘轮保证。',
+                    code:'// PQ Hybrid Double Ratchet\n// Init: ML-KEM-768 + P-256 hybrid X3DH\nconst sharedSecret = await hybrid_x3dh_handshake(alice, bob);\n\n// Ratchet step (every message)\nfunction ratchetStep(state, dhPubKey) {\n  // DH ratchet → new root key\n  // Symmetric ratchet → new message keys',
+                    tags:['good']
+                },
+                
+            ]
+        },
+        {
+            key:'pc', name:'Protocol Coupling', cn:'协议耦合度', score:73, max:100,
+            note: 'IANA group 运行时解析 (AlgorithmResolver) + 回退策略 (fail-fast/try-all/exclude)。能力通告保留。应用层混合 KEX（教育定位）。解耦但非标准。',
+            evidence: [
+                {
+                    file:'www/crypto/hybrid-kem-client.js', lines:'L38-L56',
+                    finding:'<strong>IANA 组号运行时解析：全部 7 个硬编码常量（GROUP_ID/PK_LEN/CT_LEN/SS_LEN）替换为 AlgorithmResolver 运行时 getter。resolver 未加载时自动回退默认值，保持兼容。',
+                    code:'// PC: IANA group + key sizes from runtime resolver\nconst R = AlgorithmResolver;\nfunction ianaGroupId() { return R.ianaGroup(\'ML-KEM-768\') || 4590; }\nfunction mlkemPkLen() { return R.pkSize(\'ML-KEM-768\') || 1184; }\nfunction mlkemCtLen() { return R.ctSize(\'ML-KEM-768\') || 1088; }\n// ... 7 getter functions, zero hardcoded constants',
+                    tags:['good','info']
+                },
+                {
+                    file:'www/crypto/gm.js', lines:'L181-L293',
+                    finding:'<strong>回退策略落地 (AA)：AlgorithmResolver 动态获取算法优先级列表。fail-fast (传统行为) / try-all (逐算法,默认) / exclude (排除特定算法) 三种策略。全失败时结构化报错（列出尝试算法+最后错误）。',
+                    code:'// PC: fallback retry loop\nvar tryList = (fallback === \'fail-fast\') ? [algoList[0]] : algoList;\nfor (var i = 0; i < tryList.length; i++) {\n  try { /* negotiate with tryList[i] */ return result; }\n  catch(e) { lastError=e; /* try next */ }\n}\nthrow Error(\'协商失败 — 已尝试: \' + tried + \'。最后错误: \' + lastError.message);',
+                    tags:['good']
+                },
+                {
+                    file:'www/crypto/hybrid-kem-client.js', lines:'L38-L42',
+                    note:'GROUP_ID=4590 (SM2+MLKEM768 hybrid)。ML-KEM 参数全部编译时常量 (PK=1184、CT=1088、SS=32)。密钥交换发生在应用层，不依赖 TLS 握手。',    code:'// Application-layer hybrid KEX (not TLS 1.3)\nconst IANA_GROUP_ID = 4590;  // SM2 + MLKEM768 hybrid\nconst MLKEM_PK_LEN = 1184, MLKEM_CT_LEN = 1088;\nconst MLKEM_SS_LEN = 32;\n\n// 密钥交换在应用层自主协商',
+                    tags:['info']
+                },
+                {
+                    file:'src/tls-hybrid-extension.js', lines:'L1-L68',
+                    finding:'应用层自定义协商（见下方代码注释）。非标准 TLS 1.3 Extension。FIBEMATE 明确选择不走 TLS 层混合（教育定位 — "理解 PQC 如何工作"而非"取代标准 TLS"）。',
+                    code:'// NOT a standard TLS 1.3 extension\n// This is an application-layer demonstration\n// showing how hybrid KEX works conceptually\n// ↓ standard TLS 1.3 混合路线已搁置',
+                    tags:['good']
+                },
+                {
+                    file:'www/crypto/gm.js', lines:'L183-L220',
+                    finding:'&lt;strong&gt;协议协商硬编码为 "SM2"&lt;/strong&gt;。POST /api/negotiate 无备选算法列表、无回退策略、无能力通告。协议层与算法身份强耦合。',
+                    code:'// L183: 协商函数硬编码算法\nasync negotiateWithServer(serverUrl, algorithm = "SM2") {\n  const clientPubKey = SM2.generateKeypair().publicKey;\n  const body = { clientPublicKey, algorithm };\n  const resp = await fetch(serverUrl, { method: "POST", body });',
+                    tags:['risk']
+                }
+            ]
+        },
+        {
+            key:'or', name:'Organizational Readiness', cn:'组织准备度', score:70, max:100,
+            note: 'OpenSSF passing badge + 完整安全文档链。Bus Factor=1 是硬伤。Q4 第三方审计后可达到 75。',
+            evidence: [
+                {
+                    file:'SECURITY.md + CONTRIBUTING.md + CODE_OF_CONDUCT.md', lines:'—',
+                    finding:'<strong>11 个安全治理文档：SECURITY.md、CONTRIBUTING.md、CODE_OF_CONDUCT.md、GOVERNANCE.md、PQC_MIGRATION_PLAN.md、INCIDENT_RESPONSE_PLAN.md、RECOVERY_PLAN.md、CODEOWNERS、MAINTAINERS.md、THREAT_MODEL、security-limitations.md。OpenSSF Best Practices badge #13695 (passing)。+ CodeQL SAST + Dependabot 自动化。',
+                    code:'# SECURITY.md — Security Vulnerability Reporting\n# CONTRIBUTING.md — AI contribution boundaries + DCO\n# CODE_OF_CONDUCT.md v2.1 — Contributor Covenant\n# security-limitations.md (10,888B) — 6 honest limitations\n# THREAT_MODEL + VULNERABILITIES',
+                    tags:['good']
+                },
+                {
+                    file:'git log analysis', lines:'476 commits',
+                    finding:'<strong>⚠️ Bus Factor = 1 (硬伤)：全 476 commits 来自同一邮箱 27202998@qq.com + AI agent (dev@fibemate.net)。所有贡献者可归约到 1 个自然人。这是从 OpenSSF Silver 到 Gold 的最大阻塞项。',
+                    code:'$ git shortlog -sn --all\n 275  FIBEMATE <dev@fibemate.net>     (AI agent)\n  39  Tianhe Liu <...@fibemate.net>\n   3  Lennonhaha <27202998@qq.com>\n  15+ liuguowei1983 <27202998@qq.com>\n─────────────────────────────\n  Bus Factor = 1  (经邮箱去重证实)',
+                    tags:['risk']
+                },
+                {
+                    file:'e69c944..e1795326 (CI/Nightly)', lines:'24 jobs',
+                    finding:'<strong>CI 基础设施：8 个 workflow (ci/ci-native/native-build/nightly-phase1/nightly-phase2/scorecard/codeql/repolinter) × 4 平台全绿。+ CodeQL security-extended SAST + Dependabot weekly。24 路 GH Actions 无红线。',
+                    code:'# 8 workflows across 4 platforms\n# ci/ci-native/native-build (core+native 12/12 ✓)\n# nightly-phase1/2 (Phase1 ✓, Phase2 4/5 ✓)\n# scorecard + codeql + repolinter (全部 ✓)\n# dependabot.yml (weekly npm + actions)',
+                    tags:['good']
+                },
+                {
+                    file:'N/A (外部流程)', lines:'—',
+                    finding:'&lt;strong&gt;缺失：第三方独立审计&lt;/strong&gt; (Q4 2026 最早)。KAT/TVLA 均为内部证据，未经外部同行评审。这是从 "工程验证平台" 到 "可信资产" 的&lt;strong&gt;唯一不可绕过的一步&lt;/strong&gt;。',
+                    code:'// P0 (Q4 2026): 第三方密码学审计\n// - 核心原语语义审查 (ML-KEM/KDF/NTT)\n// - 混合 KEM 拼接安全性\n// - TLA+ 模型与实现一致性\n// - 侧信道: 物理 TVLA (FPGA/STM32)\n// 估计收益: +10-15 CARS 分',
+                    tags:['risk']
+                }
+            ]
+        }
+    ];
+
+    // 改进后预测
+    var improved = [85, 73, 85, 80, 78];
+
+    var N = dimensions.length, maxScore = 100;
+    var showImproved = false;
+    var activeDim = -1;
+
+    // ═══════════ 3D Scene ═══════════
+    var container = document.getElementById('canvas-container');
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(45, container.clientWidth/container.clientHeight, 0.1, 100);
+    camera.position.set(0, 3.5, 8); camera.lookAt(0, 0, 0);
+
+    var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.2;
+    container.appendChild(renderer.domElement);
+
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true; controls.dampingFactor = 0.08;
+    controls.minDistance = 3.5; controls.maxDistance = 16;
+    controls.maxPolarAngle = Math.PI * 0.65;
+    controls.autoRotate = true; controls.autoRotateSpeed = 0.5;
+
+    scene.add(new THREE.AmbientLight(0x334466, 1.5));
+    var sun = new THREE.DirectionalLight(0x8899ff, 1.2);
+    sun.position.set(5, 8, 5); scene.add(sun);
+
+    // ── Polar grid ──
+    var gridHelper = new THREE.PolarGridHelper(5.5, 40, 20, 64, 0x1a1a3e, 0x1a1a3e);
+    gridHelper.position.y = -0.6; scene.add(gridHelper);
+
+    // ── Reference rings ──
+    for (var level = 20; level <= 100; level += 20) {
+        var r = (level/maxScore)*4.5;
+        var ringPts = [];
+        for (var i = 0; i < N; i++) {
+            var a = (i/N)*Math.PI*2 - Math.PI/2;
+            ringPts.push(new THREE.Vector2(Math.cos(a)*r, Math.sin(a)*r));
+        }
+        ringPts.push(ringPts[0].clone());
+        var ringGeo = new THREE.BufferGeometry();
+        ringGeo.setFromPoints(ringPts.map(function(v){ return new THREE.Vector3(v.x,0,v.y); }));
+        var ring = new THREE.Line(ringGeo, new THREE.LineBasicMaterial({
+            color:0x2a2a4a, transparent:true, opacity:level===100?0.8:0.35
+        }));
+        ring.name = 'ring-'+level; scene.add(ring);
+        if (level%40===0 || level===100) {
+            var spr = makeTextSprite(String(level), '#3a3a5a', 24);
+            spr.position.set(r+0.25, 0.05, 0); spr.scale.set(0.6,0.3,1); scene.add(spr);
+        }
+    }
+
+    // ── Axis lines ──
+    for (var i2 = 0; i2 < N; i2++) {
+        var a2 = (i2/N)*Math.PI*2 - Math.PI/2;
+        var ex = Math.cos(a2)*4.7, ez = Math.sin(a2)*4.7;
+        var axGeo = new THREE.BufferGeometry();
+        axGeo.setFromPoints([new THREE.Vector3(0,-0.4,0), new THREE.Vector3(ex,-0.4,ez)]);
+        scene.add(new THREE.Line(axGeo, new THREE.LineBasicMaterial({color:0x1a1a3e,opacity:0.5,transparent:true})));
+    }
+
+    // ── Dimension labels ──
+    for (var i3 = 0; i3 < N; i3++) {
+        var a3 = (i3/N)*Math.PI*2 - Math.PI/2;
+        var lr = 5.1;
+        var s = makeTextSprite(dimensions[i3].name, '#00d4ff', 28);
+        s.position.set(Math.cos(a3)*lr, 0.1, Math.sin(a3)*lr);
+        s.scale.set(1.7,0.85,1); scene.add(s);
+    }
+
+    // ── Fill ──
+    var fillGroup = new THREE.Group(); scene.add(fillGroup);
+    function buildFill(scores) {
+        while (fillGroup.children.length) fillGroup.remove(fillGroup.children[0]);
+        var pts = [];
+        for (var i = 0; i < N; i++) {
+            var a = (i/N)*Math.PI*2 - Math.PI/2;
+            var r = (scores[i]/maxScore)*4.5;
+            pts.push(new THREE.Vector2(Math.cos(a)*r, Math.sin(a)*r));
+        }
+        var shape = new THREE.Shape(pts);
+        var g = new THREE.ShapeGeometry(shape);
+        var m = new THREE.MeshBasicMaterial({color:0x00d4ff,side:2,transparent:true,opacity:0.28,depthWrite:false});
+        var mesh = new THREE.Mesh(g,m); mesh.rotation.x = -Math.PI/2; mesh.position.y = -0.35;
+        fillGroup.add(mesh);
+        pts.push(pts[0].clone());
+        var geo = new THREE.BufferGeometry();
+        geo.setFromPoints(pts.map(function(v){ return new THREE.Vector3(v.x,-0.35,v.y); }));
+        fillGroup.add(new THREE.Line(geo, new THREE.LineBasicMaterial({color:0x00d4ff,opacity:0.9,transparent:true})));
+    }
+    buildFill(dimensions.map(function(d){return d.score;}));
+
+    // ── Improved (dashed) ──
+    var improvedGroup = new THREE.Group(); improvedGroup.visible = false; scene.add(improvedGroup);
+    function buildImproved() {
+        while (improvedGroup.children.length) improvedGroup.remove(improvedGroup.children[0]);
+        var pts = [];
+        for (var i = 0; i < N; i++) {
+            var a = (i/N)*Math.PI*2 - Math.PI/2;
+            pts.push(new THREE.Vector3(Math.cos(a)*(improved[i]/maxScore)*4.5, -0.34, Math.sin(a)*(improved[i]/maxScore)*4.5));
+        }
+        pts.push(pts[0].clone());
+        var DL=0.3,GL=0.25;
+        for (var s=0; s<N; s++) {
+            var st=pts[s],en=pts[s+1];
+            var dx=en.x-st.x,dz=en.z-st.z;
+            var seg=Math.sqrt(dx*dx+dz*dz);
+            var nx=dx/seg,nz=dz/seg,drawn=0;
+            while (drawn < seg) {
+                var d0=drawn,d1=Math.min(drawn+DL,seg);
+                var sg=new THREE.BufferGeometry();
+                sg.setFromPoints([new THREE.Vector3(st.x+nx*d0,-0.34,st.z+nz*d0), new THREE.Vector3(st.x+nx*d1,-0.34,st.z+nz*d1)]);
+                improvedGroup.add(new THREE.Line(sg,new THREE.LineBasicMaterial({color:0xffc107,opacity:0.7,transparent:true})));
+                drawn=d1+GL;
+            }
+        }
+        for (var i2=0;i2<N;i2++) {
+            var a2=(i2/N)*Math.PI*2-Math.PI/2;
+            var r2=(improved[i2]/maxScore)*4.5;
+            var dot=new THREE.Mesh(new THREE.SphereGeometry(0.08,12,12),new THREE.MeshBasicMaterial({color:0xffc107}));
+            dot.position.set(Math.cos(a2)*r2,-0.33,Math.sin(a2)*r2);
+            improvedGroup.add(dot);
+        }
+    }
+    buildImproved();
+
+    // ── Node spheres (clickable) ──
+    var nodeSpheres = [];
+    for (var i4 = 0; i4 < N; i4++) {
+        var a4 = (i4/N)*Math.PI*2 - Math.PI/2;
+        var r4 = (dimensions[i4].score/maxScore)*4.5;
+        var sGeo = new THREE.SphereGeometry(0.12, 24, 24);
+        var colorHex = parseInt(DIM_COLORS[i4].replace('#',''), 16);
+        var sMat = new THREE.MeshStandardMaterial({
+            color: colorHex, emissive: colorHex, emissiveIntensity: 0.35,
+            roughness: 0.25, metalness: 0.3
+        });
+        var sphere = new THREE.Mesh(sGeo, sMat);
+        sphere.position.set(Math.cos(a4)*r4, -0.33, Math.sin(a4)*r4);
+        sphere.name = 'node-'+i4;
+        sphere.userData = { dimIndex: i4 };
+        scene.add(sphere);
+        nodeSpheres.push(sphere);
+    }
+
+    // ── Center ──
+    var cs = new THREE.Mesh(new THREE.SphereGeometry(0.18,24,24),
+        new THREE.MeshStandardMaterial({color:0xff9800,emissive:0x441100,roughness:0.2,metalness:0.4}));
+    cs.position.y = -0.34; scene.add(cs);
+    var halo = new THREE.Mesh(new THREE.TorusGeometry(0.28,0.03,16,48),
+        new THREE.MeshBasicMaterial({color:0xffc107,opacity:0.5,transparent:true}));
+    halo.rotation.x = Math.PI/2; halo.position.y = -0.33; scene.add(halo);
+
+    // ── Particles ──
+    var pGeo = new THREE.BufferGeometry();
+    var pPos = new Float32Array(200*3);
+    for (var p=0;p<200;p++) {
+        var rad=1.5+Math.random()*5,th=Math.random()*Math.PI*2;
+        pPos[p*3]=Math.cos(th)*rad;pPos[p*3+1]=(Math.random()-0.5)*2;pPos[p*3+2]=Math.sin(th)*rad;
+    }
+    pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+    var part = new THREE.Points(pGeo,new THREE.PointsMaterial({color:0x334466,size:0.02,opacity:0.5,transparent:true}));
+    scene.add(part);
+
+    // ── Text sprite ──
+    function makeTextSprite(text, color, size) {
+        var c=document.createElement('canvas');c.width=256;c.height=128;
+        var ctx=c.getContext('2d');
+        ctx.font='bold '+size+'px -apple-system,"Noto Sans SC",sans-serif';
+        ctx.fillStyle=color;ctx.textAlign='center';ctx.textBaseline='middle';
+        ctx.fillText(text,128,64);
+        var tex=new THREE.CanvasTexture(c);tex.minFilter=THREE.LinearFilter;
+        return new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true}));
+    }
+
+    // ═══════════ Raycaster ═══════════
+    var raycaster = new THREE.Raycaster();
+    raycaster.params.Points.threshold = 0.3;
+    var mouse = new THREE.Vector2();
+    var tooltip = document.getElementById('tooltip');
+    var hoveredNode = -1;
+
+    function onMouseMove(e) {
+        mouse.x = (e.clientX/container.clientWidth)*2-1;
+        mouse.y = -(e.clientY/container.clientHeight)*2+1;
+        raycaster.setFromCamera(mouse, camera);
+        var hits = raycaster.intersectObjects(nodeSpheres);
+        if (hits.length > 0) {
+            var idx = hits[0].object.userData.dimIndex;
+            hoveredNode = idx;
+            var dim = dimensions[idx];
+            tooltip.querySelector('.tt-name').textContent = dim.cn;
+            tooltip.querySelector('.tt-score').textContent = dim.score+' / 100';
+            tooltip.style.color = DIM_COLORS[idx];
+            tooltip.style.display = 'block';
+            tooltip.style.left = (e.clientX+20)+'px';
+            tooltip.style.top = (e.clientY-40)+'px';
+            document.body.style.cursor = 'pointer';
+        } else {
+            hoveredNode = -1;
+            tooltip.style.display = 'none';
+            document.body.style.cursor = 'default';
+        }
+    }
+
+    function onClick(e) {
+        // Ignore clicks on the evidence panel or left panel
+        if (e.target.closest('#evidence-panel') || e.target.closest('#panel') || e.target.closest('button')) return;
+
+        raycaster.setFromCamera(mouse, camera);
+        var hits = raycaster.intersectObjects(nodeSpheres);
+        if (hits.length > 0) {
+            var idx = hits[0].object.userData.dimIndex;
+            openEvidence(idx);
+        }
+    }
+
+    // ═══════════ Evidence panel logic ═══════════
+    var evPanel = document.getElementById('evidence-panel');
+
+    function openEvidence(idx) {
+        activeDim = idx;
+        var dim = dimensions[idx];
+
+        document.getElementById('ev-dim-name').textContent = dim.cn + ' (' + dim.name + ')';
+        document.getElementById('ev-dim-score').textContent = '得分 ' + dim.score + '/100 · 改进后 → ' + improved[idx];
+        document.getElementById('ev-summary').textContent = dim.note;
+
+        var list = document.getElementById('ev-list');
+        list.innerHTML = dim.evidence.map(function(ev, ei) {
+            var tagsHtml = (ev.tags||[]).map(function(t) {
+                var cls = t==='risk'?'risk':(t==='good'?'good':'info');
+                var label = t==='risk'?'⚠ 问题':(t==='good'?'✅ 优势':'ℹ 说明');
+                return '<span class="ev-tag '+cls+'">'+label+'</span>';
+            }).join('');
+            // Simple syntax highlighting
+            var code = ev.code
+                .replace(/\/\/.*/g, '<span class="cm">$&</span>')
+                .replace(/\b(const|let|var|function|module|export|class|async|await|return|if|else|for|while|switch|case|break|default)\b/g, '<span class="kw">$1</span>')
+                .replace(/=>(?=\s)/g, '<span class="fn">=&gt;</span>')
+                .replace(/\b\d+(\.\d+)?\b/g, '<span class="num">$&</span>')
+                .replace(/(['\"`])(?:(?!\1).)*?\1/g, '<span class="str">$&</span>')
+                .replace(/\*(\s*\S.*?)\*/g, '<span class="hl">*$1*</span>')
+                .replace(/───.*/g, '<span class="hl">$&</span>')
+                .replace(/\b(Bus Factor|第三方|审计|Q4|P0|TODO|TLA\+|TLC|violations|states)\b/g, '<span class="hl">$1</span>');
+
+            return '<div class="ev-item">' +
+                '<div class="ev-file">' +
+                    '<span class="ev-file-icon">📄</span>' +
+                    '<span class="ev-file-path">' + ev.file + '</span>' +
+                    '<span class="ev-file-lines">' + ev.lines + '</span>' +
+                '</div>' +
+                '<div class="ev-finding">' + ev.finding + '</div>' +
+                (tagsHtml ? '<div style="margin-bottom:6px">'+tagsHtml+'</div>' : '') +
+                '<div class="ev-code">' + code + '</div>' +
+            '</div>';
+        }).join('');
+
+        evPanel.classList.add('open');
+
+        // Highlight left panel row
+        var rows = document.querySelectorAll('.dim-row');
+        rows.forEach(function(r) { r.classList.remove('active'); });
+        var targetRow = document.querySelector('.dim-row[data-idx="'+idx+'"]');
+        if (targetRow) targetRow.classList.add('active');
+
+        // Highlight node sphere
+        nodeSpheres.forEach(function(ns, i) {
+            ns.material.emissiveIntensity = (i===idx) ? 1.2 : 0.35;
+            ns.scale.setScalar(i===idx ? 1.6 : 1.0);
+        });
+    }
+
+    function closeEvidence() {
+        activeDim = -1;
+        evPanel.classList.remove('open');
+        document.querySelectorAll('.dim-row').forEach(function(r){ r.classList.remove('active'); });
+        nodeSpheres.forEach(function(ns) {
+            ns.material.emissiveIntensity = 0.35;
+            ns.scale.setScalar(1.0);
+        });
+    }
+
+    window.closeEvidence = closeEvidence;
+    window.togglePanel = function() {
+        var p = document.getElementById('panel');
+        p.classList.toggle('collapsed');
+        var btn = document.getElementById('panel-toggle');
+        btn.textContent = p.classList.contains('collapsed') ? '▶' : '☰';
+    };
+
+    window.addEventListener('mousemove', onMouseMove, { passive:true });
+    window.addEventListener('click', onClick);
+    window.addEventListener('resize', function() {
+        camera.aspect = container.clientWidth/container.clientHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    // ═══════════ Left panel dim list ═══════════
+    var dimList = document.getElementById('dim-list');
+    dimensions.forEach(function(dim, i) {
+        var row = document.createElement('div');
+        row.className = 'dim-row';
+        row.setAttribute('data-idx', i);
+        row.innerHTML =
+            '<div class="dot" style="background:'+DIM_COLORS[i]+';box-shadow:0 0 6px '+DIM_COLORS[i]+';"></div>' +
+            '<span class="dim-name">'+dim.cn+'</span>' +
+            '<span class="dim-score" style="color:'+DIM_COLORS[i]+';">'+dim.score+'</span>' +
+            '<span class="dim-arrow">▸</span>';
+        row.onclick = function(e) {
+            e.stopPropagation();
+            if (activeDim === i) closeEvidence();
+            else openEvidence(i);
+        };
+        dimList.appendChild(row);
+    });
+
+    // ═══════════ Improved toggle ═══════════
+    window.toggleImprovement = function() {
+        showImproved = !showImproved;
+        var btn = document.getElementById('improve-toggle');
+        if (showImproved) {
+            btn.textContent = '隐藏改进路线';
+            btn.classList.add('active');
+        } else {
+            btn.textContent = '显示改进路线';
+            btn.classList.remove('active');
+        }
+    };
+
+    // ═══════════ Animate ═══════════
+    var clock = new THREE.Clock();
+    function animate() {
+        requestAnimationFrame(animate);
+        var dt = Math.min(clock.getDelta(), 0.1);
+        controls.update();
+        improvedGroup.visible = showImproved;
+        part.rotation.y += dt*0.05;
+        var pulse = 1 + Math.sin(Date.now()*0.002)*0.1;
+        halo.scale.setScalar(pulse);
+        nodeSpheres.forEach(function(ns,i) {
+            if (activeDim !== i) {
+                ns.position.y = -0.33 + Math.sin(Date.now()*0.003+i*1.2)*0.03;
+            }
+        });
+        renderer.render(scene, camera);
+    }
+
+    animate();
+})();
+</script>
+</body>
+</html>
