@@ -172,6 +172,14 @@
 
         // Build sections
         buildStats();
+
+        // Create 3D chart container (required before initBarChart)
+        var chartPanel = document.createElement('div');
+        chartPanel.id = 'chart-panel';
+        chartPanel.className = 'chart-panel';
+        chartPanel.innerHTML = '<div class="chart-header"><h2>📊 算法全维度 3D 对比</h2><div class="chart-tabs" id="chart-tabs"></div></div><div id="bar3d"></div><div class="chart-hint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移 · 点击色块切换算法</div>';
+        container.appendChild(chartPanel);
+
         initBarChart();
         buildScoreCards();
         buildTable();
