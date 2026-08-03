@@ -225,13 +225,29 @@ class KeyLifecycleManager {
   emergencyRotate(newKeyMaterial) {
     const oldKv = this._keys.get(this._currentVersion);
     const now = Date.now();
+    const oldVersion = oldKv ? oldKv.version : this._currentVersion;
 
     if (oldKv) {
       oldKv.active = false;
       this._revoke(oldKv.version, 'compromise', now, oldKv.version + 1);
     }
 
-    return this.rotate(newKeyMaterial, 'compromise');
+    // rotate creates the new version; pass saved oldKv so it doesn't re-fetch (already deleted)
+    this._algorithm = this._algorithm || 'unknown';
+    const newVersion = this._currentVersion + 1;
+    const newKv = new KeyVersion(
+      newVersion, newKeyMaterial, this._algorithm, now,
+      now + this.config.rotationIntervalMs + this.config.gracePeriodMs
+    );
+    this._keys.set(newVersion, newKv);
+    this._currentVersion = newVersion;
+    this._totalRotations++;
+
+    if (this.config.persistencePath) {
+      this._schedulePersist();
+    }
+
+    return { oldVersion: oldKv, newVersion: newKv };
   }
 
   // ---- Revocation ----
