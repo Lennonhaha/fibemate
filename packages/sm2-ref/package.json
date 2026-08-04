@@ -1,0 +1,21 @@
+{
+  "name": "@fibemate/sm2-ref",
+  "version": "3.3.0",
+  "description": "SM2 signature and key exchange — pure JS bundle (browser edition)",
+  "main": "../../../www/crypto/sm2-browser.cjs.js",
+  "scripts": {
+    "test": "node test/sm2-smoke.test.js"
+  },
+  "keywords": [
+    "sm2",
+    "gm",
+    "signature",
+    "key-exchange",
+    "chinese-crypto"
+  ],
+  "license": "GPL-3.0-only",
+  "private": false,
+  "engines": {
+    "node": ">=18"
+  }
+}

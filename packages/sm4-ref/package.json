@@ -1,0 +1,21 @@
+{
+  "name": "@fibemate/sm4-ref",
+  "version": "3.3.0",
+  "description": "SM4 block cipher + SM4-GCM — pure JS bundle (browser edition)",
+  "main": "../../../www/crypto/sm4-browser.js",
+  "scripts": {
+    "test": "node test/sm4-smoke.test.js"
+  },
+  "keywords": [
+    "sm4",
+    "block-cipher",
+    "gcm",
+    "gm",
+    "chinese-crypto"
+  ],
+  "license": "GPL-3.0-only",
+  "private": false,
+  "engines": {
+    "node": ">=18"
+  }
+}

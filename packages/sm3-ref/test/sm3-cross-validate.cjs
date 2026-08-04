@@ -3,7 +3,7 @@
 // SM3 JS-Python cross-validation — KAT reference vectors
 'use strict';
 
-const SM3Hash = require('../../www/crypto/sm3-browser.js');
+const SM3Hash = require('../../../www/crypto/sm3-browser.js');
 const fs = require('fs');
 
 // GBT 32905 Standard Test Vectors

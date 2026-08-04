@@ -1,0 +1,20 @@
+{
+  "name": "@fibemate/sm3-ref",
+  "version": "3.3.0",
+  "description": "SM3 hash — pure JS implementation (GBT 32905-2016)",
+  "main": "../../../www/crypto/sm3-browser.js",
+  "scripts": {
+    "test": "node test/sm3-cross-validate.cjs"
+  },
+  "keywords": [
+    "sm3",
+    "hash",
+    "gm",
+    "chinese-crypto"
+  ],
+  "license": "GPL-3.0-only",
+  "private": false,
+  "engines": {
+    "node": ">=18"
+  }
+}
