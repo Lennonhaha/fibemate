@@ -38,7 +38,7 @@
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
-> **Cite this work**: [CITATION.cff](./CITATION.cff) — Liu, T. *FIBEMATE: Post-Quantum Cryptography Full-Stack Engineering Platform*. v3.3-preview, 2026.
+> **Cite this work**: [CITATION.cff](./CITATION.cff) — Liu, T. *FIBEMATE: Post-Quantum Cryptography Full-Stack Engineering Platform*. v3.3.0, 2026.
 
 ---
 
