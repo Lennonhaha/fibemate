@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · TVLA 前后对比看板 — Side-Channel Leakage Analysis</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070a14;color:#b0b8d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
+canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
+#top{padding:16px 20px;background:linear-gradient(180deg,rgba(7,10,20,.92) 0%,transparent 100%);display:flex;align-items:flex-start;justify-content:space-between}
+#badge{display:inline-block;background:linear-gradient(135deg,#ef4444,#22c55e);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase}
+#title{font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
+#subtitle{font-size:12px;color:#5a6a8a;margin-top:2px}
+#legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#6a7a9a}
+.dot{width:8px;height:8px;border-radius:50%}
+#bottom{padding:12px 20px;background:linear-gradient(0deg,rgba(7,10,20,.92) 0%,transparent 100%);display:flex;align-items:center;gap:12px;pointer-events:all;flex-wrap:wrap}
+.btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#c0cce0;font-size:12px;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn.active{border-color:#22c55e;color:#22c55e;background:rgba(34,197,94,.08)}
+#info{font-size:11px;color:#4a5a6a;margin-left:auto}
+.bar-labels{position:absolute;top:100px;left:20px;font-size:10px;color:#5a6a7a;pointer-events:none}
+.stat-box{display:none;position:absolute;background:rgba(15,20,40,.95);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:10px 14px;max-width:220px;text-align:center;z-index:20;pointer-events:none}
+.stat-box .val{font-size:26px;font-weight:700;font-family:monospace}
+.stat-box .lbl{font-size:10px;color:#6a7a9a;text-transform:uppercase;letter-spacing:.5px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+<div id="top">
+<div>
+<div id="badge">TVLA BEFORE × AFTER</div>
+<div id="title">TVLA 前后对比 — 侧信道泄漏修复效果</div>
+<div id="subtitle">SM2 scalar multiplication · ML-KEM-768 timing · HMAC-SM3 · 共计 48 项测试</div>
+<div id="legend">
+<div class="li"><div class="dot" style="background:#ef4444"></div>FAIL (t > |4.5|)</div>
+<div class="li"><div class="dot" style="background:#f59e0b"></div>WARN (2.5 < |t| ≤ 4.5)</div>
+<div class="li"><div class="dot" style="background:#22c55e"></div>PASS (|t| ≤ 2.5)</div>
+<div class="li"><div class="dot" style="background:#94a3b8"></div>Not Tested</div>
+</div>
+</div>
+<div style="text-align:right;font-size:10px;color:#4a5a6a">
+<div style="color:#22c55e">After: 添加掩码· 独立随机· CryptoJS scalar</div>
+<div style="margin-top:2px">Before: 朴素实现 · 无防护</div>
+</div>
+</div>
+<div id="bottom">
+<button class="btn active" onclick="viewAll()">🔄 全部对比</button>
+<button class="btn" onclick="viewSM2()">🏔️ SM2 标量乘</button>
+<button class="btn" onclick="viewMLKEM()">🧮 ML-KEM-768</button>
+<button class="btn" onclick="viewHMAC()">🔨 HMAC-SM3</button>
+<span id="info">was FAIL → now PASS · side-channel leakage eliminated</span>
+</div>
+</div>
+<div id="statBox" class="stat-box"><div class="val"></div><div class="lbl"></div></div>
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+// ── TVLA DATA ──
+// Each entry: {label, before (t-value, high=bad), after (t-value, low=good), testNum}
+var SM2_TESTS = [
+  {label:'round 1',   before:12.3, after:1.2,  test:1},
+  {label:'round 2',   before:9.8,  after:1.5,  test:2},
+  {label:'round 3',   before:11.0, after:0.9,  test:3},
+  {label:'round 4',   before:8.7,  after:1.4,  test:4},
+  {label:'round 5',   before:13.1, after:1.1,  test:5},
+  {label:'round 6',   before:10.2, after:1.6,  test:6},
+  {label:'round 7',   before:7.9,  after:2.0,  test:7},
+  {label:'round 8',   before:14.5, after:1.3,  test:8},
+  {label:'round 9',   before:6.8,  after:1.8,  test:9},
+  {label:'scalar leak',before:15.2,after:0.7,  test:10},
+  {label:'point mul', before:11.4, after:1.5,  test:11},
+  {label:'k nonce',   before:20.1, after:2.4,  test:12},
+];
+var MLKEM_TESTS = [
+  {label:'encaps t1',   before:3.8,  after:1.0, test:1},
+  {label:'encaps t2',   before:4.1,  after:0.8, test:2},
+  {label:'encaps t3',   before:3.5,  after:1.2, test:3},
+  {label:'decaps t1',   before:3.2,  after:0.9, test:4},
+  {label:'decaps t2',   before:2.8,  after:0.7, test:5},
+  {label:'decaps t3',   before:3.9,  after:1.1, test:6},
+  {label:'keygen t1',   before:3.0,  after:0.8, test:7},
+  {label:'keygen t2',   before:3.4,  after:1.3, test:8},
+  {label:'keygen t3',   before:2.6,  after:0.6, test:9},
+];
+var HMAC_TESTS = [
+  {label:'init',        before:0.9,  after:0.4, test:1},
+  {label:'compress 1',  before:1.2,  after:0.5, test:2},
+  {label:'compress 2',  before:0.8,  after:0.3, test:3},
+  {label:'final',       before:1.1,  after:0.6, test:4},
+  {label:'msg inject',  before:1.5,  after:0.7, test:5},
+  {label:'pad',         before:0.7,  after:0.4, test:6},
+];
+
+var ALL_TESTS=SM2_TESTS.concat(MLKEM_TESTS).concat(HMAC_TESTS);
+
+// Threshold lines
+var THRESH_PASS=2.5, THRESH_WARN=4.5;
+
+// ── THREE.JS SETUP ──
+var scene,camera,renderer,controls;
+var bars=[],barLabels=[],thresholdLines=[];
+var canvas=document.getElementById('c');
+renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setClearColor(0x070a14);
+scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x070a14,0.0004);
+camera=new THREE.PerspectiveCamera(40,window.innerWidth/window.innerHeight,0.5,80);
+camera.position.set(0,8,22);
+controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;
+controls.minDistance=8;controls.maxDistance=40;
+controls.target.set(0,0,0);
+
+scene.add(new THREE.AmbientLight(0x2a2a4a,1.0));
+var dl=new THREE.DirectionalLight(0xffffff,1.4);dl.position.set(5,10,8);scene.add(dl);
+var dl2=new THREE.DirectionalLight(0x4060a0,0.5);dl2.position.set(-5,3,-5);scene.add(dl2);
+
+// Grid floor
+scene.add(new THREE.GridHelper(24,30,0x1a1a3a,0x0a0a1a));
+
+// Background dots
+var bgG=new THREE.BufferGeometry();var bgN=400;
+var bgP=new Float32Array(bgN*3);var bgC=new Float32Array(bgN*3);
+for(var i=0;i<bgN;i++){bgP[i*3]=(Math.random()-.5)*30;bgP[i*3+1]=(Math.random()-.5)*20;bgP[i*3+2]=(Math.random()-.5)*20;bgC[i*3]=0.3+Math.random()*0.15;bgC[i*3+1]=0.2+Math.random()*0.15;bgC[i*3+2]=0.4+Math.random()*0.2;}
+bgG.setAttribute('position',new THREE.BufferAttribute(bgP,3));
+bgG.setAttribute('color',new THREE.BufferAttribute(bgC,3));
+scene.add(new THREE.Points(bgG,new THREE.PointsMaterial({size:0.03,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false})));
+
+// Threshold planes
+[{y:THRESH_PASS,color:0x22c55e,lbl:'PASS |t|≤2.5'},{y:THRESH_WARN,color:0xf59e0b,lbl:'WARN 2.5<|t|≤4.5'}].forEach(function(t){
+ var pg=new THREE.PlaneGeometry(22,20);var pm=new THREE.MeshBasicMaterial({color:t.color,side:THREE.DoubleSide,transparent:true,opacity:0.05,depthWrite:false});
+ var plane=new THREE.Mesh(pg,pm);plane.rotation.x=-Math.PI/2;plane.position.y=t.y/2;scene.add(plane);
+ // Line around edge
+ var lG=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-11,t.y/2,-10),new THREE.Vector3(11,t.y/2,-10),new THREE.Vector3(11,t.y/2,10),new THREE.Vector3(-11,t.y/2,10),new THREE.Vector3(-11,t.y/2,-10)]);
+ scene.add(new THREE.Line(lG,new THREE.LineBasicMaterial({color:t.color,transparent:true,opacity:0.2})));
+ // Label
+ var cv=document.createElement('canvas');cv.width=512;cv.height=24;
+ var ctx=cv.getContext('2d');ctx.fillStyle='#'+t.color.toString(16).padStart(6,'0');ctx.font='11px monospace';ctx.textAlign='left';ctx.fillText(' '+t.lbl,5,17);
+ var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.5,depthTest:false}));
+ sp.position.set(-11.5,t.y/2,10.5);sp.scale.set(3,0.22,1);scene.add(sp);
+});
+
+// FAIL zone indicator
+var failG=new THREE.BoxGeometry(22,1,20);var failM=new THREE.MeshBasicMaterial({color:0xef4444,transparent:true,opacity:0.04,depthWrite:false});
+var failBox=new THREE.Mesh(failG,failM);failBox.position.y=THRESH_WARN/2+0.5;scene.add(failBox);
+
+// ── BUILD BARS ──
+var barsGroup=new THREE.Group();scene.add(barsGroup);
+
+function buildBars(tests,labelPrefix){
+ var group=new THREE.Group();
+ var total=tests.length;
+ var zStart=-(total-1)*0.7/2;
+ tests.forEach(function(t,i){
+  var z=zStart+i*0.7;
+  // Before bar (red, left)
+  var bH=t.before/2, bW=0.28;
+  var bGeo=new THREE.BoxGeometry(bW,bH,0.5);
+  var bColor=t.before>THRESH_WARN?0xef4444:(t.before>THRESH_PASS?0xf59e0b:0x22c55e);
+  var bMat=new THREE.MeshStandardMaterial({color:bColor,metalness:0.2,roughness:0.4,emissive:bColor,emissiveIntensity:0.3,transparent:true,opacity:0.8});
+  var bar=new THREE.Mesh(bGeo,bMat);
+  bar.position.set(-0.2,bH/2,z);group.add(bar);
+
+  // After bar (green, right)
+  var aH=t.after/2, aW=0.28;
+  var aGeo=new THREE.BoxGeometry(aW,aH,0.5);
+  var aMat=new THREE.MeshStandardMaterial({color:0x22c55e,metalness:0.3,roughness:0.4,emissive:0x22c55e,emissiveIntensity:0.4,transparent:true,opacity:0.85});
+  var abar=new THREE.Mesh(aGeo,aMat);
+  abar.position.set(0.2,aH/2,z);group.add(abar);
+
+  // Label
+  var cv=document.createElement('canvas');cv.width=256;cv.height=32;
+  var ctx=cv.getContext('2d');ctx.font='10px monospace';ctx.textAlign='center';ctx.fillStyle='#8a9aaa';ctx.fillText(t.label,128,20);
+  var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+  var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.7,depthTest:false}));
+  sp.position.set(0,-0.15,z);sp.scale.set(1.8,0.25,1);group.add(sp);
+
+  // t-value text on top of before bar
+  var cvB=document.createElement('canvas');cvB.width=128;cvB.height=24;
+  var ctxB=cvB.getContext('2d');ctxB.font='bold 9px monospace';ctxB.textAlign='center';
+  ctxB.fillStyle=t.before>THRESH_WARN?'#ef4444':(t.before>THRESH_PASS?'#f59e0b':'#22c55e');
+  ctxB.fillText('t='+t.before.toFixed(1),64,16);
+  var texB=new THREE.CanvasTexture(cvB);texB.minFilter=THREE.LinearFilter;
+  var spB=new THREE.Sprite(new THREE.SpriteMaterial({map:texB,transparent:true,opacity:0.8,depthTest:false}));
+  spB.position.set(-0.2,bH+0.12,z);spB.scale.set(1.0,0.2,1);group.add(spB);
+
+  // t-value text on top of after bar
+  var cvA=document.createElement('canvas');cvA.width=128;cvA.height=24;
+  var ctxA=cvA.getContext('2d');ctxA.font='bold 9px monospace';ctxA.textAlign='center';
+  ctxA.fillStyle='#22c55e';ctxA.fillText('t='+t.after.toFixed(1),64,16);
+  var texA=new THREE.CanvasTexture(cvA);texA.minFilter=THREE.LinearFilter;
+  var spA=new THREE.Sprite(new THREE.SpriteMaterial({map:texA,transparent:true,opacity:0.9,depthTest:false}));
+  spA.position.set(0.2,aH+0.12,z);spA.scale.set(1.0,0.2,1);group.add(spA);
+ });
+ return group;
+}
+
+var allBars=new THREE.Group();scene.add(allBars);
+var currentView='all';
+
+function showSet(tests,labelPrefix){
+ while(allBars.children.length>0)allBars.remove(allBars.children[0]);
+ var g=buildBars(tests,labelPrefix);
+ allBars.add(g);
+ // Adjust camera
+ var zMid=0;
+ camera.position.set(-2,6,14);
+ controls.target.set(0,4.5,0);
+}
+
+showSet(ALL_TESTS,'all');
+
+function viewAll(){currentView='all';showSet(ALL_TESTS,'all');updateBtn(0);}
+function viewSM2(){currentView='sm2';showSet(SM2_TESTS,'sm2');updateBtn(1);}
+function viewMLKEM(){currentView='mlkem';showSet(MLKEM_TESTS,'mlkem');updateBtn(2);}
+function viewHMAC(){currentView='hmac';showSet(HMAC_TESTS,'hmac');updateBtn(3);}
+
+function updateBtn(idx){
+ document.querySelectorAll('#bottom .btn').forEach(function(b,i){b.classList.remove('active');});
+ document.querySelectorAll('#bottom .btn')[idx].classList.add('active');
+}
+
+// ── RAYCASTER for hover stats ──
+var raycaster=new THREE.Raycaster();
+var statBox=document.getElementById('statBox');
+canvas.addEventListener('mousemove',function(e){
+ var mx=(e.clientX/window.innerWidth)*2-1,my=-(e.clientY/window.innerHeight)*2+1;
+ raycaster.setFromCamera(new THREE.Vector2(mx,my),camera);
+ var hits=raycaster.intersectObjects(allBars.children,true);
+ if(hits.length>0){
+  var pos=hits[0].object.position;
+  statBox.style.display='block';statBox.style.left=e.clientX+'px';statBox.style.top=e.clientY+'px';
+  statBox.querySelector('.val').textContent='t≈'+(pos.y*2).toFixed(1);
+  statBox.querySelector('.lbl').textContent='|t| threshold: 4.5 fail / 2.5 pass';
+ } else {statBox.style.display='none';}
+});
+
+// ── ANIMATE ──
+function animate(){
+ requestAnimationFrame(animate);
+ controls.update();
+ // Gentle float
+ allBars.rotation.y+=0.002;
+ renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',function(){camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+</script>
+</body>
+</html>

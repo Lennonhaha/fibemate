@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · 协议层次结构图 — 3-Layer Architecture</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070a14;color:#b0b8d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
+canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
+#top{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px;background:linear-gradient(180deg,rgba(7,10,20,.92) 0%,transparent 100%)}
+#left{max-width:60%}
+#badge{display:inline-block;background:linear-gradient(135deg,#06b6d4,#7c3aed);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+#title{font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
+#subtitle{font-size:12px;color:#5a6a8a;margin-top:2px;line-height:1.5}
+#legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#6a7a9a}
+.dot{width:8px;height:8px;border-radius:50%}
+#right{text-align:right;font-size:11px;color:#3a4a6a;line-height:1.7}
+#bottom{padding:12px 20px;background:linear-gradient(0deg,rgba(7,10,20,.92) 0%,transparent 100%);display:flex;align-items:center;gap:16px;pointer-events:all;flex-wrap:wrap}
+.lay-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#8a9ab0;font-size:12px;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:inherit}
+.lay-btn:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+.lay-btn.active{color:#fff;border-color:#06b6d4;background:rgba(6,182,212,.1)}
+.lay-btn.all{color:#a78bfa;border-color:#7c3aed}
+.lay-btn.all:hover{background:rgba(124,58,237,.1)}
+#info{font-size:11px;color:#4a5a6a;margin-left:auto}
+#detail{display:none;background:rgba(15,20,40,.9);border:1px solid rgba(167,139,250,.2);border-radius:8px;padding:10px 14px;pointer-events:all;position:absolute;bottom:70px;left:50%;transform:translateX(-50%);max-width:380px;text-align:center}
+#detail .d-name{font-size:14px;color:#fff;font-weight:600}
+#detail .d-sub{font-size:11px;color:#06b6d4;margin-top:2px}
+#detail .d-info{font-size:11px;color:#8a9ab0;margin-top:4px;line-height:1.4}
+#detail .d-icon{font-size:24px}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+<div id="top">
+<div id="left">
+<div id="badge">3-LAYER ARCHITECTURE</div>
+<div id="title">FIBEMATE 协议层次结构</div>
+<div id="subtitle">Algorithm → Protocol → Hardware · 算法 12 种 · 协议 4 种 · 硬件 4 平台</div>
+<div id="legend">
+<div class="li"><div class="dot" style="background:#f59e0b"></div>硬件层</div>
+<div class="li"><div class="dot" style="background:#7c3aed"></div>协议层</div>
+<div class="li"><div class="dot" style="background:#06b6d4"></div>算法层</div>
+<div class="li"><div class="dot" style="background:#a78bfa"></div>跨层依赖</div>
+</div>
+</div>
+<div id="right">
+<div style="color:#a78bfa">Architecture v1</div>
+<div style="margin-top:2px">12 算法 · 4 协议 · 4 硬件</div>
+<div style="margin-top:2px">D-26 开源倒计时</div>
+</div>
+</div>
+<div id="detail"><div class="d-icon" id="d-icon"></div><div class="d-name" id="d-name"></div><div class="d-sub" id="d-sub"></div><div class="d-info" id="d-info"></div></div>
+<div id="bottom">
+<button class="lay-btn all active" onclick="showAll()">🌐 全景</button>
+<button class="lay-btn" onclick="focusLayer(0)" style="border-color:#f59e0b;color:#f59e0b">🧬 硬件</button>
+<button class="lay-btn" onclick="focusLayer(1)" style="border-color:#7c3aed;color:#7c3aed">🔗 协议</button>
+<button class="lay-btn" onclick="focusLayer(2)" style="border-color:#06b6d4;color:#06b6d4">📐 算法</button>
+<span id="info">Drag to rotate · Scroll to zoom · Click nodes</span>
+</div>
+</div>
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+// ============================================================
+var scene,camera,renderer,controls;
+var allNodes=[],allEdges=[],allLabels=[],activeLayer=-1;
+var canvas=document.getElementById('c');
+renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setClearColor(0x070a14);
+scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x070a14,0.0006);
+camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.5,80);
+camera.position.set(0,2,28);
+controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;
+controls.minDistance=8;controls.maxDistance=50;
+controls.target.set(0,-0.5,0);
+
+scene.add(new THREE.AmbientLight(0x1a1a3a,1.0));
+var dl=new THREE.DirectionalLight(0xffffff,1.2);dl.position.set(8,12,8);scene.add(dl);
+var dl2=new THREE.DirectionalLight(0x406080,0.5);dl2.position.set(-6,-4,-6);scene.add(dl2);
+
+// Background stars
+var bgG=new THREE.BufferGeometry();var bgN=500;
+var bgP=new Float32Array(bgN*3);var bgC=new Float32Array(bgN*3);
+for(var i=0;i<bgN;i++){bgP[i*3]=(Math.random()-.5)*40;bgP[i*3+1]=(Math.random()-.5)*30;bgP[i*3+2]=(Math.random()-.5)*30;bgC[i*3]=0.4+Math.random()*0.2;bgC[i*3+1]=0.3+Math.random()*0.2;bgC[i*3+2]=0.5+Math.random()*0.3;}
+bgG.setAttribute('position',new THREE.BufferAttribute(bgP,3));bgG.setAttribute('color',new THREE.BufferAttribute(bgC,3));
+scene.add(new THREE.Points(bgG,new THREE.PointsMaterial({size:0.03,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false})));
+
+// Layer planes (transparent)
+var LAYERS_DATA=[{"id":"hardware","y":5,"label":"硬件层 (Hardware)","color":"#f59e0b","items":[{"id":"fpga","label":"FPGA Artix-7","sub":"NTT Pipeline · BRAM · 50MHz","detail":"ILA+L4 确认 · WNS 9.755ns","icon":"🧬"},{"id":"stm32","label":"STM32 Cortex-M4","sub":"C 框架编译自测通过","detail":"TVLA 物理侧信道 (待 ChipWhisperer)","icon":"💻"},{"id":"wasm","label":"WASM Browser","sub":"96.9KB gzip ~46KB","detail":"vwz-sign · lgv2 · 双棘轮 PQ","icon":"🌐"},{"id":"server","label":"ECS 服务器","sub":"nginx · Node v22 · systemd","detail":"Let's Encrypt · TLS 1.3 · 443/8443","icon":"☁️"}]},{"id":"protocol","y":0,"label":"协议层 (Protocol)","color":"#7c3aed","items":[{"id":"tls","label":"TLS 1.3 Hybrid","sub":"IANA #4590 · X25519MLKEM768","detail":"ML-KEM + ECDH hybrid handshake","icon":"🔗"},{"id":"dr","label":"Double Ratchet","sub":"PQ 双棘轮 · X3DH 握手","detail":"ML-KEM-768 + P-256 混合 X3DH","icon":"🔄"},{"id":"hybrid","label":"Hybrid KEM","sub":"ML-KEM + ECDH 双封装","detail":"ciphertext = ct_pqc || ct_ecc","icon":"🔐"},{"id":"keylife","label":"Key Lifecycle","sub":"NIST SP 800-57 · 自动轮换","detail":"7d 时间 · 500 消息 · grace 1h","icon":"⏱️"}]},{"id":"algorithm","y":-5,"label":"算法层 (Algorithm)","color":"#06b6d4","items":[{"id":"mlkem","label":"ML-KEM-768","sub":"FIPS 203 · ~192-bit classical","detail":"NIST Cat 3 · KAT 10000/10000","icon":"🧮"},{"id":"mldsa","label":"ML-DSA-65","sub":"FIPS 204 · lattice signature","detail":"NIST Cat 3 · KAT 75/75 PASS","icon":"✍️"},{"id":"slhdsa","label":"SLH-DSA-128s","sub":"FIPS 205 · hash-based stateless","detail":"NIST Cat 1 · SPHINCS+","icon":"🌲"},{"id":"sm2","label":"SM2","sub":"GB/T 32918 · 国密椭圆曲线","detail":"TVLA 36/36 PASS · 纯 JS","icon":"🏔️"},{"id":"sm3","label":"SM3","sub":"GB/T 32905 · 国密哈希","detail":"32B digest · 21K ops/s (JS)","icon":"🔨"},{"id":"sm4","label":"SM4-GCM","sub":"GB/T 32907 · 国密分组密码","detail":"128-bit key · GCM AEAD","icon":"🔒"},{"id":"p256","label":"P-256 ECDH","sub":"NIST SP 800-56A · 经典基线","detail":"secp256r1 · 128-bit classical","icon":"📐"},{"id":"aes","label":"AES-256-GCM","sub":"FIPS 197 · 对称加密","detail":"256-bit key · GCM AEAD","icon":"🗝️"}]}];
+LAYERS_DATA.forEach(function(L){
+ var planeGeo=new THREE.PlaneGeometry(14,8);var planeMat=new THREE.MeshBasicMaterial({color:L.color,side:THREE.DoubleSide,transparent:true,opacity:0.06,depthWrite:false});
+ var plane=new THREE.Mesh(planeGeo,planeMat);plane.position.y=L.y;plane.userData={layer:L.id};allEdges.push(plane);scene.add(plane);
+ // Layer label
+ addLayerLabel(L);
+});
+
+function addLayerLabel(L){
+ var cv=document.createElement('canvas');cv.width=512;cv.height=48;
+ var ctx=cv.getContext('2d');ctx.fillStyle='rgba(18,22,38,0.7)';ctx.fillRect(0,0,512,48);
+ ctx.fillStyle='#ffffff';ctx.font='bold 16px monospace';ctx.textAlign='center';ctx.fillText(L.label,256,30);
+ var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.7,depthTest:false}));
+ sp.position.set(-8.5,L.y+0.3,0);sp.scale.set(5,0.5,1);scene.add(sp);allLabels.push(sp);
+}
+
+// Place nodes
+var ITEM_MAP={};
+LAYERS_DATA.forEach(function(L){
+ L.items.forEach(function(item,i){
+  var total=L.items.length;
+  var z=(i-total/2+0.5)*2.2;
+  var x=(L.id==='algorithm'? -4 : L.id==='protocol'? 0 : 4);
+  var n=createNode(x,L.y,z,item,L.color);
+  ITEM_MAP[item.id]=n;
+  allNodes.push(n);
+ });
+});
+
+function createNode(x,y,z,item,color){
+ var g=new THREE.Group();
+ // Platform
+ var pg=new THREE.CylinderGeometry(0.35,0.4,0.12,24);
+ g.add(new THREE.Mesh(pg,new THREE.MeshStandardMaterial({color:color,metalness:0.3,roughness:0.5,emissive:color,emissiveIntensity:0.25})));
+ // Core
+ var cg=new THREE.SphereGeometry(0.2,16,16);
+ var core=new THREE.Mesh(cg,new THREE.MeshStandardMaterial({color:color,metalness:0.15,roughness:0.3,emissive:color,emissiveIntensity:0.45}));
+ g.add(core);
+ // Ring
+ var rg=new THREE.TorusGeometry(0.38,0.025,12,28);
+ var ring=new THREE.Mesh(rg,new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.5}));
+ ring.rotation.x=Math.PI/2;g.add(ring);
+ g.position.set(x,y,z);
+ g.userData={item:item,layerColor:color,ring:ring,core:core};
+ scene.add(g);
+ // Label
+ var cv=document.createElement('canvas');cv.width=256;cv.height=32;
+ var ctx=cv.getContext('2d');
+ ctx.font='bold 13px monospace';ctx.fillStyle=color;ctx.textAlign='center';ctx.fillText(' '+item.icon+' '+item.label,128,22);
+ var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.8,depthTest:false}));
+ sp.position.set(x,y-0.55,z);sp.scale.set(3.5,0.45,1);scene.add(sp);allLabels.push(sp);
+ return g;
+}
+
+// Connections
+var CONNS_DATA=[["mlkem","tls"],["mlkem","dr"],["mlkem","hybrid"],["mlkem","keylife"],["mldsa","tls"],["slhdsa","tls"],["sm2","tls"],["sm2","dr"],["sm2","hybrid"],["sm3","tls"],["sm3","dr"],["sm4","dr"],["sm4","hybrid"],["p256","tls"],["p256","dr"],["p256","hybrid"],["aes","dr"],["aes","hybrid"],["tls","server"],["tls","wasm"],["dr","stm32"],["dr","wasm"],["dr","server"],["hybrid","fpga"],["hybrid","wasm"],["keylife","server"]];
+CONNS_DATA.forEach(function(c){
+ var from=ITEM_MAP[c[0]],to=ITEM_MAP[c[1]];
+ if(!from||!to)return;
+ var s=from.position,e=to.position;
+ var mid=new THREE.Vector3().addVectors(s,e).multiplyScalar(0.5);
+ mid.x+=(Math.random()-.5)*0.4;mid.z+=(Math.random()-.5)*0.4;
+ var curve=new THREE.QuadraticBezierCurve3(s,mid,e);
+ var tg=new THREE.TubeGeometry(curve,20,0.025,6,false);
+ var tube=new THREE.Mesh(tg,new THREE.MeshBasicMaterial({color:'#a78bfa',transparent:true,opacity:0.18,depthWrite:false}));
+ scene.add(tube);allEdges.push(tube);
+});
+
+// Raycaster for click
+var raycaster=new THREE.Raycaster();raycaster.params.Points.threshold=0.5;
+canvas.addEventListener('click',function(e){
+ var mx=(e.clientX/window.innerWidth)*2-1,my=-(e.clientY/window.innerHeight)*2+1;
+ raycaster.setFromCamera(new THREE.Vector2(mx,my),camera);
+ var hits=raycaster.intersectObjects(allNodes,true);
+ if(hits.length>0){
+  var obj=hits[0].object;
+  while(obj){
+   if(obj.userData&&obj.userData.item){showDetail(obj.userData.item);return;}
+   obj=obj.parent;
+  }
+ }
+ hideDetail();
+});
+
+function showDetail(item){
+ document.getElementById('d-icon').textContent=item.icon;
+ document.getElementById('d-name').textContent=item.label;
+ document.getElementById('d-sub').textContent=item.sub;
+ document.getElementById('d-info').textContent=item.detail;
+ document.getElementById('detail').style.display='block';
+}
+function hideDetail(){document.getElementById('detail').style.display='none';}
+
+// Layer focus
+function focusLayer(idx){
+ activeLayer=idx;
+ var L=LAYERS_DATA[idx];
+ var tx=idx===2?-4:idx===1?0:4;
+ controls.target.set(tx,L.y,0);
+ camera.position.set(tx+4,L.y+2,12);
+ // Dim other layers
+ allNodes.forEach(function(n){
+  var ly=n.position.y;
+  var target=ly===L.y?1:0.2;
+  gsapTo(n,target);
+ });
+ allEdges.forEach(function(e){
+  if(e instanceof THREE.Mesh&&e.material&&e.material.opacity!==undefined){
+   e.material.opacity=e.material.opacity>0.1?0.3:0.05;
+  }
+ });
+ updateTab(idx);
+}
+
+function showAll(){
+ activeLayer=-1;
+ controls.target.set(0,-0.5,0);
+ camera.position.set(0,2,28);
+ allNodes.forEach(function(n){gsapTo(n,1);});
+ allEdges.forEach(function(e){
+  if(e instanceof THREE.Mesh&&e.material&&e.material.opacity!==undefined&&e.material.opacity<0.15)
+   e.material.opacity=0.18;
+ });
+ updateTab(-1);
+}
+
+function updateTab(idx){
+ var btns=document.querySelectorAll('.lay-btn');
+ btns.forEach(function(b){b.classList.remove('active');});
+ if(idx>=0)btns[idx+1].classList.add('active');
+ else btns[0].classList.add('active');
+}
+
+function gsapTo(node,target){
+ node.children.forEach(function(c){
+  if(c.material&&c.material.opacity!==undefined)c.material.opacity=target;
+  if(c.material&&c.material.emissiveIntensity!==undefined)c.material.emissiveIntensity=0.25+(target===1?0.2:0);
+ });
+ if(node.userData.ring)node.userData.ring.material.opacity=0.5*target;
+}
+
+// Animate
+function animate(){
+ requestAnimationFrame(animate);
+ controls.update();
+ allNodes.forEach(function(n){
+  if(n.userData.ring)n.userData.ring.rotation.z+=0.003;
+ });
+ renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',function(){camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+</script>
+</body>
+</html>

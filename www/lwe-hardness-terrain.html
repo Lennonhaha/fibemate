@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · LWE 难度地貌图 — 3D Terrain Map</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070a14;color:#b0b8d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
+canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
+#top{padding:16px 20px;background:linear-gradient(180deg,rgba(7,10,20,.92) 0%,transparent 100%);display:flex;align-items:flex-start;justify-content:space-between}
+#badge{display:inline-block;background:linear-gradient(135deg,#ff9800,#f44336);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px}
+#title{font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
+#subtitle{font-size:12px;color:#5a6a8a;margin-top:2px}
+#bottom{padding:12px 20px;background:linear-gradient(0deg,rgba(7,10,20,.92) 0%,transparent 100%);display:flex;align-items:center;gap:12px;pointer-events:all}
+.btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#c0cce0;font-size:12px;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn.active{border-color:#ff9800;color:#ff9800;background:rgba(255,152,0,.08)}
+#info{font-size:11px;color:#4a5a6a;margin-left:auto}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+<div id="top">
+<div>
+<div id="badge">LWE HARDNESS TERRAIN</div>
+<div id="title">LWE 难度地貌图</div>
+<div id="subtitle">横轴: n (格维度) · 深度: log₂(q) (模数) · 高度: log₂(攻击成本)</div>
+</div>
+<div style="text-align:right;font-size:10px;color:#4a5a6a;margin-top:4px">
+<span style="color:#00ff88">●</span> 低于NIST · <span style="color:#ff9800">●</span> Level 1 · <span style="color:#f44336">●</span> Level 3 · <span style="color:#e040fb">●</span> Level 5+
+</div>
+</div>
+<div id="bottom">
+<button class="btn" onclick="viewClassic()">🔬 经典攻击 (Classical)</button>
+<button class="btn" onclick="viewQuantum()">⚛️ 量子加速 (Quantum)</button>
+<button class="btn active" id="btnBoth" onclick="viewBoth()">🌐 两者叠加</button>
+<span id="info">Drag to rotate · Scroll to zoom</span>
+</div>
+</div>
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+var scene,camera,renderer,controls;
+var canvas=document.getElementById('c');
+renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setClearColor(0x070a14);
+scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x070a14,0.0003);
+camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.5,80);
+camera.position.set(15,18,22);camera.lookAt(10,5,10);
+controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;
+controls.minDistance=6;controls.maxDistance=50;
+scene.add(new THREE.AmbientLight(0x2a2a4a,0.8));
+var dl=new THREE.DirectionalLight(0xffffff,1.5);dl.position.set(15,20,10);scene.add(dl);
+var dl2=new THREE.DirectionalLight(0x4060a0,0.6);dl2.position.set(-10,5,-10);scene.add(dl2);
+
+// ── TERRAIN SURFACE ──
+var grid=[[0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0],[56.77241379310344,58.1492648527069,59.46000103013752,60.710681986110814,61.90657067494434,63.05226716508076,64.15181549144233,65.20878980943387,66.22636448304802,67.20737157332272,68.15434835110817,69.06957684189767,69.95511695429916,70.81283440228566,71.64442437318472,72.45143169628064,73.23526811511282,73.99722714867467,74.73849693445521,75.46017137352625,76.16325984012987,76.84869567207882,77.51734362118293,78.17000641291561,78.80743054013807,79.43031139576001,80.0392978328336,80.63499622705687,81.2179741054537,81.78876339566153],[113.54482758620688,116.2985297054138,118.92000206027504,121.42136397222163,123.81314134988868,126.10453433016151,128.30363098288467,130.41757961886773,132.45272896609603,134.41474314664543,136.30869670221634,138.13915368379534,139.91023390859831,141.62566880457132,143.28884874636944,144.90286339256127,146.47053623022563,147.99445429734934,149.47699386891043,150.9203427470525,152.32651968025974,153.69739134415764,155.03468724236586,156.34001282583122,157.61486108027614,158.86062279152003,160.0785956656672,161.26999245411375,162.4359482109074,163.57752679132307],[170.31724137931033,174.4477945581207,178.38000309041257,182.1320459583325,185.71971202483306,189.15680149524226,192.45544647432706,195.62636942830164,198.67909344914406,201.6221147199682,204.46304505332452,207.20873052569306,209.8653508628975,212.43850320685698,214.9332731195542,217.35429508884192,219.70580434533846,221.991681446024,224.2154908033657,226.38051412057877,228.48977952038965,230.5460870162365,232.55203086354882,234.51001923874688,236.42229162041423,238.2909341872801,240.11789349850082,241.9049886811706,243.65392231636116,245.3662901869846],[227.08965517241376,232.5970594108276,237.84000412055008,242.84272794444325,247.62628269977736,252.20906866032303,256.60726196576934,260.83515923773547,264.90545793219206,268.82948629329087,272.6173934044327,276.2783073675907,279.82046781719663,283.25133760914264,286.5776974927389,289.80572678512254,292.94107246045127,295.98890859469867,298.95398773782085,301.840685494105,304.6530393605195,307.3947826883153,310.0693744847317,312.68002565166245,315.2297221605523,317.72124558304006,320.1571913313344,322.5399849082275,324.8718964218148,327.15505358264613],[283.86206896551727,290.7463242635346,297.3000051506877,303.55340993055415,309.53285337472175,315.2613358254038,320.7590774572118,326.04394904716946,331.13182241524015,336.03685786661373,340.771741755541,345.3478842094885,349.77558477149586,354.0641720114283,358.2221218659237,362.2571584814032,366.17634057556415,369.98613574337344,373.6924846722761,377.30085686763135,380.81629920064944,384.2434783603942,387.58671810591477,390.85003206457816,394.03715270069046,397.15155697880016,400.1964891641681,403.17498113528444,406.0898705272686,408.94381697830767],[340.63448275862066,348.8955891162414,356.76000618082514,364.264091916665,371.4394240496661,378.3136029904845,384.9108929486541,391.2527388566033,397.3581868982881,403.2442294399364,408.92609010664904,414.4174610513861,419.730701725795,424.87700641371396,429.8665462391084,434.70859017768385,439.4116086906769,443.983362892048,448.4309816067314,452.76102824115753,456.9795590407793,461.092174032473,465.10406172709764,469.02003847749376,472.84458324082846,476.5818683745602,480.23578699700164,483.8099773623412,487.3078446327223,490.7325803739692],[397.4068965517242,407.04485396894836,416.22000721096276,424.9747739027758,433.3459947246104,441.36587015556535,449.06270844009646,456.4615286660371,463.58455138133615,470.45160101325916,477.0804384577572,483.48703789328385,489.68581868009414,495.6898408159997,501.5109706122932,507.16002187396447,512.6468768057898,517.9805900407227,523.1694785411865,528.2211996146839,533.1428188809092,537.9408697045518,542.6214053482806,547.1900448904094,551.6520137809666,556.0121797703202,560.2750848298352,564.4449735893982,568.525818738176,572.5213437696308],[454.1793103448275,465.1941188216552,475.68000824110015,485.6854558888865,495.2525653995547,504.41813732064605,513.2145239315387,521.6703184754709,529.8109158643841,537.6589725865817,545.2347868088654,552.5566147351814,559.6409356343933,566.5026752182853,573.1553949854778,579.6114535702451,585.8821449209025,591.9778171893973,597.9079754756417,603.68137098821,609.306078721039,614.7895653766305,620.1387489694634,625.3600513033249,630.4594443211046,635.4424911660801,640.3143826626688,645.079969816455,649.7437928436296,654.3101071652923],[510.9517241379311,523.3433836743623,535.1400092712378,546.3961378749975,557.1591360744992,567.4704044857269,577.3663394229812,586.879108284905,596.0372803474322,604.8663441599047,613.3891351599736,621.6261915770792,629.5960525886926,637.3155096205709,644.7998193586626,652.0628852665259,659.1174130360156,665.9750443380722,672.646472410097,679.1415423617365,685.4693385611691,691.6382610487095,697.6560925906466,703.5300577162407,709.2668748612427,714.8728025618403,720.3536804955025,725.714966043512,730.9617669490834,736.098870560954],[567.7241379310345,581.4926485270692,594.6000103013754,607.1068198611083,619.0657067494435,630.5226716508076,641.5181549144236,652.0878980943389,662.2636448304803,672.0737157332275,681.543483511082,690.695768418977,699.5511695429917,708.1283440228566,716.4442437318475,724.5143169628064,732.3526811511283,739.9722714867469,747.3849693445522,754.6017137352627,761.6325984012989,768.4869567207884,775.1734362118295,781.7000641291563,788.0743054013809,794.3031139576003,800.3929783283362,806.3499622705689,812.1797410545372,817.8876339566153],[624.496551724138,639.641913379776,654.0600113315129,667.8175018472191,680.9722774243879,693.5749388158883,705.6699704058659,717.2966879037729,728.4900093135284,739.2810873065501,749.6978318621899,759.7653452608746,769.506286497291,778.9411784251423,788.0886681050322,796.9657486590871,805.5879492662413,813.9694986354215,822.1234662790075,830.061885108789,837.7958582414287,845.3356523928672,852.6907798330125,859.870070542072,866.8817359415189,873.7334253533604,880.4322761611699,886.9849584976257,893.397715159991,899.6763973522769],[681.2689655172413,697.7911782324828,713.5200123616503,728.52818383333,742.8788480993322,756.627205980969,769.8217858973082,782.5054777132066,794.7163737965762,806.4884588798728,817.8521802132981,828.8349221027722,839.46140345159,849.7540128274279,859.7330924782168,869.4171803553677,878.8232173813539,887.966725784096,896.8619632134628,905.5220564823151,913.9591180815586,922.184348064946,930.2081234541953,938.0400769549875,945.6891664816569,953.1637367491204,960.4715739940033,967.6199547246824,974.6156892654446,981.4651607479384],[738.0413793103448,755.9404430851898,772.9800133917879,789.2388658194407,804.7854187742766,819.6794731460499,833.9736013887506,847.7142675226404,860.9427382796243,873.6958304531955,886.0065285644063,897.90449894467,909.4165204058892,920.5668472297136,931.3775168514015,941.8686120516484,952.0584854964668,961.9639529327709,971.6004601479179,980.9822278558414,990.1223779216884,999.0330437370249,1000,1000,1000,1000,1000,1000,1000,1000],[794.8137931034483,814.0897079378967,832.4400144219255,849.9495478055516,866.6919894492208,882.7317403111307,898.1254168801929,912.9230573320742,927.1691027626723,940.9032020265183,954.1608769155145,966.9740757865677,979.3716373601883,991.3796816319993,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[851.5862068965517,872.2389727906037,891.9000154520629,910.6602297916625,928.5985601241653,945.7840074762114,962.2772323716354,978.1318471415082,993.3954672457204,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[908.358620689655,930.3882376433104,951.3600164822003,971.370911777773,990.5051307991095,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[965.1310344827585,988.5375024960175,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000],[1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000,1000]];
+var res=30;
+var geo=new THREE.BufferGeometry();
+var verts=[],colors=[],indices=[];
+for(var i=0;i<res;i++){
+ for(var j=0;j<res;j++){
+  var n=(i/(res-1))*4200;
+  var lq=(j/(res-1))*12+8;
+  var h=grid[i][j]/80; // scale height
+  verts.push(n/200, h, lq*1.5);
+  var c=colorForBits(grid[i][j]);
+  colors.push(c[0],c[1],c[2]);
+ }
+}
+for(var i=0;i<res-1;i++){
+ for(var j=0;j<res-1;j++){
+  var a=i*res+j,b=a+1,c=a+res,d=a+res+1;
+  indices.push(a,b,d, a,d,c);
+ }
+}
+geo.setIndex(indices);
+geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));
+geo.setAttribute('color',new THREE.Float32BufferAttribute(colors,3));
+geo.computeVertexNormals();
+var surfMat=new THREE.MeshStandardMaterial({vertexColors:true,metalness:0.1,roughness:0.7,side:THREE.DoubleSide,flatShading:true,transparent:true,opacity:0.85});
+var surface=new THREE.Mesh(geo,surfMat);
+scene.add(surface);
+
+// Wireframe overlay
+var wire=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({color:0x1a2a4a,wireframe:true,transparent:true,opacity:0.15}));
+scene.add(wire);
+
+// Axes
+var axisLen=22;
+function makeAxis(sx,sy,sz,ex,ey,ez,color){
+ var g=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(sx,sy,sz),new THREE.Vector3(ex,ey,ez)]);
+ return new THREE.Line(g,new THREE.LineBasicMaterial({color:color,transparent:true,opacity:0.4}));
+}
+scene.add(makeAxis(0,0,0,axisLen,0,0,0x4488ff)); // n-axis
+scene.add(makeAxis(0,0,0,0,14,0,0x44ff88));       // bits-axis (up)
+scene.add(makeAxis(0,0,0,0,0,axisLen,0xff8844));   // logq-axis
+
+// Axis labels
+function addAxisLabel(x,y,z,text,color){
+ var cv=document.createElement('canvas');cv.width=256;cv.height=32;
+ var ctx=cv.getContext('2d');ctx.fillStyle=color;ctx.font='14px monospace';ctx.fillText(text,10,22);
+ var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.7}));
+ sp.position.set(x,y,z);sp.scale.set(2.5,0.35,1);scene.add(sp);
+}
+addAxisLabel(axisLen+0.5,0,0,'n (dimension)','#4488ff');
+addAxisLabel(0,14.5,0,'bits (attack cost)','#44ff88');
+addAxisLabel(0,0,axisLen+0.5,'log₂(q)','#ff8844');
+
+// ── POINTS ──
+var ptsGroup=new THREE.Group(),qptsGroup=new THREE.Group(),labelsGroup=new THREE.Group();
+scene.add(ptsGroup);scene.add(qptsGroup);scene.add(labelsGroup);
+
+var POINTS_DATA=[{"n":5,"logq":10,"bits":0,"label":"Toy","cat":"toy"},{"n":10,"logq":10,"bits":5,"label":"Toy-10","cat":"toy"},{"n":40,"logq":10,"bits":28,"label":"7/31 BKZ Exp","cat":"experiment"},{"n":256,"logq":12,"bits":82,"label":"ML-KEM-512","cat":"standard"},{"n":512,"logq":12,"bits":118,"label":"Kyber-512","cat":"benchmark"},{"n":512,"logq":12,"bits":143,"label":"Kyber-512 usvp","cat":"benchmark"},{"n":768,"logq":12,"bits":185,"label":"ML-KEM-768","cat":"standard"},{"n":800,"logq":12,"bits":192,"label":"NIST Level 3","cat":"threshold"},{"n":1024,"logq":13,"bits":233,"label":"ML-KEM-1024","cat":"standard"},{"n":1200,"logq":13,"bits":256,"label":"NIST Level 5","cat":"threshold"},{"n":1500,"logq":14,"bits":310,"label":"Beyond NIST","cat":"hard"},{"n":2048,"logq":15,"bits":440,"label":"2K-dim regime","cat":"hard"},{"n":4096,"logq":16,"bits":900,"label":"4096-dim","cat":"impossible"},{"n":512,"logq":12,"bits":107,"label":"Q-Kyber-512","cat":"quantum"},{"n":768,"logq":12,"bits":134,"label":"Q-ML-KEM-768","cat":"quantum"}];
+// Compute 3D positions
+var allPointData=[];
+POINTS_DATA.forEach(function(p){
+ var x=p.n/200, y=p.bits/80, z=p.logq*1.5;
+ // Clamp to surface + small offset
+ var gHeight=grid[Math.min(res-1,Math.floor(p.n/4200*(res-1)))][Math.min(res-1,Math.floor((p.logq-8)/(12)*(res-1)))]/80;
+ y=Math.max(y,gHeight+0.15);
+ allPointData.push({p:p,x:x,y:y,z:z});
+});
+
+function addPoint(pt,group,color,size,labelOn){
+ var sphere=new THREE.Mesh(
+  new THREE.SphereGeometry(size,12,12),
+  new THREE.MeshStandardMaterial({color:color,emissive:color,emissiveIntensity:0.6,metalness:0.2,roughness:0.3})
+ );
+ sphere.position.set(pt.x,pt.y,pt.z);
+ sphere.userData={pt:pt};group.add(sphere);
+ // Glow
+ var glow=new THREE.Mesh(
+  new THREE.SphereGeometry(size*2,8,8),
+  new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.2,depthWrite:false})
+ );
+ glow.position.copy(sphere.position);group.add(glow);
+ if(labelOn){
+  var cv=document.createElement('canvas');cv.width=256;cv.height=32;
+  var ctx=cv.getContext('2d');ctx.fillStyle=color;ctx.font='11px monospace';ctx.textAlign='center';ctx.fillText(pt.p.label,128,20);
+  var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+  var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.7,depthTest:false}));
+  sp.position.set(pt.x,pt.y+0.15,pt.z);sp.scale.set(2.2,0.32,1);labelsGroup.add(sp);
+ }
+ // Drop line to surface
+ var gHeight=grid[Math.min(res-1,Math.floor(pt.p.n/4200*(res-1)))][Math.min(res-1,Math.floor((pt.p.logq-8)/(12)*(res-1)))]/80;
+ var lg=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(pt.x,pt.y,pt.z),new THREE.Vector3(pt.x,gHeight,pt.z)]);
+ group.add(new THREE.Line(lg,new THREE.LineBasicMaterial({color:color,transparent:true,opacity:0.3})));
+}
+
+function colorForBits(bits){
+ if(bits<64)return[0,0.8,0.5];       // green: solvable
+ if(bits<128)return[1,0.6,0];        // orange: Level 1
+ if(bits<192)return[1,0.3,0];        // red: Level 3
+ return[0.9,0.2,1];                   // purple: Level 5+
+}
+
+function viewClassic(){
+ document.getElementById('btnBoth').classList.remove('active');
+ document.querySelectorAll('.btn')[0].classList.add('active');
+ ptsGroup.visible=true;qptsGroup.visible=false;
+}
+function viewQuantum(){
+ document.getElementById('btnBoth').classList.remove('active');
+ document.querySelectorAll('.btn')[1].classList.add('active');
+ ptsGroup.visible=false;qptsGroup.visible=true;
+}
+function viewBoth(){
+ document.getElementById('btnBoth').classList.add('active');
+ document.querySelectorAll('.btn')[0].classList.remove('active');
+ document.querySelectorAll('.btn')[1].classList.remove('active');
+ ptsGroup.visible=true;qptsGroup.visible=true;
+}
+
+// Place all points
+allPointData.forEach(function(ad){
+ var catColor=ad.p.cat==='quantum'?'#4488ff':ad.p.cat==='standard'?'#ffd700':ad.p.cat==='benchmark'?'#ff9800':ad.p.cat==='threshold'?'#f44336':ad.p.cat==='hard'?'#e040fb':'#00ff88';
+ var group=ad.p.cat==='quantum'?qptsGroup:ptsGroup;
+ addPoint(ad,group,catColor,ad.p.cat==='standard'||ad.p.cat==='threshold'?0.25:ad.p.cat==='benchmark'?0.2:0.18,ad.p.cat==='standard'||ad.p.cat==='threshold');
+});
+
+// Key NIST thresholds: horizontal planes
+[{bits:128,color:0xff9800,lbl:'NIST Level 1 (128-bit)'},{bits:192,color:0xf44336,lbl:'NIST Level 3 (192-bit)'},{bits:256,color:0xe040fb,lbl:'NIST Level 5 (256-bit)'}].forEach(function(t){
+ var y=t.bits/80;
+ var pg=new THREE.PlaneGeometry(25,30);
+ var pm=new THREE.MeshBasicMaterial({color:t.color,side:THREE.DoubleSide,transparent:true,opacity:0.06,depthWrite:false});
+ var plane=new THREE.Mesh(pg,pm);plane.rotation.x=-Math.PI/2;plane.position.y=y;
+ scene.add(plane);
+ // Label
+ var cv=document.createElement('canvas');cv.width=512;cv.height=24;
+ var ctx=cv.getContext('2d');ctx.fillStyle='rgba(0,0,0,0)';ctx.fillRect(0,0,512,24);
+ ctx.fillStyle='#'+t.color.toString(16).padStart(6,'0');ctx.font='11px monospace';ctx.textAlign='right';ctx.fillText(t.lbl,500,16);
+ var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.6,depthTest:false}));
+ sp.position.set(10,y,17);sp.scale.set(7,0.4,1);scene.add(sp);
+});
+
+function animate(){
+ requestAnimationFrame(animate);
+ controls.update();
+ // Animate surface slightly
+ surface.rotation.y+=0.0001;
+ wire.rotation.y=surface.rotation.y;
+ ptsGroup.rotation.y=surface.rotation.y;
+ qptsGroup.rotation.y=surface.rotation.y;
+ labelsGroup.rotation.y=surface.rotation.y;
+ renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',function(){camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+</script>
+</body>
+</html>
