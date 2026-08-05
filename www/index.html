@@ -782,7 +782,7 @@
 
 <div class="countdown-banner">
   <span class="countdown-icon">&#x1F513;</span>
-  <span>FIBEMATE v3.3.0 opensource <strong>2026-08-31</strong> &mdash; <strong>37</strong> days away</span>
+  <span>FIBEMATE v3.3.0 opensource <strong>2026-08-31</strong> &mdash; <strong id="countdown-days">--</strong> days away</span>
   <span>· <a href="https://github.com/Lennonhaha/fibemate">GitHub</a></span>
   <span>· <a href="/docs/launch-announcement-2026-08-31.html">Announcement</a></span>
 </div>
@@ -2316,5 +2316,17 @@ const canvas = document.getElementById('particles-canvas');
         });
     </script>
     <script>navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){x.unregister()})});</script>
+<script>
+// 动态倒计时 (D-26 today)
+(function(){
+  var el = document.getElementById('countdown-days');
+  if (!el) return;
+  var target = new Date('2026-08-31T00:00:00+08:00').getTime();
+  var now = Date.now();
+  var days = Math.max(0, Math.ceil((target - now) / 86400000));
+  el.textContent = days;
+})();
+</script>
+
 </body>
 </html>
