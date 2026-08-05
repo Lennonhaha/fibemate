@@ -23,7 +23,7 @@
   "scripts": {
     "test": "node test/basic.test.js",
     "build:native": "node-gyp rebuild -C native",
-    "build:native:release": "node-gyp rebuild -C native --release",
+    "build:native:release": "node-gyp rebuild -C native --release --msvs-version 2022",
     "test:native": "node ../../scripts/test-native-addon.cjs",
     "ci:build": "npm run build:native:release && npm run test:native",
     "bench:native": "node ../../scripts/mlkem-bench-native.cjs 500"
