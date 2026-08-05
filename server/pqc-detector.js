@@ -45,6 +45,7 @@ function probe(hostname, port = 443) {
       host: hostname,
       port,
       servername: hostname,
+      // codeql[js/disabling-certificate-validation] Intentionally disabled: this is a PQC deployment probe tool that must probe arbitrary TLS servers, not a production app. False certs are expected for self-signed/internal CA servers. The probe result is never used for secure connections.
       rejectUnauthorized: false,
       minVersion: 'TLSv1.2',
       maxVersion: 'TLSv1.3',

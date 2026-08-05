@@ -21,6 +21,9 @@ on:
       - 'packages/pqc-kem/package.json'
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   # Linux + macOS native builds
   build-native:
