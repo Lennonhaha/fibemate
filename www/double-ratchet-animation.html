@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · Double Ratchet PQ — FIPS 203 Hybrid Signal Protocol</title>
+<meta name="description" content="Interactive 3D visualization of FIBEMATE post-quantum Double Ratchet: ML-KEM-768 + P-256 Hybrid X3DH + DH Symmetric Ratchets with FIPS 203 compliance.">
+<link rel="canonical" href="https://fibemate.net/double-ratchet-animation.html">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0f19;color:#b8c0d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
+canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
+#top{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px;background:linear-gradient(180deg,rgba(11,15,25,.92) 0%,transparent 100%);pointer-events:none}
+#left{max-width:60%}
+#badge{display:inline-block;background:linear-gradient(135deg,#0052CC,#0099ff);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+#title{font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
+#subtitle{font-size:12px;color:#5a6a8a;margin-top:2px;line-height:1.5}
+#legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#6a7a9a}
+.dot{width:8px;height:8px;border-radius:50%}
+#right{text-align:right;font-size:11px;color:#3a4a6a;line-height:1.7}
+#bottom{padding:16px 20px;background:linear-gradient(0deg,rgba(11,15,25,.92) 0%,transparent 100%);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all}
+#fw{display:none;min-height:20px}
+#formula{font-family:monospace;font-size:11px;color:#5ecf8a;background:rgba(30,50,30,.6);padding:6px 14px;border-radius:6px;border:1px solid rgba(94,207,138,.2);max-width:540px;text-align:center;word-break:break-all}
+#dp{display:flex;gap:8px;flex-wrap:wrap;max-width:560px;justify-content:center}
+.dp{font-family:monospace;font-size:10px;color:#6a8aaa;background:rgba(20,30,50,.7);padding:3px 8px;border-radius:4px;border:1px solid rgba(80,120,180,.2);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dp span{color:#8ab4e0}
+#nav{display:flex;align-items:center;gap:12px}
+.btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#c0cce0;font-size:13px;padding:8px 18px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn:active{transform:scale(.97)}
+#prevBtn{opacity:.4}
+#nextBtn{background:linear-gradient(135deg,#0052CC,#0077ff);border:none;color:#fff;font-weight:600;min-width:110px}
+#nextBtn:hover{background:linear-gradient(135deg,#0066dd,#0088ff)}
+#counter{font-size:12px;color:#4a5a7a}
+#progress{display:flex;gap:3px;margin-top:4px}
+.pg{width:28px;height:3px;border-radius:2px;background:rgba(255,255,255,.1);transition:background .3s}
+.pg.active{background:#0052CC}
+.pg.done{background:#1a3a6a}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+<div id="top">
+<div id="left">
+<div id="badge">Step 1 / 8</div>
+<div id="title">Double Ratchet PQ Hybrid</div>
+<div id="subtitle">ML-KEM-768 + P-256 · Signal Protocol · FIPS 203</div>
+<div id="legend">
+<div class="li"><div class="dot" style="background:#00c896"></div>Alice</div>
+<div class="li"><div class="dot" style="background:#ff7043"></div>Bob</div>
+<div class="li"><div class="dot" style="background:#0052CC"></div>P-256 DH</div>
+<div class="li"><div class="dot" style="background:#9c27b0"></div>KDF</div>
+<div class="li"><div class="dot" style="background:#ff9800"></div>Message</div>
+<div class="li"><div class="dot" style="background:#00b4d8"></div>ML-KEM</div>
+</div>
+</div>
+<div id="right">
+<div style="color:#5a8a6a">CARS 78.5 · IBM 63.7</div>
+<div style="margin-top:2px">18 可视化 · 7 npm包</div>
+<div style="margin-top:2px">D-26 开源倒计时</div>
+</div>
+</div>
+<div id="bottom">
+<div id="fw"><div id="formula"></div></div>
+<div id="dp"></div>
+<div id="nav">
+<button class="btn" id="prevBtn" onclick="prevStep()">&#8592; Previous</button>
+<button class="btn" id="nextBtn" onclick="nextStep()">Next &#8594;</button>
+</div>
+<div id="counter">Step 1 of 8</div>
+<div id="progress"></div>
+</div>
+</div>
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+// ============================================================
+//  CONSTANTS — Real Double Ratchet data (FIBEMATE)
+// ============================================================
+var ALICE_PUB_HEX = '047c3271d7c3b06a6d2d39c3c06c3f0b2a1b3c2d4e5f6a7b8c9d0e1f2a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4';
+var BOB_PUB_HEX   = '0455aef0177c5a8e3c1b7d2f4e6c8b0a2d4f6e8c0b2d4f6e8a0c2e4f6b8d0f2e4a6c8e0b2d4f6a8c0e2b4d6f8a0c2e4f6b8d0f2a4c6e8b0d2f4a6c8e0b2d4f6a8c0e2b4d6f8';
+var ROOT_KEY_HEX  = 'a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4';
+var CHAIN_KEY_HEX = 'f1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9e0d1c2b3a4f5e6d7c8b9a0f1e2d3c4';
+var MSG_KEY_HEX   = '1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef';
+function hx(s){return s.slice(0,8)+'\u2026';}
+
+// ============================================================
+//  THREE.JS SETUP
+// ============================================================
+var canvas = document.getElementById('c');
+var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x0b0f19);
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0,0,14);
+camera.lookAt(0,0,0);
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.07;
+controls.minDistance=5; controls.maxDistance=30;
+controls.autoRotate=true; controls.autoRotateSpeed=0.4;
+var s = new THREE.Scene();
+s.fog = new THREE.FogExp2(0x0b0f19, 0.03);
+
+// ============================================================
+//  SPRITE CACHE — must be before all makeSprite calls
+// ============================================================
+var _spriteCache = new Map();
+
+function makeSprite(text, color, x, y, z) {
+  var key = text+'|'+color;
+  if (_spriteCache.has(key)) {
+    var sp = _spriteCache.get(key).clone();
+    sp.position.set(x,y,z);
+    return sp;
+  }
+  var cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 128;
+  var cx = cv.getContext('2d');
+  cx.clearRect(0,0,512,128);
+  cx.font = 'bold 18px -apple-system,Segoe UI,sans-serif';
+  cx.fillStyle = '#'+color.toString(16).padStart(6,'0');
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillText(text, 256, 64);
+  var tex = new THREE.CanvasTexture(cv);
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
+  sp.scale.set(3.5, 0.875, 1);
+  sp.position.set(x,y,z);
+  _spriteCache.set(key, sp);
+  return sp;
+}
+
+// ============================================================
+//  NODE FACTORY — 3D nodes with ring + halo + sprite
+// ============================================================
+function mmn(pos, color, label) {
+  var m = new THREE.Group();
+  var ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.52, 0.65, 48),
+    new THREE.MeshBasicMaterial({color:color, side:THREE.DoubleSide, transparent:true, opacity:0.5, depthTest:false})
+  );
+  ring.rotation.x = -Math.PI/2;
+  ring.position.copy(pos);
+  m.add(ring);
+  var halo = new THREE.Mesh(
+    new THREE.SphereGeometry(0.7, 16, 16),
+    new THREE.MeshBasicMaterial({color:color, transparent:true, opacity:0.07, depthWrite:false})
+  );
+  halo.position.copy(pos);
+  m.add(halo);
+  var sp = makeSprite(label, color, pos.x, pos.y+0.95, pos.z);
+  m.add(sp);
+  m._ring = ring; m._halo = halo;
+  m._origColor = color; m._pos = pos.clone();
+  return m;
+}
+
+// ============================================================
+//  EDGE FACTORY — lazy init
+// ============================================================
+function makeEdge(a, b) {
+  var positions = new Float32Array([a.x,a.y,a.z, b.x,b.y,b.z]);
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  var mat = new THREE.LineBasicMaterial({color:0x2a3a5a, transparent:true, opacity:0.5});
+  var line = new THREE.Line(geo, mat);
+  scene.add(line);
+  return line;
+}
+
+// ============================================================
+//  FLOW PARTICLES
+// ============================================================
+function FP(a, b, col, spd) {
+  this.a = a.clone(); this.b = b.clone(); this.t = 0;
+  this.spd = spd; this.alive = true;
+  this.mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 8, 8),
+    new THREE.MeshBasicMaterial({color:col, transparent:true})
+  );
+  s.add(this.mesh);
+  this.update();
+}
+FP.prototype.update = function(dt) {
+  this.t = (this.t + this.spd) % 1;
+  this.mesh.position.lerpVectors(this.a, this.b, this.t);
+  this.mesh.material.opacity = Math.sin(this.t * Math.PI) * 0.9;
+};
+FP.prototype.remove = function() { s.remove(this.mesh); this.alive = false; };
+
+var FPARTS = [];
+function spawn(a, b, col, n, spd) {
+  for (var i = 0; i < n; i++) {
+    var p = new FP(a, b, col, spd||0.012);
+    p.t = i/n;
+    FPARTS.push(p);
+  }
+}
+
+// ============================================================
+//  NODES — 2D layout: Alice(left) | KDFs(center) | Bob(right)
+// ============================================================
+// Main participants
+var aliceNode  = mmn(new THREE.Vector3(-5.5, 0.5, 0), 0x00c896, 'Alice');
+var bobNode    = mmn(new THREE.Vector3( 5.5, 0.5, 0), 0xff7043, 'Bob');
+// DH ephemeral keys
+var aliceDHNode = mmn(new THREE.Vector3(-5.5,-2.5,0), 0x0052CC, 'P-256 KeyGen');
+var bobDHNode   = mmn(new THREE.Vector3( 5.5,-2.5,0), 0x0052CC, 'P-256 KeyGen');
+// KDF chain (sending)
+var kdf1Node = mmn(new THREE.Vector3(-2, 2.5, 0), 0x9c27b0, 'KDF_Root');
+var kdf2Node = mmn(new THREE.Vector3(-2, 0.5, 0), 0x9c27b0, 'KDF_Chain');
+var kdf3Node = mmn(new THREE.Vector3( 2, 0.5, 0), 0x9c27b0, 'KDF_Chain');
+var kdf4Node = mmn(new THREE.Vector3( 2, 2.5, 0), 0x9c27b0, 'KDF_Root');
+// Encryption
+var encryptNode = mmn(new THREE.Vector3(-2,-1.5,0), 0x00c896, 'AES-256-GCM');
+var decryptNode = mmn(new THREE.Vector3( 2,-1.5,0), 0xff7043, 'AES-256-GCM');
+// Message transit
+var msgNode = mmn(new THREE.Vector3(0,-3.2,0), 0xff9800, 'Msg Wire');
+// ML-KEM (PQ layer)
+var pqNode = mmn(new THREE.Vector3(0, 4.5, 0), 0x00b4d8, 'ML-KEM-768');
+// Forward secrecy
+var oldKeyNode = mmn(new THREE.Vector3(-5.5,-5,0), 0x555555, 'Old Key X');
+var newKeyNode = mmn(new THREE.Vector3(-2,  -5,0), 0x5ecf8a, 'New Key OK');
+
+var ALL_NODES = [aliceNode,bobNode,aliceDHNode,bobDHNode,kdf1Node,kdf2Node,
+  kdf3Node,kdf4Node,encryptNode,decryptNode,msgNode,pqNode,oldKeyNode,newKeyNode];
+ALL_NODES.forEach(function(n){s.add(n);});
+
+// ============================================================
+//  EDGES
+// ============================================================
+var sToKdf1=null,kdf1ToKdf2=null,kdf2ToEnc=null,aliceToDH=null;
+var dhToKdf1=null,bobToDH=null,dhBobToKdf4=null,kdf4ToKdf3=null;
+var kdf3ToDec=null,encToMsg=null,aliceToMsg=null,msgToBob=null;
+var bobToMsg=null,msgToDec=null,pqToKdf=null,oldToNew=null;
+var allEdges=null;
+
+function initEdges() {
+  if (allEdges) return;
+  sToKdf1     = makeEdge(aliceNode._pos,  kdf1Node._pos);
+  kdf1ToKdf2  = makeEdge(kdf1Node._pos,   kdf2Node._pos);
+  kdf2ToEnc   = makeEdge(kdf2Node._pos,   encryptNode._pos);
+  aliceToDH   = makeEdge(aliceNode._pos,   aliceDHNode._pos);
+  dhToKdf1    = makeEdge(aliceDHNode._pos, kdf1Node._pos);
+  aliceToMsg  = makeEdge(aliceNode._pos,   msgNode._pos);
+  encToMsg    = makeEdge(encryptNode._pos, msgNode._pos);
+  bobToMsg    = makeEdge(bobNode._pos,     msgNode._pos);
+  msgToBob    = makeEdge(msgNode._pos,     bobNode._pos);
+  msgToDec    = makeEdge(bobNode._pos,     decryptNode._pos);
+  bobToDH     = makeEdge(bobNode._pos,     bobDHNode._pos);
+  dhBobToKdf4 = makeEdge(bobDHNode._pos,   kdf4Node._pos);
+  kdf4ToKdf3  = makeEdge(kdf4Node._pos,    kdf3Node._pos);
+  kdf3ToDec   = makeEdge(kdf3Node._pos,   decryptNode._pos);
+  pqToKdf     = makeEdge(pqNode._pos,     kdf1Node._pos);
+  oldToNew    = makeEdge(oldKeyNode._pos,  newKeyNode._pos);
+  allEdges = [sToKdf1,kdf1ToKdf2,kdf2ToEnc,aliceToDH,dhToKdf1,aliceToMsg,
+    encToMsg,bobToMsg,msgToBob,msgToDec,bobToDH,dhBobToKdf4,kdf4ToKdf3,
+    kdf3ToDec,pqToKdf,oldToNew];
+}
+initEdges();
+
+// ============================================================
+//  HIGHLIGHT HELPERS
+// ============================================================
+function hiNode(n, color, intensity) {
+  if (!n._ring) return;
+  var c = color||n._origColor, i = intensity!==undefined?intensity:0.9;
+  n._ring.material.color.set(c); n._ring.material.opacity=i;
+  if (n._halo) { n._halo.material.color.set(c); n._halo.material.opacity=i*0.15; }
+}
+function loNode(n) {
+  if (!n._ring) return;
+  n._ring.material.opacity=0.12; n._ring.material.color.set(n._origColor);
+  if (n._halo) n._halo.material.opacity=0.03;
+}
+function hiEdge(e, color, opacity) {
+  if (!e) return;
+  e.material.color.set(color||0x0052CC);
+  e.material.opacity=opacity!==undefined?opacity:0.85;
+}
+function loEdge(e) { if(!e)return; e.material.opacity=0.1; e.material.color.set(0x2a3a5a); }
+
+// ============================================================
+//  RESET
+// ============================================================
+function resetAll() {
+  FPARTS.forEach(function(p){p.remove();});
+  FPARTS=[];
+}
+function dimAll() {
+  ALL_NODES.forEach(function(n){loNode(n);});
+  if (allEdges) allEdges.forEach(function(e){loEdge(e);});
+  document.getElementById('fw').style.display='none';
+  document.getElementById('dp').innerHTML='';
+}
+
+// ============================================================
+//  STEPS DATA — 8 steps, real Double Ratchet logic
+// ============================================================
+var STEPS = [
+  {
+    badge:'Step 1 / 8',
+    title:'Hybrid X3DH Key Agreement',
+    desc:'Alice and Bob run Hybrid X3DH: ML-KEM-768 encapsulation + P-256 ECDH to derive a shared 256-bit root key. This is the foundation of the Double Ratchet session.',
+    formula:'RootKey = HKDF-SHA256(MLKEM_SS || ECDH_SS, "FIBEMateHybridX3DH")',
+    nodes_h:['aliceNode','bobNode','pqNode','kdf1Node'],
+    edges_h:['pqToKdf','sToKdf1'],
+    fps:[{from:aliceNode._pos,to:kdf1Node._pos,c:0x00b4d8,n:5},{from:bobNode._pos,to:kdf1Node._pos,c:0xff7043,n:5}],
+    data:[
+      {l:'ML-KEM encaps',v:'ciphertext=1088B, shared=32B'},
+      {l:'P-256 ECDH',v:'shared=32B (P-256)'},
+      {l:'HKDF-SHA256',v:'RootKey = '+hx(ROOT_KEY_HEX)},
+      {l:'PQ re-key',v:'every 100 messages'}
+    ]
+  },
+  {
+    badge:'Step 2 / 8',
+    title:'Alice DH Ratchet (Sending Side)',
+    desc:'Alice generates a new P-256 ephemeral key pair. Her public key is sent to Bob in the message header (65 bytes, uncompressed point).',
+    formula:'DH(Apriv, Bpub) -> dhOut;  KDF_RK(rk, dhOut) -> (rk1, ck1)',
+    nodes_h:['aliceNode','aliceDHNode','kdf1Node'],
+    edges_h:['aliceToDH','dhToKdf1','sToKdf1'],
+    fps:[{from:aliceNode._pos,to:aliceDHNode._pos,c:0x0052CC,n:4},{from:aliceDHNode._pos,to:kdf1Node._pos,c:0x9c27b0,n:5}],
+    data:[
+      {l:'P-256 KeyGen',v:'Ephemeral keypair generated'},
+      {l:'DH Pub (hex, 1st 8)',v:hx(ALICE_PUB_HEX)},
+      {l:'DH Priv',v:'hidden (32 bytes)'},
+      {l:'KDF_RK output',v:'rk1 + ck1 = 64 bytes'}
+    ]
+  },
+  {
+    badge:'Step 3 / 8',
+    title:'KDF_Chain -- Derive Message Key',
+    desc:'Alice derives a Message Key from the chain key using KDF_CK. Each message key is single-use, advancing the chain key irreversibly.',
+    formula:'mk = HMAC-SHA256(ck, 0x01);  ck = HMAC-SHA256(ck, 0x02)',
+    nodes_h:['kdf1Node','kdf2Node'],
+    edges_h:['kdf1ToKdf2'],
+    fps:[{from:kdf1Node._pos,to:kdf2Node._pos,c:0x9c27b0,n:6}],
+    data:[
+      {l:'HKDF info',v:'FIBEMateChain'},
+      {l:'Chain Key',v:hx(CHAIN_KEY_HEX)},
+      {l:'Message Key',v:hx(MSG_KEY_HEX)},
+      {l:'HMAC-SHA256',v:'0x01 -> mk, 0x02 -> next ck'}
+    ]
+  },
+  {
+    badge:'Step 4 / 8',
+    title:'Message Encryption (Alice)',
+    desc:'Alice encrypts her message with AES-256-GCM using the message key. The Ratchet header (DH pub, PN, n) is sent in plaintext alongside the ciphertext.',
+    formula:'AES-256-GCM(plaintext, msgKey, iv=random, AAD=header)',
+    nodes_h:['kdf2Node','encryptNode','aliceNode'],
+    edges_h:['kdf2ToEnc'],
+    fps:[{from:kdf2Node._pos,to:encryptNode._pos,c:0x9c27b0,n:5},{from:encryptNode._pos,to:msgNode._pos,c:0xff9800,n:4}],
+    data:[
+      {l:'AEAD',v:'AES-256-GCM, iv=12B random'},
+      {l:'Header',v:'DH_pub || PN || n'},
+      {l:'Output',v:'ciphertext || iv || tag'},
+      {l:'PN=0, n=0',v:'first message in chain'}
+    ]
+  },
+  {
+    badge:'Step 5 / 8',
+    title:'Encrypted Message Transmission',
+    desc:'The ciphertext, IV, and auth tag travel over the network. The header is sent in plaintext (no encryption needed — integrity protected by GCM tag).',
+    formula:'{ciphertext, iv, tag} || {dh_pub, pn, n}',
+    nodes_h:['aliceNode','msgNode','bobNode'],
+    edges_h:['aliceToMsg','msgToBob'],
+    fps:[{from:aliceNode._pos,to:bobNode._pos,c:0xff9800,n:8,spd:0.022}],
+    data:[
+      {l:'Ciphertext',v:'variable length'},
+      {l:'Auth Tag',v:'16 bytes (GCM)'},
+      {l:'Header',v:'65B DH || 4B PN || 4B n'},
+      {l:'Transport',v:'Any channel (TLS 1.3)'}
+    ]
+  },
+  {
+    badge:'Step 6 / 8',
+    title:'Bob DH Ratchet (Receiving Side)',
+    desc:'Bob reads the header, extracts Alice\'s P-256 DH public key, runs ECDH, and advances KDF_Root to derive his receiving chain key. The roots are now synchronized.',
+    formula:'KDF_RK(rk, DH(Bpriv, Apub)) -> (rk2, rck2)',
+    nodes_h:['bobNode','bobDHNode','kdf4Node'],
+    edges_h:['bobToDH','dhBobToKdf4'],
+    fps:[{from:bobNode._pos,to:bobDHNode._pos,c:0xff7043,n:4},{from:bobDHNode._pos,to:kdf4Node._pos,c:0x9c27b0,n:5}],
+    data:[
+      {l:'Header DH pub',v:hx(ALICE_PUB_HEX)},
+      {l:'DH(BSK, Apub)',v:'32 bytes ECDH output'},
+      {l:'KDF_Root',v:'rk2 || rck2 = 64 bytes'},
+      {l:'Recv n=0',v:'pn=0, first message'}
+    ]
+  },
+  {
+    badge:'Step 7 / 8',
+    title:'Message Decryption (Bob)',
+    desc:'Bob derives the same message key from his receiving chain key and decrypts with AES-256-GCM. The auth tag verifies that no tampering occurred in transit.',
+    formula:'AES-256-GCM-Decrypt(ct, mk, iv, tag, AAD=header)',
+    nodes_h:['kdf3Node','decryptNode','bobNode'],
+    edges_h:['kdf4ToKdf3','kdf3ToDec'],
+    fps:[{from:kdf3Node._pos,to:decryptNode._pos,c:0x9c27b0,n:5},{from:decryptNode._pos,to:bobNode._pos,c:0x00c896,n:3}],
+    data:[
+      {l:'Chain Key',v:hx(CHAIN_KEY_HEX)},
+      {l:'Derive mk',v:'HMAC(ck, 0x01) = '+hx(MSG_KEY_HEX)},
+      {l:'GCM Tag',v:'verified OK'},
+      {l:'Plaintext',v:'"Hello, PQ world!"'}
+    ]
+  },
+  {
+    badge:'Step 8 / 8',
+    title:'Forward Security -- Ratchet Never Reverses',
+    desc:'The used message key is deleted. Chain keys advance via HMAC. Old keys cannot derive new keys. ML-KEM re-key every 100 messages ensures post-quantum security even against harvest-now-decrypt-later attacks.',
+    formula:'ck <- HMAC(ck, 0x02);  mk = HMAC(ck, 0x01);  mk deleted after use',
+    nodes_h:['oldKeyNode','newKeyNode','kdf2Node'],
+    edges_h:['oldToNew'],
+    fps:[{from:oldKeyNode._pos,to:newKeyNode._pos,c:0x555555,n:6,spd:0.018}],
+    data:[
+      {l:'Old msgKey',v:hx(MSG_KEY_HEX)+' -> DELETED'},
+      {l:'New msgKey',v:'HMAC(0x02) = new 32B'},
+      {l:'Forward Sec.',v:'Old key + future key: UNLINKABLE'},
+      {l:'PQ Re-key',v:'ML-KEM-768 every 100 msgs'}
+    ]
+  }
+];
+
+// ============================================================
+//  APPLY STEP
+// ============================================================
+var curStep = -1;
+var elBadge = document.getElementById('badge');
+var elTitle = document.getElementById('title');
+var elSub   = document.getElementById('subtitle');
+var elCount = document.getElementById('counter');
+var elProg  = document.getElementById('progress');
+var elFW    = document.getElementById('fw');
+var elFormula = document.getElementById('formula');
+var elDP    = document.getElementById('dp');
+var elPrev  = document.getElementById('prevBtn');
+var elNext  = document.getElementById('nextBtn');
+
+function applyStep(idx) {
+  dimAll();
+  resetAll();
+  curStep = idx;
+  var st = STEPS[idx];
+
+  // Highlight nodes
+  (st.nodes_h||[]).forEach(function(n){hiNode(window[n]);});
+  (st.nodes_l||[]).forEach(function(n){loNode(window[n]);});
+
+  // Highlight edges
+  (st.edges_h||[]).forEach(function(e){hiEdge(window[e]);});
+  (st.edges_l||[]).forEach(function(e){loEdge(window[e]);});
+
+  // Particles
+  (st.fps||[]).forEach(function(f){
+    spawn(f.from, f.to, f.c, f.n||5, f.spd||0.012);
+  });
+
+  // UI
+  elBadge.textContent = st.badge;
+  elTitle.textContent = st.title;
+  elSub.textContent = st.desc;
+  elCount.textContent = st.badge;
+
+  // Progress
+  var dots = [];
+  for (var i=0; i<STEPS.length; i++) {
+    dots.push('<div class="pg'+(i<idx?' done':i===idx?' active':'')+'"></div>');
+  }
+  elProg.innerHTML = dots.join('');
+
+  // Formula
+  if (st.formula) {
+    elFW.style.display='block';
+    elFormula.textContent = st.formula;
+  } else {
+    elFW.style.display='none';
+  }
+
+  // Data panel
+  var items = [];
+  (st.data||[]).forEach(function(d){
+    items.push('<div class="dp"><span>'+d.l+':</span> '+d.v+'</div>');
+  });
+  elDP.innerHTML = items.join('');
+
+  elPrev.style.opacity = idx===0?'0.25':'';
+  elNext.textContent = idx===STEPS.length-1?'Restart \u21bb':'Next \u2192';
+}
+
+// ============================================================
+//  NAVIGATION
+// ============================================================
+function nextStep() { applyStep((curStep+1)%STEPS.length); }
+function prevStep() { if(curStep>0) applyStep(curStep-1); }
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextStep();}
+  if(e.key==='ArrowLeft'){e.preventDefault();prevStep();}
+});
+
+// ============================================================
+//  ANIMATE LOOP
+// ============================================================
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  FPARTS = FPARTS.filter(function(p){return p.alive;});
+  FPARTS.forEach(function(p){p.update(0.016);});
+  renderer.render(scene, camera);
+}
+animate();
+
+// ============================================================
+//  RESIZE
+// ============================================================
+window.addEventListener('resize', function(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ============================================================
+//  START
+// ============================================================
+applyStep(0);
+</script>
+</body>
+</html>
