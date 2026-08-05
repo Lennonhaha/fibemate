@@ -3,526 +3,565 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FIBEMATE · TLS 1.3 Hybrid Handshake — IANA #4590 + IANA #4588</title>
-<meta name="description" content="Interactive 3D visualization of FIBEMATE TLS 1.3 post-quantum hybrid handshake: IANA #4590 (SM2-MLKEM768) and IANA #4588 (X25519MLKEM768) with FIPS 203 compliance.">
-<link rel="canonical" href="https://fibemate.net/tls-hybrid-handshake.html">
+<title>FIBEMATE · TLS 1.3 Hybrid Handshake — 10-Step Live</title>
+<meta name="description" content="TLS 1.3 PQ Hybrid Handshake: IANA #4590 SM2-MLKEM768 + #4588 X25519MLKEM768. 10-step interactive 3D visualization.">
 <style>
+:root {
+  --bg: #060a10;
+  --panel-bg: rgba(8,12,22,0.94);
+  --teal: #00e5c3;
+  --blue: #0052CC;
+  --purple: #a855f7;
+  --orange: #ff9100;
+  --red: #ff5252;
+  --green: #5ecf8a;
+  --text: #c8d0e0;
+  --dim: #5a6a8a;
+}
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0b0f19;color:#b8c0d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
-canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
-#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
-#top{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px;background:linear-gradient(180deg,rgba(11,15,25,.92) 0%,transparent 100%);pointer-events:none}
-#left{max-width:60%}
-#badge{display:inline-block;background:linear-gradient(135deg,#0052CC,#0099ff);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
-#title{font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
-#subtitle{font-size:12px;color:#5a6a8a;line-height:1.5;margin-top:2px}
-#legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
-.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#6a7a9a}
-.dot{width:8px;height:8px;border-radius:50%}
-#right{text-align:right;font-size:11px;color:#3a4a6a;line-height:1.7}
-#bottom{padding:16px 20px;background:linear-gradient(0deg,rgba(11,15,25,.92) 0%,transparent 100%);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all}
-#fw{display:none;min-height:20px}
-#formula{font-family:monospace;font-size:11px;color:#5ecf8a;background:rgba(30,50,30,.6);padding:6px 14px;border-radius:6px;border:1px solid rgba(94,207,138,.2);max-width:540px;text-align:center;word-break:break-all}
-#dp{display:flex;gap:8px;flex-wrap:wrap;max-width:580px;justify-content:center}
-.dp{font-family:monospace;font-size:10px;color:#6a8aaa;background:rgba(20,30,50,.7);padding:3px 8px;border-radius:4px;border:1px solid rgba(80,120,180,.2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dp span{color:#8ab4e0}
-#nav{display:flex;align-items:center;gap:12px}
-.btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#c0cce0;font-size:13px;padding:8px 18px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:inherit}
-.btn:hover{background:rgba(255,255,255,.12);color:#fff}
-.btn:active{transform:scale(.97)}
-#prevBtn{opacity:.4}
-#nextBtn{background:linear-gradient(135deg,#0052CC,#0077ff);border:none;color:#fff;font-weight:600;min-width:110px}
-#nextBtn:hover{background:linear-gradient(135deg,#0066dd,#0088ff)}
-#counter{font-size:12px;color:#4a5a7a}
-#progress{display:flex;gap:3px;margin-top:4px}
-.pg{width:24px;height:3px;border-radius:2px;background:rgba(255,255,255,.1);transition:background .3s}
-.pg.active{background:#0052CC}
-.pg.done{background:#1a3a6a}
+body{background:var(--bg);overflow:hidden;font-family:'Segoe UI',system-ui,-apple-system,sans-serif;color:var(--text)}
+
+canvas{display:block;position:fixed;top:0;left:0;z-index:0}
+
+/* Top overlay */
+#top{position:fixed;top:0;left:0;right:0;z-index:10;padding:16px 20px;
+  background:linear-gradient(180deg,var(--panel-bg) 0%,transparent 100%);
+  display:flex;align-items:flex-start;justify-content:space-between;pointer-events:none}
+#top-left{max-width:55%}
+#top-badge{display:inline-flex;align-items:center;gap:6px;
+  background:linear-gradient(135deg,var(--blue),#0077ff);color:#fff;
+  font-size:11px;font-weight:700;padding:5px 14px;border-radius:20px;
+  letter-spacing:0.5px;text-transform:uppercase;margin-bottom:6px}
+#top-badge .pulse{width:7px;height:7px;border-radius:50%;background:#fff;animation:pulse 1.5s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 4px #fff}50%{opacity:0.4;box-shadow:0 0 12px #fff}}
+#top-title{font-size:20px;font-weight:700;color:#fff;letter-spacing:0.3px;margin-bottom:2px}
+#top-desc{font-size:13px;color:var(--dim);line-height:1.5;max-width:480px}
+#top-right{text-align:right;font-size:11px;color:var(--dim);line-height:1.8}
+#top-right .hl{color:var(--teal)}
+
+/* Bottom panel */
+#bottom{position:fixed;bottom:0;left:0;right:0;z-index:10;padding:14px 20px 18px;
+  background:linear-gradient(0deg,var(--panel-bg) 0%,transparent 100%);
+  display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all}
+
+#formula-bar{font-family:'JetBrains Mono','Cascadia Code',monospace;font-size:11px;color:var(--teal);
+  background:rgba(0,229,195,0.06);padding:7px 16px;border-radius:8px;
+  border:1px solid rgba(0,229,195,0.15);max-width:620px;text-align:center;word-break:break-all;display:none}
+
+#data-strip{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:640px}
+.dp{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--dim);
+  background:rgba(20,24,40,0.8);padding:4px 10px;border-radius:5px;
+  border:1px solid rgba(80,100,140,0.2);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dp .key{color:#8ab4e0}
+.dp .val{color:var(--teal)}
+
+#nav-row{display:flex;align-items:center;gap:14px}
+.nav-btn{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);color:var(--text);
+  font-size:13px;padding:9px 20px;border-radius:8px;cursor:pointer;transition:all 0.2s;font-family:inherit;
+  display:flex;align-items:center;gap:6px}
+.nav-btn:hover{background:rgba(255,255,255,0.12);color:#fff;border-color:rgba(255,255,255,0.2)}
+.nav-btn:active{transform:scale(0.97)}
+#prevBtn{opacity:0.4;pointer-events:none}
+#nextBtn{background:linear-gradient(135deg,var(--blue),#0077ff);border:none;color:#fff;font-weight:600;min-width:110px;justify-content:center}
+#nextBtn:hover{background:linear-gradient(135deg,#0066dd,#0088ff);box-shadow:0 0 20px rgba(0,82,204,0.3)}
+#step-counter{font-size:12px;color:var(--dim);min-width:80px;text-align:center}
+
+#progress-bar{display:flex;gap:4px;margin-top:2px}
+.pb-dot{width:28px;height:4px;border-radius:2px;background:rgba(255,255,255,0.08);transition:all 0.4s}
+.pb-dot.active{background:var(--blue);box-shadow:0 0 8px rgba(0,82,204,0.6)}
+.pb-dot.done{background:rgba(0,82,204,0.25)}
+
+/* Legend float */
+#legend-float{position:fixed;right:20px;top:50%;transform:translateY(-50%);z-index:9;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none}
+.lg-item{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--dim)}
+.lg-dot{width:10px;height:10px;border-radius:50%}
+
+/* Key schedule highlight */
+.kh-highlight{font-size:10px;color:var(--teal);opacity:0;transition:opacity 0.5s}
+.kh-highlight.show{opacity:1}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<div id="ui">
+
 <div id="top">
-<div id="left">
-<div id="badge">Step 1 / 10</div>
-<div id="title">TLS 1.3 Hybrid Handshake</div>
-<div id="subtitle">IANA #4590 SM2-MLKEM768 + #4588 X25519MLKEM768 · FIPS 203</div>
-<div id="legend">
-<div class="li"><div class="dot" style="background:#00c896"></div>Client</div>
-<div class="li"><div class="dot" style="background:#ff7043"></div>Server</div>
-<div class="li"><div class="dot" style="background:#0052CC"></div>Key Exchange</div>
-<div class="li"><div class="dot" style="background:#9c27b0"></div>HKDF</div>
-<div class="li"><div class="dot" style="background:#ff9800"></div>Handshake Msg</div>
-<div class="li"><div class="dot" style="background:#00b4d8"></div>ML-KEM</div>
+  <div id="top-left">
+    <div id="top-badge"><span class="pulse"></span>Step <span id="stepN">1</span> / 10</div>
+    <div id="top-title">ClientHello — Propose Hybrid Groups</div>
+    <div id="top-desc">Client proposes IANA #4590 + #4588, sends ML-KEM-768 public key + P-256 key share.</div>
+  </div>
+  <div id="top-right">
+    <div><span class="hl">CARS 75.20</span> · IBM 63.70</div>
+    <div>20 可视化 · 7 npm 包</div>
+    <div style="color:var(--orange)">D-26 开源倒计时</div>
+  </div>
 </div>
+
+<div id="legend-float">
+  <div class="lg-item"><div class="lg-dot" style="background:#00e5c3"></div> Client</div>
+  <div class="lg-item"><div class="lg-dot" style="background:#ff7043"></div> Server</div>
+  <div class="lg-item"><div class="lg-dot" style="background:#0052CC"></div> Key Exchange</div>
+  <div class="lg-item"><div class="lg-dot" style="background:#a855f7"></div> HKDF</div>
+  <div class="lg-item"><div class="lg-dot" style="background:#ff9100"></div> Handshake Msg</div>
+  <div class="lg-item"><div class="lg-dot" style="background:#00b4d8"></div> ML-KEM</div>
 </div>
-<div id="right">
-<div style="color:#5a8a6a">CARS 75.20 · IBM 63.70</div>
-<div style="margin-top:2px">19 可视化 · 7 npm包</div>
-<div style="margin-top:2px">D-26 开源倒计时</div>
-</div>
-</div>
+
 <div id="bottom">
-<div id="fw"><div id="formula"></div></div>
-<div id="dp"></div>
-<div id="nav">
-<button class="btn" id="prevBtn" onclick="prevStep()">&#8592; Previous</button>
-<button class="btn" id="nextBtn" onclick="nextStep()">Next &#8594;</button>
+  <div id="formula-bar"></div>
+  <div id="data-strip"></div>
+  <div id="nav-row">
+    <button class="nav-btn" id="prevBtn" onclick="prevStep()">◀ 上一步</button>
+    <button class="nav-btn" id="nextBtn" onclick="nextStep()">下一步 ▶</button>
+    <span id="step-counter">Step 1 of 10</span>
+  </div>
+  <div id="progress-bar"></div>
 </div>
-<div id="counter">Step 1 of 10</div>
-<div id="progress"></div>
-</div>
-</div>
+
 <script src="/docs/lib/three.min.js?v=20260803"></script>
-<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
 <script>
-// ============================================================
-//  CONSTANTS — TLS 1.3 Hybrid Handshake real data
-// ============================================================
-var HYBRID_GROUP_4590 = 'IANA #4590 SM2-MLKEM768';
-var HYBRID_GROUP_4588 = 'IANA #4588 X25519MLKEM768';
-var SM2_SHARE_SIZE = 65;
-var MLKEM_PK_SIZE  = 1184;
-var MLKEM_CT_SIZE  = 1088;
-var TOTAL_SHARE    = 1249;
-var SHARED_SECRET  = 'a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4';
-function hx(s){return s.slice(0,8)+'\u2026';}
-
-// ============================================================
-//  THREE.JS SETUP
-// ============================================================
-var canvas = document.getElementById('c');
-var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+// ═══════════════════════════════════════════════════════════════
+//  THREE.JS SETUP — rich scene
+// ═══════════════════════════════════════════════════════════════
+var W=window.innerWidth, H=window.innerHeight;
+var renderer=new THREE.WebGLRenderer({canvas:document.getElementById('c'),antialias:true,alpha:true});
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-renderer.setSize(window.innerWidth, window.innerHeight);
-renderer.setClearColor(0x0b0f19);
-var scene = new THREE.Scene();
-var camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
-camera.position.set(0, 1.5, 16);
-camera.lookAt(0, 0, 0);
-var controls = new THREE.OrbitControls(camera, renderer.domElement);
-controls.enableDamping=true; controls.dampingFactor=0.07;
-controls.minDistance=6; controls.maxDistance=32;
-controls.autoRotate=true; controls.autoRotateSpeed=0.3;
-var sGroups = new THREE.Scene();
-sGroups.fog = new THREE.FogExp2(0x0b0f19, 0.02);
+renderer.setSize(W,H);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure=1.2;
 
-// ============================================================
-//  SPRITE CACHE
-// ============================================================
-var _spriteCache = new Map();
+var scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x060a10,0.0004);
 
-function makeSprite(text, color, x, y, z) {
-  var key = text+'|'+color;
-  if (_spriteCache.has(key)) {
-    var sp = _spriteCache.get(key).clone();
-    sp.position.set(x,y,z);
-    return sp;
+var camera=new THREE.PerspectiveCamera(50,W/H,0.5,80);
+camera.position.set(0,3,14);
+camera.lookAt(0,0,0);
+
+// ═══════════════════════════════════════════════════════════════
+//  BACKGROUND — starfield + grid floor + ambient particles
+// ═══════════════════════════════════════════════════════════════
+(function(){
+  // Starfield
+  var sg=new THREE.BufferGeometry();
+  var stars=[]; for(var i=0;i<600;i++){stars.push((Math.random()-0.5)*40,(Math.random()-0.5)*25,(Math.random()-0.5)*10-8)}
+  sg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(stars),3));
+  var sm=new THREE.PointsMaterial({color:0x3a4a7a,size:0.03,transparent:true,opacity:0.6,depthWrite:false});
+  scene.add(new THREE.Points(sg,sm));
+
+  // Grid floor
+  var grid=new THREE.GridHelper(20,40,0x1a2a4a,0x0a1220);
+  grid.position.y=-5.5;
+  scene.add(grid);
+
+  // Ambient floating dots
+  var ag=new THREE.BufferGeometry();
+  var adots=[]; for(var j=0;j<80;j++){adots.push((Math.random()-0.5)*18,Math.random()*10-5,(Math.random()-0.5)*6)}
+  ag.setAttribute('position',new THREE.BufferAttribute(new Float32Array(adots),3));
+  var am=new THREE.PointsMaterial({color:0x0052CC,size:0.05,transparent:true,opacity:0.3,depthWrite:false});
+  var ap=new THREE.Points(ag,am);
+  ap.name='ambientPts'; scene.add(ap);
+})();
+
+// ═══════════════════════════════════════════════════════════════
+//  LIGHTS
+// ═══════════════════════════════════════════════════════════════
+scene.add(new THREE.AmbientLight(0x1a2a4a,0.6));
+var dl=new THREE.DirectionalLight(0xffffff,0.3); dl.position.set(5,10,8); scene.add(dl);
+
+// ═══════════════════════════════════════════════════════════════
+//  NODE FACTORY — platform + label + glow ring
+// ═══════════════════════════════════════════════════════════════
+function createNode(pos,color,label,size){
+  size=size||0.5;
+  var g=new THREE.Group();
+  g.position.copy(pos);
+  g._baseColor=color;
+  g._pos=pos.clone();
+
+  // Platform disc
+  var disc=new THREE.Mesh(
+    new THREE.CylinderGeometry(size*0.7,size*0.8,0.06,32),
+    new THREE.MeshStandardMaterial({color:color,metalness:0.3,roughness:0.5,emissive:color,emissiveIntensity:0.2})
+  );
+  disc.position.y=-0.03; g.add(disc);
+
+  // Glow ring (always on, wider than disc)
+  var ring=new THREE.Mesh(
+    new THREE.TorusGeometry(size*0.85,0.04,16,32),
+    new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.35,depthWrite:false})
+  );
+  ring.rotation.x=-Math.PI/2; ring.position.y=0.01;
+  ring.name='glowRing'; g.add(ring);
+
+  // Core sphere
+  var core=new THREE.Mesh(
+    new THREE.SphereGeometry(size*0.35,16,16),
+    new THREE.MeshStandardMaterial({color:color,metalness:0.2,roughness:0.3,emissive:color,emissiveIntensity:0.4})
+  );
+  g.add(core);
+
+  // Label sprite
+  var cv=document.createElement('canvas'); cv.width=256; cv.height=64;
+  var cx=cv.getContext('2d');
+  cx.font='bold 14px Segoe UI,system-ui'; cx.textAlign='center'; cx.textBaseline='middle';
+  cx.fillStyle='#'+color.toString(16).padStart(6,'0'); cx.fillText(label,128,32);
+  var spr=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
+  spr.scale.set(size*3.5,size*0.9,1); spr.position.y=size*1.1;
+  g.add(spr);
+
+  // Pulse halo (for highlight)
+  var halo=new THREE.Mesh(
+    new THREE.RingGeometry(size*0.9,size*1.15,32),
+    new THREE.MeshBasicMaterial({color:color,side:THREE.DoubleSide,transparent:true,opacity:0,depthWrite:false})
+  );
+  halo.rotation.x=-Math.PI/2; halo.position.y=0.02;
+  halo.name='halo'; g.add(halo);
+
+  scene.add(g);
+  return g;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  EDGE FACTORY — tube geometry with glow
+// ═══════════════════════════════════════════════════════════════
+function createEdge(a,b,color){
+  color=color||0x1a3050;
+  var curve=new THREE.LineCurve3(a.clone(),b.clone());
+  var tube=new THREE.TubeGeometry(curve,24,0.03,8,false);
+  var mat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.25,depthWrite:true});
+  var mesh=new THREE.Mesh(tube,mat);
+  mesh._baseColor=color;
+  scene.add(mesh);
+  return mesh;
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  NODE LAYOUT — horizontal flow: Client | Msg Flow | Server
+//                 Key Schedule below
+// ═══════════════════════════════════════════════════════════════
+var CLR={client:0x00e5c3,server:0xff7043,kex:0x0052CC,hkdf:0xa855f7,msg:0xff9100,mlkem:0x00b4d8,done:0x5ecf8a};
+
+// Client column
+var cCl   = createNode(new THREE.Vector3(-7, 3.5,0), CLR.client, 'Client',0.5);
+var cKEM  = createNode(new THREE.Vector3(-7, 1.5,0), CLR.mlkem, 'KeyGen\nML-KEM',0.45);
+var cDH   = createNode(new THREE.Vector3(-7,-0.5,0), CLR.kex, 'KeyGen\nP-256',0.45);
+var cDone = createNode(new THREE.Vector3(-7,-2.8,0), CLR.done, 'Finished',0.4);
+
+// Server column
+var sCl   = createNode(new THREE.Vector3(7, 3.5,0), CLR.server, 'Server',0.5);
+var sKEM  = createNode(new THREE.Vector3(7, 1.5,0), CLR.mlkem, 'Encaps\nML-KEM',0.45);
+var sDH   = createNode(new THREE.Vector3(7,-0.5,0), CLR.kex, 'KeyGen\nP-256',0.45);
+var sDone = createNode(new THREE.Vector3(7,-2.8,0), CLR.done, 'Finished',0.4);
+
+// Message flow center
+var ch    = createNode(new THREE.Vector3(0, 5.0,0), CLR.msg, '① ClientHello',0.48);
+var sh    = createNode(new THREE.Vector3(0, 3.8,0), CLR.msg, '② ServerHello',0.48);
+var ee    = createNode(new THREE.Vector3(0, 2.6,0), CLR.msg, '③ EncryptedExt',0.45);
+var cert  = createNode(new THREE.Vector3(0, 1.4,0), CLR.msg, '④ Certificate',0.45);
+var cv    = createNode(new THREE.Vector3(0, 0.2,0), CLR.msg, '⑤ CertVerify',0.45);
+var sfin  = createNode(new THREE.Vector3(0,-0.8,0), CLR.msg, '⑦ Svr Finished',0.45);
+var cfin  = createNode(new THREE.Vector3(0,-1.8,0), CLR.msg, '⑨ Cli Finished',0.45);
+var app   = createNode(new THREE.Vector3(0,-3.2,0), CLR.done, '★ App Data',0.5);
+
+// Key schedule (vertical chain, bottom area)
+var es   = createNode(new THREE.Vector3(-3.5, 3.0,1), CLR.hkdf, 'early_secret',0.4);
+var hs   = createNode(new THREE.Vector3(-3.5, 1.5,1), CLR.hkdf, 'handshake\n_secret',0.4);
+var ms   = createNode(new THREE.Vector3(-3.5,-0.8,1), CLR.hkdf, 'master\n_secret',0.4);
+var ts   = createNode(new THREE.Vector3(3.5,-0.8,1), CLR.hkdf, 'traffic\n_secret',0.4);
+
+// Hybrid share node
+var hb   = createNode(new THREE.Vector3(-3.5, -0.5,0), CLR.kex, 'Hybrid\nShare',0.45);
+
+// ═══════════════════════════════════════════════════════════════
+//  EDGES — tube meshes
+// ═══════════════════════════════════════════════════════════════
+var E={};
+function posOf(n){return n._pos;}
+E.e1 =createEdge(posOf(cCl), posOf(ch));        // Client → ClientHello
+E.e2 =createEdge(posOf(ch),  posOf(sCl));       // ClientHello → Server
+E.e3 =createEdge(posOf(sCl), posOf(sh));        // Server → ServerHello
+E.e4 =createEdge(posOf(sh),  posOf(cCl));       // ServerHello → Client
+E.e5 =createEdge(posOf(sCl), posOf(ee));        // Server → EncryptedExt
+E.e6 =createEdge(posOf(ee),  posOf(cCl));       // EncryptedExt → Client
+E.e7 =createEdge(posOf(cKEM),posOf(hb));        // Client KEM → Hybrid
+E.e8 =createEdge(posOf(cDH), posOf(hb));        // Client DH → Hybrid
+E.e9 =createEdge(posOf(ch),  posOf(es));        // ClientHello → early_secret
+E.e10=createEdge(posOf(sh),  posOf(hs));        // ServerHello → handshake_secret
+E.e11=createEdge(posOf(es),  posOf(hs));        // early → handshake
+E.e12=createEdge(posOf(hs),  posOf(ms));        // handshake → master
+E.e13=createEdge(posOf(ms),  posOf(ts));        // master → traffic
+E.e14=createEdge(posOf(sfin),posOf(sDone));     // Server Fin → Server Done
+E.e15=createEdge(posOf(cDone),posOf(app));      // Client Done → App Data
+E.e16=createEdge(posOf(sCl), posOf(cert));      // Server → Cert
+E.e17=createEdge(posOf(cert),posOf(cv));        // Cert → CertVerify
+E.e18=createEdge(posOf(cv),  posOf(cfin));      // CertVerify → Client Fin
+E.e19=createEdge(posOf(cfin),posOf(sfin));      // Client Fin → Server Fin
+
+// ═══════════════════════════════════════════════════════════════
+//  FLOW PARTICLES — visible, animated orbs
+// ═══════════════════════════════════════════════════════════════
+var flows=[];
+function FlowParticle(from,to,color,speed){
+  this.from=from.clone(); this.to=to.clone(); this.t=Math.random();
+  this.speed=speed||0.008; this.alive=true;
+  var m=new THREE.Mesh(
+    new THREE.SphereGeometry(0.08,8,8),
+    new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.85})
+  );
+  m.position.lerpVectors(this.from,this.to,this.t);
+  scene.add(m); this.mesh=m;
+  this.update=function(dt){
+    this.t=(this.t+this.speed)%1;
+    this.mesh.position.lerpVectors(this.from,this.to,this.t);
+    this.mesh.material.opacity=0.3+Math.sin(this.t*Math.PI)*0.55;
+  };
+  this.remove=function(){scene.remove(this.mesh);this.alive=false;this.mesh.geometry.dispose();this.mesh.material.dispose();};
+}
+
+function spawnFlow(from,to,color,n,speed){
+  var arr=[]; for(var i=0;i<n;i++){var f=new FlowParticle(from,to,color,speed||0.01);f.t=i/n;flows.push(f);arr.push(f);}
+  return arr;
+}
+
+function clearFlows(){flows.forEach(function(f){f.remove();});flows=[];}
+
+// ═══════════════════════════════════════════════════════════════
+//  HIGHLIGHT SYSTEM — per-step node/edge glow
+// ═══════════════════════════════════════════════════════════════
+function hiNode(n,color,brightness){
+  var g=n.children;
+  for(var i=0;i<g.length;i++){
+    if(g[i].name==='glowRing'){g[i].material.opacity=0.9;g[i].material.color.set(color||n._baseColor);}
+    if(g[i].name==='halo'){g[i].material.opacity=brightness||0.5;g[i].material.color.set(color||n._baseColor);}
+    if(g[i].isSprite){g[i].material.opacity=1;}
   }
-  var cv = document.createElement('canvas');
-  cv.width = 512; cv.height = 128;
-  var cx = cv.getContext('2d');
-  cx.clearRect(0,0,512,128);
-  cx.font = 'bold 18px -apple-system,Segoe UI,sans-serif';
-  cx.fillStyle = '#'+color.toString(16).padStart(6,'0');
-  cx.textAlign = 'center'; cx.textBaseline = 'middle';
-  cx.fillText(text, 256, 64);
-  var tex = new THREE.CanvasTexture(cv);
-  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
-  sp.scale.set(3.5, 0.875, 1);
-  sp.position.set(x,y,z);
-  _spriteCache.set(key, sp);
-  return sp;
+  // Also brighten disc
+  if(g[0]&&g[0].material&&g[0].material.emissiveIntensity!==undefined){g[0].material.emissiveIntensity=0.6;}
 }
-
-// ============================================================
-//  NODE FACTORY
-// ============================================================
-function mmn(pos, color, label) {
-  var m = new THREE.Group();
-  var ring = new THREE.Mesh(
-    new THREE.RingGeometry(0.52, 0.65, 48),
-    new THREE.MeshBasicMaterial({color:color, side:THREE.DoubleSide, transparent:true, opacity:0.5, depthTest:false})
-  );
-  ring.rotation.x = -Math.PI/2;
-  ring.position.copy(pos);
-  m.add(ring);
-  var halo = new THREE.Mesh(
-    new THREE.SphereGeometry(0.7, 16, 16),
-    new THREE.MeshBasicMaterial({color:color, transparent:true, opacity:0.07, depthWrite:false})
-  );
-  halo.position.copy(pos);
-  m.add(halo);
-  var sp = makeSprite(label, color, pos.x, pos.y+0.95, pos.z);
-  m.add(sp);
-  m._ring = ring; m._halo = halo;
-  m._origColor = color; m._pos = pos.clone();
-  return m;
-}
-
-// ============================================================
-//  EDGE FACTORY
-// ============================================================
-function makeEdge(a, b) {
-  var positions = new Float32Array([a.x,a.y,a.z, b.x,b.y,b.z]);
-  var geo = new THREE.BufferGeometry();
-  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-  var mat = new THREE.LineBasicMaterial({color:0x2a3a5a, transparent:true, opacity:0.5});
-  var line = new THREE.Line(geo, mat);
-  scene.add(line);
-  return line;
-}
-
-// ============================================================
-//  FLOW PARTICLES
-// ============================================================
-function FP(a, b, col, spd) {
-  this.a = a.clone(); this.b = b.clone(); this.t = 0;
-  this.spd = spd; this.alive = true;
-  this.mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(0.08, 8, 8),
-    new THREE.MeshBasicMaterial({color:col, transparent:true})
-  );
-  sGroups.add(this.mesh);
-  this.update();
-}
-FP.prototype.update = function(dt) {
-  this.t = (this.t + this.spd) % 1;
-  this.mesh.position.lerpVectors(this.a, this.b, this.t);
-  this.mesh.material.opacity = Math.sin(this.t * Math.PI) * 0.9;
-};
-FP.prototype.remove = function(){ sGroups.remove(this.mesh); this.alive=false; };
-
-var FPARTS = [];
-function spawn(a, b, col, n, spd) {
-  for (var i=0; i<n; i++) {
-    var p = new FP(a, b, col, spd||0.012);
-    p.t = i/n;
-    FPARTS.push(p);
+function loNode(n){
+  var g=n.children;
+  for(var i=0;i<g.length;i++){
+    if(g[i].name==='glowRing'){g[i].material.opacity=0.15;g[i].material.color.set(n._baseColor);}
+    if(g[i].name==='halo'){g[i].material.opacity=0;}
+    if(g[i].isSprite){g[i].material.opacity=0.5;}
   }
+  if(g[0]&&g[0].material&&g[0].material.emissiveIntensity!==undefined){g[0].material.emissiveIntensity=0.2;}
+}
+function hiEdge(e,color,opacity){e.material.color.set(color||0x0052CC);e.material.opacity=opacity||0.7;}
+function loEdge(e){e.material.color.set(e._baseColor);e.material.opacity=0.12;}
+
+function dimScene(allNodes){
+  allNodes.forEach(function(n){if(n._baseColor)loNode(n);});
+  Object.values(E).forEach(function(e){loEdge(e);});
+  document.getElementById('formula-bar').style.display='none';
+  document.getElementById('data-strip').innerHTML='';
 }
 
-// ============================================================
-//  NODES — 3-column layout: Client | Handshake Flow | Server
-// ============================================================
-// Client side
-var clientNode    = mmn(new THREE.Vector3(-6,  3.2, 0), 0x00c896, 'Client');
-var clientKEMNode = mmn(new THREE.Vector3(-6,  1.2, 0), 0x00b4d8, 'KeyGen (ML-KEM)');
-var clientDHNode  = mmn(new THREE.Vector3(-6, -1.0, 0), 0x0052CC, 'KeyGen (P-256)');
-var clientDoneNode = mmn(new THREE.Vector3(-6, -3.5, 0), 0x5ecf8a, 'Finished');
+// ═══════════════════════════════════════════════════════════════
+//  CAMERA ANIMATION — move to focus area per step
+// ═══════════════════════════════════════════════════════════════
+var camTarget=new THREE.Vector3(0,0,0);
+var camGoal=new THREE.Vector3(0,3,14);
+var camLookGoal=new THREE.Vector3(0,0,0);
+var cameraLerp=0.08;
 
-// Server side
-var serverNode    = mmn(new THREE.Vector3(6,  3.2, 0), 0xff7043, 'Server');
-var serverKEMNode = mmn(new THREE.Vector3(6,  1.2, 0), 0x00b4d8, 'Encaps (ML-KEM)');
-var serverDHNode  = mmn(new THREE.Vector3(6, -1.0, 0), 0x0052CC, 'KeyGen (P-256)');
-var serverDoneNode = mmn(new THREE.Vector3(6, -3.5, 0), 0x5ecf8a, 'Finished');
-
-// Handshake message nodes (center, arranged vertically)
-var chNode       = mmn(new THREE.Vector3(0, 5, 0), 0xff9800, 'ClientHello');
-var shNode       = mmn(new THREE.Vector3(0, 3.8, 0), 0xff9800, 'ServerHello');
-var eeNode       = mmn(new THREE.Vector3(0, 2.6, 0), 0xff9800, 'EncryptedExt');
-var certNode     = mmn(new THREE.Vector3(0, 1.4, 0), 0xff9800, 'Certificate');
-var cvNode       = mmn(new THREE.Vector3(0, 0.2, 0), 0xff9800, 'CertVerify');
-var finNode      = mmn(new THREE.Vector3(0, -1.3, 0), 0xff9800, 'Finished');
-var appNode       = mmn(new THREE.Vector3(0, -3.0, 0), 0x5ecf8a, 'Application Data');
-
-// Derived secrets
-var earlySecretNode = mmn(new THREE.Vector3(-3, 4.2, 0), 0x9c27b0, 'early_secret');
-var hsSecretNode    = mmn(new THREE.Vector3(-3, 1.6, 0), 0x9c27b0, 'handshake_secret');
-var masterSecretNode= mmn(new THREE.Vector3(-3,-2.2, 0), 0x9c27b0, 'master_secret');
-var appSecretNode   = mmn(new THREE.Vector3(3, -2.2, 0), 0x9c27b0, 'traffic_secret');
-
-// Combined key share node
-var hybridShareNode  = mmn(new THREE.Vector3(-3, -0.5, 0), 0x0052CC, 'Hybrid Share');
-
-var ALL_NODES = [clientNode,clientKEMNode,clientDHNode,clientDoneNode,
-  serverNode,serverKEMNode,serverDHNode,serverDoneNode,
-  chNode,shNode,eeNode,certNode,cvNode,finNode,appNode,
-  earlySecretNode,hsSecretNode,masterSecretNode,appSecretNode,hybridShareNode];
-ALL_NODES.forEach(function(n){sGroups.add(n);});
-
-// ============================================================
-//  EDGES
-// ============================================================
-var edges = {};
-var allEdges = null;
-
-function initEdges() {
-  if (allEdges) return;
-  edges.e1  = makeEdge(clientNode._pos,   chNode._pos);
-  edges.e2  = makeEdge(chNode._pos,       serverNode._pos);
-  edges.e3  = makeEdge(serverNode._pos,   shNode._pos);
-  edges.e4  = makeEdge(shNode._pos,       clientNode._pos);
-  edges.e5  = makeEdge(serverNode._pos,   eeNode._pos);
-  edges.e6  = makeEdge(eeNode._pos,       clientNode._pos);
-  edges.e7  = makeEdge(clientKEMNode._pos,hybridShareNode._pos);
-  edges.e8  = makeEdge(clientDHNode._pos, hybridShareNode._pos);
-  edges.e9  = makeEdge(chNode._pos,     earlySecretNode._pos);
-  edges.e10 = makeEdge(shNode._pos,       hsSecretNode._pos);
-  edges.e11 = makeEdge(hsSecretNode._pos, masterSecretNode._pos);
-  edges.e12 = makeEdge(clientNode._pos,   finNode._pos);
-  edges.e13 = makeEdge(finNode._pos,      serverNode._pos);
-  edges.e14 = makeEdge(serverDoneNode._pos,appNode._pos);
-  edges.e15 = makeEdge(masterSecretNode._pos,appSecretNode._pos);
-  allEdges = [edges.e1,edges.e2,edges.e3,edges.e4,edges.e5,edges.e6,
-    edges.e7,edges.e8,edges.e9,edges.e10,edges.e11,edges.e12,edges.e13,
-    edges.e14,edges.e15];
-}
-initEdges();
-
-// ============================================================
-//  HIGHLIGHT HELPERS
-// ============================================================
-function hiNode(n, color, intensity) {
-  if (!n._ring) return;
-  var c=color||n._origColor, i=intensity!==undefined?intensity:0.9;
-  n._ring.material.color.set(c); n._ring.material.opacity=i;
-  if(n._halo){n._halo.material.color.set(c);n._halo.material.opacity=i*0.15;}
-}
-function loNode(n) {
-  if(!n._ring)return;
-  n._ring.material.opacity=0.12; n._ring.material.color.set(n._origColor);
-  if(n._halo)n._halo.material.opacity=0.03;
-}
-function hiEdge(e, color, opacity) {
-  if(!e)return;
-  e.material.color.set(color||0x0052CC);
-  e.material.opacity=opacity!==undefined?opacity:0.85;
-}
-function loEdge(e){if(!e)return;e.material.opacity=0.1;e.material.color.set(0x2a3a5a);}
-
-function resetAll(){FPARTS.forEach(function(p){p.remove();});FPARTS=[];}
-function dimAll(){
-  ALL_NODES.forEach(function(n){loNode(n);});
-  if(allEdges)allEdges.forEach(function(e){loEdge(e);});
-  document.getElementById('fw').style.display='none';
-  document.getElementById('dp').innerHTML='';
+function setCamera(pos,look){
+  camGoal.copy(pos); camLookGoal.copy(look);
 }
 
-function applyHL(nh,eh,fp) {
-  if(nh)(nh||[]).forEach(function(n){hiNode(window[n]);});
-  if(eh)(eh||[]).forEach(function(e){hiEdge(edges[e]||window[e]);});
-  if(fp)(fp||[]).forEach(function(f){
-    var a=typeof f.from==='string'?window[f.from]._pos:f.from;
-    var b=typeof f.to==='string'?window[f.to]._pos:f.to;
-    spawn(a,b,f.c,f.n||5,f.spd||0.012);
-  });
-}
-
-// ============================================================
-//  STEPS DATA — 10-step TLS 1.3 hybrid handshake
-// ============================================================
-var STEPS = [
+// ═══════════════════════════════════════════════════════════════
+//  10 STEPS DATA
+// ═══════════════════════════════════════════════════════════════
+var STEPS=[
   {
-    badge:'Step 1 / 10',
     title:'ClientHello — Propose Hybrid Groups',
-    desc:'Client sends ClientHello with supported_groups: [IANA #4590, IANA #4588] and key_share for ML-KEM-768 + P-256 ECDH. This signals post-quantum capability.',
-    formula:'supported_groups = [4590 (SM2-MLKEM768), 4588 (X25519MLKEM768)]',
-    nh:['clientNode','chNode'],
-    eh:['e1'],
-    fp:[{from:'clientNode',to:'chNode',c:0xff9800,n:6}],
-    data:[
-      {l:'TLS 1.3 version',v:'0x0304'},
-      {l:'supported_groups',v:'[4590, 4588]'},
-      {l:'key_share (client)',v:'ML-KEM pk(1184B)+P-256(65B)=1249B'},
-      {l:'Cipher Suite',v:'TLS_AES_256_GCM_SHA384'}
-    ]
-  },
-  {
-    badge:'Step 2 / 10',
+    desc:'Client sends ClientHello with supported_groups: [IANA #4590, IANA #4588] and key_share for ML-KEM-768 + P-256 ECDH.',
+    formula:'supported_groups = [4590(SM2-MLKEM768), 4588(X25519MLKEM768)]',
+    cam:{pos:[0,4,12],look:[0,1.5,0]},
+    hiNodes:[cCl,ch], hiEdges:[E.e1],
+    flows:[{from:posOf(cCl),to:posOf(ch),c:CLR.msg,n:8,spd:0.012}],
+    data:[['TLS version','0x0304'],['supported_groups','[4590, 4588]'],['key_share','ML-KEM pk(1184B)+P-256(65B)'],['Cipher','TLS_AES_256_GCM_SHA384']]
+  },{
     title:'ServerHello — Select Hybrid Group',
-    desc:'Server selects IANA #4590 and responds with ServerHello containing SM2-ECDH share + ML-KEM-768 ciphertext (encapsulated shared secret).',
+    desc:'Server selects IANA #4590 and responds with ServerHello containing SM2-ECDH share + ML-KEM-768 ciphertext.',
     formula:'key_share(server) = SM2_pub(65B) || MLKEM_ct(1088B) = 1153B',
-    nh:['chNode','serverNode','shNode'],
-    eh:['e2','e3'],
-    fp:[{from:'chNode',to:'serverNode',c:0xff9800,n:5},{from:'serverNode',to:'shNode',c:0xff7043,n:5}],
-    data:[
-      {l:'selected_group',v:'IANA #4590 (SM2-MLKEM768)'},
-      {l:'Server key_share',v:'1153 bytes (65+1088)'},
-      {l:'Random (32B)',v:'Server nonce generated'},
-      {l:'Session ID',v:'32 bytes'}
-    ]
-  },
-  {
-    badge:'Step 3 / 10',
+    cam:{pos:[0,3.5,10],look:[0,3,0]},
+    hiNodes:[ch, sCl, sh], hiEdges:[E.e2, E.e3],
+    flows:[{from:posOf(ch),to:posOf(sCl),c:CLR.msg,n:6},{from:posOf(sCl),to:posOf(sh),c:CLR.server,n:6}],
+    data:[['selected_group','IANA #4590'],['Server key_share','1153 bytes'],['Random','32B nonce'],['Session ID','32 bytes']]
+  },{
     title:'Early Secret — HKDF-Extract(0, 0)',
-    desc:'Both sides independently derive the early_secret from PSK (none here, so zero). This is the root of the TLS 1.3 key schedule.',
-    formula:'early_secret = HKDF-Extract(salt=0, ikm=0)',
-    nh:['chNode','shNode','earlySecretNode'],
-    eh:['e9'],
-    fp:[{from:'chNode',to:'earlySecretNode',c:0x9c27b0,n:4},{from:'shNode',to:'earlySecretNode',c:0x9c27b0,n:4}],
-    data:[
-      {l:'PSK',v:'None (0-length)'},
-      {l:'HKDF-Extract salt',v:'All zeros (32 bytes)'},
-      {l:'HKDF-Extract ikm',v:'All zeros (32 bytes)'},
-      {l:'early_secret',v:'32 bytes'}
-    ]
-  },
-  {
-    badge:'Step 4 / 10',
-    title:'Derive Handshake Secret',
-    desc:'Both sides compute the hybrid shared secret via ECDH + ML-KEM decapsulation, then derive handshake_secret via HKDF-Extract from early_secret.',
-    formula:'shared_secret = ECDH_sec || MLKEM_ss;  handshake_secret = HKDF-Extract(early_secret, shared_secret)',
-    nh:['clientKEMNode','clientDHNode','hybridShareNode','hsSecretNode'],
-    eh:['e7','e8','e10'],
-    fp:[{from:'clientKEMNode',to:'hybridShareNode',c:0x00b4d8,n:4},
-        {from:'clientDHNode',to:'hybridShareNode',c:0x0052CC,n:4},
-        {from:'hybridShareNode',to:'hsSecretNode',c:0x9c27b0,n:5}],
-    data:[
-      {l:'SM2 ECDH share',v:'32 bytes (P-256)'},
-      {l:'ML-KEM SS',v:'32 bytes (decaps)'},
-      {l:'Combined secret',v:'64 bytes total'},
-      {l:'handshake_secret',v:'32 bytes'}
-    ]
-  },
-  {
-    badge:'Step 5 / 10',
+    desc:'Both sides derive early_secret from PSK (zero here). Root of TLS 1.3 key schedule.',
+    formula:'early_secret = HKDF-Extract(salt=0, IKM=0)',
+    cam:{pos:[-2,4,10],look:[-1,2,1]},
+    hiNodes:[ch, sh, es], hiEdges:[E.e9, E.e11],
+    flows:[{from:posOf(ch),to:posOf(es),c:CLR.hkdf,n:5},{from:posOf(sh),to:posOf(es),c:CLR.hkdf,n:4}],
+    data:[['PSK','None (0-length)'],['HKDF-Extract salt','0 (32 bytes)'],['HKDF-Extract IKM','0 (32 bytes)'],['early_secret','32 bytes']]
+  },{
+    title:'Derive Handshake Secret — Hybrid Key Exchange',
+    desc:'Client ML-KEM decaps + P-256 ECDH → combined 64B shared secret → handshake_secret via HKDF.',
+    formula:'shared_secret = ECDH_sec || MLKEM_ss; handshake_secret = HKDF-Extract(early_secret, shared_secret)',
+    cam:{pos:[-3.5,1,8],look:[-2,0,0]},
+    hiNodes:[cKEM, cDH, hb, hs], hiEdges:[E.e7, E.e8, E.e12],
+    flows:[{from:posOf(cKEM),to:posOf(hb),c:CLR.mlkem,n:5},{from:posOf(cDH),to:posOf(hb),c:CLR.kex,n:4},{from:posOf(hb),to:posOf(hs),c:CLR.hkdf,n:6}],
+    data:[['SM2 ECDH share','32 bytes'],['ML-KEM SS','32 bytes (decaps)'],['Combined','64 bytes total'],['handshake_secret','32 bytes']]
+  },{
     title:'EncryptedExtensions — Server Parameters',
-    desc:'Server sends EncryptedExtensions (encrypted with handshake_traffic_secret). Contains ALPN, supported_versions, and any additional parameters.',
-    formula:'handshake_traffic_secret = Derive-Secret(handshake_secret, "s hs traffic", ClientHello...ServerHello)',
-    nh:['serverNode','eeNode'],
-    eh:['e5'],
-    fp:[{from:'serverNode',to:'eeNode',c:0xff9800,n:4}],
-    data:[
-      {l:'ALPN',v:'http/1.1'},
-      {l:'supported_versions',v:'TLS 1.3'},
-      {l:'Encryption key',v:'handshake_traffic_secret'},
-      {l:'AEAD',v:'AES-256-GCM'}
-    ]
-  },
-  {
-    badge:'Step 6 / 10',
+    desc:'Server sends EncryptedExtensions encrypted with handshake_traffic_secret (ALPN, versions, params).',
+    formula:'handshake_traffic_secret = Derive-Secret(handshake_secret, "s hs traffic", transcript)',
+    cam:{pos:[4,3,10],look:[2,1.5,0]},
+    hiNodes:[sCl, ee], hiEdges:[E.e5],
+    flows:[{from:posOf(sCl),to:posOf(ee),c:CLR.msg,n:5}],
+    data:[['ALPN','http/1.1'],['supported_versions','TLS 1.3'],['AEAD','AES-256-GCM'],['Encrypted with','hs_traffic_secret']]
+  },{
     title:'Certificate & CertificateVerify',
-    desc:'Server sends its certificate chain and signs the handshake transcript with its private key (e.g., RSA-2048 or ML-DSA-65 post-quantum).',
+    desc:'Server sends cert chain + signs transcript. Client verifies signature against server public key.',
     formula:'CertificateVerify = Sign(privKey, Hash(transcript))',
-    nh:['eeNode','certNode','cvNode'],
-    eh:['e6'],
-    fp:[{from:'eeNode',to:'certNode',c:0xff9800,n:3},{from:'certNode',to:'cvNode',c:0xff9800,n:3}],
-    data:[
-      {l:'Certificate',v:'X.509 chain (RSA 2048)'},
-      {l:'Signature algorithm',v:'rsa_pkcs1_sha256'},
-      {l:'Transcript hash',v:'SHA-256 of all messages'},
-      {l:'Client verification',v:'Validates cert chain'}
-    ]
-  },
-  {
-    badge:'Step 7 / 10',
+    cam:{pos:[4,1.5,10],look:[2,1,0]},
+    hiNodes:[ee, sCl, cert, cv], hiEdges:[E.e16, E.e17, E.e6],
+    flows:[{from:posOf(sCl),to:posOf(cert),c:CLR.msg,n:4},{from:posOf(cert),to:posOf(cv),c:CLR.msg,n:3},{from:posOf(ee),to:posOf(cCl),c:CLR.msg,n:4}],
+    data:[['Certificate','X.509 chain'],['Signature','rsa_pkcs1_sha256'],['Transcript hash','SHA-256'],['Client verify','Validates chain']]
+  },{
     title:'Server Finished — Verify Handshake',
-    desc:'Server sends its Finished message containing HMAC of the handshake transcript. Client verifies the HMAC to confirm server identity.',
+    desc:'Server sends Finished with HMAC of handshake transcript. Client verifies server identity.',
     formula:'finished_key = HKDF-Expand-Label(handshake_secret, "finished", "", 32)',
-    nh:['cvNode','serverNode','clientNode'],
-    eh:[],
-    fp:[{from:'serverNode',to:'clientNode',c:0xff7043,n:6,spd:0.02}],
-    data:[
-      {l:'Finished (verify_data)',v:'HMAC-SHA256(transcript)'},
-      {l:'Finished key',v:'32 bytes derived'},
-      {l:'Client verify',v:'HMAC match = server auth OK'}
-    ]
-  },
-  {
-    badge:'Step 8 / 10',
+    cam:{pos:[0,0,9],look:[0,-0.5,0]},
+    hiNodes:[cv, sfin, cCl], hiEdges:[E.e18],
+    flows:[{from:posOf(cv),to:posOf(sfin),c:CLR.msg,n:5},{from:posOf(sfin),to:posOf(cCl),c:CLR.server,n:6,spd:0.015}],
+    data:[['Finished verify_data','HMAC-SHA256(transcript)'],['Finished key','HKDF-derived 32B'],['Client check','HMAC match = server auth OK']]
+  },{
     title:'Master Secret — Derive Application Keys',
-    desc:'Both sides derive master_secret from handshake_secret via HKDF-Extract with all-zero salt. This transitions to the application data phase.',
+    desc:'Both sides derive master_secret from handshake_secret via HKDF-Extract. Transition to app data phase.',
     formula:'master_secret = HKDF-Extract(handshake_secret, 0)',
-    nh:['hsSecretNode','masterSecretNode'],
-    eh:['e11'],
-    fp:[{from:'hsSecretNode',to:'masterSecretNode',c:0x9c27b0,n:6}],
-    data:[
-      {l:'Input',v:'handshake_secret (32B)'},
-      {l:'Salt',v:'All zeros'},
-      {l:'master_secret',v:'32 bytes'},
-      {l:'client/app traffic keys',v:'derived next step'}
-    ]
-  },
-  {
-    badge:'Step 9 / 10',
+    cam:{pos:[-3.5,0,9],look:[-2,-1,0.5]},
+    hiNodes:[hs, ms, ts], hiEdges:[E.e12, E.e13],
+    flows:[{from:posOf(hs),to:posOf(ms),c:CLR.hkdf,n:7},{from:posOf(ms),to:posOf(ts),c:CLR.hkdf,n:5}],
+    data:[['Input','handshake_secret'],['Salt','All zeros'],['master_secret','32 bytes'],['Next','Client/Server traffic keys']]
+  },{
     title:'Client Finished — Mutual Authentication',
-    desc:'Client sends its Finished message. Both sides now derive application traffic secrets and can exchange encrypted application data.',
-    formula:'client_traffic_secret = HKDF-Expand-Label(master_secret, "c ap traffic", handshake_hash, 32)',
-    nh:['clientNode','finNode','appSecretNode'],
-    eh:['e12','e15'],
-    fp:[{from:'clientNode',to:'finNode',c:0x00c896,n:4},
-        {from:'masterSecretNode',to:'appSecretNode',c:0x9c27b0,n:4}],
-    data:[
-      {l:'client_traffic_secret',v:'32 bytes (AES-256-GCM)'},
-      {l:'server_traffic_secret',v:'32 bytes (AES-256-GCM)'},
-      {l:'Post-Quantum',v:'ML-KEM-768 session key'},
-      {l:'Handshake complete',v:'~2 RTT total'}
-    ]
-  },
-  {
-    badge:'Step 10 / 10',
+    desc:'Client sends Finished. Both sides derive app traffic secrets. Encrypted data channel established.',
+    formula:'client_traffic_secret = HKDF-Expand-Label(master_secret, "c ap traffic", hash, 32)',
+    cam:{pos:[0,-1.5,9],look:[0,-1.5,0]},
+    hiNodes:[cfin, cDone, sDone, app, ts], hiEdges:[E.e14, E.e15],
+    flows:[{from:posOf(cfin),to:posOf(cDone),c:CLR.done,n:5},{from:posOf(cDone),to:posOf(app),c:CLR.done,n:6}],
+    data:[['client_traffic_secret','32 bytes'],['server_traffic_secret','32 bytes'],['Encryption','AES-256-GCM'],['PQC session key','ML-KEM-768']]
+  },{
     title:'Application Data — Post-Quantum Secure Channel',
-    desc:'TLS 1.3 hybrid handshake complete. All application data is encrypted with AES-256-GCM using keys derived from the post-quantum hybrid key exchange. Forward secrecy maintained even against quantum attackers.',
-    formula:'AES-256-GCM(data, traffic_key, iv, AAD) — PQ hybrid channel established via IANA #4590',
-    nh:['clientDoneNode','serverDoneNode','appNode','appSecretNode'],
-    eh:['e14'],
-    fp:[{from:'clientDoneNode',to:'serverDoneNode',c:0x5ecf8a,n:8,spd:0.018}],
-    data:[
-      {l:'Encryption',v:'AES-256-GCM'},
-      {l:'Key source',v:'ML-KEM-768 + P-256 ECDH'},
-      {l:'Forward secrecy',v:'Yes (hybrid FS)'},
-      {l:'Quantum-safe',v:'Harvest-now-decrypt-later resistant'}
-    ]
+    desc:'Handshake complete. AES-256-GCM encrypted data flows. Forward secrecy maintained against quantum attackers.',
+    formula:'AES-256-GCM(data, traffic_key, iv, AAD) — PQ hybrid via IANA #4590',
+    cam:{pos:[0,-2,8],look:[0,-2,0]},
+    hiNodes:[app, cDone, sDone, ts], hiEdges:[E.e15],
+    flows:[{from:posOf(cDone),to:posOf(sDone),c:CLR.done,n:12,spd:0.014}],
+    data:[['Encryption','AES-256-GCM'],['Key source','ML-KEM-768+P-256'],['Forward secrecy','Hybrid FS ✓'],['Resistant to','Harvest-now-decrypt-later']]
   }
 ];
 
-// ============================================================
-//  APPLY STEP
-// ============================================================
-var curStep = -1;
-var elBadge=document.getElementById('badge'), elTitle=document.getElementById('title');
-var elSub=document.getElementById('subtitle'), elCount=document.getElementById('counter');
-var elProg=document.getElementById('progress'), elFW=document.getElementById('fw');
-var elFormula=document.getElementById('formula'), elDP=document.getElementById('dp');
-var elPrev=document.getElementById('prevBtn'), elNext=document.getElementById('nextBtn');
+// ═══════════════════════════════════════════════════════════════
+//  ALL NODES for dimming
+// ═══════════════════════════════════════════════════════════════
+var ALL_N=[cCl,cKEM,cDH,cDone,sCl,sKEM,sDH,sDone,ch,sh,ee,cert,cv,sfin,cfin,app,es,hs,ms,ts,hb];
 
-function applyStep(idx) {
-  dimAll(); resetAll(); curStep=idx;
-  var st=STEPS[idx];
-  applyHL(st.nh, st.eh, st.fp);
+// ═══════════════════════════════════════════════════════════════
+//  STEP ENGINE
+// ═══════════════════════════════════════════════════════════════
+var step=0;
+var elBadge=document.getElementById('top-badge'),elStepN=document.getElementById('stepN');
+var elTitle=document.getElementById('top-title'),elDesc=document.getElementById('top-desc');
+var elFormula=document.getElementById('formula-bar'),elDS=document.getElementById('data-strip');
+var elCounter=document.getElementById('step-counter'),elProg=document.getElementById('progress-bar');
+var elPrev=document.getElementById('prevBtn');
 
-  elBadge.textContent=st.badge; elTitle.textContent=st.title;
-  elSub.textContent=st.desc; elCount.textContent=st.badge;
+function applyStep(i){
+  step=i; dimScene(ALL_N); clearFlows();
+  var s=STEPS[i];
+  elStepN.textContent=i+1;
+  elBadge.innerHTML='<span class="pulse"></span>Step '+(i+1)+' / 10';
+  elTitle.textContent=s.title;
+  elDesc.textContent=s.desc;
 
-  var dots=[];
-  for(var i=0;i<STEPS.length;i++) dots.push('<div class="pg'+(i<idx?' done':i===idx?' active':'')+'"></div>');
-  elProg.innerHTML=dots.join('');
+  // Camera
+  setCamera(new THREE.Vector3(s.cam.pos[0],s.cam.pos[1],s.cam.pos[2]),
+            new THREE.Vector3(s.cam.look[0],s.cam.look[1],s.cam.look[2]));
 
-  if(st.formula){elFW.style.display='block';elFormula.textContent=st.formula;}
-  else elFW.style.display='none';
+  // Highlights
+  s.hiNodes.forEach(function(n){hiNode(n);});
+  s.hiEdges.forEach(function(e){hiEdge(e);});
 
-  var items=[];
-  (st.data||[]).forEach(function(d){items.push('<div class="dp"><span>'+d.l+':</span> '+d.v+'</div>');});
-  elDP.innerHTML=items.join('');
+  // Flows
+  s.flows.forEach(function(f){
+    spawnFlow(f.from,f.to,f.c,f.n||6,f.spd||0.01);
+  });
 
-  elPrev.style.opacity=idx===0?'0.25':'';
-  elNext.textContent=idx===STEPS.length-1?'Restart \u21bb':'Next \u2192';
+  // Formula
+  if(s.formula){elFormula.style.display='block';elFormula.textContent=s.formula;}
+  else elFormula.style.display='none';
+
+  // Data strip
+  elDS.innerHTML=s.data.map(function(d){return '<div class="dp"><span class="key">'+d[0]+':</span> <span class="val">'+d[1]+'</span></div>';}).join('');
+
+  // Progress
+  var dots='';
+  for(var j=0;j<10;j++){dots+='<div class="pb-dot'+(j<i?' done':j===i?' active':'')+'"></div>';}
+  elProg.innerHTML=dots;
+
+  // Nav
+  elCounter.textContent='Step '+(i+1)+' of 10';
+  elPrev.style.opacity=i===0?'0.3':'';elPrev.style.pointerEvents=i===0?'none':'auto';
+  document.getElementById('nextBtn').innerHTML=i===9?'↻ 重新开始':'下一步 ▶';
 }
 
-function nextStep(){applyStep((curStep+1)%STEPS.length);}
-function prevStep(){if(curStep>0)applyStep(curStep-1);}
+function nextStep(){applyStep((step+1)%10);}
+function prevStep(){if(step>0)applyStep(step-1);}
 document.addEventListener('keydown',function(e){
   if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextStep();}
   if(e.key==='ArrowLeft'){e.preventDefault();prevStep();}
 });
 
-function animate(){
-  requestAnimationFrame(animate); controls.update();
-  FPARTS=FPARTS.filter(function(p){return p.alive;});
-  FPARTS.forEach(function(p){p.update(0.016);});
-  renderer.render(scene, camera);
-}
-animate();
+// ═══════════════════════════════════════════════════════════════
+//  ANIMATION LOOP
+// ═══════════════════════════════════════════════════════════════
+var clock=new THREE.Clock();
+function animate(t){
+  requestAnimationFrame(animate);
+  var dt=Math.min(clock.getDelta(),0.1);
 
+  // Smooth camera
+  camera.position.lerp(camGoal,cameraLerp);
+  camera.lookAt(camLookGoal);
+
+  // Update flows
+  for(var i=flows.length-1;i>=0;i--){
+    if(!flows[i].alive){flows.splice(i,1);continue;}
+    flows[i].update(dt);
+  }
+
+  // Rotate ambient particles slowly
+  var ap=scene.getObjectByName('ambientPts');
+  if(ap)ap.rotation.y+=dt*0.08;
+
+  // Pulse highlighted nodes
+  ALL_N.forEach(function(n){
+    var h=n.getObjectByName('halo');
+    if(h&&h.material.opacity>0.01){h.material.opacity-=dt*0.5;h.material.opacity=Math.max(h.material.opacity,0.01);}
+  });
+
+  renderer.render(scene,camera);
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  RESIZE
+// ═══════════════════════════════════════════════════════════════
 window.addEventListener('resize',function(){
-  camera.aspect=window.innerWidth/window.innerHeight;
-  camera.updateProjectionMatrix();
-  renderer.setSize(window.innerWidth, window.innerHeight);
+  W=window.innerWidth;H=window.innerHeight;
+  camera.aspect=W/H;camera.updateProjectionMatrix();
+  renderer.setSize(W,H);
 });
 
+// ═══════════════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════════════
 applyStep(0);
+requestAnimationFrame(animate);
 </script>
 </body>
 </html>
