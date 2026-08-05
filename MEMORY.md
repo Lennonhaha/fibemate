@@ -1356,3 +1356,11 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - pre-release/ 9 个草稿本地保留
 
 ### D-26 天，开源倒计时进行中
+### fml-dsa KAT 向量补全（P0-3 彻底解决，2026-08-05 08:25）
+- kat-vectors/ 目录从未存在，导致 kat-verify.mjs 报 ENOENT
+- 运行 node test/kat-vectors.mjs（服务器可访问 GitHub API）
+- 从 NIST ACVP-Server 下载 75 个 KAT 向量（ML-DSA-44/65/87 各 25 个）
+- kat-verify.mjs：75/75 PASS，byte-for-byte 对齐 @noble/post-quantum
+- 完整测试：84+6+7+66+75 = 238/238 全绿
+- 提交：36db9ee，.gitignore 规则用 -f 强制添加
+
