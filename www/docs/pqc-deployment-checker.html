@@ -617,313 +617,129 @@ body::after {
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════════════════
-   PQC Deployment Checker — Client-side logic + demo data
-   Architecture: fetches /api/probe?endpoint=... or uses demo data
-   ═══════════════════════════════════════════════════════════════════════ */
+/* ===== PQC Deployment Checker v0.2.0 — Live API ===== */
 
-// Demo data from live probes
-const DEMO_ENDPOINTS = [
-  {
-    endpoint: "fibemate.net:443",
-    timestamp: new Date().toISOString(),
-    reachable: true,
-    tlsVersion: "TLSv1.3",
-    cipher: { name: "TLS_AES_256_GCM_SHA384", version: "TLSv1/SSLv3" },
-    keyExchange: { type: "X25519", name: "X25519", size: 253 },
-    cert: {
-      subject: { CN: "fibemate.net" },
-      issuer: { CN: "YE2", O: "Let's Encrypt" },
-      validFrom: "Jul 18 04:14:52 2026 GMT",
-      validTo: "Oct 16 04:14:51 2026 GMT",
-      publicKey: { type: "prime256v1", bits: 256 },
-      sigAlgorithm: "ecdsa-with-SHA384",
-      isSelfSigned: false
-    },
-    compliance: {
-      score: 82, maxScore: 100, grade: "B",
-      checks: [
-        { check: "TLS 1.3", status: "PASS", weight: 30, value: "TLSv1.3" },
-        { check: "PQC key exchange", status: "WARN", weight: 25, detail: "Using classic X25519. No PQC KEM. Add X25519MLKEM768." },
-        { check: "Cipher suite", status: "PASS", weight: 15, value: "TLS_AES_256_GCM_SHA384" },
-        { check: "Certificate", status: "PASS", weight: 15, detail: "prime256v1 256bit ok. No PQC cert yet." },
-        { check: "Migration readiness", status: "PASS", weight: 15, detail: "TLS 1.3 path clear. PQC hybrid KEM deployable via server update." }
-      ]
-    }
-  },
-  {
-    endpoint: "cloudflare.com:443",
-    timestamp: new Date().toISOString(),
-    reachable: true,
-    tlsVersion: "TLSv1.3",
-    cipher: { name: "TLS_AES_256_GCM_SHA384", version: "TLSv1/SSLv3" },
-    keyExchange: null,
-    cert: {
-      subject: { CN: "cloudflare.com" },
-      issuer: { CN: "Cloudflare Inc ECC CA-3", O: "Cloudflare, Inc." },
-      validFrom: "Oct  7 00:00:00 2025 GMT",
-      validTo: "Oct  6 22:47:27 2026 GMT",
-      publicKey: { type: "prime256v1", bits: 256 },
-      sigAlgorithm: "ecdsa-with-SHA256",
-      isSelfSigned: false
-    },
-    compliance: {
-      score: 70, maxScore: 100, grade: "B",
-      checks: [
-        { check: "TLS 1.3", status: "PASS", weight: 30, value: "TLSv1.3" },
-        { check: "PQC key exchange", status: "WARN", weight: 25, detail: "EphemeralKeyInfo not available; check server config." },
-        { check: "Cipher suite", status: "PASS", weight: 15, value: "TLS_AES_256_GCM_SHA384" },
-        { check: "Certificate", status: "PASS", weight: 15, detail: "prime256v1 256bit ok. No PQC cert yet." },
-        { check: "Migration readiness", status: "PASS", weight: 15, detail: "TLS 1.3 path clear. PQC hybrid KEM deployable via server update." }
-      ]
-    }
-  }
-];
+var API_BASE = '/api/v1/probe';
 
-/* ─── Render ──────── */
-let activeResult = null;
-
-function doProbe() {
-  const input = document.getElementById('endpointInput').value.trim();
+async function doProbe() {
+  var input = document.getElementById('endpointInput').value.trim();
   if (!input) return;
+  var target = input.includes(':') ? input : input + ':443';
+  var btn = document.getElementById('probeBtn');
+  btn.innerHTML = '<span class="spinner"></span>'; btn.classList.add('loading'); btn.disabled = true;
 
-  const [hostname, portStr] = input.split(':');
-  const port = portStr || '443';
-  const endpoint = `${hostname}:${port}`;
+  try {
+    var resp = await fetch(API_BASE + '?target=' + encodeURIComponent(target));
+    var data = await resp.json();
+    if (data.error) throw new Error(data.error);
+    renderResult(data);
+  } catch (err) {
+    showError('探测失败: ' + (err.message || '网络错误'));
+  } finally {
+    btn.innerHTML = '开始检测'; btn.classList.remove('loading'); btn.disabled = false;
+  }
+  window.location.hash = encodeURIComponent(target);
+}
 
-  // Show loading
-  const btn = document.getElementById('probeBtn');
-  btn.innerHTML = '<span class="spinner"></span>检测中...';
-  btn.classList.add('loading');
-  btn.disabled = true;
-
-  // Try API first, fallback to demo data
-  fetch(`/api/probe?endpoint=${encodeURIComponent(endpoint)}`)
-    .then(r => r.json())
-    .then(data => {
-      activeResult = data;
-      renderResult(data);
-    })
-    .catch(() => {
-      // Fallback: use demo data for known endpoints
-      const demo = DEMO_ENDPOINTS.find(e => e.endpoint === endpoint);
-      if (demo) {
-        activeResult = { ...demo, timestamp: new Date().toISOString() };
-        renderResult(activeResult);
-      } else {
-        // Generate synthetic result for unknown endpoints
-        activeResult = generatePlaceholder(endpoint);
-        renderResult(activeResult);
-      }
-    })
-    .finally(() => {
-      btn.innerHTML = '开始检测';
-      btn.classList.remove('loading');
-      btn.disabled = false;
-    });
-
-  // Update URL hash
-  window.location.hash = encodeURIComponent(endpoint);
+function showError(msg) {
+  var el = document.getElementById('errorBanner');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(function(){ el.style.display = 'none'; }, 5000);
 }
 
 function renderResult(r) {
-  const el = document.getElementById('results');
+  var el = document.getElementById('results');
   document.getElementById('emptyState').style.display = 'none';
-
   if (!r || !r.reachable) {
-    el.innerHTML = renderUnreachable(r);
+    el.innerHTML = '<div class="result-card" style="border-color:rgba(255,71,87,0.3);"><div class="result-header"><div class="result-endpoint"><span class="dot fail"></span> ' + esc(r&&r.endpoint||'') + '</div><div class="grade-badge F">F</div></div><div class="checks-section"><div class="check-row"><div class="check-icon status-fail">❌</div><div class="check-body"><div class="check-name">连接失败</div><div class="check-detail">无法建立 TLS 连接</div></div><div class="check-weight">—</div></div></div></div>';
     return;
   }
-
-  el.innerHTML = `
-    <div class="result-card">
-      <div class="result-header">
-        <div class="result-endpoint">
-          <span class="dot"></span>
-          ${esc(r.endpoint)}
-          <span class="hash-badge">#${sha256short(r.endpoint)}</span>
-        </div>
-        <div class="grade-badge ${r.compliance.grade}">${r.compliance.grade}</div>
-      </div>
-
-      <div class="metrics">
-        <div class="metric">
-          <div class="metric-label">TLS 版本</div>
-          <div class="metric-value good">${r.tlsVersion || 'N/A'}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">密钥交换</div>
-          <div class="metric-value ${r.keyExchange?.name?.includes('MLKEM') ? 'good' : 'warn'}">${r.keyExchange?.name || '未检测到'}</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">PQC 就绪度</div>
-          <div class="metric-value ${r.compliance.grade === 'A' ? 'good' : r.compliance.grade === 'B' ? 'warn' : 'bad'}">${r.compliance.score}/100</div>
-        </div>
-        <div class="metric">
-          <div class="metric-label">密码套件</div>
-          <div class="metric-value good">${r.cipher?.name?.replace('TLS_','').replace(/_/g,'-') || 'N/A'}</div>
-        </div>
-      </div>
-
-      <div class="checks-section">
-        <div class="checks-title">合规性检查</div>
-        ${r.compliance.checks.map(c => renderCheck(c)).join('')}
-      </div>
-
-      ${r.cert ? renderCertBlock(r.cert) : ''}
-    </div>
-  `;
-
-  // Animate re-render
-  const card = el.querySelector('.result-card');
-  if (card) {
-    card.style.animation = 'none';
-    card.offsetHeight;
-    card.style.animation = 'cardIn 0.4s ease-out forwards';
-  }
+  var c = r.compliance, g = c.grade || '?';
+  el.innerHTML =
+    '<div class="result-card"><div class="result-header"><div class="result-endpoint"><span class="dot"></span> ' + esc(r.endpoint) + '</div><div class="grade-badge ' + g + '">' + g + '</div></div>' +
+    '<div class="metrics">' +
+      '<div class="metric"><div class="metric-label">TLS 版本</div><div class="metric-value good">' + (r.tlsVersion||'N/A') + '</div></div>' +
+      '<div class="metric"><div class="metric-label">密钥交换</div><div class="metric-value ' + (r.keyExchange&&r.keyExchange.name&&r.keyExchange.name.indexOf('MLKEM')>=0?'good':'warn') + '">' + (r.keyExchange?r.keyExchange.name||'-':'-') + '</div></div>' +
+      '<div class="metric"><div class="metric-label">PQC 就绪度</div><div class="metric-value ' + (c.score>=90?'good':c.score>=70?'warn':'bad') + '">' + c.score + '/100</div></div>' +
+      '<div class="metric"><div class="metric-label">密码套件</div><div class="metric-value good">' + esc((r.cipher?r.cipher.name||'N/A':'N/A').replace('TLS_','').replace(/_/g,'-')) + '</div></div>' +
+    '</div>' +
+    '<div class="checks-section"><div class="checks-title">合规性检查</div>' + (c.checks||[]).map(renderCheck).join('') + '</div>' +
+    (r.cert ? renderCertBlock(r.cert) : '') +
+    '</div>';
 }
 
 function renderCheck(c) {
-  const icons = { PASS: '✅', WARN: '⚠️', FAIL: '❌' };
-  const cls = { PASS: 'status-pass', WARN: 'status-warn', FAIL: 'status-fail' };
-  return `
-    <div class="check-row">
-      <div class="check-icon ${cls[c.status] || 'status-unknown'}">${icons[c.status] || '—'}</div>
-      <div class="check-body">
-        <div class="check-name">${esc(c.check)}</div>
-        ${c.detail ? `<div class="check-detail">${esc(c.detail)}</div>` : ''}
-        ${c.value ? `<div class="check-detail">当前值：${esc(String(c.value))}</div>` : ''}
-      </div>
-      <div class="check-weight">${c.weight}pt</div>
-    </div>
-  `;
+  var icons = { PASS: '✅', WARN: '⚠️', FAIL: '❌' };
+  var cls = { PASS: 'status-pass', WARN: 'status-warn', FAIL: 'status-fail' };
+  return '<div class="check-row"><div class="check-icon ' + (cls[c.status]||'') + '">' + (icons[c.status]||'—') + '</div><div class="check-body"><div class="check-name">' + esc(c.check) + '</div>' + (c.detail ? '<div class="check-detail">' + esc(c.detail) + '</div>' : '') + (c.value ? '<div class="check-detail">当前值：' + esc(String(c.value)) + '</div>' : '') + '</div><div class="check-weight">' + c.weight + 'pt</div></div>';
 }
 
 function renderCertBlock(cert) {
-  return `
-    <div class="cert-block">
-      <details>
-        <summary>📜 证书详情</summary>
-        <div class="cert-details">
-          <div class="cert-row"><span class="k">Subject CN</span><span class="v">${esc(cert.subject?.CN || '?')}</span></div>
-          <div class="cert-row"><span class="k">Issuer CN</span><span class="v">${esc(cert.issuer?.CN || '?')}</span></div>
-          <div class="cert-row"><span class="k">公钥类型</span><span class="v">${esc(cert.publicKey?.type || '?')}</span></div>
-          <div class="cert-row"><span class="k">密钥长度</span><span class="v">${cert.publicKey?.bits || '?'} bit</span></div>
-          <div class="cert-row"><span class="k">签名算法</span><span class="v">${esc(cert.sigAlgorithm || '?')}</span></div>
-          <div class="cert-row"><span class="k">有效期至</span><span class="v">${esc(cert.validTo || '?')}</span></div>
-        </div>
-      </details>
-    </div>
-  `;
+  return '<div class="cert-block"><details><summary>📜 证书详情</summary><div class="cert-details">' +
+    '<div class="cert-row"><span class="k">Subject CN</span><span class="v">' + esc(cert.subject&&cert.subject.CN||'?') + '</span></div>' +
+    '<div class="cert-row"><span class="k">Issuer CN</span><span class="v">' + esc(cert.issuer&&cert.issuer.CN||'?') + '</span></div>' +
+    '<div class="cert-row"><span class="k">公钥类型</span><span class="v">' + esc(cert.publicKey&&cert.publicKey.type||'?') + '</span></div>' +
+    '<div class="cert-row"><span class="k">密钥长度</span><span class="v">' + (cert.publicKey&&cert.publicKey.bits||'?') + ' bit</span></div>' +
+    '<div class="cert-row"><span class="k">签名算法</span><span class="v">' + esc(cert.sigAlgorithm||'?') + '</span></div>' +
+    '<div class="cert-row"><span class="k">有效期至</span><span class="v">' + esc(cert.validTo||'?') + '</span></div>' +
+    '</div></details></div>';
 }
 
-function renderUnreachable(r) {
-  const ep = r?.endpoint || 'unknown';
-  return `
-    <div class="result-card" style="border-color:rgba(255,71,87,0.3);">
-      <div class="result-header">
-        <div class="result-endpoint">
-          <span class="dot fail"></span> ${esc(ep)}
-        </div>
-        <div class="grade-badge F">F</div>
-      </div>
-      <div class="checks-section">
-        <div class="check-row">
-          <div class="check-icon status-fail">❌</div>
-          <div class="check-body">
-            <div class="check-name">连接失败</div>
-            <div class="check-detail">无法建立 TLS 连接到 ${esc(ep)}。请检查防火墙/网络。</div>
-          </div>
-          <div class="check-weight">—</div>
-        </div>
-      </div>
-    </div>
-  `;
-}
+function esc(s) { if (!s) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
-function esc(s) {
-  if (!s) return '';
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
+function loadDemo(endpoint) { document.getElementById('endpointInput').value = endpoint; doProbe(); }
 
-function sha256short(s) {
-  return s.split('').reduce((a,b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0).toString(16).slice(0,8).toUpperCase();
-}
-
-function generatePlaceholder(endpoint) {
-  const [h] = endpoint.split(':');
-  return {
-    endpoint,
-    timestamp: new Date().toISOString(),
-    reachable: false,
-    tlsVersion: null,
-    cipher: null,
-    keyExchange: null,
-    cert: null,
-    compliance: {
-      score: 0, maxScore: 100, grade: 'F',
-      checks: [
-        { check: "TLS 1.3", status: "FAIL", weight: 30, detail: "无法连接。请在后端执行 node pqc-check.js 获取实时数据。" },
-        { check: "PQC key exchange", status: "FAIL", weight: 25, detail: "需要后端探测。" },
-        { check: "建议", status: "WARN", weight: 45, detail: "前端演示模式下仅展示预置端点数据。部署后端即可实时探测任意端点。" }
-      ]
-    }
-  };
-}
-
-/* ─── Compare Grid ──────── */
+/* --- Live Compare Grid --- */
 function renderCompareGrid() {
-  const grid = document.getElementById('compareGrid');
-  grid.innerHTML = DEMO_ENDPOINTS.map(ep => `
-    <div class="compare-card" onclick="loadDemo('${ep.endpoint}')">
-      <div class="endpoint">${esc(ep.endpoint)}</div>
-      <div class="mini-grade ${ep.compliance.grade}">${ep.compliance.grade}</div>
-      <div class="compare-metrics">
-        <div class="cmp-item">
-          <div class="cmp-label">TLS</div>
-          <div class="cmp-val">${ep.tlsVersion || 'N/A'}</div>
-        </div>
-        <div class="cmp-item">
-          <div class="cmp-label">KEX</div>
-          <div class="cmp-val">${ep.keyExchange?.name || '—'}</div>
-        </div>
-        <div class="cmp-item">
-          <div class="cmp-label">得分</div>
-          <div class="cmp-val">${ep.compliance.score}/100</div>
-        </div>
-      </div>
-    </div>
-  `).join('');
+  var grid = document.getElementById('compareGrid');
+  var targets = ['fibemate.net:443', 'cloudflare.com:443'];
+  grid.innerHTML = targets.map(function(t){
+    var id = 'cmp-' + t.replace(/[.:]/g,'-');
+    return '<div class="compare-card" id="' + id + '" onclick="loadDemo('' + t + '')">' +
+      '<div class="endpoint">' + t + '</div>' +
+      '<div class="mini-grade" style="color:var(--text-muted)">···</div>' +
+      '<div class="compare-metrics">' +
+        '<div class="cmp-item"><div class="cmp-label">TLS</div><div class="cmp-val">—</div></div>' +
+        '<div class="cmp-item"><div class="cmp-label">KEX</div><div class="cmp-val">—</div></div>' +
+        '<div class="cmp-item"><div class="cmp-label">得分</div><div class="cmp-val">—/100</div></div>' +
+      '</div></div>';
+  }).join('');
+
+  targets.forEach(function(t){
+    fetch(API_BASE + '?target=' + encodeURIComponent(t))
+      .then(function(r){ return r.json(); })
+      .then(function(data){
+        var el = document.getElementById('cmp-' + t.replace(/[.:]/g,'-'));
+        if (!el) return;
+        var g = data.compliance ? data.compliance.grade || '?' : '?';
+        el.innerHTML =
+          '<div class="endpoint">' + (data.endpoint||t) + '</div>' +
+          '<div class="mini-grade ' + ((g==='A'||g==='B')?g:'') + '">' + g + '</div>' +
+          '<div class="compare-metrics">' +
+            '<div class="cmp-item"><div class="cmp-label">TLS</div><div class="cmp-val">' + (data.tlsVersion||'N/A') + '</div></div>' +
+            '<div class="cmp-item"><div class="cmp-label">KEX</div><div class="cmp-val">' + (data.keyExchange?data.keyExchange.name||'-':'-') + '</div></div>' +
+            '<div class="cmp-item"><div class="cmp-label">得分</div><div class="cmp-val">' + (data.compliance?data.compliance.score||0:0) + '/100</div></div>' +
+          '</div>';
+        el.onclick = function(){ loadDemo(t); };
+      }).catch(function(){});
+  });
 }
 
-function loadDemo(endpoint) {
-  document.getElementById('endpointInput').value = endpoint;
-  doProbe();
-}
-
-/* ─── Init ──────── */
+/* --- Init --- */
 function init() {
   renderCompareGrid();
-
-  // Check URL hash
-  const hash = window.location.hash.slice(1);
+  var hash = window.location.hash.slice(1);
   if (hash) {
     document.getElementById('endpointInput').value = decodeURIComponent(hash);
     doProbe();
   }
 }
-
 window.addEventListener('DOMContentLoaded', init);
-
-// Enter key trigger
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && document.activeElement?.id === 'endpointInput') {
-    doProbe();
-  }
+document.addEventListener('keydown', function(e){
+  if (e.key === 'Enter' && document.activeElement && document.activeElement.id === 'endpointInput') doProbe();
 });
-
-// Update version tag
-document.getElementById('versionTag').textContent = 'v0.1.0-alpha';
+document.getElementById('versionTag').textContent = 'v0.2.0-live';
 </script>
+
 </body>
 </html>
