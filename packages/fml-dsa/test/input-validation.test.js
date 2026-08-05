@@ -167,10 +167,11 @@ expect('throw', () => {
   const bad = new Int32Array(N).fill(Q + 1);
   ntt(bad);
 }, 'ntt(value > Q)');
-expect('throw', () => {
+expect('pass', () => {
   const bad = new Int32Array(N).fill(-5);
-  ntt(bad);
-}, 'ntt(negative value)');
+  const r = ntt(bad);
+  return r instanceof Int32Array ? 'ok' : r;
+}, 'ntt(negative value in valid range [-(Q-1),Q-1])');
 expect('throw', () => {
   const bad = new Int32Array(N).fill(Q);
   ntt(bad);
