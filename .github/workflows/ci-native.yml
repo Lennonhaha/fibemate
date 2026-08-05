@@ -41,8 +41,10 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           # node-gyp on Windows needs Visual Studio Build Tools (pre-installed on windows-latest)
-          # and Python (also pre-installed). Verify toolchain is available.
-          npm config set msvs_version 2022
+          # and Python (also pre-installed).
+          # Note: npm config set msvs_version is deprecated in npm 10+.
+          # Use GYP_MSVS_VERSION env var instead (node-gyp reads it automatically).
+          echo "Using GYP_MSVS_VERSION=2022 via environment variable (npm 10+ compatible)"
 
       - name: npm install (addon deps)
         working-directory: packages/pqc-kem
