@@ -532,7 +532,7 @@ All dashboards live at **[fibemate.net/docs/](https://fibemate.net/docs/)** — 
 | 🗺️ Overview | `algo-family-tree.html` | 3D algorithm family tree (18 nodes, 6 branches) |
 | 🗺️ Overview | `pqc-security-levels.html` | PQC security level comparison (10 algos, 4 metrics) |
 
-**Current scores**: CARS **78.50** · IBM **63.70 HIGH** — [see scoring details](https://fibemate.net/docs/cars-radar.html)
+**Current scores**: CARS **75.20** · IBM **63.70 HIGH** — [see scoring details](https://fibemate.net/docs/cars-radar.html)
 
 ---
 
