@@ -1,0 +1,13 @@
+FIBEMATE SM2 WASM Phase 0 Verification
+Date: 2026-08-05
+Status: COMPLETED
+Claim: AssemblyScript 0.28 -> WASM 979B -> Node.js loading success
+Evidence:
+  - asc --version: 0.28.20
+  - WASM output: sm2.wasm (979 bytes)
+  - add(2,3) = 5 (PASS)
+  - mul(4,5) = 20 (PASS)
+  - exports: add, mul, WORDS, addModTest, __new, __pin, __unpin, __collect, __rtti_base, memory
+Toolchain: AssemblyScript 0.28.20 (npm, /opt/asmtest/)
+Source: wasm-sm2/assembly/index.ts -> build/sm2.wasm
+Note: Phase 1 (curve ops + Montgomery Ladder) starts post 8/31 open source
