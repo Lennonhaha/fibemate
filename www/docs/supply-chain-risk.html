@@ -179,7 +179,7 @@ EDGES.forEach(function(e){
   scene.add(new THREE.Line(geo,new THREE.LineBasicMaterial({color:'#1f2a44',transparent:true,opacity:opacity})));
 
   // Flow particle
-  var dot=new THREE.Mesh(new THREE.SphereGeometry(0.03,4,4),
+  var dot=new THREE.Mesh((function(){var g=new THREE.SphereGeometry(0.03,4,4);g.computeBoundingSphere();return g;})(),
     new THREE.MeshBasicMaterial({color:RISK_COLOR[nodeMap[e.to].risk],transparent:true,opacity:0.5,depthWrite:false}));
   dot.userData={curve:curve,phase:Math.random()*Math.PI*2};
   scene.add(dot);
