@@ -695,7 +695,7 @@ function renderCompareGrid() {
   var targets = ['fibemate.net:443', 'cloudflare.com:443'];
   grid.innerHTML = targets.map(function(t){
     var id = 'cmp-' + t.replace(/[.:]/g,'-');
-    return '<div class="compare-card" id="' + id + '" onclick="loadDemo(&quot;' + t + '&quot;)">' +
+    return '<div class="compare-card" id="' + id + '" onclick="loadDemo(\' + t + \')">' +
       '<div class="endpoint">' + t + '</div>' +
       '<div class="mini-grade" style="color:var(--text-muted)">···</div>' +
       '<div class="compare-metrics">' +
