@@ -760,7 +760,7 @@ function doProbe() {
   btn.disabled = true;
 
   // Try API first, fallback to demo data
-  fetch(`/api/probe?endpoint=${encodeURIComponent(endpoint)}`)
+  fetch(`/api/v1/probe?target=${encodeURIComponent(endpoint)}`)
     .then(r => r.json())
     .then(data => {
       activeResult = data;
@@ -986,6 +986,7 @@ document.addEventListener('keydown', (e) => {
 
 // Update version tag
 document.getElementById('versionTag').textContent = 'v0.1.0-alpha';
+const API_BASE = '/api/v1/probe';
 
 /* ===== History Engine ===== */
 var HISTORY_KEY = 'pqc-checker-history-v1';
