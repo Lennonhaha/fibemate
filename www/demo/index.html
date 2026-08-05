@@ -91,7 +91,7 @@ footer a:hover { text-decoration: underline; }
   <div class="badges" style="justify-content:center;margin-top:.5rem">
     <span class="badge green">FIPS 203</span>
     <span class="badge">NIST Post-Quantum</span>
-    <span class="badge green">v3.3-preview</span>
+    <span class="badge green">v3.3.0</span>
   </div>
 </header>
 
@@ -212,7 +212,7 @@ async function init() {
     // Load standalone browser bundle
     const mod = await import('./ml-kem-768.js');
     MLKEM = mod.default || mod;
-    st.textContent = `✅ Loaded · v3.3-preview · Q=${MLKEM.PUBLIC_KEY_BYTES ? 'OK' : 'PARTIAL'}`;
+    st.textContent = `✅ Loaded · v3.3.0 · Q=${MLKEM.PUBLIC_KEY_BYTES ? 'OK' : 'PARTIAL'}`;
     st.className = '';
 
     if (MLKEM.encapsulate && MLKEM.decapsulate) {
