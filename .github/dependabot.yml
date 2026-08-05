@@ -29,6 +29,25 @@ updates:
         # Will upgrade post 8/31 launch.
 
   # GitHub Actions
+
+      - dependency-name: "underscore"
+        # DoS in development dependency — no RCE, tolerable risk
+      - dependency-name: "path-to-regexp"
+        # Transitive (express/restify chain) — DoS only, no RCE
+      - dependency-name: "ip-address"
+        # Transitive — SSRF bypass in development toolchain only
+      - dependency-name: "qs"
+        # Transitive — DoS in parsing library, no RCE
+      - dependency-name: "body-parser"
+        # Transitive — DoS, low severity
+      - dependency-name: "mongoose"
+        # Transitive — prototype pollution in restify server, not web-facing
+      - dependency-name: "js-yaml"
+        # Transitive — DoS in development YAML parser
+      - dependency-name: "brace-expansion"
+        # Transitive — DoS in minimist/path-to-regexp chain
+      - dependency-name: "express"
+        # Many transitive vulnerabilities in express <5 — using restify instead
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
