@@ -47,7 +47,7 @@
 | If you are... | Jump to |
 | :--- | :--- |
 | 🔒 **Engineering evaluation** | → [🟢 Verified Components](#-verified-components-default-on--self-tested) · [Security Model](#security-model) · [Known Limitations](#known-limitations) |
-| 📊 **Scorecards & Dashboards** | → [CARS/IBM 评分](https://fibemate.net/docs/cars-radar.html) · [PQC Dashboard](https://fibemate.net/docs/pqc-dashboard.html) · [All Visualizations](#-visualization-dashboards-14-pages) |
+| 📊 **Scorecards & Dashboards** | → [CARS/IBM 评分](https://fibemate.net/docs/cars-radar.html) · [PQC Dashboard](https://fibemate.net/docs/pqc-dashboard.html) · [All Visualizations](#visualization-dashboards) |
 | 🔬 **Researching VWZ / LookingGlass** | → [🔬 Experimental Research Components](#-experimental-research-components-default-off--no-security-guarantees) · [VWZ ePrint](#-publications) |
 | 🛠️ **Building / running** | → [Quick Start](#quick-start) · [BUILD.md](BUILD.md) |
 | 🤔 **Questioning ML-KEM interoperability** | → [ML-KEM-768 Wire Format](#ml-kem-768-wire-format) |
@@ -453,11 +453,11 @@ rop: ≈2^143.8, red: ≈2^143.8, δ: 1.003941, β: 406, d: 998, tag: usvp
 | ML-KEM-768 | ≈583* | ~185-bit | ~168-bit | **Category 3** |
 | ML-KEM-1024 | ≈772* | ~233-bit | ~212-bit | **Category 5** |
 
-> *ML-KEM-768/1024 BKZ-β values extrapolated from NIST category levels. Precise values require SageMath ≥9.4. See [ML-KEM Security Estimate](docs/ml-kem-security-estimate.md) for full methodology and attack breakdown (usvp, bdd, dual, dual_hybrid, bkw).
+> *ML-KEM-768/1024 BKZ-β values extrapolated from NIST category levels. Precise values require SageMath ≥9.4. See [ML-KEM Security Estimate](www/docs/ml-kem-security-estimate.md) for full methodology and attack breakdown (usvp, bdd, dual, dual_hybrid, bkw).
 
 **Key Insight:** BKZ-β=406 represents a computation far beyond any known classical or quantum capability (Core-SVP cost: 2^143.8 classical, 2^131.0 quantum). The gap between our experimental β≤20 and the required β≥406 demonstrates **exactly why LWE is hard** — not as an abstract claim, but as a measurable, reproducible fact.
 
-> 📄 Full analysis: [docs/ml-kem-security-estimate.md](docs/ml-kem-security-estimate.md)
+> 📄 Full analysis: [docs/ml-kem-security-estimate.md](www/docs/ml-kem-security-estimate.md)
 
 
 ### Known Limitations
@@ -544,7 +544,7 @@ FIBEMATE welcomes contributions from the PQC community. Here's how to get involv
 
 ---
 
-## 🎨 Visualization Dashboards (14 pages)
+## 🎨 Visualization Dashboards
 
 All dashboards live at **[fibemate.net/docs/](https://fibemate.net/docs/)** — no install, just a browser.
 
