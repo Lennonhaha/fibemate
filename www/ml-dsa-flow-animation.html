@@ -147,6 +147,7 @@ scene.add(makeSprite("✓",0x81c784,0,-2.5,0));
 // Operation mini-nodes
 function mmn(pos,color,lbl){
   const m=new THREE.Mesh(BG,makeMat(color,0.4));m.position.copy(pos);scene.add(m);
+  return m;
   scene.add(makeSprite(lbl,color,pos.x,pos.y+0.7,pos.z));
 }
 const seedNode=mmn(new THREE.Vector3(-3,1.5,-1),0xce93d8,"seed→ρ");
@@ -184,7 +185,7 @@ class FP{
   constructor(a,b,col,s=0.012){this.a=a.clone();this.b=b.clone();this.t=0;this.s=s;this.alive=true;
     const m=new THREE.Mesh(new THREE.SphereGeometry(0.07,8,8),new THREE.MeshBasicMaterial({color:col,transparent:true}));
     this.mesh=m;scene.add(m);this.update();}
-  update(dt){this.t=(this.t+this.s)%1;this.mesh.position.lerpVectors(this.a,this.b,this.t);this.mat.opacity=Math.sin(this.t*Math.PI)*0.9;}
+  update(dt){this.t=(this.t+this.s)%1;this.mesh.position.lerpVectors(this.a,this.b,this.t);this.mesh.material.opacity=Math.sin(this.t*Math.PI)*0.9;}
   remove(){scene.remove(this.mesh);this.alive=false}
 }
 let FPARTS=[];
