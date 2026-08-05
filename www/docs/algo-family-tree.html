@@ -217,6 +217,7 @@ TREE.forEach(function(n){
 
   // Flow particle on edge
   var dotGeo=new THREE.SphereGeometry(0.04,4,4);
+  dotGeo.computeBoundingSphere();
   var dotMat=new THREE.MeshBasicMaterial({color:CAT[n.cat]||'#66708a',transparent:true,opacity:0.6,depthWrite:false});
   var dot=new THREE.Mesh(dotGeo,dotMat);
   dot.userData={curve:curve,phase:Math.random()*Math.PI*2};
