@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SLH-DSA 签名验证流程动画</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0f19;color:#b8c0d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+#ui{position:fixed;bottom:0;left:0;right:0;padding:16px 20px;background:rgba(11,15,25,.92);border-top:1px solid #1f2a44;display:flex;gap:16px;align-items:center;backdrop-filter:blur(8px);z-index:10}
+#step-card{flex:1;background:#131827;border:1px solid #1f2a44;border-radius:12px;padding:14px 18px;min-width:0}
+#step-num{font-size:11px;color:#ff9800;font-weight:700;letter-spacing:.1em;margin-bottom:4px;text-transform:uppercase}
+#desc-title{font-size:15px;font-weight:700;color:#e8ecf4;margin-bottom:6px}
+#desc{font-size:12px;color:#8899bb;line-height:1.55;white-space:pre-line;max-height:56px;overflow:hidden}
+#formula{font-size:11px;background:#1a2236;border:1px solid #2a3a56;border-radius:6px;padding:6px 10px;margin-top:8px;font-family:monospace;color:#4fc3f7;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#progress{display:flex;gap:5px;margin-bottom:10px}
+.prog{height:3px;flex:1;border-radius:2px;background:#1f2a44;transition:background .3s}
+.prog.done{background:#ff9800}
+.prog.active{background:#ffc107}
+#btn-prev,#btn-next{background:#1f2a44;border:1px solid #2a3a56;border-radius:8px;color:#b8c0d0;padding:10px 20px;font-size:13px;cursor:pointer;transition:all .2s;min-width:80px}
+#btn-prev:hover,#btn-next:hover{background:#2a3a56;color:#fff}
+#btn-prev:disabled,#btn-next:disabled{opacity:.3;cursor:not-allowed}
+#data-box{background:#131827;border:1px solid #1f2a44;border-radius:8px;padding:8px 12px;font-family:monospace;font-size:10px;color:#6a8aaa;white-space:pre;max-width:200px;max-height:70px;overflow:hidden;line-height:1.6}
+#badge{position:fixed;top:16px;left:16px;background:rgba(255,152,0,.15);border:1px solid rgba(255,152,0,.4);border-radius:8px;padding:8px 14px;font-size:12px;font-weight:700;color:#ff9800;backdrop-filter:blur(8px);z-index:10}
+#badge span{font-size:18px;margin-right:6px}
+#info{position:fixed;top:16px;right:16px;background:rgba(11,15,25,.88);border:1px solid #1f2a44;border-radius:10px;padding:10px 16px;font-size:11px;color:#556688;backdrop-filter:blur(8px);z-index:10;max-width:220px;text-align:right;line-height:1.7}
+#reset-btn{background:transparent;border:1px solid #2a3a56;border-radius:6px;color:#8899bb;padding:6px 12px;font-size:11px;cursor:pointer}
+#reset-btn:hover{background:#1f2a44;color:#fff}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="badge"><span>🌲</span>FIPS 205 · SLH-DSA</div>
+<div id="info">D=8 steps · Three.js r128<br>SLH-DSA-128s · hash-based PQC</div>
+<div id="ui">
+  <button id="btn-prev" disabled>◀ 上一步</button>
+  <div style="flex:1;min-width:0">
+    <div id="progress"></div>
+    <div id="step-card">
+      <div id="step-num">Step 1 / 8</div>
+      <div id="desc-title">系统初始化</div>
+      <div id="desc"></div>
+      <div id="formula"></div>
+    </div>
+  </div>
+  <div id="data-box"></div>
+  <button id="btn-next">下一步 ▶</button>
+  <button id="reset-btn">重置</button>
+</div>
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+const STEPS = [{"n":1,"phase":"keygen","title":"系统初始化","desc":"SLH-DSA（SPHINCS+）基于纯哈希函数的抗量子签名方案。\n无任何数论假设，完全依赖哈希函数安全性。\n采用 HORST + XMSS^MT 多层哈希树结构。","detail":"n=16B(128bits) h=12 d=6 k=10 a=2\npk: a3f1c2d4e5b6789012345678abcdef01\nsk: deadbeefcafebabe1023456789abcdef…","formula":"pk = (root_seed, root_auth)","data":"pk = a3f1c2d4e5b6789012345678abcdef01… (32B)\nsk = deadbeefcafebabe1023456789abcdef00000000… (64B)","hi":[0,1],"edge":"sToAuth","particles":"sToAuth"},{"n":2,"phase":"sign","title":"消息随机化","desc":"对消息做 SHAKE256 哈希，取前 n=16B 伪随机数 R。\nR 掩盖消息哈希，防止签名泄露消息内容。\nSLH-DSA 的 WOTRS（Weak One-Time Randomizable Signature）层。","detail":"H(msg) = SHAKE256(\"Sign this message\", 256)\nR = H(msg)[0:16]\n= 5369676e2074686973206d6573736167…","formula":"R = SHAKE256(m, 128)","data":"msg: Sign this message\nR: 5369676e2074686973206d6573736167 (16B)","hi":[0,1,2],"edge":"authToMsg","particles":"authToMsg"},{"n":3,"phase":"sign","title":"FORS 森林选择","desc":"FORS（Forest of Hash Signatures）层：k=10 棵哈希树。\n消息摘要分成 10×2=20 位，每 2 位选取一条路径。\n每棵树的叶节点数为 2^2=4，10棵树共 40 个叶。","detail":"k=10 trees, a=2 height\nFORS leaves = k×2^a = 40\nmsg bits → 20 selectors\npath = [idx_0, idx_1, ..., idx_19]","formula":"FORSpk = Σ hash_i(sk_seed[i], leaf_index[i])","data":"FORS leaves: 40\nk=10 trees × 4 leaves/tree","hi":[0,1,2,3],"edge":"msgToFors","particles":"msgToFors"},{"n":4,"phase":"sign","title":"FORS 签名","desc":"对选中的每条路径生成签名链：\n从叶节点向上计算：auth[i] = H(child‖index)。\nFORS 签名 = (R, {leaf, auth_chain}) for each tree。\n纯哈希，无椭圆曲线，无格，全量子安全。","detail":"FORSi sig = [leaf_i, H(leaf_i‖0), H(H(...)|1), ...]\nauth depth = 2 levels\nFORS sig size ≈ 256B","formula":"FORSSig_i = [leaf_i, H(child₀₀‖0), H(H(...)|1)]","data":"R[16B]: 5369676e2074686973206d6573736167\nFORS sig: ~256B\n10 × (leaf + 2 auth nodes)","hi":[0,1,3,4],"edge":"forsToRoot","particles":"forsToRoot"},{"n":5,"phase":"sign","title":"Merkle 树认证","desc":"FORS 公钥集合组成 XMSS 底层叶节点。\n计算 Merkle 树根：Root = H(AUTH_0‖AUTH_1‖…‖AUTH_5)。\n认证路径 AUTH 包含每层兄弟节点，供验证者重构根。","detail":"d=6 layers\nAUTH = 6 × 32B = 192B\nRoot = SHAKE256(AUTH, 256)\n= a3f1c2d4e5b6789012345678abcdef01…","formula":"Root = H(AUTH_0 ‖ AUTH_1 ‖ … ‖ AUTH_d-1)","data":"Merkle tree: depth 6\nAUTH[0..5]: 6 × 32B = 192B\nRoot: a3f1c2d4e5b6789012345678abcdef01…","hi":[0,1,4,5],"edge":"rootToSig","particles":"rootToSig"},{"n":6,"phase":"output","title":"签名输出","desc":"最终签名 σ = (R, FORSsig, AUTH)。\nSLH-DSA-128s 签名长度 ≈ 7,856 字节（~8KB）。\n典型参数：n=16, h=12, d=6, k=10, a=2。","detail":"σ = R ‖ FORSsig ‖ AUTH\nR = 16B\nFORSsig ≈ 256B\nAUTH = 192B\nTotal ≈ 464B ≈ 7856B","formula":"σ = (R, FORSsig_1..k, AUTH_0..d-1)","data":"sig: ≈7856B ≈ 8KB\n(R || FORSsig || AUTH)\n✅ 纯哈希 · 抗量子 · 无数论假设","hi":[0,1,5],"edge":"sigToV","particles":"sigToV"},{"n":7,"phase":"verify","title":"签名传输","desc":"签名 σ 与消息 m 一起发送给验证者。\n验证者仅需公钥 pk，无需私钥，无需哈希树结构。\n签名本身不包含任何密钥材料，仅含认证数据。","detail":"sent: (m, σ)\nmsg: 5369676e2074686973206d6573736167 (17B)\nsig: ~7856B\nchannel: any (no secrecy)","formula":"(m, σ) || pk → Verifier","data":"msg: Sign this message\nsig: ≈7856B\npk: a3f1c2d4e5b6789012345678abcdef01 (32B)","hi":[6,7],"edge":null,"particles":null},{"n":8,"phase":"verify","title":"验证结果","desc":"验证者三步重构：\n1. 从 FORSsig 反推 FORS 公钥集合\n2. 从 AUTH 路径重算 Merkle 根\n3. 验证 XMSS 签名（用 pk 验证对 Root 的签名）\n三者匹配 → ✓ 接受","detail":"Step1: ReFORS(FORSsig, m) → FORSpk\nStep2: ComputeRoot(AUTH, FORSpk) → Root\nStep3: VerifyXMSS(XMSSsig, Root) → pk_root\n\n✓ = FORSpk = FORSpk_expected\n✓ = Root = Root_expected\n✓ = pk_root = pk_expected\n→ ACCEPT","formula":"ACCEPT ⟺ (FORSpk'=FORSpk) ∧ (Root'=Root)","data":"FORS check: PASS ✅\nMerkle check: PASS ✅\nXMSS check: PASS ✅\n\nAll H() = SHAKE256 (quantum safe)\n结论: 签名有效 ✅","hi":[6,7,8],"edge":null,"particles":null}];
+let cur = 0;
+
+// ─── Three.js ──────────────────────────────────────────────────────────────
+const c = document.getElementById('c');
+const r = new THREE.WebGLRenderer({canvas:c,antialias:true});
+r.setPixelRatio(Math.min(devicePixelRatio,2));
+r.setClearColor(0x0b0f19,1);
+
+const s = new THREE.Scene();
+const cam = new THREE.PerspectiveCamera(55,1,.1,100);
+cam.position.set(0,2,9);
+
+const ro = new THREE.OrbitControls(cam,r.domElement);
+ro.enableDamping=true; ro.dampingFactor=.08; ro.minDistance=3; ro.maxDistance=18;
+
+function resize(){
+  const W=innerWidth,H=innerHeight;
+  r.setSize(W,H); cam.aspect=W/H; cam.updateProjectionMatrix();
+}
+window.addEventListener('resize',resize); resize();
+
+// Lights
+s.add(new THREE.AmbientLight(0x334466,2));
+const dL=new THREE.DirectionalLight(0xffd54f,.8); dL.position.set(5,8,5); s.add(dL);
+const pL=new THREE.PointLight(0xff9800,1.5,14); pL.position.set(-4,3,2); s.add(pL);
+
+// Grid
+const grid=new THREE.GridHelper(24,24,0x1a2744,0x0d1525); grid.position.y=-2.5; s.add(grid);
+
+// ─── Geometries ─────────────────────────────────────────────────────────────
+const SG=new THREE.SphereGeometry(.55,32,32);
+const RG=new THREE.TorusGeometry(.8,.07,16,64);
+const BG=new THREE.BoxGeometry(.38,.38,.38);
+
+// ─── Participants ────────────────────────────────────────────────────────────
+const signer=new THREE.Mesh(SG,makeMat(0xff9800,.35));
+signer.position.set(-6,0,0); s.add(signer);
+const sRing=new THREE.Mesh(RG,new THREE.MeshBasicMaterial({color:0xff9800,transparent:true,opacity:.5}));
+sRing.position.copy(signer.position); s.add(sRing);
+
+const verifier=new THREE.Mesh(SG,makeMat(0x4fc3f7,.35));
+verifier.position.set(6,0,0); s.add(verifier);
+const vRing=new THREE.Mesh(RG,new THREE.MeshBasicMaterial({color:0x4fc3f7,transparent:true,opacity:.5}));
+vRing.position.copy(verifier.position); s.add(vRing);
+
+// ─── Nodes ─────────────────────────────────────────────────────────────────
+function mmn(pos,color,lbl){
+  const m=new THREE.Mesh(BG,makeMat(color,.45));
+  m.position.copy(pos); s.add(m);
+  const sp=makeSprite(lbl,color,pos.x,pos.y+.75,pos.z);
+  s.add(sp);
+  return m;
+}
+
+const authNode=mmn(new THREE.Vector3(-2,1.5,-1),0xff9800,'R=H(msg)');
+const msgNode=mmn(new THREE.Vector3(-2,.5,0),0xff9800,'m');
+const forsNode=mmn(new THREE.Vector3(0,1.5,0),0xffc107,'FORS forest');
+const treeRootNode=mmn(new THREE.Vector3(2,2,-1),0xff9800,'Merkle root');
+const sigOutNode=mmn(new THREE.Vector3(2,.5,0),0xffc107,'σ ≈ 8KB');
+const okNode=new THREE.Mesh(new THREE.IcosahedronGeometry(.38,1),makeMat(0x81c784,.65));
+okNode.position.set(6,1.5,0); s.add(okNode);
+
+// ─── Edges ─────────────────────────────────────────────────────────────────
+function makeEdge(a,b){
+  const g=new THREE.BufferGeometry().setFromPoints([a.clone(),b.clone()]);
+  const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x1a2744,transparent:true,opacity:.5}));
+  s.add(l); return l;
+}
+const sToAuth=makeEdge(signer.position,authNode.position);
+const authToMsg=makeEdge(authNode.position,msgNode.position);
+const msgToFors=makeEdge(msgNode.position,forsNode.position);
+const forsToRoot=makeEdge(forsNode.position,treeRootNode.position);
+const rootToSig=makeEdge(treeRootNode.position,sigOutNode.position);
+const sigToV=makeEdge(sigOutNode.position,verifier.position);
+const allEdges=[sToAuth,authToMsg,msgToFors,forsToRoot,rootToSig,sigToV];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+function makeSprite(text,color,x,y,z){
+  const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
+  const cx=cv.getContext('2d'); cx.clearRect(0,0,256,64);
+  cx.font='bold 20px -apple-system,Segoe UI,sans-serif';
+  cx.fillStyle='#'+color.toString(16).padStart(6,'0');
+  cx.textAlign='center'; cx.textBaseline='middle';
+  cx.fillText(text,128,32);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
+  sp.scale.set(2,.5,1); sp.position.set(x,y,z); return sp;
+}
+
+function makeMat(hex,opacity){return new THREE.MeshPhongMaterial({color:hex,emissive:hex,emissiveIntensity:.2,transparent:opacity<1,opacity:opacity, shininess:80});}
+
+class FP{
+  constructor(a,b,col,s=.012){
+    this.a=a.clone(); this.b=b.clone(); this.t=0; this.s=s; this.alive=true;
+    const m=new THREE.Mesh(new THREE.SphereGeometry(.07,8,8),new THREE.MeshBasicMaterial({color:col,transparent:true}));
+    this.mesh=m; s.add(m); this.update();
+  }
+  update(dt){this.t=(this.t+this.s)%1; this.mesh.position.lerpVectors(this.a,this.b,this.t); this.mesh.material.opacity=Math.sin(this.t*Math.PI)*.9;}
+  remove(){s.remove(this.mesh); this.alive=false}
+}
+let FPARTS=[];
+function spawn(a,b,col,n=5,s=.012){for(let i=0;i<n;i++){const p=new FP(a,b,col,s);p.t=i/n;FPARTS.push(p);}}
+function clearP(){FPARTS.forEach(p=>p.remove()); FPARTS=[];}
+
+const ALL_NODES=[signer,verifier,authNode,msgNode,forsNode,treeRootNode,sigOutNode,okNode];
+
+function dimAll(){
+  ALL_NODES.forEach(n=>{n.material.opacity=.28; n.material.emissiveIntensity=.04;});
+  allEdges.forEach(e=>e.material.opacity=.08);
+  [sRing,vRing].forEach(r=>r.material.opacity=.04);
+}
+function hi(node,col,int=.8){node.material.color.set(col); node.material.emissive.set(col); node.material.emissiveIntensity=int; node.material.opacity=1;}
+function hiEdge(e,col){e.material.color.set(col); e.material.opacity=.9;}
+function resetAll(){dimAll(); hi(signer,0xff9800,.3); hi(verifier,0x4fc3f7,.3); okNode.position.set(6,1.5,0); okNode.material.color.set(0x81c784); okNode.material.emissive.set(0x81c784); okNode.material.emissiveIntensity=.4; okNode.material.opacity=0;}
+
+// ─── Step rendering ─────────────────────────────────────────────────────────
+const $=(id)=>document.getElementById(id);
+
+function applyStep(idx){
+  const st=STEPS[idx];
+  clearP();
+  dimAll();
+
+  // Always highlight signer + verifier
+  hi(signer,0xff9800,.5);
+  hi(verifier,0x4fc3f7,.5);
+
+  if(st.hi){
+    if(st.hi.includes(0)) hi(signer,0xff9800,.9);
+    if(st.hi.includes(1)) hi(verifier,0x4fc3f7,.9);
+    if(st.hi.includes(2)){hi(authNode,0xff9800,.8); hiEdge(sToAuth,0xff9800);}
+    if(st.hi.includes(3)){hi(msgNode,0xff9800,.8); hiEdge(authToMsg,0xff9800);}
+    if(st.hi.includes(4)){hi(forsNode,0xffc107,.9); hiEdge(msgToFors,0xffc107);}
+    if(st.hi.includes(5)){hi(treeRootNode,0xff9800,.85); hiEdge(forsToRoot,0xff9800);}
+    if(st.hi.includes(6)){hi(sigOutNode,0xffc107,.85); hiEdge(rootToSig,0xff9800);}
+    if(st.hi.includes(7)){hiEdge(sigToV,0xffc107);}
+    if(st.hi.includes(8)){hi(okNode,0x81c784,.9); okNode.material.opacity=1;}
+  }
+
+  if(st.particles){
+    const edgeMap={sToAuth:[signer.position,authNode.position],authToMsg:[authNode.position,msgNode.position],msgToFors:[msgNode.position,forsNode.position],forsToRoot:[forsNode.position,treeRootNode.position],rootToSig:[treeRootNode.position,sigOutNode.position],sigToV:[sigOutNode.position,verifier.position]};
+    const e=edgeMap[st.particles];
+    if(e) spawn(e[0],e[1],0xff9800,10,.013);
+  }
+
+  $('step-num').textContent='Step '+(idx+1)+' / '+STEPS.length;
+  $('desc-title').textContent=st.title;
+  $('desc').textContent=st.desc||'';
+  $('formula').textContent=st.formula||'';
+  $('data-box').textContent=st.data||'';
+
+  document.querySelectorAll('.prog').forEach((p,i)=>{
+    p.className='prog'+(i<idx?' done':i===idx?' active':'');
+  });
+
+  $('btn-prev').disabled=idx===0;
+  $('btn-next').disabled=idx===STEPS.length-1;
+}
+
+// Progress dots
+const pg=$('progress');
+STEPS.forEach((_,i)=>{const d=document.createElement('div');d.className='prog';d.onclick=()=>{cur=i;applyStep(i);};pg.appendChild(d);});
+
+// Buttons
+$('btn-prev').onclick=()=>{cur=Math.max(0,cur-1);applyStep(cur);};
+$('btn-next').onclick=()=>{cur=Math.min(STEPS.length-1,cur+1);applyStep(cur);};
+$('reset-btn').onclick=()=>{cur=0;resetAll();applyStep(0);};
+
+// Init
+resetAll(); applyStep(0);
+
+// ─── Render loop ────────────────────────────────────────────────────────────
+let t=0;
+(function loop(){
+  requestAnimationFrame(loop);
+  t+=.016;
+  signer.position.y=Math.sin(t*.4)*.08;
+  verifier.position.y=Math.sin(t*.4+.5)*.08;
+  ro.update();
+  FPARTS.forEach(p=>p.update());
+  FPARTS=FPARTS.filter(p=>p.alive);
+  r.render(s,cam);
+})();
+</script>
+</body>
+</html>
