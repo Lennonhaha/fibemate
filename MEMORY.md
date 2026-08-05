@@ -1328,3 +1328,31 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - P1「Nightly CI 自动变绿」阻塞于账号层面，代码已就绪
 - 不影响本地测试、服务器部署、TSR 生成
 - 8.31 开源前必须解决，否则 CI badge 显示红色
+
+
+## 2026-08-05：解除冻结期，整理欠账，全面清理
+
+### 本次成果（d0c8820c）
+
+**P0 修复全部完成：**
+- v3.3.0 tag 移动：749c30d4 → c62505d3
+- key-lifecycle package.json：新增，27/27 测试全过
+- fml-dsa input-validation：修复 ntt(negative value) 测试期望（-5 是有效范围），66/66 PASS（622ad77）
+- sm2/sm3/sm4-ref：全部 npm install + test PASS（c62505d3）
+
+**全部 7 个 npm 包状态：**
+- algorithm-registry / fml-dsa(174/175+66/66) / key-lifecycle(27/27) / pqc-kem(8/8) / sm2-ref(9/9) / sm3-ref(32/32) / sm4-ref(7/7) — 全部 PASS
+
+**CI 最新（2026-08-05 00:00）：CI / CodeQL / OpenSSF Scorecard / Repolinter / Nightly-Full 全部 success**
+
+**欠账清零：**
+- P0：全部清零
+- P1（8/26 前）：README.zh-CN vs ANNOUNCEMENT 对齐、daily-check.js 编码修复、倒计时刷新
+- P2（8/26-30）：ANNOUNCEMENT 最终定稿、Contact List、发布渠道确认
+
+**清理：**
+- 18 个临时脚本/artifact 文件全部删除
+- MEMORY.md 冲突标记已清理
+- pre-release/ 9 个草稿本地保留
+
+### D-26 天，开源倒计时进行中
