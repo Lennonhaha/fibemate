@@ -97,6 +97,8 @@ verifier.position.set(6,0,0); s.add(verifier);
 const vRing=new THREE.Mesh(RG,new THREE.MeshBasicMaterial({color:0x4fc3f7,transparent:true,opacity:.5}));
 vRing.position.copy(verifier.position); s.add(vRing);
 
+const _spriteCache=new Map();
+
 // ─── Nodes ─────────────────────────────────────────────────────────────────
 function mmn(pos,color,lbl){
   const m=new THREE.Mesh(BG,makeMat(color,.45));
@@ -129,7 +131,6 @@ let sigToV=null;
 let allEdges=null;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
-const _spriteCache=new Map();
 function makeSprite(text,color,x,y,z){
   const key=text+'|'+color;
   if(_spriteCache.has(key)){const sp=_spriteCache.get(key).clone();sp.position.set(x,y,z);return sp;}
