@@ -31,13 +31,7 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-extended,security-and-quality
-          config: |
-            paths-ignore:
-              - fibemate-mobile/
-              - archive/
-              - experimental/
-              - tmp-bundle.git/
-
+          config-file: ./.github/codeql/codeql-config.yml
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4
 
