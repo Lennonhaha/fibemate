@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML-KEM 密钥封装流程 — 3D 交互动画 | FIBEMATE</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230052CC'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='18' font-family='monospace'>ML</text></svg>">
+<style>
+:root {
+  --bg: #060a12;
+  --panel: #0d1525;
+  --border: #1a2744;
+  --text: #b8c8e8;
+  --dim: #5a6a8a;
+  --accent: #0052CC;
+  --accent2: #00c8e0;
+  --alice: #4fc3f7;
+  --bob: #81c784;
+  --kem: #ffb74d;
+  --active: #ff6b6b;
+  --font: -apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); overflow:hidden; height:100vh; }
+
+#header {
+  position:fixed; top:0; left:0; right:0; z-index:10;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 20px;
+  background:linear-gradient(180deg,rgba(6,10,18,.95) 0%,transparent 100%);
+  border-bottom:1px solid rgba(255,255,255,.05);
+}
+#header h1 { font-size:15px; font-weight:600; color:#e0e8ff; letter-spacing:.02em; }
+#header .badge {
+  background:var(--accent); color:#fff; font-size:11px; padding:3px 10px;
+  border-radius:20px; font-weight:600; letter-spacing:.05em;
+}
+#header .sub { font-size:12px; color:var(--dim); }
+
+#canvas-container { position:fixed; inset:0; z-index:1; }
+canvas { display:block; }
+
+/* ── Bottom panel ── */
+#panel {
+  position:fixed; bottom:0; left:0; right:0; z-index:10;
+  background:linear-gradient(0deg,rgba(6,10,18,.97) 0%,rgba(6,10,18,.85) 80%,transparent 100%);
+  padding:0 20px 16px;
+}
+#step-indicator {
+  display:flex; gap:6px; align-items:center; justify-content:center;
+  padding:10px 0 6px;
+}
+.step-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:var(--border); transition:all .3s;
+}
+.step-dot.active { background:var(--accent2); transform:scale(1.5); box-shadow:0 0 8px var(--accent2); }
+.step-dot.done { background:var(--accent); }
+.step-line {
+  width:40px; height:1px; background:var(--border);
+  transition:background .3s;
+}
+.step-line.active { background:var(--accent); }
+
+#phase-label {
+  text-align:center; font-size:12px; font-weight:700;
+  letter-spacing:.12em; text-transform:uppercase; margin-bottom:6px;
+}
+#phase-label.keygen { color:var(--alice); }
+#phase-label.encaps { color:var(--kem); }
+#phase-label.decaps { color:var(--bob); }
+
+#desc-box {
+  background:var(--panel); border:1px solid var(--border);
+  border-radius:10px; padding:12px 16px; margin-bottom:10px; min-height:64px;
+}
+#desc-title { font-size:13px; font-weight:700; color:#e8f0ff; margin-bottom:4px; }
+#desc-text { font-size:12px; color:var(--text); line-height:1.6; }
+#desc-formula {
+  font-family:'Courier New',monospace; font-size:11px;
+  color:var(--accent2); margin-top:6px; padding:4px 8px;
+  background:rgba(0,194,224,.08); border-radius:4px;
+  display:inline-block; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+}
+
+#data-row {
+  display:flex; gap:8px; overflow-x:auto; padding-bottom:2px;
+}
+.data-chip {
+  flex-shrink:0; padding:5px 10px; border-radius:6px;
+  font-family:'Courier New',monospace; font-size:10px;
+  border:1px solid; max-width:200px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  background:rgba(0,0,0,.3);
+}
+.data-chip.alice { border-color:var(--alice); color:var(--alice); }
+.data-chip.bob { border-color:var(--bob); color:var(--bob); }
+.data-chip.kem { border-color:var(--kem); color:var(--kem); }
+.data-chip.shared { border-color:var(--active); color:var(--active); }
+.data-chip .lbl { font-size:9px; opacity:.7; display:block; }
+
+#ctrl {
+  display:flex; gap:10px; align-items:center; justify-content:center;
+  padding-top:8px;
+}
+.btn {
+  padding:8px 20px; border:none; border-radius:8px;
+  font-family:var(--font); font-size:13px; font-weight:600;
+  cursor:pointer; transition:all .2s;
+}
+.btn-prev { background:var(--panel); color:var(--text); border:1px solid var(--border); }
+.btn-prev:hover { border-color:var(--accent); color:var(--accent); }
+.btn-prev:disabled { opacity:.3; cursor:not-allowed; }
+.btn-next {
+  background:var(--accent); color:#fff; min-width:120px;
+  box-shadow:0 2px 12px rgba(0,82,204,.4);
+}
+.btn-next:hover { background:#1a6fff; box-shadow:0 4px 16px rgba(0,82,204,.6); }
+.btn-next:disabled { opacity:.4; cursor:not-allowed; }
+.btn-reset { background:transparent; color:var(--dim); font-size:12px; border:none; cursor:pointer; }
+.btn-reset:hover { color:var(--text); }
+#btn-skip { background:transparent; border:1px solid var(--border); color:var(--dim); font-size:11px; padding:6px 12px; border-radius:6px; cursor:pointer; }
+#btn-skip:hover { border-color:var(--accent); color:var(--accent); }
+
+#progress-bar {
+  height:2px; background:var(--border); margin-top:8px; border-radius:2px; overflow:hidden;
+}
+#progress-fill { height:100%; background:var(--accent2); width:0%; transition:width .4s; }
+
+/* ── Legend ── */
+#legend {
+  position:fixed; top:64px; right:16px; z-index:10;
+  background:rgba(13,21,37,.88); border:1px solid var(--border);
+  border-radius:10px; padding:10px 14px;
+}
+#legend h3 { font-size:11px; color:var(--dim); letter-spacing:.1em; text-transform:uppercase; margin-bottom:8px; }
+.lg { display:flex; align-items:center; gap:8px; font-size:11px; color:var(--text); margin-bottom:5px; }
+.lg-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+</style>
+</head>
+<body>
+
+<div id="header">
+  <div>
+    <h1>ML-KEM-768 密钥封装流程</h1>
+    <div class="sub">FIPS 203 · Kyber · 混合 KEX · 三步交互</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:10px">
+    <span class="sub">Step <span id="step-num">1</span> / <span id="total-steps">8</span></span>
+    <span class="badge">v3.3</span>
+  </div>
+</div>
+
+<div id="canvas-container"><canvas id="c"></canvas></div>
+
+<div id="legend">
+  <h3>图例</h3>
+  <div class="lg"><div class="lg-dot" style="background:var(--alice)"></div>Alice（发送方）</div>
+  <div class="lg"><div class="lg-dot" style="background:var(--kem)"></div>KEM 操作</div>
+  <div class="lg"><div class="lg-dot" style="background:var(--bob)"></div>Bob（接收方）</div>
+  <div class="lg"><div class="lg-dot" style="background:var(--active)"></div>共享密钥</div>
+  <div class="lg"><div class="lg-dot" style="background:#666;border:1px solid #888"></div>传输通道</div>
+</div>
+
+<div id="panel">
+  <div id="step-indicator"></div>
+  <div id="phase-label" class="keygen">🔑 KeyGen — 密钥生成</div>
+  <div id="desc-box">
+    <div id="desc-title">Alice 生成密钥对</div>
+    <div id="desc-text">使用随机种子生成公钥和私钥。</div>
+    <div id="desc-formula"></div>
+  </div>
+  <div id="data-row"></div>
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <div id="ctrl">
+    <button class="btn btn-prev" id="btn-prev" disabled>◀ 上一步</button>
+    <button class="btn btn-next" id="btn-next">下一步 ▶</button>
+    <button class="btn-reset" id="btn-reset">重置</button>
+    <button id="btn-skip">跳过动画</button>
+  </div>
+</div>
+
+<script src="lib/three.min.js?v=20260803"></script>
+<script src="lib/OrbitControls.js?v=20260803"></script>
+<script>
+// ─────────────────────────────────────────────────────────
+// STEP DATA
+// ─────────────────────────────────────────────────────────
+// Each step: { phase, title, desc, formula, chips:[{label,value,owner}], camera?, action }
+// phases: keygen | encaps | decaps
+const STEPS = [
+  {
+    phase: 'keygen', title: '生成随机种子',
+    desc: 'Alice 用 Web Crypto API 生成两个 256-bit 随机数：d（私钥种子）和 z（私钥标识）。',
+    formula: 'd, z ←$ {0,1}²⁵⁶',
+    chips: [{label:'d (seed)', value:'a3f0...7c2e', owner:'alice'},{label:'z (nonce)', value:'91d4...8fa0', owner:'alice'}],
+    camera: {x:0, y:2, z:6}
+  },
+  {
+    phase: 'keygen', title: 'SHA3-512 派生 ρ 与 σ',
+    desc: 'd ‖ z 经 SHA3-512 哈希得到种子流，分割为 ρ（用于生成矩阵 A）和 σ（用于生成向量 s 和 e）。',
+    formula: 'seed = SHA3-512(d ‖ z) = ρ ‖ σ',
+    chips: [{label:'ρ (rho)', value:'e8c9...3f01', owner:'alice'},{label:'σ (sigma)', value:'2a7d...9c44', owner:'alice'}],
+    camera: {x:3, y:2, z:5}
+  },
+  {
+    phase: 'keygen', title: '采样矩阵 A 与误差向量',
+    desc: '从 ρ 用 SHAKE128 派生出一个 k×k 的多项式矩阵 A；从 σ 用 CBD（Centered Binomial Distribution）采样私钥向量 s 和误差向量 e。ML-KEM-768: k=3。',
+    formula: 'A[i,j] ←$ PRF(ρ, i‖j)  |  s,e ←$ CBD(σ)',
+    chips: [{label:'A (matrix)', value:'3×3 PolyMat', owner:'alice'},{label:'s (secret)', value:'3-polys', owner:'alice'},{label:'e (error)', value:'3-polys', owner:'alice'}],
+    camera: {x:0, y:0, z:5}
+  },
+  {
+    phase: 'keygen', title: '计算公钥 pk = As + e',
+    desc: '公钥 pk = A·s + e (mod q)，其中 q=3329。这是 ML-KEM 安全性的核心：已知 pk 求 s 是 LWE 问题，在量子攻击下仍需 ~2¹⁸⁸ 步。',
+    formula: 'pk = A·s + e  (mod 3329)  |  ek = pk ‖ ρ',
+    chips: [{label:'pk (pubkey)', value:'1184 bytes', owner:'alice'},{label:'ek (encapKey)', value:'1184B → Bob', owner:'kem'}],
+    camera: {x:-5, y:1, z:5}
+  },
+  {
+    phase: 'encaps', title: 'Bob 收到公钥 ek',
+    desc: 'Bob 通过任意渠道（TLS 证书、DH 混合密钥交换等）接收到 Alice 的封装密钥 ek，内含 pk 和 ρ。Bob 不持有私钥 dk。',
+    formula: 'ek = (pk, ρ)  ← received by Bob',
+    chips: [{label:'ek', value:'1184B', owner:'bob'}],
+    camera: {x:5, y:1, z:5}
+  },
+  {
+    phase: 'encaps', title: 'Bob 生成 m 并派生 r',
+    desc: 'Bob 从 ρ 派生 SHA3-512 再派生 m（消息），从 m 用 CBD 采样封装随机向量 r。这是 ML-KEM 的 IND-CPA 安全保证：每次封装使用独立随机数。',
+    formula: 'm = SHA3-512(ρ)  |  r ← CBD(m)',
+    chips: [{label:'m (message)', value:'32B random', owner:'bob'},{label:'r (rnd vector)', value:'3-polys', owner:'bob'}],
+    camera: {x:3, y:2, z:4}
+  },
+  {
+    phase: 'encaps', title: '计算密文 c 和共享密钥 ss',
+    desc: '密文 c = Compressq(pk·r + m) + Compressq(eᵀ·r)，共享密钥 ss = SHA3-512(m ‖ H(c))。H 是 SHAKE256（输出扩展函数）。',
+    formula: 'c = Compressq(pk·r + m)  |  ss = SHA3-512(m ‖ H(c))',
+    chips: [{label:'c (ciphertext)', value:'1088B → Alice', owner:'kem'},{label:"ss (shared)", value:'32B = Bob', owner:'bob'}],
+    camera: {x:0, y:-1, z:6}
+  },
+  {
+    phase: 'decaps', title: 'Alice 用 dk 解密得到 ss',
+    desc: 'Alice 用私钥 dk（含 s 和 z）执行解封装：m\' = Decaps(c, dk)，其中 Decaps 用 s 逆推 m，再计算 ss\' = SHA3-512(m\' ‖ H(c))。若 c 合法则 ss\' = ss。',
+    formula: "ss = SHA3-512(m ‖ H(c))  |  dk = s ‖ z ‖ pk ‖ H(pk) ‖ ρ",
+    chips: [{label:'ss (shared)', value:'32B = Alice ✓', owner:'shared'}],
+    camera: {x:-3, y:2, z:5}
+  }
+];
+
+// ─────────────────────────────────────────────────────────
+// THREE.JS SCENE
+// ─────────────────────────────────────────────────────────
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060a12);
+scene.fog = new THREE.FogExp2(0x060a12, 0.04);
+
+const camera = new THREE.PerspectiveCamera(50, innerWidth/innerHeight, 0.1, 200);
+camera.position.set(0, 2, 7);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 3;
+controls.maxDistance = 20;
+controls.maxPolarAngle = Math.PI * 0.75;
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// Lights
+scene.add(new THREE.AmbientLight(0x334466, 1.2));
+const dirLight = new THREE.DirectionalLight(0x8899cc, 1.5);
+dirLight.position.set(5, 8, 5);
+scene.add(dirLight);
+const ptLight = new THREE.PointLight(0x0052cc, 2, 15);
+ptLight.position.set(-4, 3, 2);
+scene.add(ptLight);
+
+// Grid floor
+const grid = new THREE.GridHelper(20, 20, 0x1a2744, 0x0d1525);
+grid.position.y = -2.5;
+scene.add(grid);
+
+// ─── PARTICLES ─────────────────────────────────────────
+const particleCount = 200;
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(particleCount * 3);
+for (let i = 0; i < particleCount * 3; i++) pPos[i] = (Math.random() - 0.5) * 20;
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({color:0x334466, size:0.03, transparent:true, opacity:0.5});
+scene.add(new THREE.Points(pGeo, pMat));
+
+// ─── NODES ──────────────────────────────────────────────
+function makeMat(color, emissive=0x000000, emissiveIntensity=0.5) {
+  return new THREE.MeshStandardMaterial({color, emissive, emissiveIntensity, metalness:0.4, roughness:0.3, transparent:true});
+}
+
+const SPHERE_GEO = new THREE.SphereGeometry(0.45, 32, 32);
+const RING_GEO = new THREE.TorusGeometry(0.6, 0.06, 16, 64);
+const BOX_GEO = new THREE.BoxGeometry(0.7, 0.5, 0.3);
+
+const aliceNode = new THREE.Mesh(SPHERE_GEO, makeMat(0x4fc3f7, 0x4fc3f7, 0.3));
+aliceNode.position.set(-5, 0, 0);
+scene.add(aliceNode);
+const aliceRing = new THREE.Mesh(RING_GEO, new THREE.MeshBasicMaterial({color:0x4fc3f7, transparent:true, opacity:0.3}));
+aliceRing.position.copy(aliceNode.position);
+scene.add(aliceRing);
+const aliceLabel = makeLabel('Alice', 0x4fc3f7);
+aliceLabel.position.set(-5, 1.1, 0);
+scene.add(aliceLabel);
+
+const bobNode = new THREE.Mesh(SPHERE_GEO, makeMat(0x81c784, 0x81c784, 0.3));
+bobNode.position.set(5, 0, 0);
+scene.add(bobNode);
+const bobRing = new THREE.Mesh(RING_GEO, new THREE.MeshBasicMaterial({color:0x81c784, transparent:true, opacity:0.3}));
+bobRing.position.copy(bobNode.position);
+scene.add(bobRing);
+const bobLabel = makeLabel('Bob', 0x81c784);
+bobLabel.position.set(5, 1.1, 0);
+scene.add(bobLabel);
+
+// Central KEM hub
+const kemNode = new THREE.Mesh(new THREE.OctahedronGeometry(0.5, 0), makeMat(0xffb74d, 0xffb74d, 0.4));
+kemNode.position.set(0, 0, 0);
+scene.add(kemNode);
+const kemRing = new THREE.Mesh(new THREE.TorusGeometry(0.75, 0.05, 16, 64), new THREE.MeshBasicMaterial({color:0xffb74d, transparent:true, opacity:0.4}));
+kemRing.position.copy(kemNode.position);
+scene.add(kemRing);
+const kemLabel = makeLabel('KEM Ops', 0xffb74d);
+kemLabel.position.set(0, 1.2, 0);
+scene.add(kemLabel);
+
+// Shared secret node (hidden initially)
+const sharedNode = new THREE.Mesh(new THREE.IcosahedronGeometry(0.35, 1), makeMat(0xff6b6b, 0xff6b6b, 0.6));
+sharedNode.position.set(0, -1.5, 0);
+scene.add(sharedNode);
+const sharedLabel = makeLabel('ss ✓', 0xff6b6b);
+sharedLabel.position.set(0, -0.9, 0);
+scene.add(sharedLabel);
+
+// Operation mini-nodes
+function makeMiniNode(pos, color, label) {
+  const m = new THREE.Mesh(BOX_GEO, makeMat(color, color, 0.4));
+  m.position.copy(pos);
+  scene.add(m);
+  const lbl = makeLabel(label, color);
+  lbl.position.set(pos.x, pos.y + 0.7, pos.z);
+  scene.add(lbl);
+  return m;
+}
+const seedNode = makeMiniNode(new THREE.Vector3(-3.5, 1.5, -1), 0x4fc3f7, 'd‖z→ρ‖σ');
+const matNode = makeMiniNode(new THREE.Vector3(-1.5, 1.5, -1), 0x4fc3f7, 'A·s+e');
+const encNode = makeMiniNode(new THREE.Vector3(1.5, 1.5, 1), 0xffb74d, 'Encaps');
+const decNode = makeMiniNode(new THREE.Vector3(-1.5, 1.5, 1), 0x81c784, 'Decaps');
+
+// ─── EDGES ──────────────────────────────────────────────
+const EDGE_MAT = new THREE.LineBasicMaterial({color:0x1a2744, transparent:true, opacity:0.6});
+function makeEdge(a, b) {
+  const g = new THREE.BufferGeometry().setFromPoints([a.clone(), b.clone()]);
+  const l = new THREE.Line(g, EDGE_MAT.clone());
+  scene.add(l);
+  return l;
+}
+const aliceToKem = makeEdge(aliceNode.position, kemNode.position);
+const aliceToSeed = makeEdge(aliceNode.position, seedNode.position);
+const aliceToMat = makeEdge(aliceNode.position, matNode.position);
+const bobToKem = makeEdge(bobNode.position, kemNode.position);
+const bobToEnc = makeEdge(bobNode.position, encNode.position);
+const bobToDec = makeEdge(bobNode.position, decNode.position);
+const kemToShared = makeEdge(kemNode.position, sharedNode.position);
+
+// All edges for dimming
+const allEdges = [aliceToKem, aliceToSeed, aliceToMat, bobToKem, bobToEnc, bobToDec, kemToShared];
+
+// ─── DATA FLOW PARTICLES ────────────────────────────────
+// Animated particles along edges
+class FlowParticle {
+  constructor(start, end, color, speed=0.012) {
+    this.start = start.clone();
+    this.end = end.clone();
+    this.t = 0;
+    this.speed = speed;
+    this.alive = true;
+    const geo = new THREE.SphereGeometry(0.07, 8, 8);
+    this.mat = new THREE.MeshBasicMaterial({color, transparent:true, opacity:0.9});
+    this.mesh = new THREE.Mesh(geo, this.mat);
+    scene.add(this.mesh);
+    this.update();
+  }
+  update(dt) {
+    this.t = (this.t + this.speed) % 1;
+    this.mesh.position.lerpVectors(this.start, this.end, this.t);
+    this.mat.opacity = Math.sin(this.t * Math.PI) * 0.9;
+  }
+  remove() {
+    scene.remove(this.mesh);
+    this.alive = false;
+  }
+}
+
+let particles = [];
+
+function spawnFlow(start, end, color, count=5, speed=0.012) {
+  for (let i = 0; i < count; i++) {
+    const p = new FlowParticle(start, end, color, speed);
+    p.t = i / count;
+    particles.push(p);
+  }
+}
+
+function clearParticles() {
+  particles.forEach(p => p.remove());
+  particles = [];
+}
+
+// ─── LABEL HELPER ──────────────────────────────────────
+function makeLabel(text, color) {
+  const c = document.createElement('canvas');
+  c.width = 256; c.height = 64;
+  const ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, 256, 64);
+  ctx.font = 'bold 22px -apple-system, Segoe UI, sans-serif';
+  ctx.fillStyle = '#' + color.toString(16).padStart(6, '0');
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 32);
+  const tex = new THREE.CanvasTexture(c);
+  const mat = new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false});
+  const sp = new THREE.Sprite(mat);
+  sp.scale.set(2, 0.5, 1);
+  return sp;
+}
+
+// ─── HIGHLIGHT HELPERS ──────────────────────────────────
+const ACTIVE_COLOR = 0x0052CC;
+const DIM_OPACITY = 0.08;
+
+function dimAll() {
+  [aliceNode, bobNode, kemNode, sharedNode].forEach(n => {
+    n.material.opacity = 0.3;
+    n.material.emissiveIntensity = 0.05;
+  });
+  [seedNode, matNode, encNode, decNode].forEach(n => {
+    n.material.opacity = 0.3;
+  });
+  allEdges.forEach(e => { e.material.opacity = 0.1; });
+  [aliceRing, bobRing, kemRing].forEach(r => { r.material.opacity = 0.05; });
+}
+
+function highlightNode(node, ring, color, intensity=0.8) {
+  node.material.color.set(color);
+  node.material.emissive.set(color);
+  node.material.emissiveIntensity = intensity;
+  node.material.opacity = 1;
+  ring.material.color.set(color);
+  ring.material.opacity = 0.6;
+}
+
+function highlightEdge(edge, color) {
+  edge.material.color.set(color);
+  edge.material.opacity = 0.9;
+}
+
+function resetAllHighlights() {
+  dimAll();
+  highlightNode(aliceNode, aliceRing, 0x4fc3f7, 0.3);
+  highlightNode(bobNode, bobRing, 0x81c784, 0.3);
+  highlightNode(kemNode, kemRing, 0xffb74d, 0.4);
+  sharedNode.material.opacity = 0;
+  sharedLabel.material.opacity = 0;
+  sharedNode.material.emissiveIntensity = 0;
+}
+
+// ─── STEP ACTIONS ───────────────────────────────────────
+const STEP_ACTIONS = [
+  // 0: seeds
+  () => {
+    dimAll();
+    highlightNode(aliceNode, aliceRing, 0x4fc3f7, 0.9);
+    highlightEdge(aliceToSeed, 0x4fc3f7);
+    highlightNode(seedNode, null, 0x4fc3f7, 0.7);
+    spawnFlow(aliceNode.position, seedNode.position, 0x4fc3f7, 8, 0.015);
+    spawnFlow(aliceNode.position, matNode.position, 0x4fc3f7, 5, 0.01);
+    seedNode.material.emissive.set(0x4fc3f7);
+    matNode.material.emissive.set(0x4fc3f7);
+  },
+  // 1: rho/sigma
+  () => {
+    clearParticles();
+    dimAll();
+    highlightNode(aliceNode, aliceRing, 0x4fc3f7, 0.9);
+    highlightEdge(aliceToSeed, 0x4fc3f7);
+    highlightNode(seedNode, null, 0x4fc3f7, 0.8);
+    spawnFlow(aliceNode.position, seedNode.position, 0x4fc3f7, 10, 0.018);
+    seedNode.material.emissive.set(0x4fc3f7);
+  },
+  // 2: matrix + s/e
+  () => {
+    clearParticles();
+    dimAll();
+    highlightNode(aliceNode, aliceRing, 0x4fc3f7, 0.9);
+    highlightEdge(aliceToMat, 0x4fc3f7);
+    highlightNode(matNode, null, 0x4fc3f7, 0.9);
+    spawnFlow(aliceNode.position, matNode.position, 0x4fc3f7, 8, 0.012);
+    spawnFlow(aliceNode.position, aliceNode.position, 0x4fc3f7, 4, 0.02);
+    matNode.material.emissive.set(0x4fc3f7);
+  },
+  // 3: pk computed, sent to Bob
+  () => {
+    clearParticles();
+    dimAll();
+    highlightNode(aliceNode, aliceRing, 0x4fc3f7, 0.9);
+    highlightEdge(aliceToKem, 0x4fc3f7);
+    highlightEdge(aliceToMat, 0x4fc3f7);
+    highlightNode(matNode, null, 0x4fc3f7, 0.7);
+    highlightNode(kemNode, kemRing, 0xffb74d, 0.9);
+    spawnFlow(aliceNode.position, kemNode.position, 0x4fc3f7, 6, 0.02);
+    spawnFlow(aliceNode.position, matNode.position, 0x4fc3f7, 4, 0.01);
+    kemNode.material.emissive.set(0xffb74d);
+    // rotate kem node
+    spinKEM(1.5);
+    matNode.material.emissive.set(0x4fc3f7);
+  },
+  // 4: Bob receives ek
+  () => {
+    clearParticles();
+    dimAll();
+    highlightNode(kemNode, kemRing, 0xffb74d, 0.8);
+    highlightEdge(aliceToKem, 0x4fc3f7);
+    highlightEdge(bobToKem, 0x81c784);
+    highlightNode(bobNode, bobRing, 0x81c784, 0.9);
+    spawnFlow(kemNode.position, bobNode.position, 0xffb74d, 10, 0.025);
+    bobNode.material.emissive.set(0x81c784);
+  },
+  // 5: Bob generates m, r
+  () => {
+    clearParticles();
+    dimAll();
+    highlightNode(bobNode, bobRing, 0x81c784, 0.9);
+    highlightEdge(bobToEnc, 0x81c784);
+    highlightNode(encNode, null, 0xffb74d, 0.9);
+    spawnFlow(bobNode.position, encNode.position, 0x81c784, 8, 0.02);
+    encNode.material.emissive.set(0xffb74d);
+    bobNode.material.emissive.set(0x81c784);
+  },
+  // 6: ciphertext sent to Alice, ss computed at Bob
+  () => {
+    clearParticles();
+    dimAll();
+    highlightNode(bobNode, bobRing, 0x81c784, 0.8);
+    highlightNode(encNode, null, 0xffb74d, 0.9);
+    highlightEdge(bobToEnc, 0xffb74d);
+    highlightNode(kemNode, kemRing, 0xffb74d, 0.8);
+    highlightNode(aliceNode, aliceRing, 0x4fc3f7, 0.8);
+    spawnFlow(encNode.position, kemNode.position, 0xffb74d, 10, 0.03);
+    spawnFlow(kemNode.position, aliceNode.position, 0xffb74d, 10, 0.025);
+    // Show ss at Bob
+    sharedNode.position.set(7, 1.5, 0);
+    sharedNode.material.opacity = 1;
+    sharedNode.material.emissive.set(0xff6b6b);
+    sharedNode.material.emissiveIntensity = 0.8;
+    sharedLabel.material.opacity = 1;
+    encNode.material.emissive.set(0xffb74d);
+  },
+  // 7: Alice decaps, ss matches
+  () => {
+    clearParticles();
+    dimAll();
+    highlightNode(aliceNode, aliceRing, 0x4fc3f7, 0.9);
+    highlightNode(decNode, null, 0x81c784, 0.9);
+    highlightNode(kemNode, kemRing, 0xffb74d, 0.7);
+    highlightEdge(aliceToKem, 0xffb74d);
+    spawnFlow(kemNode.position, decNode.position, 0xffb74d, 8, 0.025);
+    spawnFlow(decNode.position, aliceNode.position, 0x4fc3f7, 6, 0.02);
+    // Move shared node to center
+    sharedNode.position.set(0, -1.5, 0);
+    sharedNode.material.opacity = 1;
+    sharedNode.material.emissiveIntensity = 1.2;
+    sharedLabel.material.opacity = 1;
+    decNode.material.emissive.set(0x81c784);
+    aliceNode.material.emissive.set(0x4fc3f7);
+    aliceNode.material.emissiveIntensity = 1;
+    // Pulse shared
+    pulseShared();
+    spinKEM(-2);
+  }
+];
+
+let spinSpeed = 0;
+let spinDir = 1;
+function spinKEM(speed) { spinSpeed = speed; spinDir = speed > 0 ? 1 : -1; }
+
+let sharedPulseT = 0;
+let sharedPulsing = false;
+function pulseShared() { sharedPulsing = true; sharedPulseT = 0; }
+
+// ─── UI STATE ────────────────────────────────────────────
+let currentStep = 0;
+const TOTAL = STEPS.length;
+
+function $(id) { return document.getElementById(id); }
+
+function buildDots() {
+  const el = $('step-indicator');
+  el.innerHTML = '';
+  for (let i = 0; i < TOTAL; i++) {
+    if (i > 0) {
+      const ln = document.createElement('div');
+      ln.className = 'step-line';
+      ln.id = `line-${i}`;
+      el.appendChild(ln);
+    }
+    const dot = document.createElement('div');
+    dot.className = 'step-dot';
+    dot.id = `dot-${i}`;
+    el.appendChild(dot);
+  }
+}
+
+function updateDots(step) {
+  for (let i = 0; i < TOTAL; i++) {
+    const dot = $(`dot-${i}`);
+    const ln = $(`line-${i}`);
+    if (!dot) continue;
+    dot.className = 'step-dot' + (i < step ? ' done' : i === step ? ' active' : '');
+    if (ln) ln.className = 'step-line' + (i < step ? ' active' : '');
+  }
+}
+
+function updatePhaseLabel(phase) {
+  const el = $('phase-label');
+  el.className = 'phase-label ' + phase;
+  const labels = {keygen:'🔑 KeyGen — 密钥生成', encaps:'📦 Encaps — 封装', decaps:'🔓 Decaps — 解封装'};
+  el.textContent = labels[phase] || phase;
+}
+
+function updateChips(chips) {
+  const row = $('data-row');
+  row.innerHTML = '';
+  chips.forEach(chip => {
+    const d = document.createElement('div');
+    d.className = `data-chip ${chip.owner}`;
+    d.innerHTML = `<span class="lbl">${chip.label}</span>${chip.value}`;
+    row.appendChild(d);
+  });
+}
+
+function applyStep(step) {
+  const s = STEPS[step];
+  $('step-num').textContent = step + 1;
+  $('total-steps').textContent = TOTAL;
+  $('desc-title').textContent = s.title;
+  $('desc-text').textContent = s.desc;
+  $('desc-formula').textContent = s.formula || '';
+  updatePhaseLabel(s.phase);
+  updateChips(s.chips);
+  updateDots(step);
+  $('progress-fill').style.width = ((step + 1) / TOTAL * 100) + '%';
+  $('btn-prev').disabled = step === 0;
+  $('btn-next').disabled = step === TOTAL - 1;
+
+  // Run 3D action
+  if (STEP_ACTIONS[step]) STEP_ACTIONS[step]();
+
+  // Camera
+  if (s.camera) {
+    camera.position.set(s.camera.x, s.camera.y, s.camera.z);
+    controls.target.set(0, 0, 0);
+  }
+}
+
+$('btn-next').addEventListener('click', () => {
+  if (currentStep < TOTAL - 1) {
+    currentStep++;
+    applyStep(currentStep);
+  }
+});
+$('btn-prev').addEventListener('click', () => {
+  if (currentStep > 0) {
+    currentStep--;
+    applyStep(currentStep);
+  }
+});
+$('btn-reset').addEventListener('click', () => {
+  currentStep = 0;
+  resetAllHighlights();
+  clearParticles();
+  sharedNode.position.set(0, -1.5, 0);
+  sharedNode.material.opacity = 0;
+  sharedLabel.material.opacity = 0;
+  sharedPulsing = false;
+  sharedPulseT = 0;
+  spinSpeed = 0;
+  camera.position.set(0, 2, 7);
+  controls.target.set(0, 0, 0);
+  applyStep(0);
+});
+$('btn-skip').addEventListener('click', () => {
+  // Jump to end
+  currentStep = TOTAL - 1;
+  applyStep(currentStep);
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); $('btn-next').click(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); $('btn-prev').click(); }
+  if (e.key === 'r') $('btn-reset').click();
+});
+
+// ─── ANIMATION LOOP ─────────────────────────────────────
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+
+  controls.update();
+
+  // KEM node rotation
+  kemNode.rotation.y += 0.005 + spinSpeed * dt;
+  kemNode.rotation.x = Math.sin(Date.now() * 0.001) * 0.1;
+  kemRing.rotation.z += 0.008;
+
+  // Ring orbits
+  aliceRing.rotation.x += 0.003;
+  aliceRing.rotation.z += 0.005;
+  bobRing.rotation.x += 0.003;
+  bobRing.rotation.y += 0.004;
+
+  // Node breathing
+  const t = Date.now() * 0.001;
+  aliceNode.material.emissiveIntensity += (0.35 - aliceNode.material.emissiveIntensity) * 0.05;
+  bobNode.material.emissiveIntensity += (0.35 - bobNode.material.emissiveIntensity) * 0.05;
+  kemNode.material.emissiveIntensity += (0.5 - kemNode.material.emissiveIntensity) * 0.05;
+
+  // Shared node
+  if (sharedNode.material.opacity > 0) {
+    if (sharedPulsing) {
+      sharedPulseT += dt;
+      sharedNode.material.emissiveIntensity = 0.6 + Math.sin(sharedPulseT * 4) * 0.6;
+      sharedNode.scale.setScalar(1 + Math.sin(sharedPulseT * 3) * 0.15);
+      if (sharedPulseT > 3) { sharedPulsing = false; sharedNode.scale.setScalar(1); }
+    }
+    sharedNode.rotation.y += 0.02;
+  }
+
+  // Particles
+  particles.forEach(p => p.update(dt));
+  particles = particles.filter(p => p.alive);
+
+  renderer.render(scene, camera);
+}
+
+// ─── INIT ────────────────────────────────────────────────
+buildDots();
+resetAllHighlights();
+applyStep(0);
+animate();
+</script>
+</body>
+</html>
