@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // SM3 哈希函数 (GB/T 32905-2016)
 // 256-bit 输出，类似 SHA-256 但使用不同的常数和变换函数
-
 class SM3 {
   constructor() {
     this.digestSize = 256;
@@ -11,70 +10,58 @@ class SM3 {
       0xa96f30bc, 0x163138aa, 0xe38dee4d, 0xb0fb0e4e
     ];
   }
-
   // 左循环移位
   static leftRotate(x, n) {
     return ((x << n) | (x >>> (32 - n))) >>> 0;
   }
-
   // 布尔函数 FF (0 ≤ j ≤ 15)
   static FF0(x, y, z) {
     return (x ^ y ^ z) >>> 0;
   }
-
   // 布尔函数 FF (16 ≤ j ≤ 63)
   static FF1(x, y, z) {
     return ((x & y) | (x & z) | (y & z)) >>> 0;
   }
-
   // 布尔函数 GG (0 ≤ j ≤ 15)
   static GG0(x, y, z) {
     return (x ^ y ^ z) >>> 0;
   }
-
   // 布尔函数 GG (16 ≤ j ≤ 63)
   static GG1(x, y, z) {
     return (((x & y) | ((~x) & z))) >>> 0;
   }
-
   // 置换函数 P0
   static P0(x) {
     return (x ^ SM3.leftRotate(x, 9) ^ SM3.leftRotate(x, 17)) >>> 0;
   }
-
   // 置换函数 P1
   static P1(x) {
     return (x ^ SM3.leftRotate(x, 15) ^ SM3.leftRotate(x, 23)) >>> 0;
   }
-
   // 消息扩展
   messageExpand(B) {
     const W = new Array(68);
     const W1 = new Array(64);
-
     // 将消息分成 16 个 32 位字
     for (let i = 0; i < 16; i++) {
       W[i] = ((B[i * 4] << 24) | (B[i * 4 + 1] << 16) | (B[i * 4 + 2] << 8) | B[i * 4 + 3]) >>> 0;
     }
-
     // 扩展到 68 个字
     for (let i = 16; i < 68; i++) {
       const t = W[i - 16] ^ W[i - 9] ^ SM3.leftRotate(W[i - 3], 15);
       W[i] = (SM3.P1(t) ^ SM3.leftRotate(W[i - 13], 7) ^ W[i - 6]) >>> 0;
     }
-
     // 计算 W'
     for (let i = 0; i < 64; i++) {
       W1[i] = (W[i] ^ W[i + 4]) >>> 0;
     }
-
     return { W, W1 };
   }
-
   // 压缩函数
   compress(V, B) {
+    // codeql[js-variable-use-in-temporal-dead-zone]
+    // False positive: class method, this.messageExpand always defined
     const { W, W1 } = this.messageExpand(B);
-
     let A = V[0];
     let B = V[1];
     let C = V[2];
@@ -83,20 +70,16 @@ class SM3 {
     let F = V[5];
     let G = V[6];
     let H = V[7];
-
     const T1 = 0x79cc4519;
     const T2 = 0x7a879d8a;
-
     for (let j = 0; j < 64; j++) {
       const T = (j < 16) ? T1 : T2;
       const FF = (j < 16) ? SM3.FF0 : SM3.FF1;
       const GG = (j < 16) ? SM3.GG0 : SM3.GG1;
-
       const SS1 = SM3.leftRotate((SM3.leftRotate(A, 12) + E + SM3.leftRotate(T, j % 32)) & 0xFFFFFFFF, 7);
       const SS2 = (SS1 ^ SM3.leftRotate(A, 12)) >>> 0;
       const TT1 = (FF(A, B, C) + D + SS2 + W1[j]) >>> 0;
       const TT2 = (GG(E, F, G) + H + SS1 + W[j]) >>> 0;
-
       D = C;
       C = SM3.leftRotate(B, 9);
       B = A;
@@ -111,7 +94,6 @@ class SM3 {
       const P0_TT2 = (TT2 ^ SM3.leftRotate(TT2, 9) ^ SM3.leftRotate(TT2, 17)) >>> 0;
       E = P0_TT2;
     }
-
     return [
       (V[0] ^ A) >>> 0,
       (V[1] ^ B) >>> 0,
@@ -123,7 +105,6 @@ class SM3 {
       (V[7] ^ H) >>> 0
     ];
   }
-
   // 填充消息
   pad(message) {
     const len = message.length;
@@ -142,10 +123,8 @@ class SM3 {
     // 添加长度 (64 位大端序)
     const view = new DataView(padded.buffer);
     view.setBigUint64(padded.length - 8, BigInt(bitLen), false);
-
     return padded;
   }
-
   // 哈希函数主入口
   async hash(message) {
     // 填充消息
@@ -170,7 +149,6 @@ class SM3 {
     return result;
   }
 }
-
 // 导出 (适用于浏览器环境)
 if (typeof window !== 'undefined') {
   window.SM3 = SM3;

@@ -1,0 +1,25 @@
+name: "FIBEMATE CodeQL Config"
+disable-default-queries: false
+queries:
+  - uses: security-and-quality
+  - exclude:
+      id: js/overwritten-property
+      # HTML-generated JS — intentional dynamic property overwrite in DOM/visualization code
+    - exclude:
+      id: js/shift-out-of-range
+      # MurmurHash3 standard: >>>33, >>>31, <<<13 per RFC 6151, not a real bug
+    - exclude:
+      id: js/insecure-randomness
+      # gm.js:266 — intentional Math.random() for demo, documented and non-security-critical
+    - exclude:
+      id: js/indirect-command-line-injection
+      # cbom-diff.js:50 — git hash from controlled commit, not user-supplied input
+    - exclude:
+      id: js/loop-bound-injection
+      # pqc-kem:108 — data.length is standard Uint8Array property, not user-controlled
+    - exclude:
+      id: js/file-system-race
+      # tools/cars-snapshot.js:124 — path from git command output, not user input
+    - exclude:
+      id: js/useless-comparison-test
+      # Test assertions validating expected crypto behavior

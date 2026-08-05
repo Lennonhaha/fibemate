@@ -20,6 +20,13 @@ updates:
         update-types: ["version-update:semver-minor"]
       - dependency-name: "bcryptjs"
         update-types: ["version-update:semver-minor"]
+      - dependency-name: "sm-crypto"
+        # FIBEMATE has its own @fibemate/sm2-ref replacement.
+        # Legacy dependency only for backward compat in www/crypto/sm2-browser.js.
+      - dependency-name: "ws"
+        # Production dependency for reg-server WebSocket.
+        # DoS vulnerability has low impact for a post-quantum crypto validation platform.
+        # Will upgrade post 8/31 launch.
 
   # GitHub Actions
   - package-ecosystem: "github-actions"
