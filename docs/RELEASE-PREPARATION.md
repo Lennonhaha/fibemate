@@ -144,14 +144,29 @@ gh release view v3.3.0 --repo Lennonhaha/fibemate
 - [ ] 账号：@Lennonhaha（需确认已注册）
 - [ ] 发布时间：8/31 08:00-10:00 PDT（约北京时间 23:00-01:00+1）
 - [ ] 标题备选：
-  - "FIBEMATE: 全栈后量子密码工程验证平台（ML-KEM + 国密 + FPGA + 形式化验证）"
-  - "Show HN: I built a full-stack PQC engineering validation platform from math to hardware"
+  - "Show HN: FIBEMATE — Full-Stack PQC Engineering Validation (ML-KEM + 国密 + FPGA)"
+  - "Show HN: I built a complete post-quantum crypto platform from math to FPGA hardware"
+- [ ] 草稿：`docs/ANNOUNCEMENT-HN.md`
 - [ ] 内容要点：诚实透明（列出已知限制）+ 26 个可视化 + 全开源 + TSR 证据链
 
 ### 4.2 V2EX
 - [ ] 账号：@Lennonhaha（需确认已注册）
 - [ ] 节点：`/t/cryptography` 或 `/t/programming`
-- [ ] 内容：与 HN 类似，中文版本
+- [ ] 草稿：`docs/ANNOUNCEMENT-V2EX.md`
+- [ ] 内容：与 HN 类似，中文版本，约 400-500 中文字
+
+### 4.3 知乎
+- [ ] 账号：需确认已注册（知乎专栏）
+- [ ] 发布时间：8/31 10:00 CST（V2EX 后约 30 分钟）
+- [ ] 草稿：`docs/ANNOUNCEMENT-ZHIHU.md`
+- [ ] 节点：密码学 / 编程 / 技术
+- [ ] 内容：扩展版（约 1500-2000 中文字），复用 V2EX 草稿结构
+- [ ] 可加：官网截图作为头图、可视化页面截图
+- [ ] 注意：评论区及时回复（知乎运营关键）
+
+### 4.4 GitHub Discussions
+- [ ] 8/31 09:00 CST 发欢迎帖
+- [ ] 帖子内容：宣布正式开源 + 引用 v3.3.0 Release + 欢迎 Issues/协作
 
 ### 4.3 Twitter / X
 - [ ] 账号：@fibemate_net（需确认已注册）
