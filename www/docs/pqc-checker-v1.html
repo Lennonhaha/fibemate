@@ -4,9 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PQC 部署验证器 · FIBEMATE</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<!-- Google Fonts removed for CSP compliance — using system monospace fallback -->
 <style>
 /* ═════════════════════════════════════════════════════════════════════
    Quantum Terminal — PQC Deployment Checker
@@ -1206,6 +1204,16 @@ function renderTrend() {
   });
 
   document.getElementById('trendLegend').innerHTML = legends.join('');
+}
+
+/* ===== Utility: showError ===== */
+function showError(msg) {
+  var el = document.getElementById('errorBanner');
+  if (el) {
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(function() { el.style.display = 'none'; }, 5000);
+  }
 }
 
 /* ===== Hook into existing doProbe to save history ===== */
