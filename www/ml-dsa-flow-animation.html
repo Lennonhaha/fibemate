@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML-DSA 签名验证流程 — 3D 交互动画 | FIBEMATE</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230052CC'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='14' font-family='monospace'>DS</text></svg>">
+<style>
+:root{--bg:#060a12;--panel:#0d1525;--border:#1a2744;--text:#b8c8e8;--dim:#5a6a8a;--accent:#0052CC;--acc2:#00c8e0;--sgn:#ce93d8;--ver:#80cbc4;--key:#ffb74d;--ok:#81c784;--fail:#ef5350;--font:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);overflow:hidden;height:100vh}
+#header{position:fixed;top:0;left:0;right:0;z-index:10;display:flex;align-items:center;justify-content:space-between;padding:12px 20px;background:linear-gradient(180deg,rgba(6,10,18,.95),transparent);border-bottom:1px solid rgba(255,255,255,.05)}
+#header h1{font-size:15px;font-weight:600;color:#e0e8ff}
+#header .sub{font-size:12px;color:var(--dim)}
+#canvas-container{position:fixed;inset:0;z-index:1}
+canvas{display:block}
+#panel{position:fixed;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(0deg,rgba(6,10,18,.97),rgba(6,10,18,.85) 80%,transparent);padding:0 20px 16px}
+#step-indicator{display:flex;gap:6px;align-items:center;justify-content:center;padding:10px 0 6px}
+.step-dot{width:8px;height:8px;border-radius:50%;background:var(--border);transition:all .3s}
+.step-dot.active{background:var(--acc2);transform:scale(1.5);box-shadow:0 0 8px var(--acc2)}
+.step-dot.done{background:var(--accent)}
+.step-line{width:40px;height:1px;background:var(--border);transition:background .3s}
+.step-line.active{background:var(--accent)}
+#phase-label{text-align:center;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px}
+#phase-label.keygen{color:#ce93d8}
+#phase-label.sign{color:#ce93d8}
+#phase-label.verify{color:#80cbc4}
+#desc-box{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px 16px;margin-bottom:10px;min-height:64px}
+#desc-title{font-size:13px;font-weight:700;color:#e8f0ff;margin-bottom:4px}
+#desc-text{font-size:12px;color:var(--text);line-height:1.6}
+#desc-formula{font-family:'Courier New',monospace;font-size:11px;color:var(--acc2);margin-top:6px;padding:4px 8px;background:rgba(0,194,224,.08);border-radius:4px;display:inline-block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#data-row{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.data-chip{flex-shrink:0;padding:5px 10px;border-radius:6px;font-family:'Courier New',monospace;font-size:10px;border:1px solid;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;background:rgba(0,0,0,.3)}
+.data-chip.signer{border-color:#ce93d8;color:#ce93d8}
+.data-chip.verifier{border-color:#80cbc4;color:#80cbc4}
+.data-chip.sig{border-color:#ffb74d;color:#ffb74d}
+.data-chip.msg{border-color:#80deea;color:#80deea}
+.data-chip.ok{border-color:#81c784;color:#81c784}
+.data-chip.fail{border-color:#ef5350;color:#ef5350}
+.data-chip .lbl{font-size:9px;opacity:.7;display:block}
+#ctrl{display:flex;gap:10px;align-items:center;justify-content:center;padding-top:8px}
+.btn{padding:8px 20px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-prev{background:var(--panel);color:var(--text);border:1px solid var(--border)}
+.btn-prev:hover{border-color:var(--accent);color:var(--accent)}
+.btn-prev:disabled{opacity:.3;cursor:not-allowed}
+.btn-next{background:var(--accent);color:#fff;min-width:120px;box-shadow:0 2px 12px rgba(0,82,204,.4)}
+.btn-next:hover{background:#1a6fff;box-shadow:0 4px 16px rgba(0,82,204,.6)}
+.btn-next:disabled{opacity:.4;cursor:not-allowed}
+.btn-reset{background:transparent;color:var(--dim);font-size:12px;border:none;cursor:pointer}
+.btn-reset:hover{color:var(--text)}
+#btn-skip{background:transparent;border:1px solid var(--border);color:var(--dim);font-size:11px;padding:6px 12px;border-radius:6px;cursor:pointer}
+#btn-skip:hover{border-color:var(--accent);color:var(--accent)}
+#progress-bar{height:2px;background:var(--border);margin-top:8px;border-radius:2px;overflow:hidden}
+#progress-fill{height:100%;background:var(--acc2);width:0%;transition:width .4s}
+#legend{position:fixed;top:64px;right:16px;z-index:10;background:rgba(13,21,37,.88);border:1px solid var(--border);border-radius:10px;padding:10px 14px}
+#legend h3{font-size:11px;color:var(--dim);letter-spacing:.1em;text-transform:uppercase;margin-bottom:8px}
+.lg{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text);margin-bottom:5px}
+.lg-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+</style>
+</head>
+<body>
+<div id="header">
+  <div><h1>ML-DSA-44 签名验证流程</h1><div class="sub">FIPS 204 · Dilithium · 8 步交互</div></div>
+  <div style="display:flex;align-items:center;gap:10px"><span class="sub">Step <span id="step-num">1</span> / <span id="total-steps">8</span></span><span style="background:var(--accent);color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600">v3.3</span></div>
+</div>
+<div id="canvas-container"><canvas id="c"></canvas></div>
+<div id="legend"><h3>图例</h3>
+<div class="lg"><div class="lg-dot" style="background:#ce93d8"></div>签名者（Signer）</div>
+<div class="lg"><div class="lg-dot" style="background:#80cbc4"></div>验证者（Verifier）</div>
+<div class="lg"><div class="lg-dot" style="background:#ffb74d"></div>签名值 σ</div>
+<div class="lg"><div class="lg-dot" style="background:#80deea"></div>消息 m</div>
+<div class="lg"><div class="lg-dot" style="background:#81c784"></div>验证通过 ✓</div>
+</div>
+<div id="panel">
+<div id="step-indicator"></div>
+<div id="phase-label" class="keygen">🔐 KeyGen — 签名密钥生成</div>
+<div id="desc-box"><div id="desc-title"></div><div id="desc-text"></div><div id="desc-formula"></div></div>
+<div id="data-row"></div>
+<div id="progress-bar"><div id="progress-fill"></div></div>
+<div id="ctrl"><button class="btn btn-prev" id="btn-prev" disabled>◀ 上一步</button><button class="btn btn-next" id="btn-next">下一步 ▶</button><button class="btn-reset" id="btn-reset">重置</button><button id="btn-skip">跳过动画</button></div>
+</div>
+<script src="/docs/lib/three.min.js?v=20260805"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260805"></script>
+<script>
+const STEPS=[
+{phase:"keygen",title:"生成随机种子",desc:"签名者用 32-byte 随机种子 ρ 通过 SHAKE256 派生确定性随机数，用于后续所有采样操作。",formula:"ρ ←$ {0,1}²⁵⁶",chips:[{label:"ρ (seed)",value:"7194b13c...2bd200",owner:"signer"}],camera:{x:0,y:2,z:7}},
+{phase:"keygen",title:"派生扩展矩阵 A",desc:"从 ρ 通过 SHAKE256 派生出一个 k×k 的多项式环矩阵 A（Ring-LWE 结构，模 q=8380417）。ML-DSA-44: k=4。",formula:"A = ExpandA(ρ)  (mod 8380417)",chips:[{label:"A (matrix)",value:"4×4 PolyMat",owner:"signer"},{label:"ρ",value:"32B",owner:"signer"}],camera:{x:3,y:2,z:6}},
+{phase:"keygen",title:"采样私钥向量 s₁, s₂",desc:"从 ρ 通过CBD-η（η=2）采样私钥向量 s = (s₁, s₂)，其中 s₁∈R_k^η，s₂∈R_l^η。ML-DSA-44: k=4, l=4, η=2。",formula:"s₁,s₂ ←$ CBD_η(ρ)",chips:[{label:"s₁ (secret-1)",value:"4-polys η=2",owner:"signer"},{label:"s₂ (secret-2)",value:"4-polys η=2",owner:"signer"}],camera:{x:-3,y:2,z:6}},
+{phase:"keygen",title:"计算公钥 pk = As + t",desc:"公钥 t = As₁ + s₂ (mod q)，然后哈希 H(pk) 存入私钥。公钥 pk 公开，私钥 sk=(t, s₁, s₂, ρ, H(pk)) 保密。",formula:"t = A·s₁ + s₂ (mod 8380417)  |  pk = (ρ, t)",chips:[{label:"pk (pubkey)",value:"1312B → Verifier",owner:"signer"},{label:"sk (seckey)",value:"2560B",owner:"signer"}],camera:{x:-5,y:1,z:5}},
+{phase:"sign",title:"接收方发送消息",desc:"验证者将待签名消息 m 发送给签名者。消息可以是任意长度字节串（ML-DSA 无长度限制）。",formula:"m = "Hello, post-quantum world!"",chips:[{label:"m (message)",value:"48656c6c6f2c...21 (52B)",owner:"msg"}],camera:{x:5,y:1,z:5}},
+{phase:"sign",title:"签名者计算消息哈希 μ",desc:"签名者计算 μ = SHAKE256(H(pk) ‖ m)，即公钥哈希与消息的联结哈希。这是抗选择消息攻击（EUF-CMA）的关键。",formula:"μ = SHAKE256(H(pk) ‖ m)",chips:[{label:"μ (msg hash)",value:"32B random-ish",owner:"signer"},{label:"H(pk)",value:"32B",owner:"signer"}],camera:{x:2,y:2,z:6}},
+{phase:"sign",title:"生成签名向量 z",desc:"签名者采样随机数 y（高斯分布），计算 z = y + c·s₁（mod q），然后截断并加上_hint_。核心：c 依赖于 μ，只能用私钥生成。",formula:"z = y + c·s₁  (mod 8380417)  |  σ = (z, hint)",chips:[{label:"z (sig part)",value:"4-polys",owner:"signer"},{label:"hint",value:"4-polys w1",owner:"sig"},{label:"σ (signature)",value:"~2700B → Verifier",owner:"sig"}],camera:{x:0,y:0,z:5}},
+{phase:"verify",title:"验证者校验签名",desc:"验证者用公钥 t 恢复 c' = DecompressQ(w)，其中 w = Az - c·t。如果 c' = c，则签名有效。",formula:"c' = H(μ ‖ DecompressQ(Az - c·t))  |  accept if c' = c",chips:[{label:"σ (signature)",value:"~2700B",owner:"sig"},{label:"result",value:"✓ VERIFIED",owner:"ok"}],camera:{x:0,y:-1,z:6}}
+];
+
+const canvas=document.getElementById("c");
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth,innerHeight);
+renderer.toneMapping=THREE.ACESFilmicToneMapping;
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x060a12);
+scene.fog=new THREE.FogExp2(0x060a12,0.04);
+const camera=new THREE.PerspectiveCamera(50,innerWidth/innerHeight,0.1,200);
+camera.position.set(0,2,7);
+const controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;controls.minDistance=3;controls.maxDistance=20;controls.maxPolarAngle=Math.PI*0.75;
+window.addEventListener("resize",()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+scene.add(new THREE.AmbientLight(0x334466,1.2));
+const dL=new THREE.DirectionalLight(0x8899cc,1.5);dL.position.set(5,8,5);scene.add(dL);
+const pL=new THREE.PointLight(0x9c27b0,2,15);pL.position.set(-4,3,2);scene.add(pL);
+
+// Grid
+const grid=new THREE.GridHelper(20,20,0x1a2744,0x0d1525);grid.position.y=-2.5;scene.add(grid);
+
+// Particles
+const pCount=200;
+const pGeo=new THREE.BufferGeometry();
+const pPos=new Float32Array(pCount*3);
+for(let i=0;i<pCount*3;i++)pPos[i]=(Math.random()-0.5)*20;
+pGeo.setAttribute("position",new THREE.BufferAttribute(pPos,3));
+scene.add(new THREE.Points(pGeo,new THREE.PointsMaterial({color:0x334466,size:0.03,transparent:true,opacity:0.5})));
+
+// Nodes
+function makeMat(color,emI=0.4){return new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:emI,metalness:0.4,roughness:0.3,transparent:true})}
+const SG=new THREE.SphereGeometry(0.45,32,32);
+const RG=new THREE.TorusGeometry(0.6,0.06,16,64);
+const BG=new THREE.BoxGeometry(0.7,0.5,0.3);
+
+const signer=new THREE.Mesh(SG,makeMat(0xce93d8,0.3));signer.position.set(-5,0,0);scene.add(signer);
+const sRing=new THREE.Mesh(RG,new THREE.MeshBasicMaterial({color:0xce93d8,transparent:true,opacity:0.3}));sRing.position.copy(signer.position);scene.add(sRing);
+scene.add(makeSprite("Signer",0xce93d8,-5,1.1,0));
+scene.add(makeSprite("Verifier",0x80cbc4,5,1.1,0));
+
+const verifier=new THREE.Mesh(SG,makeMat(0x80cbc4,0.3));verifier.position.set(5,0,0);scene.add(verifier);
+const vRing=new THREE.Mesh(RG,new THREE.MeshBasicMaterial({color:0x80cbc4,transparent:true,opacity:0.3}));vRing.position.copy(verifier.position);scene.add(vRing);
+
+const sigNode=new THREE.Mesh(new THREE.OctahedronGeometry(0.4,0),makeMat(0xffb74d,0.5));sigNode.position.set(0,0.8,0);scene.add(sigNode);
+const sigRing=new THREE.Mesh(new THREE.TorusGeometry(0.7,0.05,16,64),new THREE.MeshBasicMaterial({color:0xffb74d,transparent:true,opacity:0.4}));sigRing.position.copy(sigNode.position);scene.add(sigRing);
+
+const msgNode=new THREE.Mesh(new THREE.BoxGeometry(0.6,0.4,0.3),makeMat(0x80deea,0.5));msgNode.position.set(0,-0.8,0);scene.add(msgNode);
+scene.add(makeSprite("m",0x80deea,0,-1.3,0));
+
+const okNode=new THREE.Mesh(new THREE.IcosahedronGeometry(0.35,1),makeMat(0x81c784,0.6));okNode.position.set(0,-2,0);okNode.material.opacity=0;scene.add(okNode);
+scene.add(makeSprite("✓",0x81c784,0,-2.5,0));
+
+// Operation mini-nodes
+function mmn(pos,color,lbl){
+  const m=new THREE.Mesh(BG,makeMat(color,0.4));m.position.copy(pos);scene.add(m);
+  scene.add(makeSprite(lbl,color,pos.x,pos.y+0.7,pos.z));
+}
+const seedNode=mmn(new THREE.Vector3(-3,1.5,-1),0xce93d8,"seed→ρ");
+const matNode=mmn(new THREE.Vector3(-1,1.5,-1),0xce93d8,"A·s₁+s₂");
+const hashNode=mmn(new THREE.Vector3(1,1.5,1),0xce93d8,"H(pk)‖m");
+const sigGenNode=mmn(new THREE.Vector3(0,1.5,1),0xffb74d,"Sign(μ)");
+const verifyNode=mmn(new THREE.Vector3(0,1.5,-1),0x80cbc4,"Verify(σ,m,pk)");
+
+// Edges
+function makeEdge(a,b){const g=new THREE.BufferGeometry().setFromPoints([a.clone(),b.clone()]);const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x1a2744,transparent:true,opacity:0.6}));scene.add(l);return l;}
+const sToSig=makeEdge(signer.position,sigNode.position);
+const sToSeed=makeEdge(signer.position,seedNode.position);
+const sToMat=makeEdge(signer.position,matNode.position);
+const vToVerify=makeEdge(verifier.position,verifyNode.position);
+const sigToV=makeEdge(sigNode.position,verifier.position);
+const msgToHash=makeEdge(msgNode.position,hashNode.position);
+const hashToSign=makeEdge(hashNode.position,sigGenNode.position);
+const allEdges=[sToSig,sToSeed,sToMat,vToVerify,sigToV,msgToHash,hashToSign];
+
+// Sprite labels
+function makeSprite(text,color,x,y,z){
+  const c=document.createElement("canvas");c.width=256;c.height=64;
+  const ctx=c.getContext("2d");ctx.clearRect(0,0,256,64);
+  ctx.font="bold 22px -apple-system,Segoe UI,sans-serif";
+  ctx.fillStyle="#"+color.toString(16).padStart(6,"0");
+  ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText(text,128,32);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthTest:false}));
+  sp.scale.set(2,0.5,1);sp.position.set(x,y,z);
+  return sp;
+}
+
+// Flow particles
+class FP{
+  constructor(a,b,col,s=0.012){this.a=a.clone();this.b=b.clone();this.t=0;this.s=s;this.alive=true;
+    const m=new THREE.Mesh(new THREE.SphereGeometry(0.07,8,8),new THREE.MeshBasicMaterial({color:col,transparent:true}));
+    this.mesh=m;scene.add(m);this.update();}
+  update(dt){this.t=(this.t+this.s)%1;this.mesh.position.lerpVectors(this.a,this.b,this.t);this.mat.opacity=Math.sin(this.t*Math.PI)*0.9;}
+  remove(){scene.remove(this.mesh);this.alive=false}
+}
+let FPARTS=[];
+function spawn(a,b,col,n=5,s=0.012){for(let i=0;i<n;i++){const p=new FP(a,b,col,s);p.t=i/n;FPARTS.push(p);}}
+function clearP(){FPARTS.forEach(p=>p.remove());FPARTS=[];}
+
+function dimAll(){
+  [signer,verifier,sigNode,msgNode,okNode].forEach(n=>{n.material.opacity=0.3;n.material.emissiveIntensity=0.05});
+  [seedNode,matNode,hashNode,sigGenNode,verifyNode].forEach(n=>n.material.opacity=0.3);
+  allEdges.forEach(e=>e.material.opacity=0.1);
+  [sRing,vRing,sigRing].forEach(r=>r.material.opacity=0.05);
+}
+function hi(node,ring,col,int=0.8){node.material.color.set(col);node.material.emissive.set(col);node.material.emissiveIntensity=int;node.material.opacity=1;if(ring){ring.material.color.set(col);ring.material.opacity=0.6;}}
+function hiEdge(e,col){e.material.color.set(col);e.material.opacity=0.9;}
+function resetAll(){dimAll();hi(signer,sRing,0xce93d8,0.3);hi(verifier,vRing,0x80cbc4,0.3);hi(sigNode,sigRing,0xffb74d,0.5);msgNode.material.opacity=0;okNode.material.opacity=0;}
+
+// Step actions
+const SACTIONS=[
+  ()=>{dimAll();hi(signer,sRing,0xce93d8,0.9);hiEdge(sToSeed,0xce93d8);hi(seedNode,null,0xce93d8,0.8);spawn(signer.position,seedNode.position,0xce93d8,8,0.015);},
+  ()=>{clearP();dimAll();hi(signer,sRing,0xce93d8,0.9);hiEdge(sToMat,0xce93d8);hi(matNode,null,0xce93d8,0.8);spawn(signer.position,matNode.position,0xce93d8,8,0.012);},
+  ()=>{clearP();dimAll();hi(signer,sRing,0xce93d8,0.9);hiEdge(sToMat,0xce93d8);hi(matNode,null,0xce93d8,0.9);spawn(signer.position,matNode.position,0xce93d8,6,0.012);spawn(signer.position,signer.position,0xce93d8,4,0.02);},
+  ()=>{clearP();dimAll();hi(signer,sRing,0xce93d8,0.9);hiEdge(sToSig,0xce93d8);hi(sigNode,sigRing,0xffb74d,0.9);hi(matNode,null,0xce93d8,0.7);hiEdge(sToMat,0xce93d8);spawn(signer.position,sigNode.position,0xce93d8,8,0.02);spawn(signer.position,matNode.position,0xce93d8,4,0.01);sigNode.material.emissive.set(0xffb74d);},
+  ()=>{clearP();dimAll();msgNode.material.opacity=1;msgNode.material.emissiveIntensity=0.6;hi(verifier,vRing,0x80cbc4,0.7);msgNode.position.set(2,1,0);spawn(msgNode.position,verifier.position,0x80deea,8,0.02);},
+  ()=>{clearP();dimAll();hi(signer,sRing,0xce93d8,0.9);hi(hashNode,null,0xce93d8,0.8);msgNode.material.opacity=1;msgNode.material.emissiveIntensity=0.4;spawn(msgNode.position,hashNode.position,0x80deea,6,0.015);spawn(signer.position,hashNode.position,0xce93d8,6,0.012);},
+  ()=>{clearP();dimAll();hi(signer,sRing,0xce93d8,0.8);hi(sigGenNode,null,0xffb74d,0.9);hi(sigNode,sigRing,0xffb74d,0.8);hiEdge(sToSig,0xce93d8);spawn(signer.position,sigGenNode.position,0xce93d8,6,0.012);spawn(sigGenNode.position,sigNode.position,0xffb74d,8,0.02);hashNode.material.opacity=0.3;},
+  ()=>{clearP();dimAll();hi(verifier,vRing,0x80cbc4,0.9);hi(verifyNode,null,0x80cbc4,0.9);hi(sigNode,sigRing,0xffb74d,0.7);hiEdge(sigToV,0xffb74d);spawn(sigNode.position,verifier.position,0xffb74d,10,0.025);okNode.material.opacity=1;okNode.material.emissiveIntensity=1;okNode.position.set(7,1,0);pulseOK();}
+];
+let okPulseT=0,okPulsing=false;
+function pulseOK(){okPulsing=true;okPulseT=0;}
+
+// UI
+let cur=0;
+const TOTAL=STEPS.length;
+function $(id){return document.getElementById(id)}
+function buildDots(){const el=$("step-indicator");el.innerHTML="";for(let i=0;i<TOTAL;i++){if(i>0){const ln=document.createElement("div");ln.className="step-line";ln.id="ln-"+i;el.appendChild(ln);}const d=document.createElement("div");d.className="step-dot";d.id="dot-"+i;el.appendChild(d);}}
+function updateDots(s){for(let i=0;i<TOTAL;i++){const d=$("dot-"+i),ln=$("ln-"+i);if(d)d.className="step-dot"+(i<s?" done":i===s?" active":"");if(ln)ln.className="step-line"+(i<s?" active":"");}}
+function updateUI(s){const st=STEPS[s];$("step-num").textContent=s+1;$("desc-title").textContent=st.title;$("desc-text").textContent=st.desc;$("desc-formula").textContent=st.formula||"";updateDots(s);$("progress-fill").style.width=((s+1)/TOTAL*100)+"%";$("btn-prev").disabled=s===0;$("btn-next").disabled=s===TOTAL-1;const phLabel=$("phase-label");phLabel.className="phase-label "+st.phase;phLabel.textContent={keygen:"🔐 KeyGen — 签名密钥生成",sign:"✍️ Sign — 签名生成",verify:"✅ Verify — 签名验证"}[st.phase]||st.phase;const row=$("data-row");row.innerHTML="";st.chips.forEach(ch=>{const d=document.createElement("div");d.className="data-chip "+ch.owner;d.innerHTML="<span class=lbl>"+ch.label+"</span>"+ch.value;row.appendChild(d);});if(st.camera){camera.position.set(st.camera.x,st.camera.y,st.camera.z);controls.target.set(0,0,0);}if(SACTIONS[s])SACTIONS[s]();}
+$("btn-next").addEventListener("click",()=>{if(cur<TOTAL-1){cur++;updateUI(cur);}});
+$("btn-prev").addEventListener("click",()=>{if(cur>0){cur--;updateUI(cur);}});
+$("btn-reset").addEventListener("click",()=>{cur=0;resetAll();clearP();okNode.position.set(0,-2,0);okNode.material.opacity=0;okPulsing=false;camera.position.set(0,2,7);controls.target.set(0,0,0);updateUI(0);});
+$("btn-skip").addEventListener("click",()=>{cur=TOTAL-1;updateUI(cur);});
+document.addEventListener("keydown",e=>{if(e.key==="ArrowRight"||e.key===" "){e.preventDefault();$("btn-next").click();}if(e.key==="ArrowLeft"){$("btn-prev").click();}if(e.key==="r")$("btn-reset").click();});
+
+// Animate
+const clock=new THREE.Clock();
+function animate(){requestAnimationFrame(animate);const dt=clock.getDelta();controls.update();const t=Date.now()*0.001;
+  sigNode.rotation.y+=0.006;sigRing.rotation.z+=0.008;
+  sRing.rotation.x+=0.003;sRing.rotation.z+=0.005;
+  vRing.rotation.x+=0.003;vRing.rotation.y+=0.004;
+  signer.material.emissiveIntensity+=(0.35-signer.material.emissiveIntensity)*0.05;
+  verifier.material.emissiveIntensity+=(0.35-verifier.material.emissiveIntensity)*0.05;
+  sigNode.material.emissiveIntensity+=(0.5-sigNode.material.emissiveIntensity)*0.05;
+  FPARTS.forEach(p=>p.update(dt));FPARTS=FPARTS.filter(p=>p.alive);
+  if(okNode.material.opacity>0&&okPulsing){okPulseT+=dt;okNode.material.emissiveIntensity=0.6+Math.sin(okPulseT*4)*0.6;okNode.scale.setScalar(1+Math.sin(okPulseT*3)*0.15);if(okPulseT>3){okPulsing=false;okNode.scale.setScalar(1);}}
+  if(okNode.material.opacity>0)okNode.rotation.y+=0.02;
+  renderer.render(scene,camera);
+}
+buildDots();resetAll();updateUI(0);animate();
+</script>
+</body>
+</html>
