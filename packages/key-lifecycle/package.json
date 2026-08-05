@@ -1,0 +1,24 @@
+{
+  "name": "@fibemate/key-lifecycle",
+  "version": "0.1.0",
+  "description": "FIBEMATE Key Lifecycle Manager — rotation, versioning, revocation",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "node test-key-lifecycle.js && node test-integration.js"
+  },
+  "dependencies": {},
+  "devDependencies": {},
+  "license": "GPL-3.0-only",
+  "homepage": "https://fibemate.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lennonhaha/fibemate"
+  },
+  "keywords": [
+    "key-lifecycle",
+    "key-rotation",
+    "pqc",
+    "post-quantum"
+  ]
+}
