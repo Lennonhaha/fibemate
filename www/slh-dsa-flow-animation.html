@@ -146,7 +146,7 @@ class FP{
   constructor(a,b,col,s=.012){
     this.a=a.clone(); this.b=b.clone(); this.t=0; this.s=s; this.alive=true;
     const m=new THREE.Mesh(new THREE.SphereGeometry(.07,8,8),new THREE.MeshBasicMaterial({color:col,transparent:true}));
-    this.mesh=m; s.add(m); this.update();
+    this.mesh=m; scene.add(m); this.update();
   }
   update(dt){this.t=(this.t+this.s)%1; this.mesh.position.lerpVectors(this.a,this.b,this.t); this.mesh.material.opacity=Math.sin(this.t*Math.PI)*.9;}
   remove(){s.remove(this.mesh); this.alive=false}
