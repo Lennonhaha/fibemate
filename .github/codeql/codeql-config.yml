@@ -2,28 +2,6 @@ name: "FIBEMATE CodeQL Config"
 disable-default-queries: false
 queries:
   - uses: security-and-quality
-query-filters:
-  - exclude:
-      id: js/overwritten-property
-      # reason: "HTML-generated JS intentional dynamic property overwrite in DOM/visualization code"
-  - exclude:
-      id: js/shift-out-of-range
-      # reason: "MurmurHash3 standard: >>>33, >>>31, <<<13 per RFC 6151"
-  - exclude:
-      id: js/insecure-randomness
-      # reason: "gm.js intentional Math.random() for demo, documented non-critical"
-  - exclude:
-      id: js/indirect-command-line-injection
-      # reason: "cbom-diff.js git hash from controlled commit input"
-  - exclude:
-      id: js/loop-bound-injection
-      # reason: "pqc-kem data.length is standard Uint8Array property"
-  - exclude:
-      id: js/file-system-race
-      # reason: "cars-snapshot.js path from git command output"
-  - exclude:
-      id: js/useless-comparison-test
-      # reason: "Test assertions validating expected crypto behavior"
 paths-ignore:
   - path: fibemate-mobile/
   - path: archive/
