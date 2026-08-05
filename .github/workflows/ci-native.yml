@@ -25,6 +25,9 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
+    env:
+      GYP_MSVS_VERSION: '2022'
+
     steps:
       - uses: actions/checkout@v7
 
@@ -37,14 +40,6 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential
 
-      - name: Install build tools (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          # node-gyp on Windows needs Visual Studio Build Tools (pre-installed on windows-latest)
-          # and Python (also pre-installed).
-          # Note: npm config set msvs_version is deprecated in npm 10+.
-          # Use GYP_MSVS_VERSION env var instead (node-gyp reads it automatically).
-          echo "Using GYP_MSVS_VERSION=2022 via environment variable (npm 10+ compatible)"
 
       - name: npm install (addon deps)
         working-directory: packages/pqc-kem
