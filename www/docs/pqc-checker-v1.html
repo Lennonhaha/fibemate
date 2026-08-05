@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PQC 部署验证器 · FIBEMATE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 <style>
 /* ═════════════════════════════════════════════════════════════════════
    Quantum Terminal — PQC Deployment Checker
@@ -1061,7 +1064,7 @@ function renderHistory() {
     var when = new Date(e.ts);
     var timeStr = when.toISOString().replace('T',' ').slice(0,19);
     var gradeColor = e.grade === 'A' ? 'var(--grade-a)' : e.grade === 'B' ? 'var(--grade-b)' : e.grade === 'F' ? 'var(--grade-f)' : 'var(--text-muted)';
-    return '<div class="history-item" onclick="loadDemoHistory('\' + e.endpoint + '\')">' +
+    return '<div class="history-item" data-endpoint="' + e.endpoint + '">' +
       '<div class="hi-time">' + timeStr + '</div>' +
       '<div class="hi-endpoint">' + esc(String(e.endpoint)) + '</div>' +
       '<div class="hi-kex">' + esc(String(e.kex)) + '</div>' +
@@ -1076,6 +1079,14 @@ function loadDemoHistory(endpoint) {
   document.getElementById('endpointInput').value = endpoint;
   doProbe();
 }
+
+// Delegated click handler for history items (data-endpoint attribute)
+document.addEventListener('click', function(e) {
+  var item = e.target.closest('[data-endpoint]');
+  if (item && item.dataset.endpoint) {
+    loadDemoHistory(item.dataset.endpoint);
+  }
+});
 
 /* ===== Trend Chart (Canvas) ===== */
 function renderTrend() {
