@@ -120,24 +120,30 @@ function makeEdge(a,b){
   const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x1a2744,transparent:true,opacity:.5}));
   s.add(l); return l;
 }
-const sToAuth=makeEdge(signer.position,authNode.position);
-const authToMsg=makeEdge(authNode.position,msgNode.position);
-const msgToFors=makeEdge(msgNode.position,forsNode.position);
-const forsToRoot=makeEdge(forsNode.position,treeRootNode.position);
-const rootToSig=makeEdge(treeRootNode.position,sigOutNode.position);
-const sigToV=makeEdge(sigOutNode.position,verifier.position);
-const allEdges=[sToAuth,authToMsg,msgToFors,forsToRoot,rootToSig,sigToV];
+let sToAuth=null;
+let authToMsg=null;
+let msgToFors=null;
+let forsToRoot=null;
+let rootToSig=null;
+let sigToV=null;
+let allEdges=null;
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+const _spriteCache=new Map();
 function makeSprite(text,color,x,y,z){
+  const key=text+'|'+color;
+  if(_spriteCache.has(key)){const sp=_spriteCache.get(key).clone();sp.position.set(x,y,z);return sp;}
   const cv=document.createElement('canvas'); cv.width=256; cv.height=64;
   const cx=cv.getContext('2d'); cx.clearRect(0,0,256,64);
   cx.font='bold 20px -apple-system,Segoe UI,sans-serif';
   cx.fillStyle='#'+color.toString(16).padStart(6,'0');
   cx.textAlign='center'; cx.textBaseline='middle';
   cx.fillText(text,128,32);
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(cv),transparent:true,depthTest:false}));
-  sp.scale.set(2,.5,1); sp.position.set(x,y,z); return sp;
+  const tex=new THREE.CanvasTexture(cv);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthTest:false}));
+  sp.scale.set(2,.5,1); sp.position.set(x,y,z);
+  _spriteCache.set(key,sp);
+  return sp;
 }
 
 function makeMat(hex,opacity){return new THREE.MeshPhongMaterial({color:hex,emissive:hex,emissiveIntensity:.2,transparent:opacity<1,opacity:opacity, shininess:80});}
@@ -156,7 +162,21 @@ function clearP(){FPARTS.forEach(p=>p.remove()); FPARTS=[];}
 
 const ALL_NODES=[signer,verifier,authNode,msgNode,forsNode,treeRootNode,sigOutNode,okNode];
 
+
+// Lazy edge init
+function initEdges(){
+  if(allEdges)return;
+  sToAuth=makeEdge(signer.position,authNode.position);
+  authToMsg=makeEdge(authNode.position,msgNode.position);
+  msgToFors=makeEdge(msgNode.position,forsNode.position);
+  forsToRoot=makeEdge(forsNode.position,treeRootNode.position);
+  rootToSig=makeEdge(treeRootNode.position,sigOutNode.position);
+  sigToV=makeEdge(sigOutNode.position,verifier.position);
+  allEdges=[sToAuth,authToMsg,msgToFors,forsToRoot,rootToSig,sigToV];
+}
+
 function dimAll(){
+  initEdges();
   ALL_NODES.forEach(n=>{n.material.opacity=.28; n.material.emissiveIntensity=.04;});
   allEdges.forEach(e=>e.material.opacity=.08);
   [sRing,vRing].forEach(r=>r.material.opacity=.04);
@@ -169,6 +189,7 @@ function resetAll(){dimAll(); hi(signer,0xff9800,.3); hi(verifier,0x4fc3f7,.3); 
 const $=(id)=>document.getElementById(id);
 
 function applyStep(idx){
+  initEdges();
   const st=STEPS[idx];
   clearP();
   dimAll();
