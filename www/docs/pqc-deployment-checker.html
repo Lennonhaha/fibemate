@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PQC 部署验证器 · FIBEMATE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+/* ═════════════════════════════════════════════════════════════════════
+   Quantum Terminal — PQC Deployment Checker
+   Aesthetic: Security-grade diagnostics. Dark void, neon precision.
+   FIBEMATE © 2026 — Model 2: Deployment Verification Framework
+   ═════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --void: #0a0a0f;
+  --void-deep: #05050a;
+  --panel: #0f0f1a;
+  --panel-raised: #141425;
+  --border: #1a1a2e;
+  --border-active: #2a2a4a;
+  
+  --neon-green: #00ff88;
+  --neon-cyan: #00e5ff;
+  --neon-amber: #ffb347;
+  --neon-red: #ff4757;
+  --neon-blue: #3498ff;
+  
+  --text-primary: #e0e0e8;
+  --text-secondary: #8088a0;
+  --text-muted: #4a4a60;
+  
+  --grade-a: #00ff88;
+  --grade-b: #ffb347;
+  --grade-c: #ffa502;
+  --grade-d: #ff6348;
+  --grade-f: #ff4757;
+  
+  --font-mono: 'JetBrains Mono', 'Cascadia Code', 'Fira Code', monospace;
+  --font-display: 'Share Tech Mono', monospace;
+  
+  --radius-sm: 3px;
+  --radius: 6px;
+  --radius-lg: 10px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--void);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Scanline overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0,0,0,0.03) 2px,
+    rgba(0,0,0,0.03) 4px
+  );
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Noise texture */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.02'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+}
+
+/* ─── Layout ──────── */
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+  position: relative;
+  z-index: 1;
+}
+
+/* ─── Header ──────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-logo {
+  width: 36px;
+  height: 36px;
+  border: 2px solid var(--neon-cyan);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  color: var(--neon-cyan);
+  position: relative;
+}
+.header-logo::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 1px solid var(--neon-cyan);
+  opacity: 0.3;
+  border-radius: 5px;
+}
+
+.header-titles h1 {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 400;
+  color: var(--text-primary);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.header-titles span {
+  font-size: 11px;
+  color: var(--text-secondary);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.header-badge {
+  font-size: 10px;
+  color: var(--neon-cyan);
+  border: 1px solid rgba(0,229,255,0.3);
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  animation: badgePulse 3s ease-in-out infinite;
+}
+@keyframes badgePulse {
+  0%, 100% { border-color: rgba(0,229,255,0.3); }
+  50% { border-color: rgba(0,229,255,0.6); }
+}
+
+/* ─── Input Bar ──────── */
+.input-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 32px;
+  position: relative;
+}
+
+.input-bar input {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.input-bar input:focus {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+}
+.input-bar input::placeholder {
+  color: var(--text-muted);
+}
+
+.btn-probe {
+  background: transparent;
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 14px 28px;
+  border-radius: var(--radius);
+  cursor: pointer;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  transition: all 0.2s;
+  white-space: nowrap;
+  position: relative;
+  overflow: hidden;
+}
+.btn-probe::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--neon-cyan);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.btn-probe:hover::before { opacity: 0.08; }
+.btn-probe:hover {
+  box-shadow: 0 0 20px rgba(0,229,255,0.15);
+  border-color: var(--neon-cyan);
+}
+.btn-probe:active { transform: scale(0.98); }
+.btn-probe.loading {
+  border-color: var(--text-muted);
+  color: var(--text-muted);
+  cursor: wait;
+}
+
+/* ─── Result Card ──────── */
+.result-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  margin-bottom: 24px;
+  opacity: 0;
+  transform: translateY(12px);
+  animation: cardIn 0.4s ease-out forwards;
+}
+@keyframes cardIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.result-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel-raised);
+}
+
+.result-endpoint {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.result-endpoint .dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--neon-green);
+  box-shadow: 0 0 8px var(--neon-green);
+}
+.result-endpoint .dot.fail {
+  background: var(--neon-red);
+  box-shadow: 0 0 8px var(--neon-red);
+}
+
+/* Grade badge */
+.grade-badge {
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 700;
+  min-width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius);
+  border: 2px solid;
+  letter-spacing: 2px;
+}
+.grade-badge.A { color: var(--grade-a); border-color: var(--grade-a); box-shadow: 0 0 16px rgba(0,255,136,0.15); }
+.grade-badge.B { color: var(--grade-b); border-color: var(--grade-b); box-shadow: 0 0 16px rgba(255,179,71,0.15); }
+.grade-badge.C { color: var(--grade-c); border-color: var(--grade-c); }
+.grade-badge.D { color: var(--grade-d); border-color: var(--grade-d); }
+.grade-badge.F { color: var(--grade-f); border-color: var(--grade-f); }
+
+/* ─── Metric Grid ──────── */
+.metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.metric {
+  padding: 18px 22px;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+.metric:last-child { border-right: none; }
+.metric-label {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.metric-value {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 400;
+  color: var(--text-primary);
+}
+.metric-value.good { color: var(--neon-green); }
+.metric-value.warn { color: var(--neon-amber); }
+.metric-value.bad { color: var(--neon-red); }
+
+/* ─── Checks ──────── */
+.checks-section {
+  padding: 18px 22px;
+}
+.checks-title {
+  font-size: 10px;
+  color: var(--text-secondary);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+.check-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+  transition: background 0.15s;
+}
+.check-row:hover {
+  background: rgba(255,255,255,0.02);
+}
+.check-icon {
+  flex-shrink: 0;
+  width: 22px;
+  font-size: 14px;
+  text-align: center;
+  padding-top: 1px;
+}
+.check-body {}
+.check-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+}
+.check-detail {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.check-weight {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  padding-top: 2px;
+}
+
+.status-pass { color: var(--neon-green); }
+.status-warn { color: var(--neon-amber); }
+.status-fail { color: var(--neon-red); }
+.status-unknown { color: var(--text-muted); }
+
+/* ─── Certificate Info ──────── */
+.cert-block {
+  padding: 16px 22px;
+  border-top: 1px solid var(--border);
+  background: rgba(0,0,0,0.15);
+}
+.cert-block summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  user-select: none;
+}
+.cert-block summary:hover { color: var(--text-primary); }
+.cert-details {
+  margin-top: 12px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 24px;
+}
+.cert-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 4px 0;
+}
+.cert-row .k { color: var(--text-secondary); }
+.cert-row .v { color: var(--text-primary); font-family: var(--font-mono); }
+
+/* ─── Compare Panel ──────── */
+.compare-section { margin-top: 36px; }
+.section-title {
+  font-family: var(--font-display);
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.compare-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 14px;
+}
+
+.compare-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+  cursor: pointer;
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+  position: relative;
+  overflow: hidden;
+}
+.compare-card:hover {
+  border-color: var(--border-active);
+  box-shadow: 0 4px 24px rgba(0,0,0,0.3);
+  transform: translateY(-2px);
+}
+.compare-card .endpoint {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: var(--text-primary);
+}
+.compare-card .mini-grade {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+}
+.compare-card .mini-grade.A { color: var(--grade-a); }
+.compare-card .mini-grade.B { color: var(--grade-b); }
+.compare-card .mini-grade.C { color: var(--grade-c); }
+.compare-card .mini-grade.F { color: var(--grade-f); }
+
+.compare-metrics {
+  display: flex;
+  gap: 24px;
+  font-size: 11px;
+}
+.compare-metrics .cmp-item .cmp-label {
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 2px;
+}
+.compare-metrics .cmp-item .cmp-val {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-size: 12px;
+}
+
+/* ─── Footer ──────── */
+.footer {
+  margin-top: 48px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-size: 10px;
+  color: var(--text-muted);
+  letter-spacing: 1px;
+}
+.footer a {
+  color: var(--neon-cyan);
+  text-decoration: none;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+.footer a:hover { opacity: 1; }
+
+/* ─── Spinner ──────── */
+.spinner {
+  display: inline-block;
+  width: 14px; height: 14px;
+  border: 2px solid var(--text-muted);
+  border-top-color: var(--neon-cyan);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Error Banner ──────── */
+.error-banner {
+  background: rgba(255,71,87,0.08);
+  border: 1px solid rgba(255,71,87,0.3);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 24px;
+  color: var(--neon-red);
+  font-size: 12px;
+  display: none;
+}
+
+/* ─── Empty State ──────── */
+.empty-state {
+  text-align: center;
+  padding: 64px 24px;
+  color: var(--text-muted);
+}
+.empty-state .icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.4;
+}
+.empty-state p {
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+/* ─── URL Hash ──────── */
+.hash-badge {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--text-muted);
+  padding: 4px 8px;
+  background: var(--void-deep);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+}
+
+/* ─── Responsive ──────── */
+@media (max-width: 700px) {
+  .metrics { grid-template-columns: repeat(2, 1fr); }
+  .metric:nth-child(2) { border-right: none; }
+  .header { flex-wrap: wrap; gap: 12px; }
+  .header-badge { display: none; }
+  .input-bar { flex-direction: column; }
+  .btn-probe { text-align: center; }
+  .cert-details { grid-template-columns: 1fr; }
+  .compare-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="header-logo">◇</div>
+      <div class="header-titles">
+        <h1>PQC 部署验证器</h1>
+        <span>Deployment Verification Framework · FIBEMATE</span>
+      </div>
+    </div>
+    <div class="header-badge">Model 2 · LIVE</div>
+  </header>
+
+  <!-- Input -->
+  <div class="input-bar">
+    <input type="text" id="endpointInput"
+           placeholder="输入 TLS 端点，例如 fibemate.net:443"
+           value="fibemate.net:443"
+           autocomplete="off" spellcheck="false">
+    <button class="btn-probe" id="probeBtn" onclick="doProbe()">
+      开始检测
+    </button>
+  </div>
+
+  <!-- Error -->
+  <div class="error-banner" id="errorBanner"></div>
+
+  <!-- Results -->
+  <div id="results"></div>
+
+  <!-- Empty state -->
+  <div class="empty-state" id="emptyState">
+    <div class="icon">🛡️</div>
+    <p>输入 TLS 端点地址，检测其后量子密码学就绪度</p>
+    <p style="font-size:11px;color:var(--text-muted);margin-top:8px;">
+      基于 TLS 1.3 NamedGroup 协商 · ML-KEM hybrid KEM · 证书链分析
+    </p>
+  </div>
+
+  <!-- Compare: Demo data from known endpoints -->
+  <div class="compare-section" id="compareSection">
+    <div class="section-title">▸ 已知端点对比</div>
+    <div class="compare-grid" id="compareGrid"></div>
+  </div>
+
+  <!-- Footer -->
+  <div class="footer">
+    FIBEMATE © 2026 · <a href="https://fibemate.net" target="_blank">fibemate.net</a> ·
+    Model 2: Deployment Verification Framework ·
+    <span id="versionTag">v0.1.0</span>
+  </div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════════════
+   PQC Deployment Checker — Client-side logic + demo data
+   Architecture: fetches /api/probe?endpoint=... or uses demo data
+   ═══════════════════════════════════════════════════════════════════════ */
+
+// Demo data from live probes
+const DEMO_ENDPOINTS = [
+  {
+    endpoint: "fibemate.net:443",
+    timestamp: new Date().toISOString(),
+    reachable: true,
+    tlsVersion: "TLSv1.3",
+    cipher: { name: "TLS_AES_256_GCM_SHA384", version: "TLSv1/SSLv3" },
+    keyExchange: { type: "X25519", name: "X25519", size: 253 },
+    cert: {
+      subject: { CN: "fibemate.net" },
+      issuer: { CN: "YE2", O: "Let's Encrypt" },
+      validFrom: "Jul 18 04:14:52 2026 GMT",
+      validTo: "Oct 16 04:14:51 2026 GMT",
+      publicKey: { type: "prime256v1", bits: 256 },
+      sigAlgorithm: "ecdsa-with-SHA384",
+      isSelfSigned: false
+    },
+    compliance: {
+      score: 82, maxScore: 100, grade: "B",
+      checks: [
+        { check: "TLS 1.3", status: "PASS", weight: 30, value: "TLSv1.3" },
+        { check: "PQC key exchange", status: "WARN", weight: 25, detail: "Using classic X25519. No PQC KEM. Add X25519MLKEM768." },
+        { check: "Cipher suite", status: "PASS", weight: 15, value: "TLS_AES_256_GCM_SHA384" },
+        { check: "Certificate", status: "PASS", weight: 15, detail: "prime256v1 256bit ok. No PQC cert yet." },
+        { check: "Migration readiness", status: "PASS", weight: 15, detail: "TLS 1.3 path clear. PQC hybrid KEM deployable via server update." }
+      ]
+    }
+  },
+  {
+    endpoint: "cloudflare.com:443",
+    timestamp: new Date().toISOString(),
+    reachable: true,
+    tlsVersion: "TLSv1.3",
+    cipher: { name: "TLS_AES_256_GCM_SHA384", version: "TLSv1/SSLv3" },
+    keyExchange: null,
+    cert: {
+      subject: { CN: "cloudflare.com" },
+      issuer: { CN: "Cloudflare Inc ECC CA-3", O: "Cloudflare, Inc." },
+      validFrom: "Oct  7 00:00:00 2025 GMT",
+      validTo: "Oct  6 22:47:27 2026 GMT",
+      publicKey: { type: "prime256v1", bits: 256 },
+      sigAlgorithm: "ecdsa-with-SHA256",
+      isSelfSigned: false
+    },
+    compliance: {
+      score: 70, maxScore: 100, grade: "B",
+      checks: [
+        { check: "TLS 1.3", status: "PASS", weight: 30, value: "TLSv1.3" },
+        { check: "PQC key exchange", status: "WARN", weight: 25, detail: "EphemeralKeyInfo not available; check server config." },
+        { check: "Cipher suite", status: "PASS", weight: 15, value: "TLS_AES_256_GCM_SHA384" },
+        { check: "Certificate", status: "PASS", weight: 15, detail: "prime256v1 256bit ok. No PQC cert yet." },
+        { check: "Migration readiness", status: "PASS", weight: 15, detail: "TLS 1.3 path clear. PQC hybrid KEM deployable via server update." }
+      ]
+    }
+  }
+];
+
+/* ─── Render ──────── */
+let activeResult = null;
+
+function doProbe() {
+  const input = document.getElementById('endpointInput').value.trim();
+  if (!input) return;
+
+  const [hostname, portStr] = input.split(':');
+  const port = portStr || '443';
+  const endpoint = `${hostname}:${port}`;
+
+  // Show loading
+  const btn = document.getElementById('probeBtn');
+  btn.innerHTML = '<span class="spinner"></span>检测中...';
+  btn.classList.add('loading');
+  btn.disabled = true;
+
+  // Try API first, fallback to demo data
+  fetch(`/api/probe?endpoint=${encodeURIComponent(endpoint)}`)
+    .then(r => r.json())
+    .then(data => {
+      activeResult = data;
+      renderResult(data);
+    })
+    .catch(() => {
+      // Fallback: use demo data for known endpoints
+      const demo = DEMO_ENDPOINTS.find(e => e.endpoint === endpoint);
+      if (demo) {
+        activeResult = { ...demo, timestamp: new Date().toISOString() };
+        renderResult(activeResult);
+      } else {
+        // Generate synthetic result for unknown endpoints
+        activeResult = generatePlaceholder(endpoint);
+        renderResult(activeResult);
+      }
+    })
+    .finally(() => {
+      btn.innerHTML = '开始检测';
+      btn.classList.remove('loading');
+      btn.disabled = false;
+    });
+
+  // Update URL hash
+  window.location.hash = encodeURIComponent(endpoint);
+}
+
+function renderResult(r) {
+  const el = document.getElementById('results');
+  document.getElementById('emptyState').style.display = 'none';
+
+  if (!r || !r.reachable) {
+    el.innerHTML = renderUnreachable(r);
+    return;
+  }
+
+  el.innerHTML = `
+    <div class="result-card">
+      <div class="result-header">
+        <div class="result-endpoint">
+          <span class="dot"></span>
+          ${esc(r.endpoint)}
+          <span class="hash-badge">#${sha256short(r.endpoint)}</span>
+        </div>
+        <div class="grade-badge ${r.compliance.grade}">${r.compliance.grade}</div>
+      </div>
+
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-label">TLS 版本</div>
+          <div class="metric-value good">${r.tlsVersion || 'N/A'}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">密钥交换</div>
+          <div class="metric-value ${r.keyExchange?.name?.includes('MLKEM') ? 'good' : 'warn'}">${r.keyExchange?.name || '未检测到'}</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">PQC 就绪度</div>
+          <div class="metric-value ${r.compliance.grade === 'A' ? 'good' : r.compliance.grade === 'B' ? 'warn' : 'bad'}">${r.compliance.score}/100</div>
+        </div>
+        <div class="metric">
+          <div class="metric-label">密码套件</div>
+          <div class="metric-value good">${r.cipher?.name?.replace('TLS_','').replace(/_/g,'-') || 'N/A'}</div>
+        </div>
+      </div>
+
+      <div class="checks-section">
+        <div class="checks-title">合规性检查</div>
+        ${r.compliance.checks.map(c => renderCheck(c)).join('')}
+      </div>
+
+      ${r.cert ? renderCertBlock(r.cert) : ''}
+    </div>
+  `;
+
+  // Animate re-render
+  const card = el.querySelector('.result-card');
+  if (card) {
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = 'cardIn 0.4s ease-out forwards';
+  }
+}
+
+function renderCheck(c) {
+  const icons = { PASS: '✅', WARN: '⚠️', FAIL: '❌' };
+  const cls = { PASS: 'status-pass', WARN: 'status-warn', FAIL: 'status-fail' };
+  return `
+    <div class="check-row">
+      <div class="check-icon ${cls[c.status] || 'status-unknown'}">${icons[c.status] || '—'}</div>
+      <div class="check-body">
+        <div class="check-name">${esc(c.check)}</div>
+        ${c.detail ? `<div class="check-detail">${esc(c.detail)}</div>` : ''}
+        ${c.value ? `<div class="check-detail">当前值：${esc(String(c.value))}</div>` : ''}
+      </div>
+      <div class="check-weight">${c.weight}pt</div>
+    </div>
+  `;
+}
+
+function renderCertBlock(cert) {
+  return `
+    <div class="cert-block">
+      <details>
+        <summary>📜 证书详情</summary>
+        <div class="cert-details">
+          <div class="cert-row"><span class="k">Subject CN</span><span class="v">${esc(cert.subject?.CN || '?')}</span></div>
+          <div class="cert-row"><span class="k">Issuer CN</span><span class="v">${esc(cert.issuer?.CN || '?')}</span></div>
+          <div class="cert-row"><span class="k">公钥类型</span><span class="v">${esc(cert.publicKey?.type || '?')}</span></div>
+          <div class="cert-row"><span class="k">密钥长度</span><span class="v">${cert.publicKey?.bits || '?'} bit</span></div>
+          <div class="cert-row"><span class="k">签名算法</span><span class="v">${esc(cert.sigAlgorithm || '?')}</span></div>
+          <div class="cert-row"><span class="k">有效期至</span><span class="v">${esc(cert.validTo || '?')}</span></div>
+        </div>
+      </details>
+    </div>
+  `;
+}
+
+function renderUnreachable(r) {
+  const ep = r?.endpoint || 'unknown';
+  return `
+    <div class="result-card" style="border-color:rgba(255,71,87,0.3);">
+      <div class="result-header">
+        <div class="result-endpoint">
+          <span class="dot fail"></span> ${esc(ep)}
+        </div>
+        <div class="grade-badge F">F</div>
+      </div>
+      <div class="checks-section">
+        <div class="check-row">
+          <div class="check-icon status-fail">❌</div>
+          <div class="check-body">
+            <div class="check-name">连接失败</div>
+            <div class="check-detail">无法建立 TLS 连接到 ${esc(ep)}。请检查防火墙/网络。</div>
+          </div>
+          <div class="check-weight">—</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function sha256short(s) {
+  return s.split('').reduce((a,b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a; }, 0).toString(16).slice(0,8).toUpperCase();
+}
+
+function generatePlaceholder(endpoint) {
+  const [h] = endpoint.split(':');
+  return {
+    endpoint,
+    timestamp: new Date().toISOString(),
+    reachable: false,
+    tlsVersion: null,
+    cipher: null,
+    keyExchange: null,
+    cert: null,
+    compliance: {
+      score: 0, maxScore: 100, grade: 'F',
+      checks: [
+        { check: "TLS 1.3", status: "FAIL", weight: 30, detail: "无法连接。请在后端执行 node pqc-check.js 获取实时数据。" },
+        { check: "PQC key exchange", status: "FAIL", weight: 25, detail: "需要后端探测。" },
+        { check: "建议", status: "WARN", weight: 45, detail: "前端演示模式下仅展示预置端点数据。部署后端即可实时探测任意端点。" }
+      ]
+    }
+  };
+}
+
+/* ─── Compare Grid ──────── */
+function renderCompareGrid() {
+  const grid = document.getElementById('compareGrid');
+  grid.innerHTML = DEMO_ENDPOINTS.map(ep => `
+    <div class="compare-card" onclick="loadDemo('${ep.endpoint}')">
+      <div class="endpoint">${esc(ep.endpoint)}</div>
+      <div class="mini-grade ${ep.compliance.grade}">${ep.compliance.grade}</div>
+      <div class="compare-metrics">
+        <div class="cmp-item">
+          <div class="cmp-label">TLS</div>
+          <div class="cmp-val">${ep.tlsVersion || 'N/A'}</div>
+        </div>
+        <div class="cmp-item">
+          <div class="cmp-label">KEX</div>
+          <div class="cmp-val">${ep.keyExchange?.name || '—'}</div>
+        </div>
+        <div class="cmp-item">
+          <div class="cmp-label">得分</div>
+          <div class="cmp-val">${ep.compliance.score}/100</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function loadDemo(endpoint) {
+  document.getElementById('endpointInput').value = endpoint;
+  doProbe();
+}
+
+/* ─── Init ──────── */
+function init() {
+  renderCompareGrid();
+
+  // Check URL hash
+  const hash = window.location.hash.slice(1);
+  if (hash) {
+    document.getElementById('endpointInput').value = decodeURIComponent(hash);
+    doProbe();
+  }
+}
+
+window.addEventListener('DOMContentLoaded', init);
+
+// Enter key trigger
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && document.activeElement?.id === 'endpointInput') {
+    doProbe();
+  }
+});
+
+// Update version tag
+document.getElementById('versionTag').textContent = 'v0.1.0-alpha';
+</script>
+</body>
+</html>
