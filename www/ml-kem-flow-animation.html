@@ -460,9 +460,11 @@ function highlightNode(node, ring, color, intensity=0.8) {
   node.material.emissive.set(color);
   node.material.emissiveIntensity = intensity;
   node.material.opacity = 1;
+  if (ring) {
   ring.material.color.set(color);
-  ring.material.opacity = 0.6;
-}
+    ring.material.color.set(color);
+    ring.material.opacity = 0.6;
+  }
 
 function highlightEdge(edge, color) {
   edge.material.color.set(color);
