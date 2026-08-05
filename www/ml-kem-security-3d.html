@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · ML-KEM 安全强度 3D — BKZ-β vs Attack Cost</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070a14;color:#b0b8d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
+canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
+#top{padding:16px 20px;background:linear-gradient(180deg,rgba(7,10,20,.92) 0%,transparent 100%)}
+#badge{display:inline-block;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px}
+#title{font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
+#subtitle{font-size:12px;color:#5a6a8a;margin-top:2px}
+#legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#6a7a9a}
+.dot{width:8px;height:8px;border-radius:50%}
+#bottom{padding:12px 20px;background:linear-gradient(0deg,rgba(7,10,20,.92) 0%,transparent 100%);display:flex;align-items:center;gap:12px;pointer-events:all}
+.btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#c0cce0;font-size:12px;padding:7px 16px;border-radius:6px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn.active{border-color:#7c3aed;color:#7c3aed;background:rgba(124,58,237,.08)}
+#info{font-size:11px;color:#4a5a6a;margin-left:auto}
+#detail{position:absolute;background:rgba(15,20,40,.95);border:1px solid rgba(167,139,250,.3);border-radius:8px;padding:12px 16px;pointer-events:none;display:none;max-width:240px}
+#detail .d-title{font-size:14px;color:#fff;font-weight:600}
+#detail .d-row{font-size:11px;color:#8a9ab0;margin-top:4px}
+#detail .d-val{color:#a78bfa;font-family:monospace}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+<div id="top">
+<div>
+<div id="badge">ML-KEM SECURITY 3D</div>
+<div id="title">ML-KEM 安全强度 3D 可视化</div>
+<div id="subtitle">BKZ-β 格基约减块大小 vs log₂(rop) 攻击成本 · lattice-estimator 数据</div>
+<div id="legend">
+<div class="li"><div class="dot" style="background:#22c55e"></div>Level 1 (128-bit)</div>
+<div class="li"><div class="dot" style="background:#f59e0b"></div>Level 3 (192-bit)</div>
+<div class="li"><div class="dot" style="background:#ef4444"></div>Level 5 (256-bit)</div>
+</div>
+</div>
+</div>
+<div id="bottom">
+<button class="btn active" onclick="viewAll()">🌐 全部</button>
+<button class="btn" onclick="viewBKZ()">📊 BKZ-β 视角</button>
+<button class="btn" onclick="viewCost()">💰 攻击成本视角</button>
+<span id="info">Drag to rotate · Scroll to zoom · Click bars for details</span>
+</div>
+</div>
+<div id="detail"></div>
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+var scene,camera,renderer,controls,bars=[],labels=[];
+var canvas=document.getElementById('c');
+renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setClearColor(0x070a14);
+scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x070a14,0.0004);
+camera=new THREE.PerspectiveCamera(45,window.innerWidth/window.innerHeight,0.5,80);
+camera.position.set(8,10,12);
+controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;
+controls.minDistance=5;controls.maxDistance=30;
+controls.target.set(0,5,0);
+
+scene.add(new THREE.AmbientLight(0x2a2a4a,1.0));
+var dl=new THREE.DirectionalLight(0xffffff,1.4);dl.position.set(5,10,8);scene.add(dl);
+var dl2=new THREE.DirectionalLight(0x4060a0,0.5);dl2.position.set(-5,3,-5);scene.add(dl2);
+
+// Grid
+scene.add(new THREE.GridHelper(20,20,0x1a1a3a,0x0a0a1a));
+
+// Background stars
+var bgG=new THREE.BufferGeometry();var bgN=300;
+var bgP=new Float32Array(bgN*3);var bgC=new Float32Array(bgN*3);
+for(var i=0;i<bgN;i++){bgP[i*3]=(Math.random()-.5)*30;bgP[i*3+1]=(Math.random()-.5)*20;bgP[i*3+2]=(Math.random()-.5)*20;bgC[i*3]=0.3+Math.random()*0.2;bgC[i*3+1]=0.2+Math.random()*0.2;bgC[i*3+2]=0.4+Math.random()*0.2;}
+bgG.setAttribute('position',new THREE.BufferAttribute(bgP,3));bgG.setAttribute('color',new THREE.BufferAttribute(bgC,3));
+scene.add(new THREE.Points(bgG,new THREE.PointsMaterial({size:0.03,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false})));
+
+// Data
+var DATA=[{"variant":"ML-KEM-512","n":512,"bkz":406,"rop":143.8,"nist":1,"color":"#22c55e"},{"variant":"ML-KEM-768","n":768,"bkz":583,"rop":185,"nist":3,"color":"#f59e0b"},{"variant":"ML-KEM-1024","n":1024,"bkz":772,"rop":233,"nist":5,"color":"#ef4444"}];
+
+// Build bars
+DATA.forEach(function(d,i){
+ var x=(i-1)*4;
+ var h=d.rop/15;
+ var geo=new THREE.BoxGeometry(1.5,h,1.5);
+ var mat=new THREE.MeshStandardMaterial({color:d.color,metalness:0.3,roughness:0.4,emissive:d.color,emissiveIntensity:0.4});
+ var bar=new THREE.Mesh(geo,mat);
+ bar.position.set(x,h/2,0);
+ bar.userData={d:d,idx:i};
+ scene.add(bar);bars.push(bar);
+ 
+ // Label
+ var cv=document.createElement('canvas');cv.width=256;cv.height=40;
+ var ctx=cv.getContext('2d');ctx.fillStyle=d.color;ctx.font='bold 14px monospace';ctx.textAlign='center';
+ ctx.fillText(d.variant,128,20);ctx.font='11px monospace';ctx.fillStyle='#8a9ab0';ctx.fillText('NIST Level '+d.nist,128,35);
+ var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+ var sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.85,depthTest:false}));
+ sp.position.set(x,-0.3,1.2);sp.scale.set(3.5,0.6,1);scene.add(sp);labels.push(sp);
+ 
+ // Value label on top
+ var cv2=document.createElement('canvas');cv2.width=128;cv2.height=32;
+ var ctx2=cv2.getContext('2d');ctx2.fillStyle='#fff';ctx2.font='bold 12px monospace';ctx2.textAlign='center';
+ ctx2.fillText('β='+d.bkz,64,16);ctx2.fillStyle='#a78bfa';ctx2.fillText(d.rop.toFixed(1)+'-bit',64,28);
+ var tex2=new THREE.CanvasTexture(cv2);tex2.minFilter=THREE.LinearFilter;
+ var sp2=new THREE.Sprite(new THREE.SpriteMaterial({map:tex2,transparent:true,opacity:0.9,depthTest:false}));
+ sp2.position.set(x,h+0.4,0);sp2.scale.set(2,0.4,1);scene.add(sp2);labels.push(sp2);
+});
+
+// NIST threshold planes
+[{y:128,color:0x22c55e,lbl:'NIST Level 1 (128-bit)'},{y:192,color:0xf59e0b,lbl:'Level 3 (192-bit)'},{y:256,color:0xef4444,lbl:'Level 5 (256-bit)'}].forEach(function(t){
+ var y=t.y/15;
+ var pg=new THREE.PlaneGeometry(16,12);var pm=new THREE.MeshBasicMaterial({color:t.color,side:THREE.DoubleSide,transparent:true,opacity:0.06,depthWrite:false});
+ var plane=new THREE.Mesh(pg,pm);plane.rotation.x=-Math.PI/2;plane.position.y=y;scene.add(plane);
+ var lG=new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-8,y,-6),new THREE.Vector3(8,y,-6),new THREE.Vector3(8,y,6),new THREE.Vector3(-8,y,6),new THREE.Vector3(-8,y,-6)]);
+ scene.add(new THREE.Line(lG,new THREE.LineBasicMaterial({color:t.color,transparent:true,opacity:0.2})));
+});
+
+// Raycaster
+var raycaster=new THREE.Raycaster();
+var detail=document.getElementById('detail');
+canvas.addEventListener('click',function(e){
+ var mx=(e.clientX/window.innerWidth)*2-1,my=-(e.clientY/window.innerHeight)*2+1;
+ raycaster.setFromCamera(new THREE.Vector2(mx,my),camera);
+ var hits=raycaster.intersectObjects(bars);
+ if(hits.length>0){
+  var d=hits[0].object.userData.d;
+  detail.style.display='block';detail.style.left=e.clientX+'px';detail.style.top=e.clientY+'px';
+  detail.innerHTML='<div class="d-title">'+d.variant+'</div><div class="d-row">NIST Security Level: <span class="d-val">'+d.nist+'</span></div><div class="d-row">BKZ-β: <span class="d-val">'+d.bkz+'</span></div><div class="d-row">Attack Cost: <span class="d-val">2^'+d.rop+'</span></div><div class="d-row">Lattice Dim n: <span class="d-val">'+d.n+'</span></div>';
+ } else {detail.style.display='none';}
+});
+
+// View buttons
+function viewAll(){camera.position.set(8,10,12);controls.target.set(0,5,0);updateBtn(0);}
+function viewBKZ(){camera.position.set(0,15,0);controls.target.set(0,5,0);updateBtn(1);}
+function viewCost(){camera.position.set(0,5,20);controls.target.set(0,5,0);updateBtn(2);}
+function updateBtn(idx){document.querySelectorAll('.btn').forEach(function(b,i){b.classList.remove('active');});document.querySelectorAll('.btn')[idx].classList.add('active');}
+
+function animate(){
+ requestAnimationFrame(animate);
+ controls.update();
+ bars.forEach(function(b,i){b.rotation.y+=0.002;});
+ renderer.render(scene,camera);
+}
+animate();
+window.addEventListener('resize',function(){camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight);});
+</script>
+</body>
+</html>
