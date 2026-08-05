@@ -23,7 +23,7 @@
 >
 > You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
 >
-> **20 interactive visualizations** · 12 algorithms · 11 security governance docs · 100+ timestamped evidence records · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
+> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 100+ timestamped evidence records · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)

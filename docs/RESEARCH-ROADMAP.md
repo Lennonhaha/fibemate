@@ -152,6 +152,22 @@
 7. **协议交互序列图** — TLS 1.3 混合握手 + OPK 预密钥协议详细序列
 8. **测试覆盖热力图** — 480 个回归测试按模块（ML-KEM/SM2/FPGA）分类可视化
 
+
+### SM2 WASM 恒定时间实现路线图（Phase 0 已完成）
+
+> **Phase 0 已完成（2026-08-05）**。AssemblyScript 工具链验证通过，进入 Phase 1 实现阶段。
+
+| 阶段 | 内容 | 状态 |
+|:---:|------|:---:|
+| Phase 0 | 工具链验证：AssemblyScript 0.28 → WASM 979B → Node.js 加载 | ✅ 2026-08-05 |
+| Phase 1 | 曲线参数 + 模运算：addMod / subMod / mulMod / invMod（Fermat） | ⏳ Q3 2026 |
+| Phase 2 | 点运算：Montgomery Ladder 点乘（恒定时间） | ⏳ Q3 2026 |
+| Phase 3 | 签名集成：SM2 签名（e || r || s 格式） | ⏳ Q4 2026 |
+| Phase 4 | TVLA 验证：目标 |t| < 4.5（1-4阶矩全 PASS） | ⏳ Q4 2026 |
+
+**技术选型**：AssemblyScript（TS 子集 → WASM），相比 Emscripten 无大下载、编译快、WASM 输出小。
+
+
 ### 🧅 Sphinx Mixnet 预研（post-8/31，第 4 层混合网络）
 
 > 概念已完成，源码未公开。下列方向违反“冻结”纪律，推迟至开源后。

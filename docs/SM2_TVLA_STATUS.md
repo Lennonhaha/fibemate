@@ -59,6 +59,22 @@ SM2 在 FIBEMATE 中用于**教学演示和交叉验证**，不推荐生产环�
 | 开源策略 | v3.x 聚焦可复现+可审计，WASM 引入新工具链会稀释这一定位 |
 | 留给社区 | 开源后社区可贡献 Rust/WASM 实现，更有叙事意义 |
 
+
+---
+
+## AssemblyScript WASM 实现路线图
+
+> **Phase 0 已完成（2026-08-05）**。工具链打通，Phase 1 启动。
+
+| 阶段 | 内容 | 状态 |
+|:---:|------|:---:|
+| Phase 0 | 工具链：AssemblyScript 0.28 → WASM → Node.js 加载，add(2,3)=5 / mul(4,5)=20 | ✅ |
+| Phase 1 | 字段运算：addMod / subMod / mulMod / invMod（Montgomery） | ⏳ |
+| Phase 2 | 点运算：Montgomery Ladder 恒定时间点乘 | ⏳ |
+| Phase 3 | 签名：SM2 签名（e || r || s 格式） | ⏳ |
+| Phase 4 | TVLA：高阶矩验证，|t| < 4.5 全阶通过 | ⏳ |
+
+
 ## 诚实声明
 
 > SM2 在 FIBEMATE 中**仅用于教学/验证/对比研究**。
