@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · TLS 1.3 Hybrid Handshake — IANA #4590 + IANA #4588</title>
+<meta name="description" content="Interactive 3D visualization of FIBEMATE TLS 1.3 post-quantum hybrid handshake: IANA #4590 (SM2-MLKEM768) and IANA #4588 (X25519MLKEM768) with FIPS 203 compliance.">
+<link rel="canonical" href="https://fibemate.net/tls-hybrid-handshake.html">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b0f19;color:#b8c0d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
+canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
+#top{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px;background:linear-gradient(180deg,rgba(11,15,25,.92) 0%,transparent 100%);pointer-events:none}
+#left{max-width:60%}
+#badge{display:inline-block;background:linear-gradient(135deg,#0052CC,#0099ff);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+#title{font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
+#subtitle{font-size:12px;color:#5a6a8a;line-height:1.5;margin-top:2px}
+#legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#6a7a9a}
+.dot{width:8px;height:8px;border-radius:50%}
+#right{text-align:right;font-size:11px;color:#3a4a6a;line-height:1.7}
+#bottom{padding:16px 20px;background:linear-gradient(0deg,rgba(11,15,25,.92) 0%,transparent 100%);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all}
+#fw{display:none;min-height:20px}
+#formula{font-family:monospace;font-size:11px;color:#5ecf8a;background:rgba(30,50,30,.6);padding:6px 14px;border-radius:6px;border:1px solid rgba(94,207,138,.2);max-width:540px;text-align:center;word-break:break-all}
+#dp{display:flex;gap:8px;flex-wrap:wrap;max-width:580px;justify-content:center}
+.dp{font-family:monospace;font-size:10px;color:#6a8aaa;background:rgba(20,30,50,.7);padding:3px 8px;border-radius:4px;border:1px solid rgba(80,120,180,.2);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dp span{color:#8ab4e0}
+#nav{display:flex;align-items:center;gap:12px}
+.btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#c0cce0;font-size:13px;padding:8px 18px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn:active{transform:scale(.97)}
+#prevBtn{opacity:.4}
+#nextBtn{background:linear-gradient(135deg,#0052CC,#0077ff);border:none;color:#fff;font-weight:600;min-width:110px}
+#nextBtn:hover{background:linear-gradient(135deg,#0066dd,#0088ff)}
+#counter{font-size:12px;color:#4a5a7a}
+#progress{display:flex;gap:3px;margin-top:4px}
+.pg{width:24px;height:3px;border-radius:2px;background:rgba(255,255,255,.1);transition:background .3s}
+.pg.active{background:#0052CC}
+.pg.done{background:#1a3a6a}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+<div id="top">
+<div id="left">
+<div id="badge">Step 1 / 10</div>
+<div id="title">TLS 1.3 Hybrid Handshake</div>
+<div id="subtitle">IANA #4590 SM2-MLKEM768 + #4588 X25519MLKEM768 · FIPS 203</div>
+<div id="legend">
+<div class="li"><div class="dot" style="background:#00c896"></div>Client</div>
+<div class="li"><div class="dot" style="background:#ff7043"></div>Server</div>
+<div class="li"><div class="dot" style="background:#0052CC"></div>Key Exchange</div>
+<div class="li"><div class="dot" style="background:#9c27b0"></div>HKDF</div>
+<div class="li"><div class="dot" style="background:#ff9800"></div>Handshake Msg</div>
+<div class="li"><div class="dot" style="background:#00b4d8"></div>ML-KEM</div>
+</div>
+</div>
+<div id="right">
+<div style="color:#5a8a6a">CARS 75.20 · IBM 63.70</div>
+<div style="margin-top:2px">19 可视化 · 7 npm包</div>
+<div style="margin-top:2px">D-26 开源倒计时</div>
+</div>
+</div>
+<div id="bottom">
+<div id="fw"><div id="formula"></div></div>
+<div id="dp"></div>
+<div id="nav">
+<button class="btn" id="prevBtn" onclick="prevStep()">&#8592; Previous</button>
+<button class="btn" id="nextBtn" onclick="nextStep()">Next &#8594;</button>
+</div>
+<div id="counter">Step 1 of 10</div>
+<div id="progress"></div>
+</div>
+</div>
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+// ============================================================
+//  CONSTANTS — TLS 1.3 Hybrid Handshake real data
+// ============================================================
+var HYBRID_GROUP_4590 = 'IANA #4590 SM2-MLKEM768';
+var HYBRID_GROUP_4588 = 'IANA #4588 X25519MLKEM768';
+var SM2_SHARE_SIZE = 65;
+var MLKEM_PK_SIZE  = 1184;
+var MLKEM_CT_SIZE  = 1088;
+var TOTAL_SHARE    = 1249;
+var SHARED_SECRET  = 'a3b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0e1f2a3b4';
+function hx(s){return s.slice(0,8)+'\u2026';}
+
+// ============================================================
+//  THREE.JS SETUP
+// ============================================================
+var canvas = document.getElementById('c');
+var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x0b0f19);
+var scene = new THREE.Scene();
+var camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0, 1.5, 16);
+camera.lookAt(0, 0, 0);
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping=true; controls.dampingFactor=0.07;
+controls.minDistance=6; controls.maxDistance=32;
+controls.autoRotate=true; controls.autoRotateSpeed=0.3;
+var sGroups = new THREE.Scene();
+sGroups.fog = new THREE.FogExp2(0x0b0f19, 0.02);
+
+// ============================================================
+//  SPRITE CACHE
+// ============================================================
+var _spriteCache = new Map();
+
+function makeSprite(text, color, x, y, z) {
+  var key = text+'|'+color;
+  if (_spriteCache.has(key)) {
+    var sp = _spriteCache.get(key).clone();
+    sp.position.set(x,y,z);
+    return sp;
+  }
+  var cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 128;
+  var cx = cv.getContext('2d');
+  cx.clearRect(0,0,512,128);
+  cx.font = 'bold 18px -apple-system,Segoe UI,sans-serif';
+  cx.fillStyle = '#'+color.toString(16).padStart(6,'0');
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillText(text, 256, 64);
+  var tex = new THREE.CanvasTexture(cv);
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
+  sp.scale.set(3.5, 0.875, 1);
+  sp.position.set(x,y,z);
+  _spriteCache.set(key, sp);
+  return sp;
+}
+
+// ============================================================
+//  NODE FACTORY
+// ============================================================
+function mmn(pos, color, label) {
+  var m = new THREE.Group();
+  var ring = new THREE.Mesh(
+    new THREE.RingGeometry(0.52, 0.65, 48),
+    new THREE.MeshBasicMaterial({color:color, side:THREE.DoubleSide, transparent:true, opacity:0.5, depthTest:false})
+  );
+  ring.rotation.x = -Math.PI/2;
+  ring.position.copy(pos);
+  m.add(ring);
+  var halo = new THREE.Mesh(
+    new THREE.SphereGeometry(0.7, 16, 16),
+    new THREE.MeshBasicMaterial({color:color, transparent:true, opacity:0.07, depthWrite:false})
+  );
+  halo.position.copy(pos);
+  m.add(halo);
+  var sp = makeSprite(label, color, pos.x, pos.y+0.95, pos.z);
+  m.add(sp);
+  m._ring = ring; m._halo = halo;
+  m._origColor = color; m._pos = pos.clone();
+  return m;
+}
+
+// ============================================================
+//  EDGE FACTORY
+// ============================================================
+function makeEdge(a, b) {
+  var positions = new Float32Array([a.x,a.y,a.z, b.x,b.y,b.z]);
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  var mat = new THREE.LineBasicMaterial({color:0x2a3a5a, transparent:true, opacity:0.5});
+  var line = new THREE.Line(geo, mat);
+  scene.add(line);
+  return line;
+}
+
+// ============================================================
+//  FLOW PARTICLES
+// ============================================================
+function FP(a, b, col, spd) {
+  this.a = a.clone(); this.b = b.clone(); this.t = 0;
+  this.spd = spd; this.alive = true;
+  this.mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.08, 8, 8),
+    new THREE.MeshBasicMaterial({color:col, transparent:true})
+  );
+  sGroups.add(this.mesh);
+  this.update();
+}
+FP.prototype.update = function(dt) {
+  this.t = (this.t + this.spd) % 1;
+  this.mesh.position.lerpVectors(this.a, this.b, this.t);
+  this.mesh.material.opacity = Math.sin(this.t * Math.PI) * 0.9;
+};
+FP.prototype.remove = function(){ sGroups.remove(this.mesh); this.alive=false; };
+
+var FPARTS = [];
+function spawn(a, b, col, n, spd) {
+  for (var i=0; i<n; i++) {
+    var p = new FP(a, b, col, spd||0.012);
+    p.t = i/n;
+    FPARTS.push(p);
+  }
+}
+
+// ============================================================
+//  NODES — 3-column layout: Client | Handshake Flow | Server
+// ============================================================
+// Client side
+var clientNode    = mmn(new THREE.Vector3(-6,  3.2, 0), 0x00c896, 'Client');
+var clientKEMNode = mmn(new THREE.Vector3(-6,  1.2, 0), 0x00b4d8, 'KeyGen (ML-KEM)');
+var clientDHNode  = mmn(new THREE.Vector3(-6, -1.0, 0), 0x0052CC, 'KeyGen (P-256)');
+var clientDoneNode = mmn(new THREE.Vector3(-6, -3.5, 0), 0x5ecf8a, 'Finished');
+
+// Server side
+var serverNode    = mmn(new THREE.Vector3(6,  3.2, 0), 0xff7043, 'Server');
+var serverKEMNode = mmn(new THREE.Vector3(6,  1.2, 0), 0x00b4d8, 'Encaps (ML-KEM)');
+var serverDHNode  = mmn(new THREE.Vector3(6, -1.0, 0), 0x0052CC, 'KeyGen (P-256)');
+var serverDoneNode = mmn(new THREE.Vector3(6, -3.5, 0), 0x5ecf8a, 'Finished');
+
+// Handshake message nodes (center, arranged vertically)
+var chNode       = mmn(new THREE.Vector3(0, 5, 0), 0xff9800, 'ClientHello');
+var shNode       = mmn(new THREE.Vector3(0, 3.8, 0), 0xff9800, 'ServerHello');
+var eeNode       = mmn(new THREE.Vector3(0, 2.6, 0), 0xff9800, 'EncryptedExt');
+var certNode     = mmn(new THREE.Vector3(0, 1.4, 0), 0xff9800, 'Certificate');
+var cvNode       = mmn(new THREE.Vector3(0, 0.2, 0), 0xff9800, 'CertVerify');
+var finNode      = mmn(new THREE.Vector3(0, -1.3, 0), 0xff9800, 'Finished');
+var appNode       = mmn(new THREE.Vector3(0, -3.0, 0), 0x5ecf8a, 'Application Data');
+
+// Derived secrets
+var earlySecretNode = mmn(new THREE.Vector3(-3, 4.2, 0), 0x9c27b0, 'early_secret');
+var hsSecretNode    = mmn(new THREE.Vector3(-3, 1.6, 0), 0x9c27b0, 'handshake_secret');
+var masterSecretNode= mmn(new THREE.Vector3(-3,-2.2, 0), 0x9c27b0, 'master_secret');
+var appSecretNode   = mmn(new THREE.Vector3(3, -2.2, 0), 0x9c27b0, 'traffic_secret');
+
+// Combined key share node
+var hybridShareNode  = mmn(new THREE.Vector3(-3, -0.5, 0), 0x0052CC, 'Hybrid Share');
+
+var ALL_NODES = [clientNode,clientKEMNode,clientDHNode,clientDoneNode,
+  serverNode,serverKEMNode,serverDHNode,serverDoneNode,
+  chNode,shNode,eeNode,certNode,cvNode,finNode,appNode,
+  earlySecretNode,hsSecretNode,masterSecretNode,appSecretNode,hybridShareNode];
+ALL_NODES.forEach(function(n){sGroups.add(n);});
+
+// ============================================================
+//  EDGES
+// ============================================================
+var edges = {};
+var allEdges = null;
+
+function initEdges() {
+  if (allEdges) return;
+  edges.e1  = makeEdge(clientNode._pos,   chNode._pos);
+  edges.e2  = makeEdge(chNode._pos,       serverNode._pos);
+  edges.e3  = makeEdge(serverNode._pos,   shNode._pos);
+  edges.e4  = makeEdge(shNode._pos,       clientNode._pos);
+  edges.e5  = makeEdge(serverNode._pos,   eeNode._pos);
+  edges.e6  = makeEdge(eeNode._pos,       clientNode._pos);
+  edges.e7  = makeEdge(clientKEMNode._pos,hybridShareNode._pos);
+  edges.e8  = makeEdge(clientDHNode._pos, hybridShareNode._pos);
+  edges.e9  = makeEdge(chNode._pos,     earlySecretNode._pos);
+  edges.e10 = makeEdge(shNode._pos,       hsSecretNode._pos);
+  edges.e11 = makeEdge(hsSecretNode._pos, masterSecretNode._pos);
+  edges.e12 = makeEdge(clientNode._pos,   finNode._pos);
+  edges.e13 = makeEdge(finNode._pos,      serverNode._pos);
+  edges.e14 = makeEdge(serverDoneNode._pos,appNode._pos);
+  edges.e15 = makeEdge(masterSecretNode._pos,appSecretNode._pos);
+  allEdges = [edges.e1,edges.e2,edges.e3,edges.e4,edges.e5,edges.e6,
+    edges.e7,edges.e8,edges.e9,edges.e10,edges.e11,edges.e12,edges.e13,
+    edges.e14,edges.e15];
+}
+initEdges();
+
+// ============================================================
+//  HIGHLIGHT HELPERS
+// ============================================================
+function hiNode(n, color, intensity) {
+  if (!n._ring) return;
+  var c=color||n._origColor, i=intensity!==undefined?intensity:0.9;
+  n._ring.material.color.set(c); n._ring.material.opacity=i;
+  if(n._halo){n._halo.material.color.set(c);n._halo.material.opacity=i*0.15;}
+}
+function loNode(n) {
+  if(!n._ring)return;
+  n._ring.material.opacity=0.12; n._ring.material.color.set(n._origColor);
+  if(n._halo)n._halo.material.opacity=0.03;
+}
+function hiEdge(e, color, opacity) {
+  if(!e)return;
+  e.material.color.set(color||0x0052CC);
+  e.material.opacity=opacity!==undefined?opacity:0.85;
+}
+function loEdge(e){if(!e)return;e.material.opacity=0.1;e.material.color.set(0x2a3a5a);}
+
+function resetAll(){FPARTS.forEach(function(p){p.remove();});FPARTS=[];}
+function dimAll(){
+  ALL_NODES.forEach(function(n){loNode(n);});
+  if(allEdges)allEdges.forEach(function(e){loEdge(e);});
+  document.getElementById('fw').style.display='none';
+  document.getElementById('dp').innerHTML='';
+}
+
+function applyHL(nh,eh,fp) {
+  if(nh)(nh||[]).forEach(function(n){hiNode(window[n]);});
+  if(eh)(eh||[]).forEach(function(e){hiEdge(edges[e]||window[e]);});
+  if(fp)(fp||[]).forEach(function(f){
+    var a=typeof f.from==='string'?window[f.from]._pos:f.from;
+    var b=typeof f.to==='string'?window[f.to]._pos:f.to;
+    spawn(a,b,f.c,f.n||5,f.spd||0.012);
+  });
+}
+
+// ============================================================
+//  STEPS DATA — 10-step TLS 1.3 hybrid handshake
+// ============================================================
+var STEPS = [
+  {
+    badge:'Step 1 / 10',
+    title:'ClientHello — Propose Hybrid Groups',
+    desc:'Client sends ClientHello with supported_groups: [IANA #4590, IANA #4588] and key_share for ML-KEM-768 + P-256 ECDH. This signals post-quantum capability.',
+    formula:'supported_groups = [4590 (SM2-MLKEM768), 4588 (X25519MLKEM768)]',
+    nh:['clientNode','chNode'],
+    eh:['e1'],
+    fp:[{from:'clientNode',to:'chNode',c:0xff9800,n:6}],
+    data:[
+      {l:'TLS 1.3 version',v:'0x0304'},
+      {l:'supported_groups',v:'[4590, 4588]'},
+      {l:'key_share (client)',v:'ML-KEM pk(1184B)+P-256(65B)=1249B'},
+      {l:'Cipher Suite',v:'TLS_AES_256_GCM_SHA384'}
+    ]
+  },
+  {
+    badge:'Step 2 / 10',
+    title:'ServerHello — Select Hybrid Group',
+    desc:'Server selects IANA #4590 and responds with ServerHello containing SM2-ECDH share + ML-KEM-768 ciphertext (encapsulated shared secret).',
+    formula:'key_share(server) = SM2_pub(65B) || MLKEM_ct(1088B) = 1153B',
+    nh:['chNode','serverNode','shNode'],
+    eh:['e2','e3'],
+    fp:[{from:'chNode',to:'serverNode',c:0xff9800,n:5},{from:'serverNode',to:'shNode',c:0xff7043,n:5}],
+    data:[
+      {l:'selected_group',v:'IANA #4590 (SM2-MLKEM768)'},
+      {l:'Server key_share',v:'1153 bytes (65+1088)'},
+      {l:'Random (32B)',v:'Server nonce generated'},
+      {l:'Session ID',v:'32 bytes'}
+    ]
+  },
+  {
+    badge:'Step 3 / 10',
+    title:'Early Secret — HKDF-Extract(0, 0)',
+    desc:'Both sides independently derive the early_secret from PSK (none here, so zero). This is the root of the TLS 1.3 key schedule.',
+    formula:'early_secret = HKDF-Extract(salt=0, ikm=0)',
+    nh:['chNode','shNode','earlySecretNode'],
+    eh:['e9'],
+    fp:[{from:'chNode',to:'earlySecretNode',c:0x9c27b0,n:4},{from:'shNode',to:'earlySecretNode',c:0x9c27b0,n:4}],
+    data:[
+      {l:'PSK',v:'None (0-length)'},
+      {l:'HKDF-Extract salt',v:'All zeros (32 bytes)'},
+      {l:'HKDF-Extract ikm',v:'All zeros (32 bytes)'},
+      {l:'early_secret',v:'32 bytes'}
+    ]
+  },
+  {
+    badge:'Step 4 / 10',
+    title:'Derive Handshake Secret',
+    desc:'Both sides compute the hybrid shared secret via ECDH + ML-KEM decapsulation, then derive handshake_secret via HKDF-Extract from early_secret.',
+    formula:'shared_secret = ECDH_sec || MLKEM_ss;  handshake_secret = HKDF-Extract(early_secret, shared_secret)',
+    nh:['clientKEMNode','clientDHNode','hybridShareNode','hsSecretNode'],
+    eh:['e7','e8','e10'],
+    fp:[{from:'clientKEMNode',to:'hybridShareNode',c:0x00b4d8,n:4},
+        {from:'clientDHNode',to:'hybridShareNode',c:0x0052CC,n:4},
+        {from:'hybridShareNode',to:'hsSecretNode',c:0x9c27b0,n:5}],
+    data:[
+      {l:'SM2 ECDH share',v:'32 bytes (P-256)'},
+      {l:'ML-KEM SS',v:'32 bytes (decaps)'},
+      {l:'Combined secret',v:'64 bytes total'},
+      {l:'handshake_secret',v:'32 bytes'}
+    ]
+  },
+  {
+    badge:'Step 5 / 10',
+    title:'EncryptedExtensions — Server Parameters',
+    desc:'Server sends EncryptedExtensions (encrypted with handshake_traffic_secret). Contains ALPN, supported_versions, and any additional parameters.',
+    formula:'handshake_traffic_secret = Derive-Secret(handshake_secret, "s hs traffic", ClientHello...ServerHello)',
+    nh:['serverNode','eeNode'],
+    eh:['e5'],
+    fp:[{from:'serverNode',to:'eeNode',c:0xff9800,n:4}],
+    data:[
+      {l:'ALPN',v:'http/1.1'},
+      {l:'supported_versions',v:'TLS 1.3'},
+      {l:'Encryption key',v:'handshake_traffic_secret'},
+      {l:'AEAD',v:'AES-256-GCM'}
+    ]
+  },
+  {
+    badge:'Step 6 / 10',
+    title:'Certificate & CertificateVerify',
+    desc:'Server sends its certificate chain and signs the handshake transcript with its private key (e.g., RSA-2048 or ML-DSA-65 post-quantum).',
+    formula:'CertificateVerify = Sign(privKey, Hash(transcript))',
+    nh:['eeNode','certNode','cvNode'],
+    eh:['e6'],
+    fp:[{from:'eeNode',to:'certNode',c:0xff9800,n:3},{from:'certNode',to:'cvNode',c:0xff9800,n:3}],
+    data:[
+      {l:'Certificate',v:'X.509 chain (RSA 2048)'},
+      {l:'Signature algorithm',v:'rsa_pkcs1_sha256'},
+      {l:'Transcript hash',v:'SHA-256 of all messages'},
+      {l:'Client verification',v:'Validates cert chain'}
+    ]
+  },
+  {
+    badge:'Step 7 / 10',
+    title:'Server Finished — Verify Handshake',
+    desc:'Server sends its Finished message containing HMAC of the handshake transcript. Client verifies the HMAC to confirm server identity.',
+    formula:'finished_key = HKDF-Expand-Label(handshake_secret, "finished", "", 32)',
+    nh:['cvNode','serverNode','clientNode'],
+    eh:[],
+    fp:[{from:'serverNode',to:'clientNode',c:0xff7043,n:6,spd:0.02}],
+    data:[
+      {l:'Finished (verify_data)',v:'HMAC-SHA256(transcript)'},
+      {l:'Finished key',v:'32 bytes derived'},
+      {l:'Client verify',v:'HMAC match = server auth OK'}
+    ]
+  },
+  {
+    badge:'Step 8 / 10',
+    title:'Master Secret — Derive Application Keys',
+    desc:'Both sides derive master_secret from handshake_secret via HKDF-Extract with all-zero salt. This transitions to the application data phase.',
+    formula:'master_secret = HKDF-Extract(handshake_secret, 0)',
+    nh:['hsSecretNode','masterSecretNode'],
+    eh:['e11'],
+    fp:[{from:'hsSecretNode',to:'masterSecretNode',c:0x9c27b0,n:6}],
+    data:[
+      {l:'Input',v:'handshake_secret (32B)'},
+      {l:'Salt',v:'All zeros'},
+      {l:'master_secret',v:'32 bytes'},
+      {l:'client/app traffic keys',v:'derived next step'}
+    ]
+  },
+  {
+    badge:'Step 9 / 10',
+    title:'Client Finished — Mutual Authentication',
+    desc:'Client sends its Finished message. Both sides now derive application traffic secrets and can exchange encrypted application data.',
+    formula:'client_traffic_secret = HKDF-Expand-Label(master_secret, "c ap traffic", handshake_hash, 32)',
+    nh:['clientNode','finNode','appSecretNode'],
+    eh:['e12','e15'],
+    fp:[{from:'clientNode',to:'finNode',c:0x00c896,n:4},
+        {from:'masterSecretNode',to:'appSecretNode',c:0x9c27b0,n:4}],
+    data:[
+      {l:'client_traffic_secret',v:'32 bytes (AES-256-GCM)'},
+      {l:'server_traffic_secret',v:'32 bytes (AES-256-GCM)'},
+      {l:'Post-Quantum',v:'ML-KEM-768 session key'},
+      {l:'Handshake complete',v:'~2 RTT total'}
+    ]
+  },
+  {
+    badge:'Step 10 / 10',
+    title:'Application Data — Post-Quantum Secure Channel',
+    desc:'TLS 1.3 hybrid handshake complete. All application data is encrypted with AES-256-GCM using keys derived from the post-quantum hybrid key exchange. Forward secrecy maintained even against quantum attackers.',
+    formula:'AES-256-GCM(data, traffic_key, iv, AAD) — PQ hybrid channel established via IANA #4590',
+    nh:['clientDoneNode','serverDoneNode','appNode','appSecretNode'],
+    eh:['e14'],
+    fp:[{from:'clientDoneNode',to:'serverDoneNode',c:0x5ecf8a,n:8,spd:0.018}],
+    data:[
+      {l:'Encryption',v:'AES-256-GCM'},
+      {l:'Key source',v:'ML-KEM-768 + P-256 ECDH'},
+      {l:'Forward secrecy',v:'Yes (hybrid FS)'},
+      {l:'Quantum-safe',v:'Harvest-now-decrypt-later resistant'}
+    ]
+  }
+];
+
+// ============================================================
+//  APPLY STEP
+// ============================================================
+var curStep = -1;
+var elBadge=document.getElementById('badge'), elTitle=document.getElementById('title');
+var elSub=document.getElementById('subtitle'), elCount=document.getElementById('counter');
+var elProg=document.getElementById('progress'), elFW=document.getElementById('fw');
+var elFormula=document.getElementById('formula'), elDP=document.getElementById('dp');
+var elPrev=document.getElementById('prevBtn'), elNext=document.getElementById('nextBtn');
+
+function applyStep(idx) {
+  dimAll(); resetAll(); curStep=idx;
+  var st=STEPS[idx];
+  applyHL(st.nh, st.eh, st.fp);
+
+  elBadge.textContent=st.badge; elTitle.textContent=st.title;
+  elSub.textContent=st.desc; elCount.textContent=st.badge;
+
+  var dots=[];
+  for(var i=0;i<STEPS.length;i++) dots.push('<div class="pg'+(i<idx?' done':i===idx?' active':'')+'"></div>');
+  elProg.innerHTML=dots.join('');
+
+  if(st.formula){elFW.style.display='block';elFormula.textContent=st.formula;}
+  else elFW.style.display='none';
+
+  var items=[];
+  (st.data||[]).forEach(function(d){items.push('<div class="dp"><span>'+d.l+':</span> '+d.v+'</div>');});
+  elDP.innerHTML=items.join('');
+
+  elPrev.style.opacity=idx===0?'0.25':'';
+  elNext.textContent=idx===STEPS.length-1?'Restart \u21bb':'Next \u2192';
+}
+
+function nextStep(){applyStep((curStep+1)%STEPS.length);}
+function prevStep(){if(curStep>0)applyStep(curStep-1);}
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextStep();}
+  if(e.key==='ArrowLeft'){e.preventDefault();prevStep();}
+});
+
+function animate(){
+  requestAnimationFrame(animate); controls.update();
+  FPARTS=FPARTS.filter(function(p){return p.alive;});
+  FPARTS.forEach(function(p){p.update(0.016);});
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize',function(){
+  camera.aspect=window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+applyStep(0);
+</script>
+</body>
+</html>
