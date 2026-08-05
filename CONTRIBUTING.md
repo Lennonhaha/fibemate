@@ -199,3 +199,58 @@ For audit purposes, every merged cryptographic change must be traceable:
 - **Documentation-only fixes** (typos, formatting): one approving review or 24h cool-down.
 - **Emergency security fixes**: documented in SECURITY.md, retroactive review required.
 
+## Looking for Contributors
+
+FIBEMATE is built and maintained by a single person today. We want to grow it
+into a community-owned PQC engineering resource. There are two ways to get involved.
+
+### Contributor (no write access required)
+
+You are a contributor if you can:
+
+- Run the project by following the README Quick Start
+- Read and modify the code
+- Submit a PR that passes CI
+
+**Start here:** pick a
+[`good-first-issue`](https://github.com/Lennonhaha/fibemate/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue),
+or propose a change in
+[Discussions → Ideas](https://github.com/Lennonhaha/fibemate/discussions/categories/ideas).
+
+No cryptography background is required — documentation, tests, and examples all count.
+
+### Collaborator (write access, merges PRs)
+
+Collaborators hold `write` access and help maintain the project. We invite
+contributors who have:
+
+| Condition | Requirement |
+|-----------|-------------|
+| Track record | Submitted **2–3 quality PRs** (passing CI, following code style, constructive review discussion) |
+| Sustained involvement | Continues participating — not a one-PR-and-gone contributor |
+| Trust | Established through contribution history, not by asking |
+
+Collaborators are invited individually after we have worked together — we do
+not grant write access to strangers.
+
+### How we evaluate (the invisible filter)
+
+| Dimension | What we look for |
+|-----------|------------------|
+| Code quality | PRs pass CI and follow the style in this file |
+| Communication | Issues/PRs are constructive and respect project direction |
+| Focus | Deep work in one area beats scattered drive-by changes |
+| Consistency | Sustained participation, not a single dropped PR |
+
+### How to join
+
+1. Pick an issue or propose a change.
+2. Submit a PR (CI runs all tests automatically).
+3. We review and provide feedback.
+
+We welcome everyone regardless of experience level. If you're stuck, ask in
+[Discussions → Q&A](https://github.com/Lennonhaha/fibemate/discussions/categories/q-a).
+
+> Active contributors who submit 2–3 quality PRs may be invited as Collaborators
+> with write access.
+
