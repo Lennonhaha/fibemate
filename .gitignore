@@ -346,3 +346,7 @@ dist/
 *.pdb
 *.exp
 *.lib
+# Pre-commit guard supplement (2026-08-05)
+.venv-*/
+*.log
+*.swp
