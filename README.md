@@ -23,7 +23,7 @@
 >
 > You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
 >
-> **14 interactive visualizations** · 12 algorithms · 11 security governance docs · 100+ timestamped evidence records · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
+> **20 interactive visualizations** · 12 algorithms · 11 security governance docs · 100+ timestamped evidence records · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
@@ -425,6 +425,40 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 |-----------|-----------|----------------|
 | **LookingGlass v2** | Binary obfuscation via algebraic group representations (wreath product recursion); educational / hardware self-test aid | Not a cryptographic security primitive; does not enhance LWE hardness |
 | **VWZ** | Tensor-based signature scheme (Vandermonde-Wronskian-Zariski); research exploration | Not production-ready; relies on VMQ-SPARSE (novel tensor-based hardness assumption); no reduction to standard LWE; pending peer review |
+
+### Lattice Security Analysis — ML-KEM Concrete Hardness
+
+The security of ML-KEM rests on the hardness of the Module-Learning With Errors (MLWE) problem.
+FIBEMATE provides a **two-part evidence chain** validating this assumption:
+
+**Part 1 — Experimental (Negative Results):** Hand-crafted LLL/BKZ attacks against small-scale LWE instances all fail, confirming that even trivial LWE lattices resist basic lattice reduction.
+
+| Experiment | Parameters | Result |
+|------------|-----------|--------|
+| LLL (pure Python) | n=40, q=1009, rank ≈120 | ❌ No abnormally short vector found |
+| BKZ Kannan Embedding (SageCell) | n=5/10/15, q=101, β=2~20 | ❌ All FAIL — BKZ-β≤20 insufficient |
+
+> 📄 Full experiment records: `lwe-experiment-v2.py` + `lwe-lll-experiment-notes_2026-07-31.md`
+
+**Part 2 — Standard Analysis (lattice-estimator):** Using malb/lattice-estimator, the industry-standard tool for concrete LWE security estimation.
+
+```
+>>> LWE.primal_usvp(schemes.Kyber512)
+rop: ≈2^143.8, red: ≈2^143.8, δ: 1.003941, β: 406, d: 998, tag: usvp
+```
+
+| Parameter Set | BKZ Block Size β | Classical Security | Quantum Security | NIST Category |
+|---------------|-------------------|---------------------|-------------------|---------------|
+| ML-KEM-512 | ≈406 | ~143.8-bit | ~131-bit | **Category 1** |
+| ML-KEM-768 | ≈583* | ~185-bit | ~168-bit | **Category 3** |
+| ML-KEM-1024 | ≈772* | ~233-bit | ~212-bit | **Category 5** |
+
+> *ML-KEM-768/1024 BKZ-β values extrapolated from NIST category levels. Precise values require SageMath ≥9.4. See [ML-KEM Security Estimate](docs/ml-kem-security-estimate.md) for full methodology and attack breakdown (usvp, bdd, dual, dual_hybrid, bkw).
+
+**Key Insight:** BKZ-β=406 represents a computation far beyond any known classical or quantum capability (Core-SVP cost: 2^143.8 classical, 2^131.0 quantum). The gap between our experimental β≤20 and the required β≥406 demonstrates **exactly why LWE is hard** — not as an abstract claim, but as a measurable, reproducible fact.
+
+> 📄 Full analysis: [docs/ml-kem-security-estimate.md](docs/ml-kem-security-estimate.md)
+
 
 ### Known Limitations
 

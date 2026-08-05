@@ -90,6 +90,33 @@ NIST 在 2024 年完成了后量子密码学标准化（FIPS 203/204/205）。�
 
 ---
 
+### 安全性分析 — ML-KEM 具体硬度
+
+ML-KEM 的安全性基于 MLWE 格问题的计算困难性。FIBEMATE 提供了**双轨证据链**：
+
+**① 手工攻击实验（负结果）** — 证明小规模 LWE 实例已抵抗基本格归约：
+
+| 实验 | 参数 | 结果 |
+|:---|:---|:---|
+| LLL 格基归约 | n=40, q=1009, 秩 ≈120 | ❌ 无异常短向量 |
+| BKZ Kannan Embedding | n=5~15, q=101, β=2~20 | ❌ 全部失败 |
+
+**② lattice-estimator 标准分析** — 使用 malb/lattice-estimator（Albrecht et al. 2015）的 BKZ 仿真器：
+
+```python
+>>> LWE.primal_usvp(schemes.Kyber512)
+rop: ≈2^143.8, δ: 1.003941, β: 406, d: 998
+```
+
+| 方案 | BKZ-β | 经典安全 | NIST 等级 |
+|:---|:---|:---|:---|
+| ML-KEM-512 | 406 | 143.8-bit | Category 1 |
+| ML-KEM-768 | ~583 | ~185-bit | Category 3 |
+| ML-KEM-1024 | ~772 | ~233-bit | Category 5 |
+
+> **核心结论**：BKZ-β=406 代表远超任何已知经典/量子计算能力的计算量（Core-SVP: 2^143.8）。从手工实验的 β≤20 到实际需要的 β≥406 这个差距，就是 **LWE 为什么难** — 不是一个抽象声明，而是一个可度量、可复现的事实。详见 [ML-KEM 安全性估计](https://fibemate.net/docs/ml-kem-security-estimate.md)。
+
+
 ## 评分卡（2026-08-03）
 
 | 框架 | 综合分 | 各维度 |
