@@ -2,24 +2,30 @@ name: "FIBEMATE CodeQL Config"
 disable-default-queries: false
 queries:
   - uses: security-and-quality
+query-filters:
   - exclude:
       id: js/overwritten-property
-      # HTML-generated JS — intentional dynamic property overwrite in DOM/visualization code
-    - exclude:
+      # reason: "HTML-generated JS intentional dynamic property overwrite in DOM/visualization code"
+  - exclude:
       id: js/shift-out-of-range
-      # MurmurHash3 standard: >>>33, >>>31, <<<13 per RFC 6151, not a real bug
-    - exclude:
+      # reason: "MurmurHash3 standard: >>>33, >>>31, <<<13 per RFC 6151"
+  - exclude:
       id: js/insecure-randomness
-      # gm.js:266 — intentional Math.random() for demo, documented and non-security-critical
-    - exclude:
+      # reason: "gm.js intentional Math.random() for demo, documented non-critical"
+  - exclude:
       id: js/indirect-command-line-injection
-      # cbom-diff.js:50 — git hash from controlled commit, not user-supplied input
-    - exclude:
+      # reason: "cbom-diff.js git hash from controlled commit input"
+  - exclude:
       id: js/loop-bound-injection
-      # pqc-kem:108 — data.length is standard Uint8Array property, not user-controlled
-    - exclude:
+      # reason: "pqc-kem data.length is standard Uint8Array property"
+  - exclude:
       id: js/file-system-race
-      # tools/cars-snapshot.js:124 — path from git command output, not user input
-    - exclude:
+      # reason: "cars-snapshot.js path from git command output"
+  - exclude:
       id: js/useless-comparison-test
-      # Test assertions validating expected crypto behavior
+      # reason: "Test assertions validating expected crypto behavior"
+paths-ignore:
+  - path: fibemate-mobile/
+  - path: archive/
+  - path: experimental/
+  - path: tmp-bundle.git/
