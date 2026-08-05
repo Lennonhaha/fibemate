@@ -27,6 +27,7 @@ jobs:
 
     env:
       GYP_MSVS_VERSION: '2022'
+      GYP_MSVS_OVERRIDE_PATH: 'C:\\Program Files\\Microsoft Visual Studio'
 
     steps:
       - uses: actions/checkout@v7
