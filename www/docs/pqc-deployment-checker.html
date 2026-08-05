@@ -6,7 +6,7 @@
 <title>PQC 部署验证器 · FIBEMATE</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<!-- Google Fonts removed for CSP compliance — system mono fallback used -->
 <style>
 /* ═════════════════════════════════════════════════════════════════════
    Quantum Terminal — PQC Deployment Checker
@@ -695,7 +695,7 @@ function renderCompareGrid() {
   var targets = ['fibemate.net:443', 'cloudflare.com:443'];
   grid.innerHTML = targets.map(function(t){
     var id = 'cmp-' + t.replace(/[.:]/g,'-');
-    return '<div class="compare-card" id="' + id + '" onclick="loadDemo('' + t + '')">' +
+    return '<div class="compare-card" id="' + id + '" onclick="loadDemo(&quot;' + t + '&quot;)">' +
       '<div class="endpoint">' + t + '</div>' +
       '<div class="mini-grade" style="color:var(--text-muted)">···</div>' +
       '<div class="compare-metrics">' +

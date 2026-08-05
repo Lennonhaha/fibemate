@@ -334,3 +334,15 @@ __pycache__/
 .eslintrc.json
 
 fibemate-mobile/
+
+# Build artifacts (added 2026-08-05 after git add -A accident)
+rust/target/
+.venv-lattice/
+.venv/
+__pycache__/
+*.pyc
+*.so
+dist/
+*.pdb
+*.exp
+*.lib
