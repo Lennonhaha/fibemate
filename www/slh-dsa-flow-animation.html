@@ -157,7 +157,7 @@ class FP{constructor(a,b,col,spd=.012){
   remove(){s.remove(this.mesh); this.alive=false}
 }
 let FPARTS=[];
-function spawn(a,b,col,n=5,s=.012){for(let i=0;i<n;i++){const p=new FP(a,b,col,spd);p.t=i/n;FPARTS.push(p);}}
+function spawn(a,b,col,n=5,s=.012){for(let i=0;i<n;i++){const p=new FP(a,b,col,s);p.t=i/n;FPARTS.push(p);}}
 function clearP(){FPARTS.forEach(p=>p.remove()); FPARTS=[];}
 
 const ALL_NODES=[signer,verifier,authNode,msgNode,forsNode,treeRootNode,sigOutNode,okNode];
