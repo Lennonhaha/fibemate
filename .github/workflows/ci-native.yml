@@ -25,11 +25,6 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
 
-    env:
-      # VCINSTALLDIR is what findVSFromSpecifiedLocation checks first.
-      # Setting it to a non-null value (even empty) prevents the null-return early-exit,
-      # allowing node-gyp to find VS 2022 via the --msvs-version 2022 argument in package.json.
-      VCINSTALLDIR: 'C:\\Program Files\\Microsoft Visual Studio\\2022\\Community'
 
     steps:
       - uses: actions/checkout@v7
@@ -39,9 +34,6 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
-      - name: Setup MSBuild (Windows)
-        if: runner.os == 'Windows'
-        uses: actions/setup-MSBuild@v2
 
       - name: Install build tools (Linux)
         if: runner.os == 'Linux'
