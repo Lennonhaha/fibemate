@@ -72,13 +72,9 @@ jobs:
         working-directory: packages/pqc-kem
         run: npm install
 
-      - name: Verify JS fallback is active
+      - name: Verify JS implementation loads
         working-directory: packages/pqc-kem
-        run: node -e "const k = require('./'); console.log('ML-KEM-768 keygen:', typeof k.mlkem768GenerateKeyPair); const r = k.mlkem768Encaps(k.mlkem768GenerateKeyPair().publicKey); console.log('encaps OK, ct length:', r.ciphertext.length);"
-
-      - name: Smoke test (JS implementation)
-        working-directory: packages/pqc-kem
-        run: node ../../scripts/smoke-test.js
+        run: node smoke-test.js
 
   # Nightly: full 10000-round regression (Linux only)
   nightly-regression:
