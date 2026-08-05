@@ -74,7 +74,7 @@ jobs:
 
       - name: Verify JS implementation loads
         working-directory: packages/pqc-kem
-        run: node smoke-test.js
+        run: node ../../scripts/smoke-test.js
 
   # Nightly: full 10000-round regression (Linux only)
   nightly-regression:
