@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · 密钥生命周期追踪 — ML-KEM-768 Key Lifecycle</title>
+<meta name="description" content="Interactive 3D visualization of ML-KEM-768 key lifecycle: from seed generation to secure destruction, aligned with NIST SP 800-57.">
+<link rel="canonical" href="https://fibemate.net/key-lifecycle-trace.html">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#070a14;color:#b0b8d0;font-family:-apple-system,Segoe UI,sans-serif;overflow:hidden}
+canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
+#top{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px;background:linear-gradient(180deg,rgba(7,10,20,.92) 0%,transparent 100%)}
+#left{max-width:58%}
+#badge{display:inline-block;background:linear-gradient(135deg,#7c3aed,#a78bfa);color:#fff;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:4px}
+#title{font-size:18px;font-weight:700;color:#fff;letter-spacing:.3px}
+#subtitle{font-size:12px;color:#5a6a8a;margin-top:2px;line-height:1.5}
+#legend{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#6a7a9a}
+.dot{width:8px;height:8px;border-radius:50%}
+#right{text-align:right;font-size:11px;color:#3a4a6a;line-height:1.7}
+#bottom{padding:16px 20px;background:linear-gradient(0deg,rgba(7,10,20,.92) 0%,transparent 100%);display:flex;flex-direction:column;align-items:center;gap:10px;pointer-events:all}
+#fw{display:none;min-height:20px}
+#formula{font-family:monospace;font-size:11px;color:#c792ea;background:rgba(90,40,120,.4);padding:6px 14px;border-radius:6px;border:1px solid rgba(167,139,250,.2);max-width:540px;text-align:center;word-break:break-all}
+#dp{display:flex;gap:8px;flex-wrap:wrap;max-width:580px;justify-content:center}
+.dp{font-family:monospace;font-size:10px;color:#6a8aaa;background:rgba(15,20,40,.7);padding:3px 8px;border-radius:4px;border:1px solid rgba(80,120,180,.15);max-width:170px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dp span{color:#8ab4e0}
+#nav{display:flex;align-items:center;gap:12px}
+.btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#c0cce0;font-size:13px;padding:8px 18px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn:active{transform:scale(.97)}
+#prevBtn{opacity:.4}
+#nextBtn{background:linear-gradient(135deg,#7c3aed,#a78bfa);border:none;color:#fff;font-weight:600;min-width:110px}
+#nextBtn:hover{background:linear-gradient(135deg,#8b5cf6,#c4b5fd)}
+#counter{font-size:12px;color:#4a5a7a}
+#progress{display:flex;gap:3px;margin-top:4px}
+.pg{width:22px;height:3px;border-radius:2px;background:rgba(255,255,255,.1);transition:background .3s}
+.pg.active{background:#7c3aed}
+.pg.done{background:#2a1a5a}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="ui">
+<div id="top">
+<div id="left">
+<div id="badge">Step 1 / 10</div>
+<div id="title">ML-KEM-768 密钥生命周期</div>
+<div id="subtitle">NIST SP 800-57 · Key Lifecycle Manager · FIBEMATE KL</div>
+<div id="legend">
+<div class="li"><div class="dot" style="background:#f59e0b"></div>活跃</div>
+<div class="li"><div class="dot" style="background:#7c3aed"></div>派生</div>
+<div class="li"><div class="dot" style="background:#06b6d4"></div>封装/解封</div>
+<div class="li"><div class="dot" style="background:#a78bfa"></div>宽限期</div>
+<div class="li"><div class="dot" style="background:#ef4444"></div>吊销</div>
+<div class="li"><div class="dot" style="background:#6b7280"></div>销毁</div>
+</div>
+</div>
+<div id="right">
+<div style="color:#a78bfa">Key Lifecycle Manager v1</div>
+<div style="margin-top:2px">NIST SP 800-57 Part 1</div>
+<div style="margin-top:2px">D-26 开源倒计时</div>
+</div>
+</div>
+<div id="bottom">
+<div id="fw"><div id="formula"></div></div>
+<div id="dp"></div>
+<div id="nav">
+<button class="btn" id="prevBtn" onclick="prevStep()">&#8592; Previous</button>
+<button class="btn" id="nextBtn" onclick="nextStep()">Next &#8594;</button>
+</div>
+<div id="counter">Step 1 of 10</div>
+<div id="progress"></div>
+</div>
+</div>
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+// ============================================================
+//  THREE.JS SETUP
+// ============================================================
+var STEPS=10,STEP=0,nodes=[],edges=[],particles=[],labels=[];
+var scene, camera, renderer, controls;
+var canvas=document.getElementById('c');
+renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setClearColor(0x070a14);
+scene=new THREE.Scene();
+scene.fog=new THREE.FogExp2(0x070a14,0.0008);
+camera=new THREE.PerspectiveCamera(50,window.innerWidth/window.innerHeight,0.5,60);
+camera.position.set(0,1,18);
+controls=new THREE.OrbitControls(camera,renderer.domElement);
+controls.enableDamping=true;controls.dampingFactor=0.08;
+controls.minDistance=8;controls.maxDistance=30;
+controls.target.set(0,0,0);
+
+// Lighting
+scene.add(new THREE.AmbientLight(0x1a1a3a,1.2));
+var dl=new THREE.DirectionalLight(0xa78bfa,1.4);dl.position.set(5,8,5);scene.add(dl);
+var dl2=new THREE.DirectionalLight(0xf59e0b,0.6);dl2.position.set(-5,-2,-5);scene.add(dl2);
+
+// Background: particle field
+var bgGeo=new THREE.BufferGeometry();var bgCount=400;
+var bgPos=new Float32Array(bgCount*3);var bgCol=new Float32Array(bgCount*3);
+for(var i=0;i<bgCount;i++){
+ bgPos[i*3]=(Math.random()-.5)*30;bgPos[i*3+1]=(Math.random()-.5)*20;bgPos[i*3+2]=(Math.random()-.5)*20;
+ bgCol[i*3]=0.4+Math.random()*0.2;bgCol[i*3+1]=0.3+Math.random()*0.2;bgCol[i*3+2]=0.5+Math.random()*0.3;
+}
+bgGeo.setAttribute('position',new THREE.BufferAttribute(bgPos,3));
+bgGeo.setAttribute('color',new THREE.BufferAttribute(bgCol,3));
+var bgMat=new THREE.PointsMaterial({size:0.03,vertexColors:true,blending:THREE.AdditiveBlending,depthWrite:false});
+scene.add(new THREE.Points(bgGeo,bgMat));
+
+// Grid floor
+var grid=new THREE.GridHelper(16,20,0x1a1a3a,0x0a0a1a);
+grid.position.y=-5;scene.add(grid);
+
+// ============================================================
+//  LIFECYCLE DATA — 10 Steps (NIST SP 800-57 aligned)
+// ============================================================
+var STEP_DATA=[
+ {id:'seed',    label:'种子生成',   icon:'🌱', detail:'systemEntropy(256bit) → CSPRNG',       formula:'seed = getRandomValues(32B)',        keys:['seed: af3b...7c2d'], color:'#f59e0b', pos:[0,2.5,0]},
+ {id:'keypair', label:'密钥派生',   icon:'🔑', detail:'seed → (pk, sk) via ML-KEM-768.KeyGen()', formula:'(pk,sk) = ML-KEM.KeyGen(seed)',     keys:['pk: 1184B','sk: 2400B'], color:'#7c3aed', pos:[-3,1.2,0]},
+ {id:'cert',    label:'公钥分发',   icon:'📜', detail:'pk → X.509 certificate (RFC 5280)',       formula:'cert = wrapX509(pk, MLKEM768)',      keys:['cert: ~1.5KB','SAN: fibemate.net'], color:'#06b6d4', pos:[3,1.2,0]},
+ {id:'encaps',  label:'密钥封装',   icon:'📦', detail:'Encaps(pk) → (ct, ss)',                  formula:'(ct,ss) = ML-KEM.Encaps(pk)',       keys:['ct: 1088B','ss: 32B shared'], color:'#06b6d4', pos:[3,-1.2,0]},
+ {id:'decaps',  label:'密钥解封装', icon:'📬', detail:'Decaps(sk, ct) → ss′',                    formula:'ss′ = ML-KEM.Decaps(sk, ct)',       keys:['ct: 1088B','ss′ = ss (FO-transform)'], color:'#06b6d4', pos:[-3,-1.2,0]},
+ {id:'session', label:'会话建立',   icon:'🤝', detail:'ss → HKDF-SHA256 → sessionKey',          formula:'skey = HKDF(ss, "FIBEMATE-v1")',     keys:['sessionKey: 32B','version: 1'], color:'#8b5cf6', pos:[0,-2.5,0]},
+ {id:'usage',   label:'密钥使用',   icon:'⚡', detail:'sessionKey → AES-256-GCM encrypt/decrypt', formula:'{ct,tag} = AES-GCM(skey, msg)',     keys:['encryptCount: 487','decryptCount: 203'], color:'#f59e0b', pos:[-3,-4,0]},
+ {id:'grace',   label:'宽限期',     icon:'⏳', detail:'key still valid for decrypt (1h window)',  formula:'expiresAt = now + gracePeriod(1h)', keys:['expiresAt: +1h','decrypt-only mode'], color:'#a78bfa', pos:[0,-5,0]},
+ {id:'revoked', label:'密钥吊销',   icon:'🚫', detail:'Revocation entry created (rotation)',     formula:'revoke(version, "rotation")',       keys:['reason: rotation','replacedBy: v2'], color:'#ef4444', pos:[3,-5,0]},
+ {id:'destroy', label:'安全销毁',   icon:'💀', detail:'keyMaterial zeroized + GC reclaimed',      formula:'zeroize(keyBuffer); delete version', keys:['zeroized: ✔','GC: collected'], color:'#6b7280', pos:[0,-6.5,0]}
+];
+
+// ============================================================
+//  BUILD SCENE — Nodes + Edges
+// ============================================================
+function createNode(x,y,z,color,radius){
+ var group=new THREE.Group();
+ // Platform
+ var platGeo=new THREE.CylinderGeometry(radius,radius*1.3,0.1,24);
+ var platMat=new THREE.MeshStandardMaterial({color:color,metalness:0.4,roughness:0.5,emissive:color,emissiveIntensity:0.3});
+ var plat=new THREE.Mesh(platGeo,platMat);plat.position.y=-0.05;group.add(plat);
+ // Core sphere
+ var coreGeo=new THREE.SphereGeometry(radius*0.5,20,20);
+ var coreMat=new THREE.MeshStandardMaterial({color:color,metalness:0.2,roughness:0.3,emissive:color,emissiveIntensity:0.5});
+ var core=new THREE.Mesh(coreGeo,coreMat);group.add(core);
+ // Glow ring
+ var ringGeo=new THREE.TorusGeometry(radius*1.1,0.03,16,32);
+ var ringMat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.6});
+ var ring=new THREE.Mesh(ringGeo,ringMat);ring.rotation.x=Math.PI/2;group.add(ring);
+ // Outer pulse
+ var pulseGeo=new THREE.TorusGeometry(radius*1.5,0.02,16,48);
+ var pulseMat=new THREE.MeshBasicMaterial({color:color,transparent:true,opacity:0.25});
+ var pulse=new THREE.Mesh(pulseGeo,pulseMat);pulse.rotation.x=Math.PI/2;group.add(pulse);
+ group.position.set(x,y,z);
+ group.userData={pulse:pulse,ring:ring,core:core,baseColor:color};
+ scene.add(group);
+ return group;
+}
+
+function tubeEdge(from,to,color){
+ var start=new THREE.Vector3(from.position.x,from.position.y,from.position.z);
+ var end=new THREE.Vector3(to.position.x,to.position.y,to.position.z);
+ var mid=new THREE.Vector3().addVectors(start,end).multiplyScalar(0.5);
+ mid.y+=0.3;
+ var curve=new THREE.QuadraticBezierCurve3(start,mid,end);
+ var tubeGeo=new THREE.TubeGeometry(curve,24,0.04,8,false);
+ var tubeMat=new THREE.MeshStandardMaterial({color:color,metalness:0.3,roughness:0.4,emissive:color,emissiveIntensity:0.15});
+ var tube=new THREE.Mesh(tubeGeo,tubeMat);
+ scene.add(tube);
+ return tube;
+}
+
+function addLabel(x,y,text,color){
+ var cv=document.createElement('canvas');cv.width=256;cv.height=32;
+ var ctx=cv.getContext('2d');ctx.fillStyle=color||'#ffffff';ctx.font='14px monospace';
+ ctx.fillText(text,10,22);
+ var tex=new THREE.CanvasTexture(cv);tex.minFilter=THREE.LinearFilter;
+ var spriteMat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.85});
+ var sprite=new THREE.Sprite(spriteMat);sprite.position.set(x,y-0.6,0);sprite.scale.set(2.5,0.35,1);
+ scene.add(sprite);return sprite;
+}
+
+// Build all
+STEP_DATA.forEach(function(s,i){
+ var n=createNode(s.pos[0],s.pos[1],s.pos[2],s.color,0.25);
+ n.userData.stepIdx=i;n.userData.label=s.label;n.userData.icon=s.icon;
+ nodes.push(n);
+ labels.push(addLabel(s.pos[0],s.pos[1],s.label,s.color));
+});
+
+// Edges (key data flow)
+edges.push(tubeEdge(nodes[0],nodes[1],'#7c3aed')); // seed -> keypair
+edges.push(tubeEdge(nodes[1],nodes[2],'#06b6d4')); // keypair -> cert
+edges.push(tubeEdge(nodes[2],nodes[3],'#06b6d4')); // cert -> encaps
+edges.push(tubeEdge(nodes[3],nodes[4],'#06b6d4')); // encaps -> decaps
+edges.push(tubeEdge(nodes[4],nodes[5],'#8b5cf6')); // decaps -> session
+edges.push(tubeEdge(nodes[5],nodes[6],'#f59e0b')); // session -> usage
+edges.push(tubeEdge(nodes[6],nodes[7],'#a78bfa')); // usage -> grace
+edges.push(tubeEdge(nodes[7],nodes[8],'#ef4444')); // grace -> revoked
+edges.push(tubeEdge(nodes[8],nodes[9],'#6b7280')); // revoked -> destroy
+
+// ============================================================
+//  PARTICLES — flowing along active edges
+// ============================================================
+var flowParticles=[],flowEdges=[];
+function spawnFlow(fromNodeIdx,toNodeIdx,count,color){
+ var from=nodes[fromNodeIdx].position,to=nodes[toNodeIdx].position;
+ var mid=new THREE.Vector3().addVectors(from,to).multiplyScalar(0.5);mid.y+=0.3;
+ var curve=new THREE.QuadraticBezierCurve3(from,mid,to);
+ for(var i=0;i<count;i++){
+  var dotGeo=new THREE.SphereGeometry(0.06,6,6);
+  var dotMat=new THREE.MeshBasicMaterial({color:color,blending:THREE.AdditiveBlending,depthWrite:false});
+  var dot=new THREE.Mesh(dotGeo,dotMat);
+  dot.userData={curve:curve,t:Math.random(),speed:0.003+Math.random()*0.004,color:color};
+  scene.add(dot);flowParticles.push(dot);
+  flowEdges.push({from:fromNodeIdx,to:toNodeIdx,color:color});
+ }
+}
+
+// ============================================================
+//  STEP LOGIC
+// ============================================================
+function clearAllFlow(){
+ flowParticles.forEach(function(d){scene.remove(d);});
+ flowParticles=[];flowEdges=[];
+}
+
+var highlightGroup=new THREE.Group();scene.add(highlightGroup);
+
+function applyStep(s){
+ STEP=s;
+ // Clear highlights
+ while(highlightGroup.children.length>0)highlightGroup.remove(highlightGroup.children[0]);
+ clearAllFlow();
+
+ // Reset all nodes
+ nodes.forEach(function(n,i){
+  var c=n.userData.baseColor;
+  n.children.forEach(function(child){
+   if(child.material&&child.material.emissive)child.material.emissive.set(c);
+   if(child.material&&child.material.color)child.material.color.set(c);
+   if(child.material&&child.material.opacity!==undefined)child.material.opacity=0.25;
+  });
+  n.userData.ring.material.opacity=0.3;
+  n.userData.pulse.material.opacity=0.1;
+ });
+
+ // Dim all labels
+ labels.forEach(function(l){l.material.opacity=0.4;});
+
+ var sd=STEP_DATA[s],cn=nodes[s];
+ // Highlight active node
+ cn.children.forEach(function(child){
+  if(child.material&&child.material.emissive)child.material.emissiveIntensity=1.2;
+  if(child.material&&child.material.opacity!==undefined)child.material.opacity=1;
+ });
+ cn.userData.ring.material.opacity=1;
+ cn.userData.pulse.material.opacity=0.6;
+ labels[s].material.opacity=1;
+
+ // Highlight connected upstream nodes dimly
+ for(var i=0;i<=s;i++){
+  var n=nodes[i];
+  n.userData.ring.material.opacity=0.6;
+  n.userData.pulse.material.opacity=0.3;
+  labels[i].material.opacity=i===s?1:0.6;
+ }
+
+ // Spawn flow particles for active edge
+ if(s>0)spawnFlow(s-1,s,15,sd.color);
+
+ // Camera lerp
+ var tx=sd.pos[0],ty=sd.pos[1],tz=sd.pos[2]+8;
+ controls.target.set(tx,ty,sd.pos[2]);
+ // Smooth: OrbitControls handles damping
+
+ // UI
+ document.getElementById('badge').textContent='Step '+(s+1)+' / 10';
+ document.getElementById('counter').textContent='Step '+(s+1)+' of 10';
+ document.getElementById('formula').textContent=sd.formula;
+ document.getElementById('fw').style.display='block';
+
+ // Key data pills
+ var dp=document.getElementById('dp');
+ dp.innerHTML=sd.keys.map(function(k){return '<div class="dp"><span>'+k.replace(':','')+'</span></div>';}).join('');
+
+ // Progress dots
+ var pg=document.getElementById('progress');
+ var dots='';
+ for(var i=0;i<STEPS;i++){
+  var cls='pg'+(i===s?' active':(i<s?' done':''));
+  dots+='<div class="'+cls+'"></div>';
+ }
+ pg.innerHTML=dots;
+
+ // Buttons
+ document.getElementById('prevBtn').style.opacity=s===0?'0.3':'1';
+ document.getElementById('nextBtn').textContent=s>=STEPS-1?'⟳ Restart':'Next →';
+
+ // 3D highlight pulse: spawn a ring at active node
+ var hlGeo=new THREE.TorusGeometry(0.45,0.015,16,48);
+ var hlMat=new THREE.MeshBasicMaterial({color:sd.color,transparent:true,opacity:0.7});
+ var hl=new THREE.Mesh(hlGeo,hlMat);hl.rotation.x=Math.PI/2;
+ hl.position.copy(cn.position);hl.position.y+=0.3;
+ highlightGroup.add(hl);
+ hl.userData={life:1,color:sd.color};
+}
+
+function nextStep(){
+ if(STEP>=STEPS-1){STEP=-1;}
+ applyStep(STEP+1);
+}
+function prevStep(){
+ if(STEP<=0)return;
+ applyStep(STEP-1);
+}
+
+// ============================================================
+//  ANIMATION LOOP
+// ============================================================
+function animate(){
+ requestAnimationFrame(animate);
+ controls.update();
+
+ // Animate flow particles
+ flowParticles.forEach(function(d){
+  d.userData.t+=d.userData.speed;
+  if(d.userData.t>1)d.userData.t-=1;
+  var pt=d.userData.curve.getPoint(d.userData.t);
+  d.position.copy(pt);
+  // Pulsate
+  var s=0.6+0.4*Math.sin(d.userData.t*Math.PI*20);
+  d.scale.setScalar(s);
+ });
+
+ // Animate highlight rings
+ for(var i=highlightGroup.children.length-1;i>=0;i--){
+  var ch=highlightGroup.children[i];
+  ch.userData.life-=0.008;
+  ch.material.opacity=ch.userData.life*0.7;
+  ch.scale.multiplyScalar(1.008);
+  if(ch.userData.life<=0)highlightGroup.remove(ch);
+ }
+
+ // Animate node rings
+ nodes.forEach(function(n){
+  n.userData.ring.rotation.z+=0.005;
+  n.userData.pulse.rotation.z-=0.003;
+  n.userData.pulse.scale.setScalar(1+0.08*Math.sin(Date.now()*0.002+n.position.y));
+ });
+
+ renderer.render(scene,camera);
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+function init(){
+ for(var i=0;i<STEPS;i++){
+  document.getElementById('progress').innerHTML+='<div class="pg"></div>';
+ }
+ applyStep(0);
+ animate();
+ document.getElementById('nextBtn').textContent='Next →';
+}
+
+// Keyboard
+document.addEventListener('keydown',function(e){
+ if(e.key==='ArrowRight'||e.key===' ')nextStep();
+ if(e.key==='ArrowLeft')prevStep();
+});
+
+// Resize
+window.addEventListener('resize',function(){
+ camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();
+ renderer.setSize(window.innerWidth,window.innerHeight);
+});
+
+init();
+</script>
+</body>
+</html>
