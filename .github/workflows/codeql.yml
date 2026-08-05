@@ -24,14 +24,15 @@ jobs:
         language: [javascript-typescript, python, actions]
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout repository
+        uses: actions/checkout@v7
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
         with:
           languages: ${{ matrix.language }}
-          queries: security-extended,security-and-quality
-          config-file: ./.github/codeql/codeql-config.yml
+          queries: security-and-quality
+
       - name: Autobuild
         uses: github/codeql-action/autobuild@v4
 

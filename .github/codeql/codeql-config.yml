@@ -1,9 +1,0 @@
-name: "FIBEMATE CodeQL Config"
-disable-default-queries: false
-queries:
-  - uses: security-and-quality
-paths-ignore:
-  - path: fibemate-mobile/
-  - path: archive/
-  - path: experimental/
-  - path: tmp-bundle.git/
