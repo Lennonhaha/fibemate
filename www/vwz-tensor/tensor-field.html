@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VWZ · 3D Vandermonde 张量场</title>
+<style>
+  :root { --bg: #0a0a0f; --card: #111118; --text: #e0e0e0; --accent: #f59e0b; --accent2: #8b5cf6; --muted: rgba(255,255,255,.35); }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; height: 100vh; }
+  #container { width: 100%; height: 100%; }
+  #ui { position: absolute; top: 0; left: 0; right: 0; pointer-events: none; z-index: 10; }
+  #header { padding: 16px 20px 8px; pointer-events: auto; }
+  #header h1 { font-size: 1.4rem; font-weight: 700; color: var(--accent); margin: 0 0 2px; }
+  #header .sub { font-size: 0.75rem; color: var(--muted); line-height: 1.5; }
+  #header .sub span { color: var(--accent2); }
+  #controls { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; pointer-events: auto; flex-wrap: wrap; justify-content: center; }
+  #controls button { background: var(--card); color: var(--text); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 6px 14px; font-size: 0.78rem; cursor: pointer; transition: all .15s; }
+  #controls button:hover { background: #1a1a2e; border-color: var(--accent); }
+  #controls button.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: 600; }
+  #legend { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: auto; background: var(--card); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: 12px; font-size: 0.7rem; }
+  #legend .bar { height: 8px; border-radius: 2px; margin: 4px 0; }
+  #toggle-mode { position: absolute; top: 90px; right: 16px; pointer-events: auto; background: var(--card); border: 1px solid rgba(255,255,255,.12); border-radius: 6px; padding: 6px 12px; font-size: 0.75rem; color: var(--text); cursor: pointer; }
+  #info-panel { position: absolute; bottom: 80px; left: 16px; pointer-events: auto; background: var(--card); border: 1px solid rgba(255,255,255,.08); border-radius: 8px; padding: 10px 14px; font-size: 0.7rem; max-width: 240px; display: none; }
+  #info-panel .kv { display: flex; justify-content: space-between; gap: 12px; }
+  #info-panel .kv .k { color: var(--muted); }
+  #info-panel .kv .v { color: var(--accent); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .note { position: absolute; bottom: 16px; right: 16px; pointer-events: auto; font-size: 0.65rem; color: var(--muted); }
+  .note a { color: var(--accent2); text-decoration: none; }
+  @media (max-width: 600px) {
+    #header h1 { font-size: 1.1rem; }
+    #controls button { padding: 4px 10px; font-size: 0.7rem; }
+    #legend { right: 4px; padding: 8px; font-size: 0.65rem; }
+  }
+</style>
+</head>
+<body>
+<div id="container"></div>
+<div id="ui">
+  <div id="header">
+    <h1>🧮 VWZ Vandermonde 张量场</h1>
+    <div class="sub">
+      7 层 · N=17 Vandermonde 矩阵叠立 · 模数 <strong style="color:var(--accent)">Q=3329</strong><br>
+      <span>张量积结构 | λ-sets 互异 | 数学基础: Vandermonde 矩阵 — 区别于 LG 的 Kronecker 矩阵场</span>
+    </div>
+  </div>
+  <button id="toggle-mode" onclick="toggleMode()">🌐 球体 / 📊 柱状</button>
+  <div id="legend">
+    <div style="margin-bottom:4px;font-weight:600;color:var(--accent)">模 Q 值映射</div>
+    <div style="display:flex;align-items:center;gap:4px"><span style="color:#1e3a8a">■</span> 1 → Q/4</div>
+    <div style="display:flex;align-items:center;gap:4px"><span style="color:#f59e0b">■</span> Q/4 → Q/2</div>
+    <div style="display:flex;align-items:center;gap:4px"><span style="color:#ef4444">■</span> Q/2 → 3Q/4</div>
+    <div style="display:flex;align-items:center;gap:4px"><span style="color:#c084fc">■</span> 3Q/4 → Q</div>
+    <div style="margin-top:6px"><span style="color:var(--accent2)">⋮</span> Vandermonde 脊</div>
+    <div style="color:var(--muted);margin-top:4px">DENSE: 100% 非零</div>
+    <div style="color:var(--muted)">cf. LG: 0.56% 稀疏</div>
+  </div>
+  <div id="info-panel"></div>
+</div>
+<div id="controls">
+  <button onclick="selectLayer(0)" id="btn0">S₂ (1D)</button>
+  <button onclick="selectLayer(1)" id="btn1">C₅ (1D)</button>
+  <button onclick="selectLayer(2)" id="btn2">S₃ (2D)</button>
+  <button onclick="selectLayer(3)" id="btn3">D₄ (2D)</button>
+  <button onclick="selectLayer(4)" id="btn4">A₄ (3D)</button>
+  <button onclick="selectLayer(5)" id="btn5">D₆ (2D)</button>
+  <button onclick="selectLayer(6)" id="btn6">C_Q (2D)</button>
+  <button onclick="selectLayer(-1)" id="btnAll" class="active">全部 7 层</button>
+</div>
+<div class="note">
+  <span style="color:var(--muted)">experimental/vwz-lg · </span>
+  <a href="/lg-tensor/tensor-field.html">→ LG v2.3 矩阵场</a>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./lib/three.module.js",
+    "three/addons/": "./lib/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ——— Load data ———
+const resp = await fetch('vwz-tensor-data.json?v=1');
+const data = await resp.json();
+
+const Q = data.q;
+const N = data.N;
+const LAYERS = data.layers.length;
+
+// ——— Scene ———
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a0f);
+scene.fog = new THREE.Fog(0x0a0a0f, 30, 80);
+
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 200);
+camera.position.set(20, 12, 25);
+camera.lookAt(N/2, LAYERS/2, N/2);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.getElementById('container').appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(N/2, LAYERS/2, N/2);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.minDistance = 8;
+controls.maxDistance = 60;
+controls.maxPolarAngle = Math.PI * 0.7;
+controls.update();
+
+// ——— Lights ———
+scene.add(new THREE.AmbientLight(0x222244, 0.8));
+const dir = new THREE.DirectionalLight(0xffffff, 1.2);
+dir.position.set(30, 40, 20);
+scene.add(dir);
+const dir2 = new THREE.DirectionalLight(0x8866ff, 0.4);
+dir2.position.set(-20, 10, -15);
+scene.add(dir2);
+
+// ——— Grid ———
+const grid = new THREE.GridHelper(25, 25, 0x222244, 0x111122);
+grid.position.set(N/2, -0.5, N/2);
+scene.add(grid);
+
+// ——— Value → color ———
+function valueColor(v) {
+  const t = v / Q;
+  if (t < 0.25) return new THREE.Color().setHSL(0.6, 0.8, 0.35 + t * 1.2);
+  if (t < 0.5)  return new THREE.Color().setHSL(0.12, 0.9, 0.45 + (t - 0.25) * 1.4);
+  if (t < 0.75) return new THREE.Color().setHSL(0.0, 0.85, 0.5 + (t - 0.5) * 0.8);
+  return new THREE.Color().setHSL(0.75, 0.7, 0.55 + (t - 0.75) * 0.6);
+}
+
+// ——— Build tensor visualization ———
+const SPHERE_R = 0.22;
+const BAR_W = 0.55;
+const MAX_H = 8;
+
+let mode = 'bar'; // bar | sphere
+const groups = [];
+
+for (let layer = 0; layer < LAYERS; layer++) {
+  const g = new THREE.Group();
+  const mat = data.layers[layer].matrix;
+  
+  for (let row = 0; row < N; row++) {
+    for (let col = 0; col < N; col++) {
+      const v = mat[row][col];
+      const t = v / Q;
+      const h = 0.5 + t * MAX_H; // height proportional to value
+      const color = valueColor(v);
+      
+      if (mode === 'bar') {
+        // Column visualization — height = value
+        const geo = new THREE.BoxGeometry(BAR_W, h, BAR_W);
+        const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+          color, roughness: 0.5, metalness: 0.1, transparent: true, opacity: 0.85
+        }));
+        mesh.position.set(row, layer * 3.5 + h / 2, col);
+        mesh.userData = { layer, row, col, value: v, lam: data.lambda_sets[layer][row] };
+        g.add(mesh);
+      } else {
+        // Sphere visualization — opacity proportional to value
+        const geo = new THREE.SphereGeometry(SPHERE_R, 8, 8);
+        const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+          color, roughness: 0.3, metalness: 0.2, transparent: true,
+          opacity: 0.3 + t * 0.7,
+          emissive: color, emissiveIntensity: t * 0.5
+        }));
+        mesh.position.set(row, layer * 3.5 + 0.5, col);
+        mesh.userData = { layer, row, col, value: v, lam: data.lambda_sets[layer][row] };
+        g.add(mesh);
+      }
+    }
+  }
+  
+  // Layer separating plane
+  const planeGeo = new THREE.PlaneGeometry(N + 1, N + 1);
+  const planeMat = new THREE.MeshBasicMaterial({
+    color: 0x8866ff, side: THREE.DoubleSide,
+    transparent: true, opacity: 0.04, depthWrite: false
+  });
+  const plane = new THREE.Mesh(planeGeo, planeMat);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.set(N/2, layer * 3.5 - 0.1, N/2);
+  g.add(plane);
+  
+  // Layer label
+  // (text via CSS/HTML overlay for simplicity)
+  
+  scene.add(g);
+  groups.push(g);
+}
+
+// ——— Layer connection lines (Vandermonde ridge) ———
+const ridgeGroup = new THREE.Group();
+for (let layer = 0; layer < LAYERS - 1; layer++) {
+  const ridgesCurr = data.layers[layer].ridges;
+  const ridgesNext = data.layers[layer + 1].ridges;
+  
+  // Connect corresponding ridge points between layers
+  for (let i = 0; i < Math.min(ridgesCurr.length, ridgesNext.length); i++) {
+    const rc = ridgesCurr[i];
+    const rn = ridgesNext[i];
+    const y1 = layer * 3.5 + 0.5 + (rc.value / Q) * MAX_H;
+    const y2 = (layer + 1) * 3.5 + 0.5 + (rn.value / Q) * MAX_H;
+    
+    const points = [
+      new THREE.Vector3(rc.row, y1, rc.col),
+      new THREE.Vector3(rn.row, y2, rn.col)
+    ];
+    const lineGeo = new THREE.BufferGeometry().setFromPoints(points);
+    const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({
+      color: 0x8b5cf6, transparent: true, opacity: 0.2, depthTest: true
+    }));
+    ridgeGroup.add(line);
+  }
+}
+scene.add(ridgeGroup);
+
+// ——— Axis labels (simple wireframe box) ———
+const boxGeo = new THREE.BoxGeometry(N, LAYERS * 3.5, N);
+const boxEdges = new THREE.EdgesGeometry(boxGeo);
+const boxLine = new THREE.LineSegments(boxEdges, new THREE.LineBasicMaterial({
+  color: 0x333366, transparent: true, opacity: 0.3
+}));
+boxLine.position.set(N/2, LAYERS * 3.5 / 2, N/2);
+scene.add(boxLine);
+
+// ——— Stars background ———
+const starsGeo = new THREE.BufferGeometry();
+const starsCount = 1000;
+const starsPos = new Float32Array(starsCount * 3);
+for (let i = 0; i < starsCount; i++) {
+  starsPos[i * 3] = (Math.random() - 0.5) * 80;
+  starsPos[i * 3 + 1] = (Math.random() - 0.5) * 50;
+  starsPos[i * 3 + 2] = (Math.random() - 0.5) * 80;
+}
+starsGeo.setAttribute('position', new THREE.BufferAttribute(starsPos, 3));
+scene.add(new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0x334466, size: 0.08 })));
+
+// ——— Raycaster for hover info ———
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const infoPanel = document.getElementById('info-panel');
+
+renderer.domElement.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  
+  raycaster.setFromCamera(mouse, camera);
+  const allMeshes = groups.flatMap(g => g.children.filter(c => c.isMesh && c.userData.layer !== undefined));
+  const hits = raycaster.intersectObjects(allMeshes, false);
+  
+  if (hits.length > 0) {
+    const d = hits[0].object.userData;
+    infoPanel.style.display = 'block';
+    infoPanel.innerHTML = `
+      <div class="kv"><span class="k">层</span><span class="v">${d.layer + 1}/7</span></div>
+      <div class="kv"><span class="k">行</span><span class="v">${d.row} (λ=${d.lam})</span></div>
+      <div class="kv"><span class="k">列</span><span class="v">${d.col}</span></div>
+      <div class="kv"><span class="k">值</span><span class="v" style="color:var(--accent)">V[${d.row}][${d.col}] = ${d.value}</span></div>
+      <div class="kv"><span class="k">模占比</span><span class="v">${(d.value / Q * 100).toFixed(1)}% of Q</span></div>
+    `;
+  } else {
+    infoPanel.style.display = 'none';
+  }
+});
+
+// ——— Layer toggle ———
+function selectLayer(idx) {
+  // Update button states
+  document.querySelectorAll('#controls button').forEach(b => b.classList.remove('active'));
+  if (idx === -1) {
+    document.getElementById('btnAll').classList.add('active');
+  } else {
+    document.getElementById('btn' + idx).classList.add('active');
+  }
+  
+  // Show/hide layers
+  for (let l = 0; l < LAYERS; l++) {
+    groups[l].visible = (idx === -1 || idx === l);
+  }
+  ridgeGroup.visible = (idx === -1);
+}
+window.selectLayer = selectLayer;
+
+// ——— Toggle bar/sphere mode ———
+function toggleMode() {
+  mode = mode === 'bar' ? 'sphere' : 'bar';
+  document.getElementById('toggle-mode').textContent = mode === 'bar' ? '📊 柱状' : '🌐 球体';
+  
+  // Rebuild — simplest approach
+  for (let layer = 0; layer < LAYERS; layer++) {
+    const g = groups[layer];
+    // Remove old meshes (keep plane)
+    const toRemove = [];
+    g.children.forEach(c => { if (c.isMesh && c.userData.layer !== undefined) toRemove.push(c); });
+    toRemove.forEach(c => g.remove(c));
+    
+    const mat = data.layers[layer].matrix;
+    for (let row = 0; row < N; row++) {
+      for (let col = 0; col < N; col++) {
+        const v = mat[row][col];
+        const t = v / Q;
+        const color = valueColor(v);
+        
+        if (mode === 'bar') {
+          const h = 0.5 + t * MAX_H;
+          const geo = new THREE.BoxGeometry(BAR_W, h, BAR_W);
+          const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+            color, roughness: 0.5, metalness: 0.1, transparent: true, opacity: 0.85
+          }));
+          mesh.position.set(row, layer * 3.5 + h / 2, col);
+          mesh.userData = { layer, row, col, value: v, lam: data.lambda_sets[layer][row] };
+          g.add(mesh);
+        } else {
+          const geo = new THREE.SphereGeometry(SPHERE_R, 8, 8);
+          const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({
+            color, roughness: 0.3, metalness: 0.2, transparent: true,
+            opacity: 0.3 + t * 0.7,
+            emissive: color, emissiveIntensity: t * 0.5
+          }));
+          mesh.position.set(row, layer * 3.5 + 0.5, col);
+          mesh.userData = { layer, row, col, value: v, lam: data.lambda_sets[layer][row] };
+          g.add(mesh);
+        }
+      }
+    }
+  }
+}
+window.toggleMode = toggleMode;
+
+// ——— Animate ———
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+// ——— Resize ———
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+
+console.log('🧮 VWZ Vandermonde Tensor Field ready —', N + '×' + N + '×' + LAYERS, 'mod', Q);
+console.log('  DENSE (100% non-zero) — cf. LG 0.56% sparse');
+</script>
+</body>
+</html>
