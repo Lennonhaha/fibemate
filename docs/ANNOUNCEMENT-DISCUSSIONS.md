@@ -14,7 +14,7 @@ A full-stack post-quantum cryptography engineering validation platform — from 
 - TLS 1.3 Hybrid KEM (X25519 + ML-KEM768)
 - Post-quantum Double Ratchet with TLA+ formal verification
 - FPGA Verilog RTL with BRAM simulation
-- 26 interactive visualizations at fibemate.net
+- 25+ interactive visualizations at fibemate.net
 
 **Every claim has a runnable test + timestamped evidence.** The full evidence chain is publicly auditable.
 

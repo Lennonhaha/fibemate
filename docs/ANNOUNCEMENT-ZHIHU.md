@@ -34,7 +34,7 @@
 
 | 算法 | 标准 | 说明 |
 |:---|:---|:---|
-| **ML-KEM-768** | FIPS 203 | 完整 NTT 实现，10,000 组 KAT 向量验证 |
+| **ML-KEM-768** | FIPS 203 | 完整 NTT 实现，10,000 组 KAT 向量验证（ACVP-Server，自动下载） |
 | **ML-DSA-65** | FIPS 204 | 参考实现，与 noble/post-quantum 字节级对齐 |
 | **SLH-DSA-128s** | FIPS 205 | 无状态基于哈希的签名 |
 | **SM2** | GB/T 32918 | 国密椭圆曲线，含侧信道安全实现 |
@@ -43,7 +43,7 @@
 
 ### 协议与集成
 
-- **TLS 1.3 混合 KEM**：X25519 + ML-KEM768 混合握手，完整实现，附 10 步 3D 可视化
+- **TLS 1.3 混合 KEM**：X25519 + ML-KEM768 混合握手（应用层 C-2 路径活跃），附 10 步 3D 可视化
 - **双棘轮协议**：后量子增强 Signal 协议，含 TLA+ 形式化验证模型
 - **Hybrid KEM**：经典 + 后量子密钥封装混合方案
 
@@ -52,7 +52,7 @@
 - **FPGA Verilog RTL**：Artix-7 上的 NTT 协处理器，含 BRAM 仿真
 - **硬件侧信道验证**：TVLA（Test Vector Leakage Assessment）框架，遮掩实现验证通过
 
-### 26 个交互式可视化
+### 25+ 个交互式可视化
 
 这是 FIBEMATE 最有意思的部分——每一个算法、每一个协议步骤，都有在线可运行的 3D 可视化页面：
 
@@ -68,7 +68,7 @@
 
 ---
 
-## 100 份时间戳存证
+## 130+ 份时间戳存证
 
 这是 FIBEMATE 区别于大多数开源项目的地方：每一项声明都有对应的可运行测试，加上 DigiCert / FreeTSA 双机构时间戳存证。
 
@@ -91,8 +91,8 @@
 **硬件侧信道测试**
 完整的 ChipWhisperer 物理测试还未做，现有结果基于仿真。FPGA 上的真实侧信道测试需要硬件设备。
 
-**LookingGlass 协议**
-形式化验证完成（TLA+），但尚未作为标准协议部署。数学上是安全的，工程部署是另一回事。
+**LookingGlass v2.2**
+wreath-product 递归混淆引擎（实验性，默认关闭）。形式化验证完成（TLA+），但尚未作为标准协议部署。数学上已验证，工程部署是另一回事。
 
 所有这些，都在文档里有明确说明。没有"高性能""生产级""企业用"这样的词。
 
@@ -117,7 +117,7 @@ GPL-3.0-only，无 VC，无企业背书。
 - **GitHub**：https://github.com/Lennonhaha/fibemate
 - **官网**：https://fibemate.net
 - **Release**：https://github.com/Lennonhaha/fibemate/releases/tag/v3.3.0
-- **可视化索引**：https://fibemate.net/docs（26 个交互式页面）
+- **可视化索引**：https://fibemate.net/docs（25+ 个交互式页面）
 - **安全策略**：https://github.com/Lennonhaha/fibemate/security/policy
 
 有问题、有反馈、想协作，直接 GitHub Issues 或这里留言都可以。
@@ -128,7 +128,7 @@ GPL-3.0-only，无 VC，无企业背书。
 
 **标题备选：**
 - "【开源】我用两年时间，把后量子密码学从数学公式变成了可运行的代码和可视化"
-- "FIBEMATE：全栈后量子密码工程验证平台（含 26 个交互式可视化）"
+- "FIBEMATE：全栈后量子密码工程验证平台（含 25+ 个交互式可视化）"
 - "后量子密码学（PQC）怎么从标准文档变成可运行代码？我做了一遍，记录全在这里"
 
 **发布时间：** 8/31 10:00 CST

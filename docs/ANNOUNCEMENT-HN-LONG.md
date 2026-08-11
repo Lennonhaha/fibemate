@@ -63,7 +63,7 @@ TSR:           200+ time-stamped records (lg-001~101, DigiCert + FreeTSA dual-is
 lattice-estimator: ML-KEM-768 security estimate BKZ β≈406 → attack cost 2^143
 ```
 
-### 26 interactive visualization pages
+### 25+ interactive visualization pages
 
 Algorithm flows (NTT butterfly, ML-KEM key generation), TLS 1.3 hybrid handshake, PQC deployment detector, cryptography history timeline — all running in browser, zero install.
 

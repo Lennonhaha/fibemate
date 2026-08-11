@@ -18,14 +18,14 @@ Post-quantum cryptography migration is happening, but the gap between NIST stand
 - **SLH-DSA-128s** (FIPS 205): Stateless hash-based signatures
 - **SM2/SM3/SM4** (GB/T): Chinese national elliptic curve + hash + block cipher suite
 - **FPGA NTT**: Working Verilog RTL targeting Artix-7, with BRAM simulation
-- **TLS 1.3 Hybrid KEM**: X25519 + ML-KEM768 hybrid handshake, fully implemented
+- **TLS 1.3 Hybrid KEM**: X25519 + ML-KEM768 hybrid handshake (Path C-2, application-layer, active)
 - **Double Ratchet PQ**: Post-quantum augmented Signal Protocol with formal TLA+ models
 
-### 26 interactive visualizations
+### 25+ interactive visualizations
 
 Every algorithm has a live visualization: 3D key-generation flows, LWE attack terrain maps, TVLA side-channel test dashboards, TLS handshake sequence diagrams, lattice security comparisons, FPGA heatmaps, and more. All running at fibemate.net.
 
-### 100 time-stamped evidence records (TSR)
+### 130+ time-stamped evidence records (TSR)
 
 Every claim is backed by a runnable test + DigiCert/FreeTSA timestamped evidence. The full chain is publicly auditable at fibemate.net/docs/tsa/.
 
@@ -34,7 +34,7 @@ Every claim is backed by a runnable test + DigiCert/FreeTSA timestamped evidence
 This is an engineering record, not a product:
 - ML-KEM-768 is implemented in pure JS — educational performance, not production-grade
 - SM2 verification side-channel: TVLA PASS on masked implementations, but pure-JS verify is not constant-time
-- LookingGlass DMTH v1: formally verified (TLA+), but not deployed as a standard protocol
+- LookingGlass v2.2: wreath-product recursive obfuscation engine (experimental, default off)
 - Full hardware TVLA testing pending physical equipment (ChipWhisperer)
 
 All of this is documented. No marketing gloss.
