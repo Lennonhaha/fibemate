@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.2 · 3D Tensor Field — 7-Layer Kronecker Matrix</title>
+<style>
+  :root { --bg:#0a0a14; --text:#c8d6e5; --accent:#ff6b6b; --active:#ff9f43; --identity:#48dbfb; --panel:#12122a; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; overflow:hidden; height:100vh; }
+  canvas { display:block; }
+  #panel {
+    position:fixed; top:16px; left:16px; background:var(--panel); border-radius:12px;
+    padding:16px 20px; z-index:10; max-width:280px; box-shadow:0 4px 24px rgba(0,0,0,.5);
+    border:1px solid rgba(255,255,255,.08);
+  }
+  #panel h1 { font-size:18px; margin-bottom:4px; color:var(--accent); }
+  #panel .sub { font-size:12px; color:rgba(255,255,255,.45); margin-bottom:12px; }
+  .stat { display:flex; justify-content:space-between; font-size:12px; margin:3px 0; }
+  .stat span:last-child { color:var(--active); }
+  hr { border-color:rgba(255,255,255,.06); margin:10px 0; }
+  .layer-btn { 
+    display:block; width:100%; padding:6px 10px; margin:2px 0; border:none; border-radius:6px;
+    background:rgba(255,255,255,.04); color:var(--text); font-size:12px; cursor:pointer;
+    text-align:left; transition:all .15s;
+  }
+  .layer-btn:hover { background:rgba(255,255,255,.1); }
+  .layer-btn.on { background:var(--active); color:#000; font-weight:600; }
+  #legend { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex;
+    gap:16px; background:var(--panel); padding:8px 16px; border-radius:8px; font-size:11px; z-index:10; }
+  .leg-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div id="panel">
+  <h1>LG v2.2 Tensor Field</h1>
+  <div class="sub">7-layer Kronecker product · Q=3329</div>
+  <div class="stat"><span>Matrix</span><span>256 × 256 × 7</span></div>
+  <div class="stat"><span>Non-zero</span><span id="nzCount">—</span></div>
+  <div class="stat"><span>Density</span><span>0.56%</span></div>
+  <div class="stat"><span>Active dim</span><span>48×48</span></div>
+  <hr>
+  <div style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:4px;">LAYERS</div>
+  <div id="layerBtns"></div>
+</div>
+
+<div id="legend">
+  <div><span class="leg-dot" style="background:var(--active)"></span>Active (0-47)</div>
+  <div><span class="leg-dot" style="background:var(--identity)"></span>Identity (48-255)</div>
+  <div style="color:rgba(255,255,255,.35)">Drag=rotate · Scroll=zoom · Shift+drag=pan</div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "https://unpkg.com/three@0.157.0/build/three.module.js", "three/addons/": "https://unpkg.com/three@0.157.0/examples/jsm/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ── Scene Setup ──
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 10, 2000);
+camera.position.set(300, 200, 400);
+camera.lookAt(128, 128, 3);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(128, 128, 3);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.update();
+
+// ── Lighting ──
+scene.add(new THREE.AmbientLight(0x222244, 1.5));
+const d1 = new THREE.DirectionalLight(0xff9f43, 2);
+d1.position.set(300, 400, 200);
+scene.add(d1);
+const d2 = new THREE.DirectionalLight(0x48dbfb, 2);
+d2.position.set(-200, -100, 300);
+scene.add(d2);
+
+// ── Grid ──
+const grid = new THREE.GridHelper(300, 30, 0x222244, 0x111122);
+grid.position.set(128, -20, 3);
+scene.add(grid);
+
+// ── Bounding Box ──
+const boxGeo = new THREE.BoxGeometry(256, 256, 7);
+const boxEdges = new THREE.EdgesGeometry(boxGeo);
+const boxLine = new THREE.LineSegments(boxEdges, new THREE.LineBasicMaterial({
+  color: 0x334466, transparent: true, opacity: 0.3,
+}));
+boxLine.position.set(128, 128, 3);
+scene.add(boxLine);
+
+// ── Active Region Highlight ──
+const activeGeo = new THREE.BoxGeometry(48, 48, 7);
+const activeEdges = new THREE.EdgesGeometry(activeGeo);
+const activeBox = new THREE.LineSegments(activeEdges, new THREE.LineBasicMaterial({
+  color: 0xff9f43, transparent: true, opacity: 0.5,
+}));
+activeBox.position.set(24, 24, 3);
+scene.add(activeBox);
+
+// ── Axes ──
+function axisLabel(text, pos, color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color; ctx.font = '14px system-ui';
+  ctx.fillText(text, 10, 22);
+  const tex = new THREE.CanvasTexture(canvas);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+  sprite.position.copy(pos);
+  sprite.scale.set(48, 12, 1);
+  scene.add(sprite);
+}
+axisLabel('row (i)', new THREE.Vector3(280, -5, 0), '#ff9f43');
+axisLabel('col (j)', new THREE.Vector3(-5, 280, 0), '#48dbfb');
+axisLabel('layer', new THREE.Vector3(-5, -5, 8), '#a29bfe');
+
+// ── Data Loading ──
+const sphereGeom = new THREE.SphereGeometry(1.2, 8, 6);
+const activeMat = new THREE.MeshStandardMaterial({ color: 0xff9f43, roughness: 0.3, metalness: 0.1 });
+const identityMat = new THREE.MeshStandardMaterial({ color: 0x48dbfb, roughness: 0.3, metalness: 0.1 });
+
+let allLayers = [];
+let layerGroups = [];
+
+async function loadData() {
+  const res = await fetch('lg-matrix-data.json');
+  const data = await res.json();
+  
+  document.getElementById('nzCount').textContent = data.meta.total_nonzero;
+  
+  allLayers = data.layers;
+  const btnContainer = document.getElementById('layerBtns');
+  
+  const colors = ['#ff6b6b','#ff9f43','#feca57','#54a0ff','#5f27cd','#01a3a4','#f368e0'];
+  
+  allLayers.forEach((layer, idx) => {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(colors[idx]), roughness: 0.3, metalness: 0.1 });
+    
+    layer.elements.forEach(([i, j, v, inActive]) => {
+      const sphere = new THREE.Mesh(sphereGeom, inActive ? mat : identityMat);
+      sphere.position.set(j, i, idx + 1);  // col=x, row=y, layer=z
+      // Scale by value magnitude
+      const s = Math.max(0.5, Math.log2(Math.abs(v) + 1) * 0.4);
+      sphere.scale.setScalar(s);
+      sphere.userData = { i, j, v, inActive };
+      group.add(sphere);
+    });
+    
+    scene.add(group);
+    layerGroups.push(group);
+    
+    const btn = document.createElement('button');
+    btn.className = 'layer-btn on';
+    btn.textContent = `${layer.name} (${layer.nonzero} nz)`;
+    btn.style.borderLeft = `3px solid ${colors[idx]}`;
+    btn.onclick = () => {
+      group.visible = !group.visible;
+      btn.classList.toggle('on');
+    };
+    btnContainer.appendChild(btn);
+  });
+  
+  console.log('[tensor-field] Loaded:', allLayers.length, 'layers,', data.meta.total_nonzero, 'total nonzeros');
+}
+
+loadData();
+
+// ── Raycaster for hover ──
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const tooltip = document.createElement('div');
+tooltip.style.cssText = 'position:fixed;pointer-events:none;background:rgba(0,0,0,.85);color:#fff;padding:6px 10px;border-radius:6px;font-size:11px;display:none;z-index:20;';
+document.body.appendChild(tooltip);
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  
+  raycaster.setFromCamera(mouse, camera);
+  const spheres = [];
+  layerGroups.forEach(g => g.children.forEach(c => spheres.push(c)));
+  const hits = raycaster.intersectObjects(spheres);
+  
+  if (hits.length > 0) {
+    const { i, j, v, inActive } = hits[0].object.userData;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.clientX + 16) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+    tooltip.innerHTML = `M[${i},${j}] = ${v}<br><span style="color:#999">${inActive ? 'active (0-47)' : 'identity (48-255)'}</span>`;
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+// ── Render Loop ──
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
