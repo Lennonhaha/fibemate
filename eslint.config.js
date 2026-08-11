@@ -20,11 +20,19 @@ module.exports = [
         clearTimeout: "readonly",
         setInterval: "readonly",
         clearInterval: "readonly",
-        global: "readonly"
+        global: "readonly",
+        crypto: "readonly",
+        WebAssembly: "readonly",
+        window: "readonly",
+        fetch: "readonly",
+        describe: "readonly",
+        it: "readonly",
+        path: "readonly",
+        __filename: "readonly"
       }
     },
     rules: {
-      "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+      "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_", "caughtErrorsIgnorePattern": "^_" }],
       "no-undef": "warn",
       "no-console": "off",
       "no-empty": "off",

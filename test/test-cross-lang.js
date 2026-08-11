@@ -83,7 +83,7 @@ let crossOk1 = false;
 try {
     const crossSS_wasm = wasmBindgen.decapsulate(crossPK_js.secretKey, crossCT_js.ciphertext);
     crossOk1 = Buffer.from(crossCT_js.sharedSecret).equals(Buffer.from(crossSS_wasm));
-} catch (e) {
+} catch (_e) {
     // Expected: format mismatch
 }
 if (crossOk1) {
@@ -103,7 +103,7 @@ let crossOk2 = false;
 try {
     const crossSS_js = JS_MLKEM.decapsulate(crossPK_wasm.secret_key, crossCT_wasm.ciphertext);
     crossOk2 = Buffer.from(crossCT_wasm.shared_secret).equals(Buffer.from(crossSS_js));
-} catch (e) {
+} catch (_e) {
     // Expected
 }
 if (crossOk2) {
@@ -159,15 +159,15 @@ console.log('\n=== 8. 格式兼容性边界 ===');
 try {
     const wasmEncapsWithJsPk = wasmBindgen.encapsulate(jsKp.publicKey);
     check('WASM encaps 接受 JS publicKey', wasmEncapsWithJsPk.ciphertext.length === 1088);
-} catch (e) {
-    warn(`WASM encaps 拒绝 JS publicKey: ${e.message}`);
+} catch (_e) {
+    warn(`WASM encaps 拒绝 JS publicKey: ${_e.message}`);
 }
 
 try {
     const jsEncapsWithWasmPk = JS_MLKEM.encapsulate(wasmKp.public_key);
     check('JS encaps 接受 WASM publicKey', jsEncapsWithWasmPk.ciphertext.length === 1088);
-} catch (e) {
-    warn(`JS encaps 拒绝 WASM publicKey: ${e.message}`);
+} catch (_e) {
+    warn(`JS encaps 拒绝 WASM publicKey: ${_e.message}`);
 }
 
 // ============================================================

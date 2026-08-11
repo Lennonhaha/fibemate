@@ -22,7 +22,7 @@
  */
 'use strict';
 
-const { randomBytes } = require('crypto');
+const { randomBytes: _randomBytes } = require('crypto');
 const path = require('path');
 const fs = require('fs');
 
@@ -30,10 +30,10 @@ const fs = require('fs');
 // Test Runner
 // ============================================================
 const stats = { passed: 0, failed: 0, skipped: 0 };
-let currentGroup = '';
+let _currentGroup = '';
 
 function group(name) {
-    currentGroup = name;
+    _currentGroup = name;
     console.log(`\n${'='.repeat(60)}`);
     console.log(`  ${name}`);
     console.log(`${'='.repeat(60)}`);
@@ -88,8 +88,8 @@ class Fips1403Module {
             this._doPCT();
             this._selfTestPassed = true;
             return true;
-        } catch (e) {
-            console.error(`  [${this.name}] POST FAILED: ${e.message}`);
+        } catch (_e) {
+            console.error(`  [${this.name}] POST FAILED: ${_e.message}`);
             this._selfTestPassed = false;
             return false;
         }
@@ -129,7 +129,7 @@ try {
         writable: true,
         configurable: true
     });
-} catch (e) {
+} catch (_e) {
     // fallback if already defined
     if (!global.crypto?.getRandomValues) {
         global.crypto = { getRandomValues(buf) { return require('crypto').randomFillSync(buf); } };
@@ -146,8 +146,8 @@ group('Track 1a: ML-KEM-768 确定性 KAT (固定种子)');
 
 function runMLKEMKAT() {
     // Deterministic: use fixed seed for reproducibility
-    const d = Buffer.alloc(32, 0x42);
-    const z = Buffer.alloc(32, 0x13);
+    const _d = Buffer.alloc(32, 0x42);
+    const _z = Buffer.alloc(32, 0x13);
 
     // Verify round-trip 1
     const kp = mlkemTD.generateKeypair();
@@ -260,7 +260,7 @@ function runBoundaryTests() {
     let shortPkOk = true;
     try {
         mlkemTD.encapsulate(Buffer.alloc(100));
-    } catch (e) {
+    } catch (_e) {
         shortPkOk = false;
     }
     if (shortPkOk) {
@@ -274,7 +274,7 @@ function runBoundaryTests() {
     let shortSkOk = true;
     try {
         mlkemTD.decapsulate(Buffer.alloc(100), Buffer.alloc(1088));
-    } catch (e) {
+    } catch (_e) {
         shortSkOk = false;
     }
     if (shortSkOk) {
@@ -287,11 +287,11 @@ function runBoundaryTests() {
     // Mismatched ciphertext
     const kp = mlkemTD.generateKeypair();
     const ct = Buffer.alloc(1088, 0xFF);
-    let ctError = false;
+    let _ctError = false;
     try {
         mlkemTD.decapsulate(kp.secretKey, ct);
-    } catch (e) {
-        ctError = true;
+    } catch (_e) {
+        let _ctError = true; // assign after catch
     }
     // Note: ML-KEM *must* return a shared secret even for invalid CT (implicit rejection)
     // This is a security property, not a bug
@@ -476,8 +476,8 @@ assert(lockPassed, 'POST 通过');
 try {
     lockMod.safeOperation();
     assert(true, 'POST 通过后 safeOperation() 可用');
-} catch (e) {
-    assert(false, `safeOperation 不应抛出: ${e.message}`);
+} catch (_e) {
+    assert(false, `safeOperation 不应抛出: ${_e.message}`);
 }
 
 // Simulate POST failure → lock
@@ -485,9 +485,9 @@ lockMod.lock();
 try {
     lockMod.safeOperation();
     assert(false, '锁定后应拒绝操作');
-} catch (e) {
-    assert(e.message.includes('locked') || e.message.includes('self-test'),
-        `锁定后拒绝: "${e.message}"`);
+} catch (_e) {
+    assert(_e.message.includes('locked') || _e.message.includes('self-test'),
+        `锁定后拒绝: "${_e.message}"`);
 }
 
 // ============================================================

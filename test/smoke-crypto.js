@@ -22,7 +22,7 @@ let MLKEM;
 try {
     MLKEM = require('./packages/pqc-kem/src/ml-kem-768.js');
     pass('module loaded');
-} catch (e) {
+} catch (_e) {
     // try workspace-relative
     try {
         MLKEM = require('../packages/pqc-kem/src/ml-kem-768.js');
@@ -39,7 +39,7 @@ try {
     kp = MLKEM.generateKeypair();
     if (kp.publicKey.length !== MLKEM.PUBLIC_KEY_BYTES) fail('pk size: ' + kp.publicKey.length + ' ≠ ' + MLKEM.PUBLIC_KEY_BYTES);
     else pass('keygen — pk=' + kp.publicKey.length + 'B sk=' + kp.secretKey.length + 'B');
-} catch (e) { fail('keygen threw: ' + e.message); return process.exit(1); }
+} catch (_e) { fail('keygen threw: ' + _e.message); return process.exit(1); }
 
 // 2. Encaps
 let enc;
@@ -48,21 +48,21 @@ try {
     if (enc.ciphertext.length !== MLKEM.CIPHERTEXT_BYTES) fail('ct size: ' + enc.ciphertext.length + ' ≠ ' + MLKEM.CIPHERTEXT_BYTES);
     else if (enc.sharedSecret.length !== MLKEM.SHARED_SECRET_BYTES) fail('ss size: ' + enc.sharedSecret.length + ' ≠ ' + MLKEM.SHARED_SECRET_BYTES);
     else pass('encaps — ct=' + enc.ciphertext.length + 'B ss=' + enc.sharedSecret.length + 'B');
-} catch (e) { fail('encaps threw: ' + e.message); return process.exit(1); }
+} catch (_e) { fail('encaps threw: ' + _e.message); return process.exit(1); }
 
 // 3. Decaps + roundtrip
 try {
     const ss = MLKEM.decapsulate(kp.secretKey, enc.ciphertext);
     const ok = Buffer.compare(enc.sharedSecret, ss) === 0;
     ok ? pass('KEM roundtrip PASS') : fail('KEM roundtrip FAIL — ss mismatch');
-} catch (e) { fail('decaps threw: ' + e.message); return process.exit(1); }
+} catch (_e) { fail('decaps threw: ' + _e.message); return process.exit(1); }
 
 // 4. Multiple encap: distinct ciphertexts
 try {
     const enc2 = MLKEM.encapsulate(kp.publicKey);
     const distinct = Buffer.compare(enc.ciphertext, enc2.ciphertext) !== 0;
     distinct ? pass('multiple encap → distinct ct') : fail('multiple encap → identical ct (bad)');
-} catch (e) { fail('second encap threw: ' + e.message); }
+} catch (_e) { fail('second encap threw: ' + _e.message); }
 
 // ─── SM2 签名/验签 ───────────────────────────────────────────
 log('【SM2】');
@@ -72,9 +72,9 @@ try {
     // SM2 is optional — may not be in packages/ on this branch
     SM2 = require('../packages/pqc-kem/src/sm2-bigint-ec.js');
     pass('module loaded');
-} catch (e) {
+} catch (_e) {
     try { SM2 = require('./packages/pqc-kem/src/sm2-bigint-ec.js'); pass('module loaded'); }
-    catch (e2) {
+    catch (_e2) {
         log('  ⬜ SM2 not found in packages/ — skipping (not available on this branch)');
     }
 }
@@ -93,7 +93,7 @@ if (SM2) {
         const tamperOk = SM2.verify(tampered, sig, skpk.publicKey);
         !tamperOk ? pass('SM2 tamper rejection PASS') : fail('SM2 tampered message verified (bad)');
 
-    } catch (e) { fail('SM2 threw: ' + e.message); }
+    } catch (_e) { fail('SM2 threw: ' + _e.message); }
 }
 
 // ─── Summary ──────────────────────────────────────────────────

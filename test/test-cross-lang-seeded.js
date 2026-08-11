@@ -9,8 +9,8 @@
  * see FIPS 203 §12.1 for rationale on internal representation differences.
  */
 
-const path = require('path');
-const fs = require('fs');
+const _path = require('path');
+const _fs = require('fs');
 const crypto = require('crypto');
 
 // Load JS time-domain implementation (repo-relative from test/)
@@ -24,7 +24,7 @@ for (let i = 0; i < 32; i++) TEST_SEED[i] = i; // seed = 0x00..0x1f
 
 const PASS = (s) => { console.log(`  \x1b[32m✓\x1b[0m ${s}`); return 1; };
 const WARN = (s) => { console.log(`  \x1b[33m⚠\x1b[0m ${s}`); return 1; };
-const FAIL = (s) => { console.log(`  \x1b[31m✗\x1b[0m ${s}`); return -1; };
+const _FAIL = (s) => { console.log(`  \x1b[31m✗\x1b[0m ${s}`); return -1; };
 
 function hex(u8, n = 16) {
     return Array.from(u8.slice(0, n)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -39,7 +39,7 @@ function wasmGenerateKeypairWithSeed(seed) {
     // pqc-kyber's internal seed derivation is not exposed.
     // We derive a fresh keypair from the seed via hash, then return.
     // For seeded determinism, the test verifies REPRODUCIBILITY from same seed.
-    const hash = crypto.createHash('sha3-256').update(seed).digest();
+    const _hash = crypto.createHash('sha3-256').update(seed).digest();
     // Re-create keypair (WASM uses OS randomness — we accept this limitation)
     return WASM_MLKEM.keypair();
 }
@@ -48,7 +48,7 @@ function wasmGenerateKeypairWithSeed(seed) {
  * Polyfill encapsulateWithSeed for pqc-kyber (which only has encapsulate(pk)).
  * NOTE: Encapsulation randomness from OS — seeded version unavailable in pqc-kyber.
  */
-function wasmEncapsulateWithSeed(pk, seed) {
+function wasmEncapsulateWithSeed(pk, _seed) {
     return WASM_MLKEM.encapsulate(pk);
 }
 
@@ -71,7 +71,7 @@ function main() {
 
     // WASM (reproducibility via polyfill — note: pqc-kyber keypair is not seeded)
     const wasm_kp1 = wasmGenerateKeypairWithSeed(TEST_SEED);
-    const wasm_kp2 = wasmGenerateKeypairWithSeed(TEST_SEED);
+    const _wasm_kp2 = wasmGenerateKeypairWithSeed(TEST_SEED);
     warn += WARN('WASM keypair from OS randomness (pqc-kyber seed polyfill uses OS RNG)');
     pass += PASS('WASM keypair created: pk=' + wasm_kp1.pubkey.length + 'B sk=' + wasm_kp1.secret.length + 'B');
 
@@ -98,7 +98,7 @@ function main() {
     pass += PASS('JS encaps reproducible (ss): ' + (hex(js_enc1.sharedSecret) === hex(js_enc2.sharedSecret)));
 
     const wasm_enc1 = wasmEncapsulateWithSeed(wasm_kp1.pubkey, TEST_SEED);
-    const wasm_enc2 = wasmEncapsulateWithSeed(wasm_kp1.pubkey, TEST_SEED);
+    const _wasm_enc2 = wasmEncapsulateWithSeed(wasm_kp1.pubkey, TEST_SEED);
     warn += WARN('WASM encapsulate from OS randomness (pqc-kyber no seeded encaps)');
     pass += PASS('WASM encaps created: ct=' + wasm_enc1.ciphertext.length + 'B ss=' + wasm_enc1.sharedSecret.length + 'B');
 

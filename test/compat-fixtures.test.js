@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 const assert = require('assert');
-const { decapsulate, encapsulate, usingNative } = require('../packages/pqc-kem');
+const { encapsulate } = require('../packages/pqc-kem');
 const ref = require('./fixtures/ml-kem-768-golden.json');
 
-function hex(b) { return Buffer.from(b).toString('hex'); }
+// function hex(b) { return Buffer.from(b).toString('hex'); }
 
 describe('Compat Fixtures — ML-KEM-768 Deterministic', function() {
     this.timeout(15000);

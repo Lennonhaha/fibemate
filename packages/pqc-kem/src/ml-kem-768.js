@@ -17,14 +17,14 @@
 
 // Runtime parameter set (AA: algorithm agility — switchable without recompile)
 const { getParams, listParamSets, MLKEM_PARAMS } = require('./params');
-let KYBER_N, KYBER_Q, KYBER_K, KYBER_ETA1, KYBER_ETA2, KYBER_DU, KYBER_DV,
+let KYBER_N, KYBER_Q, KYBER_K, _KYBER_ETA1, _KYBER_ETA2, KYBER_DU, KYBER_DV,
     KYBER_PUBLICKEYBYTES, KYBER_SECRETKEYBYTES, KYBER_CIPHERTEXTBYTES, KYBER_SSBYTES, KYBER_QHALF;
 let _currentParamSet = 'ML-KEM-768';
 
 function loadParams(paramSet) {
     const p = getParams(paramSet);
     KYBER_N = p.N; KYBER_Q = p.Q; KYBER_K = p.k;
-    KYBER_ETA1 = p.eta1; KYBER_ETA2 = p.eta2;
+    _KYBER_ETA1 = p.eta1; _KYBER_ETA2 = p.eta2;
     KYBER_DU = p.du; KYBER_DV = p.dv;
     KYBER_PUBLICKEYBYTES = p.ekBytes;
     KYBER_SECRETKEYBYTES = p.dkBytes;

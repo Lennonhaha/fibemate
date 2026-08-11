@@ -3,7 +3,7 @@ const keccak = require('../lib/keccak.js');
 const assert = require('assert');
 const crypto = require('crypto');
 
-const { sha3_256_hex, sha3_512_hex, shake128_hex, shake256_hex, keccakP } = keccak;
+const { sha3_256_hex, sha3_512_hex, shake128_hex, _shake256_hex, _keccakP } = keccak;
 function sbuf(s) { return new Uint8Array(Buffer.from(s, 'utf8')); }
 
 // KAT: NIST FIPS 202
