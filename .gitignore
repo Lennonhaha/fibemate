@@ -204,6 +204,7 @@ ntt_*.js
 ntt_*.py
 get_*.py
 check-*.sh
+!scripts/check-live-version.sh
 ssl-*.sh
 ssl-*.ps1
 push-*.sh
