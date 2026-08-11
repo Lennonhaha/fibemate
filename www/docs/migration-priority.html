@@ -162,7 +162,7 @@
         <div class="kpi"><div class="kpi-val" style="color:#ff9800;">3</div><div class="kpi-label">需监控 🟡 规划路线</div></div>
         <div class="kpi"><div class="kpi-val" style="color:#ffa94d;">2</div><div class="kpi-label">快速赢取 🟠 近期迁移</div></div>
         <div class="kpi"><div class="kpi-val" style="color:#51cf66;">3</div><div class="kpi-label">低优先级 🟢 延后</div></div>
-        <div class="kpi"><div class="kpi-val" style="color:#00d4ff;">76.5</div><div class="kpi-label">加权优先指数</div></div>
+        <div class="kpi"><div class="kpi-val" style="color:#00d4ff;">76.5</div><!-- NOTE: 静态占位值，12项资产JS动态加权平均为44.5。根因见 docs/hybrid-kex-design.md#known-issues。TODO(v3.3.1): 改为JS动态计算，同步bloom-scan.js爆炸半径因子。--><div class="kpi-label">加权优先指数</div></div>
     </div>
 
     <!-- ═══ Main Grid ═══ -->
@@ -219,7 +219,7 @@
                 <button class="filter-btn" onclick="setFilter('safe',this)">🟢 量子安全</button>
             </div>
             <div style="font-size:0.7rem;color:#64748b;margin-top:4px;">
-                加权评分 = 量子风险 × 0.6 + 迁移难度 × 0.4
+                加权评分 = 量子风险 × 0.6 + 迁移难度 × 0.4<!-- 12项算术平均=44.5，顶部76.5为早期4项高优先级资产手工估算值，详见 known-issues.md -->
             </div>
 
             <h2>🏆 迁移优先级排序</h2>
