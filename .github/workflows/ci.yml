@@ -108,7 +108,7 @@ jobs:
         run: npm install --no-save eslint @eslint/js@^9
 
       - name: Run ESLint
-        run: npx eslint packages/pqc-kem/src/ test/ --max-warnings 150
+        run: npx eslint packages/pqc-kem/src/ test/ --max-warnings 0
 
   # ─── 文档检查 (single platform) ─────────────────────
   docs-check:

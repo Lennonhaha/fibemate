@@ -7,8 +7,8 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "test:keccak": "node test/test-keccak.js",
-    "lint": "eslint packages/pqc-kem/src/ test/ --max-warnings 150",
-    "lint:quiet": "eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 50",
+    "lint": "eslint packages/pqc-kem/src/ test/ --max-warnings 0",
+    "lint:quiet": "eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 0",
     "audit": "node scripts/daily-audit.js",
     "audit:fix": "node scripts/daily-audit.js --fix",
     "audit:json": "node scripts/daily-audit.js --json"
