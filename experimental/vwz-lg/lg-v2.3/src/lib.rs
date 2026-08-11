@@ -1,4 +1,4 @@
-// lg-v3/src/lib.rs — LG v3.0 模块化重构
+// lg-v3/src/lib.rs — LG v2.3 模块化重构
 // Based on v2.2.2 (lookingglass-v2, commit f9cc379)
 //
 // LG v3 Changes vs v2.2.2:
@@ -147,14 +147,14 @@ pub fn lgv3_verify_invertibility(seed: u64) -> bool {
 #[wasm_bindgen]
 pub fn lgv3_audit_log(data_len: usize, seed: u64, depth: usize) -> String {
     format!(
-        r#"{{"version":"LG v3.0.0-alpha","op":"confuse","data_len":{},"seed":"{:016x}","depth":{}/{},"modules":["sbox","wreath","bind","cleanup"],"baseline":"v2.2.2 (f9cc379)"}}"#,
+        r#"{{"version":"LG v2.3.0-alpha","op":"confuse","data_len":{},"seed":"{:016x}","depth":{}/{},"modules":["sbox","wreath","bind","cleanup"],"baseline":"v2.2.2 (f9cc379)"}}"#,
         data_len, seed, depth, NUM_LAYERS
     )
 }
 
 #[wasm_bindgen]
 pub fn lgv2_version() -> String {
-    "LG v3.0-alpha (modular refactor of v2.2.2, backward-compatible API)".to_string()
+    "LG v2.3-alpha (modular refactor of v2.2.2, backward-compatible API)".to_string()
 }
 
 // ============================================================

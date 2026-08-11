@@ -1,8 +1,8 @@
 [package]
-name = "lgv3"
-version = "3.0.0-alpha"
+name = "lgv2.3"
+version = "2.3.0-alpha"
 edition = "2021"
-description = "LG v3.0 — 置换群递归混淆引擎 (baseline: v2.2.2 + 模块化重构)"
+description = "LG v2.3 — 置换群递归混淆引擎 (baseline: v2.2.2 + 模块化重构)"
 
 [lib]
 path = "src/lib.rs"
