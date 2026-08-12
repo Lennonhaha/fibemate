@@ -138,6 +138,38 @@ app.use((req, res, next) => {
 });
 
 // ========================
+// 频率限制（内存计数器）— security 2026-08-13
+// 两档独立限流：
+//   1) 登录/注册：30 次 / 15 分钟（防爆破）
+//   2) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
+// ========================
+function makeRateLimiter(max, windowMs) {
+  const map = new Map(); // key: ip | value: { count, firstAt }
+  return (req, res, next) => {
+    const key = req.ip || req.socket.remoteAddress;
+    const now = Date.now();
+    const record = map.get(key);
+    if (!record || now - record.firstAt > windowMs) {
+      map.set(key, { count: 1, firstAt: now });
+      return next();
+    }
+    record.count++;
+    if (record.count > max) {
+      const retryAfter = Math.ceil((windowMs - (now - record.firstAt)) / 1000);
+      res.setHeader('Retry-After', String(retryAfter));
+      return res.status(429).json({ error: `请求过于频繁，请 ${retryAfter} 秒后再试` });
+    }
+    next();
+  };
+}
+const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（两档共用）
+const authRateLimitMiddleware = makeRateLimiter(30, RATE_LIMIT_WINDOW);      // 登录/注册防爆破
+const globalRateLimitMiddleware = makeRateLimiter(600, RATE_LIMIT_WINDOW);   // 全局 API 防滥用
+
+// 全局 API 限流（挂载在所有 /api 路由之前生效）
+app.use('/api', globalRateLimitMiddleware);
+
+// ========================
 // 工具
 // ========================
 const logSecurity = (event, userId, details = {}, req = null) => {
@@ -487,7 +519,7 @@ const RESERVED_IDS = ['id88888888', 'id1111111', 'id66666666', 'id99999999', 'id
 const ADMIN_INVITE_CODE = process.env.ADMIN_INVITE_CODE || 'CHANGE_ME_STRONG';  // P0 FIX 2026-05-29: read from .env
 
 // 注册
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
   try {
     const { username, password, displayName, publicKey, signedPrekey, prekeySignature } = req.body;
     if (!username || !password || !publicKey) {
@@ -562,7 +594,7 @@ app.post('/api/auth/register', async (req, res) => {
 });
 
 // 登录
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
   try {
     const { username, password, devicePublicKey } = req.body;
     if (!username || !password) return res.status(400).json({ error: '缺少用户名或密码' });
@@ -619,7 +651,7 @@ app.post('/api/auth/login', async (req, res) => {
 // ========================
 
 // ZK 注册
-app.post('/api/auth/register-anonymous', async (req, res) => {
+app.post('/api/auth/register-anonymous', authRateLimitMiddleware, async (req, res) => {
   try {
     const { commitment, publicKey, proofOfKnowledge, displayName } = req.body;
     
@@ -724,7 +756,7 @@ app.post('/api/auth/register-anonymous', async (req, res) => {
 });
 
 // ZK 登录
-app.post('/api/auth/login-anonymous', async (req, res) => {
+app.post('/api/auth/login-anonymous', authRateLimitMiddleware, async (req, res) => {
   try {
     const { commitment, proofOfKnowledge } = req.body;
     

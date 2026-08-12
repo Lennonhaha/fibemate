@@ -281,31 +281,39 @@ const genRefreshToken = (user) => jwt.sign(
 
 
 // ========================
-// 登录/注册频率限制（内存计数器）
+// 频率限制（内存计数器）— security 2026-08-13
+// 两档独立限流：
+//   1) 登录/注册/刷新 token：30 次 / 15 分钟（防爆破）
+//   2) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
 // ========================
-const rateLimitMap = new Map(); // key: ip | value: { count, firstAt }
-const RATE_LIMIT_MAX = 30;       // 窗口期内最大请求次数
-const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟
+function makeRateLimiter(max, windowMs) {
+  const map = new Map(); // key: ip | value: { count, firstAt }
+  return (req, res, next) => {
+    const key = req.ip || req.socket.remoteAddress;
+    const now = Date.now();
+    const record = map.get(key);
+    if (!record || now - record.firstAt > windowMs) {
+      map.set(key, { count: 1, firstAt: now });
+      return next();
+    }
+    record.count++;
+    if (record.count > max) {
+      const retryAfter = Math.ceil((windowMs - (now - record.firstAt)) / 1000);
+      res.setHeader('Retry-After', String(retryAfter));
+      return res.status(429).json({ error: `请求过于频繁，请 ${retryAfter} 秒后再试` });
+    }
+    next();
+  };
+}
+const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（两档共用）
+const rateLimitMiddleware = makeRateLimiter(30, RATE_LIMIT_WINDOW);        // 登录/注册防爆破
+const globalRateLimitMiddleware = makeRateLimiter(600, RATE_LIMIT_WINDOW);  // 全局 API 防滥用
 
 // OPK routes: must be registered after authMiddleware is defined
 opkServer.init(app, db, authMiddleware);
 
-const rateLimitMiddleware = (req, res, next) => {
-  const key = req.ip || req.socket.remoteAddress;
-  const now = Date.now();
-  const record = rateLimitMap.get(key);
-  if (!record || now - record.firstAt > RATE_LIMIT_WINDOW) {
-    rateLimitMap.set(key, { count: 1, firstAt: now });
-    return next();
-  }
-  record.count++;
-  if (record.count > RATE_LIMIT_MAX) {
-    const retryAfter = Math.ceil((RATE_LIMIT_WINDOW - (now - record.firstAt)) / 1000);
-    res.setHeader('Retry-After', String(retryAfter));
-    return res.status(429).json({ error: `请求过于频繁，请 ${retryAfter} 秒后再试` });
-  }
-  next();
-};
+// 全局 API 限流（挂载在所有 /api 路由之前生效）
+app.use('/api', globalRateLimitMiddleware);
 
 // ========================
 // POST /api/auth/refresh - 刷新 access token
