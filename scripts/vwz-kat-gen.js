@@ -41,12 +41,12 @@ if (!fs.existsSync(wasmDir)) {
 }
 
 async function main() {
-  const { default: init, keygen, keygen_seeded, sign, verify,
+  const { initSync, keygen, keygen_seeded, sign, verify,
           serialize_public_key, serialize_signature,
           deserialize_public_key, deserialize_signature,
-          estimate_sizes, SecretKey } = await import(wasmDir + '/vwz_signature.js');
+          estimate_sizes } = await import(wasmDir + '/vwz_signature.js');
 
-  await init();
+  initSync(fs.readFileSync(wasmDir + '/vwz_signature_bg.wasm'));
 
   const kat = {
     algorithm: 'VWZ',
