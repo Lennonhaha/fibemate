@@ -3,7 +3,7 @@
  * KAT 10,000 轮真实计时测试
  * 运行: node kat_bench.js
  */
-const MLKEM768 = require('./www/crypto/ml-kem-768.js');
+const MLKEM768 = require('../www/crypto/ml-kem-768.js');
 const fs = require('fs');
 
 const ROUNDS = 10000;
