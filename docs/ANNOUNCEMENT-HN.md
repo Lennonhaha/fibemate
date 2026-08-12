@@ -35,6 +35,7 @@ This is an engineering record, not a product:
 - ML-KEM-768 is implemented in pure JS — educational performance, not production-grade
 - SM2 verification side-channel: TVLA PASS on masked implementations, but pure-JS verify is not constant-time
 - LookingGlass v2.2: wreath-product recursive obfuscation engine (experimental, default off)
+- VWZ Signature: Vandermonde sparse signature scheme (experimental, VMQ-SPARSE hypothesis unverified, NOT for production)
 - Full hardware TVLA testing pending physical equipment (ChipWhisperer)
 
 All of this is documented. No marketing gloss.

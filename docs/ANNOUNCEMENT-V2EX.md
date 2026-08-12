@@ -37,6 +37,7 @@
 - ML-KEM-768 是纯 JS 实现——足够理解原理，不是生产级性能
 - SM2 验证的侧信道测试：遮掩实现 TVLA PASS，但纯 JS 实现非常数时间
 - LookingGlass v2.2：wreath-product 递归混淆引擎（实验性，默认关闭）
+- VWZ 签名方案：Vandermonde 稀疏签名（实验性，VMQ-SPARSE 困难假设未经学术验证，禁止用于生产）
 - 完整硬件侧信道测试（ChipWhisperer）待物理设备
 
 所有局限性均已文档化。不美化，不掩饰。
