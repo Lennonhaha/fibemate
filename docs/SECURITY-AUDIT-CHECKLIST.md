@@ -128,7 +128,7 @@
 | VWZ/LookingGlass 实验性声明 | ✅ |
 | 文档一致性 (ARCHITECTURE/ROADMAP/README/ANNOUNCEMENT) | ✅ |
 | TSR 存证链完整 | ✅ |
-| Dependabot 告警已审计 | ⏳ |
+| Dependabot 告警已审计 | ✅ (docs/NPM-AUDIT-STATUS.md，0/7 核心包受影响) |
 | OpenSSF Scorecard ≥7.0 | ❌ (当前 5.2) |
 | 第三方审计 | ❌ (2027 Q2) |
 
