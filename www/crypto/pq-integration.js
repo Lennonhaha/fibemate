@@ -167,7 +167,68 @@ class PQKeyManager {
     constructor() {
         this.conversations = new Map(); // conversationId -> PQDoubleRatchet
         this.dbName = 'fibemate-pq-keys';
-        this.dbVersion = 1;
+        this.dbVersion = 2;
+        this._dbPromise = null;
+        this._wrapKeyPromise = null;
+    }
+
+    /**
+     * 打开 IndexedDB（懒初始化，单例 Promise）
+     */
+    async _openDb() {
+        if (this._dbPromise) return this._dbPromise;
+        this._dbPromise = new Promise((resolve, reject) => {
+            const req = indexedDB.open(this.dbName, this.dbVersion);
+            req.onupgradeneeded = (e) => {
+                const db = e.target.result;
+                if (!db.objectStoreNames.contains('keys')) {
+                    db.createObjectStore('keys');
+                }
+            };
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+        return this._dbPromise;
+    }
+
+    /**
+     * 获取或创建 AES-GCM 封装密钥（extractable:false）。
+     * 该密钥的原始字节永远无法通过 exportKey 导出，
+     * 因此离线复制浏览器存储文件也无法解密会话密钥。
+     */
+    async _getWrapKey() {
+        if (this._wrapKeyPromise) return this._wrapKeyPromise;
+        this._wrapKeyPromise = (async () => {
+            const db = await this._openDb();
+            const existing = await this._idbGet(db, 'wrapkey');
+            if (existing) return existing;
+            const key = await crypto.subtle.generateKey(
+                { name: 'AES-GCM', length: 256 },
+                false, // extractable: false
+                ['encrypt', 'decrypt']
+            );
+            await this._idbPut(db, 'wrapkey', key);
+            return key;
+        })();
+        return this._wrapKeyPromise;
+    }
+
+    async _idbGet(db, key) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('keys', 'readonly');
+            const req = tx.objectStore('keys').get(key);
+            req.onsuccess = () => resolve(req.result);
+            req.onerror = () => reject(req.error);
+        });
+    }
+
+    async _idbPut(db, key, value) {
+        return new Promise((resolve, reject) => {
+            const tx = db.transaction('keys', 'readwrite');
+            tx.objectStore('keys').put(value, key);
+            tx.oncomplete = () => resolve();
+            tx.onerror = () => reject(tx.error);
+        });
     }
 
     /**
@@ -204,7 +265,9 @@ class PQKeyManager {
     }
 
     /**
-     * Save conversation keys to persistent storage
+     * Save conversation keys to persistent storage.
+     * 私钥与会话密钥用 AES-GCM 加密后存 IndexedDB，
+     * 封装密钥 extractable:false，杜绝明文落盘。
      */
     async _saveToStorage(conversationId, pq) {
         try {
@@ -215,21 +278,45 @@ class PQKeyManager {
                 } : null,
                 hybridSecret: pq.hybridSecret ? Array.from(pq.hybridSecret) : null
             };
-            
-            localStorage.setItem(`pq_${conversationId}`, JSON.stringify(data));
+
+            const wrapKey = await this._getWrapKey();
+            const iv = crypto.getRandomValues(new Uint8Array(12));
+            const plaintext = new TextEncoder().encode(JSON.stringify(data));
+            const ciphertext = await crypto.subtle.encrypt(
+                { name: 'AES-GCM', iv },
+                wrapKey,
+                plaintext
+            );
+
+            const db = await this._openDb();
+            await this._idbPut(db, 'pq_' + conversationId, {
+                iv: Array.from(iv),
+                ciphertext: Array.from(new Uint8Array(ciphertext))
+            });
         } catch (e) {
             console.error('Failed to save PQ keys:', e);
         }
     }
 
     /**
-     * Load conversation keys from storage
+     * Load conversation keys from storage（AES-GCM 解密）
      */
     async loadFromStorage(conversationId) {
         try {
-            const data = JSON.parse(localStorage.getItem(`pq_${conversationId}`));
-            if (!data) return null;
-            
+            const db = await this._openDb();
+            const record = await this._idbGet(db, 'pq_' + conversationId);
+            if (!record) return null;
+
+            const wrapKey = await this._getWrapKey();
+            const iv = new Uint8Array(record.iv);
+            const ciphertext = new Uint8Array(record.ciphertext);
+            const plaintext = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                wrapKey,
+                ciphertext
+            );
+            const data = JSON.parse(new TextDecoder().decode(plaintext));
+
             const pq = new PQDoubleRatchet();
             if (data.kemKeypair) {
                 pq.kemKeypair = {
@@ -240,7 +327,7 @@ class PQKeyManager {
             if (data.hybridSecret) {
                 pq.hybridSecret = new Uint8Array(data.hybridSecret);
             }
-            
+
             this.conversations.set(conversationId, pq);
             return pq;
         } catch (e) {
