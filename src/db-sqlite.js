@@ -294,8 +294,10 @@ class SqliteDB {
   }
 
   getUserById(id) {
+    // 防御原型污染：拒绝原型链危险键 (security 2026-08-13)
+    if (typeof id !== 'string' || id === '__proto__' || id === 'constructor' || id === 'prototype') return null;
     const u = this._get('users', id);
-    if (u && this.data && this.data.users) this.data.users[id] = u;
+    if (u && this.data && this.data.users && Object.prototype.hasOwnProperty.call(this.data.users, id)) this.data.users[id] = u;
     return u;
   }
 

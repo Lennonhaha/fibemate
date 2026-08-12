@@ -38,7 +38,11 @@ class JsonDB {
     return user;
   }
 
-  getUserById(id) { return this.data.users[id] || null; }
+  getUserById(id) {
+    // 防御原型污染：__proto__/constructor 等键不可作为用户 ID 访问 (security 2026-08-13)
+    if (typeof id !== 'string' || !Object.prototype.hasOwnProperty.call(this.data.users, id)) return null;
+    return this.data.users[id] || null;
+  }
   getUserByUsername(username) {
     return Object.values(this.data.users).find(u => u.username === username) || null;
   }
