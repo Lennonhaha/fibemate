@@ -460,7 +460,7 @@ digicert-certs/digicert-tsa-chain.pem 含 DigiCert 2025 TSA 完整链（leaf + �
 ### 7. FPGA / Vivado 环境锁定
 - Vivado 版本固定并记录于 FPGA 文档；综合/仿真/约束脚本（`.tcl`）与 `impl_constraints.xdc` 全部提交，保证可复现综合与时序报告，不依赖图形界面工程文件。
 
-### 8. 操作系统 & 全局环境
+### 8. 操作系统与全局环境
 - 不依赖全局 npm 包 / 全局工具（pm2、vivado 全局脚本），改用 npx / 本地 `node_modules/.bin`。
 - `.gitattributes` 统一换行符（`* text=auto eol=lf`），所有文本 UTF-8 无 BOM。
 - 避免硬编码绝对路径/本机用户名（已用 `__dirname` 修复）。
