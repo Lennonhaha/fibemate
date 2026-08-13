@@ -16,7 +16,7 @@ SM2 在 FIBEMATE 中用于**教学演示和交叉验证**，不推荐生产环�
 | verify | BigInt | 5,000 | **0.10** | 4.5 | ✅ PASS |
 | keygen | BigInt | 5,000 | 3.15 | 4.5 | ✅ PASS |
 
-**总计**: 7/7 PASS（100%）· SM2 BigInt v1.3 三重防护
+**总计**: 5/5 PASS（100%）· SM2 BigInt v1.3 三重防护
 
 ### 演化路径（修复时间线）
 

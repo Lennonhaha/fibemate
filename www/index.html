@@ -1152,7 +1152,7 @@
                             <tr><td style="padding:2px 6px;">解密</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>2.06</strong></td><td style="text-align:right;padding:2px 6px;color:#f87171;"><strong>8.22 &#x274C;</strong></td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; PASS</td></tr>
                         </tbody>
                     </table>
-                    <p style="font-size:0.7rem;margin-top:0.25rem;color:#8b949e;">&#x1F4CC; 三重防护: Scalar Masking + Projective Randomization + Montgomery Ladder<br>&#x1F517; N=5,000 · 7/7 一阶全 PASS + 20/20 高阶全 PASS · verify |t|=0.10 · decrypt |t|=0.16 · 恒时点乘<br>&#x1F4C5; 2026-06-21 · FreeTSA 时间戳存证 · 571.7s (高阶)</p>
+                    <p style="font-size:0.7rem;margin-top:0.25rem;color:#8b949e;">&#x1F4CC; 三重防护: Scalar Masking + Projective Randomization + Montgomery Ladder<br>&#x1F517; N=5,000 · 5/5 一阶全 PASS + 20/20 高阶全 PASS · verify |t|=0.10 · decrypt |t|=0.16 · 恒时点乘<br>&#x1F4C5; 2026-06-21 · FreeTSA 时间戳存证 · 571.7s (高阶)</p>
                     非商密认证产品，仅供技术研究。
                 </div>
             </div>
@@ -1201,7 +1201,7 @@
         <!-- ═══════════ SM2 侧信道安全验证 ═══════════ -->
     <section class="security-verification sm2-tvla-section" style="padding:2rem 1rem;max-width:900px;margin:0 auto;">
       <div class="section-badge" style="background:rgba(0,210,170,0.08);border:2px solid rgba(0,210,170,0.3);">&#x1F1E8;&#x1F1F3; 国密侧信道安全 v1.3</div>
-      <h2 style="font-size:1.5rem;">SM2 · TVLA N=5,000 全绿 <span style="background:rgba(0,210,170,0.12);border:2px solid rgba(0,210,170,0.35);border-radius:12px;padding:2px 12px;font-size:0.75rem;color:#00d4aa;vertical-align:middle;">7/7 + 20/20 ✓ 三重防护 · 1-4 阶</span></h2>
+      <h2 style="font-size:1.5rem;">SM2 · TVLA N=5,000 全绿 <span style="background:rgba(0,210,170,0.12);border:2px solid rgba(0,210,170,0.35);border-radius:12px;padding:2px 12px;font-size:0.75rem;color:#00d4aa;vertical-align:middle;">5/5 + 20/20 ✓ 三重防护 · 1-4 阶</span></h2>
       <p class="section-subtitle" style="max-width:700px;margin:0 auto 1.5rem;font-size:0.9rem;color:#8b949e;">
         Scalar Masking + Projective Randomization + Montgomery Ladder · N=5,000 · |t|≤0.38 一阶全项通过 · 1-4 阶矩 20/20 全绿 · 恒定时间点乘 · FreeTSA 存证
       </p>
@@ -1218,7 +1218,7 @@
             <tr><td>加密</td><td style="text-align:right;color:#00d4aa;">0.34</td><td style="text-align:right;color:#646c78;">~4</td></tr>
             <tr><td>解密</td><td style="text-align:right;color:#00d4aa;"><strong>2.06</strong></td><td style="text-align:right;color:#f87171;"><strong>8.22 &#x274C;</strong></td></tr>
           </table>
-          <p style="font-size:0.7rem;color:#00d4aa;margin:0.3rem 0 0;">✅ 7/7 一阶 + 20/20 高阶 PASS · N=5,000 · 528s (一阶) + 571.7s (高阶) · verify ↓92% · decrypt ↓92%</p>
+          <p style="font-size:0.7rem;color:#00d4aa;margin:0.3rem 0 0;">✅ 5/5 一阶 + 20/20 高阶 PASS · N=5,000 · 528s (一阶) + 571.7s (高阶) · verify ↓92% · decrypt ↓92%</p>
         </div>
 
         <div class="verification-card">
@@ -1714,7 +1714,7 @@
             <a href="/docs/SM2_TVLA_STATUS.md" class="doc-card purple">
               <div class="dc-icon">🔒</div>
               <div class="dc-name">SM2 TVLA 状态</div>
-              <div class="dc-desc">31/36 PASS · 诚实标注纯JS边界</div>
+              <div class="dc-desc">5/5 + 20/20 全绿 · 诚实标注纯JS边界</div>
               <span class="dc-tag purple">侧信道</span>
             </a>
             <a href="/docs/OPEN_SOURCE_COUNTDOWN.md" class="doc-card purple">
@@ -2014,7 +2014,7 @@
 </p>
 <div class="footer-timestamp sm2-tvla-footer" style="text-align:center;margin-top:6px;font-size:0.78rem;color:#8b949e;padding:6px 0;border-top:1px solid rgba(255,255,255,0.04);">
  <div style="margin-bottom:4px;">
-  <span>&#x1F4DC; SM2 TVLA N=5,000 · 7/7 + 20/20 ✓ · 1-4 阶矩</span>
+  <span>&#x1F4DC; SM2 TVLA N=5,000 · 5/5 + 20/20 ✓ · 1-4 阶矩</span>
   <span>&nbsp;|&nbsp;</span>
   <span style="color:#00d4aa;">verify 0.10 · decrypt 0.16</span>
  </div>
@@ -2171,7 +2171,7 @@
         <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">⚡ 2026-06-16 · SM2 加解密性能再提升 9%，wNAF 标量乘优化上线 · <a href="/docs/sm2-optimization.html" style="color:#00E5C3;">文章 →</a> · <a href="/security.html#sec-9-8" style="color:#00E5C3;">数据 →</a></p>
         <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🛡️ 2026-06-16 · SM2 TVLA v2 10/10 全部通过 (N=2,000)，jsbn + BigInt 双路径无泄漏 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">分析报告 →</a></p>
         <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🔒 2026-07-08 · React Native 硬件侧信道防护合成通过 (ntt_fault_protect + ntt_masked_wrapper + hw_monitor + lfsr256_prng) · VWZ Rust/WASM 公钥压缩 (全量表 2.8KB, rank-1 理论值 468B, 7/7) · 浏览器 WASM 基准测速完成 · TSR 时间戳存证达 57 份 | 🔬 <a href="/docs/pqc-readiness.html#7" style="color:#00E5C3;">PQC 就绪状态 →</a> &nbsp;|&nbsp; <a href="/docs/pqc-benchmark.html" class="badge-link" style="background:#1a2332;color:#f9e2af;border:1px solid #f9e2af33;">📊 性能基准</a></a> &nbsp;|&nbsp; 🏆 <a href="/vwz-challenge/" style="color:#f9e2af;text-decoration:underline;">VWZ 密码分析挑战赛 →</a></p>
-        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🟢 2026-06-18 · SM2 TVLA v1.3 Montgomery Ladder N=5,000 7/7 全绿 · verify |t|=0.10 · decrypt |t|=0.16 · 三重防护锁定 · FreeTSA 存证 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00d4aa;">完整分析 →</a> · <a href="/docs/TECHNICAL-VERIFICATION.md" style="color:#8b949e;">证据地图 →</a></p>
+        <p style="max-width:900px;margin:0 auto 0.5rem;padding:0 1rem;font-size:0.85rem;color:#c9d1d9;">🟢 2026-06-18 · SM2 TVLA v1.3 Montgomery Ladder N=5,000 5/5 全绿 · verify |t|=0.10 · decrypt |t|=0.16 · 三重防护锁定 · FreeTSA 存证 · <a href="/docs/sm2-tvla-analysis.html" style="color:#00d4aa;">完整分析 →</a> · <a href="/docs/TECHNICAL-VERIFICATION.md" style="color:#8b949e;">证据地图 →</a></p>
 
         <p class="footer-tech" style="margin-top: 0.5rem; font-size: 0.8rem;">
             <a href="/docs/pqc-readiness.html" style="color:#00E5C3;text-decoration:none;">Post-Quantum Ready</a> &middot; Double Ratchet · Sphinx · fml-dsa · FPGA v5
@@ -2272,9 +2272,9 @@
         <div>
         <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,210,100,0.25);padding-bottom:0.3rem;">&#x1F6E1;&#xFE0F; SM2 TVLA 侧信道验证 &#x1F4C5; 2026-06-18 (6) <span style="font-size:0.6rem;color:#00d4aa;">FreeTSA + DigiCert · v1.3 最终版</span></h5>
         <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
-        <li><span style="color:#c9d1d9;">sm2-bigint-ec.js v1.3</span> <span style="font-size:0.55rem;color:#00d4aa;">TSA&#x2714;</span> &mdash; BigInt + Jacobian + wNAF + Montgomery Ladder<br><span style="font-size:0.6rem;color:#646c78;">TVLA N=5,000 7/7 PASS (|t|&#x2264;0.38) · Scalar Mask + Proj Rand + Ladder · 恒时点乘</span></li>
+        <li><span style="color:#c9d1d9;">sm2-bigint-ec.js v1.3</span> <span style="font-size:0.55rem;color:#00d4aa;">TSA&#x2714;</span> &mdash; BigInt + Jacobian + wNAF + Montgomery Ladder<br><span style="font-size:0.6rem;color:#646c78;">TVLA N=5,000 5/5 PASS (|t|&#x2264;0.38) · Scalar Mask + Proj Rand + Ladder · 恒时点乘</span></li>
         <li><span style="color:#c9d1d9;">tvla_sm2_v13_final.js</span> <span style="font-size:0.55rem;color:#00d4aa;">TSA&#x2714;</span> &mdash; SM2 TVLA v1.3 测试框架 (Welch's t-test, N=5,000)<br><span style="font-size:0.6rem;color:#646c78;">预生成密钥池 + Fixed-vs-Random + Montgomery Ladder 实验设计</span></li>
-        <li><span style="color:#c9d1d9;">tvla-sm2-v13-report.json</span> <span style="font-size:0.55rem;color:#00d4aa;">TSA&#x2714;</span> &mdash; N=5,000 7/7 全绿报告（最终版）<br><span style="font-size:0.6rem;color:#646c78;">verify 0.10 · decrypt 0.16 · 三重防护 · 528s (2026-06-18)</span></li>
+        <li><span style="color:#c9d1d9;">tvla-sm2-v13-report.json</span> <span style="font-size:0.55rem;color:#00d4aa;">TSA&#x2714;</span> &mdash; N=5,000 5/5 全绿报告（最终版）<br><span style="font-size:0.6rem;color:#646c78;">verify 0.10 · decrypt 0.16 · 三重防护 · 528s (2026-06-18)</span></li>
         <li><span style="color:#c9d1d9;">TECHNICAL-VERIFICATION.md</span> <span style="font-size:0.55rem;color:#00d4aa;" title="FreeTSA 2026-06-18">TSA&#x2714;</span> &mdash; 技术验证证据地图 v2<br><span style="font-size:0.6rem;color:#646c78;">SHA256 + TSR · Status: Granted (Jun 18 2026)</span></li>
         </ul>
         </div>
