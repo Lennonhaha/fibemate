@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>格密码 101：LWE 问题与 NTT 蝶形运算 · 教育科普</title>
+<meta name="description" content="格密码 101：从格结构、LWE 学习带误差问题，到 NTT 数论变换与蝶形运算的交互式教育可视化。纯科普，不涉及任何具体方案的安全性结论。">
+<style>
+  :root{
+    --bg:#060a12; --panel:rgba(10,16,28,.72); --line:rgba(64,192,255,.25);
+    --accent:#10b981; --cyan:#06b6d4; --violet:#8b5cf6; --warn:#f59e0b; --lattice:#4ade80;
+    --text:#d0e4f5; --muted:rgba(208,228,245,.55);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  #scene{position:fixed;inset:0;z-index:0}
+
+  /* 扫描线 HUD 覆盖层 */
+  #scanline{
+    position:fixed;inset:0;z-index:5;pointer-events:none;
+    background:repeating-linear-gradient(0deg, rgba(64,192,255,.018) 0px, rgba(64,192,255,.018) 1px, transparent 1px, transparent 3px);
+    mix-blend-mode:screen;
+  }
+
+  /* 顶部标题 */
+  #hud-top{
+    position:fixed;top:0;left:0;right:0;z-index:10;
+    padding:18px 26px 14px;
+    background:linear-gradient(180deg,rgba(6,10,18,.92) 0%,rgba(6,10,18,.6) 70%,transparent 100%);
+  }
+  #hud-top h1{
+    font-size:clamp(1.15rem,2.4vw,1.7rem);font-weight:700;letter-spacing:.5px;
+    background:linear-gradient(90deg,#7dd3fc,#4ade80,#10b981);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  #hud-top .sub{font-size:.8rem;color:var(--muted);margin-top:6px;letter-spacing:.3px}
+  #hud-top .disclaimer{
+    font-size:.72rem;color:var(--muted);margin-top:8px;padding:7px 12px;
+    border-left:2px solid var(--warn);background:rgba(245,158,11,.06);
+    border-radius:0 6px 6px 0;max-width:820px;line-height:1.5;
+  }
+  #hud-top .disclaimer b{color:var(--warn)}
+
+  /* 左侧步骤说明面板 */
+  #side{
+    position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:10;
+    width:min(340px,calc(100vw - 36px));
+    background:var(--panel);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:14px;padding:18px;
+    box-shadow:0 0 30px rgba(6,182,212,.12);
+  }
+  #side .step-no{font-size:.7rem;color:var(--cyan);letter-spacing:2px;font-weight:700}
+  #side .step-title{font-size:1.05rem;font-weight:700;margin:6px 0 10px;color:#eaf6ff}
+  #side .step-desc{font-size:.82rem;line-height:1.65;color:var(--text)}
+  #side .step-desc b{color:#7dd3fc}
+  #side .step-desc .danger{color:#f87171}
+  #side .step-desc .ok{color:#34d399}
+  #side #next-bridge{
+    margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);
+  }
+  #side #next-bridge .nb-title{font-size:.8rem;font-weight:700;color:#7dd3fc;margin-bottom:6px}
+  #side #next-bridge .nb-text{font-size:.74rem;line-height:1.6;color:var(--muted);margin-bottom:10px}
+  #side #next-bridge a.nb-link{
+    display:inline-block;font-size:.74rem;color:#7dd3fc;text-decoration:underline;
+    margin-right:12px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;
+    transition:.2s;
+  }
+  #side #next-bridge a.nb-link:hover{background:rgba(6,182,212,.12);border-color:var(--cyan)}
+
+  /* 右侧实时数据面板 */
+  #hud-data{
+    position:fixed;right:18px;top:50%;transform:translateY(-50%);z-index:10;
+    width:min(220px,calc(100vw - 36px));
+    background:var(--panel);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:14px;padding:16px;
+    box-shadow:0 0 30px rgba(74,222,128,.1);
+    font-family:ui-monospace,SFMono-Regular,Consolas,monospace;
+  }
+  #hud-data .hd-title{font-size:.68rem;color:var(--lattice);letter-spacing:2px;font-weight:700;margin-bottom:12px}
+  #hud-data .row{display:flex;justify-content:space-between;align-items:baseline;padding:5px 0;border-bottom:1px solid rgba(64,192,255,.1)}
+  #hud-data .row:last-child{border-bottom:none}
+  #hud-data .k{font-size:.7rem;color:var(--muted)}
+  #hud-data .v{font-size:.78rem;color:#eaf6ff;font-weight:700}
+  #hud-data .v.hl{color:var(--lattice)}
+  #hud-data .v.danger{color:#f87171}
+  #hud-data .slider-wrap{margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+  #hud-data .slider-label{font-size:.68rem;color:var(--muted);margin-bottom:6px}
+  #hud-data input[type=range]{
+    width:100%;-webkit-appearance:none;height:4px;border-radius:2px;
+    background:linear-gradient(90deg,var(--cyan),var(--lattice));outline:none;cursor:pointer;
+  }
+  #hud-data input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;width:14px;height:14px;border-radius:50%;
+    background:#eaf6ff;border:2px solid var(--cyan);cursor:pointer;
+  }
+
+  /* 底部步骤控制 */
+  #ctl{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:10;
+    display:flex;align-items:center;gap:12px;
+    background:var(--panel);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:40px;padding:10px 18px;
+    box-shadow:0 0 30px rgba(6,182,212,.15);
+  }
+  #ctl button{
+    background:transparent;border:1px solid var(--line);color:var(--text);
+    width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;
+    transition:.2s;
+  }
+  #ctl button:hover{background:rgba(6,182,212,.15);border-color:var(--cyan)}
+  #ctl button.primary{background:linear-gradient(135deg,#06b6d4,#10b981);border:none;color:#04121a;font-weight:700;width:auto;padding:0 20px;border-radius:24px}
+  #ctl .dots{display:flex;gap:7px}
+  #ctl .dots i{width:7px;height:7px;border-radius:50%;background:rgba(208,228,245,.25);transition:.3s}
+  #ctl .dots i.on{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+  #ctl .label{font-size:.78rem;color:var(--muted);min-width:120px;text-align:center}
+
+  @media (max-width:900px){
+    #hud-data{display:none}
+  }
+  @media (max-width:760px){
+    #side{left:50%;top:auto;bottom:110px;transform:translateX(-50%);width:calc(100vw - 24px)}
+    #ctl{bottom:14px}
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+<div id="scanline"></div>
+
+<div id="hud-top">
+  <h1>格密码 101：LWE 问题与 NTT 蝶形运算</h1>
+  <div class="sub">格结构 · 学习带误差 LWE · 数论变换 NTT · 蝶形运算 · 交互式教育可视化</div>
+  <div class="disclaimer">
+    ⚠️ <b>纯教育科普，不含任何具体密码方案的安全性结论。</b>
+    本页面讲解的是格密码（Lattice-based）背后的通用数学思想：格结构、LWE 困难问题、以及 NTT/蝶形运算这一高效计算工具。参数均为教学示意值，非任何已部署方案的实际参数。
+  </div>
+</div>
+
+<div id="side">
+  <div class="step-no" id="s-no">STEP 01 / 06</div>
+  <div class="step-title" id="s-title">格：离散的规则点阵</div>
+  <div class="step-desc" id="s-desc"></div>
+  <div id="next-bridge">
+    <div class="nb-title">下一步：格密码如何抵御量子攻击？</div>
+    <div class="nb-text">理解了 LWE 的几何直觉后，再看它为什么能把量子攻击挡在门外——困难不在「格」本身，而在<b>高维格上注入的噪声</b>。</div>
+    <a class="nb-link" href="/lwe-hardness-terrain.html" target="_blank">LWE 难度地貌</a>
+    <a class="nb-link" href="/viz/quantum-group-attack.html" target="_blank">量子攻击 101</a>
+  </div>
+</div>
+
+<div id="hud-data">
+  <div class="hd-title">◈ 实时参数面板</div>
+  <div class="row"><span class="k">维度 n</span><span class="v hl" id="d-n">256</span></div>
+  <div class="row"><span class="k">模数 q</span><span class="v" id="d-q">3329</span></div>
+  <div class="row"><span class="k">噪声 σ</span><span class="v" id="d-s">3.2</span></div>
+  <div class="row"><span class="k">格基数量</span><span class="v" id="d-b">256</span></div>
+  <div class="row"><span class="k">安全等级</span><span class="v hl" id="d-sec">NIST L1+</span></div>
+  <div class="slider-wrap">
+    <div class="slider-label">教学维度 n（可视化采样）</div>
+    <input type="range" id="dim-slider" min="8" max="256" step="8" value="256">
+  </div>
+</div>
+
+<div id="ctl">
+  <button id="btn-prev" title="上一步">‹</button>
+  <div class="dots" id="dots"></div>
+  <div class="label" id="s-label">自动播放</div>
+  <button id="btn-play" class="primary" title="播放/暂停">▶</button>
+  <button id="btn-next" title="下一步">›</button>
+</div>
+
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+// ================= 步骤定义 =================
+const STEPS = [
+  {
+    title: "格：离散的规则点阵",
+    desc: "一个<b>格（Lattice）</b>，就是一组基向量（basis）的所有<b>整数线性组合</b>张成的离散点阵。<br><br>它不是连续的平面，而是一群「间距固定、规则排列」的点。密码学关心的正是这些点构成的<b>几何结构</b>——以及「离某个点最近」这类问题有多难。"
+  },
+  {
+    title: "LWE：给方程加上噪声",
+    desc: "学习带误差问题（<b>LWE</b>）：已知一组线性方程 <b>A·s + e = b</b>，其中 s 是秘密、e 是<b>微小噪声</b>。<br><br>没有噪声 e，解方程（高斯消元）瞬间完成；但一旦每个方程都被<b>轻微扰动</b>，恢复 s 就变成了在格上找「最近点」——这个噪声，正是格密码抵抗量子攻击的关键。"
+  },
+  {
+    title: "NTT：多项式的快速乘法",
+    desc: "格密码里大量运算发生在多项式环 <b>Z_q[x]/(x^n+1)</b> 上，核心是<b>多项式乘法</b>。<br><br>普通乘法要 O(n²) 步；<b>数论变换（NTT）</b>利用「在模 q 下的单位根」把乘法转到频域，降到 <b>O(n log n)</b>——这是 ML-KEM/ML-DSA 高速运算的引擎。"
+  },
+  {
+    title: "蝶形运算：NTT 的微观结构",
+    desc: "NTT 的每一层，都由成对的「<b>蝶形运算（butterfly）</b>」组成：<br>  新值 = a + b·ω，新值' = a − b·ω<br><br>两个输入交叉成一个蝴蝶形状，逐层递归。观察右侧点阵中成对节点如何随旋转因子 ω 交错合并，就是蝶形运算的本质。"
+  },
+  {
+    title: "格基约化：攻击者的武器",
+    desc: "攻击格密码的主要工具是<b>格基约化</b>——LLL、BKZ 算法尝试把「又长又歪」的基，改造成「又短又正交」的基，从而逼近最短向量。<br><br>但维度 n 越高，约化代价随 n <b>指数级</b>增长。右侧的「约化」动画演示了攻击者如何在高维下举步维艰。<span class='ok'>这正是格密码安全性的来源。</span>"
+  },
+  {
+    title: "结论：噪声 + 高维 = 抗量子",
+    desc: "格密码的安全，不来自「某个交换群的分解困难」，而来自<b>高维格上注入噪声</b>这一几何难题。<br><br><span class='ok'>量子计算机（如 Shor 算法）擅长破「交换群结构」，但对「高维格上的最近向量 / 带噪线性方程」没有已知的多项式攻击。</span>这是它成为 NIST 后量子标准的根本原因。"
+  }
+];
+
+// ================= 3D 场景 =================
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060a12);
+scene.fog = new THREE.FogExp2(0x060a12, 0.016);
+
+const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 300);
+camera.position.set(0, 2, 24);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
+controls.minDistance = 8;
+controls.maxDistance = 60;
+
+scene.add(new THREE.AmbientLight(0x334466, 1.2));
+const dir = new THREE.DirectionalLight(0x8899cc, 1.6); dir.position.set(6,10,8); scene.add(dir);
+const pt = new THREE.PointLight(0x4ade80, 2.0, 60); pt.position.set(-8,3,6); scene.add(pt);
+
+// 背景星点
+const starGeo = new THREE.BufferGeometry();
+const starN = 800;
+const starPos = new Float32Array(starN*3);
+for(let i=0;i<starN;i++){
+  starPos[i*3] = (Math.random()-0.5)*90;
+  starPos[i*3+1] = (Math.random()-0.5)*50;
+  starPos[i*3+2] = (Math.random()-0.5)*90 - 10;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+const starMat = new THREE.PointsMaterial({color:0x6b8ab8, size:0.08, transparent:true, opacity:0.7, blending:THREE.AdditiveBlending, depthWrite:false});
+scene.add(new THREE.Points(starGeo, starMat));
+
+// ================= 主体：晶格点阵 =================
+const latticeGroup = new THREE.Group();
+scene.add(latticeGroup);
+
+// 可视化采样：实际展示的格点规模（受维度滑块影响，但物理上限控制性能）
+const GRID = 12;          // 每个轴向的点数
+const SPACING = 1.6;      // 点间距
+
+// 格点：三层结构（规则点阵 + 错误偏移点）
+const latticePoints = [];  // 规则格点 mesh
+const latticeBase = [];    // 规则格点基准位置
+const noisePoints = [];    // 带噪声的"扰动点"
+const noiseBase = [];
+
+function buildLattice(){
+  // 清除旧点
+  latticePoints.forEach(p=>latticeGroup.remove(p.m)); latticePoints.length = 0; latticeBase.length = 0;
+  noisePoints.forEach(p=>latticeGroup.remove(p.m)); noisePoints.length = 0; noiseBase.length = 0;
+
+  const geo = new THREE.SphereGeometry(0.14, 10, 10);
+  const mat = new THREE.MeshBasicMaterial({color:0x4ade80, transparent:true, opacity:0.85});
+  const matNoise = new THREE.MeshBasicMaterial({color:0xf59e0b, transparent:true, opacity:0.9});
+  const matGlow = new THREE.MeshBasicMaterial({color:0x4ade80, transparent:true, opacity:0.2, blending:THREE.AdditiveBlending, depthWrite:false});
+
+  const half = (GRID-1)/2;
+  for(let i=0;i<GRID;i++){
+    for(let j=0;j<GRID;j++){
+      for(let k=0;k<GRID;k++){
+        // 只展示一个"壳层"附近的点，避免 12^3=1728 太多
+        const ci = i-half, cj = j-half, ck = k-half;
+        const dist = Math.abs(ci)+Math.abs(cj)+Math.abs(ck);
+        if(dist > half*1.6) continue;   // 菱形剪枝
+        const x = ci*SPACING, y = cj*SPACING, z = ck*SPACING;
+        const m = new THREE.Mesh(geo, mat);
+        m.position.set(x,y,z);
+        latticeGroup.add(m);
+        latticePoints.push({m, base:new THREE.Vector3(x,y,z)});
+        latticeBase.push(new THREE.Vector3(x,y,z));
+
+        // 每隔若干点，放一个"噪声点"（偏移示意）
+        if((ci+cj+ck)%3===0){
+          const nm = new THREE.Mesh(geo, matNoise);
+          const ox = x + (Math.sin(i*7+j*3)*0.28);
+          const oy = y + (Math.cos(j*5+k*2)*0.28);
+          const oz = z + (Math.sin(k*9+i*5)*0.28);
+          nm.position.set(ox,oy,oz);
+          latticeGroup.add(nm);
+          noisePoints.push({m:nm, base:new THREE.Vector3(ox,oy,oz), latticePos:new THREE.Vector3(x,y,z)});
+          noiseBase.push(new THREE.Vector3(ox,oy,oz));
+        }
+      }
+    }
+  }
+}
+buildLattice();
+
+// 错误向量：从噪声点指向最近格点的线段（LWE 的"误差"可视化）
+const errGroup = new THREE.Group();
+scene.add(errGroup);
+let errLines = [];
+function buildErrorVectors(){
+  errLines.forEach(l=>errGroup.remove(l)); errLines = [];
+  const errMat = new THREE.LineBasicMaterial({color:0xf87171, transparent:true, opacity:0.6, blending:THREE.AdditiveBlending});
+  noisePoints.forEach(np=>{
+    const g = new THREE.BufferGeometry().setFromPoints([np.base.clone(), np.latticePos.clone()]);
+    const l = new THREE.Line(g, errMat);
+    errGroup.add(l);
+    errLines.push(l);
+  });
+}
+buildErrorVectors();
+
+// NTT 蝶形运算：环形数据流（随步骤 3/4 显现）
+const nttGroup = new THREE.Group();
+scene.add(nttGroup);
+const BFLY = 16;
+const bflyNodes = [];
+function buildNtt(){
+  const geo = new THREE.SphereGeometry(0.22, 12, 12);
+  const mat = new THREE.MeshBasicMaterial({color:0x06b6d4, transparent:true, opacity:0.9});
+  for(let i=0;i<BFLY;i++){
+    const a = (i/BFLY)*Math.PI*2;
+    const r = 7.5;
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(Math.cos(a)*r, Math.sin(a*2)*1.8, Math.sin(a)*r);
+    nttGroup.add(m);
+    bflyNodes.push({m, a});
+  }
+  // 环
+  const ringGeo = new THREE.TorusGeometry(7.5, 0.04, 8, 120);
+  const ringMat = new THREE.MeshBasicMaterial({color:0x1d6a8a, transparent:true, opacity:0.4});
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = Math.PI/2.6;
+  nttGroup.add(ring);
+}
+buildNtt();
+
+// 蝶形连接线（成对交叉）
+const bflyLineGroup = new THREE.Group();
+nttGroup.add(bflyLineGroup);
+let bflyLines = [];
+function buildBflyLines(){
+  bflyLines.forEach(l=>bflyLineGroup.remove(l)); bflyLines = [];
+  const mat = new THREE.LineBasicMaterial({color:0x22d3ee, transparent:true, opacity:0.5, blending:THREE.AdditiveBlending});
+  for(let i=0;i<BFLY/2;i++){
+    const j = (i + BFLY/2) % BFLY;
+    const p1 = bflyNodes[i].m.position, p2 = bflyNodes[j].m.position;
+    // 蝶形交叉：上下交叉线
+    const g1 = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+    bflyLineGroup.add(new THREE.Line(g1, mat));
+    bflyLines.push(g1);
+  }
+}
+buildBflyLines();
+
+// 约化"攻击"射线（步骤 5）
+const reduceGroup = new THREE.Group();
+scene.add(reduceGroup);
+const RAYS = 40;
+const reduceLines = [];
+for(let i=0;i<RAYS;i++){
+  const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), new THREE.Vector3(0,0,1)]);
+  const mat = new THREE.LineBasicMaterial({color:0xf87171, transparent:true, opacity:0, blending:THREE.AdditiveBlending});
+  const l = new THREE.Line(g, mat);
+  reduceGroup.add(l);
+  reduceLines.push(l);
+}
+
+// ================= 交互 =================
+let cur = 0;
+let playing = true;
+let playTimer = null;
+let dimN = 256;   // 教学维度值
+
+function render() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', render);
+render();
+
+function setStep(i){
+  cur = ((i % STEPS.length) + STEPS.length) % STEPS.length;
+  document.getElementById('s-no').textContent = 'STEP ' + String(cur+1).padStart(2,'0') + ' / ' + String(STEPS.length).padStart(2,'0');
+  document.getElementById('s-title').textContent = STEPS[cur].title;
+  document.getElementById('s-desc').innerHTML = STEPS[cur].desc;
+  document.querySelectorAll('#dots i').forEach((d,k)=>d.classList.toggle('on', k===cur));
+  applyStepVisual(cur);
+  updateDataPanel();
+}
+
+// 各步骤视觉强度：格点 / 噪声 / NTT / 蝶形 / 约化 / 结论
+function applyStepVisual(step){
+  // 错误向量可见性
+  const errVis = [0, 1, 0.15, 0.15, 0.6, 0.3][step];
+  errLines.forEach(l=>l.material.opacity = errVis * 0.6);
+
+  // NTT 环可见性（步骤 2 之后）
+  const nttVis = [0, 0.05, 1, 1, 0.3, 0.15][step];
+  nttGroup.visible = nttVis > 0.02;
+  nttGroup.children.forEach(c=>{ if(c.material) c.material.opacity = c.material.opacity===undefined?1:Math.min(1, nttVis * (c.material.opacity===0.4?0.9:0.9)); });
+
+  // 蝶形连线强度
+  const bflyVis = [0, 0, 0.3, 1, 0.2, 0.1][step];
+  bflyLines.forEach(g=>{ if(g.material) g.material.opacity = bflyVis*0.5; });
+
+  // 约化射线强度
+  const redVis = [0, 0, 0, 0, 1, 0.4][step];
+  reduceLines.forEach((l,i)=>{
+    const a = (i/RAYS)*Math.PI*2;
+    const len = 9 + Math.sin(a*3)*2;
+    const end = new THREE.Vector3(Math.cos(a)*len, Math.sin(a*2)*2, Math.sin(a)*len);
+    l.geometry.dispose();
+    l.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), end]);
+    l.material.opacity = redVis * 0.55;
+  });
+
+  // 噪声点强调
+  noisePoints.forEach(np=>{ np.m.material.opacity = 0.4 + [0,1,0.5,0.5,0.7,0.5][step]*0.5; });
+}
+
+function updateDataPanel(){
+  // 维度随滑块
+  document.getElementById('d-n').textContent = dimN;
+  // 安全等级随维度（教学示意映射）
+  let sec;
+  if(dimN >= 768) sec = 'NIST L5';
+  else if(dimN >= 512) sec = 'NIST L3';
+  else if(dimN >= 256) sec = 'NIST L1+';
+  else if(dimN >= 128) sec = 'NIST L1';
+  else sec = '教学示意';
+  document.getElementById('d-sec').textContent = sec;
+  // 格基数量 = 维度
+  document.getElementById('d-b').textContent = dimN;
+}
+
+function next(){ setStep(cur+1); }
+function prev(){ setStep(cur-1); }
+function togglePlay(){
+  playing = !playing;
+  document.getElementById('btn-play').textContent = playing ? '⏸' : '▶';
+  document.getElementById('s-label').textContent = playing ? '自动播放' : '手动';
+  if(playing) startPlay(); else stopPlay();
+}
+function startPlay(){ if(playTimer) return; playTimer = setInterval(()=>{ if(cur >= STEPS.length-1){ cur = -1; } next(); }, 6000); }
+function stopPlay(){ if(playTimer){ clearInterval(playTimer); playTimer = null; } }
+
+document.getElementById('btn-next').onclick = ()=>{ stopPlay(); playing=false; document.getElementById('btn-play').textContent='▶'; document.getElementById('s-label').textContent='手动'; next(); };
+document.getElementById('btn-prev').onclick = ()=>{ stopPlay(); playing=false; document.getElementById('btn-play').textContent='▶'; document.getElementById('s-label').textContent='手动'; prev(); };
+document.getElementById('btn-play').onclick = togglePlay;
+
+// 维度滑块
+document.getElementById('dim-slider').oninput = function(e){
+  dimN = parseInt(e.target.value, 10);
+  // 维度影响格点规模（性能友好：实际点阵固定，只改面板与旋转速度）
+  updateDataPanel();
+};
+
+// 初始化 dots
+const dotsBox = document.getElementById('dots');
+for(let i=0;i<STEPS.length;i++){ const d = document.createElement('i'); dotsBox.appendChild(d); }
+
+setStep(0);
+startPlay();
+
+// ================= 动画循环 =================
+const clock = new THREE.Clock();
+let t = 0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  t += dt;
+
+  controls.update();
+
+  // 晶格缓慢旋转
+  latticeGroup.rotation.y += dt*0.08;
+  latticeGroup.rotation.x += dt*0.02;
+
+  // 噪声点"呼吸"（误差抖动）
+  noisePoints.forEach((np,i)=>{
+    const ph = t*1.2 + i;
+    const amp = [0, 1, 0.4, 0.4, 0.6, 0.4][cur] * 0.1;
+    np.m.position.x = np.base.x + Math.sin(ph)*amp;
+    np.m.position.y = np.base.y + Math.cos(ph*0.9)*amp;
+    np.m.position.z = np.base.z + Math.sin(ph*1.1)*amp;
+  });
+
+  // NTT 环旋转 + 蝶形节点脉冲
+  if(nttGroup.visible){
+    nttGroup.rotation.y += dt*0.3;
+    bflyNodes.forEach((n,i)=>{
+      const s = 1 + Math.sin(t*3 + i*0.8)*0.25;
+      n.m.scale.setScalar(s);
+    });
+  }
+
+  // 约化射线组旋转
+  reduceGroup.rotation.y += dt*0.3;
+  reduceGroup.rotation.z += dt*0.06;
+
+  // 数据面板实时刷新（安全等级）
+  if(Math.floor(t*4) % 4 === 0){ /* 低频刷新，避免高频 DOM 抖动 */ }
+
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
