@@ -1,6 +1,6 @@
 # FIBEMATE 技术验证证据地图
 
-> **最后更新**：2026-07-17（v5 · 全局 TSR 76 份 · Path A/C-2 Active · 全站校准）  
+> **最后更新**：2026-08-13（v6 · 全局 TSR 138 份 · Path A/C-2 Active · v3.3.0 · 全站校准）  
 > **定位**：本文档汇总 FIBEMATE 项目在硬件加速、软件优化、安全性三个维度的可验证证据，供开源社区、安全研究者及潜在用户查阅。  
 > **开源计划**：FIBEMATE 核心协议代码计划于 **2026.08.31** 开源。当前 repo 为 private，本文档所列验证结果均可在 [fibemate.net](https://fibemate.net) 的公开报告页面复现验证。
 
@@ -17,7 +17,7 @@
 | 🇨🇳 国密 | SM2 全栈性能 | 2.1×–8.4× 加速 | [SM2 优化报告](https://fibemate.net/docs/sm2-optimization.html) |
 | 🇨🇳 国密 | SM2 TVLA 侧信道 (v1.3, 1-4阶) | N=5,000 20/20 ✅ | [TVLA 分析](https://fibemate.net/docs/sm2-tvla-analysis.html) |
 | 🇨🇳 国密 | sm-crypto 互操作 | 100% 兼容 ✅ | [SM2 优化报告](https://fibemate.net/docs/sm2-optimization.html) |
-| 🛡️ 完整性 | RFC 3161 时间戳存证 | 9 文件 (联合信任 + DigiCert) | `/docs/tsa/` |
+| 🛡️ 完整性 | RFC 3161 时间戳存证 | 138 份 TSR (联合信任 + DigiCert) | `/docs/tsa/` |
 
 ---
 
@@ -284,13 +284,12 @@ openssl ts -reply -in *.tsr -text | grep "Status: Granted"
 
 ## 本文档存证（最新）
 
+> ⚠️ **v6 尚未重新存证**：本文档内容已于 2026-08-13 更新为 v6（TSR 138 份 · v3.3.0），但尚未生成新的 `.sha256` / `.tsr` 存证文件。历史 v5 存证文件（`TECHNICAL-VERIFICATION-v5.tsr`）未在仓库中找到，当前可验证的存证为下方「历史存证 (v1)」。
+
 | 属性 | 值 |
 |------|-----|
-| SHA-256 | 见 `TECHNICAL-VERIFICATION-v5.sha256` |
-| 时间戳 | ✅ Granted · 见 `TECHNICAL-VERIFICATION-v5.tsr` · `openssl ts -reply -in TECHNICAL-VERIFICATION-v5.tsr -text` |
-| TSA 授时机构 | FreeTSA (RFC 3161) |
-| 版本 | v5 — 全局 TSR 76 份 · Path A/C-2 Active · 2026-07-17 |
-| TSR 文件 | `TECHNICAL-VERIFICATION-v5.tsr` |
+| 版本 | v6 — 全局 TSR 138 份 · Path A/C-2 Active · v3.3.0 · 2026-08-13 |
+| 存证状态 | ⏳ 待重新存证（v6） |
 
 **历史存证 (v1)**：
 
