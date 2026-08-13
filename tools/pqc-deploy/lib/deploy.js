@@ -36,7 +36,7 @@ function parseManifest(text) {
   return text.split('\n')
     .map(l => l.trim())
     .filter(l => l && !l.startsWith('#'))
-    .map(l => l.replace(/^https?:\/\//, '').replace(/\/.*$/, ''));
+    .map(l => l.replace(/^https?:\/\//, '').split('/')[0]);
 }
 
 module.exports = { probe, probeMany, formatReport, persist, addMigrationAdvice, parseManifest, MIGRATION_RULES };
