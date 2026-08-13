@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>量子攻击如何作用于群结构 · 教育科普</title>
+<meta name="description" content="量子攻击如何作用于群结构：Kuperberg 隐子群攻击与半直积离散对数亚指数量子算法的交互式教育可视化。纯科普，不涉及任何具体密码方案的安全性结论。">
+<style>
+  :root{
+    --bg:#060a12; --panel:rgba(10,16,28,.72); --line:rgba(64,192,255,.25);
+    --accent:#10b981; --cyan:#06b6d4; --violet:#8b5cf6; --warn:#f59e0b;
+    --text:#d0e4f5; --muted:rgba(208,228,245,.55);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html,body{height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+  #scene{position:fixed;inset:0;z-index:0}
+
+  /* 顶部标题 */
+  #hud-top{
+    position:fixed;top:0;left:0;right:0;z-index:10;
+    padding:18px 26px 14px;
+    background:linear-gradient(180deg,rgba(6,10,18,.92) 0%,rgba(6,10,18,.6) 70%,transparent 100%);
+  }
+  #hud-top h1{
+    font-size:clamp(1.15rem,2.4vw,1.7rem);font-weight:700;letter-spacing:.5px;
+    background:linear-gradient(90deg,#7dd3fc,#10b981,#8b5cf6);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+  }
+  #hud-top .sub{font-size:.8rem;color:var(--muted);margin-top:6px;letter-spacing:.3px}
+  #hud-top .disclaimer{
+    font-size:.72rem;color:var(--muted);margin-top:8px;padding:7px 12px;
+    border-left:2px solid var(--warn);background:rgba(245,158,11,.06);
+    border-radius:0 6px 6px 0;max-width:820px;line-height:1.5;
+  }
+  #hud-top .disclaimer b{color:var(--warn)}
+
+  /* 左侧步骤说明面板 */
+  #side{
+    position:fixed;left:18px;top:50%;transform:translateY(-50%);z-index:10;
+    width:min(340px,calc(100vw - 36px));
+    background:var(--panel);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:14px;padding:18px;
+    box-shadow:0 0 30px rgba(6,182,212,.12);
+  }
+  #side .step-no{font-size:.7rem;color:var(--cyan);letter-spacing:2px;font-weight:700}
+  #side .step-title{font-size:1.05rem;font-weight:700;margin:6px 0 10px;color:#eaf6ff}
+  #side .step-desc{font-size:.82rem;line-height:1.65;color:var(--text)}
+  #side .step-desc b{color:#7dd3fc}
+  #side .step-desc .danger{color:#f87171}
+  #side .step-desc .ok{color:#34d399}
+
+  /* 底部步骤控制 */
+  #ctl{
+    position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:10;
+    display:flex;align-items:center;gap:12px;
+    background:var(--panel);backdrop-filter:blur(8px);
+    border:1px solid var(--line);border-radius:40px;padding:10px 18px;
+    box-shadow:0 0 30px rgba(6,182,212,.15);
+  }
+  #ctl button{
+    background:transparent;border:1px solid var(--line);color:var(--text);
+    width:40px;height:40px;border-radius:50%;cursor:pointer;font-size:1.1rem;
+    transition:.2s;
+  }
+  #ctl button:hover{background:rgba(6,182,212,.15);border-color:var(--cyan)}
+  #ctl button.primary{background:linear-gradient(135deg,#06b6d4,#10b981);border:none;color:#04121a;font-weight:700;width:auto;padding:0 20px;border-radius:24px}
+  #ctl .dots{display:flex;gap:7px}
+  #ctl .dots i{width:7px;height:7px;border-radius:50%;background:rgba(208,228,245,.25);transition:.3s}
+  #ctl .dots i.on{background:var(--cyan);box-shadow:0 0 10px var(--cyan)}
+  #ctl .label{font-size:.78rem;color:var(--muted);min-width:120px;text-align:center}
+
+  @media (max-width:760px){
+    #side{left:50%;top:auto;bottom:110px;transform:translateX(-50%);width:calc(100vw - 24px)}
+    #ctl{bottom:14px}
+  }
+</style>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div id="hud-top">
+  <h1>量子攻击如何作用于群结构</h1>
+  <div class="sub">Kuperberg 隐子群攻击 · 半直积离散对数亚指数量子算法 · 交互式教育可视化</div>
+  <div class="disclaimer">
+    ⚠️ <b>纯教育科普，不含任何具体密码方案的安全性结论。</b>
+    本页面讲解的是作用于「群结构」的通用量子算法思想。脚注中提到的自研方案与这些攻击类之间<b>不存在已建立的归约关系</b>，其安全性判断与本页面内容无关。
+  </div>
+</div>
+
+<div id="side">
+  <div class="step-no" id="s-no">STEP 01 / 05</div>
+  <div class="step-title" id="s-title">群作用：结构性的起点</div>
+  <div class="step-desc" id="s-desc"></div>
+</div>
+
+<div id="ctl">
+  <button id="btn-prev" title="上一步">‹</button>
+  <div class="dots" id="dots"></div>
+  <div class="label" id="s-label">自动播放</div>
+  <button id="btn-play" class="primary" title="播放/暂停">▶</button>
+  <button id="btn-next" title="下一步">›</button>
+</div>
+
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+// ================= 步骤定义 =================
+const STEPS = [
+  {
+    title: "群作用：结构性的起点",
+    desc: "很多密码学困难问题，本质上是一个<b>群 G</b> 作用在一个<b>集合 X</b> 上。攻击者知道作用后的结果，想反推出作用前的秘密。<br><br>经典计算机往往只能逐个枚举，代价随参数规模指数增长。"
+  },
+  {
+    title: "把问题编码为「求周期」",
+    desc: "量子算法的核心一步，是把「反推群作用」转化成一个<b>隐子群问题（HSP）</b>：存在一个隐藏子群 H，函数 f 在 H 的陪集上取常值。<br><br>只要 H 是<b>交换群</b>，Shor 算法就能高效求出它。这是「离散对数」「因子分解」被量子算法打破的共同根源。"
+  },
+  {
+    title: "Kuperberg：非交换群的困难",
+    desc: "当 G <b>不再交换</b>（比如二面体群、半直积群），隐子群 H 的恢复就变得困难得多。<br><br>Kuperberg 给出了针对<b>二面体群</b>隐子群问题的<b>亚指数</b>量子算法（2<sup>O(√log n)</sup>），远快于经典暴力，但仍非多项式——这是「非交换结构」带来的真实量子优势，也是新的攻击面。"
+  },
+  {
+    title: "半直积离散对数：亚指数量子攻击",
+    desc: "在<b>半直积群</b>（如 Z/p ⋊ Z/p*）上，离散对数问题存在<b>亚指数量子算法</b>（Kuperberg / Biasse–Bonnetain 等）。<br><br>结论：<span class='danger'>一旦某个密码方案的困难问题能被归约到半直积 DLP，其量子安全强度就必须按亚指数（而非多项式）重新评估。</span>"
+  },
+  {
+    title: "结论：结构决定量子脆弱性",
+    desc: "量子攻击的威力，<b>不取决于方案「看起来多复杂」</b>，而取决于背后群结构的<b>交换性</b>与<b>可归约性</b>。<br><br>交换群 → 多项式量子攻击（Shor）。<br>非交换群 → 亚指数乃至更高（Kuperberg 类）。<br><span class='ok'>因此，评估任何新方案的量子抵抗，第一步永远是：它的困难问题能归约到什么群结构？</span>"
+  }
+];
+
+// ================= 3D 场景 =================
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060a12);
+scene.fog = new THREE.FogExp2(0x060a12, 0.016);
+
+const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 300);
+camera.position.set(0, 4, 26);
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.minDistance = 8;
+controls.maxDistance = 60;
+
+scene.add(new THREE.AmbientLight(0x334466, 1.2));
+const dir = new THREE.DirectionalLight(0x8899cc, 1.6); dir.position.set(6,10,8); scene.add(dir);
+const pt = new THREE.PointLight(0x06b6d4, 2.2, 60); pt.position.set(-8,3,6); scene.add(pt);
+
+// 背景粒子网格（深空星点）
+const starGeo = new THREE.BufferGeometry();
+const starN = 900;
+const starPos = new Float32Array(starN*3);
+for(let i=0;i<starN;i++){
+  starPos[i*3] = (Math.random()-0.5)*90;
+  starPos[i*3+1] = (Math.random()-0.5)*50;
+  starPos[i*3+2] = (Math.random()-0.5)*90 - 10;
+}
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPos,3));
+const starMat = new THREE.PointsMaterial({color:0x6b8ab8, size:0.08, transparent:true, opacity:0.7, blending:THREE.AdditiveBlending, depthWrite:false});
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
+
+// 群结构：节点环（元素）+ 边（作用连线）
+const group = new THREE.Group();
+scene.add(group);
+
+// 主环：群元素节点
+const NODE_N = 24;
+const nodeMeshes = [];
+const nodeColor = new THREE.Color(0x06b6d4);
+for(let i=0;i<NODE_N;i++){
+  const a = (i/NODE_N)*Math.PI*2;
+  const r = 8.2;
+  const x = Math.cos(a)*r, y = Math.sin(a)*2.2, z = Math.sin(a)*r*0.7;
+  const geo = new THREE.SphereGeometry(0.28, 16, 16);
+  const mat = new THREE.MeshBasicMaterial({color:nodeColor, transparent:true, opacity:0.9});
+  const m = new THREE.Mesh(geo, mat);
+  m.position.set(x,y,z);
+  group.add(m);
+  nodeMeshes.push({m, base:new THREE.Vector3(x,y,z)});
+}
+
+// 边：环上相邻连线（半透明）
+const edgeMat = new THREE.LineBasicMaterial({color:0x1d4a6a, transparent:true, opacity:0.5});
+for(let i=0;i<NODE_N;i++){
+  const a = (i/NODE_N)*Math.PI*2, b = ((i+1)/NODE_N)*Math.PI*2;
+  const r = 8.2;
+  const p1 = new THREE.Vector3(Math.cos(a)*r, Math.sin(a)*2.2, Math.sin(a)*r*0.7);
+  const p2 = new THREE.Vector3(Math.cos(b)*r, Math.sin(b)*2.2, Math.sin(b)*r*0.7);
+  const g = new THREE.BufferGeometry().setFromPoints([p1,p2]);
+  group.add(new THREE.Line(g, edgeMat));
+}
+
+// 中心「秘密」核心
+const coreGeo = new THREE.SphereGeometry(1.1, 32, 32);
+const coreMat = new THREE.MeshBasicMaterial({color:0x8b5cf6, transparent:true, opacity:0.85});
+const core = new THREE.Mesh(coreGeo, coreMat);
+group.add(core);
+const coreGlow = new THREE.SphereGeometry(1.5, 32, 32);
+const coreGlowMat = new THREE.MeshBasicMaterial({color:0x8b5cf6, transparent:true, opacity:0.15, blending:THREE.AdditiveBlending, depthWrite:false});
+const coreGlowMesh = new THREE.Mesh(coreGlow, coreGlowMat);
+group.add(coreGlowMesh);
+
+// 量子查询粒子流
+const QN = 400;
+const qGeo = new THREE.BufferGeometry();
+const qPos = new Float32Array(QN*3);
+const qSeed = new Float32Array(QN);
+for(let i=0;i<QN;i++){
+  qPos[i*3]=(Math.random()-0.5)*20;
+  qPos[i*3+1]=(Math.random()-0.5)*12;
+  qPos[i*3+2]=(Math.random()-0.5)*20;
+  qSeed[i]=Math.random()*Math.PI*2;
+}
+qGeo.setAttribute('position', new THREE.BufferAttribute(qPos,3));
+const qMat = new THREE.PointsMaterial({color:0x7dd3fc, size:0.16, transparent:true, opacity:0.85, blending:THREE.AdditiveBlending, depthWrite:false});
+const quants = new THREE.Points(qGeo, qMat);
+group.add(quants);
+
+// 攻击「射线」：从外部射向核心的线（随步骤强度变化）
+const rayGroup = new THREE.Group();
+scene.add(rayGroup);
+const RAYS = 60;
+const rayLines = [];
+for(let i=0;i<RAYS;i++){
+  const g = new THREE.BufferGeometry().setFromPoints([
+    new THREE.Vector3(0,0,0),
+    new THREE.Vector3(0,0,1)
+  ]);
+  const mat = new THREE.LineBasicMaterial({color:0x22d3ee, transparent:true, opacity:0, blending:THREE.AdditiveBlending});
+  const l = new THREE.Line(g, mat);
+  rayGroup.add(l);
+  rayLines.push(l);
+}
+
+// ================= 交互 =================
+let cur = 0;
+let playing = true;
+let playTimer = null;
+
+function render() {
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  camera.updateProjectionMatrix();
+}
+addEventListener('resize', render);
+render();
+
+function setStep(i){
+  cur = ((i % STEPS.length) + STEPS.length) % STEPS.length;
+  document.getElementById('s-no').textContent = 'STEP ' + String(cur+1).padStart(2,'0') + ' / ' + String(STEPS.length).padStart(2,'0');
+  document.getElementById('s-title').textContent = STEPS[cur].title;
+  document.getElementById('s-desc').innerHTML = STEPS[cur].desc;
+  document.querySelectorAll('#dots i').forEach((d,k)=>d.classList.toggle('on', k===cur));
+  // 步骤视觉强度
+  applyStepVisual(cur);
+}
+
+// 各步骤的视觉参数：攻击射线强度 / 粒子流密度 / 核心颜色
+function applyStepVisual(step){
+  const intensity = [0.05, 0.3, 0.65, 1.0, 0.9][step];
+  // 射线
+  rayLines.forEach((l,i)=>{
+    const a = (i/RAYS)*Math.PI*2;
+    const len = 6 + Math.sin(a*3)*3;
+    const end = new THREE.Vector3(Math.cos(a)*len, Math.sin(a*2)*3, Math.sin(a)*len);
+    l.geometry.dispose();
+    l.geometry = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0), end]);
+    l.material.opacity = intensity * 0.5;
+    l.material.color.setHSL(0.52 - intensity*0.2, 0.9, 0.6);
+  });
+  // 粒子流速度
+  qMat.opacity = 0.5 + intensity*0.5;
+  // 核心颜色随步骤变化
+  const hue = [0.72, 0.6, 0.5, 0.0, 0.38][step];
+  coreMat.color.setHSL(hue, 0.85, 0.55);
+  coreGlowMat.color.setHSL(hue, 0.85, 0.55);
+}
+
+function next(){ setStep(cur+1); }
+function prev(){ setStep(cur-1); }
+function togglePlay(){
+  playing = !playing;
+  document.getElementById('btn-play').textContent = playing ? '⏸' : '▶';
+  document.getElementById('s-label').textContent = playing ? '自动播放' : '手动';
+  if(playing) startPlay(); else stopPlay();
+}
+function startPlay(){ if(playTimer) return; playTimer = setInterval(()=>{ if(cur >= STEPS.length-1){ cur = -1; } next(); }, 5200); }
+function stopPlay(){ if(playTimer){ clearInterval(playTimer); playTimer = null; } }
+
+document.getElementById('btn-next').onclick = ()=>{ stopPlay(); playing=false; document.getElementById('btn-play').textContent='▶'; document.getElementById('s-label').textContent='手动'; next(); };
+document.getElementById('btn-prev').onclick = ()=>{ stopPlay(); playing=false; document.getElementById('btn-play').textContent='▶'; document.getElementById('s-label').textContent='手动'; prev(); };
+document.getElementById('btn-play').onclick = togglePlay;
+
+// 初始化 dots
+const dotsBox = document.getElementById('dots');
+for(let i=0;i<STEPS.length;i++){ const d = document.createElement('i'); dotsBox.appendChild(d); }
+
+setStep(0);
+startPlay();
+
+// ================= 动画循环 =================
+const clock = new THREE.Clock();
+let t = 0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt = clock.getDelta();
+  t += dt;
+
+  controls.update();
+
+  // 星点缓慢漂移
+  stars.rotation.y += dt*0.01;
+  stars.rotation.x += dt*0.004;
+
+  // 群环自转
+  group.rotation.y += dt*0.15;
+
+  // 核心脉动
+  const s = 1 + Math.sin(t*2.2)*0.08;
+  core.scale.setScalar(s);
+  coreGlowMesh.scale.setScalar(s*1.35);
+
+  // 粒子流：从外向内汇聚 + 沿环流动
+  const pos = quants.geometry.attributes.position.array;
+  for(let i=0;i<QN;i++){
+    const seed = qSeed[i];
+    const speed = 0.25 + Math.sin(seed)*0.15;
+    const a = seed + t*speed;
+    const rr = 9 + Math.sin(seed*3)*4;
+    // 粒子沿螺旋路径，随强度向内
+    const intensity = [0.05,0.3,0.65,1.0,0.9][cur];
+    const inward = rr * (1 - intensity*0.6);
+    pos[i*3]   = Math.cos(a*1.7)*inward;
+    pos[i*3+1] = Math.sin(a*2.3)*2.4 + Math.sin(t*1.5+seed)*0.6;
+    pos[i*3+2] = Math.sin(a*1.7)*inward;
+  }
+  quants.geometry.attributes.position.needsUpdate = true;
+
+  // 射线组旋转
+  rayGroup.rotation.y += dt*0.25;
+  rayGroup.rotation.z += dt*0.08;
+
+  renderer.render(scene, camera);
+}
+animate();
+</script>
+</body>
+</html>
