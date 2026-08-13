@@ -48,6 +48,17 @@
   #side .step-desc b{color:#7dd3fc}
   #side .step-desc .danger{color:#f87171}
   #side .step-desc .ok{color:#34d399}
+  #side #next-bridge{
+    margin-top:16px;padding-top:14px;border-top:1px dashed var(--line);
+  }
+  #side #next-bridge .nb-title{font-size:.8rem;font-weight:700;color:#7dd3fc;margin-bottom:6px}
+  #side #next-bridge .nb-text{font-size:.74rem;line-height:1.6;color:var(--muted);margin-bottom:10px}
+  #side #next-bridge a.nb-link{
+    display:inline-block;font-size:.74rem;color:#7dd3fc;text-decoration:underline;
+    margin-right:12px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;
+    transition:.2s;
+  }
+  #side #next-bridge a.nb-link:hover{background:rgba(6,182,212,.12);border-color:var(--cyan)}
 
   /* 底部步骤控制 */
   #ctl{
@@ -91,6 +102,12 @@
   <div class="step-no" id="s-no">STEP 01 / 05</div>
   <div class="step-title" id="s-title">群作用：结构性的起点</div>
   <div class="step-desc" id="s-desc"></div>
+  <div id="next-bridge">
+    <div class="nb-title">下一步：格密码如何抵抗这些攻击？</div>
+    <div class="nb-text">理解了「结构决定量子脆弱性」后，再看格密码（LWE）为什么是例外——它把困难问题建立在<b>高维格上的错误</b>，而非群的交换性。</div>
+    <a class="nb-link" href="/ml-kem-security-3d.html?v=3" target="_blank">ML-KEM 安全强度 3D</a>
+    <a class="nb-link" href="/lwe-hardness-terrain.html" target="_blank">LWE 难度地貌</a>
+  </div>
 </div>
 
 <div id="ctl">
