@@ -105,7 +105,7 @@
 <p>数据库名 <code>FIBEMATE_Keys</code>，对象存储 <code>keys</code>。所有其他方法内部自动调用 <code>initDB()</code>，可省略此步骤。</p>
 
 <h3>generateAndStoreKeyPair(keyId, userId)</h3>
-<pre>const keyPair = await window.KeyStorage.generateAndStoreKeyPair('identity', 'alice@fibemate.link');</pre>
+<pre>const keyPair = await window.KeyStorage.generateAndStoreKeyPair('identity', 'alice@fibemate.net');</pre>
 <table>
 <tr><th>参数</th><th>类型</th><th>说明</th></tr>
 <tr><td><code>keyId</code></td><td><span class="type">string</span></td><td>密钥标识符（如 <code>'identity'</code>、<code>'rotation-2026'</code>）</td></tr>
@@ -132,7 +132,7 @@ const exists = await window.KeyStorage.hasKey('identity'); // true | false</pre>
 const sharedHex = await window.KeyStorage.deriveSharedKey('identity', otherPubHex);</pre>
 
 <h3>rotateKey(keyId, userId) / deleteKey(keyId) / clearAllKeys()</h3>
-<pre>const newKeyPair = await window.KeyStorage.rotateKey('identity', 'alice@fibemate.link');
+<pre>const newKeyPair = await window.KeyStorage.rotateKey('identity', 'alice@fibemate.net');
 await window.KeyStorage.deleteKey('old-session-key');
 await window.KeyStorage.clearAllKeys();</pre>
 
@@ -167,7 +167,7 @@ await window.KeyStorage.clearAllKeys();</pre>
 // { authenticated: boolean, user_id: string | null }</pre>
 
 <h3>on_auth_success(token, user_id) / logout()</h3>
-<pre>await invoke('on_auth_success', { token: 'jwt...', userId: 'alice@fibemate.link' });
+<pre>await invoke('on_auth_success', { token: 'jwt...', userId: 'alice@fibemate.net' });
 await invoke('logout');</pre>
 
 <h3>get_app_info()</h3>

@@ -11,7 +11,7 @@ const url = require('url');
 const { probe } = require('./pqc-detector');
 
 const PORT = process.env.PORT || 9004;
-const ALLOWED_ORIGINS = ['https://fibemate.net', 'https://fibemate.link'];
+const ALLOWED_ORIGINS = ['https://fibemate.net'];
 const MAX_TARGETS = 5;
 
 // ─── Simple JSON error ──────────────────────────────────────────────────────
