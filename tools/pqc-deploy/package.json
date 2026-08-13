@@ -1,0 +1,18 @@
+{
+  "name": "@fibemate/pqc-deploy-check",
+  "version": "0.1.0",
+  "description": "PQC 部署验证与主动探测 CLI — 批量探测 TLS 端点 PQC 就绪度（FIBEMATE）",
+  "type": "commonjs",
+  "bin": {
+    "pqc-deploy": "bin/pqc-deploy.js"
+  },
+  "main": "lib/deploy.js",
+  "scripts": {
+    "test": "node test/test-deploy.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "GPL-3.0-only",
+  "keywords": ["pqc", "deployment", "probe", "tls", "ml-kem", "fibemate", "readiness"]
+}

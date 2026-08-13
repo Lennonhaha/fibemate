@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML-KEM 密钥封装黑盒拆解 — KeyGen/Encaps/Decaps 3D | FIBEMATE</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230052CC'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='18' font-family='monospace'>K</text></svg>">
+<style>
+:root {
+  --bg:#060a12; --panel:#0d1525; --border:#1a2744; --text:#b8c8e8; --dim:#5a6a8a;
+  --accent:#0052CC; --accent2:#00c8e0; --blue:#4fc3f7; --green:#81c784; --orange:#ffb74d;
+  --purple:#b39ddb; --red:#ef4444;
+  --font:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding:16px;overflow-x:hidden}
+h1{font-size:20px;font-weight:700;color:#e8f0ff}
+.subtitle{font-size:13px;color:var(--dim);margin-top:4px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;margin-left:8px;vertical-align:middle}
+.header{margin-bottom:14px}
+
+.layout{display:grid;grid-template-columns:1fr 300px;gap:14px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+#scene-wrap{position:relative;background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;min-height:560px}
+#scene-canvas{display:block;width:100%;height:560px;cursor:grab}
+#scene-canvas:active{cursor:grabbing}
+#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);background:rgba(6,10,18,.7);padding:4px 12px;border-radius:12px;pointer-events:none}
+
+/* 右侧详情面板 */
+.detail{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px;overflow-y:auto;max-height:560px}
+.detail h2{font-size:14px;font-weight:700;color:#e8f0ff;margin-bottom:4px}
+.detail .io{font-size:11px;color:var(--dim);font-family:'Courier New',monospace;margin-bottom:12px}
+.submod{border:1px solid var(--border);border-radius:8px;padding:9px 11px;margin-top:8px;font-size:11.5px;line-height:1.55}
+.submod .name{font-weight:700;font-size:12px}
+.submod .io{font-size:10px;color:var(--dim);font-family:'Courier New',monospace;margin:2px 0 0}
+.submod .formula{font-size:10px;font-family:'Courier New',monospace;margin-top:3px;padding:3px 6px;border-radius:4px}
+.c-calc{border-left:3px solid var(--blue)}.c-calc .name{color:var(--blue)}
+.c-rand{border-left:3px solid var(--green)}.c-rand .name{color:var(--green)}
+.c-pack{border-left:3px solid var(--orange)}.c-pack .name{color:var(--orange)}
+.c-hash{border-left:3px solid var(--purple)}.c-hash .name{color:var(--purple)}
+.c-cmov{border-left:3px solid var(--red)}.c-cmov .name{color:var(--red)}
+.c-calc .formula{background:rgba(79,195,247,.08)}
+.c-rand .formula{background:rgba(129,199,132,.08)}
+.c-pack .formula{background:rgba(255,183,77,.08)}
+.c-hash .formula{background:rgba(179,157,219,.08)}
+.c-cmov .formula{background:rgba(239,68,68,.08)}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-top:14px;font-size:11px;color:var(--dim)}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:3px;display:inline-block}
+
+footer{text-align:center;font-size:11px;color:var(--dim);margin-top:18px;padding-top:12px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>ML-KEM 密钥封装「黑盒」拆解<span class="badge">ML-KEM-768 · K=3 · N=256 · Q=3329</span></h1>
+  <div class="subtitle">三个立体黑盒，内部是确定性的数学步骤。拖拽旋转 / 滚轮缩放 / 点击黑盒查看子模块。</div>
+</div>
+
+<div class="layout">
+  <div id="scene-wrap">
+    <canvas id="scene-canvas"></canvas>
+    <div id="hint">🖱 拖拽旋转 · 滚轮缩放 · 点击黑盒选中</div>
+  </div>
+  <div class="detail" id="detail-panel"></div>
+</div>
+
+<div class="legend">
+  <span><i style="background:var(--blue)"></i>确定性计算</span>
+  <span><i style="background:var(--green)"></i>随机采样</span>
+  <span><i style="background:var(--orange)"></i>压缩/解压</span>
+  <span><i style="background:var(--purple)"></i>哈希/KDF/PRF</span>
+  <span><i style="background:var(--red)"></i>恒定时间 cmov（安全关键）</span>
+</div>
+
+<footer>FIBEMATE v3.3.0 · 2026-08-13 · ML-KEM-768 参考实现结构（FIPS 203）</footer>
+
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+(function(){
+  // ===== 阶段数据 =====
+  const STAGES = [
+    {
+      id:'keygen', title:'① KeyGen', io:'(pk=1184B, sk=2400B)', color:0x4fc3f7,
+      submods:[
+        {cls:'c-rand', name:'种子 d ← random(32B)', io:'d ∈ {0,1}²⁵⁶'},
+        {cls:'c-rand', name:'INDCPA_KeyGen', io:'输入 d → 输出 (ek, dk)'},
+        {cls:'c-calc', name:'NTT(A) 矩阵生成', formula:'A ∈ R_q^{3×3} ← gen_a(seed)'},
+        {cls:'c-rand', name:'CBD(s,e) 噪声采样', formula:'s ← CBD_η₁, e ← CBD_η₁'},
+        {cls:'c-calc', name:'basemul 矩阵乘法', formula:'t = A·s + e'},
+        {cls:'c-pack', name:'pack / compress', formula:'ek = encode(t), dk = encode(s)'},
+        {cls:'c-hash', name:'最终封装', formula:'pk = ek ‖ H(ek)\nsk = d ‖ ek ‖ H(ek) ‖ z'},
+      ]
+    },
+    {
+      id:'encaps', title:'② Encaps', io:'(ct=1088B, ss=32B)', color:0xffb74d,
+      submods:[
+        {cls:'c-rand', name:'随机 m (32B)', io:'m ∈ {0,1}²⁵⁶'},
+        {cls:'c-hash', name:'G(m ‖ H(pk)) → (K, r)', formula:'SHAKE256 → 共享密钥 K + 随机种子 r'},
+        {cls:'c-pack', name:'unpack(pk)', io:'解析 ek'},
+        {cls:'c-calc', name:'NTT(Aᵀ) 转置矩阵', formula:'Aᵀ 用于加密'},
+        {cls:'c-rand', name:'CBD(e₁) / CBD(e₂)', formula:'e₁ ← CBD_η₁, e₂ ← CBD_η₂'},
+        {cls:'c-pack', name:'compress / pack', formula:'ct = (c₁, c₂) = (u, v)'},
+        {cls:'c-hash', name:'共享密钥派生', formula:'ss = KDF(K ‖ H(ct))'},
+      ]
+    },
+    {
+      id:'decaps', title:'③ Decaps', io:'(ss=32B, 恒定时间)', color:0xef4444,
+      submods:[
+        {cls:'c-pack', name:'unpack(sk)', formula:'(d, ek, H_ek, z)'},
+        {cls:'c-calc', name:'m\' = INDCPA_Decrypt(s, ct)', io:'用秘密向量 s 解密'},
+        {cls:'c-calc', name:'NTT(s) + basemul + invNTT', formula:'m\' = decode(v − sᵀ·u)'},
+        {cls:'c-hash', name:'(K\', r\') = G(m\' ‖ H_ek)', formula:'重新派生 K\''},
+        {cls:'c-hash', name:'K₀ = KDF(K\' ‖ H(ct))', formula:'真密钥'},
+        {cls:'c-hash', name:'K₁ = PRF(z, ct)', formula:'拒绝密钥（伪装）'},
+        {cls:'c-cmov', name:'ss = cmov(K₀, K₁, ct_valid)', formula:'⚠ 恒定时间条件选择 — FO 变换防篡改攻击'},
+      ]
+    },
+  ];
+
+  // ===== Three.js 场景 =====
+  const canvas = document.getElementById('scene-canvas');
+  const wrap = document.getElementById('scene-wrap');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060a12);
+  scene.fog = new THREE.FogExp2(0x060a12, 0.018);
+
+  const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 200);
+  camera.position.set(0, 3.2, 11);
+  camera.lookAt(0, 0, 0);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 5;
+  controls.maxDistance = 22;
+  controls.maxPolarAngle = Math.PI * 0.78;
+  controls.target.set(0, 0, 0);
+
+  // 灯光
+  scene.add(new THREE.AmbientLight(0x334466, 1.3));
+  const dir = new THREE.DirectionalLight(0x8899cc, 1.6); dir.position.set(6, 8, 6); scene.add(dir);
+  const pt = new THREE.PointLight(0x0052cc, 2.2, 20); pt.position.set(-4, 4, 4); scene.add(pt);
+  const pt2 = new THREE.PointLight(0x00c8e0, 1.4, 20); pt2.position.set(4, -2, 3); scene.add(pt2);
+
+  // 地面网格
+  const grid = new THREE.GridHelper(20, 20, 0x1a2744, 0x0d1525);
+  grid.position.y = -2.4;
+  scene.add(grid);
+
+  // 背景粒子
+  (function(){
+    const N = 350, pos = new Float32Array(N*3);
+    for(let i=0;i<N;i++){ pos[i*3]=(Math.random()-0.5)*18; pos[i*3+1]=(Math.random()-0.5)*10; pos[i*3+2]=(Math.random()-0.5)*10; }
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    const m = new THREE.PointsMaterial({color:0x334466,size:0.03,transparent:true,opacity:0.55});
+    scene.add(new THREE.Points(g,m));
+  })();
+
+  // ===== 构建三个黑盒 =====
+  const boxes = [];
+  const boxGroup = new THREE.Group();
+  const BOX_W = 2.1, BOX_H = 2.4, BOX_D = 2.1;
+  const X_POS = [-4.2, 0, 4.2];
+
+  STAGES.forEach((st, i) => {
+    const g = new THREE.Group();
+    g.position.x = X_POS[i];
+
+    // 玻璃盒体
+    const mat = new THREE.MeshPhysicalMaterial({
+      color: st.color, transparent:true, opacity:0.13, roughness:0.15, metalness:0.1,
+      emissive: st.color, emissiveIntensity:0.12, clearcoat:0.4, side:THREE.DoubleSide
+    });
+    const box = new THREE.Mesh(new THREE.BoxGeometry(BOX_W, BOX_H, BOX_D), mat);
+    g.add(box);
+
+    // 发光边框
+    const edges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(BOX_W, BOX_H, BOX_D)),
+      new THREE.LineBasicMaterial({color:st.color, transparent:true, opacity:0.6})
+    );
+    g.add(edges);
+
+    // 内部子模块小球（沿 Y 轴排列）
+    const n = st.submods.length;
+    st.spheres = [];
+    st.submods.forEach((sm, j) => {
+      const y = (n-1)/2 - j; // 居中排布
+      const col = clsColor(sm.cls);
+      const sphere = new THREE.Mesh(
+        new THREE.SphereGeometry(0.16, 20, 20),
+        new THREE.MeshStandardMaterial({color:col, emissive:col, emissiveIntensity:0.55, roughness:0.3, metalness:0.3})
+      );
+      sphere.position.set(0, y * (BOX_H / (n+1)), 0);
+      sphere.userData = { stage:i, sub:j };
+      g.add(sphere);
+      st.spheres.push(sphere);
+    });
+
+    // 标题 sprite（用 canvas 纹理做浮空标签）
+    const label = makeLabel(st.title, st.color);
+    label.position.set(0, BOX_H/2 + 0.55, 0);
+    g.add(label);
+
+    g.userData = { stage:i };
+    boxGroup.add(g);
+    boxes.push(g);
+  });
+  scene.add(boxGroup);
+
+  // ===== 粒子数据流（盒子间流动） =====
+  const flowParticles = [];
+  (function(){
+    const N = 40, pos = new Float32Array(N*3);
+    const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    const m = new THREE.PointsMaterial({color:0x00c8e0, size:0.06, transparent:true, opacity:0.9, blending:THREE.AdditiveBlending});
+    const points = new THREE.Points(g, m);
+    scene.add(points);
+    for(let i=0;i<N;i++){
+      flowParticles.push({ t: Math.random(), seg: Math.floor(Math.random()*2) });
+    }
+    // 箭头：两段
+    function arrow(fromX, toX, color){
+      const mid = (fromX+toX)/2;
+      const dir = new THREE.Vector3(toX>fromX?1:-1, 0, 0);
+      const arrow = new THREE.ArrowHelper(dir, new THREE.Vector3(mid-0.8*dir.x, 0, 0), 1.6, color, 0.35, 0.22);
+      scene.add(arrow);
+    }
+    arrow(X_POS[0], X_POS[1], 0x4fc3f7);
+    arrow(X_POS[1], X_POS[2], 0xffb74d);
+    flowParticles._points = points;
+  })();
+
+  // ===== 交互：点击选中 =====
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+  let downX = 0, downY = 0, selected = 0;
+
+  function onPointerDown(e){ downX = e.clientX; downY = e.clientY; }
+  function onPointerUp(e){
+    if(Math.abs(e.clientX-downX) > 5 || Math.abs(e.clientY-downY) > 5) return; // 拖拽不触发
+    const rect = canvas.getBoundingClientRect();
+    mouse.x = ((e.clientX-rect.left)/rect.width)*2 - 1;
+    mouse.y = -((e.clientY-rect.top)/rect.height)*2 + 1;
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(boxGroup.children, true);
+    if(hits.length){
+      const obj = hits[0].object;
+      const g = obj.userData.stage !== undefined ? boxes[obj.userData.stage] : null;
+      if(g){ selectStage(g.userData.stage); }
+    }
+  }
+  canvas.addEventListener('pointerdown', onPointerDown);
+  canvas.addEventListener('pointerup', onPointerUp);
+
+  function selectStage(i){
+    selected = i;
+    boxes.forEach((g, k) => {
+      const st = STAGES[k];
+      g.children.forEach(c => {
+        if(c.isLineSegments){ c.material.opacity = k===i ? 1.0 : 0.35; }
+        if(c.geometry && c.geometry.type==='BoxGeometry'){ c.material.opacity = k===i ? 0.22 : 0.1; c.material.emissiveIntensity = k===i?0.3:0.08; }
+      });
+    });
+    renderDetail(i);
+  }
+
+  function renderDetail(i){
+    const st = STAGES[i];
+    let html = '<h2>' + st.title + '</h2><div class="io">' + st.io + '</div>';
+    st.submods.forEach(sm => {
+      html += '<div class="submod ' + sm.cls + '"><div class="name">' + sm.name + '</div>';
+      if(sm.io) html += '<div class="io">' + sm.io + '</div>';
+      if(sm.formula) html += '<div class="formula">' + sm.formula.replace(/\n/g,'<br>') + '</div>';
+      html += '</div>';
+    });
+    document.getElementById('detail-panel').innerHTML = html;
+  }
+
+  function clsColor(cls){
+    switch(cls){
+      case 'c-calc': return 0x4fc3f7;
+      case 'c-rand': return 0x81c784;
+      case 'c-pack': return 0xffb74d;
+      case 'c-hash': return 0xb39ddb;
+      case 'c-cmov': return 0xef4444;
+      default: return 0x8899cc;
+    }
+  }
+
+  function makeLabel(text, color){
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 64;
+    const ctx = c.getContext('2d');
+    ctx.font = 'bold 30px "Segoe UI","PingFang SC",sans-serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const hex = '#' + new THREE.Color(color).getHexString();
+    ctx.fillStyle = hex;
+    ctx.fillText(text, 128, 32);
+    const tex = new THREE.CanvasTexture(c);
+    tex.minFilter = THREE.LinearFilter;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
+    sprite.scale.set(2.4, 0.6, 1);
+    return sprite;
+  }
+
+  // ===== 动画循环 =====
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    // 黑盒轻微浮动
+    boxes.forEach((g, i) => {
+      g.rotation.y = Math.sin(t*0.4 + i*1.2) * 0.18;
+      g.position.y = Math.sin(t*0.7 + i*2.1) * 0.12;
+    });
+
+    // 子模块球脉动
+    STAGES.forEach((st, i) => {
+      st.spheres.forEach((s, j) => {
+        s.scale.setScalar(1 + Math.sin(t*2.5 + i*2 + j*0.7)*0.18);
+      });
+    });
+
+    // 数据流粒子
+    const pts = flowParticles._points;
+    const arr = pts.geometry.attributes.position.array;
+    flowParticles.forEach((p, idx) => {
+      p.t += 0.004;
+      if(p.t > 1){ p.t = 0; p.seg = (p.seg+1)%2; }
+      const fromX = p.seg===0 ? X_POS[0] : X_POS[1];
+      const toX = p.seg===0 ? X_POS[1] : X_POS[2];
+      const x = fromX + (toX-fromX) * p.t;
+      const y = Math.sin(p.t*Math.PI)*0.6;
+      arr[idx*3] = x; arr[idx*3+1] = y; arr[idx*3+2] = 0;
+    });
+    pts.geometry.attributes.position.needsUpdate = true;
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  // ===== 响应式 =====
+  function resize(){
+    const w = wrap.clientWidth, h = 560;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  renderDetail(0);
+  selectStage(0);
+  animate();
+})();
+</script>
+</body>
+</html>

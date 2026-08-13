@@ -1,0 +1,37 @@
+# FIBEMATE PQC Sandbox — 三镜像一键启动
+# 设计文档: docs/product-designs/08-pqc-docker.md §7.4
+version: '3.8'
+
+services:
+  learn:
+    build:
+      context: .
+      dockerfile: docker/learn/Dockerfile
+    image: fibemate/pqc-learn:3.3.0
+    ports: ["8080:80"]
+    restart: unless-stopped
+    read_only: true
+    tmpfs: ["/var/cache/nginx", "/var/run"]
+    security_opt: ["no-new-privileges:true"]
+
+  attack:
+    build:
+      context: .
+      dockerfile: docker/attack/Dockerfile
+    image: fibemate/pqc-attack:3.3.0
+    ports: ["3000:3000"]
+    network_mode: none  # 强制网络隔离（本地研究沙盒）
+    profiles: ["attack"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    security_opt: ["no-new-privileges:true"]
+
+  bench:
+    build:
+      context: .
+      dockerfile: docker/bench/Dockerfile
+    image: fibemate/pqc-bench:3.3.0
+    profiles: ["bench"]
+    volumes: ["./bench-out:/out"]
+    security_opt: ["no-new-privileges:true"]
+    command: ["run", "--rounds", "10000"]

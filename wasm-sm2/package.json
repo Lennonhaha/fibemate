@@ -1,0 +1,15 @@
+{
+  "name": "@fibemate/sm2-wasm",
+  "version": "3.3.0",
+  "description": "SM2 signature — constant-time AssemblyScript WASM implementation (P-256/SM2 curve)",
+  "license": "GPL-3.0-only",
+  "private": false,
+  "scripts": {
+    "build": "asc assembly/index.ts --target release",
+    "build:debug": "asc assembly/index.ts --target debug",
+    "test": "node test/sm2-wasm.test.js"
+  },
+  "devDependencies": {
+    "assemblyscript": "^0.28.20"
+  }
+}

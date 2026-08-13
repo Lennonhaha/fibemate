@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>FIBEMATE · PQC Desktop</title>
+<style>
+:root { --bg:#08080d; --card:#0f0f18; --surf:#141424; --text:#d0d0d0; --muted:rgba(255,255,255,.35); --accent:#10b981; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { display:flex; height:100vh; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; }
+#sidebar { width:260px; background:var(--card); border-right:1px solid rgba(255,255,255,.06); overflow-y:auto; padding:16px 0; }
+#sidebar h2 { font-size:14px; padding:0 16px 12px; }
+.chapter { padding:8px 16px; font-size:13px; font-weight:600; color:var(--muted); cursor:default; }
+.lesson { padding:7px 16px 7px 28px; font-size:13px; cursor:pointer; color:var(--text); }
+.lesson:hover { background:rgba(255,255,255,.05); }
+.lesson.active { background:var(--accent); color:#000; }
+.lesson .done { color:var(--accent); margin-left:6px; }
+.lesson.active .done { color:#000; }
+#progress-bar { padding:12px 16px; font-size:11px; color:var(--muted); }
+#progress-fill { height:6px; background:var(--surf); border-radius:3px; margin-top:6px; overflow:hidden; }
+#progress-fill div { height:100%; background:var(--accent); transition:width .3s; }
+#content { flex:1; display:flex; flex-direction:column; }
+#frame { flex:1; border:none; }
+#toolbar { display:flex; gap:8px; padding:8px 16px; background:var(--card); border-bottom:1px solid rgba(255,255,255,.06); }
+#toolbar button { background:var(--surf); color:var(--text); border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-size:12px; }
+#toolbar button:hover { background:rgba(255,255,255,.08); }
+</style>
+</head>
+<body>
+<div id="sidebar">
+  <h2>📚 课程大纲</h2>
+  <div id="tree"></div>
+  <div id="progress-bar">
+    学习进度
+    <div id="progress-fill"><div id="progress-fill-inner" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div id="content">
+  <div id="toolbar">
+    <button onclick="fibemateDesktop.minimize()">—</button>
+    <button onclick="fibemateDesktop.maximize()">□</button>
+    <button onclick="fibemateDesktop.close()">✕</button>
+    <span style="flex:1"></span>
+    <button onclick="exportCert()">📜 导出证书</button>
+  </div>
+  <iframe id="frame" sandbox="allow-scripts allow-same-origin"></iframe>
+</div>
+
+<script>
+// 课程树（16 节，六章）
+const COURSE_TREE = [
+  { id:'basics', title:'🔰 入门', lessons:[
+    { id:'l1', title:'什么是后量子密码学', file:'docs/pqc-crash-course.html' },
+    { id:'l2', title:'Shor 算法与 Grover 算法', file:'docs/quantum-threat.html' },
+    { id:'l3', title:'NIST PQC 标准化时间线', file:'docs/pqc-readiness.html' },
+  ]},
+  { id:'lattice', title:'🧮 格密码', lessons:[
+    { id:'l4', title:'ML-KEM 密钥封装流程', file:'ml-kem-flow-animation.html' },
+    { id:'l5', title:'NTT 蝶形运算 [3D]', file:'viz/ntt-butterfly-flow.html' },
+    { id:'l6', title:'KEM 黑盒拆解 [3D]', file:'viz/kem-blackbox-3d.html' },
+  ]},
+  { id:'hashsig', title:'📝 哈希签名', lessons:[
+    { id:'l7', title:'SLH-DSA 哈希签名流程', file:'slh-dsa-flow-animation.html' },
+    { id:'l8', title:'ML-DSA 签名验证流程', file:'ml-dsa-flow-animation.html' },
+  ]},
+  { id:'sm', title:'🇨🇳 国密算法', lessons:[
+    { id:'l9', title:'SM2 椭圆曲线详解', file:'docs/sm2-tvla-analysis.html' },
+    { id:'l10', title:'SM4 分组密码', file:'docs/pqc-dashboard.html' },
+  ]},
+  { id:'exp', title:'🔬 实验工具', lessons:[
+    { id:'l11', title:'VWZ 张量场', file:'vwz-tensor/tensor-field.html' },
+    { id:'l12', title:'LG 矩阵场', file:'lg-tensor/' },
+    { id:'l13', title:'PQC 算法对比 [赛题]', file:'viz/pqc-signature-landscape.html' },
+  ]},
+  { id:'prac', title:'⚙️ 实作', lessons:[
+    { id:'l14', title:'编译运行 ML-KEM', file:'docs/pqc-dashboard.html' },
+    { id:'l15', title:'KAT 验证实验', file:'docs/pqc-dashboard.html' },
+    { id:'l16', title:'TVLA 侧信道实验', file:'docs/pqc-dashboard.html' },
+  ]},
+];
+
+let progress = { solved: [] };
+let activeId = null;
+
+// 初始化进度
+fibemateDesktop.getProgress().then(p => { progress = p || { solved: [] }; render(); });
+
+function render() {
+  const tree = document.getElementById('tree');
+  tree.innerHTML = '';
+  for (const chapter of COURSE_TREE) {
+    const ch = document.createElement('div');
+    ch.className = 'chapter';
+    ch.textContent = chapter.title;
+    tree.appendChild(ch);
+    for (const lesson of chapter.lessons) {
+      const el = document.createElement('div');
+      el.className = 'lesson' + (lesson.id === activeId ? ' active' : '');
+      el.innerHTML = lesson.title + (progress.solved.includes(lesson.id) ? '<span class="done">✓</span>' : '');
+      el.onclick = () => loadLesson(lesson);
+      tree.appendChild(el);
+    }
+  }
+  const pct = Math.round(progress.solved.length / 16 * 100);
+  document.getElementById('progress-fill-inner').style.width = pct + '%';
+}
+
+function loadLesson(lesson) {
+  activeId = lesson.id;
+  if (!progress.solved.includes(lesson.id)) {
+    progress.solved.push(lesson.id);
+    fibemateDesktop.saveProgress(progress);
+  }
+  render();
+  document.getElementById('frame').src = 'content/' + lesson.file;
+}
+
+function exportCert() {
+  fibemateDesktop.exportCertificate().then(p => {
+    if (p) alert('证书已导出: ' + p);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+{
+  "name": "pqc-lens",
+  "displayName": "PQC Lens",
+  "description": "PQC 感知的代码扫描 — 实时提示量子不安全算法，全球首个 PQC IDE 插件（FIBEMATE）",
+  "version": "0.1.0",
+  "publisher": "fibemate",
+  "engines": { "vscode": "^1.80.0" },
+  "categories": ["Linters", "Other"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./out/extension.js",
+  "contributes": {
+    "views": {
+      "explorer": [{
+        "id": "pqc-sidebar",
+        "name": "PQC Lens",
+        "icon": "$(shield)"
+      }]
+    },
+    "configuration": {
+      "title": "PQC Lens",
+      "properties": {
+        "pqcLens.threshold": {
+          "type": "number", "default": 50,
+          "description": "最低量子就绪度分数，低于视为不安全"
+        },
+        "pqcLens.ignoreDev": {
+          "type": "boolean", "default": true,
+          "description": "忽略 devDependencies"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.80.0",
+    "typescript": "^5.0.0"
+  }
+}

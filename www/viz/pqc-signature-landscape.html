@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>后量子签名方案对比图 — 尺寸×速度×信任度 | FIBEMATE</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230052CC'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='18' font-family='monospace'>S</text></svg>">
+<style>
+:root {
+  --bg:#060a12; --panel:#0d1525; --border:#1a2744; --text:#b8c8e8; --dim:#5a6a8a;
+  --accent:#0052CC; --green:#10b981; --yellow:#f59e0b; --red:#ef4444;
+  --font:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding:16px;overflow-x:hidden;background-image:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,82,204,.08),transparent)}
+h1{font-size:20px;font-weight:700;color:#e8f0ff;background:linear-gradient(90deg,#e8f0ff,#4fc3f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{font-size:13px;color:var(--dim);margin-top:4px}
+.header{margin-bottom:16px}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.mode-btn{padding:7px 16px;border-radius:8px;border:1px solid var(--border);background:var(--panel);color:var(--text);font-family:var(--font);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+.mode-btn:hover{border-color:var(--accent)}
+.mode-btn.active{background:linear-gradient(135deg,var(--accent),#1a6fff);border-color:var(--accent);color:#fff;box-shadow:0 2px 10px rgba(0,82,204,.4)}
+.dim-btn{padding:6px 12px;border-radius:6px;border:1px solid var(--border);background:var(--panel);color:var(--dim);font-family:var(--font);font-size:11px;cursor:pointer;transition:all .2s}
+.dim-btn.active{border-color:var(--accent2, #00c8e0);color:var(--accent2, #00c8e0);background:rgba(0,200,224,.1)}
+.sep{width:1px;height:22px;background:var(--border);margin:0 4px}
+
+#chart-wrap{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:14px;position:relative}
+#chart-wrap::before{content:'';position:absolute;inset:0;border-radius:12px;padding:1px;background:linear-gradient(135deg,rgba(0,82,204,.4),transparent 40%,rgba(0,200,224,.2));-webkit-mask:linear-gradient(#fff 0 0) content-box,linear-gradient(#fff 0 0);-webkit-mask-composite:xor;mask-composite:exclude;pointer-events:none}
+#chart{width:100%;display:block}
+
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:11px;color:var(--dim);margin-bottom:14px}
+.legend span{display:flex;align-items:center;gap:5px}
+.legend i{width:10px;height:10px;border-radius:50%;display:inline-block}
+
+#tooltip{position:fixed;background:rgba(13,21,37,.97);border:1px solid var(--border);border-radius:10px;padding:12px;font-size:11px;line-height:1.7;pointer-events:none;z-index:100;display:none;max-width:260px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+#tooltip .tt-name{font-size:13px;font-weight:700;color:#e8f0ff;margin-bottom:4px}
+
+footer{text-align:center;font-size:11px;color:var(--dim);margin-top:20px;padding-top:12px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>后量子签名方案对比图</h1>
+  <div class="subtitle">签名尺寸 × 公钥尺寸 × 签名速度 × 验证速度 × 信任度，多维度对比主流 PQC 签名方案</div>
+</div>
+
+<div class="toolbar">
+  <button class="mode-btn active" data-mode="scatter">散点图</button>
+  <button class="mode-btn" data-mode="radar">雷达图</button>
+  <button class="mode-btn" data-mode="line">折线图</button>
+  <span class="sep"></span>
+  <button class="dim-btn active" data-dim="size">尺寸优先</button>
+  <button class="dim-btn" data-dim="speed">速度优先</button>
+  <button class="dim-btn" data-dim="combo">综合</button>
+</div>
+
+<div class="legend">
+  <span><i style="background:var(--green)"></i>NIST 标准（已发布）</span>
+  <span><i style="background:var(--yellow)"></i>FIPS 草案 / 经典</span>
+  <span><i style="background:var(--red)"></i>实验性</span>
+</div>
+
+<div id="chart-wrap"><canvas id="chart" height="520"></canvas></div>
+
+<div id="tooltip"></div>
+
+<footer>FIBEMATE v3.3.0 · 2026-08-12 · 数据来源：fml-dsa 实测 + FIPS 草案文献 + vwz-performance 实测</footer>
+
+<script>
+(function(){
+  // 方案数据（签名尺寸B, 公钥尺寸B, 签名速度ops/s, 验证速度ops/s, 信任度, 类型）
+  const SCHEMES = [
+    { name:'ML-DSA-44',  sig:2420, pk:1312,  sign:90,   verify:400,  trust:'NIST I',  color:'#10b981' },
+    { name:'ML-DSA-65',  sig:3293, pk:1952,  sign:92,   verify:405,  trust:'NIST III', color:'#10b981' },
+    { name:'ML-DSA-87',  sig:4595, pk:2592,  sign:70,   verify:300,  trust:'NIST V',  color:'#10b981' },
+    { name:'FALCON-512', sig:666,  pk:897,   sign:6000, verify:3000, trust:'草案 I',  color:'#f59e0b' },
+    { name:'FALCON-1024',sig:1280, pk:1793,  sign:3000, verify:1500, trust:'草案 V',  color:'#f59e0b' },
+    { name:'SLH-DSA-128s',sig:7856, pk:32,   sign:10,   verify:8,    trust:'NIST I',  color:'#10b981' },
+    { name:'SLH-DSA-192f',sig:17088,pk:56,   sign:5,    verify:4,    trust:'NIST V',  color:'#10b981' },
+    { name:'ECDSA P-256', sig:72,   pk:65,   sign:5000, verify:2000, trust:'量子不安全', color:'#f59e0b' },
+    { name:'VWZ k=8',    sig:36,   pk:468,  sign:24527,verify:2581, trust:'~73-bit 实验', color:'#ef4444' },
+    { name:'VWZ k=16',   sig:68,   pk:1700, sign:4765, verify:404,  trust:'~146-bit 实验', color:'#ef4444' },
+  ];
+
+  const canvas = document.getElementById('chart');
+  const ctx = canvas.getContext('2d');
+  const tooltip = document.getElementById('tooltip');
+
+  let mode = 'scatter';
+  let dim = 'size';
+  let hovered = null;
+  let animT = 0;
+
+  // 存储当前散点坐标供 hover 检测
+  let scatterPts = [];
+
+  function resize() {
+    const rect = canvas.parentElement.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = rect.width * dpr;
+    canvas.height = 520 * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function logScale(v, vmin, vmax, range) {
+    // 对数尺度，处理 0 值
+    const lv = Math.log10(v + 1);
+    const lmin = Math.log10(vmin + 1);
+    const lmax = Math.log10(vmax + 1);
+    return range * (lv - lmin) / (lmax - lmin);
+  }
+
+  function drawScatter() {
+    const W = canvas.getBoundingClientRect().width;
+    const H = 520;
+    ctx.clearRect(0, 0, W, H);
+    const pad = { l: 70, r: 20, t: 30, b: 50 };
+
+    let xKey, yKey, xLabel, yLabel, xMin, xMax, yMin, yMax;
+    if (dim === 'size') {
+      xKey = 'sig'; yKey = 'pk';
+      xLabel = '签名尺寸 (bytes, log)'; yLabel = '公钥尺寸 (bytes, log)';
+      xMin = 10; xMax = 20000; yMin = 10; yMax = 3000;
+    } else if (dim === 'speed') {
+      xKey = 'sign'; yKey = 'verify';
+      xLabel = '签名速度 (ops/s, log)'; yLabel = '验证速度 (ops/s, log)';
+      xMin = 1; xMax = 30000; yMin = 1; yMax = 4000;
+    } else {
+      xKey = 'sigpk'; yKey = 'sigvrf';
+      xLabel = '签名×公钥尺寸 (log)'; yLabel = '签名×验证速度 (log)';
+      xMin = 100; xMax = 20000000; yMin = 10; yMax = 100000000;
+    }
+
+    // 坐标轴
+    ctx.strokeStyle = '#1a2744';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, H - pad.b); ctx.stroke();
+
+    ctx.fillStyle = '#5a6a8a';
+    ctx.font = '11px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(xLabel, (pad.l + W - pad.r) / 2, H - 18);
+    ctx.save();
+    ctx.translate(14, (pad.t + H - pad.b) / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(yLabel, 0, 0);
+    ctx.restore();
+
+    // 网格线
+    ctx.strokeStyle = 'rgba(26,39,68,.4)';
+    for (let i = 0; i <= 4; i++) {
+      const x = pad.l + (W - pad.l - pad.r) * i / 4;
+      ctx.beginPath(); ctx.moveTo(x, pad.t); ctx.lineTo(x, H - pad.b); ctx.stroke();
+      const y = pad.t + (H - pad.t - pad.b) * i / 4;
+      ctx.beginPath(); ctx.moveTo(pad.l, y); ctx.lineTo(W - pad.r, y); ctx.stroke();
+    }
+
+    // 数据点
+    scatterPts = [];
+    SCHEMES.forEach(s => {
+      let xv, yv;
+      if (dim === 'combo') {
+        xv = s.sig * s.pk; yv = s.sign * s.verify;
+      } else {
+        xv = s[xKey]; yv = s[yKey];
+      }
+      const x = pad.l + logScale(xv, xMin, xMax, W - pad.l - pad.r);
+      const y = H - pad.b - logScale(yv, yMin, yMax, H - pad.t - pad.b);
+      // 气泡大小 = 公钥尺寸的视觉映射（尺寸优先时用 sig）
+      const baseR = dim === 'size' ? 4 + Math.min(16, s.sig / 1500) : 4 + Math.min(16, s.pk / 250);
+      const breath = 1 + Math.sin(animT * 2 + SCHEMES.indexOf(s)) * 0.08;
+      const r = baseR * breath;
+      const isHover = hovered === s.name;
+
+      // 发光光晕
+      const glow = ctx.createRadialGradient(x, y, r * 0.3, x, y, r * 2.6);
+      glow.addColorStop(0, s.color + (isHover ? '88' : '44'));
+      glow.addColorStop(1, s.color + '00');
+      ctx.fillStyle = glow;
+      ctx.beginPath(); ctx.arc(x, y, r * 2.6, 0, Math.PI * 2); ctx.fill();
+
+      ctx.fillStyle = s.color + (isHover ? 'FF' : 'CC');
+      ctx.strokeStyle = isHover ? '#ffffff' : s.color;
+      ctx.lineWidth = isHover ? 2 : 1.5;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+
+      ctx.fillStyle = isHover ? '#ffffff' : '#b8c8e8';
+      ctx.font = (isHover ? 'bold 10px' : '9px') + ' sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(s.name, x + r + 3, y + 3);
+
+      scatterPts.push({ name: s.name, x, y, r, s });
+    });
+  }
+
+  function drawRadar() {
+    const W = canvas.getBoundingClientRect().width;
+    const H = 520;
+    ctx.clearRect(0, 0, W, H);
+    const dims = ['签名小','公钥小','签名快','验证快','信任高'];
+    const cx = W / 2, cy = H / 2, R = Math.min(W, H) / 2 - 90;
+
+    // 归一化函数（越小越好/越快越好/信任越高 → 越大越好）
+    function norm(s, d) {
+      switch(d) {
+        case '签名小': return 1 - Math.min(1, s.sig / 17088);
+        case '公钥小': return 1 - Math.min(1, s.pk / 2592);
+        case '签名快': return Math.min(1, s.sign / 24527);
+        case '验证快': return Math.min(1, s.verify / 3000);
+        case '信任高': return s.trust.includes('NIST') ? 1 : (s.trust.includes('草案') ? 0.5 : 0.2);
+      }
+    }
+
+    // 网格
+    for (let ring = 1; ring <= 5; ring++) {
+      ctx.strokeStyle = 'rgba(26,39,68,.5)';
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+        const rr = R * ring / 5;
+        const x = cx + rr * Math.cos(a), y = cy + rr * Math.sin(a);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath(); ctx.stroke();
+    }
+    for (let i = 0; i < 5; i++) {
+      const a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+      ctx.strokeStyle = 'rgba(26,39,68,.5)';
+      ctx.beginPath(); ctx.moveTo(cx, cy); ctx.lineTo(cx + R * Math.cos(a), cy + R * Math.sin(a)); ctx.stroke();
+      ctx.fillStyle = '#b8c8e8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(dims[i], cx + (R + 20) * Math.cos(a), cy + (R + 20) * Math.sin(a));
+    }
+
+    // 每个方案画多边形（画前 6 个有代表性的，避免重叠）
+    const show = SCHEMES.filter(s => ['ML-DSA-65','FALCON-512','SLH-DSA-128s','ECDSA P-256','VWZ k=8'].includes(s.name));
+    show.forEach(s => {
+      ctx.beginPath();
+      for (let i = 0; i < 5; i++) {
+        const a = -Math.PI / 2 + i * 2 * Math.PI / 5;
+        const v = norm(s, dims[i]);
+        const x = cx + R * v * Math.cos(a), y = cy + R * v * Math.sin(a);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.closePath();
+      ctx.fillStyle = s.color + '22';
+      ctx.strokeStyle = s.color;
+      ctx.lineWidth = 2;
+      ctx.fill(); ctx.stroke();
+    });
+
+    // 图例
+    let ly = 20;
+    show.forEach(s => {
+      ctx.fillStyle = s.color; ctx.fillRect(20, ly, 10, 10);
+      ctx.fillStyle = '#b8c8e8'; ctx.font = '10px sans-serif'; ctx.textAlign = 'left';
+      ctx.fillText(s.name + ' (' + s.trust + ')', 36, ly + 9);
+      ly += 18;
+    });
+  }
+
+  function drawLine() {
+    const W = canvas.getBoundingClientRect().width;
+    const H = 520;
+    ctx.clearRect(0, 0, W, H);
+    const pad = { l: 60, r: 20, t: 30, b: 50 };
+
+    // 展示 ML-DSA 44→65→87 的尺寸/速度变化
+    const series = SCHEMES.filter(s => s.name.startsWith('ML-DSA'));
+    const labels = series.map(s => s.name.replace('ML-DSA-','44→').replace('ML-DSA-',''));
+
+    // 双轴：签名尺寸 + 签名速度
+    ctx.strokeStyle = '#1a2744';
+    ctx.beginPath(); ctx.moveTo(pad.l, H - pad.b); ctx.lineTo(W - pad.r, H - pad.b); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(pad.l, pad.t); ctx.lineTo(pad.l, H - pad.b); ctx.stroke();
+
+    const xStep = (W - pad.l - pad.r) / (series.length - 1);
+    const xPos = i => pad.l + i * xStep;
+
+    // 签名尺寸折线（左轴）
+    const maxSig = 5000, maxSpeed = 100;
+    ctx.strokeStyle = '#10b981'; ctx.lineWidth = 2; ctx.beginPath();
+    series.forEach((s, i) => {
+      const x = xPos(i);
+      const y = H - pad.b - (s.sig / maxSig) * (H - pad.t - pad.b);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.fillStyle = '#10b981'; ctx.font = '10px sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText('签名尺寸 (B)', (pad.l + W - pad.r) / 2, H - 30);
+
+    // 签名速度折线（右轴）
+    ctx.strokeStyle = '#4fc3f7'; ctx.lineWidth = 2; ctx.beginPath();
+    series.forEach((s, i) => {
+      const x = xPos(i);
+      const y = H - pad.b - (s.sign / maxSpeed) * (H - pad.t - pad.b);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+    ctx.fillStyle = '#4fc3f7'; ctx.textAlign = 'center';
+    ctx.fillText('签名速度 (ops/s)', (pad.l + W - pad.r) / 2, H - 14);
+
+    // 数据点 + 标签
+    series.forEach((s, i) => {
+      const x = xPos(i);
+      ctx.fillStyle = '#e8f0ff'; ctx.font = '11px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(s.name, x, H - pad.b + 16);
+      ctx.fillStyle = '#10b981';
+      ctx.beginPath(); ctx.arc(x, H - pad.b - (s.sig/maxSig)*(H-pad.t-pad.b), 4, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#4fc3f7';
+      ctx.beginPath(); ctx.arc(x, H - pad.b - (s.sign/maxSpeed)*(H-pad.t-pad.b), 4, 0, Math.PI*2); ctx.fill();
+    });
+  }
+
+  function draw() {
+    if (mode === 'scatter') drawScatter();
+    else if (mode === 'radar') drawRadar();
+    else drawLine();
+  }
+
+  // hover 检测
+  function showTooltip(e) {
+    if (mode !== 'scatter') { tooltip.style.display = 'none'; return; }
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    let hit = null;
+    for (const p of scatterPts) {
+      if (Math.hypot(mx - p.x, my - p.y) < p.r * 2) { hit = p; break; }
+    }
+    if (hit) {
+      hovered = hit.name;
+      const s = hit.s;
+      tooltip.innerHTML = '<div class="tt-name">' + s.name + '</div>' +
+        '签名尺寸: <b>' + s.sig + 'B</b><br>' +
+        '公钥尺寸: <b>' + s.pk + 'B</b><br>' +
+        '签名速度: <b>' + s.sign + ' ops/s</b><br>' +
+        '验证速度: <b>' + s.verify + ' ops/s</b><br>' +
+        '信任度: <b style="color:' + s.color + '">' + s.trust + '</b>';
+      tooltip.style.display = 'block';
+      tooltip.style.left = (e.clientX + 14) + 'px';
+      tooltip.style.top = (e.clientY + 14) + 'px';
+      draw();
+    } else {
+      if (hovered) { hovered = null; draw(); }
+      tooltip.style.display = 'none';
+    }
+  }
+  canvas.addEventListener('mousemove', showTooltip);
+  canvas.addEventListener('mouseleave', () => { hovered = null; tooltip.style.display = 'none'; draw(); });
+
+  // 呼吸动画循环
+  (function animLoop(){
+    animT += 0.03;
+    if (mode === 'scatter') draw();
+    requestAnimationFrame(animLoop);
+  })();
+
+  // 事件
+  document.querySelectorAll('.mode-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.mode-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      mode = b.dataset.mode;
+      draw();
+    });
+  });
+  document.querySelectorAll('.dim-btn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.dim-btn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      dim = b.dataset.dim;
+      if (mode === 'radar') mode = 'scatter'; // radar 不支持维度切换，自动回散点
+      draw();
+    });
+  });
+
+  window.addEventListener('resize', () => { resize(); draw(); });
+  resize();
+  draw();
+})();
+</script>
+</body>
+</html>

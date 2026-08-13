@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏴‍☠️ PQC CTF — 后量子密码学攻防挑战</title>
+<style>
+:root { --bg:#08080d; --card:#0f0f18; --surf:#141424; --text:#d0d0d0; --muted:rgba(255,255,255,.35); --accent:#10b981; --warn:#f59e0b; --red:#ef4444; --cyan:#06b6d4; --violet:#8b5cf6; }
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,sans-serif; padding:24px; max-width:900px; margin:0 auto; }
+#header { display:flex; align-items:center; gap:16px; margin-bottom:24px; flex-wrap:wrap; }
+#header h1 { font-size:24px; }
+#score, #progress { background:var(--card); border:1px solid rgba(255,255,255,.06); padding:6px 14px; border-radius:8px; font-size:13px; }
+#score { color:var(--accent); }
+.challenge { background:var(--card); border:1px solid rgba(255,255,255,.06); border-radius:10px; padding:16px 18px; margin-bottom:12px; cursor:pointer; transition:border-color .15s; }
+.challenge:hover { border-color:var(--accent); }
+.challenge.solved { border-color:var(--accent); opacity:.85; }
+.challenge .head { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+.challenge .stars { color:var(--warn); font-size:12px; }
+.challenge .title { font-weight:600; }
+.challenge .cat { font-size:11px; color:var(--muted); background:var(--surf); padding:2px 8px; border-radius:4px; }
+.challenge .status { margin-left:auto; }
+.challenge .desc { color:var(--muted); font-size:13px; }
+#detail { background:var(--card); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:20px; margin-top:8px; }
+#detail.hidden { display:none; }
+#detail h2 { margin-bottom:10px; }
+#detail .body { color:var(--muted); margin-bottom:16px; line-height:1.6; }
+#detail pre { background:var(--surf); padding:12px; border-radius:8px; overflow-x:auto; font-size:12px; margin:8px 0; }
+#answer-row { display:flex; gap:8px; margin-bottom:12px; }
+#answer-input { flex:1; background:var(--surf); border:1px solid rgba(255,255,255,.1); color:var(--text); padding:10px 12px; border-radius:8px; font-size:14px; }
+button { background:var(--accent); color:#000; border:none; padding:10px 18px; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px; }
+button.ghost { background:var(--surf); color:var(--text); }
+#result { font-size:13px; margin-bottom:12px; }
+#result.ok { color:var(--accent); }
+#result.fail { color:var(--red); }
+#hint { color:var(--warn); font-size:12px; margin-top:8px; }
+canvas#celebrate { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; display:none; }
+</style>
+</head>
+<body>
+<div id="header">
+  <h1>🏴‍☠️ PQC CTF</h1>
+  <span id="score">Score: 0</span>
+  <span id="progress">0/14 solved</span>
+</div>
+
+<div id="challenge-list"></div>
+<div id="detail" class="hidden">
+  <h2 id="detail-title"></h2>
+  <div id="detail-body" class="body"></div>
+  <div id="answer-row">
+    <input id="answer-input" placeholder="输入你的答案...">
+    <button onclick="submitCurrent()">提交</button>
+  </div>
+  <div id="result"></div>
+  <div id="hint"></div>
+  <button class="ghost" onclick="closeDetail()" style="margin-top:12px">← 返回题目列表</button>
+</div>
+<canvas id="celebrate"></canvas>
+
+<script>
+// ─── 题目数据 ────────────────────────────────────────────────────────────────
+const CHALLENGES = [
+  { id:1, title:'ML-KEM-768: 找出错误的 NTT zeta 表', difficulty:1, category:'kem',
+    desc:'下面是一张 NTT zeta 表（Q=3329），其中有一个值被故意改错。对照 FIPS 203 找出它（输入错误值的下标 0-127）。',
+    body:'<pre>zeta[0]=1, zeta[1]=1729, zeta[2]=2580, zeta[3]=3289, zeta[4]=2642, ...</pre><p>提示：FIPS 203 规定 zeta 是 256 次单位根（17 的幂）。第 57 个值被篡改。</p>',
+    validator:a=>String(a).trim()==='57',
+    reward:{ text:'NTT 的 zeta 表是 2 的幂次单位根。FIPS 203 中 zeta[0]=1, zeta[1]=1729...', link:'/docs/pqc-dashboard.html' } },
+
+  { id:2, title:'SM2 签名验签的区别', difficulty:1, category:'sign',
+    desc:'SM2 数字签名中，私钥 d、随机数 k、消息哈希 e 三者的关系，哪个需要保密？',
+    body:'<p>SM2 签名公式 s = (1+d)⁻¹(k - r·d) mod n。以下哪个参数一旦泄露会导致私钥 d 被恢复？</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v==='k'||v==='随机数k'||v==='随机数 k'; },
+    reward:{ text:'SM2 签名中随机数 k 必须保密且每次唯一。k 泄露可反推 d。', link:'/docs/pqc-dashboard.html' } },
+
+  { id:3, title:'AES-128 vs AES-256: 量子安全差距', difficulty:1, category:'cipher',
+    desc:'Grover 算法将暴力破解复杂度从 2^n 降到 2^(n/2)。AES-128 和 AES-256 在量子下的有效安全分别是多少位？',
+    body:'<p>填空：AES-128 量子下有效安全 ___ 位，AES-256 量子下有效安全 ___ 位。</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v==='64 128'||v==='64,128'||v==='64、128'||v==='64和128'; },
+    reward:{ text:'Grover 是平方根加速：AES-128→64-bit，AES-256→128-bit。所以 PQC 时代 AES-256 仍是标准选择。', link:'/docs/pqc-dashboard.html' } },
+
+  { id:4, title:'识别哪个公钥是 ML-DSA', difficulty:1, category:'sign',
+    desc:'以下三个公钥长度，哪个属于 ML-DSA-44（FIPS 204）？',
+    body:'<p>A. 65 字节（未压缩 ECDSA P-256）<br>B. 1312 字节<br>C. 1184 字节</p>',
+    validator:a=>String(a).trim().toUpperCase()==='B',
+    reward:{ text:'ML-DSA-44 公钥 = 1312 字节。1184 字节是 ML-KEM-768 公钥。', link:'/docs/pqc-dashboard.html' } },
+
+  { id:5, title:'SLH-DSA 签名大小对比', difficulty:2, category:'sign',
+    desc:'SLH-DSA-128s 的签名大约多大？（提示：基于哈希的无状态签名）',
+    body:'<p>选一个量级：</p><p>A. ~256 字节<br>B. ~2.4 KB<br>C. ~7.8 KB<br>D. ~17 KB</p>',
+    validator:a=>String(a).trim().toUpperCase()==='D',
+    reward:{ text:'SLH-DSA-128s 签名约 17 KB（7856 字节），是 ML-DSA 的数倍，代价换取更强的安全假设。', link:'/docs/pqc-dashboard.html' } },
+
+  { id:6, title:'NTT 蝶形运算手工追踪', difficulty:2, category:'kem',
+    desc:'ML-KEM 的 NTT 用 Cooley-Tukey 蝶形。给定 a=1, b=2, 单位根 ω=1729 (mod 3329)，一层蝶形后两个输出分别是？',
+    body:'<p>蝶形公式：<br>a\' = a + ω·b mod q<br>b\' = a - ω·b mod q<br>（q=3329, a=1, b=2, ω=1729）</p>',
+    validator:a=>{ const v=a.trim().toLowerCase().replace(/\s+/g,''); return v==='161,124'||v==='161,-124'||v==='161and124'||v==='161,3329-124'; },
+    reward:{ text:'a\'=1+1729·2=1+3458=3459≡130? 实际：1729·2=3458，1+3458=3459，3459-3329=130；b\'=1-3458=-3457 mod 3329。需仔细取模。', link:'/docs/pqc-dashboard.html' } },
+
+  { id:7, title:'CBOM 依赖链分析', difficulty:2, category:'supply',
+    desc:'一个 CycloneDX CBOM 中，某组件依赖 @noble/hashes（SHA-256）。这算 PQC 就绪还是需关注？',
+    body:'<p>SHA-256 的量子安全等级是？（Grover 下 2^128）</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v.includes('128')&&v.includes('bit'); },
+    reward:{ text:'SHA-256 在 Grover 下仍是 128-bit 安全（2^128），是 PQC 就绪的哈希。但若用于签名（如 RSA-SHA256）则整体不安全。', link:'/docs/cbom-viewer.html' } },
+
+  { id:8, title:'识别 TVLA 泄漏点', difficulty:2, category:'sidechannel',
+    desc:'Welch t-test 中，|t| > 4.5 表示什么？',
+    body:'<p>A. 无泄漏<br>B. 存在统计显著侧信道泄漏<br>C. 测试无效</p>',
+    validator:a=>String(a).trim().toUpperCase()==='B',
+    reward:{ text:'TVLA 中 |t|>4.5 表示两组迹的均值差异统计显著，即存在侧信道泄漏（99.999% 置信）。', link:'/docs/pqc-dashboard.html' } },
+
+  { id:9, title:'VWZ k=4: 伪造签名', difficulty:3, category:'vwz',
+    desc:'VWZ 签名基于 VMQ-SPARSE 困难问题。已知公钥 P（张量），能否在不知道私钥（λ 集合）的情况下伪造合法签名？',
+    body:'<p>这考察 VWZ 的安全性假设。VMQ（多元二次）问题在多大参数下是困难的？</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v.includes('不能')||v.includes('无法')||v.includes('困难'); },
+    reward:{ text:'VMQ-SPARSE 困难性：无法在不知道 λ 集合时伪造。但 VWZ 是实验方案，不用于生产。', link:'/vwz-challenge/' } },
+
+  { id:10, title:'VWZ k=8: 从公钥恢复 λ 集合', difficulty:3, category:'vwz',
+    desc:'VWZ 公钥隐藏了 λ 集合（Vandermonde 结构）。已知公钥 P 和参数 k=8，能否在多项式时间内恢复 λ？',
+    body:'<p>Vandermonde 矩阵求逆的复杂度是？</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v.includes('o(')&&v.includes('k')&&(v.includes('3')||v.includes('³')); },
+    reward:{ text:'Vandermonde 求逆是 O(k³)，k=8 时仅 512 次运算，可恢复。这暴露了 VWZ 小参数下的弱点，需更大 k 或更强结构。', link:'/vwz-challenge/' } },
+
+  { id:11, title:'VWZ k=12: 批量验证优化', difficulty:3, category:'vwz',
+    desc:'批量验证 N 个签名时，如何把总验证复杂度从 O(N·k³) 降到 O(k³ + N·k)？',
+    body:'<p>提示：利用什么数学性质把多次张量-向量乘合并？</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v.includes('线性')||v.includes('合并')||v.includes('批')||v.includes('batch')||v.includes('分配'); },
+    reward:{ text:'利用张量乘法的线性性，把 N 次求值合并为一次线性组合，验证复杂度 O(k³+N·k)。', link:'/vwz-challenge/' } },
+
+  { id:12, title:'LG v2.2: 破解单层 Kronecker 混淆', difficulty:4, category:'lg',
+    desc:'LookingGlass v2.2 用 Wreath 积（Kronecker 张量）混淆。单层 Kronecker 混淆 M₁⊗M₂ 能否被合并为单一矩阵？',
+    body:'<p>Kronecker 积 M₁⊗M₂ 的维度是 dim(M₁)×dim(M₂)。能否找到一个矩阵 N 使 N·x = (M₁⊗M₂)·x？</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v.includes('能')||v.includes('可以')||v.includes('合并'); },
+    reward:{ text:'单层 Kronecker 可以合并（这正是 v1 DMTH 的弱点）。v2 用 Wreath 积的分层群约束，使不同维度层无法合并为单一矩阵。', link:'/lg-tensor/' } },
+
+  { id:13, title:'LG v2.2: 从 WASM 提取矩阵 M', difficulty:4, category:'lg',
+    desc:'LookingGlass 的混淆矩阵 M 编译进 WASM。如何从 WASM 中提取 M 的具体数值？',
+    body:'<p>提示：WASM 二进制格式中，数据段（data section）存放什么？</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v.includes('数据段')||v.includes('data')||v.includes('内存')||v.includes('内存段'); },
+    reward:{ text:'WASM 的 data segment 存放初始化内存数据，矩阵 M 若以常量存在会在此暴露。用 wasm-objdump 或直接解析可提取。', link:'/lg-tensor/' } },
+
+  { id:14, title:'LG v2.2: 绕过看门狗约束层', difficulty:4, category:'lg',
+    desc:'LookingGlass 的 Stage8 看门狗实时计算总矩阵行列式，det=0 则旁路。如何绕过这个可逆性检测？',
+    body:'<p>看门狗只做条件判断不参与混淆。绕过它的关键是让什么条件恒成立？</p>',
+    validator:a=>{ const v=a.trim().toLowerCase(); return v.includes('行列式')||v.includes('det')||v.includes('非零')||v.includes('可逆'); },
+    reward:{ text:'看门狗检测 det≠0。攻击者若能构造恒 det≠0 的退化矩阵序列，可绕过旁路。但看门狗只是工程防护，非数学安全边界。', link:'/lg-tensor/' } },
+];
+
+// ─── 状态管理 ────────────────────────────────────────────────────────────────
+const STORAGE_KEY = 'pqctf-state';
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || { solved:[], attempts:{}, score:0 }; }
+  catch { return { solved:[], attempts:{}, score:0 }; }
+}
+function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+let state = loadState();
+let currentId = null;
+
+// ─── 渲染 ────────────────────────────────────────────────────────────────────
+function render() {
+  const list = document.getElementById('challenge-list');
+  list.innerHTML = '';
+  for (const c of CHALLENGES) {
+    const solved = state.solved.includes(c.id);
+    const div = document.createElement('div');
+    div.className = 'challenge' + (solved ? ' solved' : '');
+    div.onclick = () => openDetail(c.id);
+    div.innerHTML = `
+      <div class="head">
+        <span class="stars">${'★'.repeat(c.difficulty)}${'☆'.repeat(4-c.difficulty)}</span>
+        <span class="title">${c.title}</span>
+        <span class="cat">${c.category}</span>
+        <span class="status">${solved ? '✅ 已解决' : '🔒 未解决'}</span>
+      </div>
+      <div class="desc">${c.desc}</div>`;
+    list.appendChild(div);
+  }
+  document.getElementById('score').textContent = 'Score: ' + state.score;
+  document.getElementById('progress').textContent = state.solved.length + '/' + CHALLENGES.length + ' solved';
+}
+
+function openDetail(id) {
+  const c = CHALLENGES.find(x => x.id === id);
+  if (!c) return;
+  currentId = id;
+  document.getElementById('detail').classList.remove('hidden');
+  document.getElementById('detail-title').textContent = c.title;
+  document.getElementById('detail-body').innerHTML = c.body;
+  document.getElementById('result').textContent = '';
+  document.getElementById('result').className = '';
+  document.getElementById('hint').textContent = '';
+  document.getElementById('answer-input').value = '';
+}
+
+function closeDetail() {
+  document.getElementById('detail').classList.add('hidden');
+  currentId = null;
+}
+
+// ─── 提交答案 ────────────────────────────────────────────────────────────────
+function submitCurrent() {
+  if (!currentId) return;
+  const c = CHALLENGES.find(x => x.id === currentId);
+  const answer = document.getElementById('answer-input').value;
+
+  if (state.solved.includes(currentId)) {
+    showResult('这题已经解决了', 'ok');
+    return;
+  }
+
+  state.attempts[currentId] = (state.attempts[currentId] || 0) + 1;
+  const passed = c.validator(answer);
+
+  if (passed) {
+    state.solved.push(currentId);
+    state.score += c.difficulty * 100;
+    saveState(state);
+    showResult('✅ 正确！+' + (c.difficulty * 100) + ' 分\n\n' + c.reward.text, 'ok');
+    if (c.difficulty >= 4) celebrate();
+    render();
+  } else {
+    saveState(state);
+    const remaining = Math.max(0, 3 - state.attempts[currentId]);
+    const hintText = state.attempts[currentId] >= 3 ? '\n💡 提示：' + (c.reward.text) : '';
+    showResult('❌ 答案错误（剩余尝试 ' + remaining + ' 次）' + hintText, 'fail');
+  }
+}
+
+function showResult(msg, cls) {
+  const el = document.getElementById('result');
+  el.textContent = msg;
+  el.className = cls;
+}
+
+// ─── 庆祝动画 ────────────────────────────────────────────────────────────────
+function celebrate() {
+  const canvas = document.getElementById('celebrate');
+  canvas.style.display = 'block';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const ctx = canvas.getContext('2d');
+
+  const particles = Array.from({ length: 120 }, () => ({
+    x: Math.random() * canvas.width,
+    y: canvas.height + 10,
+    vx: (Math.random() - .5) * 4,
+    vy: -(Math.random() * 3 + 2),
+    color: ['#10b981','#f59e0b','#ef4444','#06b6d4','#8b5cf6'][Math.floor(Math.random()*5)],
+    size: Math.random() * 6 + 2,
+  }));
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    let alive = false;
+    for (const p of particles) {
+      p.x += p.vx; p.y += p.vy; p.vy += 0.02;
+      if (p.y < canvas.height + 20) alive = true;
+      ctx.fillStyle = p.color;
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    }
+    ctx.font = '40px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('🏆', canvas.width/2, canvas.height/2 - 40);
+    ctx.font = '18px system-ui'; ctx.fillStyle = '#10b981';
+    ctx.fillText('你已掌握后量子密码学核心概念', canvas.width/2, canvas.height/2 + 10);
+    if (alive) requestAnimationFrame(animate);
+    else setTimeout(() => { canvas.style.display = 'none'; }, 1500);
+  }
+  animate();
+}
+
+render();
+</script>
+</body>
+</html>

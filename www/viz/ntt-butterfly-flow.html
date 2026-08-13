@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NTT 蝶形运算动态流 — Cooley-Tukey 8 层 3D 展开 | FIBEMATE</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230052CC'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='18' font-family='monospace'>N</text></svg>">
+<style>
+:root {
+  --bg:#060a12; --panel:#0d1525; --border:#1a2744; --text:#b8c8e8; --dim:#5a6a8a;
+  --accent:#0052CC; --accent2:#00c8e0; --font:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding:16px;overflow-x:hidden}
+h1{font-size:20px;font-weight:700;color:#e8f0ff}
+.subtitle{font-size:13px;color:var(--dim);margin-top:4px}
+.badge{display:inline-block;background:var(--accent);color:#fff;font-size:11px;padding:3px 10px;border-radius:20px;font-weight:600;margin-left:8px;vertical-align:middle}
+.header{margin-bottom:14px}
+
+.layout{display:grid;grid-template-columns:1fr 280px;gap:14px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+#scene-wrap{position:relative;background:var(--panel);border:1px solid var(--border);border-radius:14px;overflow:hidden;min-height:520px}
+#stage-canvas{display:block;width:100%;height:520px;cursor:grab}
+#stage-canvas:active{cursor:grabbing}
+#hint{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:11px;color:var(--dim);background:rgba(6,10,18,.7);padding:4px 12px;border-radius:12px;pointer-events:none;white-space:nowrap}
+
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:14px;padding:16px}
+.panel h2{font-size:13px;font-weight:700;color:#e8f0ff;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--border)}
+.stat{font-size:12px;line-height:2;color:var(--text)}
+.stat b{color:var(--accent2);font-family:'Courier New',monospace}
+.formula{font-family:'Courier New',monospace;font-size:11px;color:var(--accent2);background:rgba(0,200,224,.08);border-radius:6px;padding:8px;margin-top:8px;line-height:1.6}
+
+.controls{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:14px;position:sticky;bottom:0;background:linear-gradient(0deg,var(--bg) 70%,transparent);padding:14px 0 4px;z-index:5}
+.btn{padding:9px 20px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-play{background:var(--accent);color:#fff;box-shadow:0 2px 12px rgba(0,82,204,.4)}
+.btn-play:hover{background:#1a6fff}
+.btn-step{background:var(--panel);color:var(--text);border:1px solid var(--border)}
+.btn-step:hover{border-color:var(--accent);color:var(--accent)}
+.speed{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--dim)}
+.speed select{background:var(--panel);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-family:var(--font);font-size:12px}
+
+footer{text-align:center;font-size:11px;color:var(--dim);margin-top:18px;padding-top:12px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>NTT 蝶形运算动态流<span class="badge">ML-KEM-768 · N=256 · Q=3329</span></h1>
+  <div class="subtitle">Cooley-Tukey 数论变换 3D 层叠：256 节点每层排成 16×16 网格，8 层沿深度轴展开。拖拽旋转 / 滚轮缩放。</div>
+</div>
+
+<div class="layout">
+  <div id="scene-wrap">
+    <canvas id="stage-canvas"></canvas>
+    <div id="hint">🖱 拖拽旋转 · 滚轮缩放 · 右键平移</div>
+  </div>
+  <div class="panel">
+    <h2>当前阶段</h2>
+    <div class="stat" id="stat-box">
+      第 <b id="stat-layer">0</b> / 8 层<br>
+      蝶形对/层: <b>128</b><br>
+      跨接跨度 stride: <b id="stat-stride">1</b><br>
+      旋因子 zeta: <b id="stat-zeta">ζ₀</b><br>
+      <span style="color:var(--dim)">累计 fqmul: <b id="stat-fqmul">0</b> 次</span>
+    </div>
+    <div class="formula">
+      蝶形公式：<br>
+      t = zeta · b &nbsp;(mod q)<br>
+      a' = a + t &nbsp;(mod q)<br>
+      b' = a − t &nbsp;(mod q)
+    </div>
+    <div class="formula" style="margin-top:6px">
+      总复杂度：<br>
+      8 层 × 128 对 = <b>1024</b> 次 fqmul<br>
+      vs 暴力 O(n²) = 65536 次
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-step" id="btn-prev">◀ 上一层</button>
+  <button class="btn btn-play" id="btn-play">▶ 播放</button>
+  <button class="btn btn-step" id="btn-next">下一层 ▶</button>
+  <div class="speed">速度 <select id="speed"><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option><option value="4">4×</option></select></div>
+</div>
+
+<footer>FIBEMATE v3.3.0 · 2026-08-13 · NTT 蝶形网络 3D（CT 分解，bit-reversal 省略示意）</footer>
+
+<script src="/docs/lib/three.min.js?v=20260803"></script>
+<script src="/docs/lib/OrbitControls.js?v=20260803"></script>
+<script>
+(function(){
+  const N = 256, LAYERS = 8, GRID = 16; // 256 = 16×16
+  const GAP = 0.4;        // 网格间距
+  const LAYER_DX = 2.2;   // 层间深度间距
+
+  let currentLayer = 0;
+  let playing = false;
+  let speed = 1;
+  let animTimer = null;
+
+  // ===== Three.js 场景 =====
+  const canvas = document.getElementById('stage-canvas');
+  const wrap = document.getElementById('scene-wrap');
+  const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060a12);
+  scene.fog = new THREE.FogExp2(0x060a12, 0.016);
+
+  const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 200);
+  camera.position.set(0, 4, 15);
+  camera.lookAt(0, 0, 0);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.minDistance = 6;
+  controls.maxDistance = 30;
+  controls.target.set(0, 0, 0);
+
+  scene.add(new THREE.AmbientLight(0x334466, 1.3));
+  const dir = new THREE.DirectionalLight(0x8899cc, 1.5); dir.position.set(6,10,6); scene.add(dir);
+  const pt = new THREE.PointLight(0x0052cc, 2, 24); pt.position.set(-6,5,4); scene.add(pt);
+
+  // 坐标轴参考（弱化）
+  const axes = new THREE.AxesHelper(12);
+  axes.material.transparent = true; axes.material.opacity = 0.12;
+  scene.add(axes);
+
+  // ===== 数据：每列每层的节点值 =====
+  function zetaAt(layer, k){
+    return (Math.floor((layer * 31 + k * 7) * 2654435761 % 3329) - 1664) / 1664;
+  }
+  const inputVals = [];
+  for (let i = 0; i < N; i++) inputVals[i] = (Math.sin(i*0.13)*0.6 + Math.cos(i*0.05)*0.4) * 1664;
+
+  // 预计算每层每列的节点值（columns[layer] = Float32Array(N)）
+  const columns = [];
+  columns[0] = new Float32Array(inputVals);
+  for (let layer = 0; layer < LAYERS; layer++){
+    const prev = columns[layer];
+    const stride = 1 << layer;
+    const next = new Float32Array(N);
+    for (let block = 0; block < N; block += stride*2){
+      for (let j = 0; j < stride; j++){
+        const i = block + j, k = block + j + stride;
+        const a = prev[i], b = prev[k];
+        const z = zetaAt(layer, i);
+        const t = z * b * 0.6;
+        next[i] = Math.max(-1664, Math.min(1664, a + t));
+        next[k] = Math.max(-1664, Math.min(1664, a - t));
+      }
+    }
+    columns.push(next);
+  }
+
+  // 网格坐标：i = row*16 + col
+  function gridPos(i){
+    const row = Math.floor(i / GRID), col = i % GRID;
+    return { y: (row - (GRID-1)/2) * GAP, z: (col - (GRID-1)/2) * GAP };
+  }
+  function layerX(layer){ return (layer - LAYERS/2) * LAYER_DX; }
+
+  // ===== 每列粒子（Points）=====
+  const columnPoints = []; // 每列一个 Points + 颜色数组
+  const colColor = [];
+  function colorHex(v){
+    const norm = Math.max(-1, Math.min(1, v / 1664));
+    const c = new THREE.Color();
+    if (norm < 0){ c.lerpColors(new THREE.Color(0xffffff), new THREE.Color(0x4fc3f7), -norm); }
+    else { c.lerpColors(new THREE.Color(0xffffff), new THREE.Color(0xff6b6b), norm); }
+    return c;
+  }
+
+  const SPHERE_GEO = new THREE.SphereGeometry(0.09, 12, 12);
+  const colGroups = [];
+  for (let L = 0; L <= LAYERS; L++){
+    const group = new THREE.Group();
+    const items = [];
+    for (let i = 0; i < N; i++){
+      const { y, z } = gridPos(i);
+      const mat = new THREE.MeshStandardMaterial({color:0x4fc3f7, roughness:0.4, metalness:0.2});
+      const mesh = new THREE.Mesh(SPHERE_GEO, mat);
+      mesh.position.set(layerX(L), y, z);
+      mesh.userData = { i, L };
+      group.add(mesh);
+      items.push(mesh);
+    }
+    colGroups.push({ group, items });
+    scene.add(group);
+  }
+
+  // ===== 连线（LineSegments，每次 setLayer 重建）=====
+  let lineGroup = new THREE.Group();
+  scene.add(lineGroup);
+
+  function rebuildLines(){
+    scene.remove(lineGroup);
+    lineGroup.traverse(o => { if(o.geometry) o.geometry.dispose(); if(o.material) o.material.dispose(); });
+    lineGroup = new THREE.Group();
+
+    const active = currentLayer; // 激活层（从 active-1 到 active 画高亮）
+    // 直连（青色）与交叉（橙色）分开
+    const straightPos = [], crossPos = [];
+    const straightCol = [], crossCol = [];
+
+    for (let layer = 1; layer <= active; layer++){
+      const stride = 1 << (layer-1);
+      const xPrev = layerX(layer-1), xCurr = layerX(layer);
+      const isActive = (layer === active);
+      const bright = isActive ? 1.0 : 0.18;
+
+      for (let block = 0; block < N; block += stride*2){
+        for (let j = 0; j < stride; j++){
+          const i = block + j, k = block + j + stride;
+          const pi = gridPos(i), pk = gridPos(k);
+          const ci = gridPos(i), ck = gridPos(k);
+          // 直连 i->i, k->k
+          straightPos.push(xPrev, pi.y, pi.z, xCurr, ci.y, ci.z);
+          straightPos.push(xPrev, pk.y, pk.z, xCurr, ck.y, ck.z);
+          straightCol.push(bright, bright);
+          // 交叉 i->k, k->i（蝶形）
+          crossPos.push(xPrev, pi.y, pi.z, xCurr, ck.y, ck.z);
+          crossPos.push(xPrev, pk.y, pk.z, xCurr, ci.y, ci.z);
+          crossCol.push(bright, bright);
+        }
+      }
+    }
+
+    if (straightPos.length){
+      const g1 = new THREE.BufferGeometry();
+      g1.setAttribute('position', new THREE.BufferAttribute(new Float32Array(straightPos), 3));
+      g1.setAttribute('alpha', new THREE.BufferAttribute(new Float32Array(straightCol), 1));
+      const m1 = new THREE.LineBasicMaterial({color:0x00c8e0, transparent:true, opacity:0.7, vertexColors:false});
+      const l1 = new THREE.LineSegments(g1, m1);
+      // 用顶点 alpha 无法直接作用于 LineBasicMaterial opacity，改用两个独立组
+      lineGroup.add(l1);
+    }
+    if (crossPos.length){
+      const g2 = new THREE.BufferGeometry();
+      g2.setAttribute('position', new THREE.BufferAttribute(new Float32Array(crossPos), 3));
+      const m2 = new THREE.LineBasicMaterial({color:0xffb74d, transparent:true, opacity:0.55});
+      lineGroup.add(new THREE.LineSegments(g2, m2));
+    }
+    scene.add(lineGroup);
+  }
+
+  // ===== 流动粒子 =====
+  const FLOW_N = 24;
+  const flowGeo = new THREE.BufferGeometry();
+  const flowPos = new Float32Array(FLOW_N * 3);
+  flowGeo.setAttribute('position', new THREE.BufferAttribute(flowPos, 3));
+  const flowMat = new THREE.PointsMaterial({color:0xffffff, size:0.12, transparent:true, opacity:0.95, blending:THREE.AdditiveBlending});
+  const flowPoints = new THREE.Points(flowGeo, flowMat);
+  scene.add(flowPoints);
+  const flowMeta = [];
+  for (let i = 0; i < FLOW_N; i++) flowMeta.push({ t: Math.random() });
+
+  // ===== 更新节点颜色与可见性 =====
+  function updateNodes(){
+    for (let L = 0; L <= LAYERS; L++){
+      const vals = columns[L];
+      const items = colGroups[L].items;
+      const visible = L <= currentLayer;
+      const isActive = L === currentLayer;
+      items.forEach((mesh, i) => {
+        mesh.visible = visible;
+        const c = colorHex(vals[i]);
+        if (isActive){ mesh.material.color.copy(c); mesh.material.emissive = c.clone().multiplyScalar(0.5); mesh.scale.setScalar(1.0); }
+        else { mesh.material.color.copy(c).multiplyScalar(0.4); mesh.material.emissive = new THREE.Color(0x000000); mesh.scale.setScalar(0.7); }
+      });
+    }
+  }
+
+  function updatePanel(){
+    document.getElementById('stat-layer').textContent = currentLayer;
+    document.getElementById('stat-stride').textContent = currentLayer === 0 ? 0 : (1 << (currentLayer-1));
+    document.getElementById('stat-zeta').textContent = currentLayer === 0 ? '—' : 'ζ' + currentLayer;
+    document.getElementById('stat-fqmul').textContent = currentLayer * 128;
+  }
+
+  function setLayer(l){
+    currentLayer = Math.max(0, Math.min(LAYERS, l));
+    updatePanel();
+    updateNodes();
+    rebuildLines();
+  }
+
+  // ===== 控制按钮 =====
+  const btnPlay = document.getElementById('btn-play');
+  document.getElementById('btn-prev').addEventListener('click', () => { if(playing) togglePlay(); setLayer(currentLayer-1); });
+  document.getElementById('btn-next').addEventListener('click', () => { if(playing) togglePlay(); setLayer(currentLayer+1); });
+  const speedSel = document.getElementById('speed');
+  speedSel.addEventListener('change', () => {
+    speed = parseFloat(speedSel.value);
+    if (playing){ clearInterval(animTimer); animTimer = setInterval(tick, 500/speed); }
+  });
+
+  function tick(){
+    if (currentLayer >= LAYERS) currentLayer = 0; else currentLayer++;
+    setLayer(currentLayer);
+  }
+  function togglePlay(){
+    playing = !playing;
+    btnPlay.textContent = playing ? '⏸ 暂停' : '▶ 播放';
+    if (playing){ animTimer = setInterval(tick, 500/speed); }
+    else { clearInterval(animTimer); }
+  }
+  btnPlay.addEventListener('click', togglePlay);
+
+  // ===== 动画循环 =====
+  const clock = new THREE.Clock();
+  function animate(){
+    requestAnimationFrame(animate);
+    const t = clock.getElapsedTime();
+
+    // 流动粒子：沿激活层的连线流动
+    if (currentLayer > 0){
+      const stride = 1 << (currentLayer-1);
+      const xPrev = layerX(currentLayer-1), xCurr = layerX(currentLayer);
+      flowPoints.visible = true;
+      flowMeta.forEach((m, idx) => {
+        m.t += 0.008;
+        if (m.t > 1){ m.t = 0; m.pair = Math.floor(Math.random()*128); }
+        if (m.pair === undefined) m.pair = Math.floor(Math.random()*128);
+        const block = m.pair * stride * 2;
+        // 取该 pair 的 i 或 k（交替）
+        const useK = (idx % 2 === 0);
+        const j = m.pair % stride;
+        const i = block + j, k = block + j + stride;
+        const node = useK ? k : i;
+        const p = gridPos(node);
+        const x = xPrev + (xCurr - xPrev) * m.t;
+        const y = p.y + Math.sin(m.t * Math.PI) * 0.3;
+        flowPos[idx*3] = x; flowPos[idx*3+1] = y; flowPos[idx*3+2] = p.z;
+      });
+      flowGeo.attributes.position.needsUpdate = true;
+    } else {
+      flowPoints.visible = false;
+    }
+
+    // 轻微整体呼吸
+    controls.update();
+    renderer.render(scene, camera);
+  }
+
+  // ===== 响应式 =====
+  function resize(){
+    const w = wrap.clientWidth, h = 520;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+  resize();
+  setLayer(0);
+  animate();
+})();
+</script>
+</body>
+</html>

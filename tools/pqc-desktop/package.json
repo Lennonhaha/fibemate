@@ -1,0 +1,30 @@
+{
+  "name": "fibemate-pqc-desktop",
+  "version": "3.3.0",
+  "description": "FIBEMATE PQC Desktop — 离线可用的后量子密码学交互式教科书",
+  "main": "main.js",
+  "author": "FIBEMATE",
+  "license": "GPL-3.0-only",
+  "build": {
+    "appId": "net.fibemate.pqc-desktop",
+    "productName": "FIBEMATE PQC Desktop",
+    "files": [
+      "main.js", "preload.js", "nav.html",
+      "assets/**", "content/**", "lib/**"
+    ],
+    "win":   { "target": "nsis",     "icon": "assets/icon.ico" },
+    "mac":   { "target": "dmg",      "icon": "assets/icon.png" },
+    "linux": { "target": "AppImage", "icon": "assets/icon.png" },
+    "directories": { "output": "dist" }
+  },
+  "scripts": {
+    "start":   "electron .",
+    "pack":    "electron-builder --dir",
+    "dist":    "electron-builder",
+    "dist:all": "electron-builder -mwl"
+  },
+  "devDependencies": {
+    "electron": "^28.0.0",
+    "electron-builder": "^24.0.0"
+  }
+}

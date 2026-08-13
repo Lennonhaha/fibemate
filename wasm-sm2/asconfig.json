@@ -1,0 +1,29 @@
+{
+  "targets": {
+    "release": {
+      "outFile": "build/sm2.wasm",
+      "textFile": "build/sm2.wat",
+      "sourceMap": true,
+      "optimizeLevel": 3,
+      "shrinkLevel": 1,
+      "converge": false,
+      "noAssert": false,
+      "runtime": "incremental",
+      "exportRuntime": false
+    },
+    "debug": {
+      "outFile": "build/sm2_debug.wasm",
+      "textFile": "build/sm2_debug.wat",
+      "sourceMap": true,
+      "optimizeLevel": 0,
+      "runtime": "stub",
+      "exportRuntime": false
+    }
+  },
+  "options": {
+    "bindings": "esm",
+    "exportRuntime": false,
+    "exportTable": false,
+    "initialMemory": 256
+  }
+}

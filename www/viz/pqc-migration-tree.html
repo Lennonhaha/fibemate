@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PQC 迁移路径决策树 — 我该不该迁移、先迁移什么 | FIBEMATE</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230052CC'/><text x='50%25' y='55%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='18' font-family='monospace'>P</text></svg>">
+<style>
+:root {
+  --bg:#060a12; --panel:#0d1525; --border:#1a2744; --text:#b8c8e8; --dim:#5a6a8a;
+  --accent:#0052CC; --green:#10b981; --yellow:#f59e0b; --red:#ef4444;
+  --font:-apple-system,'Segoe UI','PingFang SC','Microsoft YaHei',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--font);min-height:100vh;padding:16px;overflow-x:hidden;background-image:radial-gradient(ellipse 60% 50% at 50% 0%,rgba(0,82,204,.08),transparent)}
+h1{font-size:20px;font-weight:700;color:#e8f0ff;background:linear-gradient(90deg,#e8f0ff,#4fc3f7);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.subtitle{font-size:13px;color:var(--dim);margin-top:4px}
+.header{margin-bottom:16px}
+
+#breadcrumb{font-size:12px;color:var(--dim);margin-bottom:14px;padding:8px 12px;background:var(--panel);border:1px solid var(--border);border-radius:8px;min-height:18px}
+#breadcrumb b{color:var(--accent2, #00c8e0)}
+
+#tree{display:flex;justify-content:center;overflow-x:auto;padding:10px 0}
+
+.tree-col{display:flex;flex-direction:column;align-items:center;gap:8px;padding:0 20px;position:relative}
+.node{background:linear-gradient(135deg,rgba(13,21,37,.95),rgba(19,27,44,.95));border:1px solid var(--border);border-radius:10px;padding:10px 16px;text-align:center;cursor:pointer;transition:all .25s cubic-bezier(.4,0,.2,1);max-width:180px;position:relative;z-index:1;animation:nodeIn .45s ease both}
+.node:hover{border-color:var(--accent);transform:scale(1.05) translateY(-2px);box-shadow:0 8px 24px rgba(0,82,204,.2)}
+@keyframes nodeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.node.q{border-color:var(--accent)}
+.node.selected{border-color:var(--accent2, #00c8e0);box-shadow:0 0 16px rgba(0,200,224,.3)}
+.node.option{border-style:dashed}
+.node.option:hover{border-color:var(--green)}
+.node.leaf-green{border-left:4px solid var(--green);background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(13,21,37,.95))}
+.node.leaf-yellow{border-left:4px solid var(--yellow);background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(13,21,37,.95))}
+.node.leaf-red{border-left:4px solid var(--red);background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(13,21,37,.95))}
+.node.leaf-green .chip{background:rgba(16,185,129,.2);color:var(--green)}
+.node.leaf-yellow .chip{background:rgba(245,158,11,.2);color:var(--yellow)}
+.node.leaf-red .chip{background:rgba(239,68,68,.2);color:var(--red)}
+.node .t{font-size:13px;font-weight:600;color:#e8f0ff}
+.node .d{font-size:10px;color:var(--dim);margin-top:3px;line-height:1.5}
+.node .chip{display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;margin-top:4px;font-weight:600}
+
+.connector{width:2px;height:20px;background:linear-gradient(180deg,var(--accent),var(--border));position:relative}
+.connector::after{content:'';position:absolute;top:0;left:50%;width:2px;height:8px;background:var(--accent2,#00c8e0);transform:translateX(-50%);animation:flowDown 1.2s linear infinite}
+@keyframes flowDown{0%{top:0;opacity:0}30%{opacity:1}100%{top:12px;opacity:0}}
+
+.controls{text-align:center;margin-top:14px}
+.btn{padding:9px 22px;border:none;border-radius:8px;font-family:var(--font);font-size:13px;font-weight:600;cursor:pointer;background:linear-gradient(135deg,var(--accent),#1a6fff);color:#fff;transition:all .2s;box-shadow:0 2px 12px rgba(0,82,204,.35)}
+.btn:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,82,204,.5)}
+
+footer{text-align:center;font-size:11px;color:var(--dim);margin-top:20px;padding-top:12px;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>PQC 迁移路径决策树</h1>
+  <div class="subtitle">「我该不该迁移后量子密码、先迁移什么」→ 一个可点击的决策树，逐层收敛到具体建议</div>
+</div>
+
+<div id="breadcrumb">路径：<b>开始</b></div>
+
+<div id="tree"></div>
+
+<div class="controls">
+  <button class="btn" id="btn-reset">↺ 重新开始</button>
+</div>
+
+<footer>FIBEMATE v3.3.0 · 2026-08-12 · 决策树参考（依据 NIST PQC 迁移指南 + 本项目 WPI 数据，非权威合规结论）</footer>
+
+<script>
+(function(){
+  // 决策树数据
+  const tree = {
+    id: 'root',
+    type: 'q',
+    title: '你的组织类型？',
+    options: [
+      { label: '政府 / 关键基础设施', next: 'gov' },
+      { label: '金融 / 支付 / 电商', next: 'fin' },
+      { label: '个人 / 中小企业', next: 'sme' },
+    ]
+  };
+
+  const nodes = {
+    gov: { type:'q', title:'已有 SM2 国密部署？', options:[
+      { label:'是', next:'gov-sm2-yes' },
+      { label:'否', next:'gov-sm2-no' },
+    ]},
+    gov_sm2_yes: { type:'q', title:'是否需要量子安全立即上线？', options:[
+      { label:'是（高价值长期数据）', next:'gov-urgent' },
+      { label:'否（可等待标准）', next:'gov-wait' },
+    ]},
+    gov_sm2_no: { type:'leaf', cls:'leaf-yellow', title:'先上 SM2 国密合规', detail:'建立经典国密基线，再叠加 PQC', chip:'黄灯 · 计划迁移' },
+    gov_urgent: { type:'leaf', cls:'leaf-green', title:'ML-KEM 混合 KEX', detail:'SM2+ML-KEM-768 混合（IANA #4590, Path C-2）', chip:'绿灯 · 立即迁移' },
+    gov_wait: { type:'leaf', cls:'leaf-yellow', title:'监控标准化进展', detail:'跟踪 NIST/国密 PQC 标准，保持 SM2 基线', chip:'黄灯 · 计划迁移' },
+
+    fin: { type:'q', title:'证书 / 密钥有效期 ≤ 3 年？', options:[
+      { label:'是（短期证书）', next:'fin-short' },
+      { label:'否（长期证书）', next:'fin-long' },
+    ]},
+    fin_short: { type:'leaf', cls:'leaf-yellow', title:'混合签名过渡', detail:'SM2+RSA/ECDSA 混合，证书到期时升级', chip:'黄灯 · 慢迁移' },
+    fin_long: { type:'leaf', cls:'leaf-green', title:'ML-KEM 混合 KEX 优先', detail:'支付链路 KEX 迁移比签名更紧迫', chip:'绿灯 · 立即迁移' },
+
+    sme: { type:'q', title:'WPI 迁移优先指数评估（12 资产均值 44.5）', options:[
+      { label:'≥ 50（有高风险资产）', next:'sme-high' },
+      { label:'< 50（低风险）', next:'sme-low' },
+    ]},
+    sme_high: { type:'leaf', cls:'leaf-yellow', title:'推进 KEX 迁移', detail:'优先 ML-KEM，签名可延后', chip:'黄灯 · 计划迁移' },
+    sme_low: { type:'leaf', cls:'leaf-red', title:'暂不迁移', detail:'等待标准/工具成熟，先做资产盘点', chip:'红灯 · 暂缓' },
+  };
+
+  // 节点 ID 规范化（上面对象键用了下划线，需映射）
+  const idMap = {
+    'gov-sm2-yes':'gov_sm2_yes','gov-sm2-no':'gov_sm2_no',
+    'gov-urgent':'gov_urgent','gov-wait':'gov_wait',
+    'fin-short':'fin_short','fin-long':'fin_long',
+    'sme-high':'sme_high','sme-low':'sme_low',
+  };
+
+  let path = ['root'];
+  let selectedOptions = [];
+
+  function render() {
+    const container = document.getElementById('tree');
+    container.innerHTML = '';
+    const breadcrumb = document.getElementById('breadcrumb');
+
+    // 构建面包屑
+    const bc = [];
+    for (let i = 0; i < path.length; i++) {
+      const id = path[i];
+      if (id === 'root') { bc.push('开始'); continue; }
+      const node = nodes[id];
+      if (node) bc.push(node.title);
+    }
+    breadcrumb.innerHTML = '路径：<b>' + bc.join(' → ') + '</b>';
+
+    // 逐层渲染
+    path.forEach((id, depth) => {
+      const col = document.createElement('div');
+      col.className = 'tree-col';
+
+      if (id === 'root') {
+        const node = tree;
+        const el = renderNode(node, 'root');
+        el.style.animationDelay = '0ms';
+        col.appendChild(el);
+        // 渲染选项
+        node.options.forEach((opt, oi) => {
+          col.appendChild(connector());
+          const optEl = renderOption(opt, 'root');
+          optEl.style.animationDelay = (80 + oi*60) + 'ms';
+          col.appendChild(optEl);
+        });
+      } else {
+        const realId = idMap[id] || id;
+        const node = nodes[realId];
+        if (!node) return;
+        const el = renderNode(node, id);
+        col.appendChild(el);
+        if (node.type === 'q' && node.options) {
+          node.options.forEach((opt, oi) => {
+            col.appendChild(connector());
+            const optEl = renderOption(opt, id);
+            optEl.style.animationDelay = (80 + oi*60) + 'ms';
+            col.appendChild(optEl);
+          });
+        }
+      }
+
+      container.appendChild(col);
+      // 箭头分隔
+      if (depth < path.length - 1) {
+        const arrow = document.createElement('div');
+        arrow.style.cssText = 'align-self:center;font-size:20px;color:var(--dim);padding:0 8px';
+        arrow.textContent = '→';
+        container.appendChild(arrow);
+      }
+    });
+  }
+
+  function renderNode(node, id) {
+    const el = document.createElement('div');
+    el.className = 'node ' + (node.type || 'q');
+    if (node.type === 'leaf') el.className += ' ' + (node.cls || '');
+    el.innerHTML = '<div class="t">' + node.title + '</div>' + (node.detail ? '<div class="d">' + node.detail + '</div>' : '');
+    if (node.chip) el.innerHTML += '<span class="chip">' + node.chip + '</span>';
+    return el;
+  }
+
+  function renderOption(opt, parentId) {
+    const el = document.createElement('div');
+    el.className = 'node option';
+    el.innerHTML = '<div class="t">' + opt.label + '</div>';
+    el.addEventListener('click', () => {
+      const realId = idMap[opt.next] || opt.next;
+      path.push(opt.next);
+      selectedOptions.push(opt.label);
+      render();
+    });
+    return el;
+  }
+
+  function connector() {
+    const el = document.createElement('div');
+    el.className = 'connector';
+    return el;
+  }
+
+  document.getElementById('btn-reset').addEventListener('click', () => {
+    path = ['root'];
+    selectedOptions = [];
+    render();
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

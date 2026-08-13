@@ -1,0 +1,18 @@
+{
+  "name": "@fibemate/tsr-verify",
+  "version": "0.1.0",
+  "description": "TSR 证据链验证器 — 验证 RFC 3161 时间戳存证文件的完整性与链连续性（FIBEMATE）",
+  "type": "commonjs",
+  "bin": {
+    "tsr-verify": "bin/tsr-verify.js"
+  },
+  "main": "lib/verify.js",
+  "scripts": {
+    "test": "node test/test-verify.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "license": "GPL-3.0-only",
+  "keywords": ["tsr", "timestamp", "rfc3161", "evidence", "fibemate", "digicert"]
+}
