@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE · PQC 工程验证平台 — ML-KEM-768 · ML-DSA-65 · SLH-DSA · SM2/SM3/SM4 · FPGA</title>
-    <meta name="description" content="本仓库是 FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust · 端到端加密）另见 fibemate.net。覆盖 ML-KEM-768（FIPS 203）、ML-DSA-65（FIPS 204）、SLH-DSA-128s（FIPS 205）、SM2/SM3/SM4、FPGA NTT 加速器、TLA+ 形式化验证、100 份 TSR 存证。开源 GPL-3.0。">
+    <meta name="description" content="本仓库是 FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust · 端到端加密）另见 fibemate.net。覆盖 ML-KEM-768（FIPS 203）、ML-DSA-65（FIPS 204）、SLH-DSA-128s（FIPS 205）、SM2/SM3/SM4、FPGA NTT 加速器、TLA+ 形式化验证、200+ 份 TSR 存证。开源 GPL-3.0。">
     <meta property="og:title" content="FIBEMATE · 后量子密码学全栈工程验证平台（开源 GPL-3.0）">
     <meta property="og:description" content="FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust）另见 fibemate.net。ML-KEM-768（FIPS 203）· ML-DSA-65（FIPS 204）· SLH-DSA-128s（FIPS 205）· SM2/SM3/SM4 · FPGA NTT · TLA+ · 100 TSR。">
     <meta property="og:type" content="website">
@@ -14,6 +14,80 @@
     <meta name="twitter:title" content="FIBEMATE · 后量子密码学开源工程验证平台">
     <meta name="twitter:description" content="FIBEMATE PQC 密码学平台。同名社交软件另见 fibemate.net。ML-KEM-768 · ML-DSA-65 · SLH-DSA-128s · SM2/SM3/SM4 · FPGA · TLA+ · 100 TSR。">
     <link rel="canonical" href="https://fibemate.net">
+    <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Organization",
+      "name": "FIBEMATE",
+      "url": "https://fibemate.net",
+      "description": "后量子密码学全栈工程验证平台",
+      "sameAs": ["https://github.com/Lennonhaha/fibemate"]
+    },
+    {
+      "@type": "WebSite",
+      "url": "https://fibemate.net",
+      "name": "FIBEMATE · PQC 工程验证平台",
+      "inLanguage": ["zh-CN", "en"],
+      "description": "ML-KEM-768 (FIPS 203) · ML-DSA-44/65/87 (FIPS 204) · SLH-DSA (FIPS 205) · SM2/SM3/SM4 · FPGA NTT",
+      "keywords": "post-quantum cryptography, PQC, ML-KEM, ML-DSA, SLH-DSA, NIST FIPS 203, FIPS 204, FIPS 205, SM2, SM3, SM4, FPGA, NTT, side-channel, TVLA, lattice-based, hash-based, hybrid KEX, IANA 4590, 后量子密码, 国密算法",
+      "license": "https://spdx.org/licenses/GPL-3.0-only.html"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "name": "FIBEMATE",
+      "version": "3.3.0",
+      "applicationCategory": "SecurityApplication",
+      "operatingSystem": "Web, Linux, Node.js, FPGA, STM32, WASM",
+      "description": "后量子密码学全栈工程验证平台。ML-KEM-768 (FIPS 203) 密钥封装、ML-DSA-44/65/87 (FIPS 204) + SLH-DSA-128s/192f (FIPS 205) 数字签名、SM2/SM3/SM4 国密算法、FPGA Artix-7 NTT 加速器。35 个交互式三维可视化工具、200+ 份 RFC 3161 时间戳存证、KAT 10,000/10,000 一致性验证、TVLA 侧信道安全门。TLA+ 形式化密钥独立性验证。开源 GPL-3.0。",
+      "url": "https://fibemate.net",
+      "license": "https://spdx.org/licenses/GPL-3.0-only.html",
+      "codeRepository": "https://github.com/Lennonhaha/fibemate",
+      "releaseNotes": "https://fibemate.net/docs/CHANGELOG.md",
+      "softwareHelp": "https://github.com/Lennonhaha/fibemate/discussions",
+      "softwareVersion": "3.3.0",
+      "author": {
+        "@type": "Person",
+        "name": "Lennon (Lennonhaha)"
+      },
+      "dateModified": "2026-08-12",
+      "mainEntityOfPage": "https://fibemate.net",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "CNY"
+      }
+    },
+    {
+      "@type": "TechArticle",
+      "headline": "FIBEMATE v3.3.0 后量子密码学工程验证平台",
+      "description": "从 NTT 蝶形运算到 FPGA 硬件加速、从 SM2 国密到 NIST PQC 标准的全栈密码学工程验证。KAT 10K 一致性、TVLA 侧信道、TLA+ 形式化、200+ TSR 存证。",
+      "url": "https://fibemate.net",
+      "inLanguage": "zh-CN",
+      "proficiencyLevel": "Expert",
+      "about": {
+        "@type": "Thing",
+        "name": "Post-Quantum Cryptography",
+        "sameAs": "https://en.wikipedia.org/wiki/Post-quantum_cryptography"
+      },
+      "datePublished": "2026-05-10",
+      "dateModified": "2026-08-12",
+      "keywords": "PQC, ML-KEM-768, ML-DSA, SLH-DSA, SM2, SM3, SM4, NTT, FPGA, side-channel, TVLA, TLA+, formal verification, hybrid KEX, post-quantum"
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "FIBEMATE 首页", "item": "https://fibemate.net" },
+        { "@type": "ListItem", "position": 2, "name": "PQC 就绪度评估", "item": "https://fibemate.net/docs/pqc-readiness.html" },
+        { "@type": "ListItem", "position": 3, "name": "可视化工具集", "item": "https://fibemate.net/#visualizations" },
+        { "@type": "ListItem", "position": 4, "name": "项目文档", "item": "https://fibemate.net/docs/" },
+        { "@type": "ListItem", "position": 5, "name": "GitHub 仓库", "item": "https://github.com/Lennonhaha/fibemate" }
+      ]
+    }
+  ]
+}
+</script>
     <style>
         * {
             margin: 0;
@@ -1334,7 +1408,7 @@
     <section class="features" id="engineering-viz" style="margin-top:1rem;">
       <div class="section-badge" style="background:rgba(0,212,255,0.08);border:2px solid rgba(0,212,255,0.3);">🔷 工程可视化工具集
         <a href="/docs/viz-index.html" style="font-size:0.8rem;color:#00d4ff;text-decoration:underline;margin-left:0.5rem;">📇 完整索引</a></div>
-      <h2 style="font-size:1.5rem;">27 个交互式工具 · 代码证据驱动</h2>
+      <h2 style="font-size:1.5rem;">35 个交互式工具 · 代码证据驱动</h2>
       <p class="section-subtitle" style="max-width:700px;margin:0 auto 1.5rem;font-size:0.9rem;color:#8b949e;">
         评分审计 · 性能基准 · 依赖风险 · FPGA 硬件 · 时间轴演进 — 全部基于 git 仓库真实数据
       </p>
@@ -1513,6 +1587,16 @@
           <a href="/vwz-tensor/tensor-field.html" class="proof-link"
              style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #10b981; text-decoration: underline;">打开 3D 张量场 &#8594;</a>
         </div>
+        <div class="feature-card" style="border-top:3px solid #10b981;">
+          <div class="feature-title">🎯 VWZ 综合画像卡</div>
+          <div class="feature-desc">定位地图 × 代价地图 — 签名尺寸/速度/验证/公钥四维 trade-off，点击散点切换方案</div>
+          <a href="/vwz-tensor/portrait.html" class="proof-link" target="_blank">📊 打开画像卡 →</a>
+        </div>
+        <div class="feature-card" style="border-top:3px solid #10b981;">
+          <div class="feature-title">⚡ VWZ 性能基准看板</div>
+          <div class="feature-desc">签名/验证 ops/s 柱状图 · 批处理理论加速比曲线 · k 值滑块联动 · 四维雷达对比 <span style="color:#f59e0b;font-size:0.7rem">(旧版保留)</span></div>
+          <a href="/vwz-tensor/performance.html" class="proof-link" target="_blank">📊 打开看板 →</a>
+        </div>
 
         <div class="feature-card" style="border-top: 3px solid #f368e0;">
           <div class="feature-icon">🔮</div>
@@ -1527,6 +1611,35 @@
              style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #f368e0; text-decoration: underline;">打开 3D 矩阵场 &#8594;</a>
         </div>
 
+        <div class="feature-card" style="border-top: 3px solid #00c8e0;">
+          <div class="feature-icon">🔀</div>
+          <div class="feature-title">混合密钥交换动态对比</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">SM2(65B) vs ML-KEM-768(1184B) vs 混合(1249B) 三轨道<br>量子攻击模拟 · HKDF 合并动画 · IANA #4590</div>
+          <a href="/viz/hybrid-kex-comparison.html?v=2" class="proof-link" target="_blank">🔀 打开对比 →</a>
+        </div>
+
+        <div class="feature-card" style="border-top: 3px solid #4fc3f7;">
+          <div class="feature-icon">🦋</div>
+          <div class="feature-title">NTT 蝶形运算动态流</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">Cooley-Tukey 8 层逐层展开 · Q=3329<br>1024 次 fqmul vs O(n²) 65536 次</div>
+          <a href="/viz/ntt-butterfly-flow.html?v=2" class="proof-link" target="_blank">🦋 打开蝶形网络 →</a>
+        </div>
+
+        <div class="feature-card" style="border-top: 3px solid #ffb74d;">
+          <div class="feature-icon">📦</div>
+          <div class="feature-title">ML-KEM 密钥封装黑盒拆解</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">KeyGen / Encaps / Decaps 三黑盒点击展开<br>NTT + CBD + basemul + 恒定时间 cmov</div>
+          <a href="/viz/kem-blackbox-3d.html?v=2" class="proof-link" target="_blank">📦 打开黑盒拆解 →</a>
+        </div>
+
+
+
+        <div class="feature-card" style="border-top: 3px solid #ff6b6b;">
+          <div class="feature-icon">🗺️</div>
+          <div class="feature-title">协议 × 算法族谱</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">L4 应用协议 → L1 安全基础四层资产全景<br>点击节点联动数据流拓扑 · KAT/TVLA/TSR 徽章</div>
+          <a href="/viz/protocol-algorithm-family-tree.html?v=2" class="proof-link" target="_blank">🗺️ 打开族谱 →</a>
+        </div>
         <div class="feature-card" style="border-top: 3px solid #f59e0b;">
           <div class="feature-icon">📖</div>
           <div class="feature-title">文档中心</div>
@@ -1535,6 +1648,8 @@
              style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #f59e0b; text-decoration: underline;">打开文档中心 &#8594;</a>
         </div>
 
+
+
       </div>
     </section>
 
@@ -1542,7 +1657,7 @@
 <!-- ═══════ 📖 项目文档 ═══════ -->
     <section class="features" id="project-docs" style="margin-top:1rem;">
       <div class="section-badge" style="background:rgba(167,139,250,0.08);border:2px solid rgba(167,139,250,0.3);">📖 项目文档</div>
-      <h2 style="font-size:1.5rem;">17 份关键文档 · 从合规到应急</h2>
+      <h2 style="font-size:1.5rem;">19 份关键文档 · 从合规到应急</h2>
       <p class="section-subtitle" style="max-width:700px;margin:0 auto 2rem;font-size:0.9rem;color:#8b949e;">覆盖开源公告、变更记录、安全治理、合规自评 — 从 8/31 开源倒计时到灾难恢复全覆盖</p>
 
       <div class="doc-cards-wrap">
@@ -1643,6 +1758,18 @@
               <div class="dc-icon">🆘</div>
               <div class="dc-name">恢复计划</div>
               <div class="dc-desc">灾难恢复 · 备份策略</div>
+              <span class="dc-tag orange">韧性</span>
+            </a>
+            <a href="/docs/VULNERABILITY-DISCLOSURE.md" class="doc-card orange">
+              <div class="dc-icon">🐛</div>
+              <div class="dc-name">漏洞披露</div>
+              <div class="dc-desc">报告渠道 · 时间线 · 安全港</div>
+              <span class="dc-tag orange">安全</span>
+            </a>
+            <a href="/docs/KEY-COMPROMISE-GUIDE.md" class="doc-card orange">
+              <div class="dc-icon">🔑</div>
+              <div class="dc-name">密钥应急</div>
+              <div class="dc-desc">泄露检测 · 分级应对 · 轮换</div>
               <span class="dc-tag orange">韧性</span>
             </a>
           </div>
@@ -1856,7 +1983,7 @@
         </div>
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-07-31 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.2.3 ❄️🔥 61/61 &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 100 份 (lg-001~100) ✓<br>
+            最后更新：2026-08-12 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.2.3 ❄️🔥 61/61 &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 200+ 份 (lg-001~218) ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (FIPS 204, ML-DSA-44/65/87 纯 JS 自研，跨 @noble/post-quantum 双向验证通过)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
@@ -1865,7 +1992,7 @@
                 计划于 <strong>2026.08.31</strong> 以 <strong>GNU General Public License v3.0 (GPLv3)</strong> 开源核心密码学模块<br>
                 （以第三方安全审计为前提）。开源前，代码为私有仓库，所有验证报告<br>
                 （KAT、TVLA）仅为自证，待开源后可独立验证。<br>
-                所有核心代码已通过 <strong>100 份</strong> 联合信任(tsa.cn) + DigiCert 双源时间戳存证，原创性可追溯。<br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-07-24 · FPGA UART 调试打通 + SM2 Mersenne 1.8x + 全回归 480/480 · VWZ 148/148 ✅ + SM2 Mersenne 1.8× ✅ + KAT 10,000/10,000 ✅ + ML-KEM-768 NTT 域 独立实现 ✓ 200/200 + FIPS 203 参照 ✓ 10,000/10,000 + lg-001~lg-100 · 双源存证 &#x2705;</small>
+                所有核心代码已通过 <strong>200+ 份</strong> 联合信任(tsa.cn) + DigiCert 双源时间戳存证，原创性可追溯。<br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-07-24 · FPGA UART 调试打通 + SM2 Mersenne 1.8x + 全回归 480/480 · VWZ 148/148 ✅ + SM2 Mersenne 1.8× ✅ + KAT 10,000/10,000 ✅ + ML-KEM-768 NTT 域 独立实现 ✓ 200/200 + FIPS 203 参照 ✓ 10,000/10,000 + lg-001~lg-100 · 双源存证 &#x2705;</small>
             </p>
         </div>
         <p class="footer-beian" style="margin-top:0.3rem;font-size:0.82rem;color:#94a3b8;">
