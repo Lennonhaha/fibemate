@@ -266,21 +266,24 @@ function makeTextSprite(text, opts = {}) {
       emissiveIntensity: 2.2, roughness: 0.04, metalness: 0,
       transparent: true, opacity: 0.92,
     });
-    grp.add(new THREE.Mesh(coreGeo, coreMat));
+    const coreMesh = new THREE.Mesh(coreGeo, coreMat);
+    grp.add(coreMesh);
     // Halo
     const haloGeo = new THREE.SphereGeometry(sz * 3.5, 10, 10);
     const haloMat = new THREE.MeshBasicMaterial({
       color: emissive, transparent: true, opacity: 0.12,
       depthWrite: false, blending: THREE.AdditiveBlending,
     });
-    grp.add(new THREE.Mesh(haloGeo, haloMat));
+    const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+    grp.add(haloMesh);
     grp.position.set(x, y, z);
     scene.add(grp);
     // 记录星体：入场动画（scale 0→1）+ 呼吸脉动
     grp.userData = {
-      baseScale: 1,
+      coreMat, haloMat,
+      baseEmissive: 2.2, baseHaloOp: 0.12,
       phase: Math.random() * Math.PI * 2,
-      delay: orbSeq++ * 0.18,       // 入场逐颗延迟
+      delay: orbSeq++ * 0.3,        // 入场逐颗延迟
     };
     grp.scale.setScalar(0);          // 入场起点：不可见
     starOrbs.push(grp);
@@ -796,17 +799,30 @@ function animate() {
   // ③ 星体呼吸脉动 + ① 入场动画（星体 scale 0→1 逐颗弹出）
   for (const o of starOrbs) {
     const u = o.userData;
-    // 入场：t 超过 delay 后弹性放大到 baseScale（前 1.2 秒完成）
+    // 入场：t 超过 delay 后弹性放大到 1（前 2.0 秒完成，带 overshoot）
     let intro = 0;
     if (t >= u.delay) {
       const el = t - u.delay;
-      intro = el >= 1.2 ? 1 : Math.min(1, el / 1.2);
-      // 弹性 overshoot：前半段轻微超调到 1.12 再回落
-      intro = intro < 1 ? intro * (1 + 0.12 * Math.sin(intro * Math.PI)) : 1;
+      if (el < 2.0) {
+        // 弹性：ease-out + overshoot 1.15 回落
+        const k = el / 2.0;
+        intro = 1 - Math.pow(1 - k, 3);
+        intro *= 1 + 0.15 * Math.sin(k * Math.PI);
+      } else {
+        intro = 1;
+      }
     }
-    // 呼吸脉动：±8% 缩放 + 亮度波动（入场完成后生效）
-    const breath = 1 + 0.08 * Math.sin(t * 0.9 + u.phase);
-    o.scale.setScalar(intro * breath);
+    // 呼吸脉动：±18% 缩放 + 亮度/光晕同步（入场完成后生效）
+    const breath = 1 + 0.18 * Math.sin(t * 1.2 + u.phase);
+    const s = intro * breath;
+    o.scale.setScalar(s);
+    // 亮度随呼吸同步（放大时更亮）
+    if (u.coreMat) {
+      u.coreMat.emissiveIntensity = u.baseEmissive * (1 + 0.35 * Math.sin(t * 1.2 + u.phase));
+    }
+    if (u.haloMat) {
+      u.haloMat.opacity = u.baseHaloOp * (1 + 0.5 * Math.sin(t * 1.2 + u.phase));
+    }
   }
 
   raycaster.setFromCamera(pointer, camera);
