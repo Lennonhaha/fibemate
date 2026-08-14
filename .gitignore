@@ -23,6 +23,19 @@ dbg_*.js
 **/scripts/*test.js
 **/scripts/*Test.js
 !scripts/smoke-test.js
+# Temporary debug/diagnostic scripts + trash staging
+_*.js
+_*.cjs
+_*.sh
+_*.py
+_*.ps1
+_*.bat
+_*.md
+_*.txt
+_*.json
+_*.html
+_*.png
+.trash-*/
 # double-ratchet.js / fix-ratchet.js are WHITELISTED (core crypto)
 *t2.js
 *t3.js

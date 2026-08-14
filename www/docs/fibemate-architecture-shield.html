@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE 安全架构 · 三层护盾</title>
+<style>
+  :root {
+    --bg: #04060f;
+    --text: #dfe4f2;
+    --muted: rgba(223,228,242,.45);
+    --panel-bg: rgba(9,12,26,.94);
+    --border: rgba(255,255,255,.09);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #scene { position: fixed; inset: 0; display: block; }
+  .hud { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 10; }
+  .hud h1 { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: 2px; }
+  .hud .sub { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 2px; }
+  .legend { position: fixed; left: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 10; pointer-events: none; }
+  .legend .item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.outer { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
+  .dot.mid { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
+  .dot.inner { background: #eab308; box-shadow: 0 0 8px #eab308; }
+  .dot.done { background: #1f2333; border: 1px solid #eab308; }
+  .dot.plan { background: #f5f7ff; border: 1px solid #60a5fa; }
+  #panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); width: 300px; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px; z-index: 20; display: none; backdrop-filter: blur(12px); }
+  #panel h2 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  #panel .layer-tag { font-size: 11px; letter-spacing: 1px; margin-bottom: 12px; }
+  #panel .row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  #panel .row .k { color: var(--muted); }
+  #panel .row .v { color: var(--text); font-weight: 500; text-align: right; }
+  #panel .status { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; margin-bottom: 10px; }
+  #panel .status.done { background: rgba(16,185,129,.15); color: #34d399; }
+  #panel .status.plan { background: rgba(96,165,250,.15); color: #60a5fa; }
+  #panel .close { position: absolute; top: 12px; right: 14px; cursor: pointer; color: var(--muted); font-size: 18px; }
+  #panel .close:hover { color: var(--text); }
+  .hint { position: fixed; bottom: 20px; right: 20px; font-size: 11px; color: var(--muted); z-index: 10; pointer-events: none; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "../vwz-tensor/lib/three.module.js", "three/addons/": "../vwz-tensor/lib/" } }
+</script>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="hud">
+  <h1>FIBEMATE 安全架构 · 三层护盾</h1>
+  <div class="sub">外层 · 表现层&nbsp;&nbsp;|&nbsp;&nbsp;中层 · 工程层&nbsp;&nbsp;|&nbsp;&nbsp;内层 · 理论层</div>
+</div>
+
+<div class="legend">
+  <div class="item"><span class="dot outer"></span>外层护盾 · 表现层（可视化 / 文档 / 证据链）</div>
+  <div class="item"><span class="dot mid"></span>中层护盾 · 工程层（算法 / 硬件 / CI）</div>
+  <div class="item"><span class="dot inner"></span>内层核心 · 理论层（TLA+ / 安全模型）</div>
+  <div class="item"><span class="dot done"></span>已实现</div>
+  <div class="item"><span class="dot plan"></span>规划中</div>
+</div>
+
+<div id="panel">
+  <span class="close" onclick="closePanel()">×</span>
+  <h2 id="p-title"></h2>
+  <div class="layer-tag" id="p-layer"></div>
+  <div id="p-status"></div>
+  <div id="p-body"></div>
+</div>
+
+<div class="hint">拖动旋转 · 滚轮缩放 · 点击节点查看详情</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 7, 17);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.5;
+controls.minDistance = 7;
+controls.maxDistance = 34;
+controls.target.set(0, 0, 0);
+
+scene.add(new THREE.AmbientLight(0x223344, 1.4));
+const dir = new THREE.DirectionalLight(0xffffff, 1.3);
+dir.position.set(6, 9, 5);
+scene.add(dir);
+
+// 星点
+(function stars() {
+  const n = 800;
+  const pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const r = 32 + Math.random() * 42;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i*3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i*3+1] = r * Math.sin(ph) * Math.sin(th);
+    pos[i*3+2] = r * Math.cos(ph);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x88aadd, size: 0.07, transparent: true, opacity: 0.5, depthWrite: false })));
+})();
+
+// 环带护盾着色器（菲涅尔 + 扫描 + 旋转流光）
+const ringVert = `
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+void main() {
+  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+  vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  gl_Position = projectionMatrix * viewMatrix * vec4(vWorldPos, 1.0);
+}`;
+
+const ringFrag = `
+uniform vec3 uColor;
+uniform float uTime;
+uniform float uOpacity;
+varying vec3 vWorldPos;
+varying vec3 vWorldNormal;
+void main() {
+  vec3 viewDir = normalize(cameraPosition - vWorldPos);
+  float fres = pow(1.0 - abs(dot(viewDir, normalize(vWorldNormal))), 3.0);
+  float flow = 0.5 + 0.5 * sin(vWorldPos.y * 10.0 - uTime * 3.0);
+  float glow = fres * (0.5 + 0.5 * flow);
+  gl_FragColor = vec4(uColor * (glow + 0.10), clamp(glow, 0.04, 1.0) * uOpacity);
+}`;
+
+function makeRing(radius, color, opacity, tube) {
+  const geo = new THREE.TorusGeometry(radius, tube, 32, 160);
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: ringVert,
+    fragmentShader: ringFrag,
+    uniforms: {
+      uColor: { value: new THREE.Color(color) },
+      uTime: { value: 0 },
+      uOpacity: { value: opacity },
+    },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+  return mesh;
+}
+
+const R1 = 3.2, R2 = 5.2, R3 = 7.4;
+const ringInner = makeRing(R1, 0xeab308, 0.9, 0.10); // 内层 · 理论 · 金
+const ringMid   = makeRing(R2, 0xa855f7, 0.85, 0.12); // 中层 · 工程 · 紫
+const ringOuter = makeRing(R3, 0x3b82f6, 0.80, 0.14); // 外层 · 表现 · 蓝
+
+// 底部蜂巢能量场（表现层底座）
+(function hexGrid() {
+  const grp = new THREE.Group();
+  const hexGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.08, 6);
+  const hexMat = new THREE.MeshStandardMaterial({ color: 0x0a1230, emissive: 0x3b82f6, emissiveIntensity: 0.5, roughness: 0.5, metalness: 0.4 });
+  const step = 1.05;
+  for (let q = -4; q <= 4; q++) {
+    for (let r = -4; r <= 4; r++) {
+      const x = step * 1.5 * q;
+      const z = step * Math.sqrt(3) * (r + q / 2);
+      if (Math.hypot(x, z) > R3 + 0.4) continue;
+      const h = new THREE.Mesh(hexGeo, hexMat);
+      h.position.set(x, -0.1, z);
+      h.rotation.x = Math.PI / 2;
+      grp.add(h);
+    }
+  }
+  grp.position.y = -0.3;
+  scene.add(grp);
+})();
+
+// 核心（金色光核）
+const core = new THREE.Mesh(
+  new THREE.SphereGeometry(0.6, 32, 32),
+  new THREE.MeshStandardMaterial({ color: 0x0f0f18, emissive: 0xeab308, emissiveIntensity: 2.4, roughness: 0.2, metalness: 0.4 })
+);
+scene.add(core);
+const coreGlow = new THREE.Mesh(
+  new THREE.SphereGeometry(1.1, 32, 32),
+  new THREE.MeshBasicMaterial({ color: 0xeab308, transparent: true, opacity: 0.12, depthWrite: false })
+);
+scene.add(coreGlow);
+
+// 节点数据（三层护盾：内=理论，中=工程，外=表现）
+const nodeData = [
+  // 内层 · 理论（金）
+  { name: 'TLA+ 形式化验证', layer: '内层护盾 · 理论层', r: R1, theta: 0.4, phi: 0.0, color: 0xeab308, done: true,
+    rows: [['不变式','7 条'],['状态数','101,467'],['违规','0'],['TSR 存证','lg-069']] },
+  { name: '格硬度假设', layer: '内层护盾 · 理论层', r: R1, theta: 2.1, phi: 0.7, color: 0xeab308, done: true,
+    rows: [['方法','lattice-estimator'],['BKZ-β','≈406'],['安全等级','128-bit PQC 基线']] },
+  { name: 'FALCON 安全模型', layer: '内层护盾 · 理论层', r: R1, theta: 4.1, phi: 2.1, color: 0x60a5fa, done: false,
+    rows: [['状态','规划中'],['说明','NIST 额外签名标准']] },
+  // 中层 · 工程（紫）
+  { name: 'ML-KEM-768', layer: '中层护盾 · 工程层', r: R2, theta: 0.1, phi: 0.2, color: 0xa855f7, done: true,
+    rows: [['KAT','10,000 / 10,000'],['标准','FIPS 203']] },
+  { name: 'ML-DSA / SLH-DSA', layer: '中层护盾 · 工程层', r: R2, theta: 1.3, phi: 0.9, color: 0xa855f7, done: true,
+    rows: [['KAT','75 / 75'],['标准','FIPS 204 / 205']] },
+  { name: '国密 SM2 / SM3 / SM4', layer: '中层护盾 · 工程层', r: R2, theta: 2.5, phi: 1.2, color: 0xa855f7, done: true,
+    rows: [['SM2','9 / 9'],['SM3','32 / 32'],['SM4','7 / 7']] },
+  { name: 'FPGA NTT', layer: '中层护盾 · 工程层', r: R2, theta: 3.6, phi: 1.6, color: 0xa855f7, done: true,
+    rows: [['WNS','9.755 ns'],['平台','Artix-7']] },
+  { name: 'Python / Rust 绑定', layer: '中层护盾 · 工程层', r: R2, theta: 5.0, phi: 2.3, color: 0x60a5fa, done: false,
+    rows: [['状态','规划中'],['时间','Q1 2027']] },
+  { name: '第三方审计', layer: '中层护盾 · 工程层', r: R2, theta: 5.8, phi: 2.7, color: 0x60a5fa, done: false,
+    rows: [['状态','规划中'],['时间','Q2 2027']] },
+  // 外层 · 表现（蓝）
+  { name: '交互式可视化', layer: '外层护盾 · 表现层', r: R3, theta: 0.3, phi: 0.6, color: 0x3b82f6, done: true,
+    rows: [['类型','3D 交互'],['引擎','Three.js r157']] },
+  { name: '文档体系', layer: '外层护盾 · 表现层', r: R3, theta: 2.1, phi: 1.3, color: 0x3b82f6, done: true,
+    rows: [['语言','中 / 英'],['结构','按角色分发']] },
+  { name: 'TSR 证据链', layer: '外层护盾 · 表现层', r: R3, theta: 3.9, phi: 1.9, color: 0x3b82f6, done: true,
+    rows: [['范围','lg-001 ~ lg-069'],['方式','时间戳存证']] },
+];
+
+const clickables = [];
+nodeData.forEach(d => {
+  const mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(d.done ? 0.3 : 0.24, 24, 24),
+    new THREE.MeshStandardMaterial({
+      color: d.done ? 0x15161f : 0xeef1ff,
+      emissive: d.color,
+      emissiveIntensity: d.done ? 1.5 : 0.6,
+      roughness: 0.3, metalness: 0.3,
+    })
+  );
+  mesh.position.set(
+    d.r * Math.sin(d.theta) * Math.cos(d.phi),
+    d.r * Math.sin(d.theta) * Math.sin(d.phi),
+    d.r * Math.cos(d.theta)
+  );
+  mesh.userData = d;
+  scene.add(mesh);
+  clickables.push(mesh);
+});
+
+// 轨道粒子（沿环带旋转，表现护盾流动）
+const ORB_N = 400;
+const oPos = new Float32Array(ORB_N * 3);
+const oColor = new Float32Array(ORB_N * 3);
+const oMeta = [];
+const cInner = new THREE.Color(0xeab308), cMid = new THREE.Color(0xa855f7), cOuter = new THREE.Color(0x3b82f6);
+for (let i = 0; i < ORB_N; i++) {
+  const ring = i % 3;
+  const r = ring === 0 ? R1 : ring === 1 ? R2 : R3;
+  const ang = Math.random() * Math.PI * 2;
+  const y = (Math.random() - 0.5) * 0.8;
+  const speed = 0.004 + Math.random() * 0.012;
+  oMeta.push({ r, ang, y, speed });
+  const c = ring === 0 ? cInner : ring === 1 ? cMid : cOuter;
+  oColor[i*3] = c.r; oColor[i*3+1] = c.g; oColor[i*3+2] = c.b;
+}
+const oGeo = new THREE.BufferGeometry();
+oGeo.setAttribute('position', new THREE.BufferAttribute(oPos, 3));
+oGeo.setAttribute('color', new THREE.BufferAttribute(oColor, 3));
+const orbitParticles = new THREE.Points(oGeo, new THREE.PointsMaterial({ size: 0.06, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending }));
+scene.add(orbitParticles);
+
+function updateOrbit() {
+  for (let i = 0; i < ORB_N; i++) {
+    const m = oMeta[i];
+    m.ang += m.speed;
+    oPos[i*3] = m.r * Math.cos(m.ang);
+    oPos[i*3+1] = m.y;
+    oPos[i*3+2] = m.r * Math.sin(m.ang);
+  }
+  oGeo.attributes.position.needsUpdate = true;
+}
+
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let hovered = null;
+function setPointer(e) {
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+}
+window.addEventListener('pointermove', setPointer);
+window.addEventListener('pointerdown', (e) => {
+  setPointer(e);
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(clickables);
+  if (hits.length) openPanel(hits[0].object.userData);
+  else closePanel();
+});
+
+function openPanel(d) {
+  document.getElementById('p-title').textContent = d.name;
+  const tag = document.getElementById('p-layer');
+  tag.textContent = d.layer;
+  tag.style.color = '#' + d.color.toString(16).padStart(6, '0');
+  const st = document.getElementById('p-status');
+  st.className = 'status ' + (d.done ? 'done' : 'plan');
+  st.textContent = d.done ? '✅ 已实现' : '⏳ 规划中';
+  document.getElementById('p-body').innerHTML = d.rows.map(r =>
+    `<div class="row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`
+  ).join('');
+  document.getElementById('panel').style.display = 'block';
+}
+function closePanel() { document.getElementById('panel').style.display = 'none'; }
+window.closePanel = closePanel;
+
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  ringInner.material.uniforms.uTime.value = t;
+  ringMid.material.uniforms.uTime.value = t;
+  ringOuter.material.uniforms.uTime.value = t;
+  core.material.emissiveIntensity = 2.0 + 0.7 * Math.sin(t * 2);
+  coreGlow.scale.setScalar(1 + 0.15 * Math.sin(t * 1.5));
+
+  updateOrbit();
+
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(clickables);
+  if (hits.length && hovered !== hits[0].object) {
+    if (hovered) hovered.scale.setScalar(1);
+    hovered = hits[0].object;
+    hovered.scale.setScalar(1.35);
+    canvas.style.cursor = 'pointer';
+  } else if (!hits.length && hovered) {
+    hovered.scale.setScalar(1);
+    hovered = null;
+    canvas.style.cursor = 'default';
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>

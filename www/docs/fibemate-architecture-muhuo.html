@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE 安全架构 · 木火通明</title>
+<style>
+  :root {
+    --bg: #05060d;
+    --text: #d6d9e6;
+    --muted: rgba(214,217,230,.45);
+    --panel-bg: rgba(10,12,24,.92);
+    --border: rgba(255,255,255,.08);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #scene { position: fixed; inset: 0; display: block; }
+  /* 顶部标题 */
+  .hud { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 10; }
+  .hud h1 { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: 1px; }
+  .hud .sub { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 2px; }
+  /* 图例 */
+  .legend { position: fixed; left: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 10; pointer-events: none; }
+  .legend .item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot.wood { background: #10b981; box-shadow: 0 0 8px #10b981; }
+  .dot.fire { background: #f97316; box-shadow: 0 0 8px #f97316; }
+  .dot.light { background: #eab308; box-shadow: 0 0 8px #eab308; }
+  .dot.done { background: #1f2233; border: 1px solid #eab308; }
+  .dot.plan { background: #f5f7ff; border: 1px solid #60a5fa; }
+  /* 详情面板 */
+  #panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); width: 300px; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px; z-index: 20; display: none; backdrop-filter: blur(12px); }
+  #panel h2 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  #panel .layer-tag { font-size: 11px; letter-spacing: 1px; margin-bottom: 12px; }
+  #panel .row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+  #panel .row .k { color: var(--muted); }
+  #panel .row .v { color: var(--text); font-weight: 500; text-align: right; }
+  #panel .status { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; margin-bottom: 10px; }
+  #panel .status.done { background: rgba(16,185,129,.15); color: #34d399; }
+  #panel .status.plan { background: rgba(96,165,250,.15); color: #60a5fa; }
+  #panel .close { position: absolute; top: 12px; right: 14px; cursor: pointer; color: var(--muted); font-size: 18px; }
+  #panel .close:hover { color: var(--text); }
+  /* 提示 */
+  .hint { position: fixed; bottom: 20px; right: 20px; font-size: 11px; color: var(--muted); z-index: 10; pointer-events: none; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "../vwz-tensor/lib/three.module.js", "three/addons/": "../vwz-tensor/lib/" } }
+</script>
+</head>
+<body>
+<canvas id="scene"></canvas>
+
+<div class="hud">
+  <h1>FIBEMATE 安全架构 · 木火通明</h1>
+  <div class="sub">木 · 工程层&nbsp;&nbsp;|&nbsp;&nbsp;火 · 表现层&nbsp;&nbsp;|&nbsp;&nbsp;通明 · 理论层</div>
+</div>
+
+<div class="legend">
+  <div class="item"><span class="dot wood"></span>木 · 工程层（算法 / 硬件 / CI）</div>
+  <div class="item"><span class="dot fire"></span>火 · 表现层（可视化 / 文档 / 证据链）</div>
+  <div class="item"><span class="dot light"></span>通明 · 理论层（TLA+ / 安全模型）</div>
+  <div class="item"><span class="dot done"></span>已实现</div>
+  <div class="item"><span class="dot plan"></span>规划中</div>
+</div>
+
+<div id="panel">
+  <span class="close" onclick="closePanel()">×</span>
+  <h2 id="p-title"></h2>
+  <div class="layer-tag" id="p-layer"></div>
+  <div id="p-status"></div>
+  <div id="p-body"></div>
+</div>
+
+<div class="hint">拖动旋转 · 滚轮缩放 · 点击节点查看详情</div>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const canvas = document.getElementById('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 6, 16);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.6;
+controls.minDistance = 6;
+controls.maxDistance = 30;
+controls.target.set(0, 0, 0);
+
+// 光照
+scene.add(new THREE.AmbientLight(0x334, 1.2));
+const dir = new THREE.DirectionalLight(0xffffff, 1.4);
+dir.position.set(5, 8, 6);
+scene.add(dir);
+
+// 星点背景
+(function stars() {
+  const n = 700;
+  const pos = new Float32Array(n * 3);
+  for (let i = 0; i < n; i++) {
+    const r = 30 + Math.random() * 40;
+    const th = Math.random() * Math.PI * 2;
+    const ph = Math.acos(2 * Math.random() - 1);
+    pos[i*3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i*3+1] = r * Math.sin(ph) * Math.sin(th);
+    pos[i*3+2] = r * Math.cos(ph);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const m = new THREE.PointsMaterial({ color: 0x8899cc, size: 0.08, transparent: true, opacity: 0.6, depthWrite: false });
+  scene.add(new THREE.Points(g, m));
+})();
+
+// 护盾球壳着色器（菲涅尔边缘发光 + 扫描线）
+const shieldVert = `
+varying vec3 vWorldNormal;
+varying vec3 vWorldPos;
+void main() {
+  vWorldNormal = normalize(mat3(modelMatrix) * normal);
+  vec4 wp = modelMatrix * vec4(position, 1.0);
+  vWorldPos = wp.xyz;
+  gl_Position = projectionMatrix * viewMatrix * wp;
+}`;
+
+const shieldFrag = `
+uniform vec3 uColor;
+uniform float uTime;
+uniform float uOpacity;
+varying vec3 vWorldNormal;
+varying vec3 vWorldPos;
+void main() {
+  vec3 viewDir = normalize(cameraPosition - vWorldPos);
+  float fres = pow(1.0 - abs(dot(viewDir, normalize(vWorldNormal))), 2.5);
+  // 扫描线
+  float scan = 0.5 + 0.5 * sin(vWorldPos.y * 8.0 - uTime * 2.0);
+  float glow = fres * (0.6 + 0.4 * scan);
+  vec3 col = uColor * (glow + 0.12);
+  float alpha = clamp(glow, 0.05, 1.0) * uOpacity;
+  gl_FragColor = vec4(col, alpha);
+}`;
+
+function makeShield(radius, color, opacity) {
+  const geo = new THREE.SphereGeometry(radius, 64, 48);
+  const mat = new THREE.ShaderMaterial({
+    vertexShader: shieldVert,
+    fragmentShader: shieldFrag,
+    uniforms: {
+      uColor: { value: new THREE.Color(color) },
+      uTime: { value: 0 },
+      uOpacity: { value: opacity },
+    },
+    transparent: true,
+    depthWrite: false,
+    side: THREE.FrontSide,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  scene.add(mesh);
+  return mesh;
+}
+
+const R1 = 3.0, R2 = 5.0, R3 = 7.0;
+const shieldLight = makeShield(R1, 0xeab308, 0.55); // 通明 · 理论层 · 金
+const shieldWood  = makeShield(R2, 0x10b981, 0.45); // 木 · 工程层 · 青绿
+const shieldFire  = makeShield(R3, 0xf97316, 0.40); // 火 · 表现层 · 橙红
+
+// 核心（TLA+ 金色光核）
+const coreGeo = new THREE.SphereGeometry(0.55, 32, 32);
+const coreMat = new THREE.MeshStandardMaterial({ color: 0x11111a, emissive: 0xeab308, emissiveIntensity: 2.2, roughness: 0.2, metalness: 0.4 });
+const core = new THREE.Mesh(coreGeo, coreMat);
+scene.add(core);
+const coreHalo = new THREE.Mesh(
+  new THREE.SphereGeometry(1.0, 32, 32),
+  new THREE.ShaderMaterial({ vertexShader: shieldVert, fragmentShader: shieldFrag, uniforms: { uColor: { value: new THREE.Color(0xeab308) }, uTime: { value: 0 }, uOpacity: { value: 0.5 } }, transparent: true, depthWrite: false, side: THREE.BackSide })
+);
+scene.add(coreHalo);
+
+// 节点数据
+const nodeData = [
+  // 理论层（通明·金）
+  { name: 'TLA+ 形式化验证', layer: '通明 · 理论层', r: R1, theta: 0.4, phi: 0.0, color: 0xeab308, done: true,
+    rows: [['不变式','7 条'],['状态数','101,467'],['违规','0'],['TSR 存证','lg-069']] },
+  { name: '格硬度假设', layer: '通明 · 理论层', r: R1, theta: 2.2, phi: 0.6, color: 0xeab308, done: true,
+    rows: [['方法','lattice-estimator'],['BKZ-β','≈406'],['安全等级','128-bit PQC 基线']] },
+  { name: 'FALCON 安全模型', layer: '通明 · 理论层', r: R1, theta: 4.0, phi: 2.0, color: 0x60a5fa, done: false,
+    rows: [['状态','规划中'],['说明','NIST 额外签名标准']] },
+  // 工程层（木·青绿）
+  { name: 'ML-KEM-768', layer: '木 · 工程层', r: R2, theta: 0.0, phi: 0.3, color: 0x10b981, done: true,
+    rows: [['KAT','10,000 / 10,000'],['标准','FIPS 203']] },
+  { name: 'ML-DSA / SLH-DSA', layer: '木 · 工程层', r: R2, theta: 1.25, phi: 0.8, color: 0x10b981, done: true,
+    rows: [['KAT','75 / 75'],['标准','FIPS 204 / 205']] },
+  { name: '国密 SM2 / SM3 / SM4', layer: '木 · 工程层', r: R2, theta: 2.5, phi: 1.1, color: 0x10b981, done: true,
+    rows: [['SM2','9 / 9 测试'],['SM3','32 / 32 测试'],['SM4','7 / 7 测试']] },
+  { name: 'FPGA NTT', layer: '木 · 工程层', r: R2, theta: 3.7, phi: 1.5, color: 0x10b981, done: true,
+    rows: [['WNS','9.755 ns'],['平台','Artix-7']] },
+  { name: 'Python / Rust 绑定', layer: '木 · 工程层', r: R2, theta: 5.0, phi: 2.2, color: 0x60a5fa, done: false,
+    rows: [['状态','规划中'],['时间','Q1 2027']] },
+  { name: '第三方审计', layer: '木 · 工程层', r: R2, theta: 5.9, phi: 2.6, color: 0x60a5fa, done: false,
+    rows: [['状态','规划中'],['时间','Q2 2027']] },
+  // 表现层（火·橙红）
+  { name: '交互式可视化', layer: '火 · 表现层', r: R3, theta: 0.3, phi: 0.5, color: 0xf97316, done: true,
+    rows: [['类型','3D 交互'],['引擎','Three.js r157']] },
+  { name: '文档体系', layer: '火 · 表现层', r: R3, theta: 2.0, phi: 1.2, color: 0xf97316, done: true,
+    rows: [['语言','中 / 英'],['结构','按角色分发']] },
+  { name: 'TSR 证据链', layer: '火 · 表现层', r: R3, theta: 3.9, phi: 1.8, color: 0xf97316, done: true,
+    rows: [['范围','lg-001 ~ lg-069'],['方式','时间戳存证']] },
+];
+
+const clickables = [];
+function makeNode(d) {
+  const geo = new THREE.SphereGeometry(d.done ? 0.28 : 0.22, 24, 24);
+  const mat = new THREE.MeshStandardMaterial({
+    color: d.done ? 0x15161f : 0xeef1ff,
+    emissive: d.color,
+    emissiveIntensity: d.done ? 1.4 : 0.6,
+    roughness: 0.3, metalness: 0.3,
+  });
+  const mesh = new THREE.Mesh(geo, mat);
+  const pos = new THREE.Vector3(
+    d.r * Math.sin(d.theta) * Math.cos(d.phi),
+    d.r * Math.sin(d.theta) * Math.sin(d.phi),
+    d.r * Math.cos(d.theta),
+  );
+  mesh.position.copy(pos);
+  mesh.userData = d;
+  scene.add(mesh);
+  clickables.push(mesh);
+  return mesh;
+}
+const nodeMeshes = nodeData.map(makeNode);
+
+// 粒子流（内→外，验证流）
+const PARTICLE_N = 300;
+const pPos = new Float32Array(PARTICLE_N * 3);
+const pColor = new Float32Array(PARTICLE_N * 3);
+const pMeta = []; // {theta, phi, r, speed, color}
+const colGold = new THREE.Color(0xeab308);
+const colWood = new THREE.Color(0x10b981);
+const colFire = new THREE.Color(0xf97316);
+for (let i = 0; i < PARTICLE_N; i++) {
+  const theta = Math.acos(2 * Math.random() - 1);
+  const phi = Math.random() * Math.PI * 2;
+  const r = R1 + Math.random() * (R3 - R1);
+  const speed = 0.008 + Math.random() * 0.02;
+  // 颜色随半径渐变：金→青→橙
+  const t = (r - R1) / (R3 - R1);
+  let c;
+  if (t < 0.5) c = colGold.clone().lerp(colWood, t * 2);
+  else c = colWood.clone().lerp(colFire, (t - 0.5) * 2);
+  pMeta.push({ theta, phi, r, speed });
+  pColor[i*3] = c.r; pColor[i*3+1] = c.g; pColor[i*3+2] = c.b;
+}
+const pGeo = new THREE.BufferGeometry();
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('color', new THREE.BufferAttribute(pColor, 3));
+const pMat = new THREE.PointsMaterial({ size: 0.07, vertexColors: true, transparent: true, opacity: 0.85, depthWrite: false, blending: THREE.AdditiveBlending });
+const particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+
+function updateParticles() {
+  for (let i = 0; i < PARTICLE_N; i++) {
+    const m = pMeta[i];
+    m.r += m.speed;
+    if (m.r > R3) { m.r = R1; m.theta = Math.acos(2 * Math.random() - 1); m.phi = Math.random() * Math.PI * 2; }
+    pPos[i*3] = m.r * Math.sin(m.theta) * Math.cos(m.phi);
+    pPos[i*3+1] = m.r * Math.sin(m.theta) * Math.sin(m.phi);
+    pPos[i*3+2] = m.r * Math.cos(m.theta);
+  }
+  pGeo.attributes.position.needsUpdate = true;
+}
+
+// 交互
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let hovered = null;
+
+function onPointerMove(e) {
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+}
+function onPointerDown(e) {
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(clickables);
+  if (hits.length) openPanel(hits[0].object.userData);
+  else closePanel();
+}
+window.addEventListener('pointermove', onPointerMove);
+window.addEventListener('pointerdown', onPointerDown);
+
+function openPanel(d) {
+  document.getElementById('p-title').textContent = d.name;
+  const tag = document.getElementById('p-layer');
+  tag.textContent = d.layer;
+  tag.style.color = '#' + d.color.toString(16).padStart(6, '0');
+  const st = document.getElementById('p-status');
+  st.className = 'status ' + (d.done ? 'done' : 'plan');
+  st.textContent = d.done ? '✅ 已实现' : '⏳ 规划中';
+  document.getElementById('p-body').innerHTML = d.rows.map(r =>
+    `<div class="row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`
+  ).join('');
+  document.getElementById('panel').style.display = 'block';
+}
+function closePanel() { document.getElementById('panel').style.display = 'none'; }
+window.closePanel = closePanel;
+
+// 主循环
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const t = clock.getElapsedTime();
+  shieldLight.material.uniforms.uTime.value = t;
+  shieldWood.material.uniforms.uTime.value = t;
+  shieldFire.material.uniforms.uTime.value = t;
+  coreHalo.material.uniforms.uTime.value = t;
+  core.material.emissiveIntensity = 1.8 + 0.6 * Math.sin(t * 2);
+
+  updateParticles();
+
+  // hover 检测
+  raycaster.setFromCamera(pointer, camera);
+  const hits = raycaster.intersectObjects(clickables);
+  if (hits.length && hovered !== hits[0].object) {
+    if (hovered) hovered.scale.setScalar(1);
+    hovered = hits[0].object;
+    hovered.scale.setScalar(1.35);
+    canvas.style.cursor = 'pointer';
+  } else if (!hits.length && hovered) {
+    hovered.scale.setScalar(1);
+    hovered = null;
+    canvas.style.cursor = 'default';
+  }
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
