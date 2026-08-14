@@ -1,6 +1,6 @@
 # FIBEMATE 开源前安全审计自检清单
 
-> 版本：v1.0 · 日期：2026-08-12 · 开源日：2026-08-31（D-19）
+> 版本：v1.1 · 日期：2026-08-14 · 开源日：2026-08-31（D-17）
 
 ---
 
@@ -64,7 +64,7 @@
 | 指标 | 值 |
 |------|:---:|
 | .tsr 文件 | 225+ |
-| timestamp-manifest.json v3 | 126 条记录 |
+| timestamp-manifest.json v4 | 215 条记录 |
 | 签发机构 | DigiCert + FreeTSA 双机构 |
 | 存证范围 | 代码提交/测试结果/文档版本/TSR 自校验 |
 
@@ -76,11 +76,11 @@
 
 | 检查项 | 状态 |
 |------|:---|
-| Dependabot alerts | 23 open（10 high, 8 moderate, 5 low）— 全为传递性依赖 |
+| Dependabot alerts | 45 open（12 high, 23 moderate, 10 low）— 全为传递性依赖 |
 | cargo audit | ✅ 无高危 |
-| npm audit | ⚠️ www/ 有 4 个剩余（path-to-regexp/body-parser，需 express 5.x） |
+| npm audit | ⚠️ 根目录 5 个（含 1 critical sm-crypto）+ www/ 4 个（path-to-regexp/body-parser，需 express 5.x） |
 
-**已确认**：0 条触及核心 PQC 代码（ml-kem/sm2/fml-dsa/double-ratchet）
+**已确认**：1 条 critical 触及混合 KEM 的 SM2 密钥生成路径（sm-crypto@0.4.0，jsbn Math.random RNG，GHSA-vh45-f885-3848）；其余 44 条全为传递性依赖，0 条触及 ml-kem/fml-dsa/double-ratchet
 
 ---
 
@@ -92,6 +92,7 @@
 | **LookingGlass v2.3** | 🔴 高 | 默认关闭；上下文相关置换，非密码学安全承诺 | ✅ 标注"实验性，默认关闭" |
 | **纯 JS SM2/3/4** | 🟡 中 | 非常数时间 | ✅ README 已声明 |
 | **fml-dsa (Phase 1)** | 🟡 中 | 当前走 noble fallback，非自研实现 | ✅ portrait 已标注 |
+| **sm-crypto@0.4.0 直接依赖** | 🔴 高 | SM2 密钥生成可预测（jsbn Math.random RNG） | ✅ 8/31 后升级 0.5.5 |
 
 ---
 
@@ -128,12 +129,12 @@
 | VWZ/LookingGlass 实验性声明 | ✅ |
 | 文档一致性 (ARCHITECTURE/ROADMAP/README/ANNOUNCEMENT) | ✅ |
 | TSR 存证链完整 | ✅ |
-| Dependabot 告警已审计 | ✅ (docs/NPM-AUDIT-STATUS.md，0/7 核心包受影响) |
+| Dependabot 告警已审计 | ✅ (docs/NPM-AUDIT-STATUS.md，1 critical sm-crypto 已记录，8/31 后升级) |
 | OpenSSF Scorecard ≥7.0 | ❌ (当前 5.2) |
 | 第三方审计 | ❌ (2027 Q2) |
 
-> **Sign-off 条件**：以上 ⏳ + ❌ 项中仅 OpenSSF Silver 和第三方审计为可延后项（属"开源后持续改进"范畴），其余需 8/31 前清零。
+> **Sign-off 条件**：以上 ⏳ + ❌ 项中 OpenSSF Silver、第三方审计、sm-crypto critical 升级为可延后项（属"开源后持续改进"范畴），其余需 8/31 前清零。
 
 ---
 
-*自检完成时间：2026-08-12 ~09:55 CST · 下次更新：Dependabot review 完成后*
+*自检完成时间：2026-08-12 ~09:55 CST · 上次修订：2026-08-14 12:30 CST（补记 sm-crypto critical + 数字同步）*
