@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📖 FIBEMATE 文档中心</title>
+<style>
+:root { --bg:#08080d; --card:#0f0f18; --accent:#10b981; --text:#d0d0d0; --muted:rgba(255,255,255,.35); }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: system-ui, -apple-system, sans-serif; padding: 32px 20px; max-width: 900px; margin: 0 auto; }
+h1 { font-size: 28px; margin-bottom: 8px; }
+.sub { color: var(--muted); font-size: 13px; margin-bottom: 28px; }
+section { background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: 10px; padding: 18px 20px; margin-bottom: 16px; }
+section h2 { font-size: 17px; margin-bottom: 12px; }
+ul { list-style: none; }
+li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.04); }
+li:last-child { border-bottom: none; }
+a { color: var(--accent); text-decoration: none; font-weight: 500; }
+a:hover { text-decoration: underline; }
+.desc { color: var(--muted); font-size: 12px; display: block; margin-top: 2px; }
+.missing { color: rgba(255,255,255,.15); }
+</style>
+</head>
+<body>
+<h1>📖 FIBEMATE 文档中心</h1>
+<div class="sub">按角色分发的文档导航 · 自动生成</div>
+<section><h2>🧑‍💻 开发者入口</h2><ul><li><a href="/docs/TECHNICAL-VERIFICATION.md">TECHNICAL VERIFICATION</a><span class="desc">硬件加速、软件优化、安全性三个维度的可验证证据汇总，含 KAT、TVLA、TSR 存证索引。</span></li><li><a href="/docs/tls-hybrid-deployment.md">Tls Hybrid Deployment</a><span class="desc">TLS 1.3 混合后量子握手（X25519MLKEM768）部署步骤与 oqs-provider 配置。</span></li><li><a href="/docs/performance-benchmarks-2026-07-18.md">Performance Benchmarks 2026 07 18</a><span class="desc">ML-KEM-768、SM2 等核心操作的实测性能数据（环境：Intel Xeon、Node v22）。</span></li><li><a href="/docs/good-first-issues.md">Good First Issues</a><span class="desc">新手友好的入门贡献任务，无需密码学背景。</span></li><li><a href="/docs/ANNOUNCEMENT.md">ANNOUNCEMENT</a><span class="desc">v3.3.0 正式开源公告（2026-08-31），GPL-3.0。</span></li></ul></section><section><h2>🔒 安全审计入口</h2><ul><li><a href="/docs/known-issues.md">Known Issues</a><span class="desc">已确认的已知问题与限制。</span></li><li><a href="/docs/INCIDENT_RESPONSE_PLAN.md">INCIDENT RESPONSE PLAN</a><span class="desc">安全事件响应计划与处置流程。</span></li><li><a href="/docs/RECOVERY_PLAN.md">RECOVERY PLAN</a><span class="desc">灾难恢复流程。</span></li><li><a href="/docs/SM2_TVLA_STATUS.md">SM2 TVLA STATUS</a><span class="desc">SM2 侧信道（TVLA）测试状态说明，教学/验证用途。</span></li><li><a href="/docs/TVLA-RAW-DISCLAIMER.md">TVLA RAW DISCLAIMER</a><span class="desc">TVLA 报告仅含统计结果、不含原始轨迹数据的说明。</span></li></ul></section><section><h2>📚 学习入口</h2><ul><li><a href="/docs/ml-kem-security-estimate.md">Ml Kem Security Estimate</a><span class="desc">基于 lattice-estimator 的 ML-KEM 安全性估计。</span></li><li><a href="/docs/facts.md">Facts</a><span class="desc">面向 AI 检索的结构化项目事实页。</span></li><li><a href="/docs/discussions-welcome.md">Discussions Welcome</a><span class="desc">社区欢迎与项目三条技术线简介。</span></li><li><a href="/docs/discussions-quickstart.md">Discussions Quickstart</a><span class="desc">本地运行与快速开始步骤。</span></li><li><a href="/docs/discussions-architecture.md">Discussions Architecture</a><span class="desc">系统架构讨论。</span></li></ul></section><section><h2>🏢 企业决策入口</h2><ul><li><a href="/docs/PQC_MIGRATION_PLAN.md">PQC MIGRATION PLAN</a><span class="desc">传统密码学向后量子密码学迁移路线图（至 2030）。</span></li><li><a href="/docs/FIBEMATE-STATUS-20260527.md">FIBEMATE STATUS 20260527</a><span class="desc">v3.0-preview 项目状态报告（2026-05-27）。</span></li><li><a href="/docs/OPEN_SOURCE_COUNTDOWN.md">OPEN SOURCE COUNTDOWN</a><span class="desc">开源倒计时清单与时间线。</span></li></ul></section><section><h2>📄 全部文档（18）</h2><ul><li><a href="/docs/ANNOUNCEMENT.md">ANNOUNCEMENT</a></li><li><a href="/docs/FIBEMATE-STATUS-20260527.md">FIBEMATE STATUS 20260527</a></li><li><a href="/docs/INCIDENT_RESPONSE_PLAN.md">INCIDENT RESPONSE PLAN</a></li><li><a href="/docs/OPEN_SOURCE_COUNTDOWN.md">OPEN SOURCE COUNTDOWN</a></li><li><a href="/docs/PQC_MIGRATION_PLAN.md">PQC MIGRATION PLAN</a></li><li><a href="/docs/RECOVERY_PLAN.md">RECOVERY PLAN</a></li><li><a href="/docs/SM2_TVLA_STATUS.md">SM2 TVLA STATUS</a></li><li><a href="/docs/TECHNICAL-VERIFICATION.md">TECHNICAL VERIFICATION</a></li><li><a href="/docs/TVLA-RAW-DISCLAIMER.md">TVLA RAW DISCLAIMER</a></li><li><a href="/docs/discussions-architecture.md">Discussions Architecture</a></li><li><a href="/docs/discussions-quickstart.md">Discussions Quickstart</a></li><li><a href="/docs/discussions-welcome.md">Discussions Welcome</a></li><li><a href="/docs/facts.md">Facts</a></li><li><a href="/docs/good-first-issues.md">Good First Issues</a></li><li><a href="/docs/known-issues.md">Known Issues</a></li><li><a href="/docs/ml-kem-security-estimate.md">Ml Kem Security Estimate</a></li><li><a href="/docs/performance-benchmarks-2026-07-18.md">Performance Benchmarks 2026 07 18</a></li><li><a href="/docs/tls-hybrid-deployment.md">Tls Hybrid Deployment</a></li></ul></section></body></html>
