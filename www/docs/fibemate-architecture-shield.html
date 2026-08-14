@@ -6,7 +6,7 @@
 <title>FIBEMATE Security Architecture · Three-Layer Shield</title>
 <style>
   :root {
-    --bg: #050a11;
+    --bg: #060c16;
     --text: #dfe4f2;
     --muted: rgba(180,210,225,.5);
     --panel-bg: rgba(5,14,26,.94);
@@ -21,12 +21,12 @@
     position: fixed;
     inset: 0;
     z-index: 0;
-    background-color: #050a11;
+    background-color: #060c16;
     background-image:
-      radial-gradient(ellipse 90% 60% at 15% 55%, rgba(0,80,90,.55) 0%, transparent 65%),
-      radial-gradient(ellipse 70% 50% at 82% 30%, rgba(0,50,70,.45) 0%, transparent 60%),
-      radial-gradient(ellipse 60% 80% at 50% 90%, rgba(0,30,50,.40) 0%, transparent 55%),
-      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V16L28 0l28 16v34L28 66zm0-2.31L54 50.18V17.82L28 2.31 2 17.82v32.36L28 63.69z' fill='none' stroke='%2300d4d4' stroke-width='0.4' stroke-opacity='0.18'/%3E%3Cpath d='M28 34L0 50V16L28 0 56 16v34L28 66 0 50v-0.36' fill='none' stroke='%2300d4d4' stroke-width='0.4' stroke-opacity='0.10'/%3E%3C/svg%3E");
+      radial-gradient(ellipse 90% 60% at 15% 55%, rgba(0,60,80,.10) 0%, transparent 65%),
+      radial-gradient(ellipse 70% 50% at 82% 30%, rgba(0,40,60,.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 50% 90%, rgba(0,25,50,.06) 0%, transparent 55%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V16L28 0l28 16v34L28 66zm0-2.31L54 50.18V17.82L28 2.31 2 17.82v32.36L28 63.69z' fill='none' stroke='%2300d4d4' stroke-width='0.4' stroke-opacity='0.038'/%3E%3Cpath d='M28 34L0 50V16L28 0 56 16v34L28 66 0 50v-0.36' fill='none' stroke='%2300d4d4' stroke-width='0.4' stroke-opacity='0.020'/%3E%3C/svg%3E");
     background-size: 100% 100%, 100% 100%, 100% 100%, 56px 100px;
     pointer-events: none;
   }
@@ -724,38 +724,33 @@ window.addEventListener('resize', () => {
   }
 
   // ── CANCER halo marker (90°, west-southwest / Chengdu direction) ──
+  // theta=PI/2, phi=PI/2 → (x,y,z)=(0, ZR, 0) — top of equatorial plane
   {
-    const theta = Math.PI / 2; // equatorial
-    const phi   = Math.PI / 2; // 90° = +x axis = east in screen coords
-    const r     = ZR;
-    const x = r * Math.sin(theta) * Math.cos(phi);
-    const y = r * Math.sin(theta) * Math.sin(phi);
-    const z = r * Math.cos(theta);
+    const cx = 0, cy = ZR, cz = 0;
 
-    // Main star
+    // Main star at (0, ZR, 0)
     const starGeo = new THREE.SphereGeometry(0.09, 16, 16);
     const starMat = new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.92 });
     const star = new THREE.Mesh(starGeo, starMat);
-    star.position.set(x, y, z);
+    star.position.set(cx, cy, cz);
     scene.add(star);
 
-    // Halo ring
-    const haloGeo = new THREE.TorusGeometry(ZR, 0.035, 8, 80);
+    // Halo ring — lies in XZ plane, centered on Cancer star
+    const haloGeo = new THREE.TorusGeometry(0.35, 0.025, 8, 80);
     const haloMat = new THREE.MeshBasicMaterial({
-      color: 0xff8c42, transparent: true, opacity: 0.5, depthWrite: false,
+      color: 0xff8c42, transparent: true, opacity: 0.55, depthWrite: false,
     });
     const halo = new THREE.Mesh(haloGeo, haloMat);
-    halo.rotation.x = Math.PI / 2;
-    halo.rotation.z = Math.PI / 2;
+    halo.position.set(cx, cy, cz);
     scene.add(halo);
 
-    // Outer glow
-    const glowGeo = new THREE.SphereGeometry(0.22, 16, 16);
+    // Outer glow sphere
+    const glowGeo = new THREE.SphereGeometry(0.28, 16, 16);
     const glowMat = new THREE.MeshBasicMaterial({
       color: 0xff8c42, transparent: true, opacity: 0.18, depthWrite: false,
     });
     const glow = new THREE.Mesh(glowGeo, glowMat);
-    glow.position.set(x, y, z);
+    glow.position.set(cx, cy, cz);
     scene.add(glow);
 
     // Text label
@@ -763,7 +758,7 @@ window.addEventListener('resize', () => {
       fontSize: 20, color: '#ff8c42', strokeColor: '#050a11', strokeWidth: 3,
       canvasW: 200, canvasH: 50,
     });
-    lb.position.set(x * 1.1, y + 0.5, z * 1.1);
+    lb.position.set(cx, cy + 0.7, cz);
     scene.add(lb);
   }
 
