@@ -9,80 +9,12 @@
  *   - 仅在客户端本地过滤噪声后得到真实匹配
  * 
  * 技术：
- *   - MurmurHash3 (128-bit) → 双哈希模拟 k 次
+ *   - SHA-256 双哈希 → 模拟 k 次哈希位置
  *   - 优化参数: m=1024 bits, k=7 hashes
  *   - 差分隐私: ε=1.0, 随机噪声 N(μ,σ²) 条目
  */
 
 const crypto = require('crypto');
-
-// ========== MurmurHash3 (128-bit) ==========
-function murmurhash3_x64_128(key, seed = 0) {
-  const len = Buffer.byteLength(key, 'utf8');
-  const buf = Buffer.from(key, 'utf8');
-  
-  const h1 = [seed >>> 0, seed >>> 0];
-  const h2 = [seed >>> 0, seed >>> 0];
-  const c1 = [0x87c37b91114253d5, 0x4cf5ad432745937f];
-  const c2 = [0x4cf5ad432745937f, 0x517cc1b727220a95];
-  
-  function add(h, val) {
-    h[1] += val >>> 0;
-    h[1] = (h[1] + (val / 0x100000000) >>> 0) >>> 0;
-    h[0] += h[1];
-    h[0] = (h[0] + (h[1] / 0x100000000) >>> 0) >>> 0;
-  }
-  
-  function fmix64(h) {
-    h[0] ^= h[1];
-    h[0] = Math.imul(h[0], 0xff51afd7ed558ccd);
-    h[0] ^= h[0] >>> 33;
-    h[0] = Math.imul(h[0], 0xc4ceb9fe1a85ec53);
-    h[0] ^= h[0] >>> 33;
-    h[1] ^= h[0];
-    h[1] = Math.imul(h[1], 0xff51afd7ed558ccd);
-    h[1] ^= h[1] >>> 33;
-    h[1] = Math.imul(h[1], 0xc4ceb9fe1a85ec53);
-    h[1] ^= h[1] >>> 33;
-  }
-  
-  const nblocks = Math.floor(len / 16);
-  for (let i = 0; i < nblocks; i++) {
-    const k1 = [buf.readUInt32LE(i * 16), buf.readUInt32LE(i * 16 + 4)];
-    const k2 = [buf.readUInt32LE(i * 16 + 8), buf.readUInt32LE(i * 16 + 12)];
-    
-    k1[0] = Math.imul(k1[0], c1[0]); k1[0] = (k1[0] + (Math.imul(k1[0], c1[1]) / 0x100000000) >>> 0) >>> 0;
-    k1[1] = Math.imul(k1[1], c1[0]); k1[1] = (k1[1] + (Math.imul(k1[1], c1[1]) / 0x100000000) >>> 0) >>> 0;
-    // Simplified: use simpler hash combination
-    
-    add(h1, k1[0]);
-    add(h1, k2[0]);
-    add(h2, k1[1]);
-    add(h2, k2[1]);
-  }
-  
-  const tail = len % 16;
-  if (tail > 0) {
-    let k1 = 0, k2 = 0;
-    for (let i = nblocks * 16; i < len; i++) {
-      if (i - nblocks * 16 < 8) k1 = (k1 * 31 + buf[i]) >>> 0;
-      else k2 = (k2 * 31 + buf[i]) >>> 0;
-    }
-    add(h1, k1);
-    add(h2, k2);
-  }
-  
-  h1[0] ^= len; h1[1] ^= len;
-  h2[0] ^= len; h2[1] ^= len;
-  
-  fmix64(h1);
-  fmix64(h2);
-  
-  h1[0] += h2[0]; h1[1] += h2[1];
-  h2[0] += h1[0]; h2[1] += h1[1];
-  
-  return { h1: h1[0] >>> 0, h2: h1[1] >>> 0, h3: h2[0] >>> 0, h4: h2[1] >>> 0 };
-}
 
 // ========== Bloom Filter ==========
 
