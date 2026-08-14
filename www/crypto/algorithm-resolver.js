@@ -28,7 +28,7 @@
       ianaGroup: null, nistLevel: 5, quantumBits: 192
     },
     'SM2': {
-      pkSize: 64, skSize: 32, ssSize: 32,
+      pkSize: 65, skSize: 32, ssSize: 32,
       ianaGroup: 41, nistLevel: null, quantumBits: null
     },
     'P-256': {

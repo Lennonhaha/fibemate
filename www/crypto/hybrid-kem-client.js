@@ -291,14 +291,14 @@
     },
 
     // ---- 导出常量 ----
-    ianaGroupId(),
+    IANA_GROUP_ID: ianaGroupId(),
     HYBRID_KEY_SHARE_LEN: 2 + sm2PkLen() + mlkemPkLen(),  // 1253
-    sm2PkLen(),
-    mlkemPkLen(),
-    mlkemCtLen(),
-    mlkemSsLen(),
-    sm2SsLen(),
-    hybridSsLen(),
+    SM2_PK_LEN: sm2PkLen(),
+    MLKEM_PK_LEN: mlkemPkLen(),
+    MLKEM_CT_LEN: mlkemCtLen(),
+    MLKEM_SS_LEN: mlkemSsLen(),
+    SM2_SS_LEN: sm2SsLen(),
+    HYBRID_SS_LEN: hybridSsLen(),
 
     // ---- 测试：自检 ----
     async selfTest() {
