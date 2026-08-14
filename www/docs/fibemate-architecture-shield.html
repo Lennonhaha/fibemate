@@ -385,7 +385,7 @@ function makeTextSprite(text, opts = {}) {
   cLbl.position.set((ZR + 1.0) * Math.cos(THREE.MathUtils.degToRad(105)), 0.4, (ZR + 1.0) * Math.sin(THREE.MathUtils.degToRad(105)));
   scene.add(cLbl);
 
-  // ─── LEO (136-deg, NE) ───
+  // ─── LEO (140-deg, NE) ───
   // Amber/gold flowing curve, sickle/trapezoid shape
   nebula(136, 0.0, 'rgba(255,170,30,$OP$)', 4.2, 0.20);
   nebula(131, -0.05, 'rgba(255,130,10,$OP$)', 2.8, 0.14);
@@ -408,7 +408,7 @@ function makeTextSprite(text, opts = {}) {
                      (ZR + 1.1) * Math.sin(THREE.MathUtils.degToRad(136)));
   scene.add(leoLbl);
 
-  // ─── VIRGO (168-deg, NE) ───
+  // ─── VIRGO (170-deg, NE) ───
   // Blue-purple star field, Spica brightest
   nebula(168, 0.0, 'rgba(180,90,220,$OP$)', 4.3, 0.22);
   nebula(160, -0.06, 'rgba(140,70,200,$OP$)', 2.8, 0.16);
@@ -477,7 +477,7 @@ function makeTextSprite(text, opts = {}) {
 
   // Bottom narrative label
   const botSp = makeTextSprite(
-    'CANCER 105-deg SW · Chengdu  |  LEO 136-deg NE  |  VIRGO 168-deg NE  |  SAGITTARIUS 252-deg NE · Harbin',
+    'CANCER 105-deg SW · Chengdu  |  LEO 140-deg NE  |  VIRGO 170-deg NE  |  SAGITTARIUS 252-deg NE · Harbin',
     { fontSize: 10, color: 'rgba(0,212,212,0.5)', canvasW: 960, canvasH: 28 }
   );
   botSp.position.set(0, -ZR - 1.0, 0);
