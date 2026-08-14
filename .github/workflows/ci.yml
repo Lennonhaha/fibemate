@@ -144,3 +144,6 @@ jobs:
 
       - name: Scan tracked text files for UTF-8 BOM
         run: node scripts/check-bom.cjs
+
+      - name: Scan tracked text files for encoding corruption (U+FFFD / GBK / NUL)
+        run: node scripts/check-encoding.cjs
