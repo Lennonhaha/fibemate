@@ -258,6 +258,7 @@ function makeTextSprite(text, opts = {}) {
     const x = r * Math.cos(rad);
     const y = 0;
     const z = r * Math.sin(rad);
+    sz *= 3.0;  // 放大星体：入场/呼吸动画在远距离下可见
     const grp = new THREE.Group();
     // Core
     const coreGeo = new THREE.SphereGeometry(sz, 16, 16);
@@ -320,6 +321,7 @@ function makeTextSprite(text, opts = {}) {
   // Flowing wisp tube between points (CatmullRom smooth curve)
   function wisp(pts, color, tubeR, op) {
     if (pts.length < 2) return;
+    tubeR *= 2.6;  // 与放大后的星体保持比例
     // Use CatmullRom for organic flow
     const curve = new THREE.CatmullRomCurve3(pts, false, 'catmullrom', 0.5);
     const geo = new THREE.TubeGeometry(curve, Math.max(20, pts.length * 6), tubeR, 6, false);
@@ -354,19 +356,19 @@ function makeTextSprite(text, opts = {}) {
     return new THREE.Vector3(r * Math.cos(rad), 0, r * Math.sin(rad));
   }
 
-  // ─── CANCER (90-deg, SW / Chengdu) ───
+  // ─── CANCER (105-deg, SW / Chengdu) ───
   // Cluster of warm gold stars + soft nebulae
-  nebula(90, 0.0, 'rgba(255,160,40,$OP$)', 4.0, 0.22);
-  nebula(90, 0.05, 'rgba(255,120,20,$OP$)', 2.8, 0.15);
-  const c1 = orb(90, -0.20, 0xfff4c0, 0xffc040, 0.080);
-  const c2 = orb(86, -0.10, 0xffeab0, 0xffa030, 0.062);
-  const c3 = orb(94, -0.14, 0xfff0b0, 0xffb020, 0.058);
-  const c4 = orb(91, 0.02, 0xffe8a0, 0xff8020, 0.052);
+  nebula(105, 0.0, 'rgba(255,160,40,$OP$)', 4.0, 0.22);
+  nebula(105, 0.05, 'rgba(255,120,20,$OP$)', 2.8, 0.15);
+  const c1 = orb(105, -0.20, 0xfff4c0, 0xffc040, 0.080);
+  const c2 = orb(101, -0.10, 0xffeab0, 0xffa030, 0.062);
+  const c3 = orb(109, -0.14, 0xfff0b0, 0xffb020, 0.058);
+  const c4 = orb(106, 0.02, 0xffe8a0, 0xff8020, 0.052);
   wisp([c1, c2, c3, c4, c1], 0xffc040, 0.011, 0.45);
   // Cancer halo ring FIX: positioned at the actual star position
-  const cHalo = orb(90, 0, 0xfff4c0, 0xff8c42, 0.085);
+  const cHalo = orb(105, 0, 0xfff4c0, 0xff8c42, 0.085);
   // Halo ring around Cancer star
-  const cRingGeo = new THREE.TorusGeometry(0.22, 0.025, 8, 32);
+  const cRingGeo = new THREE.TorusGeometry(0.62, 0.06, 8, 32);
   const cRingMat = new THREE.MeshBasicMaterial({
     color: 0xff8c42, transparent: true, opacity: 0.55,
     depthWrite: false, blending: THREE.AdditiveBlending,
@@ -380,7 +382,7 @@ function makeTextSprite(text, opts = {}) {
     strokeColor: '#050a11', strokeWidth: 4,
     canvasW: 180, canvasH: 46,
   });
-  cLbl.position.set((ZR + 1.0) * Math.cos(Math.PI / 2), 0.4, (ZR + 1.0) * Math.sin(Math.PI / 2));
+  cLbl.position.set((ZR + 1.0) * Math.cos(THREE.MathUtils.degToRad(105)), 0.4, (ZR + 1.0) * Math.sin(THREE.MathUtils.degToRad(105)));
   scene.add(cLbl);
 
   // ─── LEO (136-deg, NE) ───
@@ -447,7 +449,7 @@ function makeTextSprite(text, opts = {}) {
   wisp([kausMed, nunki], 0xff3008, 0.008, 0.30);
   // Sagittarius halo ring
   const sHalo = orb(252, 0, 0xffd8b8, 0xff8c42, 0.085);
-  const sRingGeo = new THREE.TorusGeometry(0.22, 0.025, 8, 32);
+  const sRingGeo = new THREE.TorusGeometry(0.62, 0.06, 8, 32);
   const sRingMat = new THREE.MeshBasicMaterial({
     color: 0xff8c42, transparent: true, opacity: 0.55,
     depthWrite: false, blending: THREE.AdditiveBlending,
@@ -475,7 +477,7 @@ function makeTextSprite(text, opts = {}) {
 
   // Bottom narrative label
   const botSp = makeTextSprite(
-    'CANCER 90-deg SW · Chengdu  |  LEO 136-deg NE  |  VIRGO 168-deg NE  |  SAGITTARIUS 252-deg NE · Harbin',
+    'CANCER 105-deg SW · Chengdu  |  LEO 136-deg NE  |  VIRGO 168-deg NE  |  SAGITTARIUS 252-deg NE · Harbin',
     { fontSize: 10, color: 'rgba(0,212,212,0.5)', canvasW: 960, canvasH: 28 }
   );
   botSp.position.set(0, -ZR - 1.0, 0);
