@@ -6,7 +6,7 @@
 
 describe('Security', () => {
   const BASE_URL = 'http://localhost:3000';
-  const API_URL = 'window.location.origin + '/api'';
+  const API_URL = window.location.origin + '/api';
   
   beforeEach(() => {
     cy.clearLocalStorage();

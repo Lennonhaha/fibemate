@@ -64,7 +64,7 @@ const MessageCrypto = (() => {
       const request = store.put({ peerId, state: exported });
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        console.log([MessageCrypto] Saved session for );
+        console.log('[MessageCrypto] Saved session for ' + peerId);
         resolve();
       };
     });

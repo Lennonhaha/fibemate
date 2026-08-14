@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
- * C Native Addon test �?ML-KEM-768
+ * C Native Addon test —ML-KEM-768
  * CI-safe: resolves addon path relative to this script or cwd.
  */
 const path = require('path');
@@ -44,7 +44,7 @@ assert(Buffer.isBuffer(ct) && ct.length === 1088);
 assert(Buffer.isBuffer(ssEnc) && ssEnc.length === 32);
 console.log('encaps(): OK');
 
-// decaps(ct, sk) �?N-API real order
+// decaps(ct, sk) —N-API real order
 const ssDec = addon.decaps(ct, sk);
 assert(Buffer.isBuffer(ssDec) && ssDec.length === 32);
 assert.ok(Buffer.from(ssEnc).equals(ssDec), 'shared secret match');

@@ -4,7 +4,7 @@ const { defineConfig } = require('cypress');
 module.exports = defineConfig({
   e2e: {
     baseUrl: 'http://localhost:3000',
-    apiUrl: 'window.location.origin + '/api'',
+    apiUrl: window.location.origin + '/api',
     setupNodeEvents(on, config) {
       // Implement node event listeners here
       on('task', {
@@ -24,7 +24,7 @@ module.exports = defineConfig({
     env: {
       testUser: 'testuser',
       testPassword: 'testpass123',
-      apiBaseUrl: 'window.location.origin + '/api''
+      apiBaseUrl: window.location.origin + '/api'
     },
     supportFile: 'cypress/support/e2e.js'
   },

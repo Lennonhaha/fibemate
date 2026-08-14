@@ -39,7 +39,7 @@ const MIX_CONFIG = {
             name: 'Mix Node Alpha',
             address: (typeof window !== 'undefined' ? 'wss://' + window.location.hostname + ':3001/mix/alpha' : 'wss://fibemate.net:3001/mix/alpha'),
             // Fallback for development
-            addressFallback: '' + (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + ''/mix/alpha',
+            addressFallback: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/mix/alpha',
             // Public key for ECDH (P-256)
             // In production, fetched from server or PKI
             publicKey: null, // Will be fetched on init
@@ -50,7 +50,7 @@ const MIX_CONFIG = {
             id: 'mix-node-2',
             name: 'Mix Node Beta',
             address: (typeof window !== 'undefined' ? 'wss://' + window.location.hostname + ':3001/mix/beta' : 'wss://fibemate.net:3001/mix/beta'),
-            addressFallback: '' + (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + ''/mix/beta',
+            addressFallback: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/mix/beta',
             publicKey: null,
             location: 'CN-Shanghai',
             latency: 30
@@ -59,7 +59,7 @@ const MIX_CONFIG = {
             id: 'mix-node-3',
             name: 'Mix Node Gamma',
             address: (typeof window !== 'undefined' ? 'wss://' + window.location.hostname + ':3001/mix/gamma' : 'wss://fibemate.net:3001/mix/gamma'),
-            addressFallback: '' + (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + ''/mix/gamma',
+            addressFallback: (window.location.protocol === 'https:' ? 'wss:' : 'ws:') + '//' + window.location.host + '/mix/gamma',
             publicKey: null,
             location: 'CN-Shenzhen',
             latency: 40

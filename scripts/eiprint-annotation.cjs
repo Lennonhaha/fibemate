@@ -22,10 +22,10 @@ if (rm.includes(oldPdf) && !rm.includes(newPdf)) {
 
 fs.writeFileSync('/opt/fibemate-repo/README.md', rm, 'utf8');
 
-// ─── index.html (L1184 TSR line) �?ePrint status, keep VWZ �?for project status ───
+// ─── index.html (L1184 TSR line) — ePrint status, keep VWZ — for project status ───
 let html = fs.readFileSync('/opt/fibemate-repo/www/index.html', 'utf8');
-// Don't touch VWZ 148/148 �?�?that's project test status, not paper status
-// But we should note ePrint submission status somewhere visible �?add a small annotation
+// Don't touch VWZ 148/148 — that's project test status, not paper status
+// But we should note ePrint submission status somewhere visible — add a small annotation
 // near the challenge link to be precise without touching the test badge
 
 // ─── Verify ───
@@ -36,6 +36,6 @@ console.log('README has VWZ Challenge:', rm.includes('VWZ Challenge'));
 console.log('README NO "withdrawn":', !rm.includes('withdrawn'));
 
 html = fs.readFileSync('/opt/fibemate-repo/www/index.html', 'utf8');
-console.log('index.html VWZ check:', html.includes('VWZ 148/148 �?));
+console.log('index.html VWZ check:', html.includes('VWZ 148/148 ✅'));
 console.log('index.html challenge link:', html.includes('vwz-challenge'));
 console.log('index.html NO "withdrawn":', !html.includes('withdrawn'));

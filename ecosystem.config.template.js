@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-only
-# FIBEMATE PM2 Ecosystem Config — Template
-# ==========================================
-# Copy this file to ecosystem.config.js, fill in your values.
-# NEVER commit ecosystem.config.js — it contains production secrets.
-#
-# Usage:
-#   cp ecosystem.config.template.js ecosystem.config.js
-#   # edit values
-#   pm2 start ecosystem.config.js
+// FIBEMATE PM2 Ecosystem Config — Template
+// ==========================================
+// Copy this file to ecosystem.config.js, fill in your values.
+// NEVER commit ecosystem.config.js — it contains production secrets.
+//
+// Usage:
+//   cp ecosystem.config.template.js ecosystem.config.js
+//   # edit values
+//   pm2 start ecosystem.config.js
 
 module.exports = {
   apps: [

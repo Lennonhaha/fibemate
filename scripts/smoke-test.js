@@ -2,11 +2,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
- * Smoke Test �?Minimal health check
+ * Smoke Test —Minimal health check
  * 
  * Verifies:
  *   - Core modules load without error
- *   - Basic roundtrip (keygen �?encaps �?decaps) works
+ *   - Basic roundtrip (keygen —encaps —decaps) works
  *   - SM2/SM3/SM4 modules are importable
  * 
  * Exit codes:
@@ -26,9 +26,9 @@ function check(name, fn) {
   try {
     fn();
     passed++;
-    console.log(`  �?${name}`);
+    console.log(`  —${name}`);
   } catch (err) {
-    console.error(`  �?${name}: ${err.message}`);
+    console.error(`  ❌${name}: ${err.message}`);
   }
 }
 
@@ -68,18 +68,18 @@ check('ML-KEM roundtrip', () => {
   assert(enc.sharedSecret.length === 32); // K_bar (raw)
   
   // decapsulate returns ss = SHA3-256(K_bar || H(ct))
-  // So enc.sharedSecret !== dec directly �?need to recompute ss
+  // So enc.sharedSecret !== dec directly —need to recompute ss
   const dec = mlKem.decapsulate(enc.ciphertext, kp.secretKey);
   assert(dec.length === 32);
   
-  // Verify decapsulate consistency: same ct + sk �?same ss
+  // Verify decapsulate consistency: same ct + sk —same ss
   const dec2 = mlKem.decapsulate(enc.ciphertext, kp.secretKey);
   const decHex = Buffer.from(dec).toString('hex');
   const dec2Hex = Buffer.from(dec2).toString('hex');
   assert(decHex === dec2Hex, `decapsulate not deterministic: ${decHex} != ${dec2Hex}`);
   
   // Verify encapsulate produces valid ct that decapsulates successfully
-  // (ss is not K_bar, but a hash of it �?this is FIPS 203 compliant)
+  // (ss is not K_bar, but a hash of it —this is FIPS 203 compliant)
   assert(decHex.length === 64); // 32 bytes = 64 hex chars
 });
 

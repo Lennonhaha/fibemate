@@ -33,7 +33,7 @@ class NetworkDetector {
       rttSamples: options.rttSamples || 5,               // RTT采样次数
       rttTimeout: options.rttTimeout || 3000,            // RTT超时时间
       satelliteRTTThreshold: options.satelliteRTTThreshold || 200,  // 卫星RTT阈值
-      5gRTTThreshold: options['5gRTTThreshold'] || 50,   // 5G RTT阈值
+      '5gRTTThreshold': options['5gRTTThreshold'] || 50,   // 5G RTT阈值
       packetLossThreshold: options.packetLossThreshold || 10,       // 丢包率阈值
       debug: options.debug || false
     };

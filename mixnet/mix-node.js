@@ -2,8 +2,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
- * EXPERIMENTAL �?仿真非生�? * 此模块为 Mixnet 实验性代码，未经生产审计
- * 请勿用于关键路径或主�? */
+ * EXPERIMENTAL — 仿真非生产 — 此模块为 Mixnet 实验性代码，未经生产审计
+ * 请勿用于关键路径或主链路 */
 
 
 // SPDX-License-Identifier: GPL-3.0-only
@@ -15,15 +15,18 @@ const { execSync } = require('child_process');
 const app = express();
 app.use(express.json());
 
-// 解析命令行参�?const args = require('minimist')(process.argv.slice(2));
+// 解析命令行参数
+const args = require('minimist')(process.argv.slice(2));
 const PORT = parseInt(args.port) || 8001;
 const PEERS = (args.peers || '').split(',').filter(p => p);
 
-// 每个节点维护一个延迟队列（模拟混合网络延迟混淆�?const delayQueue = new Map();
+// 每个节点维护一个延迟队列（模拟混合网络延迟混淆）
+const delayQueue = new Map();
 let requestCount = 0;
 let messageLog = [];
 
-// Sphinx 包格式简化实现（实际应为洋葱加密�?class SphinxPacket {
+// Sphinx 包格式简化实现（实际应为洋葱加密）
+class SphinxPacket {
   constructor(payload, nextHop, routingInfo) {
     this.payload = payload;
     this.nextHop = nextHop;
@@ -32,8 +35,10 @@ let messageLog = [];
     this.timestamp = Date.now();
   }
 
-  // 模拟洋葱解密（实际应逐层解密�?  static process(encryptedPacket, nodeId) {
-    // 简化版：检查是否是最后一�?    if (encryptedPacket.nextHop === 'destination') {
+  // 模拟洋葱解密（实际应逐层解密）
+  static process(encryptedPacket, nodeId) {
+    // 简化版：检查是否是最后一跳
+    if (encryptedPacket.nextHop === 'destination') {
       return {
         isFinal: true,
         message: encryptedPacket.payload,
@@ -50,13 +55,14 @@ let messageLog = [];
   }
 }
 
-// 模拟混合网络：随机延�?50-200ms
+// 模拟混合网络：随机延迟 50-200ms
 function mixDelay(handler) {
   const delay = Math.random() * 150 + 50;
   setTimeout(handler, delay);
 }
 
-// 接收 Sphinx �?app.post('/relay', (req, res) => {
+// 接收 Sphinx 报文
+app.post('/relay', (req, res) => {
   requestCount++;
   const packet = req.body;
   
@@ -76,14 +82,16 @@ function mixDelay(handler) {
       console.log(`[Node ${PORT}] Final destination reached`);
       console.log(`[Node ${PORT}] Message: ${JSON.stringify(result.message)}`);
       
-      // 模拟最终投�?      res.json({ 
+      // 模拟最终投递
+      res.json({ 
         status: 'delivered', 
         message: result.message,
         hops: result.nonce,
         timestamp: new Date().toISOString()
       });
     } else {
-      // 转发到下一�?      forwardToNextHop(result.nextHop, result.packet, res);
+      // 转发到下一跳
+      forwardToNextHop(result.nextHop, result.packet, res);
     }
   });
 });
@@ -116,7 +124,8 @@ async function forwardToNextHop(nextHop, packet, originalRes) {
   }
 }
 
-// 健康检查端�?app.get('/health', (req, res) => {
+// 健康检查端点
+app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     node: PORT,
@@ -135,7 +144,8 @@ app.get('/stats', (req, res) => {
     peers: PEERS,
     delay_queue_size: delayQueue.size,
     memory_usage: process.memoryUsage(),
-    message_log: messageLog.slice(-10) // 最�?10 �?  });
+    message_log: messageLog.slice(-10) // 最近 10 条
+  });
 });
 
 // 创建 Sphinx 包（测试用）
@@ -159,13 +169,15 @@ app.post('/create-packet', (req, res) => {
   });
 });
 
-// 启动服务�?app.listen(PORT, () => {
+// 启动服务
+app.listen(PORT, () => {
   console.log(`Mix node ${process.env.NODE_ID || '?'} running on port ${PORT}`);
   console.log(`Peers: ${PEERS.join(', ') || 'none'}`);
   console.log(`Health check: http://localhost:${PORT}/health`);
 });
 
-// 优雅退�?process.on('SIGTERM', () => {
+// 优雅退出
+process.on('SIGTERM', () => {
   console.log(`[Node ${PORT}] Received SIGTERM, shutting down...`);
   process.exit(0);
 });

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
-// scripts/bench-proper.js â€?clear cache between before/after
+// scripts/bench-proper.js â€”clear cache between before/after
 const { execSync } = require('child_process');
 const { performance } = require('perf_hooks');
 

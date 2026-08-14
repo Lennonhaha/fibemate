@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
 // =============================================================================
-// uart_rx 行为级测�?v2 �?Node.js
+// uart_rx 行为级测—v2 —Node.js
 // =============================================================================
 // 用法: node scripts/test-uart-rx.js
 // =============================================================================
@@ -74,8 +74,9 @@ function assert_idle() {
 
 function set_rx(val) { rx_line = val ? 1 : 0; }
 
-// 发送一�? start(0) + 8 data(LSB) + stop(1), 每段 BIT_PERIOD 周期
-// 返回后清�?capture 标志, 等待 data_valid 脉冲再额�?tick 2 拍确保采�?function send_byte(byte) {
+// 发送一帧: start(0) + 8 data(LSB) + stop(1), 每段 BIT_PERIOD 周期
+// 返回后清 capture 标志, 等待 data_valid 脉冲再额外 tick 2 拍确保采样
+function send_byte(byte) {
     assert_idle();
     data_valid_captured = 0;
     set_rx(0); tick(BIT_PERIOD);            // start
@@ -84,7 +85,8 @@ function set_rx(val) { rx_line = val ? 1 : 0; }
         tick(BIT_PERIOD);
     }
     set_rx(1); tick(BIT_PERIOD);            // stop
-    tick(20);  // 额外空闲周期确保脉冲已捕�?}
+    tick(20);  // 额外空闲周期确保脉冲已捕捉
+}
 
 function send_glitch(cycles) {
     assert_idle();
@@ -132,7 +134,8 @@ send_glitch(Math.round(HALF_BIT / 3));
 if (!data_valid_captured) PASS(5, 'glitch filtered');
 else FAIL(5, 'glitch not filtered');
 
-// #6: 停止位错�?reset();
+// #6: 停止位错误
+reset();
 data_valid_captured = 0;
 set_rx(0); tick(BIT_PERIOD);
 for (let b = 0; b < 8; b++) { set_rx((0x33 >> b) & 1); tick(BIT_PERIOD); }
@@ -148,7 +151,7 @@ ok = (data_valid_captured && data_out === 0x41);
 if (ok) PASS(7, '4x 0x41 consecutive');
 else FAIL(7, 'consecutive mismatch', `out=0x${data_out.toString(16)}`);
 
-// #8: 0xDEADBEEF �?reset();
+// #8: 0xDEADBEEF — reset();
 ok = true;
 for (const b of [0xDE, 0xAD, 0xBE, 0xEF]) {
     send_byte(b);
@@ -157,18 +160,18 @@ for (const b of [0xDE, 0xAD, 0xBE, 0xEF]) {
 if (ok) PASS(8, 'stream 0xDEADBEEF');
 else FAIL(8, 'stream mismatch', `out=0x${data_out.toString(16)}`);
 
-// #9: LSB-first 验证 �?0x01 (�?bit0=1)
+// #9: LSB-first 验证 — 0x01 (— bit0=1)
 reset();
 send_byte(0x01);
 if (data_valid_captured && data_out === 0x01) PASS(9, 'LSB-first 0x01');
 else FAIL(9, 'LSB-first', `out=0x${data_out.toString(16)}`);
 
-// #10: LSB-first �?0x80 (�?bit7=1)
+// #10: LSB-first — 0x80 (— bit7=1)
 reset();
 send_byte(0x80);
 if (data_valid_captured && data_out === 0x80) PASS(10, 'LSB-first 0x80');
 else FAIL(10, 'LSB-first MSB', `out=0x${data_out.toString(16)}`);
 
-if (!process.exitCode) console.log(`\n�?ALL 10 TESTS PASSED`);
-else console.error(`\n�?FAILURES: ${process.exitCode}`);
+if (!process.exitCode) console.log(`\n✅ ALL 10 TESTS PASSED`);
+else console.error(`\n❌ FAILURES: ${process.exitCode}`);
 process.exit(process.exitCode ? 1 : 0);

@@ -116,7 +116,7 @@ class MixnetClient {
             
             // Export ephemeral public key (to include in the layer)
             const ephemeralPublicKeyRaw = await crypto.subtle.exportKey('raw', ephemeralKeyPair.publicKey);
-            const ephemeralPublicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(ephemeralPublicKeyRaw));
+            const ephemeralPublicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(ephemeralPublicKeyRaw)));
             
             // Get mix node's public key
             let mixPublicKey;

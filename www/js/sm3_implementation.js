@@ -58,10 +58,10 @@ class SM3 {
     return { W, W1 };
   }
   // 压缩函数
-  compress(V, B) {
+  compress(V, block) {
     // codeql[js-variable-use-in-temporal-dead-zone]
     // False positive: class method, this.messageExpand always defined
-    const { W, W1 } = this.messageExpand(B);
+    const { W, W1 } = this.messageExpand(block);
     let A = V[0];
     let B = V[1];
     let C = V[2];

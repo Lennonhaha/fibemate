@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
- * C Native Addon benchmark �?ML-KEM-768
+ * C Native Addon benchmark —ML-KEM-768
  * CI-safe: resolves addon relative to repo root.
  * Usage: node scripts/mlkem-bench-native.cjs [rounds=500]
  */
@@ -51,5 +51,5 @@ for (let i = 0; i < rounds; i++) {
 const total_ms = Number(process.hrtime.bigint() - t0) / 1_000_000;
 console.log(('roundtrip(' + rounds + ')').padEnd(28) + (total_ms / rounds).toFixed(4).padStart(8) + ' ms/op');
 
-console.log(mismatches === 0 ? `\nPASS �?${rounds}/${rounds} zero mismatches` : `\nFAIL �?${mismatches} mismatches`);
+console.log(mismatches === 0 ? `\nPASS ✅ ${rounds}/${rounds} zero mismatches` : `\nFAIL ❌ ${mismatches} mismatches`);
 process.exit(mismatches === 0 ? 0 : 1);

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
-// ML-KEM-768 (FIPS 203) �?Browser-compatible standalone
+// ML-KEM-768 (FIPS 203) — Browser-compatible standalone
 // Auto-generated from packages/pqc-kem/src/ml-kem-768.js
 // Synced: $(date)
 (function() {
@@ -42,6 +42,8 @@ if (typeof crypto === 'undefined' || typeof crypto.getRandomValues === 'undefine
 
 // Browser Int16Array (exists in all modern browsers, but just in case)
 if (typeof Int16Array === 'undefined') { window.Int16Array = Int16Array; }
+
+/**
  * NTT decode: invertButterflies (dit=true→isDit=false), ZETAS[255..129], ×3303
  * polyMulNTT: BaseCaseMultiply with ZETAS[64+⌊i/2⌋]
  *
@@ -52,7 +54,7 @@ const N = 256, Q = 3329, NTT_INV = 3303, K = 3;
 const PK_BYTES = 1184, SK_BYTES = 2400, CT_BYTES = 1088, SS_BYTES = 32;
 
 // ============================================================================
-// ZETAS[256] �?period-128, ZETAS[i]=17^{BR�?i)} mod 3329
+// ZETAS[256] — period-128, ZETAS[i]=17^{BR(i)} mod 3329
 // ============================================================================
 const ZETAS = new Int16Array([
       1,1729,2580,3289,2642,630,1897,848,1062,1919,193,797,2786,3260,569,1746,
@@ -79,7 +81,7 @@ const ZETAS = new Int16Array([
 // ============================================================================
 
 
-// Barrett reduction for modMul �?K=24 μ=5039 (0 errors / 11,082,241 exhaustive)
+// Barrett reduction for modMul — K=24 μ=5039 (0 errors / 11,082,241 exhaustive)
 const BAR_K = 24, BAR_MU = 5039;
 function modMulBarrett(a, b) {
   const p = a * b;                         // exact in f64: p < 11,082,241 < 2^24
@@ -95,19 +97,19 @@ function modMul(a, b) { return modMulBarrett(((a|0)%Q+Q)%Q, ((b|0)%Q+Q)%Q); }
 function modNeg(a) { const na = ((a|0)%Q+Q)%Q; return na ? Q-na : 0; }
 
 // ============================================================================
-// NTT / iNTT �?1:1 with @noble/curves FFTCore (genCrystals Kyber mode)
+// NTT / iNTT — 1:1 with @noble/curves FFTCore (genCrystals Kyber mode)
 //
 // encode: dit=false, invertButterflies=true, skipStages=1
-//   �?isDit = false!==true = TRUE �?DIT butterfly
-//   �?rootPos = true?(false?N-grp:grp) �?grp �?ZETAS[1..127]
-//   �?butterfly: t=ω·b, f[i₀]=a+t, f[i₁]=a-t
-//   �?stages 8,7,6,5,4,3,2
+//   — isDit = false!==true = TRUE — DIT butterfly
+//   — rootPos = true?(false?N-grp:grp) — grp — ZETAS[1..127]
+//   — butterfly: t=ω·b, f[i₀]=a+t, f[i₁]=a-t
+//   — stages 8,7,6,5,4,3,2
 //
 // decode: dit=true, invertButterflies=true, skipStages=1
-//   �?isDit = true!==true = FALSE �?invertButterflies path
-//   �?rootPos = true?(true?N-grp:grp) �?N-grp �?ZETAS[255..129]
-//   �?butterfly: f[i₀]=b+a, f[i₁]=ω·(b-a)
-//   �?stages 2,3,4,5,6,7,8 �?then ×NTT_INV
+//   — isDit = true!==true = FALSE — invertButterflies path
+//   — rootPos = true?(true?N-grp:grp) — N-grp — ZETAS[255..129]
+//   — butterfly: f[i₀]=b+a, f[i₁]=ω·(b-a)
+//   — stages 2,3,4,5,6,7,8 — then ×NTT_INV
 // ============================================================================
 function ntt(f) {
     let step = 1;
@@ -146,7 +148,7 @@ function intt(f) {
 }
 
 // ============================================================================
-// SHA-3 / SHAKE �?pure JS Keccak with noble/crypto fallbacks
+// SHA-3 / SHAKE — pure JS Keccak with noble/crypto fallbacks
 // ============================================================================
 const KeccakRhoOffsets = [0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
 const KeccakPiOffsets = [10,7,11,17,0,3,5,4,15,12,2,13,9,6,1,14,8,16,19,18,23,22,20,24,21];
@@ -179,7 +181,7 @@ function polyFromMsg(msg){const m=new Int16Array(N);for(let i=0;i<N;i++)m[i]=((m
 function polyToMsg(f){const m=new Uint8Array(32);for(let i=0;i<N;i++){const x=((f[i]%Q)+Q)%Q;if(x>832&&x<2497)m[i>>>3]|=1<<(i&7)}return m}
 
 // ============================================================================
-// KeyGen �?FIPS 203 §7.1 (NTT domain)
+// KeyGen — FIPS 203 §7.1 (NTT domain)
 // ============================================================================
 function generateKeypair(){
     const d=crypto.getRandomValues(new Uint8Array(32));
@@ -187,7 +189,7 @@ function generateKeypair(){
     const H=sha3_512(new Uint8Array([...d,3])); // d||k where k=3
     const rho=H.slice(0,32), sigma=H.slice(32,64);
 
-    // A[i][j] = ntt(sampleNTT(ρ||i||j)) �?FIPS Alg 11 step 3
+    // A[i][j] = ntt(sampleNTT(ρ||i||j)) — FIPS Alg 11 step 3
     const A=[];
     for(let i=0;i<K;i++){
         A[i]=[];
@@ -198,15 +200,15 @@ function generateKeypair(){
         }
     }
 
-    // s[i] = ntt(CBD2(PRF(σ,i))) �?step 4 (NTT domain)
-    // e[i] = ntt(CBD2(PRF(σ,i+k))) �?step 5 (NTT domain)
+    // s[i] = ntt(CBD2(PRF(σ,i))) — step 4 (NTT domain)
+    // e[i] = ntt(CBD2(PRF(σ,i+k))) — step 5 (NTT domain)
     const s=[],e=[];
     for(let i=0;i<K;i++){
         s[i]=ntt(cbd2(shake256(new Uint8Array([...sigma,i]),128)));
         e[i]=ntt(cbd2(shake256(new Uint8Array([...sigma,i+K]),128)));
     }
 
-    // t_hat[i] = A[i]*s_hat + e_hat �?NTT domain, encoded directly into pk
+    // t_hat[i] = A[i]*s_hat + e_hat — NTT domain, encoded directly into pk
     const As=matVecMulNTT(A,s,K);
     const t=As.map((row,i)=>polyAddNTT(row,e[i]));
 
@@ -228,18 +230,18 @@ function generateKeypair(){
 }
 
 // ============================================================================
-// Encaps �?FIPS 203 §7.2 (NTT domain)
+// Encaps — FIPS 203 §7.2 (NTT domain)
 // ============================================================================
 function encapsulate(publicKey){
     const m=crypto.getRandomValues(new Uint8Array(32));
     const rho=publicKey.slice(K*384,K*384+32);
     const hpk=sha3_256(publicKey);
 
-    // G(m||H(pk)) �?SHA3-512 �?(K_bar, r)
+    // G(m||H(pk)) — SHA3-512 — (K_bar, r)
     const G=sha3_512(Buffer.concat([Buffer.from(m),Buffer.from(hpk)]));
     const K_bar=G.slice(0,32), r=G.slice(32,64);
 
-    // Â^T[i][j] = sampleNTT(ρ||i||j) �?FIPS 203 §7.2 step 2 (already NTT domain)
+    // Â^T[i][j] = sampleNTT(ρ||i||j) — FIPS 203 §7.2 step 2 (already NTT domain)
     const AT=[];
     for(let i=0;i<K;i++){
         AT[i]=[];
@@ -274,25 +276,25 @@ function encapsulate(publicKey){
     let off=0;
     for(let i=0;i<K;i++){t_hat[i]=byteDecode(publicKey.slice(off,off+384),12);off+=384;}
 
-    // v = iNTT(t_hat^T * r_ntt) + e2 + Decompress�?m)
+    // v = iNTT(t_hat^T * r_ntt) + e2 + Decompress_d(m)
     const vprime=intt(vecDotNTT(t_hat,rr,K));
     const mu=polyFromMsg(m);
     const v=new Int16Array(N);
     for(let i=0;i<N;i++)v[i]=modAdd(modAdd(vprime[i],e2[i]),mu[i]);
 
-    // ct = byteEncode₁₀(compress₁₀(u)) || byteEncode�?compress�?v))
+    // ct = byteEncode₁₀(compress₁₀(u)) || byteEncode_d(compress_d(v))
     const ct=new Uint8Array(CT_BYTES);
     off=0;
     for(let i=0;i<K;i++){ct.set(byteEncode(compress(u[i],10),10),off);off+=320;}
     ct.set(byteEncode(compress(v,4),4),off);
 
-    // ss = SHA3-256(K_bar || H(ct)) �?FIPS 203 §7.2 step 14
+    // ss = SHA3-256(K_bar || H(ct)) — FIPS 203 §7.2 step 14
     const ss=sha3_256(Buffer.concat([Buffer.from(K_bar),Buffer.from(sha3_256(ct))]));
     return {ciphertext:ct,sharedSecret:K_bar};  // return raw K_bar for noble compat, hashed K_bar in ss for self-use
 }
 
 // ============================================================================
-// Decaps �?FIPS 203 §7.3 (NTT domain)
+// Decaps — FIPS 203 §7.3 (NTT domain)
 // ============================================================================
 function decapsulate(secretKey,ciphertext){
     // sk = byteEncode₁₂(s_hat) || pk || H(pk) || z (s_hat in NTT domain)
@@ -303,28 +305,28 @@ function decapsulate(secretKey,ciphertext){
     const h=secretKey.slice(off,off+32);off+=32;
     const z=secretKey.slice(off,off+32);
 
-    // ct = �?|| compress₁₀(u) || compress�?v)
+    // ct = byteEncode_d(u) || compress₁₀(u) || compress_d(v)
     const u=[];
     off=0;
     for(let i=0;i<K;i++){u[i]=decompress(byteDecode(ciphertext.slice(off,off+320),10),10);off+=320;}
     const v=decompress(byteDecode(ciphertext.slice(off,off+128),4),4);
 
-    // u �?NTT, s_hat · NTT(u) �?iNTT = s·u (s already NTT)
+    // u —(i)NTT, s_hat · NTT(u) — iNTT = s·u (s already NTT)
     const uNTT=u.map(ui=>ntt(new Int16Array(ui)));
     const su=intt(vecDotNTT(s,uNTT,K));
 
-    // v - s·u �?m'
+    // v - s·u — m'
     const mp=new Int16Array(N);
     for(let i=0;i<N;i++)mp[i]=modSub(v[i],su[i]);
     const mPrime=polyToMsg(mp);
 
-    // G(m'||H(pk)) �?(K_bar', r')
+    // G(m'||H(pk)) — (K_bar', r')
     const hpk=sha3_256(pk);
     const G2=sha3_512(Buffer.concat([Buffer.from(mPrime),Buffer.from(hpk)]));
     const K_bar_prime=G2.slice(0,32), r2seed=G2.slice(32,64);
     const rho=new Uint8Array(pk.slice(K*384,K*384+32));
 
-    // Re-encrypt: A^T[i][j] = sampleNTT(ρ||i||j) �?already NTT domain
+    // Re-encrypt: A^T[i][j] = sampleNTT(ρ||i||j) — already NTT domain
     const AT=[];
     for(let i=0;i<K;i++){
         AT[i]=[];

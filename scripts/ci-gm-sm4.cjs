@@ -35,5 +35,5 @@ console.log('SM4-GCM KAT:', pass + '/' + kat.length + ' PASS');
 if (firstErrors.length) console.error('First errors:', JSON.stringify(firstErrors));
 
 const allPass = pass === kat.length;
-console.log(allPass ? '‚ú?SM4-GCM ALL PASS' : '‚ù?SM4-GCM FAILURES');
+console.log(allPass ? '‚úÖ SM4-GCM ALL PASS' : '‚úÖ SM4-GCM FAILURES');
 process.exit(allPass ? 0 : 1);

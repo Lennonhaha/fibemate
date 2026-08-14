@@ -35,5 +35,5 @@ for (const v of kat) {
 console.log('SM3 KAT:', pass + '/' + kat.length + ' PASS');
 
 const allPass = tv0_ok && tv1_ok && pass === kat.length;
-console.log(allPass ? '‚ú?SM3 ALL PASS' : '‚ù?SM3 FAILURES');
+console.log(allPass ? '‚úÖ SM3 ALL PASS' : '‚úÖ SM3 FAILURES');
 process.exit(allPass ? 0 : 1);

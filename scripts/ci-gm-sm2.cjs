@@ -44,5 +44,5 @@ console.log('SM2 sign/verify:  ' + signPass + '/' + kat.length + ' PASS');
 console.log('SM2 encrypt/dec:  ' + encPass + '/' + kat.length + ' PASS');
 
 const allPass = signPass === kat.length && encPass === kat.length;
-console.log(allPass ? '‚ú?SM2 ALL PASS' : '‚ù?SM2 FAILURES');
+console.log(allPass ? '‚úÖ SM2 ALL PASS' : '‚úÖ SM2 FAILURES');
 process.exit(allPass ? 0 : 1);

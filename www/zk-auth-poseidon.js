@@ -16,7 +16,7 @@
  * - publicSignals: [expectedCommitment]
  */
 
-const API = 'window.location.origin + '/api'';
+const API = window.location.origin + '/api';
 
 // ZK 配置
 const ZK_CONFIG = {
