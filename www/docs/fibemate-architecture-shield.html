@@ -1,43 +1,108 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FIBEMATE 安全架构 · 三层护盾</title>
+<title>FIBEMATE Security Architecture · Three-Layer Shield</title>
 <style>
   :root {
-    --bg: #04060f;
+    --bg: #050a11;
     --text: #dfe4f2;
-    --muted: rgba(223,228,242,.45);
-    --panel-bg: rgba(9,12,26,.94);
-    --border: rgba(255,255,255,.09);
+    --muted: rgba(180,210,225,.5);
+    --panel-bg: rgba(5,14,26,.94);
+    --border: rgba(0,212,212,.15);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { width: 100%; height: 100%; overflow: hidden; background: var(--bg); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
-  #scene { position: fixed; inset: 0; display: block; }
-  .hud { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; z-index: 10; }
-  .hud h1 { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: 2px; }
-  .hud .sub { font-size: 12px; color: var(--muted); margin-top: 4px; letter-spacing: 2px; }
-  .legend { position: fixed; left: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 8px; z-index: 10; pointer-events: none; }
-  .legend .item { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); }
-  .legend .dot { width: 10px; height: 10px; border-radius: 50%; }
-  .dot.outer { background: #3b82f6; box-shadow: 0 0 8px #3b82f6; }
-  .dot.mid { background: #a855f7; box-shadow: 0 0 8px #a855f7; }
-  .dot.inner { background: #eab308; box-shadow: 0 0 8px #eab308; }
-  .dot.done { background: #1f2333; border: 1px solid #eab308; }
-  .dot.plan { background: #f5f7ff; border: 1px solid #60a5fa; }
-  #panel { position: fixed; right: 20px; top: 50%; transform: translateY(-50%); width: 300px; background: var(--panel-bg); border: 1px solid var(--border); border-radius: 14px; padding: 18px; z-index: 20; display: none; backdrop-filter: blur(12px); }
-  #panel h2 { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
-  #panel .layer-tag { font-size: 11px; letter-spacing: 1px; margin-bottom: 12px; }
-  #panel .row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,.05); }
+
+  /* ── 蜂窝背景 ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    background-color: #050a11;
+    background-image:
+      radial-gradient(ellipse 90% 60% at 15% 55%, rgba(0,80,90,.55) 0%, transparent 65%),
+      radial-gradient(ellipse 70% 50% at 82% 30%, rgba(0,50,70,.45) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 50% 90%, rgba(0,30,50,.40) 0%, transparent 55%),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='100'%3E%3Cpath d='M28 66L0 50V16L28 0l28 16v34L28 66zm0-2.31L54 50.18V17.82L28 2.31 2 17.82v32.36L28 63.69z' fill='none' stroke='%2300d4d4' stroke-width='0.4' stroke-opacity='0.18'/%3E%3Cpath d='M28 34L0 50V16L28 0 56 16v34L28 66 0 50v-0.36' fill='none' stroke='%2300d4d4' stroke-width='0.4' stroke-opacity='0.10'/%3E%3C/svg%3E");
+    background-size: 100% 100%, 100% 100%, 100% 100%, 56px 100px;
+    pointer-events: none;
+  }
+
+  #scene { position: fixed; inset: 0; display: block; z-index: 1; }
+
+  /* ── HUD ── */
+  .hud {
+    position: fixed;
+    top: 22px;
+    left: 50%;
+    transform: translateX(-50%);
+    text-align: center;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .hud h1 {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: 3px;
+  }
+  .hud .sub {
+    font-size: 11px;
+    color: rgba(0,212,212,.65);
+    margin-top: 5px;
+    letter-spacing: 2.5px;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    position: fixed;
+    left: 20px;
+    bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .legend .item { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--muted); }
+  .legend .dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  .dot.outer { background: #00d4d4; box-shadow: 0 0 8px #00d4d4; }
+  .dot.mid   { background: #7c3aed; box-shadow: 0 0 8px #7c3aed; }
+  .dot.inner { background: #ff8c42; box-shadow: 0 0 8px #ff8c42; }
+  .dot.done  { background: rgba(0,212,212,.12); border: 1px solid #00d4d4; }
+  .dot.plan  { background: rgba(255,140,66,.10); border: 1px solid #ff8c42; }
+
+  /* ── Panel ── */
+  #panel {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 300px;
+    background: var(--panel-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 18px;
+    z-index: 20;
+    display: none;
+    backdrop-filter: blur(12px);
+  }
+  #panel h2 { font-size: 15px; font-weight: 600; color: #00d4d4; margin-bottom: 3px; }
+  #panel .layer-tag { font-size: 10.5px; letter-spacing: 1px; margin-bottom: 11px; color: var(--muted); }
+  #panel .row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 5px 0; border-bottom: 1px solid rgba(0,212,212,.06); }
   #panel .row .k { color: var(--muted); }
   #panel .row .v { color: var(--text); font-weight: 500; text-align: right; }
-  #panel .status { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; margin-bottom: 10px; }
-  #panel .status.done { background: rgba(16,185,129,.15); color: #34d399; }
-  #panel .status.plan { background: rgba(96,165,250,.15); color: #60a5fa; }
+  #panel .status { display: inline-block; font-size: 11px; padding: 2px 9px; border-radius: 999px; margin-bottom: 10px; }
+  #panel .status.done { background: rgba(0,212,212,.14); color: #00d4d4; }
+  #panel .status.plan { background: rgba(255,140,66,.14); color: #ff8c42; }
   #panel .close { position: absolute; top: 12px; right: 14px; cursor: pointer; color: var(--muted); font-size: 18px; }
-  #panel .close:hover { color: var(--text); }
-  .hint { position: fixed; bottom: 20px; right: 20px; font-size: 11px; color: var(--muted); z-index: 10; pointer-events: none; }
+  #panel .close:hover { color: #00d4d4; }
+
+  /* ── Hint ── */
+  .hint { position: fixed; bottom: 20px; right: 20px; font-size: 11px; color: rgba(0,212,212,.35); z-index: 10; pointer-events: none; }
 </style>
 <script type="importmap">
 { "imports": { "three": "../vwz-tensor/lib/three.module.js", "three/addons/": "../vwz-tensor/lib/" } }
@@ -47,27 +112,27 @@
 <canvas id="scene"></canvas>
 
 <div class="hud">
-  <h1>FIBEMATE 安全架构 · 三层护盾</h1>
-  <div class="sub">外层 · 表现层&nbsp;&nbsp;|&nbsp;&nbsp;中层 · 工程层&nbsp;&nbsp;|&nbsp;&nbsp;内层 · 理论层</div>
+  <h1>FIBEMATE · THREE-LAYER SHIELD</h1>
+  <div class="sub">OUTER SHIELD · ENGINEERING LAYER &nbsp;|&nbsp; MID SHIELD · MATHEMATICS &nbsp;|&nbsp; INNER CORE · THEORY</div>
 </div>
 
 <div class="legend">
-  <div class="item"><span class="dot outer"></span>外层护盾 · 表现层（可视化 / 文档 / 证据链）</div>
-  <div class="item"><span class="dot mid"></span>中层护盾 · 工程层（算法 / 硬件 / CI）</div>
-  <div class="item"><span class="dot inner"></span>内层核心 · 理论层（TLA+ / 安全模型）</div>
-  <div class="item"><span class="dot done"></span>已实现</div>
-  <div class="item"><span class="dot plan"></span>规划中</div>
+  <div class="item"><span class="dot outer"></span>Outer Shield · Engineering Layer (CI / Hardware / Algorithms)</div>
+  <div class="item"><span class="dot mid"></span>Mid Shield · Mathematics Layer (KAT / TVLA / NTT)</div>
+  <div class="item"><span class="dot inner"></span>Inner Core · Theory Layer (TLA+ / Security Models)</div>
+  <div class="item"><span class="dot done"></span>Implemented</div>
+  <div class="item"><span class="dot plan"></span>Planned</div>
 </div>
 
 <div id="panel">
-  <span class="close" onclick="closePanel()">×</span>
+  <span class="close" onclick="closePanel()">&#xD7;</span>
   <h2 id="p-title"></h2>
   <div class="layer-tag" id="p-layer"></div>
   <div id="p-status"></div>
   <div id="p-body"></div>
 </div>
 
-<div class="hint">拖动旋转 · 滚轮缩放 · 点击节点查看详情</div>
+<div class="hint">Drag to rotate &nbsp;&middot;&nbsp; Scroll to zoom &nbsp;&middot;&nbsp; Click node for details</div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -86,34 +151,12 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.06;
 controls.autoRotate = true;
-controls.autoRotateSpeed = 0.5;
+controls.autoRotateSpeed = 0.4;
 controls.minDistance = 7;
-controls.maxDistance = 34;
+controls.maxDistance = 40;
 controls.target.set(0, 0, 0);
 
-// ── 程序化环境贴图 ──
-(function buildEnv() {
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  const env = new THREE.Scene();
-  const srcs = [
-    { p: [0, 12, 0], c: 0xffffff, s: 2.4 },
-    { p: [9, 4, 6], c: 0xeab308, s: 1.4 },
-    { p: [-9, 1, 5], c: 0xa855f7, s: 1.4 },
-    { p: [5, -3, -9], c: 0x3b82f6, s: 1.2 },
-    { p: [-6, 3, -8], c: 0x22ddbb, s: 1.2 },
-  ];
-  srcs.forEach(s => {
-    const m = new THREE.Mesh(
-      new THREE.SphereGeometry(s.s, 16, 16),
-      new THREE.MeshBasicMaterial({ color: s.c })
-    );
-    m.position.set(s.p[0], s.p[1], s.p[2]);
-    env.add(m);
-  });
-  scene.environment = pmrem.fromScene(env, 0.06).texture;
-  pmrem.dispose();
-})();
-
+// ── 环境光 ──
 scene.add(new THREE.AmbientLight(0x334466, 1.2));
 const key = new THREE.DirectionalLight(0xffffff, 1.5);
 key.position.set(6, 10, 5);
@@ -121,11 +164,11 @@ scene.add(key);
 const rim = new THREE.DirectionalLight(0x8899ff, 0.8);
 rim.position.set(-7, 2, -4);
 scene.add(rim);
-const warm = new THREE.PointLight(0x3b82f6, 1.1, 30);
-warm.position.set(4, -2, 6);
-scene.add(warm);
+const tealPt = new THREE.PointLight(0x00d4d4, 1.2, 30);
+tealPt.position.set(4, -2, 6);
+scene.add(tealPt);
 
-// 星空背景：三层彩色星点 + 星云
+// ── 程序化星空（彩色星点） ──
 (function starfield() {
   function starLayer(count, rMin, rMax, palette, size, opacity) {
     const pos = new Float32Array(count * 3);
@@ -134,7 +177,7 @@ scene.add(warm);
       const r = rMin + Math.random() * (rMax - rMin);
       const th = Math.random() * Math.PI * 2;
       const ph = Math.acos(2 * Math.random() - 1);
-      pos[i*3] = r * Math.sin(ph) * Math.cos(th);
+      pos[i*3]   = r * Math.sin(ph) * Math.cos(th);
       pos[i*3+1] = r * Math.sin(ph) * Math.sin(th);
       pos[i*3+2] = r * Math.cos(ph);
       const c = palette[Math.floor(Math.random() * palette.length)];
@@ -143,11 +186,11 @@ scene.add(warm);
     const g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
     g.setAttribute('color', new THREE.BufferAttribute(col, 3));
-    const m = new THREE.PointsMaterial({
+    return new THREE.Points(g, new THREE.PointsMaterial({
       size, vertexColors: true, transparent: true, opacity,
-      depthWrite: false, sizeAttenuation: true, blending: THREE.AdditiveBlending,
-    });
-    return new THREE.Points(g, m);
+      depthWrite: false, sizeAttenuation: true,
+      blending: THREE.AdditiveBlending,
+    }));
   }
   const W = new THREE.Color(0xffffff), B = new THREE.Color(0x8ab4ff),
         Y = new THREE.Color(0xffd9a0), C = new THREE.Color(0x9fe8ff),
@@ -155,41 +198,167 @@ scene.add(warm);
   scene.add(starLayer(700, 40, 76, [W, B, Y, C, P], 0.11, 0.85));
   scene.add(starLayer(500, 24, 40, [B, C, W], 0.07, 0.7));
   scene.add(starLayer(350, 14, 22, [W, Y], 0.05, 0.6));
-
-  function nebula(stops, pos, scale, opacity) {
-    const cv = document.createElement('canvas');
-    cv.width = cv.height = 256;
-    const ctx = cv.getContext('2d');
-    const grd = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
-    grd.addColorStop(0, stops[0]);
-    grd.addColorStop(0.55, stops[1]);
-    grd.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = grd;
-    ctx.fillRect(0, 0, 256, 256);
-    const tex = new THREE.CanvasTexture(cv);
-    const sp = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: tex, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending,
-    }));
-    sp.position.copy(pos);
-    sp.scale.set(scale, scale, 1);
-    scene.add(sp);
-  }
-  nebula(['rgba(59,130,246,0.62)', 'rgba(59,130,246,0.14)'], new THREE.Vector3(20, 11, -24), 28, 0.44);
-  nebula(['rgba(168,85,247,0.56)', 'rgba(168,85,247,0.12)'], new THREE.Vector3(-24, 9, -16), 26, 0.38);
-  nebula(['rgba(234,179,8,0.5)', 'rgba(234,179,8,0.1)'], new THREE.Vector3(12, -13, -28), 24, 0.34);
-  nebula(['rgba(34,221,187,0.5)', 'rgba(34,221,187,0.1)'], new THREE.Vector3(-16, -9, -22), 22, 0.32);
 })();
 
-// 环带护盾着色器（菲涅尔 + 扫描 + 旋转流光）
+// ── 黄道十二宫环 ──
+const ZODIAC = [
+  { name:'Aries',        sym:'&#9800;', deg:0,   col:0xff6b6b },
+  { name:'Taurus',       sym:'&#9801;', deg:30,  col:0xffcba4 },
+  { name:'Gemini',       sym:'&#9802;', deg:60,  col:0xffe066 },
+  { name:'Cancer',       sym:'&#9803;', deg:90,  col:0xd0e8ff }, // 成都方向
+  { name:'Leo',          sym:'&#9804;', deg:120, col:0xffd700 },
+  { name:'Virgo',        sym:'&#9805;', deg:150, col:0x98d982 },
+  { name:'Libra',        sym:'&#9806;', deg:180, col:0xffa8a8 },
+  { name:'Scorpio',      sym:'&#9807;', deg:210, col:0xb86e6e },
+  { name:'Sagittarius',  sym:'&#9808;', deg:240, col:0xff8c42 }, // 哈尔滨方向
+  { name:'Capricorn',    sym:'&#9809;', deg:270, col:0x5bc8d8 },
+  { name:'Aquarius',     sym:'&#9810;', deg:300, col:0x74b9ff },
+  { name:'Pisces',       sym:'&#9811;', deg:330, col:0xa8d8ea },
+];
+const HIGHLIGHT = new Set(['Cancer','Sagittarius']);
+const R_ZOD = 9.8;
+
+function makeTextSprite(text, opts = {}) {
+  const {
+    fontSize = 22, color = '#ffffff', strokeColor = null, strokeWidth = 2,
+    canvasW = 128, canvasH = 64,
+  } = opts;
+  const cv = document.createElement('canvas');
+  cv.width = canvasW; cv.height = canvasH;
+  const ctx = cv.getContext('2d');
+  if (strokeColor) {
+    ctx.strokeStyle = strokeColor;
+    ctx.lineWidth = strokeWidth;
+    ctx.strokeText(text, canvasW / 2, canvasH / 2 + fontSize * 0.36);
+  }
+  ctx.fillStyle = color;
+  ctx.font = `bold ${fontSize}px "Segoe UI Symbol", Arial, sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, canvasW / 2, canvasH / 2 + fontSize * 0.1);
+  const tex = new THREE.CanvasTexture(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+    map: tex, transparent: true, depthWrite: false,
+  }));
+  sp.scale.set(canvasW / canvasH * 1.8, 1.8, 1);
+  return sp;
+}
+
+// 十二宫星座连线（按经度排列）
+(function buildZodiac() {
+  const ZR = R_ZOD;
+
+  ZODIAC.forEach((z, i) => {
+    const deg = z.deg;
+    const rad = THREE.MathUtils.degToRad(deg);
+
+    // 外层轨道环（半透明）
+    const ringGeo = new THREE.TorusGeometry(ZR, 0.015, 6, 80);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: HIGHLIGHT.has(z.name) ? 0xff8c42 : z.col,
+      transparent: true,
+      opacity: HIGHLIGHT.has(z.name) ? 0.7 : 0.22,
+      depthWrite: false,
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.rotation.x = Math.PI / 2;
+    ring.rotation.z = rad;
+    scene.add(ring);
+
+    // 主星点（高亮星座用大星点）
+    const starR = HIGHLIGHT.has(z.name) ? 0.07 : 0.04;
+    const starGeo = new THREE.SphereGeometry(starR, 16, 16);
+    const starMat = new THREE.MeshBasicMaterial({
+      color: HIGHLIGHT.has(z.name) ? 0xff8c42 : z.col,
+      transparent: true,
+      opacity: HIGHLIGHT.has(z.name) ? 1.0 : 0.6,
+    });
+    const star = new THREE.Mesh(starGeo, starMat);
+    star.position.set(ZR * Math.cos(rad), 0, ZR * Math.sin(rad));
+    scene.add(star);
+
+    // 星座符号标签
+    const isHL = HIGHLIGHT.has(z.name);
+    const sp = makeTextSprite(z.sym, {
+      fontSize: isHL ? 24 : 16,
+      color: isHL ? '#ff8c42' : `rgba(${Math.round(new THREE.Color(z.col).r*200+55)},${Math.round(new THREE.Color(z.col).g*200+55)},${Math.round(new THREE.Color(z.col).b*200+55)},1)`,
+      strokeColor: isHL ? '#050a11' : null,
+      strokeWidth: 3,
+      canvasW: 80, canvasH: 60,
+    });
+    sp.position.set(
+      (ZR + 0.7) * Math.cos(rad),
+      0.1,
+      (ZR + 0.7) * Math.sin(rad)
+    );
+    scene.add(sp);
+
+    // 高亮星座：额外光晕
+    if (isHL) {
+      const glowGeo = new THREE.SphereGeometry(0.14, 16, 16);
+      const glowMat = new THREE.MeshBasicMaterial({
+        color: 0xff8c42, transparent: true, opacity: 0.25,
+        depthWrite: false,
+      });
+      const glow = new THREE.Mesh(glowGeo, glowMat);
+      glow.position.copy(star.position);
+      scene.add(glow);
+
+      // 外圈晕环
+      const haloRingGeo = new THREE.TorusGeometry(ZR, 0.04, 8, 80);
+      const haloRingMat = new THREE.MeshBasicMaterial({
+        color: 0xff8c42, transparent: true, opacity: 0.35,
+        depthWrite: false,
+      });
+      const haloRing = new THREE.Mesh(haloRingGeo, haloRingMat);
+      haloRing.rotation.x = Math.PI / 2;
+      haloRing.rotation.z = rad;
+      scene.add(haloRing);
+    }
+  });
+
+  // 相邻星座之间的连线
+  for (let i = 0; i < 12; i++) {
+    const z1 = ZODIAC[i];
+    const z2 = ZODIAC[(i + 1) % 12];
+    const r1 = THREE.MathUtils.degToRad(z1.deg + 15);
+    const r2 = THREE.MathUtils.degToRad(z2.deg - 15);
+    const isHL = HIGHLIGHT.has(z1.name) || HIGHLIGHT.has(z2.name);
+    const pts = [
+      new THREE.Vector3((ZR - 0.1) * Math.cos(r1), 0, (ZR - 0.1) * Math.sin(r1)),
+      new THREE.Vector3(ZR * Math.cos((r1 + r2) / 2), 0, ZR * Math.sin((r1 + r2) / 2)),
+      new THREE.Vector3((ZR - 0.1) * Math.cos(r2), 0, (ZR - 0.1) * Math.sin(r2)),
+    ];
+    const curve = new THREE.QuadraticBezierCurve3(pts[0], pts[1], pts[2]);
+    const tubeGeo = new THREE.TubeGeometry(curve, 20, isHL ? 0.012 : 0.006, 6, false);
+    const tubeMat = new THREE.MeshBasicMaterial({
+      color: isHL ? 0xff8c42 : 0x00d4d4,
+      transparent: true,
+      opacity: isHL ? 0.55 : 0.18,
+      depthWrite: false,
+    });
+    scene.add(new THREE.Mesh(tubeGeo, tubeMat));
+  }
+
+  // 底部叙事标签
+  const botSp = makeTextSprite('Cancer ♋ Chengdu · Southwest  |  Sagittarius ♐ Harbin · Northeast', {
+    fontSize: 13,
+    color: 'rgba(0,212,212,0.75)',
+    canvasW: 640, canvasH: 40,
+  });
+  botSp.position.set(0, -R_ZOD - 0.5, 0);
+  scene.add(botSp);
+})();
+
+// ── 护盾着色器 ──
 const ringVert = `
 varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
 void main() {
-  vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
-  vWorldNormal = normalize(mat3(modelMatrix) * normal);
-  gl_Position = projectionMatrix * viewMatrix * vec4(vWorldPos, 1.0);
+  vWorldPos = (modelMatrix * vec4(position,1.0)).xyz;
+  vWorldNormal = normalize(mat3(modelMatrix)*normal);
+  gl_Position = projectionMatrix*viewMatrix*vec4(vWorldPos,1.0);
 }`;
-
 const ringFrag = `
 uniform vec3 uColor;
 uniform float uTime;
@@ -197,26 +366,23 @@ uniform float uOpacity;
 varying vec3 vWorldPos;
 varying vec3 vWorldNormal;
 void main() {
-  vec3 viewDir = normalize(cameraPosition - vWorldPos);
-  float fres = pow(1.0 - abs(dot(viewDir, normalize(vWorldNormal))), 3.0);
-  float flow = 0.5 + 0.5 * sin(vWorldPos.y * 10.0 - uTime * 3.0);
-  float glow = fres * (0.5 + 0.5 * flow);
-  gl_FragColor = vec4(uColor * (glow + 0.10), clamp(glow, 0.04, 1.0) * uOpacity);
+  vec3 vd = normalize(cameraPosition - vWorldPos);
+  float fr = pow(1.0 - abs(dot(vd, normalize(vWorldNormal))), 3.0);
+  float fl = 0.5 + 0.5 * sin(vWorldPos.y * 10.0 - uTime * 3.0);
+  float g = fr * (0.5 + 0.5 * fl);
+  gl_FragColor = vec4(uColor * (g + 0.10), clamp(g, 0.04, 1.0) * uOpacity);
 }`;
 
-function makeRing(radius, color, opacity, tube) {
-  const geo = new THREE.TorusGeometry(radius, tube, 32, 160);
+function makeRing(r, color, opacity, tube) {
+  const geo = new THREE.TorusGeometry(r, tube, 32, 160);
   const mat = new THREE.ShaderMaterial({
-    vertexShader: ringVert,
-    fragmentShader: ringFrag,
+    vertexShader: ringVert, fragmentShader: ringFrag,
     uniforms: {
       uColor: { value: new THREE.Color(color) },
       uTime: { value: 0 },
       uOpacity: { value: opacity },
     },
-    transparent: true,
-    depthWrite: false,
-    side: THREE.DoubleSide,
+    transparent: true, depthWrite: false, side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(geo, mat);
   scene.add(mesh);
@@ -224,15 +390,20 @@ function makeRing(radius, color, opacity, tube) {
 }
 
 const R1 = 3.2, R2 = 5.2, R3 = 7.4;
-const ringInner = makeRing(R1, 0xeab308, 0.9, 0.10); // 内层 · 理论 · 金
-const ringMid   = makeRing(R2, 0xa855f7, 0.85, 0.12); // 中层 · 工程 · 紫
-const ringOuter = makeRing(R3, 0x3b82f6, 0.80, 0.14); // 外层 · 表现 · 蓝
+const ringInner = makeRing(R1, 0xff8c42, 0.9, 0.10);  // 内核 · 理论 · 橙
+const ringMid   = makeRing(R2, 0x7c3aed, 0.85, 0.12); // 中层 · 数学 · 紫
+const ringOuter = makeRing(R3, 0x00d4d4, 0.80, 0.14); // 外层 · 工程 · 霓虹青
 
-// 底部蜂巢能量场（表现层底座）
+// ── 底部蜂巢能量场 ──
 (function hexGrid() {
   const grp = new THREE.Group();
   const hexGeo = new THREE.CylinderGeometry(0.42, 0.42, 0.08, 6);
-  const hexMat = new THREE.MeshStandardMaterial({ color: 0x0a1230, emissive: 0x3b82f6, emissiveIntensity: 0.5, roughness: 0.5, metalness: 0.4 });
+  const hexMat = new THREE.MeshStandardMaterial({
+    color: 0x040d14,
+    emissive: 0x00d4d4,
+    emissiveIntensity: 0.45,
+    roughness: 0.5, metalness: 0.4,
+  });
   const step = 1.05;
   for (let q = -4; q <= 4; q++) {
     for (let r = -4; r <= 4; r++) {
@@ -249,92 +420,127 @@ const ringOuter = makeRing(R3, 0x3b82f6, 0.80, 0.14); // 外层 · 表现 · 蓝
   scene.add(grp);
 })();
 
-// 核心（金色光核）
+// ── 核心光球 ──
 const core = new THREE.Mesh(
   new THREE.SphereGeometry(0.6, 32, 32),
-  new THREE.MeshStandardMaterial({ color: 0x0f0f18, emissive: 0xeab308, emissiveIntensity: 2.4, roughness: 0.2, metalness: 0.4 })
+  new THREE.MeshStandardMaterial({
+    color: 0x030f18,
+    emissive: 0x00d4d4,
+    emissiveIntensity: 3.2,
+    roughness: 0.15, metalness: 0.5,
+  })
 );
 scene.add(core);
 const coreGlow = new THREE.Mesh(
-  new THREE.SphereGeometry(1.1, 32, 32),
-  new THREE.MeshBasicMaterial({ color: 0xeab308, transparent: true, opacity: 0.12, depthWrite: false })
+  new THREE.SphereGeometry(1.15, 32, 32),
+  new THREE.MeshBasicMaterial({
+    color: 0x00d4d4,
+    transparent: true, opacity: 0.14, depthWrite: false,
+  })
 );
 scene.add(coreGlow);
 
-// 节点数据（三层护盾：内=理论，中=工程，外=表现）
-const nodeData = [
-  // 内层 · 理论（金）
-  { name: 'TLA+ 形式化验证', layer: '内层护盾 · 理论层', r: R1, theta: 0.4, phi: 0.0, color: 0xeab308, done: true,
-    rows: [['不变式','7 条'],['状态数','101,467'],['违规','0'],['TSR 存证','lg-069']] },
-  { name: '格硬度假设', layer: '内层护盾 · 理论层', r: R1, theta: 2.1, phi: 0.7, color: 0xeab308, done: true,
-    rows: [['方法','lattice-estimator'],['BKZ-β','≈406'],['安全等级','128-bit PQC 基线']] },
-  { name: 'FALCON 安全模型', layer: '内层护盾 · 理论层', r: R1, theta: 4.1, phi: 2.1, color: 0x60a5fa, done: false,
-    rows: [['状态','规划中'],['说明','NIST 额外签名标准']] },
-  // 中层 · 工程（紫）
-  { name: 'ML-KEM-768', layer: '中层护盾 · 工程层', r: R2, theta: 0.1, phi: 0.2, color: 0xa855f7, done: true,
-    rows: [['KAT','10,000 / 10,000'],['标准','FIPS 203']] },
-  { name: 'ML-DSA / SLH-DSA', layer: '中层护盾 · 工程层', r: R2, theta: 1.3, phi: 0.9, color: 0xa855f7, done: true,
-    rows: [['KAT','75 / 75'],['标准','FIPS 204 / 205']] },
-  { name: '国密 SM2 / SM3 / SM4', layer: '中层护盾 · 工程层', r: R2, theta: 2.5, phi: 1.2, color: 0xa855f7, done: true,
-    rows: [['SM2','9 / 9'],['SM3','32 / 32'],['SM4','7 / 7']] },
-  { name: 'FPGA NTT', layer: '中层护盾 · 工程层', r: R2, theta: 3.6, phi: 1.6, color: 0xa855f7, done: true,
-    rows: [['WNS','9.755 ns'],['平台','Artix-7']] },
-  { name: 'Python / Rust 绑定', layer: '中层护盾 · 工程层', r: R2, theta: 5.0, phi: 2.3, color: 0x60a5fa, done: false,
-    rows: [['状态','规划中'],['时间','Q1 2027']] },
-  { name: '第三方审计', layer: '中层护盾 · 工程层', r: R2, theta: 5.8, phi: 2.7, color: 0x60a5fa, done: false,
-    rows: [['状态','规划中'],['时间','Q2 2027']] },
-  // 外层 · 表现（蓝）
-  { name: '交互式可视化', layer: '外层护盾 · 表现层', r: R3, theta: 0.3, phi: 0.6, color: 0x3b82f6, done: true,
-    rows: [['类型','3D 交互'],['引擎','Three.js r157']] },
-  { name: '文档体系', layer: '外层护盾 · 表现层', r: R3, theta: 2.1, phi: 1.3, color: 0x3b82f6, done: true,
-    rows: [['语言','中 / 英'],['结构','按角色分发']] },
-  { name: 'TSR 证据链', layer: '外层护盾 · 表现层', r: R3, theta: 3.9, phi: 1.9, color: 0x3b82f6, done: true,
-    rows: [['范围','lg-001 ~ lg-069'],['方式','时间戳存证']] },
+// ── 节点数据（全英文） ──
+// 莫兰迪调色板（低饱和高级灰）
+const MORANDI = [
+  0x94a3b8, // slate
+  0x7fb3d5, // powder blue
+  0x76c893, // sage
+  0xf4a261, // terracotta
+  0xa8dadc, // misty cyan
+  0xc9ada7, // dusty rose
+  0xb08b8b, // mauve
+  0x8ecae6, // sky
+  0xcdb4db, // lavender
+  0x9d8189, // warm gray
 ];
 
-// 节点质感：理论=能量水晶 / 工程=抛光金属 / 表现=玻璃等离子 / 规划=雾化玻璃
+const nodeData = [
+  // INNER CORE · THEORY
+  { name:'TLA+ Formal Verification', layer:'Inner Core · Theory', r:R1, theta:0.4, phi:0.0,
+    color:0xff8c42, done:true, idx:0,
+    rows:[['Invariants','7'],['States','101,467'],['Violations','0'],['TSR','lg-069']] },
+  { name:'Lattice Hardness Assumption', layer:'Inner Core · Theory', r:R1, theta:2.1, phi:0.7,
+    color:0xff8c42, done:true, idx:1,
+    rows:[['Method','lattice-estimator'],['BKZ-β','≈406'],['Security','128-bit PQC baseline']] },
+  { name:'FALCON Security Model', layer:'Inner Core · Theory', r:R1, theta:4.1, phi:2.1,
+    color:0x60a5fa, done:false, idx:2,
+    rows:[['Status','Planned'],['Standard','NIST additional signature']] },
+  // MID SHIELD · MATHEMATICS
+  { name:'ML-KEM-768', layer:'Mid Shield · Mathematics', r:R2, theta:0.1, phi:0.2,
+    color:0x7c3aed, done:true, idx:3,
+    rows:[['KAT','10,000 / 10,000'],['Standard','FIPS 203']] },
+  { name:'ML-DSA / SLH-DSA', layer:'Mid Shield · Mathematics', r:R2, theta:1.3, phi:0.9,
+    color:0x7c3aed, done:true, idx:4,
+    rows:[['KAT','75 / 75'],['Standard','FIPS 204 / 205']] },
+  { name:'SM2 / SM3 / SM4', layer:'Mid Shield · Mathematics', r:R2, theta:2.5, phi:1.2,
+    color:0x7c3aed, done:true, idx:5,
+    rows:[['SM2','9 / 9'],['SM3','32 / 32'],['SM4','7 / 7']] },
+  { name:'FPGA NTT Pipeline', layer:'Mid Shield · Mathematics', r:R2, theta:3.6, phi:1.6,
+    color:0x7c3aed, done:true, idx:6,
+    rows:[['WNS','9.755 ns'],['Platform','Artix-7']] },
+  { name:'Python / Rust Bindings', layer:'Mid Shield · Mathematics', r:R2, theta:5.0, phi:2.3,
+    color:0x60a5fa, done:false, idx:7,
+    rows:[['Status','Planned'],['Timeline','Q1 2027']] },
+  { name:'Third-Party Audit', layer:'Mid Shield · Mathematics', r:R2, theta:5.8, phi:2.7,
+    color:0x60a5fa, done:false, idx:8,
+    rows:[['Status','Planned'],['Timeline','Q2 2027']] },
+  // OUTER SHIELD · ENGINEERING
+  { name:'Interactive Visualization', layer:'Outer Shield · Engineering', r:R3, theta:0.3, phi:0.6,
+    color:0x00d4d4, done:true, idx:9,
+    rows:[['Type','3D Interactive'],['Engine','Three.js r157']] },
+  { name:'Documentation System', layer:'Outer Shield · Engineering', r:R3, theta:2.1, phi:1.3,
+    color:0x00d4d4, done:true, idx:10,
+    rows:[['Languages','EN / ZH'],['Structure','Role-based distribution']] },
+  { name:'TSR Evidence Chain', layer:'Outer Shield · Engineering', r:R3, theta:3.9, phi:1.9,
+    color:0x00d4d4, done:true, idx:11,
+    rows:[['Range','lg-001 ~ lg-069'],['Method','Trusted Timestamp']] },
+];
+
 function nodeMaterial(d) {
-  const c = new THREE.Color(d.color);
+  const mc = new THREE.Color(d.color);
   if (!d.done) {
     return new THREE.MeshPhysicalMaterial({
-      color: 0xcfe0f5, metalness: 0, roughness: 0.2,
+      color: 0xd8e4ec, metalness: 0, roughness: 0.2,
       transparent: true, opacity: 0.78,
       transmission: 0.4, thickness: 0.7, ior: 1.38,
-      emissive: c, emissiveIntensity: 0.7,
+      emissive: mc, emissiveIntensity: 0.65,
       envMapIntensity: 1.2,
     });
   }
-  if (d.layer.includes('理论')) {
+  // 霓虹青主题：理论=橙水晶，工程=抛光金属，数学=玻璃
+  if (d.layer.includes('Theory')) {
     return new THREE.MeshPhysicalMaterial({
-      color: 0x2a2410, metalness: 0.1, roughness: 0.06,
+      color: 0x1a0f06, metalness: 0.1, roughness: 0.06,
       transmission: 0.55, thickness: 1.3, ior: 1.5,
       clearcoat: 0.9, clearcoatRoughness: 0.08,
       transparent: true, opacity: 0.95,
-      emissive: c, emissiveIntensity: 0.75,
+      emissive: mc, emissiveIntensity: 0.9,
       envMapIntensity: 1.5,
     });
   }
-  if (d.layer.includes('工程')) {
+  if (d.layer.includes('Mathematics')) {
     return new THREE.MeshPhysicalMaterial({
-      color: c, metalness: 0.95, roughness: 0.16,
-      clearcoat: 0.55, clearcoatRoughness: 0.12,
-      emissive: c, emissiveIntensity: 0.22,
+      color: 0x180d30, metalness: 0.05, roughness: 0.1,
+      transmission: 0.3, thickness: 0.9, ior: 1.42,
+      clearcoat: 1.0, clearcoatRoughness: 0.04,
+      transparent: true, opacity: 0.92,
+      emissive: mc, emissiveIntensity: 1.1,
       envMapIntensity: 1.3,
     });
   }
+  // Engineering: metallic teal
   return new THREE.MeshPhysicalMaterial({
-    color: 0x20160e, metalness: 0.05, roughness: 0.1,
-    transmission: 0.3, thickness: 0.9, ior: 1.42,
-    clearcoat: 1.0, clearcoatRoughness: 0.04,
-    transparent: true, opacity: 0.92,
-    emissive: c, emissiveIntensity: 0.95,
-    envMapIntensity: 1.25,
+    color: mc, metalness: 0.95, roughness: 0.12,
+    clearcoat: 0.6, clearcoatRoughness: 0.1,
+    emissive: mc, emissiveIntensity: 0.25,
+    envMapIntensity: 1.4,
   });
 }
 
 const clickables = [];
 nodeData.forEach(d => {
-  const size = d.done ? 0.32 : 0.26;
+  const size = d.done ? 0.33 : 0.27;
   const mesh = new THREE.Mesh(
     new THREE.SphereGeometry(size, 48, 48),
     nodeMaterial(d)
@@ -347,10 +553,12 @@ nodeData.forEach(d => {
   mesh.userData = d;
   scene.add(mesh);
 
+  // Halo
   const halo = new THREE.Mesh(
-    new THREE.SphereGeometry(size * 1.4, 32, 32),
+    new THREE.SphereGeometry(size * 1.45, 32, 32),
     new THREE.MeshBasicMaterial({
-      color: d.color, transparent: true, opacity: d.done ? 0.15 : 0.06,
+      color: d.color, transparent: true,
+      opacity: d.done ? 0.14 : 0.06,
       depthWrite: false, side: THREE.BackSide,
     })
   );
@@ -360,12 +568,12 @@ nodeData.forEach(d => {
   clickables.push(mesh);
 });
 
-// 轨道粒子（沿环带旋转，表现护盾流动）
+// ── 轨道粒子 ──
 const ORB_N = 400;
 const oPos = new Float32Array(ORB_N * 3);
 const oColor = new Float32Array(ORB_N * 3);
 const oMeta = [];
-const cInner = new THREE.Color(0xeab308), cMid = new THREE.Color(0xa855f7), cOuter = new THREE.Color(0x3b82f6);
+const cI = new THREE.Color(0xff8c42), cM = new THREE.Color(0x7c3aed), cO = new THREE.Color(0x00d4d4);
 for (let i = 0; i < ORB_N; i++) {
   const ring = i % 3;
   const r = ring === 0 ? R1 : ring === 1 ? R2 : R3;
@@ -373,26 +581,30 @@ for (let i = 0; i < ORB_N; i++) {
   const y = (Math.random() - 0.5) * 0.8;
   const speed = 0.004 + Math.random() * 0.012;
   oMeta.push({ r, ang, y, speed });
-  const c = ring === 0 ? cInner : ring === 1 ? cMid : cOuter;
+  const c = ring === 0 ? cI : ring === 1 ? cM : cO;
   oColor[i*3] = c.r; oColor[i*3+1] = c.g; oColor[i*3+2] = c.b;
 }
 const oGeo = new THREE.BufferGeometry();
 oGeo.setAttribute('position', new THREE.BufferAttribute(oPos, 3));
 oGeo.setAttribute('color', new THREE.BufferAttribute(oColor, 3));
-const orbitParticles = new THREE.Points(oGeo, new THREE.PointsMaterial({ size: 0.06, vertexColors: true, transparent: true, opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending }));
+const orbitParticles = new THREE.Points(oGeo, new THREE.PointsMaterial({
+  size: 0.06, vertexColors: true, transparent: true,
+  opacity: 0.9, depthWrite: false, blending: THREE.AdditiveBlending,
+}));
 scene.add(orbitParticles);
 
 function updateOrbit() {
   for (let i = 0; i < ORB_N; i++) {
     const m = oMeta[i];
     m.ang += m.speed;
-    oPos[i*3] = m.r * Math.cos(m.ang);
+    oPos[i*3]   = m.r * Math.cos(m.ang);
     oPos[i*3+1] = m.y;
     oPos[i*3+2] = m.r * Math.sin(m.ang);
   }
   oGeo.attributes.position.needsUpdate = true;
 }
 
+// ── 交互 ──
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 let hovered = null;
@@ -401,7 +613,7 @@ function setPointer(e) {
   pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 }
 window.addEventListener('pointermove', setPointer);
-window.addEventListener('pointerdown', (e) => {
+window.addEventListener('pointerdown', e => {
   setPointer(e);
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObjects(clickables);
@@ -416,7 +628,7 @@ function openPanel(d) {
   tag.style.color = '#' + d.color.toString(16).padStart(6, '0');
   const st = document.getElementById('p-status');
   st.className = 'status ' + (d.done ? 'done' : 'plan');
-  st.textContent = d.done ? '✅ 已实现' : '⏳ 规划中';
+  st.textContent = d.done ? 'Implemented' : 'Planned';
   document.getElementById('p-body').innerHTML = d.rows.map(r =>
     `<div class="row"><span class="k">${r[0]}</span><span class="v">${r[1]}</span></div>`
   ).join('');
@@ -425,16 +637,17 @@ function openPanel(d) {
 function closePanel() { document.getElementById('panel').style.display = 'none'; }
 window.closePanel = closePanel;
 
+// ── 动画循环 ──
 const clock = new THREE.Clock();
 function animate() {
   requestAnimationFrame(animate);
   const t = clock.getElapsedTime();
   ringInner.material.uniforms.uTime.value = t;
-  ringMid.material.uniforms.uTime.value = t;
+  ringMid.material.uniforms.uTime.value   = t;
   ringOuter.material.uniforms.uTime.value = t;
-  core.material.emissiveIntensity = 2.0 + 0.7 * Math.sin(t * 2);
+  core.material.emissiveIntensity = 2.8 + 0.7 * Math.sin(t * 2.2);
   coreGlow.scale.setScalar(1 + 0.15 * Math.sin(t * 1.5));
-
+  coreGlow.material.opacity = 0.10 + 0.06 * Math.sin(t * 1.8);
   updateOrbit();
 
   raycaster.setFromCamera(pointer, camera);
