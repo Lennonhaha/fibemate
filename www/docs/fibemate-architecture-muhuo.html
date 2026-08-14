@@ -42,6 +42,10 @@
   #panel .close:hover { color: var(--text); }
   /* 提示 */
   .hint { position: fixed; bottom: 20px; right: 20px; font-size: 11px; color: var(--muted); z-index: 10; pointer-events: none; }
+  /* 天文分野叙事条 */
+  .fenye { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); font-size: 12px; letter-spacing: 1px; color: var(--muted); z-index: 10; pointer-events: none; text-align: center; white-space: nowrap; }
+  .fenye b { color: #eab308; font-weight: 600; }
+  .fenye b.n { color: #60a5fa; }
 </style>
 <script type="importmap">
 { "imports": { "three": "../vwz-tensor/lib/three.module.js", "three/addons/": "../vwz-tensor/lib/" } }
@@ -72,6 +76,8 @@
 </div>
 
 <div class="hint">拖动旋转 · 滚轮缩放 · 点击节点查看详情</div>
+
+<div class="fenye">天人合一 · 天象分野&nbsp;⟷&nbsp;密码护盾&nbsp;&nbsp;|&nbsp;&nbsp;<b>井鬼 · 鹑首 · 未宫 · 成都（西南）</b>&nbsp;&nbsp;⟷&nbsp;&nbsp;<b class="n">尾箕 · 析木 · 寅宫 · 哈尔滨（东北）</b></div>
 
 <script type="module">
 import * as THREE from 'three';
@@ -246,6 +252,148 @@ const coreHalo = new THREE.Mesh(
   new THREE.ShaderMaterial({ vertexShader: shieldVert, fragmentShader: shieldFrag, uniforms: { uColor: { value: new THREE.Color(0xeab308) }, uTime: { value: 0 }, uOpacity: { value: 0.5 } }, transparent: true, depthWrite: false, side: THREE.BackSide })
 );
 scene.add(coreHalo);
+
+// ═══════════════════════════════════════════════════════════════
+//  天文分野系统（井鬼·鹑首·未宫↔尾箕·析木·寅宫）
+// ═══════════════════════════════════════════════════════════════
+const RA = 10.0; // 天球半径（最外围，包裹三层护盾）
+
+function makeStarSprite(color, size, opacity) {
+  const cv = document.createElement('canvas');
+  cv.width = cv.height = 64;
+  const ctx = cv.getContext('2d');
+  const g = ctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.25, color);
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 64, 64);
+  const tex = new THREE.CanvasTexture(cv);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending }));
+  sp.scale.set(size, size, 1);
+  return sp;
+}
+function makeTextSprite(text, color, size) {
+  const cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 128;
+  const ctx = cv.getContext('2d');
+  ctx.font = '600 40px system-ui, "Segoe UI", sans-serif';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.lineWidth = 8;
+  ctx.strokeStyle = 'rgba(10,12,20,0.85)';
+  ctx.strokeText(text, 256, 64);
+  ctx.fillStyle = color;
+  ctx.fillText(text, 256, 64);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthWrite: false }));
+  const aspect = 512 / 128;
+  sp.scale.set(size * aspect, size, 1);
+  return sp;
+}
+
+const fenye = {
+  jinggui: { pos: new THREE.Vector3(-5.8, 3.4, -5.2).normalize().multiplyScalar(RA), color: 0x60a5fa,
+    label: '井鬼 · 鹑首 · 未宫', sub: '成都 · 西南', starCount: 12 },
+  weiji:   { pos: new THREE.Vector3(5.8, -3.4, -5.2).normalize().multiplyScalar(RA), color: 0xeab308,
+    label: '尾箕 · 析木 · 寅宫', sub: '哈尔滨 · 东北', starCount: 13 },
+};
+
+// 1. 分野连线弧（大圆孤，西南↔东北）
+let fenyeArcPts = null;
+(function fenyeArc() {
+  const pa = fenye.jinggui.pos;
+  const pb = fenye.weiji.pos;
+  const mid = pa.clone().add(pb).normalize().multiplyScalar(RA * 1.12);
+  const curve = new THREE.QuadraticBezierCurve3(pa, mid, pb);
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(120));
+  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: 0x8899cc, transparent: true, opacity: 0.35, depthWrite: false }));
+  scene.add(line);
+
+  // 沿弧流动的「分野流光」粒子
+  const N = 60;
+  const fPos = new Float32Array(N * 3);
+  const fGeo = new THREE.BufferGeometry();
+  fGeo.setAttribute('position', new THREE.BufferAttribute(fPos, 3));
+  const fMat = new THREE.PointsMaterial({ color: 0x99ccff, size: 0.09, transparent: true, opacity: 0.8, depthWrite: false, blending: THREE.AdditiveBlending });
+  const fPts = new THREE.Points(fGeo, fMat);
+  scene.add(fPts);
+  const fMeta = [];
+  for (let i = 0; i < N; i++) fMeta.push({ t: Math.random(), speed: 0.003 + Math.random() * 0.005 });
+  fenyeArcPts = { curve, fGeo, fMeta };
+})();
+
+// 2. 星宿群（井鬼12星 / 尾箕13星，用 Sprite 呈现）
+const starGroups = {};
+function buildConstellation(key) {
+  const f = fenye[key];
+  const dir = f.pos.clone().normalize();
+  const up = new THREE.Vector3(0, 1, 0);
+  const t1 = new THREE.Vector3().crossVectors(dir, up).normalize();
+  const t2 = new THREE.Vector3().crossVectors(dir, t1).normalize();
+  const g = new THREE.Group();
+  const c = new THREE.Color(f.color);
+  const points = [];
+  for (let i = 0; i < f.starCount; i++) {
+    const a = (Math.random() - 0.5) * 1.15;
+    const b = (Math.random() - 0.5) * 0.95;
+    const p = dir.clone()
+      .add(t1.clone().multiplyScalar(a))
+      .add(t2.clone().multiplyScalar(b))
+      .normalize().multiplyScalar(RA);
+    const s = 0.28 + Math.random() * 0.22;
+    const sp = makeStarSprite('#' + c.getHexString(), s, 0.8 + Math.random() * 0.2);
+    sp.position.copy(p);
+    g.add(sp);
+    points.push({ a, b, p });
+  }
+  // 按环绕角排序，连线成星宿轮廓（闭环）
+  points.sort((x, y) => Math.atan2(x.b, x.a) - Math.atan2(y.b, y.a));
+  const ring = points.map(x => x.p);
+  ring.push(ring[0]);
+  const lineGeo = new THREE.BufferGeometry().setFromPoints(ring);
+  const line = new THREE.Line(lineGeo, new THREE.LineBasicMaterial({ color: f.color, transparent: true, opacity: 0.3, depthWrite: false }));
+  g.add(line);
+  scene.add(g);
+  starGroups[key] = g;
+}
+buildConstellation('jinggui');
+buildConstellation('weiji');
+
+// 3. 天球纬圈（赤道带 + 黄道带，营造「天球」感）
+(function celestialCircles() {
+  function ring(r, color, opacity, tiltY) {
+    const pts = [];
+    for (let i = 0; i <= 128; i++) {
+      const a = (i / 128) * Math.PI * 2;
+      pts.push(new THREE.Vector3(r * Math.cos(a), 0, r * Math.sin(a)));
+    }
+    const g = new THREE.BufferGeometry().setFromPoints(pts);
+    const m = new THREE.Line(g, new THREE.LineBasicMaterial({ color, transparent: true, opacity, depthWrite: false }));
+    m.rotation.y = tiltY;
+    scene.add(m);
+    return m;
+  }
+  ring(RA, 0x8899cc, 0.14, 0);           // 赤道带
+  ring(RA * 1.015, 0xeab308, 0.18, 0.4); // 黄道带（倾斜）
+  ring(RA * 1.03, 0x5588ff, 0.12, -0.35); // 另一倾斜圈
+})();
+
+// 4. 分野标签（Sprite 文字）
+(function fenyeLabels() {
+  const pa = fenye.jinggui.pos.clone().normalize().multiplyScalar(RA * 1.26);
+  const pb = fenye.weiji.pos.clone().normalize().multiplyScalar(RA * 1.26);
+  const ca = '#' + new THREE.Color(fenye.jinggui.color).getHexString();
+  const cb = '#' + new THREE.Color(0xfcd34d).getHexString();
+  const la = makeTextSprite(fenye.jinggui.label, ca, 1.5);
+  la.position.copy(pa); scene.add(la);
+  const lb = makeTextSprite(fenye.weiji.label, cb, 1.5);
+  lb.position.copy(pb); scene.add(lb);
+  const sa = makeTextSprite(fenye.jinggui.sub, '#d6d9e6', 0.9);
+  sa.position.copy(pa.clone().multiplyScalar(1.06)); scene.add(sa);
+  const sb = makeTextSprite(fenye.weiji.sub, '#d6d9e6', 0.9);
+  sb.position.copy(pb.clone().multiplyScalar(1.06)); scene.add(sb);
+})();
 
 // 节点数据
 const nodeData = [
@@ -438,6 +586,21 @@ function animate() {
   core.material.emissiveIntensity = 1.8 + 0.6 * Math.sin(t * 2);
 
   updateParticles();
+
+  // 分野流光：沿弧线流动
+  if (fenyeArcPts) {
+    const { curve, fGeo, fMeta } = fenyeArcPts;
+    const arr = fGeo.attributes.position.array;
+    const tmp = new THREE.Vector3();
+    for (let i = 0; i < fMeta.length; i++) {
+      const m = fMeta[i];
+      m.t += m.speed;
+      if (m.t > 1) m.t -= 1;
+      curve.getPoint(m.t, tmp);
+      arr[i*3] = tmp.x; arr[i*3+1] = tmp.y; arr[i*3+2] = tmp.z;
+    }
+    fGeo.attributes.position.needsUpdate = true;
+  }
 
   // hover 检测
   raycaster.setFromCamera(pointer, camera);
