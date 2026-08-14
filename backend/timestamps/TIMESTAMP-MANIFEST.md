@@ -47,7 +47,7 @@ openssl ts -verify -data <file> -in <file>.tsr -CAfile DigiCertCA.pem
 ## PQC Validation Tests (2026-06-07)
 
 # FIBEMATE PQC Test Code Timestamp Attestation
-# DigiCert TSA (RFC 3161) 鈥?SHA-256
+# DigiCert TSA (RFC 3161) —SHA-256
 # Generated: 2026-06-06T18:19:50.856Z
 
 fo-transform.test.js

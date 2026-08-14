@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SM2 鍓嶇闆嗘垚鑱旇皟楠岃瘉 鈥?2026-06-25</title>
+<title>SM2 前端集成联调验证 — 2026-06-25</title>
 <style>
   body { font-family: -apple-system, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; background: #0a0e17; color: #e2e8f0; line-height: 1.7; }
   h1 { color: #00E5C3; font-size: 1.6rem; }
@@ -22,17 +22,17 @@
 </head>
 <body>
 
-<h1>SM2 鍓嶇闆嗘垚鑱旇皟楠岃瘉 鈥?2026-06-25</h1>
+<h1>SM2 前端集成联调验证 — 2026-06-25</h1>
 
-<h2>鎽樿</h2>
-<p>SM2 鍓嶇鏁村閾捐矾鍦?Tauri 寮€鍙戠幆澧冧笅楠岃瘉鍏ㄩ儴閫氳繃銆傛暣鏉″浗瀵嗗姞瀵嗛€氫俊閾捐矾涓€鍏?11 椤圭敤渚嬶紝11/11 鍏ㄩ儴 PASS銆?/p>
+<h2>摘要</h2>
+<p>SM2 前端整套链路在 Tauri 开发环境下验证全部通过。整条国密加密通信链路一共 11 项用例，11/11 全部 PASS。</p>
 
-<h2>涓€銆佺幆澧冨惎鍔ㄩ獙璇?/h2>
-<p>鎵ц鍛戒护锛?code>npm run tauri dev</code></p>
+<h2>一、环境启动验证</h2>
+<p>执行命令：<code>npm run tauri dev</code></p>
 <ol>
-  <li>Rust 缂栬瘧鑰楁椂锛?.80s锛屽紑鍙戦厤缃瀯寤烘棤鎶ラ敊</li>
-  <li>妗岄潰绐楀彛姝ｅ父鎷夎捣锛屽瘑閽ヤ粨搴?KeyStore 鍒濆鍖栧共鍑€锛屾棤娈嬬暀浼氳瘽</li>
-  <li>杩愯鐜鐗堟湰锛?
+  <li>Rust 编译耗时：3.80s，开发配置构建无报错</li>
+  <li>桌面窗口正常拉起，密钥仓库 KeyStore 初始化干净，无残留会话</li>
+  <li>运行环境版本：
     <ul>
       <li>Tauri CLI 2.10.1</li>
       <li>Rust 1.95.0</li>
@@ -41,48 +41,48 @@
   </li>
 </ol>
 
-<h2>浜屻€佸叏閾捐矾娴嬭瘯缁撴灉</h2>
-<p>鎵ц鑴氭湰锛?code>scripts/verify-sm2-browser.mjs</code></p>
+<h2>二、全链路测试结果</h2>
+<p>执行脚本：<code>scripts/verify-sm2-browser.mjs</code></p>
 
 <table>
-<tr><th>搴忓彿</th><th>娴嬭瘯椤圭洰</th><th>缁撴灉</th></tr>
-<tr><td>1</td><td>SM3 鍝堝笇鑷祴</td><td>鉁?/td></tr>
-<tr><td>2</td><td>SM4-GCM 鍔犲瘑鑷祴</td><td>鉁?/td></tr>
-<tr><td>3</td><td>寰€杩斿姞瑙ｅ瘑锛堜腑鏂?Emoji娣峰悎鏂囨湰锛?/td><td>鉁?/td></tr>
-<tr><td>4</td><td>瀵嗘枃绡℃敼鎷︽埅鏍￠獙</td><td>鉁?/td></tr>
-<tr><td>5</td><td>10KB闀挎枃鏈紙9.2K瀛楃锛夛細鍔犲瘑 25.6ms / 瑙ｅ瘑 18.2ms</td><td>鉁?/td></tr>
-<tr><td>6</td><td>闈炴硶瀵嗛挜鑷姩鎷掔粷</td><td>鉁?/td></tr>
-<tr><td>7</td><td>绌哄瓧绗︿覆鍔犺В瀵嗗線杩?/td><td>鉁?/td></tr>
-<tr><td>8</td><td>瓒呭ぇUnicode鐗规畩瀛楃杈圭晫娴嬭瘯</td><td>鉁?/td></tr>
-<tr><td>9</td><td>娑堟伅淇″皝瀛楁鏍煎紡鍚堣鏍￠獙</td><td>鉁?/td></tr>
-<tr><td>10</td><td>10缁勭嫭绔婼M4瀵嗛挜鐢熸垚鏃犲啿绐?/td><td>鉁?/td></tr>
-<tr><td>11</td><td>妗ユ帴鍏ㄦ祦绋嬭嚜娴嬶細瀵嗛挜鐢熸垚鈫掔鍚嶁啋楠岀鈫掑姞瀵嗏啋瑙ｅ瘑鈫扙CDH鍗忓晢</td><td>鉁?/td></tr>
+<tr><th>序号</th><th>测试项目</th><th>结果</th></tr>
+<tr><td>1</td><td>SM3 哈希自测</td><td>✅</td></tr>
+<tr><td>2</td><td>SM4-GCM 加密自测</td><td>✅</td></tr>
+<tr><td>3</td><td>往返加解密（中文+Emoji混合文本）</td><td>✅</td></tr>
+<tr><td>4</td><td>密文篡改拦截校验</td><td>✅</td></tr>
+<tr><td>5</td><td>10KB长文本（9.2K字符）：加密 25.6ms / 解密 18.2ms</td><td>✅</td></tr>
+<tr><td>6</td><td>非法密钥自动拒绝</td><td>✅</td></tr>
+<tr><td>7</td><td>空字符串加解密往返</td><td>✅</td></tr>
+<tr><td>8</td><td>超大Unicode特殊字符边界测试</td><td>✅</td></tr>
+<tr><td>9</td><td>消息信封字段格式合规校验</td><td>✅</td></tr>
+<tr><td>10</td><td>10组独立SM4密钥生成无冲突</td><td>✅</td></tr>
+<tr><td>11</td><td>桥接全流程自测：密钥生成→签名→验签→加密→解密→ECDH协商</td><td>✅</td></tr>
 </table>
 
-<h2>涓夈€佽皟鐢ㄩ摼璺畬鏁磋鐩?/h2>
-<pre>sm2-ec-browser.js锛堝簳灞傛き鍦嗚繍绠楋紝TVLA 5/5 閫氳繃锛?
-鈫?sm3-browser.js
-鈫?sm4-browser.js锛圓EAD璁よ瘉鍔犲瘑锛?
-鈫?sm2-bridge.js锛堟ˉ鎺ュ眰涓冮」鎺ュ彛灏佽锛?
-鈫?message-gm.js锛堝弻妫樿疆 + SM2-SM4娣峰悎鍔犲瘑锛?
-鈫?main.js锛堜笂灞傝亰澶╀笟鍔°€佸瘑閽ョ鐞嗐€丳2P鐩磋繛妯″紡锛?/pre>
+<h2>三、调用链路完整覆盖</h2>
+<pre>sm2-ec-browser.js（底层椭圆运算，TVLA 5/5 通过）
+→ sm3-browser.js
+→ sm4-browser.js（AEAD认证加密）
+→ sm2-bridge.js（桥接层七项接口封装）
+→ message-gm.js（双棘轮 + SM2-SM4混合加密）
+→ main.js（上层聊天业务、密钥管理、P2P直连模式）</pre>
 
-<h2>鍥涖€佸墠绔祫婧愬姞杞介摼锛坢ain.html锛?/h2>
-<pre>sm2-ec-browser.js 鈫?sm3-browser.js 鈫?sm4-browser.js 鈫?sm2-bridge.js
-鈫?message-gm.js 鈫?slh-dsa.js 鈫?opk-client.js 鈫?pq-integration.js
-鈫?security-levels.js 鈫?main.js</pre>
-<p>鍏辫 12 涓瘑鐮佸妯″潡锛屽姞杞介『搴忔甯革紝鏃犵己澶便€佹棤鑴氭湰闃诲銆?/p>
+<h2>四、前端资源加载链（main.html）</h2>
+<pre>sm2-ec-browser.js → sm3-browser.js → sm4-browser.js → sm2-bridge.js
+→ message-gm.js → slh-dsa.js → opk-client.js → pq-integration.js
+→ security-levels.js → main.js</pre>
+<p>共计 12 个密码学模块，加载顺序正常，无缺失、无脚本阻塞。</p>
 
-<h2>浜斻€佸叧閿嫎璇笌鐜璇存槑</h2>
+<h2>五、关键勘误与环境说明</h2>
 <ol>
-  <li>鎺ュ彛鍚嶇О淇锛氬師瑙勫垝鐨?<code>encryptWithGM.diagnostics()</code> 鏈疄鐜帮紝鏈€缁堝澶?API 缁熶竴涓?<code>MessageGM.encryptWithSM2()</code> / <code>MessageGM.decryptWithSM2()</code></li>
-  <li>妗ユ帴鑷祴渚濊禆娴忚鍣?localStorage锛涘湪 Node 鍛戒护琛岃繍琛屾祴璇曢渶瑕佽ˉ榻愬瓨鍌?polyfill</li>
-  <li>Tauri 寮€鍙戝湴鍧€閿佸畾锛?code>http://localhost:3002</code></li>
-  <li>娑堟伅淇″皝鏍囧噯缁撴瀯锛?
+  <li>接口名称修正：原规划的 <code>encryptWithGM.diagnostics()</code> 未实现，最终对外 API 统一为 <code>MessageGM.encryptWithSM2()</code> / <code>MessageGM.decryptWithSM2()</code></li>
+  <li>桥接自测依赖浏览器 localStorage；在 Node 命令行运行测试需要补齐存储 polyfill</li>
+  <li>Tauri 开发地址锁定：<code>http://localhost:3002</code></li>
+  <li>消息信封标准结构：
 <pre>{
   "version": 3,
   "protocol": "sm2-sm4-hybrid",
-  "AAD": "c1鍓?2瀛楄妭",
+  "AAD": "c1前32字节",
   "ciphertext": "...",
   "iv": "...",
   "signature": "..."
@@ -90,26 +90,26 @@
   </li>
 </ol>
 
-<h2>鍏€丆I 瀹夊叏瀹¤瀹屾垚鐘舵€?/h2>
+<h2>六、CI 安全审计完成状态</h2>
 <ul>
-  <li>鉁?<code>npm audit</code>锛? 楂樺嵄婕忔礊</li>
-  <li>鉁?<code>cargo fmt --check</code>锛氫唬鐮佹牸寮忓畬鍏ㄧ粺涓€</li>
-  <li>鉁?<code>cargo clippy</code>锛氭竻鐞嗗畬姣曪紝0 璀﹀憡銆? 閿欒</li>
-  <li>鈴?<code>cargo audit</code>锛氫粎缃戠粶鍘熷洜寰呬唬鐞嗙幆澧冨娴?/li>
+  <li>✅ <code>npm audit</code>：0 高危漏洞</li>
+  <li>✅ <code>cargo fmt --check</code>：代码格式完全统一</li>
+  <li>✅ <code>cargo clippy</code>：清理完毕，0 警告、0 错误</li>
+  <li>⏳ <code>cargo audit</code>：仅网络原因待代理环境复测</li>
 </ul>
 
-<h2>涓冦€佹湰娆″悓姝ヤ笂绾跨殑閰嶅妯″潡</h2>
+<h2>七、本次同步上线的配套模块</h2>
 <ol>
-  <li><strong>SLH-DSA WASM</strong>锛歐ebWorker 寮傛鍔犺浇锛屼笉闃诲 UI 涓荤嚎绋?/li>
-  <li><strong>OPK 棰勫瘑閽ュ鎴风</strong>锛氬叕閽ユ墦鍖呮墿灞?gmPublicKey锛屽鐢ㄧ幇鏈夋帴鍙?/li>
-  <li><strong>PQC 鍥藉瘑娣峰悎璋冨害灞?/strong>锛氫笁妗ｅ畨鍏ㄧ瓑绾?Standard / High / PQC-Hybrid</li>
+  <li><strong>SLH-DSA WASM</strong>：WebWorker 异步加载，不阻塞 UI 主线程</li>
+  <li><strong>OPK 预密钥客户端</strong>：公钥打包扩展 gmPublicKey，复用现有接口</li>
+  <li><strong>PQC 国密混合调度层</strong>：三档安全等级 Standard / High / PQC-Hybrid</li>
 </ol>
 
-<h2>鍏€侀摼鎺ュ叆鍙?/h2>
-<p>瀹屾暣鎬ц兘鎸囨爣銆侀珮闃?TVLA 渚т俊閬撴祴璇曟暟鎹瑙侀檮浠舵枃妗ｃ€?/p>
+<h2>八、链接入口</h2>
+<p>完整性能指标、高阶 TVLA 侧信道测试数据详见附件文档。</p>
 
 <div class="footer">
-  FIBEMATE v3.3-preview &nbsp;|&nbsp; 2026-06-25 &nbsp;|&nbsp; <a href="/">鈫?杩斿洖棣栭〉</a>
+  FIBEMATE v3.0-preview &nbsp;|&nbsp; 2026-06-25 &nbsp;|&nbsp; <a href="/">← 返回首页</a>
 </div>
 
 </body>

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // ============================================================
-// FIBEMATE Hybrid Double Ratchet 鈥?Post-Quantum Edition
+// FIBEMATE Hybrid Double Ratchet —Post-Quantum Edition
 // ML-KEM-768 (NIST FIPS 203) + P-256 Double Ratchet
 // ============================================================
 //
 // Architecture:
-//   Initial handshake: ML-KEM-768 encaps/decaps 鈫?hybrid root key
+//   Initial handshake: ML-KEM-768 encaps/decaps →hybrid root key
 //   Message ratchet:   P-256 ECDH (unchanged, 65B headers)
 //   Periodic re-key:   ML-KEM refresh every 100 messages
 //
@@ -117,9 +117,9 @@ function decapsulate(ct, sk) {
  *   - Bob's P-256 signed pre-key (raw Buffer, 65 bytes)
  *
  * Returns:
- *   - rootKey: Buffer(32) 鈥?derived from ML-KEM ss + ECDH ss
- *   - kemCt: Buffer(1088) 鈥?ML-KEM ciphertext to send to Bob
- *   - ekPub: Buffer(65) 鈥?Alice's P-256 ephemeral public key
+ *   - rootKey: Buffer(32) —derived from ML-KEM ss + ECDH ss
+ *   - kemCt: Buffer(1088) —ML-KEM ciphertext to send to Bob
+ *   - ekPub: Buffer(65) —Alice's P-256 ephemeral public key
  */
 async function hybridX3DH_initiator(bobMLKEMPub, bobP256SPK) {
   // Step 1: ML-KEM encapsulate to Bob's public key
@@ -160,8 +160,8 @@ async function hybridX3DH_initiator(bobMLKEMPub, bobP256SPK) {
  *   - His own P-256 signed pre-key pair (CryptoKeyPair)
  *
  * Receives from Alice:
- *   - kemCt: Buffer(1088) 鈥?ML-KEM ciphertext
- *   - ekPub: Buffer(65) 鈥?Alice's P-256 ephemeral public key
+ *   - kemCt: Buffer(1088) —ML-KEM ciphertext
+ *   - ekPub: Buffer(65) —Alice's P-256 ephemeral public key
  *
  * Returns:
  *   - rootKey: Buffer(32)
@@ -199,7 +199,7 @@ async function hybridX3DH_receiver(myMLKEMSecret, myP256SPKPair, kemCt, ekPub) {
 
 /**
  * Initiator side: after PQ_REKEY_INTERVAL messages, trigger re-key.
- * Returns { newPk, newSk } 鈥?send newPk to peer.
+ * Returns { newPk, newSk } —send newPk to peer.
  */
 function rekey_initiate() {
   return generatePQKeypair();
@@ -231,12 +231,12 @@ function rekey_deriveRoot(currentRootKey, pqSS) {
 class PQRatchetSession {
   constructor() {
     this.ratchetState = null;        // DoubleRatchet state
-    this.rootKey = null;             // Buffer(32) 鈥?current root key
-    this.mlkemSecretKey = null;      // Buffer(2400) 鈥?our ML-KEM secret
-    this.mlkemPublicKey = null;      // Buffer(1184) 鈥?our ML-KEM public
-    this.peerMLKEMPublicKey = null;  // Buffer(1184) 鈥?peer's ML-KEM public
-    this.p256KeyPair = null;         // CryptoKeyPair 鈥?our P-256 DH key
-    this.peerP256PublicKey = null;   // Buffer(65) 鈥?peer's P-256 DH pub
+    this.rootKey = null;             // Buffer(32) —current root key
+    this.mlkemSecretKey = null;      // Buffer(2400) —our ML-KEM secret
+    this.mlkemPublicKey = null;      // Buffer(1184) —our ML-KEM public
+    this.peerMLKEMPublicKey = null;  // Buffer(1184) —peer's ML-KEM public
+    this.p256KeyPair = null;         // CryptoKeyPair —our P-256 DH key
+    this.peerP256PublicKey = null;   // Buffer(65) —peer's P-256 DH pub
     this.sentCountSinceRekey = 0;    // Counter for periodic re-key
     this.conversationId = null;
     this.peerUserId = null;
