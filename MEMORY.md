@@ -526,3 +526,12 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 ### 附带发现
 MEMORY.md 自身有 2 处 NUL 字节（wasm-bindgen 0.2.126 / getrandom 0.2.17 的 0 被损坏成 NUL），已修复。
 
+### MEMORY.md 恢复（2026-08-14 11:00 完成）
+- 基线：c52320d85（2026-07-14）含 GBK 损坏，无法直接恢复
+- 策略：定位当前文件 clean 基线（字节 0~2770，2026-07-31 首节）+ 所有未损坏节
+- 实操：字节精确裁切 corrupt 段（2771~53565）+ 拼入 d15d19 + clean 节
+- D-15~D-19 重建：基于子代理召回 + 对比 pre-release 草稿
+- 三端同步：`c9bee4ca` 本地 = GitHub = 服务器（fibemate ECS）
+- 保留不可逆文件：sm-v12.js、session-manager.js（双重 GBK+? 损坏）
+- 服务器 `origin/main` 本地分支歧义：已用 `git fetch --force origin main && git reset --hard FETCH_HEAD` 解决
+
