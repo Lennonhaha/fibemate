@@ -91,26 +91,93 @@ controls.minDistance = 7;
 controls.maxDistance = 34;
 controls.target.set(0, 0, 0);
 
-scene.add(new THREE.AmbientLight(0x223344, 1.4));
-const dir = new THREE.DirectionalLight(0xffffff, 1.3);
-dir.position.set(6, 9, 5);
-scene.add(dir);
+// ── 程序化环境贴图 ──
+(function buildEnv() {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  const env = new THREE.Scene();
+  const srcs = [
+    { p: [0, 12, 0], c: 0xffffff, s: 2.4 },
+    { p: [9, 4, 6], c: 0xeab308, s: 1.4 },
+    { p: [-9, 1, 5], c: 0xa855f7, s: 1.4 },
+    { p: [5, -3, -9], c: 0x3b82f6, s: 1.2 },
+    { p: [-6, 3, -8], c: 0x22ddbb, s: 1.2 },
+  ];
+  srcs.forEach(s => {
+    const m = new THREE.Mesh(
+      new THREE.SphereGeometry(s.s, 16, 16),
+      new THREE.MeshBasicMaterial({ color: s.c })
+    );
+    m.position.set(s.p[0], s.p[1], s.p[2]);
+    env.add(m);
+  });
+  scene.environment = pmrem.fromScene(env, 0.06).texture;
+  pmrem.dispose();
+})();
 
-// 星点
-(function stars() {
-  const n = 800;
-  const pos = new Float32Array(n * 3);
-  for (let i = 0; i < n; i++) {
-    const r = 32 + Math.random() * 42;
-    const th = Math.random() * Math.PI * 2;
-    const ph = Math.acos(2 * Math.random() - 1);
-    pos[i*3] = r * Math.sin(ph) * Math.cos(th);
-    pos[i*3+1] = r * Math.sin(ph) * Math.sin(th);
-    pos[i*3+2] = r * Math.cos(ph);
+scene.add(new THREE.AmbientLight(0x334466, 1.2));
+const key = new THREE.DirectionalLight(0xffffff, 1.5);
+key.position.set(6, 10, 5);
+scene.add(key);
+const rim = new THREE.DirectionalLight(0x8899ff, 0.8);
+rim.position.set(-7, 2, -4);
+scene.add(rim);
+const warm = new THREE.PointLight(0x3b82f6, 1.1, 30);
+warm.position.set(4, -2, 6);
+scene.add(warm);
+
+// 星空背景：三层彩色星点 + 星云
+(function starfield() {
+  function starLayer(count, rMin, rMax, palette, size, opacity) {
+    const pos = new Float32Array(count * 3);
+    const col = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      const r = rMin + Math.random() * (rMax - rMin);
+      const th = Math.random() * Math.PI * 2;
+      const ph = Math.acos(2 * Math.random() - 1);
+      pos[i*3] = r * Math.sin(ph) * Math.cos(th);
+      pos[i*3+1] = r * Math.sin(ph) * Math.sin(th);
+      pos[i*3+2] = r * Math.cos(ph);
+      const c = palette[Math.floor(Math.random() * palette.length)];
+      col[i*3] = c.r; col[i*3+1] = c.g; col[i*3+2] = c.b;
+    }
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    const m = new THREE.PointsMaterial({
+      size, vertexColors: true, transparent: true, opacity,
+      depthWrite: false, sizeAttenuation: true, blending: THREE.AdditiveBlending,
+    });
+    return new THREE.Points(g, m);
   }
-  const g = new THREE.BufferGeometry();
-  g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-  scene.add(new THREE.Points(g, new THREE.PointsMaterial({ color: 0x88aadd, size: 0.07, transparent: true, opacity: 0.5, depthWrite: false })));
+  const W = new THREE.Color(0xffffff), B = new THREE.Color(0x8ab4ff),
+        Y = new THREE.Color(0xffd9a0), C = new THREE.Color(0x9fe8ff),
+        P = new THREE.Color(0xc9a6ff);
+  scene.add(starLayer(700, 40, 76, [W, B, Y, C, P], 0.11, 0.85));
+  scene.add(starLayer(500, 24, 40, [B, C, W], 0.07, 0.7));
+  scene.add(starLayer(350, 14, 22, [W, Y], 0.05, 0.6));
+
+  function nebula(stops, pos, scale, opacity) {
+    const cv = document.createElement('canvas');
+    cv.width = cv.height = 256;
+    const ctx = cv.getContext('2d');
+    const grd = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+    grd.addColorStop(0, stops[0]);
+    grd.addColorStop(0.55, stops[1]);
+    grd.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, 256, 256);
+    const tex = new THREE.CanvasTexture(cv);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: tex, transparent: true, opacity, depthWrite: false, blending: THREE.AdditiveBlending,
+    }));
+    sp.position.copy(pos);
+    sp.scale.set(scale, scale, 1);
+    scene.add(sp);
+  }
+  nebula(['rgba(59,130,246,0.62)', 'rgba(59,130,246,0.14)'], new THREE.Vector3(20, 11, -24), 28, 0.44);
+  nebula(['rgba(168,85,247,0.56)', 'rgba(168,85,247,0.12)'], new THREE.Vector3(-24, 9, -16), 26, 0.38);
+  nebula(['rgba(234,179,8,0.5)', 'rgba(234,179,8,0.1)'], new THREE.Vector3(12, -13, -28), 24, 0.34);
+  nebula(['rgba(34,221,187,0.5)', 'rgba(34,221,187,0.1)'], new THREE.Vector3(-16, -9, -22), 22, 0.32);
 })();
 
 // 环带护盾着色器（菲涅尔 + 扫描 + 旋转流光）
@@ -225,16 +292,52 @@ const nodeData = [
     rows: [['范围','lg-001 ~ lg-069'],['方式','时间戳存证']] },
 ];
 
+// 节点质感：理论=能量水晶 / 工程=抛光金属 / 表现=玻璃等离子 / 规划=雾化玻璃
+function nodeMaterial(d) {
+  const c = new THREE.Color(d.color);
+  if (!d.done) {
+    return new THREE.MeshPhysicalMaterial({
+      color: 0xcfe0f5, metalness: 0, roughness: 0.2,
+      transparent: true, opacity: 0.78,
+      transmission: 0.4, thickness: 0.7, ior: 1.38,
+      emissive: c, emissiveIntensity: 0.7,
+      envMapIntensity: 1.2,
+    });
+  }
+  if (d.layer.includes('理论')) {
+    return new THREE.MeshPhysicalMaterial({
+      color: 0x2a2410, metalness: 0.1, roughness: 0.06,
+      transmission: 0.55, thickness: 1.3, ior: 1.5,
+      clearcoat: 0.9, clearcoatRoughness: 0.08,
+      transparent: true, opacity: 0.95,
+      emissive: c, emissiveIntensity: 0.75,
+      envMapIntensity: 1.5,
+    });
+  }
+  if (d.layer.includes('工程')) {
+    return new THREE.MeshPhysicalMaterial({
+      color: c, metalness: 0.95, roughness: 0.16,
+      clearcoat: 0.55, clearcoatRoughness: 0.12,
+      emissive: c, emissiveIntensity: 0.22,
+      envMapIntensity: 1.3,
+    });
+  }
+  return new THREE.MeshPhysicalMaterial({
+    color: 0x20160e, metalness: 0.05, roughness: 0.1,
+    transmission: 0.3, thickness: 0.9, ior: 1.42,
+    clearcoat: 1.0, clearcoatRoughness: 0.04,
+    transparent: true, opacity: 0.92,
+    emissive: c, emissiveIntensity: 0.95,
+    envMapIntensity: 1.25,
+  });
+}
+
 const clickables = [];
 nodeData.forEach(d => {
+  const size = d.done ? 0.32 : 0.26;
   const mesh = new THREE.Mesh(
-    new THREE.SphereGeometry(d.done ? 0.3 : 0.24, 24, 24),
-    new THREE.MeshStandardMaterial({
-      color: d.done ? 0x15161f : 0xeef1ff,
-      emissive: d.color,
-      emissiveIntensity: d.done ? 1.5 : 0.6,
-      roughness: 0.3, metalness: 0.3,
-    })
+    new THREE.SphereGeometry(size, 48, 48),
+    nodeMaterial(d)
   );
   mesh.position.set(
     d.r * Math.sin(d.theta) * Math.cos(d.phi),
@@ -243,6 +346,17 @@ nodeData.forEach(d => {
   );
   mesh.userData = d;
   scene.add(mesh);
+
+  const halo = new THREE.Mesh(
+    new THREE.SphereGeometry(size * 1.4, 32, 32),
+    new THREE.MeshBasicMaterial({
+      color: d.color, transparent: true, opacity: d.done ? 0.15 : 0.06,
+      depthWrite: false, side: THREE.BackSide,
+    })
+  );
+  halo.position.copy(mesh.position);
+  scene.add(halo);
+
   clickables.push(mesh);
 });
 
