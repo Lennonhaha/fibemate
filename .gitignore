@@ -365,9 +365,9 @@ _*.mjs
 # === Attack/research experimental tooling (decide post-8/31) ===
 attack-run.sh
 attack-*.py
-lg-mapping-*.json
-lg-samples*.json
-lg-matrix-data.json
+/lg-mapping-*.json
+/lg-samples*.json
+/lg-matrix-data.json
 simulate_lg_matrix.py
 gen-matrix-data.py
 gen-vwz-tensor-data.py
@@ -383,20 +383,20 @@ pre-release/
 pqc-deployment-checker/
 .pqc-migrate-cache.json
 
-# === Research data dumps ===
-lg-*.json
-vwz-tensor-data.json
+# === Research data dumps (root-level only) ===
+/lg-*.json
+/vwz-tensor-data.json
 announcement-drafts.zip
 announcement-current.md
 gfi-upstream.md
 CONTRIBUTING-upstream.md
 README-upstream.md
 
-# === Misc scratch HTML at root ===
-tensor-field.html
-vwz-performance.html
-vwz-size-comparison.html
-vwz-tensor-field.html
+# === Misc scratch HTML at root (root-level only) ===
+/tensor-field.html
+/vwz-performance.html
+/vwz-size-comparison.html
+/vwz-tensor-field.html
 generated-images/
 
 # === scripts/ one-off debug/diag scripts (keep only real tools) ===
