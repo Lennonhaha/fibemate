@@ -217,6 +217,7 @@ const ZODIAC = [
 ];
 const HIGHLIGHT = new Set(['Cancer','Sagittarius']);
 const R_ZOD = 9.8;
+const flowWisps = [];           // 流光粒子系统（每条 wisp 一个）
 
 function makeTextSprite(text, opts = {}) {
   const {
@@ -314,6 +315,23 @@ function makeTextSprite(text, opts = {}) {
       depthWrite: false,
     });
     scene.add(new THREE.Mesh(geo, mat));
+
+    // 流光粒子：沿曲线流动的发光点（Points，单次 draw call）
+    const FLOW_N = 24;
+    const fPos = new Float32Array(FLOW_N * 3);
+    const fGeo = new THREE.BufferGeometry();
+    fGeo.setAttribute('position', new THREE.BufferAttribute(fPos, 3));
+    const fMat = new THREE.PointsMaterial({
+      color: color, size: tubeR * 4.5, transparent: true, opacity: 0.95,
+      depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    const fPts = new THREE.Points(fGeo, fMat);
+    scene.add(fPts);
+    flowWisps.push({
+      curve, pts: fPts, geo: fGeo, pos: fPos, n: FLOW_N,
+      speed: 0.004 + Math.random() * 0.008,
+      phase: Math.random() * Math.PI * 2,
+    });
   }
 
   // Convert deg to Vector3 on the zodiac ring
@@ -750,6 +768,20 @@ function animate() {
   coreGlow.scale.setScalar(1 + 0.15 * Math.sin(t * 1.5));
   coreGlow.material.opacity = 0.10 + 0.06 * Math.sin(t * 1.8);
   updateOrbit();
+
+  // 流光粒子沿曲线流动
+  for (const w of flowWisps) {
+    for (let i = 0; i < w.n; i++) {
+      const pr = ((i / w.n) + w.phase + t * w.speed) % 1;
+      const p = w.curve.getPointAt(pr);
+      w.pos[i * 3]     = p.x;
+      w.pos[i * 3 + 1] = p.y;
+      w.pos[i * 3 + 2] = p.z;
+    }
+    w.geo.attributes.position.needsUpdate = true;
+    // 粒子亮度随流动轻微脉动
+    w.pts.material.opacity = 0.6 + 0.4 * Math.sin(t * 2.0 + w.phase);
+  }
 
   raycaster.setFromCamera(pointer, camera);
   const hits = raycaster.intersectObjects(clickables);
