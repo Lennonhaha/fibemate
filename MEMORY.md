@@ -1636,3 +1636,26 @@ MEMORY.md 自身有 2 处 NUL 字节（wasm-bindgen 0.2.126 / getrandom 0.2.17 �
 | 10:xx | Dependabot #31 合并 | aa10efb60 |
 | 11:xx | CodeQL P0（SSRF + 2 语法 bug） | 4785b92c |
 | 11:2x | REMINDER 补 CodeQL 收尾计划 | c18ffead1 |
+
+
+## 2026-08-15（续）：下午至傍晚工作记录
+
+### sm2-frontend-verification.html 编码修复（16:49-17:08）
+- 用户报告 Tauri 3.0.0 里「SM2前端集成联调验证」页面中文乱码，Electron 2.20.0 正常
+- 根因：原始 HTML 是 GBK 编码，某次保存时被工具当 UTF-8 写入，52 个中文字符的 GBK 字节被错误解释成 Extension B 汉字（U+9000-U+9FFF 区，如「驗」「鏈」「鑰」），Tauri/WebView2 渲染不出
+- 修复：基于上下文逐字符推断正确字，完整重写（518 个正确汉字，U+FFFD=0，5286 字节）
+- 关键发现：U+9000-U+9FFF 范围内有大量合法常用汉字（集/验/链/钥等），不是损坏，只是 Extension B 区段被正则误判为乱码
+- 验证：文件 U+FFFD=0，read 工具显示正确中文，commit 7f285eb24，已推送 GitHub
+
+### Tauri 3.0.0 桌面升级（16:06-16:26）
+- 本机 Electron 2.20.0（168.62MB exe）升级到 Tauri 3.0.0（59.03MB exe，体积缩小 66%）
+- 新版装到 C:\Users\maivs\AppData\Local\FIBEMATE\，旧版备份 D:\FIBEMATE\backup-electron-2.20.0
+- Tauri 源码在 D:\FIBEMATE\fibemate-tauri\（tauri 2 / rustpq 0.3）
+- Tauri 中文乱码：index.html 有大量 Extension B 汉字，WebView2 字体栈无覆盖。根本解决方案：替换 Extension B 字符为 BMP 等价字 + 改善字体声明
+
+### 八月总结（20:17，308 次提交）
+- 08-01~08-15：308 次提交，52 个 www/docs HTML，135 份 TSR，三端一致 7f285eb24
+- P0 级教训：GBK 编码损坏（3 次踩坑）、gh api 分页截断（多次）
+- P1 级教训：IANA #4590 误当端口号、Slaman 模型接受为可行方案
+- 八月总结已写：august-2026-summary_2026-08-15.md
+- 桌面存档：C:\Users\maivs\Desktop\sm2-frontend-verification.html（打包版，含内联字体栈）
