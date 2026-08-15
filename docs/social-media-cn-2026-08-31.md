@@ -311,7 +311,7 @@ FIBEMATE 是一个后量子密码学（PQC）全栈工程验证平台。项目�
 - **SM2**：GB/T 32918 签名与加密，标量掩码防简易功耗分析
 - **SM3**：哈希函数，KAT 向量全通过
 - **SM4**：常时 S-box，αGCM 认证加密模式
-- **混合密钥交换**：SM2 + ML-KEM-768，已注册 IANA #4590
+- **混合密钥交换**：SM2 + ML-KEM-768，已分配 IANA #4590（Informational I-D，Recommended=N）
 
 ##### 3. 硬件实现（FPGA）
 
