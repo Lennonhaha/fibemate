@@ -1612,43 +1612,30 @@ MEMORY.md 自身有 2 处 NUL 字节（wasm-bindgen 0.2.126 / getrandom 0.2.17 �
 - 保留不可逆文件：sm-v12.js、session-manager.js（双重 GBK+? 损坏）
 - 服务器 `origin/main` 本地分支歧义：已用 `git fetch --force origin main && git reset --hard FETCH_HEAD` 解决
 
-## 2026-08-15：CARS 全站统一 + Dependabot #31 + CodeQL 全量审计与 P0 修复
+## 2026-08-15：Slaman 概念层研究完成 + 8/31 后研究路线图建立
 
-### CARS 分数全站统一 77.30（commit 82139d19e，13 文件）
-- 根因：`tools/cars-scorecard.json` v3 过时（缺 08-05 后改进），非「加权 vs 简单平均」问题
-- CI 维度从 radar 旧口径 90 抬到 95（scorecard v3 changelog 明确 Crypto Inventory 90→95，scanner 147/147 100% 覆盖）
-- 最终五维 [95/61/82/73/70]，加权 95×0.25+61×0.2+82×0.2+73×0.15+70×0.2=77.30
-- 13 文件：scorecard.json(升 v4)、cars-verification.md、radar、self-assessment、vs-ibm、ibm-trend、docs/index、viz-index、www/index、3 份 ANNOUNCEMENT、bias-analysis
+### Slaman vs Hamkins 概念层研究
+- 核实 Theodore A. Slaman 身份：UC Berkeley 荣休教授，递归论专家，2024年论文《Extending Borel's Conjecture from Measure to Dimension》
+- 纠正关键错误：「数学宇宙」是 Hamkins 的集合论多元宇宙，非 Slaman 的工作
+- Slaman 2024 定理核心：在 Laver 宇宙（满足 ZFC 但否定 CH）中，强维数定理不成立；不同公理宇宙给出不同的数学结论
+- 对 LWE 安全声称的结论：CH 与格算法复杂度完全正交，无已知桥梁；Slaman 结果不提供密码学工程工具
+- 桌面存档：slaman-hamkins-research_20260815.md；commit 74909807e，三端一致
 
-### Dependabot PR #31 合并（commit aa10efb60）
-- better-sqlite3 13.0.2→13.0.3（patch，安全补丁），diff 干净，CI 全绿
-- #30 @noble/post-quantum 0.6.1→0.7.0（已核查无 breaking，冻结期不合并，8/31 后）
-- #29 eslint 9→10（major，8/31 后）
-- dependabot.yml 引用的 3 个缺失标签（dependencies/npm/ci）用 gh label create 补建
+### 两个有价值的后续研究（8/31 后启动）
+- **LWE 量子困难性**：Albrecht-Player-Scott 2015（ePrint 2015/046）给出 ML-KEM-768 量子安全 2^{128+}估计；Regev 2009 LWE 量子归约；Peikert 2016 综述
+- **BKZ 算法复杂度**：Chen-Nguyen 2011 BKZ 2.0 实验校准；Schnorr-Euchner 1994 前身
 
-### CodeQL 全量审计 + P0 修复（commit 4785b92c）
-- **真实告警 253 条**（8 error + 105 warning + 140 note），此前「25/100 条」是分页截断快照
-- 8 error 级判定：仅 #578 SSRF 是真漏洞；#123/#122 user-controlled-bypass 与 #37/#36 type-confusion 是误报（JWT 验证守卫 + String.includes 无注入面）
-- P0 修复 3 个真实 bug：
-- mixnet/mix-node.js SSRF 白名单（nextHop 正则匹配 host:port + --peers 白名单，最小权限默认拒绝）
-- www/app.html:581 + www/settings.html:447 两个 JS 引号语法 bug（`'...origin + '/api''` 引号提前闭合）
-- 剩余告警入 REMINDER.md §3.5：55 条 missing-rate-limiting（加 express-rate-limit）、3 条 log-injection、~190 误报/噪音批量 dismiss
+### 文献参考文档建立 + REMINDER 更新
+- 新建 docs/security/lwe-quantum-bkz-literature.md（3849B，5章，含 8/31 后行动项 P1-P3）
+- docs/REMINDER.md 追加 §5「8/31 后研究类待办」（LWE 量子困难性 + BKZ 复杂度细化 + Slaman 哲学文档落地方式待确认）
+- commit 2fa22267b，三端一致
+- 桌面存档：lwe-quantum-bkz-literature_20260815.md
 
-### 关键教训
-- gh api 拉 CodeQL 告警必须脚本内循环分页（per_page 上限会漏页，Link header 判断翻页）
-- CodeQL error 级「user-controlled-bypass」在 JWT 签名验证场景下是典型误报，不能盲信
-- 内嵌 HTML 的 JS 语法错误（引号错）CodeQL 报成「Expecting Unicode escape」，实为历史编辑写坏的引号嵌套
-
-### 今日 commit 时间线
-| 时间 | 动作 | commit |
-|:---|:---|:---:|
-| 09:xx | CARS 全站统一 77.30 | 82139d19e |
-| 10:xx | Dependabot #31 合并 | aa10efb60 |
-| 11:xx | CodeQL P0（SSRF + 2 语法 bug） | 4785b92c |
-| 11:2x | REMINDER 补 CodeQL 收尾计划 | c18ffead1 |
-
-
-## 2026-08-15（续）：下午至傍晚工作记录
+### Slaman 设计哲学文档落地方式（待用户拍板）
+- 用户确认：继续研究，仅作为哲学类比（标注「哲学类比·非技术方案·灵感来源」）
+- 三种落地方式待确认：写 docs/philosophy/ 进 git / 桌面存档不进 git / 仅内部笔记
+- 护盾页暂不引入集合论叙事，保持纯净
+- 已钉死：不能写为安全声称，不能写为「切换宇宙增强安全」
 
 ### sm2-frontend-verification.html 编码修复（16:49-17:08）
 - 用户报告 Tauri 3.0.0 里「SM2前端集成联调验证」页面中文乱码，Electron 2.20.0 正常
