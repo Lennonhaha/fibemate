@@ -1694,3 +1694,45 @@ XOR-Keystream Pre/Post-Mix:
 - Stage-2: custom bytecode interpreter design doc (post 8/31)
 - Cargo.toml naming: lgv2_3 (underscore for cargo compat)
 
+
+## 2026-08-16: Branch Discipline Violation — VWZ Files in main
+
+### Incident
+User discovered vwz-portrait.html and vwz-verify-bottleneck_2026-08-12.md in main branch root.
+
+### Verification
+**CONFIRMED — serious violation.**
+- Commit 0497a9009 (2026-08-12 09:25): Added both files to main
+- Commit 18d5b4694: Updated vwz-portrait.html v2.1 (continued violation)
+
+### Violation Nature
+1. Branch separation policy: VWZ is experimental, must stay in experimental/vwz-lg
+2. Default-off principle: Research code must not appear in production branch
+3. 8/31 freeze discipline: No new experimental features to main before launch
+
+### Root Causes
+1. .gitignore gap: had vwz*.js/vwz*.py, missing vwz*.html/vwz*.md
+2. Missing commit review: 2026-08-12 commits did not check file nature
+3. Branch confusion: Likely developed in experimental, mistakenly committed to main
+
+### Fix Applied
+1. git rm vwz-portrait.html vwz-verify-bottleneck_2026-08-12.md
+2. .gitignore: add vwz*.html vwz*.md
+3. Commit 1333c578c: REVERT with explicit violation note
+
+### Lessons
+- .gitignore must be comprehensive (all file types: .html .md .rs .wasm)
+- Pre-commit check: git status + verify branch + file list
+- "Visualization is not code" trap: HTML/MD are code, same policy applies
+- "Documentation is harmless" trap: Research docs promise unverified directions
+
+### Prevention
+- .gitignore hardened: vwz*.html vwz*.md added
+- Recommendation: All research files in experimental/vwz-lg/, not root
+- Post-8/31: Consider pre-commit hook to block experimental files on main
+
+### Status
+- Local fix: DONE (1333c578c)
+- GitHub sync: PENDING (network issues, retry needed)
+- Server sync: PENDING (after GitHub sync)
+
