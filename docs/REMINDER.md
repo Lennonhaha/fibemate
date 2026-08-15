@@ -54,6 +54,26 @@ node packages/fml-dsa/test/noble-oracle.test.js  # noble 交叉基准
 
 ---
 
+## 3.5 CodeQL 告警收尾（发布后）
+
+2026-08-15 全量审计：**253 条 open 告警**（8 error + 105 warning + 140 note）。
+P0 已修（commit `4785b92c`）：#578 SSRF 白名单 + 2 个 JS 引号语法 bug。
+
+发布后处理：
+
+| 类别 | 数量 | 处理方式 |
+|:---|:---:|:---|
+| missing-rate-limiting | 55 | 加 `express-rate-limit` 中间件（`src/index.js` + `backend/src/index.js`） |
+| log-injection（#580/#581/#582） | 3 | 低危，`console.log` 拼用户输入 → 脱敏或删除（`mixnet/mix-node.js` + `mixnet/healthcheck.js`） |
+| 误报（#123/#122/#37/#36） | 4 | Dismiss：`user-controlled-bypass` 实为 JWT 验证守卫；`type-confusion` 下游仅 `String.includes()` |
+| 噪音 + 其余 warning | ~190 | 批量 dismiss（unused-variable / trivial-conditional 等） |
+
+> 误报判定依据：
+> - #123/#122 `js/user-controlled-bypass`：`if (msg.type !== 'auth')` 只是路由分支，信任根是 `jwt.verify(msg.token, SECRET)`。
+> - #37/#36 `js/type-confusion`：`q` 只用于 `String.includes()`，无 SQL/路径/命令拼接。
+
+---
+
 ## 4. 发布后其他待办（来自 MEMORY.md / 会话记录）
 
 | 事项 | 说明 |
@@ -70,5 +90,7 @@ node packages/fml-dsa/test/noble-oracle.test.js  # noble 交叉基准
 
 - ✅ CARS 分数全站统一 77.30（commit `82139d19e`）
 - ✅ Dependabot #31 better-sqlite3 13.0.3 合并（commit `aa10efb60`）
+- ✅ CodeQL P0 修复：SSRF 白名单 + 2 个 JS 语法 bug（commit `4785b92c`）
+- ✅ 仓库 dependabot.yml 引用的 3 个缺失标签已创建（dependencies/npm/ci）
 - ✅ MEMORY.md GBK 损坏修复与恢复
 - ✅ 全仓库 UTF-8/GBK 编码损坏修复 + 防范机制
