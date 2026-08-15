@@ -12,9 +12,9 @@
 `docs/audit-log/encoding-repair_2026-08-14.md` [4x U+FFFD replacement char]
 
 定位 4 处 U+FFFD，全部是**故意示例，不是损坏**：
-- L10: `U+FFFD（�）替换符` — 文档正文举例展示乱码符号
-- L11: `被损坏成 `�?`` — 举例展示「吞换行」乱码形态
-- L40/L63: `/锟斤拷|�{2,}|/` — 引用检测正则（豁免正则命中）
+- L10: `U+FFFD（\uFFFD）替换符` — 文档正文举例展示乱码符号
+- L11: `被损坏成 `\uFFFD?`` — 举例展示「吞换行」乱码形态
+- L40/L63: `/锟斤拷|\uFFFD{2,}|/` — 引用检测正则（豁免正则命中）
 
 **根因**：check-encoding.cjs 的 U+FFFD 豁免正则 `/(hasGarbage|锟斤拷|garbled|乱码|detect.*corrupt)/` 只命中 L40/L63（含「锟斤拷」），未命中 L10/L11（含「替换符/损坏」但不含豁免关键词）。
 
@@ -43,5 +43,5 @@
 2. **src/index.js experimental require 路径残留**（`../experimental/mixnet/mixnet-transport` 在 main 分支不存在，但被 flags 门控，生产不触发）——冻结期不动，8/31 后评估
 
 ## 处理
-- 问题 1：改归档文档 2 处故意 � 字符 → `\uFFFD` 转义写法（改文档不碰检测器，保持检测器严格性）
+- 问题 1：改归档文档 2 处故意 \uFFFD 字符 → `\uFFFD` 转义写法（改文档不碰检测器，保持检测器严格性）
 - 问题 2：记录到 REMINDER，8/31 后评估
