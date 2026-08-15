@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE — CARS 五维度审计仪表盘 · 代码证据级</title>
     <meta name="description" content="FIBEMATE CARS（Crypto-Agility Readiness Scorecard）五维度代码级审计仪表盘 — 点击任意维度查看具体文件、行号和代码证据。">
-    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 78.50">
-    <meta property="og:description" content="Crypto Inventory 90 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 73 · Organizational Readiness 70 — 综合 75.20/100，点击维度展开可验证代码证据。">
+    <meta property="og:title" content="FIBEMATE CARS 审计仪表盘 — 代码证据级自我审计 77.30">
+    <meta property="og:description" content="Crypto Inventory 95 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 73 · Organizational Readiness 70 — 综合 77.30/100，点击维度展开可验证代码证据。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net/docs/cars-radar.html">
     <meta property="og:site_name" content="FIBEMATE PQC Platform">
@@ -205,7 +205,7 @@
     <div class="subtitle">代码证据级自我审计 — 点击维度展开可验证证据<br>Crypto-Agility Readiness Scorecard 首次真实项目实证</div>
     <div class="overall">
         <span class="label">综合得分</span>
-        <span class="score">75.20 / 100</span>
+        <span class="score">77.30 / 100</span>
     </div>
     <div class="dim-list" id="dim-list"></div>
     <div style="font-size:9px;color:#555;margin-top:6px;line-height:1.5;">
@@ -240,7 +240,7 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
 
     var dimensions = [
         {
-            key:'ci', name:'Crypto Inventory', cn:'加密资产盘点', score:90, max:100,
+            key:'ci', name:'Crypto Inventory', cn:'加密资产盘点', score:95, max:100,
             note: '76 个源文件覆盖 12 种算法 (@fibemate/algorithm-registry v1.0.0) + 2 个 FPGA 模块，每项含 KAT/Bench/TVLA/TSR 四维覆盖。',
             evidence: [
                 {
@@ -404,7 +404,7 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
     ];
 
     // 改进后预测
-    var improved = [88, 73, 85, 80, 78];;
+    var improved = [95, 73, 85, 82, 78];;
 
     var N = dimensions.length, maxScore = 100;
     var showImproved = false;

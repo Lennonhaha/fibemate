@@ -2,12 +2,12 @@
   "framework": "CARS (Crypto-Agility Readiness Score)",
   "framework_reference": "Krämer et al., Five-Dimensional Assessment Framework",
   "assessment_subject": "FIBEMATE v3.3.0 — Post-Quantum Cryptography Full-Stack Engineering Platform",
-  "assessment_date": "2026-08-02",
+  "assessment_date": "2026-08-15",
   "commit": "1cddeab",
   "novelty": "First empirical application of CARS framework to a real running PQC engineering project",
-  "overall_score": 67.0,
+  "overall_score": 77.3,
   "max_score": 100,
-  "readiness_level": "MODERATE",
+  "readiness_level": "MODERATE-HIGH",
   "dimensions": {
     "crypto_inventory": {
       "score": 95,
@@ -105,7 +105,7 @@
             "highRiskSourceFiles": 73,
             "pqcSourceFiles": 23,
             "readinessScore": 94,
-          "coverage": "100% (147/147 deps classified)"
+            "coverage": "100% (147/147 deps classified)"
           },
           "value": "Automated scanner replaces manual inventory — every crypto dependency and source reference is now machine-auditable and reproducible in CI.",
           "v3_update": "Scanner classification coverage 37% → 100% (93 unknown → 0). Hash libraries (@noble/hashes 81 refs, js-sha3), symmetric ciphers (@noble/ciphers 31 refs, ssri), and 70 infrastructure packages all classified. This lifts Crypto Inventory from 90→95 (+5)."
@@ -113,10 +113,10 @@
       }
     },
     "algorithm_agility": {
-      "score": 40,
+      "score": 61,
       "max": 100,
       "weight": 0.2,
-      "weighted": 8,
+      "weighted": 12.2,
       "components": {
         "hybrid_kem_combinations": {
           "replaceable": false,
@@ -139,15 +139,16 @@
           "method": "q=3329 compile-time constant; parameter change requires recompilation"
         }
       },
-      "hot_swap_architecture": "FIBEMATE has no pluggable algorithm registry. gm.js:183 negotiateWithServer() is application-layer negotiation, not an algorithm registry.",
+      "hot_swap_architecture": "@fibemate/algorithm-registry npm package (12 algorithms) + AlgorithmResolver runtime resolution added 08-03; gm.js core paths (SM2 keygen/sign/encrypt) still hardcoded — 3 remaining spots.",
       "agility_is_low_but_rationale": "As an 'executable textbook', demonstrating each algorithm independently is more valuable than runtime switching. FIBEMATE's agility is in side-by-side comparison (ML-KEM vs SM2, fml-dsa vs SLH-DSA), not runtime replacement.",
-      "cars_feedback": "CARS Algorithm Agility assumes a production system needing runtime migration. Suggest adding 'cross-algorithm comparison capability' as a supplement for education/verification projects."
+      "cars_feedback": "CARS Algorithm Agility assumes a production system needing runtime migration. Suggest adding 'cross-algorithm comparison capability' as a supplement for education/verification projects.",
+      "v4_update": "AlgorithmResolver runtime parameter resolution (35/35 PASS) + @fibemate/algorithm-registry (12 algorithm metadata) + fml-dsa params.js runtime param sets lift AA 40→61."
     },
     "key_lifecycle": {
-      "score": 70,
+      "score": 82,
       "max": 100,
       "weight": 0.2,
-      "weighted": 14,
+      "weighted": 16.4,
       "lifecycle": {
         "generation": "HybridKEM.generateKeypair() (SM2+ML-KEM hybrid ephemeral)",
         "distribution": "OPK pre-key protocol (one-time upload, one-time consumption)",
@@ -165,13 +166,14 @@
         "strength": "OPK protocol has full TLA+ formal verification; ephemeral key pattern avoids reuse",
         "weakness": "Re-key interval (100 messages) lacks quantitative security derivation; no key expiration alerts; no audit logging",
         "cars_feedback": "CARS Key Lifecycle focuses on 'does the org have a key management policy'. FIBEMATE uses TLA+ formal proofs instead of written policy — this is stricter. Suggest adding 'formal verification' as a Key Lifecycle bonus."
-      }
+      },
+      "v4_update": "KeyLifecycleManager engine (27/27 PASS, 9 APIs × 6 mechanisms) + KLSession double-ratchet integration (35/35 PASS) lift KL 70→82."
     },
     "protocol_coupling": {
-      "score": 55,
+      "score": 73,
       "max": 100,
       "weight": 0.15,
-      "weighted": 8.25,
+      "weighted": 10.95,
       "coupling_analysis": {
         "hybrid_kem_handshake": {
           "coupling": "tight",
@@ -195,13 +197,14 @@
         "strength": "Each protocol component independently testable; IANA #4590 format compliance",
         "weakness": "No cipher suite negotiation; zero forward compatibility; no interop testing",
         "cars_feedback": "CARS Protocol Coupling assumes standard protocol (TLS/SSH) usage. FIBEMATE's educational decoupling trades standard compliance for pedagogical clarity. Suggest distinguishing 'protocol standards compliance' from 'educational transparency'."
-      }
+      },
+      "v4_update": "IANA group runtime resolution via AlgorithmResolver + fallback retry loop (fail-fast/try-all/exclude) lift PC 55→73."
     },
     "organizational_readiness": {
-      "score": 65,
+      "score": 70,
       "max": 100,
       "weight": 0.2,
-      "weighted": 13.0,
+      "weighted": 14,
       "subdimensions": {
         "security_policy": {
           "status": true,
@@ -272,7 +275,8 @@
         "strength": "Security documentation system complete; CI/Nightly all green; OpenSSF passing badge",
         "weakness": "Bus Factor=1 (hard wound); zero third-party audit; dependency scanning missing",
         "cars_feedback": "CARS Organization Readiness assumes multi-person team. FIBEMATE meets multi-person standards in docs/CI/SBOM but Bus Factor=1 exposes fundamental difference. Suggest adding single/small-team adjustment factor."
-      }
+      },
+      "v4_update": "Dependabot weekly enabled + CI 24-way green (8 workflows × 4 platforms) lift OR 65→70."
     }
   },
   "improvement_roadmap": [
@@ -327,11 +331,12 @@
     "Organizational Readiness dimension lacks single/small-team adjustment factor — Bus Factor=1 but docs/CI/SPDX-complete case is unscorable"
   ],
   "methodology_note": "All scoring data sourced from FIBEMATE public engineering data (CI logs, KAT results, TLA+ models, security docs, source structure). No new tests were run — all data existed at lock commit f465fba (2026-08-01). This is the first empirical application of the CARS framework to a real running PQC engineering project.",
-  "version": "v3 (100% scanner coverage)",
+  "version": "v4 (backfilled 08-02~08-13 improvements)",
   "scanner_data_source": "tools/pqc-ecosystem-scan.js output",
   "changelog": {
     "v1": "Initial CARS assessment based on manual inventory (score 63.50)",
     "v2": "Added pqc-ecosystem-scan.js output; Crypto Inventory 85→90, Org Readiness 60→63, composite 65.35",
-    "v3": "Scanner classification 100% coverage (147/147 deps); Crypto Inventory 90→95, Org Readiness 63→65, composite 67.0"
+    "v3": "Scanner classification 100% coverage (147/147 deps); Crypto Inventory 90→95, Org Readiness 63→65, composite 67.0",
+    "v4": "Backfilled 08-02~08-13 improvements: AlgorithmResolver (AA 40→61), KeyLifecycleManager (KL 70→82), fallback loop (PC 55→73), Dependabot (OR 65→70). Composite 67.0→77.30."
   }
 }

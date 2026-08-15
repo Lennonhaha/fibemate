@@ -9,11 +9,11 @@
 
 ## 执行摘要
 
-FIBEMATE 作为工程验证平台，CARS v3 综合得分 **67.0/100**（中等准备度，较 v2 的 65.35 提升 1.65 分，较 v1 的 63.50 提升 3.5 分）。提升全部来自 PQC 生态扫描器的分类覆盖率改进——从 37%（93/147 未知）到 **100%（0 未知）**，哈希库、对称密码、Node 内置模块、基础设施包已全部归类。
+FIBEMATE 作为工程验证平台，CARS v4 综合得分 **77.30/100**（中高准备度，较 v3 的 67.0 提升 10.3 分，较 v1 的 63.50 提升 13.8 分）。v4 回填了 08-02~08-13 期间的三项工程改进：AlgorithmResolver 运行时参数解析（AA 40→61）、KeyLifecycleManager 引擎（KL 70→82）、协议回退策略（PC 55→73），并将 Dependabot 与 CI 全绿纳入组织准备度（OR 65→70）。
 
-最强的维度仍是 **Crypto Inventory**（95%），PQC 生态扫描器提供了 147 依赖 × 1,138 源码引用的完整分类审计。最弱的维度仍是 **Algorithm Agility**（40%），算法替换需要代码修改、缺乏插件式热切换架构——这是"可执行教科书"定位的合理取舍。其他维度：Key Lifecycle 70%（TLA+ 形式化验证）、Protocol Coupling 55%（应用层自定义协议）、Organizational Readiness 65%（OpenSSF passing + 扫描器 100% 覆盖）。
+最强的维度仍是 **Crypto Inventory**（95%），PQC 生态扫描器提供了 147 依赖 × 1,138 源码引用的完整分类审计。最弱的维度仍是 **Algorithm Agility**（61%），虽有 AlgorithmResolver 运行时解析与 @fibemate/algorithm-registry 包，但 gm.js 核心路径（SM2 keygen/sign/encrypt）仍有 3 处硬编码——这是"可执行教科书"定位的合理取舍。其他维度：Key Lifecycle 82%（KeyLifecycleManager 27/27 + TLA+ 形式化验证）、Protocol Coupling 73%（IANA 运行时解析 + 回退策略）、Organizational Readiness 70%（OpenSSF passing + Dependabot + 扫描器 100% 覆盖）。
 
-**v3 新增**：外部人独立填写的 CARS 自评问卷结果为 **41/100**（偏差 -26）。分析报告见 `docs/cars-bias-analysis.md`。核心发现：偏差集中来自信息不可见性（Key Lifecycle -70、Org Readiness -30、Crypto Inventory -20），而非判断差异。这暴露了 CARS 自评工具的设计缺陷——对比页只展示分数不展示证据文件路径。
+**v4 新增**：外部人独立填写的 CARS 自评问卷结果为 **41/100**（偏差 -36.30）。分析报告见 `docs/cars-bias-analysis.md`。核心发现：偏差集中来自信息不可见性（Key Lifecycle -70、Org Readiness -30、Crypto Inventory -20），而非判断差异。这暴露了 CARS 自评工具的设计缺陷——对比页只展示分数不展示证据文件路径。
 
 > ⚠️ **前置声明**：本报告是 CARS 框架在真实项目上的**首次实证验证**（v1）和**首次与自动化扫描工具集成**（v2）。PQC 生态扫描器的加入使 CARS 从"手工填表"升级为"机器审计 + 手工评审"，建议 CARS 框架增加"自动化审计覆盖率"子维度。
 
@@ -21,7 +21,7 @@ FIBEMATE 作为工程验证平台，CARS v3 综合得分 **67.0/100**（中等�
 
 ## 维度一：Crypto Inventory（加密资产清单）
 
-### 评分：90/100（v2 +5，PQC 生态扫描器集成）
+### 评分：95/100（v3 +5，scanner 100% 依赖覆盖）
 
 ### 自动化扫描（v2 新增）
 
@@ -98,7 +98,7 @@ PQC 生态扫描器（`tools/pqc-ecosystem-scan.js`）提供了完整的机器�
 
 ## 维度二：Algorithm Agility（算法可替换性）
 
-### 评分：40/100
+### 评分：61/100（v4 回填：AlgorithmResolver 运行时解析 + registry 包）
 
 ### 现状
 
@@ -128,7 +128,7 @@ FIBEMATE 的定位是"可执行教科书"而非"生产密码库"。在生产系�
 
 ## 维度三：Key Lifecycle（密钥生命周期管理）
 
-### 评分：70/100
+### 评分：82/100（v4 回填：KeyLifecycleManager 引擎 27/27 + KLSession 集成）
 
 ### 生命周期模型
 
@@ -182,7 +182,7 @@ C2 握手模型 7 条不变量全部通过（含 K3 强密钥独立性）。
 
 ## 维度四：Protocol Coupling（协议耦合度）
 
-### 评分：55/100
+### 评分：73/100（v4 回填：IANA 运行时解析 + 回退策略）
 
 ### 耦合分析
 
@@ -221,7 +221,7 @@ FIBEMATE 的协议层**刻意远离标准 TLS 1.3**——这不是缺陷，是�
 
 ## 维度五：Organizational Readiness（组织准备度）
 
-### 评分：63/100（v2 +3，扫描器部分闭合依赖扫描缺口）
+### 评分：70/100（v4 回填：Dependabot weekly + CI 24 路全绿）
 
 ### 评估矩阵
 
@@ -270,12 +270,12 @@ FIBEMATE 的协议层**刻意远离标准 TLS 1.3**——这不是缺陷，是�
 
 | 维度 | 得分 | 权重 | 加权 |
 |------|------|------|------|
-| Crypto Inventory | 90 | 0.25 | 22.50 |
-| Algorithm Agility | 40 | 0.20 | 8.00 |
-| Key Lifecycle | 70 | 0.20 | 14.00 |
-| Protocol Coupling | 55 | 0.15 | 8.25 |
-| Organizational Readiness | 63 | 0.20 | 12.60 |
-| **综合** | | | **65.35** |
+| Crypto Inventory | 95 | 0.25 | 23.75 |
+| Algorithm Agility | 61 | 0.20 | 12.20 |
+| Key Lifecycle | 82 | 0.20 | 16.40 |
+| Protocol Coupling | 73 | 0.15 | 10.95 |
+| Organizational Readiness | 70 | 0.20 | 14.00 |
+| **综合** | | | **77.30** |
 
 > 注：权重按 CARS 论文默认分配，未做调整。
 
