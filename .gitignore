@@ -369,6 +369,9 @@ dist/
 wasm-sm2/build/
 wasm-sm2/node_modules/
 
+# === SM2 WASM experimental dir (kept local, not committed; decide post-8/31) ===
+wasm-sm2/
+
 # === Root-level scratch/temp scripts (underscore prefix) ===
 _*.js
 _*.py
