@@ -1,5 +1,5 @@
 [package]
-name = "lgv2.3"
+name = "lgv2_3"
 version = "2.3.0-alpha"
 edition = "2021"
 description = "LG v2.3 — 置换群递归混淆引擎 (baseline: v2.2.2 + 模块化重构)"

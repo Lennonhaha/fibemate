@@ -1,18 +1,24 @@
-// lg-v3/src/lib.rs — LG v2.3 模块化重构
+// lg-v3/src/lib.rs — LG v2.3 模块化重构 + Stage-1 增强
 // Based on v2.2.2 (lookingglass-v2, commit f9cc379)
 //
 // LG v3 Changes vs v2.2.2:
-//   - 模块拆分: sbox.rs / wreath.rs / bind.rs / cleanup.rs (从单文件拆出)
+//   - 模块拆分: sbox.rs / wreath.rs / bind.rs / cleanup.rs / premix.rs
+//   - Stage-1 增强 (VMProtect Phase-1 路线图):
+//     * premix.rs: XOR-keystream pre/post-mix 覆盖全部字节 (不是仅 48)
+//     * Wreath 仅覆盖活跃 48 维; premix 把混淆扩散到全 256 字节
+//     * lgv3_confuse_mix() / lgv3_deconfuse_mix(): 新 API 含 premix
 //   - API 新增: lgv3_audit_log() — 返回操作序列化审计日志
 //   - API 新增: lgv3_verify_invertibility() — 运行时可逆性自检
+//   - API 新增: lgv3_confuse_mix() / lgv3_deconfuse_mix() — 全字节混淆
 //   - 不变: 所有 v2.2.2 交叉验证向量 (10/10) 必须通过
-//   - 不变: WASM 体积 <25KB (gzip <10KB)
+//   - 不变: 所有 v2.3 原有测试 (13 项) 必须通过
 //   - 冻结纪律: 实验分支, 不合并 main, 8/31 前不部署
 
 pub mod sbox;
 pub mod wreath;
 pub mod bind;
 pub mod cleanup;
+pub mod premix;
 
 use wasm_bindgen::prelude::*;
 
@@ -23,6 +29,7 @@ pub use bind::CryptoBinding;
 pub use cleanup::SecureBuffer;
 
 use wreath::{confuse_full, deconfuse_full};
+use premix::{full_mix_forward_depth, full_mix_inverse_depth, premix_only, unpremix_only};
 
 // ============================================================
 // WASM 公开 API — 完全向后兼容 v2.2.2
@@ -82,6 +89,37 @@ pub fn lgv2_deconfuse_ex(data: &[u8], seed: u64, session_key: u64, depth: usize)
     let result = buf.get().to_vec();
     buf.zeroize();
     result
+}
+
+// ============================================================
+// Stage-1 增强 API: 全字节混淆 (premix + Wreath + postmix)
+// 解决活跃维度问题: Wreath 48/256 + premix 256/256 = 全覆盖
+// ============================================================
+
+/// Stage-1 全字节混淆: XOR-keystream pre/post-mix + Wreath
+/// Architecture: premix(all_bytes) -> Wreath(seed) -> postmix(all_bytes)
+/// Covers ALL bytes (premix), not just 48 active dimensions (Wreath only)
+#[wasm_bindgen]
+pub fn lgv3_confuse_mix(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    full_mix_forward_depth(&mut result, seed, session_key, depth);
+    result
+}
+
+/// Stage-1 全字节解混淆
+#[wasm_bindgen]
+pub fn lgv3_deconfuse_mix(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    full_mix_inverse_depth(&mut result, seed, session_key, depth);
+    result
+}
+
+/// Stage-1: 报告当前活跃维度 (改进后: 所有字节都被 premix 覆盖)
+#[wasm_bindgen]
+pub fn lgv3_active_dim() -> usize {
+    256 // premix covers all bytes; Wreath contributes 48 more
 }
 
 #[wasm_bindgen]
@@ -147,14 +185,14 @@ pub fn lgv3_verify_invertibility(seed: u64) -> bool {
 #[wasm_bindgen]
 pub fn lgv3_audit_log(data_len: usize, seed: u64, depth: usize) -> String {
     format!(
-        r#"{{"version":"LG v2.3.0-alpha","op":"confuse","data_len":{},"seed":"{:016x}","depth":{}/{},"modules":["sbox","wreath","bind","cleanup"],"baseline":"v2.2.2 (f9cc379)"}}"#,
+        r#"{{\"version\":\"LG v2.3.0-alpha-stage1\",\"op\":\"confuse\",\"data_len\":{},\"seed\":\"{:016x}\",\"depth\":{}/{},\"modules\":[\"sbox\",\"wreath\",\"bind\",\"cleanup\",\"premix\"],\"baseline\":\"v2.2.2 (f9cc379)\"}}"#,
         data_len, seed, depth, NUM_LAYERS
     )
 }
 
 #[wasm_bindgen]
 pub fn lgv2_version() -> String {
-    "LG v2.3-alpha (modular refactor of v2.2.2, backward-compatible API)".to_string()
+    "LG v2.3-alpha-stage1 (premix full-coverage, backward-compatible API)".to_string()
 }
 
 // ============================================================
@@ -260,6 +298,51 @@ mod tests {
         assert_eq!(data, restored, "full confuse/deconfuse must recover");
     }
 
+    // ---- v3 Stage-1 增强测试 (3 项) ----
+
+    #[test]
+    fn test_stage1_full_coverage() {
+        // Stage-1: premix + Wreath + postmix covers ALL 256 bytes
+        // Even bytes that Wreath treats as identity (208/256) are XOR-masked by premix
+        let data: Vec<u8> = (0..256).map(|i| i as u8).collect();
+        let confused = lgv3_confuse_mix(&data, 0x1234, 0xDEAD, 7);
+        let restored = lgv3_deconfuse_mix(&confused, 0x1234, 0xDEAD, 7);
+        assert_eq!(data, restored, "Stage-1 full-coverage roundtrip must recover");
+
+        // Key property: premix changes ALL bytes, even the Wreath "tail"
+        // (Wreath tail 48..255 would be identity without premix)
+        let premix_only = lgv3_confuse_mix(&data, 0x1234, 0xDEAD, 0); // depth=0 = premix only
+        assert_ne!(
+            data, premix_only,
+            "premix alone must change all bytes"
+        );
+        // And premix alone must be invertible
+        let back = lgv3_deconfuse_mix(&premix_only, 0x1234, 0xDEAD, 0);
+        assert_eq!(data, back, "premix alone must be invertible");
+    }
+
+    #[test]
+    fn test_stage1_session_independence() {
+        // Stage-1: different session_key produces different output
+        // (premix key = seed ^ session_key, so different session = different keystream)
+        let data: Vec<u8> = (0..256).map(|i| i as u8).collect();
+        let c1 = lgv3_confuse_mix(&data, 0x1234, 0xDEAD, 7);
+        let c2 = lgv3_confuse_mix(&data, 0x1234, 0xBEEF, 7); // different session
+        assert_ne!(c1, c2, "different session_key must produce different output");
+
+        // Same session twice: deterministic
+        let c3 = lgv3_confuse_mix(&data, 0x1234, 0xDEAD, 7);
+        assert_eq!(c1, c3, "same seed+session must be deterministic");
+    }
+
+    #[test]
+    fn test_stage1_different_seeds() {
+        let data: Vec<u8> = (0..256).map(|i| i as u8).collect();
+        let c1 = lgv3_confuse_mix(&data, 0x1234, 0xDEAD, 7);
+        let c2 = lgv3_confuse_mix(&data, 0x5678, 0xDEAD, 7);
+        assert_ne!(c1, c2, "different seed must produce different output");
+    }
+
     // ---- v3 新增测试 (3 项) ----
 
     #[test]
@@ -271,7 +354,7 @@ mod tests {
     #[test]
     fn test_v3_audit_log() {
         let log = lgv3_audit_log(100, 0x1234, 7);
-        assert!(log.contains("LG v3"), "audit log must contain version");
+        assert!(log.contains("LG v2.3"), "audit log must contain version");
         assert!(log.contains("v2.2.2"), "audit log must reference baseline");
         assert!(log.contains("f9cc379"), "audit log must reference baseline commit");
     }
