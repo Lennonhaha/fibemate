@@ -685,6 +685,15 @@ STM32 C框架和TVLA v4掩码方案已从软件仿真侧验证91×泄漏压缩�
 - LG v2.2 Rust源码重建发现原build_48_mat递归实现kron_flat(perm,depth)的inner_dim公式在permutation下不对称且漏掉perm[1]（layer 2）处理；修复改用直接顺序Kronecker积7层，Kronecker往返测试M·M⁻¹=I对所有perm全绿
 - `session.rs`的`static mut` UB在Rust多测试并发下导致access violation，需用Mutex<SessionState>重构；WASM单线程模型无需并发保护
 - TSR累计66份（lg-001~066），最新8份lg-059~066为2026-07-10 DigiCert存证
+- 冻结期纪律：8/31 开源前只动文档/CI 配置，不写代码逻辑、不改现有代码、不加模块、不部署、不合并 main；8/31 打 tag 发布 v3.3.0，下一里程碑 2026-08-24 发布预演（全新 clone→build→test→preview）
+- [2026-08-12] GitHub 2FA 真相：此前从未启用（7 月诊断'2FA 导致 Nightly CI 失败'为误判，实为代码/配置撞车），8/12 用户自行启用 Authenticator App 并查看恢复码；桌面 github-recovery-codes*.txt 是恢复码非登录码，桌面 key.txt 是阿里云 AccessKey 片段非 GitHub 码
+- [2026-08-13] SM2 WASM 重写完成（AssemblyScript，独立第二实现用于交叉验证）：field/curve/sm3/sm2 四层 Array<u64>；内存泄漏根因=StaticArray 在 minimal runtime 永久泄漏，改 Array + incremental runtime 后 1500 次 mulGX 稳定 16MB；11 项验证全绿（field 3000 组、SM2 KAT 验签/解密各 100、JS↔WASM 交叉 1000、内存 1500 次）；性能 mulGX=60.78ms/op（incremental），WASM 价值=交叉验证非性能；10,000 组 KAT（约 81 分钟）、Comb 窗口优化、TVLA 均 8/31 后；js v1.3 已是恒定时间 Montgomery Ladder，WASM 选方案 A 不追求性能；全部本地未 commit 未 push，等用户回「推」
+- [2026-08-13] CodeQL 批量整治：根因是长期没人看 CodeQL 页面致积累 492 条；已修复全局限流 600/15min + 登录 30/15min、原型污染防护（db 层 hasOwnProperty）、ML-KEM 私钥 IndexedDB+AES-GCM 加密存储（extractable:false）、ReDoS 正则改 split；真实 error 3 条全误报/死副本（www/crypto/crypto/ 死副本，活跃代码已改）；教训：告警异步需等重扫、必须读真实代码定级、String() 套 req.params.userId 是空操作、prototype pollution 本质是 db 层 __proto__ 返回 Object.prototype（truthy）绕过 if 守卫；待删死副本目录 www/crypto/crypto/（用户回「删」后执行）
+- [2026-08-13] SM2 WASM 内存泄漏架构级 blocker：StaticArray 非托管类型在 stub/minimal runtime 永久泄漏，mulGX ~700 次后 WASM 内存 16MB→4GB 崩溃；只有 incremental runtime 有完整 GC；先环境自检优先；AssemblyScript 0.28.20（wasm-sm2/package.json 独立安装绕过根 better-sqlite3 的 node-gyp）
+- [2026-08-14] GBK 双重误解码三类损坏：类型 A 符号级可还原（鈥?→—、鈫?→→，已修 double-ratchet-pq.js 14 处 + TIMESTAMP-MANIFEST.md 1 处）；类型 B 双重 GBK+emoji 丢失有干净历史可恢复（FAQ.html/sm2-frontend-verification.html 从 db81c7f55、timestamps/index.html 从 69b9a22c4，共 3 文件）；类型 C 双重 GBK+? 替换符无干净历史不可逆（session-manager.js 24283 字节 + sm-v12.js 20218 字节，从 initial commit 就损坏，服务器所有副本同样损坏，选 A 保留现状，逻辑完整仅中文注释乱码）；emoji 4 字节 UTF-8 被 GBK 替换成 ?（0x3F）信息永久丢失；GBK 指纹检测正则 /鈥|鈫|鈺|鈮|閬|閳|閸|閺|閻/
+- [2026-08-14] 编码铁律补充：PowerShell > 重定向是 UTF-16，git show ... > file 会写坏文件（size 翻倍+U+FFFD），必须用 node fs.writeFileSync(path, content, 'utf8')；正则里 \uFFFD 后不能拼半角 ?（是量词），需 \uFFFD\uFF1F 或转义；PowerShell 读 UTF-8 报「中文字 45 次重复」是误报（按 GBK 解码多字节序列致显示层 45 倍爆炸），判文件是否损坏必须用 node 权威检测别看终端
+- [2026-08-15] sm2-frontend-verification.html 编码修复：原 GBK 被工具当 UTF-8 写入，52 个中文字符 GBK 字节被解释成 Extension B 汉字（U+9000-U+9FFF，如驗/鏈/鑰）致 Tauri/WebView2 渲染不出，Electron 正常；基于上下文逐字符推断重写 518 个正确汉字、U+FFFD=0、5286 字节；关键发现 U+9000-U+9FFF 有大量合法常用汉字（集/验/链/钥），不是损坏只是 Extension B 区段；打包版存桌面 C:\Users\maivs\Desktop\sm2-frontend-verification.html（CSS 全内联零依赖、字体栈覆盖 PingFang SC/微软雅黑/Noto Sans CJK/文泉驿、深色主题、斑马纹表格、代码高亮）
+- [2026-08-15] 重放保护缺口（THREAT_MODEL.md:65,131-132）：方案定稿=跳过一期注入式（零收益），8/31 后直接用 Redis/lru-cache 做二期校验式；记录 commit 1fb09dc6 + 定稿 4141723，冻结期零代码改动
 
 ## 2026-06-25：路径 C PQC Hybrid 上线 — 900/900 高压通过
 
@@ -778,6 +787,7 @@ eval document.head.appendChild(Object.assign(document.createElement(`script`),{s
 - 文档偏好：事实核查严谨、TLS/密钥/KAT数据全量表格化、时间戳存证57份闭环
 - 用户偏好：直接干、能API推的不用人工网页操作、独立零依赖改动立即推
 - 用户叫maivs的刘天赫，15岁（截至2026-07-07），独立开发后量子密码学项目FIBEMATE，已开源（GPLv3），GitHub账号Lennonhaha，仓库fibemate，上海做硬件/密码安全
+- [2026-08-15] 用户坚持冻结期纪律（8/31 前只动文档不写代码），注重工程纪律；所有文件必须先保存到桌面，未经人工审核不允许私自上传；用户 GitHub 账户 Lennonhaha；偏好诚实透明、不美化不贬低（「数据诚实」项目精神）、知道自己差距比假装完美更专业；所有对外/推送前必须询问，禁止私自上传代码
 
 ## 2026-06-30：FPGA v5 硬件防护现状
 
@@ -1149,7 +1159,7 @@ This continuous geometric scheme is archived as theoretical exploratory research
 
 ## 用户身份与偏好
 
-- 用户对外部操作（仓库/上传/推送）有明确边界：未经允许不得擅自执行，要求先征得同意（2026-08-09/08-11 反复确认）；本地改完测试通过后先发改动清单，用户确认才推；推送前必须询问，禁止私自上传代码到远程
+- 有明确边界：未经允许不得擅自执行，要求先征得同意；本地改完测试通过后先发改动清单，用户确认才推；推送前必须询问，禁止私自上传代码到远程；所有文件必须先保存到桌面，未经人工审核不允许私自上传
 - 用户偏好快速推进，要求反复测试直到通过，不希望被频繁询问
 - 用户偏好固定引脚且不愿意频繁换引脚或量电压；偏好快速推进，要求反复测试直到通过，不希望被频繁询问；用户偏好诚实坦率的项目定位，认为项目应注明'教育价值和集成展示是核心价值，当前实现不适用于生产环境安全需求'；偏好梯度扫描进行侧信道诊断；偏好异步多线沟通风格，会带上具体分析、优先级排序和操作建议
 - 用户偏好诚实坦率的项目定位，认为项目应注明'教育价值和集成展示是核心价值，当前实现不适用于生产环境安全需求'
@@ -1470,9 +1480,9 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 
 ## 技术规范偏好
 
-- 时间戳存证体系使用 DigiCert+FreeTSA 双机构签发，TSR 序列已连续完整对齐至 99 份（lg-001~099），含 timestamp-manifest.json v3 共计 126 条记录，倒计时 37 天至 8.31 开源
+- 时间戳存证体系使用 DigiCert+FreeTSA 双机构签发，TSR 已累计至 215 条 manifest / 225+ 文件（8/13 口径），8 月已产 135 份 TSR，倒计时至 8.31 开源
 - README 使用公司蓝 #0052CC 配色，每页不超过 5 行，简洁风格。
-- GitHub OAuth token 缺 workflow scope，无法推送含 .github/workflows/ 的提交；PowerShell ConvertTo-Json 将中文转为 \uXXXX 转义，GitHub GraphQL API 不做自动 unescape；中文发 GitHub API 最佳路径为 Linux 服务器直接 POST 或 Python json.dumps 手动控制。
+- GitHub OAuth token 缺 workflow scope，无法推送含 .github/workflows/ 的提交；GitHub 强制 2FA（8/31 前必须启用否则所有 Actions 停止），已于 8/12 启用；PowerShell ConvertTo-Json 将中文转为 \uXXXX 转义
 - Git 工作流偏好：使用 GitHub 管理项目、通过 TSR（时间戳存证）固化代码提交、通过官网（fibemate.net）发布项目信息。本地 master 分支切换为 main 后需删除。代码提交使用 commit message 规范，GitHub 默认分支已从 master 切换为 main。
 
 ## 2026-07-25：项目全面评价 9.3/10 + 双棘轮 PQ 全链路闭环
@@ -1659,3 +1669,8 @@ MEMORY.md 自身有 2 处 NUL 字节（wasm-bindgen 0.2.126 / getrandom 0.2.17 �
 - P1 级教训：IANA #4590 误当端口号、Slaman 模型接受为可行方案
 - 八月总结已写：august-2026-summary_2026-08-15.md
 - 桌面存档：C:\Users\maivs\Desktop\sm2-frontend-verification.html（打包版，含内联字体栈）
+
+
+### Correction (22:30): Slaman math universe entry fixed
+- August summary said "already removed" - inaccurate: Slaman model was rejected at draft stage, never entered any official document
+- Correct description: "design rejected at draft stage, never entered git"
