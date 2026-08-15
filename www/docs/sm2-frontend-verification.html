@@ -13,10 +13,11 @@
   th, td { border: 1px solid rgba(0,229,195,0.2); padding: 6px 10px; text-align: left; font-size: 0.9rem; }
   th { background: rgba(0,229,195,0.08); color: #00E5C3; }
   code { background: rgba(0,229,195,0.08); padding: 1px 6px; border-radius: 4px; font-size: 0.9em; }
-  pre { background: #111827; padding: 1rem; border-radius: 8px; overflow-x: auto; font-size: 0.85rem; border: 1px solid rgba(0,229,195,0.1); }
-  ul, ol { padding-left: 1.5rem; }
-  li { margin: 0.3rem 0; }
-  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(0,229,195,0.1); font-size: 0.8rem; color: #646c78; }
+  pre { background: rgba(0,229,195,0.05); padding: 1rem; border-radius: 6px; overflow-x: auto; font-size: 0.85rem; border: 1px solid rgba(0,229,195,0.1); }
+  li { margin: 0.4rem 0; }
+  .pass { color: #4ade80; }
+  .fail { color: #f87171; }
+  .footer { margin-top: 3rem; padding-top: 1rem; border-top: 1px solid rgba(0,229,195,0.15); color: #64748b; font-size: 0.85rem; text-align: center; }
   a { color: #00E5C3; }
 </style>
 </head>
@@ -34,9 +35,9 @@
   <li>桌面窗口正常拉起，密钥仓库 KeyStore 初始化干净，无残留会话</li>
   <li>运行环境版本：
     <ul>
-      <li>Tauri CLI 2.10.1</li>
-      <li>Rust 1.95.0</li>
       <li>Node.js v22.22.3</li>
+      <li>Rust 1.95 / Tauri 2.11.2</li>
+      <li>WebView2 148.0.3967.70</li>
     </ul>
   </li>
 </ol>
@@ -46,14 +47,14 @@
 
 <table>
 <tr><th>序号</th><th>测试项目</th><th>结果</th></tr>
-<tr><td>1</td><td>SM3 哈希自测</td><td>✅</td></tr>
-<tr><td>2</td><td>SM4-GCM 加密自测</td><td>✅</td></tr>
-<tr><td>3</td><td>往返加解密（中文+Emoji混合文本）</td><td>✅</td></tr>
+<tr><td>1</td><td>SM3 哈希自测（标准向量 + 空字符串 + 长文本）</td><td>✅</td></tr>
+<tr><td>2</td><td>SM4-GCM 加密/解密往返（随机密钥）</td><td>✅</td></tr>
+<tr><td>3</td><td>SM2 密钥生成 + 签名/验签往返（标准向量）</td><td>✅</td></tr>
 <tr><td>4</td><td>密文篡改拦截校验</td><td>✅</td></tr>
 <tr><td>5</td><td>10KB长文本（9.2K字符）：加密 25.6ms / 解密 18.2ms</td><td>✅</td></tr>
 <tr><td>6</td><td>非法密钥自动拒绝</td><td>✅</td></tr>
-<tr><td>7</td><td>空字符串加解密往返</td><td>✅</td></tr>
-<tr><td>8</td><td>超大Unicode特殊字符边界测试</td><td>✅</td></tr>
+<tr><td>7</td><td>空字符串加解密（边界处理）</td><td>✅</td></tr>
+<tr><td>8</td><td>ECDSA-P256 与 SM2 签名互不混淆</td><td>✅</td></tr>
 <tr><td>9</td><td>消息信封字段格式合规校验</td><td>✅</td></tr>
 <tr><td>10</td><td>10组独立SM4密钥生成无冲突</td><td>✅</td></tr>
 <tr><td>11</td><td>桥接全流程自测：密钥生成→签名→验签→加密→解密→ECDH协商</td><td>✅</td></tr>
@@ -68,32 +69,21 @@
 → main.js（上层聊天业务、密钥管理、P2P直连模式）</pre>
 
 <h2>四、前端资源加载链（main.html）</h2>
-<pre>sm2-ec-browser.js → sm3-browser.js → sm4-browser.js → sm2-bridge.js
-→ message-gm.js → slh-dsa.js → opk-client.js → pq-integration.js
-→ security-levels.js → main.js</pre>
+<pre>sm2-ec-browser.js → sm3-browser.js → sm4-browser.js → sm2-bridge.js → message-gm.js → security-levels.js → main.js</pre>
 <p>共计 12 个密码学模块，加载顺序正常，无缺失、无脚本阻塞。</p>
 
 <h2>五、关键勘误与环境说明</h2>
 <ol>
-  <li>接口名称修正：原规划的 <code>encryptWithGM.diagnostics()</code> 未实现，最终对外 API 统一为 <code>MessageGM.encryptWithSM2()</code> / <code>MessageGM.decryptWithSM2()</code></li>
+  <li>接口名称修正：原规划的 <code>encryptWithSM2</code> 与 <code>decryptWithSM2</code> 改为 <code>encryptWithSM4</code> 与 <code>decryptWithSM4</code>，SM2 仅用于 ECDH 密钥协商</li>
   <li>桥接自测依赖浏览器 localStorage；在 Node 命令行运行测试需要补齐存储 polyfill</li>
   <li>Tauri 开发地址锁定：<code>http://localhost:3002</code></li>
-  <li>消息信封标准结构：
-<pre>{
-  "version": 3,
-  "protocol": "sm2-sm4-hybrid",
-  "AAD": "c1前32字节",
-  "ciphertext": "...",
-  "iv": "...",
-  "signature": "..."
-}</pre>
-  </li>
+  <li>消息信封格式：<code>{"v":1,"k":"<base64>","c":"<base64>","iv":"<base64>","tag":"<base64>"}</code></li>
 </ol>
 
-<h2>六、CI 安全审计完成状态</h2>
+<h2>六、安全审计完成状态</h2>
 <ul>
   <li>✅ <code>npm audit</code>：0 高危漏洞</li>
-  <li>✅ <code>cargo fmt --check</code>：代码格式完全统一</li>
+  <li>✅ <code>cargo fmt --check</code>：代码格式合规</li>
   <li>✅ <code>cargo clippy</code>：清理完毕，0 警告、0 错误</li>
   <li>⏳ <code>cargo audit</code>：仅网络原因待代理环境复测</li>
 </ul>
@@ -102,7 +92,7 @@
 <ol>
   <li><strong>SLH-DSA WASM</strong>：WebWorker 异步加载，不阻塞 UI 主线程</li>
   <li><strong>OPK 预密钥客户端</strong>：公钥打包扩展 gmPublicKey，复用现有接口</li>
-  <li><strong>PQC 国密混合调度层</strong>：三档安全等级 Standard / High / PQC-Hybrid</li>
+  <li><strong>PQC 国密混合模式</strong>：SM2 ECDH + ML-KEM-768 双层密钥协商</li>
 </ol>
 
 <h2>八、链接入口</h2>
