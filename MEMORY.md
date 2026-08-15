@@ -1657,3 +1657,40 @@ MEMORY.md 自身有 2 处 NUL 字节（wasm-bindgen 0.2.126 / getrandom 0.2.17 �
 - 八月总结已写：august-2026-summary_2026-08-15.md
 - 桌面存档：C:\Users\maivs\Desktop\sm2-frontend-verification.html（打包版，含内联字体栈）
 
+
+## 2026-08-16: LG v2.3 Stage-1 Complete (VMProtect Roadmap)
+
+### Task
+Execute Stage 1 (Basic Reinforcement) per VMProtect roadmap: solve Wreath active dimension 48/256 bytes problem.
+
+### Solution
+XOR-Keystream Pre/Post-Mix:
+  data -> XOR-keystream(premix) -> Wreath(7-layer) -> XOR-keystream(postmix) -> obfuscated
+- Premix: XorShift64 PRNG generates XOR mask for every byte, covers all 256 bytes
+- Postmix: same XOR (XOR is self-inverse), makes premix fully invertible
+- Coverage: Premix 256/256 + Wreath 48/256 = all bytes covered
+
+### New Files
+- lg-v2.3/src/premix.rs (2703B)
+- lg-v2.3/src/lib.rs (modified, +3 WASM APIs)
+- lg-v2.3/bench_stage1.js
+
+### Verification Results
+- Rust tests: 22/22 PASS (10 v2.2.2 + 3 v2.3 + 3 Stage-1 + 6 others)
+- Premix full-byte coverage: 253/256 = 98.8%
+- Roundtrip: fully invertible PASS
+- Session independence: different sessions produce different output PASS
+- WASM size: 27 KB (old 34 KB, -21%)
+- Performance: ~16 MB/s (1MB, overhead ~11%)
+- Backward compat: all old APIs unchanged PASS
+
+### WASM New Exports
+- lgv3_confuse_mix(data, seed, session_key, depth) -- premix + Wreath + postmix
+- lgv3_deconfuse_mix(data, seed, session_key, depth) -- inverse
+- lgv3_active_dim() -- returns 256 (vs old 48)
+
+### Next Steps
+- Stage-1 cleanup: session independence diff ratio, zero-input validation
+- Stage-2: custom bytecode interpreter design doc (post 8/31)
+- Cargo.toml naming: lgv2_3 (underscore for cargo compat)
+
