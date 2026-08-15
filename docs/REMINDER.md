@@ -93,6 +93,77 @@ P0 已修（commit `4785b92c`）：#578 SSRF 白名单 + 2 个 JS 引号语法 b
 | 可视化数量口径 | 权威数字拍板 + 批量改 facts.md/README/ARCHITECTURE/announcement/viz-index |
 | 证明链全景 | 已存档 `docs/visualization-designs/07-proof-chain-panorama.md`，开源后 P1 |
 | 重放保护缺口 | `THREAT_MODEL.md:65,131-132` 已登记。**方案已定（2026-08-15）**：跳过「注入式一期」（只发 UUID 不校验，零收益），8/31 后直接做校验式二期——客户端传 `X-Request-Id`，服务端查已见缓存拒绝重复（425 `REPLAY_DETECTED`），缓存用 Redis 或 `lru-cache`（自动 TTL，避免 `setInterval`+`Date.now()` 时钟回拨）。覆盖：API 端点 nonce+时间窗、Mixnet `mix-node.js` 已见 nonce 缓存（L34-35/L175-176 已有字段缺检测） |
+| Slaman × FIBEMATE 哲学文档 | 设计阶段已放弃（不在代码/参数层面引入），**如需作为叙事素材**：仅作哲学类比（标注「非技术方案·灵感来源」），不进安全声称。具体落地方式待确认（进 `docs/philosophy/` 或桌面存档均待定） |
+| 护盾页集合论注脚 | 暂不引入（保持页面纯净，后续如有哲学文档再链接） |
+
+---
+
+## 5. 8/31 后研究类待办
+
+> **2026-08-15 新增**（来自 Slaman 概念层研究 + 用户确认）
+
+### 5.1 LWE 量子困难性研究（P1）
+
+**背景**：ML-KEM 的安全性基础是 LWE 问题。量子计算机对 LWE 的威胁是否比经典计算机更大？是否存在类似 Shor 对 RSA 的指数级量子加速？（目前**未知**，是活跃研究领域）
+
+**核心文献**：
+- Albrecht-Player-Scott 2015：`Estimate_all_the_DATA - On the hardness of LWE and Ring-LWE with small error`（ePrint 2015/046）
+  - 给出量子 BKZ 对 ML-KEM-768 的复杂度估计：2^{128+}
+  - 文档：`docs/security/lwe-quantum-bkz-literature.md` 已建立
+- Regev 2009：LWE 困难性到 GapSVP/SIVP 的量子归约
+- Peikert 2016：`A decade of Lattice Cryptography`（FoT 2016）
+
+**行动项**：
+- [ ] 细读 Albrecht-Player-Scott 2015 全文，提取对 ML-KEM-768 的具体量子安全估计
+- [ ] 对比 Chen-Nguyen 2011 BKZ 校准与 FIBEMATE 现有参数文档
+- [ ] 整理 Ducas 等人量子格攻击综述（2020+ 新结果）
+- [ ] 更新 `docs/security/` 中的量子安全性说明
+
+### 5.2 BKZ 算法复杂度细化（P1）
+
+**背景**：ML-KEM-768 参数选择基于 BKZ 约化算法复杂度估计。更精确的 BKZ 复杂度模型可支撑参数文档更新。
+
+**核心文献**：
+- Chen-Nguyen 2011：`BKZ 2.0: Better lattice security estimates`（ASIACRYPT 2011）
+  - 通过实验给出 BKZ 实际运行时间与块大小 β 的精确关系
+  - NIST PQC 安全级别定义的主要实验依据之一
+- Schnorr-Euchner 1994：BKZ 前身（HKZ 约化算法）
+- Albrecht-Player-Scott 2015：量子 BKZ 复杂度（见 §5.1）
+
+**行动项**：
+- [ ] 对比 Chen-Nguyen BKZ β→复杂度表与 FIBEMATE 现有安全参数说明
+- [ ] 梳理 ML-KEM-768 的具体 β 值与对应安全级别
+- [ ] 更新 `docs/security/` 中的 BKZ 复杂度参数表（附注：量子 vs 经典）
+
+### 5.3 Slaman 设计哲学文档（待确认落地方式）
+
+**2026-08-15 用户确认**：继续研究 Slaman × FIBEMATE 设计哲学（**仅哲学类比，非技术方案**）。
+
+**背景**：
+- Theodore A. Slaman（加州大学伯克利分校，1954-）是递归论/可计算性理论专家
+- 2024 年论文：*Extending Borel's Conjecture from Measure to Dimension*
+  - 证明在 Laver 宇宙（满足 ZFC 但否定 CH）中，强维数定理不成立
+  - 核心思想：**不同公理宇宙给出不同的数学结论**（CH 宇宙 vs Laver 宇宙）
+- Hamkins 的集合论多元宇宙（Multiverse View）与 Slaman 的工作**无关**（归因错误，已纠正）
+
+**对 FIBEMATE 的可能类比**：
+| Slaman 的数学 | FIBEMATE 的工程 | 备注 |
+|:---|:---|:---|
+| 力迫法（forcing）在特定公理宇宙中构造新集合 | TLA+ 形式化验证在特定状态空间中证明性质 | 哲学类比，非技术实现 |
+| 反射原理（reflection） | TLC 模型检查 | 同上 |
+| CH 宇宙 vs Laver 宇宙 | 经典安全 vs 后量子安全 | 威胁模型不同，安全结论不同 |
+| Borel 猜想的宇宙依赖性 | 从单算法验证到全栈验证的必要性 | 同上 |
+
+**明确边界**：
+- ❌ **不能**写为"安全假设可以切换宇宙"——安全假设是计算复杂度假设，不可切换公理
+- ❌ **不能**写为"基于 Slaman/Hamkins 数学宇宙的安全增强"——两者均不提供密码学工具
+- ✅ **可以**作为叙事框架（解释"为什么 FIBEMATE 做全栈验证"），严格标注"哲学类比·灵感来源"
+- ✅ **可以**引用 Slaman 论文作为数学诚实性旁注（数学真理的公理依赖性 ↔ 工程假设的明确声明）
+
+**落地方式待确认**（2026-08-15 待用户拍板）：
+- A：写入 `docs/philosophy/slaman-fibemate-analogy.md`（进 git，对外可见）
+- B：桌面存档（本地，不推送 GitHub）
+- C：仅做内部参考笔记，不形成文档
 
 ---
 
@@ -104,3 +175,5 @@ P0 已修（commit `4785b92c`）：#578 SSRF 白名单 + 2 个 JS 引号语法 b
 - ✅ 仓库 dependabot.yml 引用的 3 个缺失标签已创建（dependencies/npm/ci）
 - ✅ MEMORY.md GBK 损坏修复与恢复
 - ✅ 全仓库 UTF-8/GBK 编码损坏修复 + 防范机制
+- ✅ Slaman vs Hamkins 概念层研究完成（`slaman-hamkins-research_20260815.md`）
+- ✅ LWE 量子困难性 + BKZ 文献参考文档建立（`docs/security/lwe-quantum-bkz-literature.md`）
