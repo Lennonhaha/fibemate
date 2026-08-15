@@ -1,9 +1,9 @@
 # FIBEMATE 进度追踪 & 待办清单
 
-> **最后更新**：2026-08-14 12:06 CST
-> **开源倒计时**：2026.08.31 开源 — 剩余 17 天
+> **最后更新**：2026-08-15 20:17 CST
+> **开源倒计时：2026.08.31 开源 — **剩余 16 天**
 > **TSR 证据链**：lg-001 ~ lg-100（100 份，FreeTSA + DigiCert 双机构）
-> **GitHub**：Lennonhaha/fibemate · main `e00deb964` · 764 commits
+> **GitHub：Lennonhaha/fibemate · main `fa548b32b` · 821 commits
 > **服务器**：ECS 2vCPU，磁盘 59%（8/12 体检），Node v22.22.2
 > **SSL 证书**：fibemate.net Oct 16 2026 到期（certbot.timer 启用）；fibemate.link 已下线（ICP 备案墙）
 
