@@ -1657,7 +1657,3 @@ MEMORY.md 自身有 2 处 NUL 字节（wasm-bindgen 0.2.126 / getrandom 0.2.17 �
 - 八月总结已写：august-2026-summary_2026-08-15.md
 - 桌面存档：C:\Users\maivs\Desktop\sm2-frontend-verification.html（打包版，含内联字体栈）
 
-
-### Correction (22:30): Slaman math universe entry fixed
-- August summary said "already removed" - inaccurate: Slaman model was rejected at draft stage, never entered any official document
-- Correct description: "design rejected at draft stage, never entered git"
