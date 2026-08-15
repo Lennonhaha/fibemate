@@ -99,6 +99,15 @@ app.post('/relay', (req, res) => {
 async function forwardToNextHop(nextHop, packet, originalRes) {
   console.log(`[Node ${PORT}] Forwarding to ${nextHop}`);
 
+  // SSRF 防护（CodeQL #578）：nextHop 来自请求体，必须严格匹配 host:port 格式
+  // 且 host 必须在 --peers 白名单内；无 peers 配置时拒绝一切转发（最小权限默认）。
+  const allowedHosts = new Set(PEERS.map((p) => String(p).split(':')[0]));
+  const hopMatch = /^([A-Za-z0-9._-]+):(\d{1,5})$/.exec(String(nextHop));
+  if (!hopMatch || !allowedHosts.has(hopMatch[1])) {
+    console.error(`[Node ${PORT}] Rejected forward to non-whitelisted nextHop: ${nextHop}`);
+    return originalRes.status(403).json({ status: 'error', error: 'Invalid nextHop: not in peer whitelist' });
+  }
+
   try {
     const [host, port] = nextHop.split(':');
     const response = await fetch(`http://${nextHop}/relay`, {

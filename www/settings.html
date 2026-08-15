@@ -444,7 +444,7 @@
   </div>
 
   <script>
-    const API_BASE = localStorage.getItem('fibemate_api_url') || 'window.location.origin + '/api'';
+    const API_BASE = localStorage.getItem('fibemate_api_url') || (window.location.origin + '/api');
 
     function loadProfile() {
       try {
