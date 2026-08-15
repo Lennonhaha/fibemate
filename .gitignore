@@ -224,6 +224,8 @@ push-*.sh
 vwz-commit.sh
 vwz*.js
 vwz*.py
+vwz*.html
+vwz*.md
 quick_check.sh
 web-health.sh
 gen-readme.sh
