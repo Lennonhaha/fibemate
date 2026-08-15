@@ -56,7 +56,7 @@ node packages/fml-dsa/test/noble-oracle.test.js  # noble 交叉基准
 
 ## 3.5 CodeQL 告警收尾（发布后）
 
-2026-08-15 全量审计：**253 条 open 告警**（8 error + 105 warning + 140 note）。
+2026-08-15 全量审计（11:37 重扫）：**182 条 open 告警**（9 error + 91 warning + 82 note）。
 P0 已修（commit `4785b92c`）：#578 SSRF 白名单 + 2 个 JS 引号语法 bug。
 
 发布后处理：
@@ -64,13 +64,22 @@ P0 已修（commit `4785b92c`）：#578 SSRF 白名单 + 2 个 JS 引号语法 b
 | 类别 | 数量 | 处理方式 |
 |:---|:---:|:---|
 | missing-rate-limiting | 55 | 加 `express-rate-limit` 中间件（`src/index.js` + `backend/src/index.js`） |
-| log-injection（#580/#581/#582） | 3 | 低危，`console.log` 拼用户输入 → 脱敏或删除（`mixnet/mix-node.js` + `mixnet/healthcheck.js`） |
+| log-injection（#624/#623/#581/#580） | 4 | error 级，`console.log` 拼用户输入 → 脱敏或删除（`mixnet/mix-node.js` + `mixnet/healthcheck.js`） |
 | 误报（#123/#122/#37/#36） | 4 | Dismiss：`user-controlled-bypass` 实为 JWT 验证守卫；`type-confusion` 下游仅 `String.includes()` |
-| 噪音 + 其余 warning | ~190 | 批量 dismiss（unused-variable / trivial-conditional 等） |
+| 误报（#543/#28/#579） | 3 | Dismiss：见下方 warning 误报判定 |
+| #124 missing-origin-check | 1 | 理论正确，同源专用 Worker 无跨域风险；可选加 `e.origin` 校验一行 |
+| 噪音 + 其余 warning | ~100 | 批量 dismiss（unused-variable / whitespace / duplicate-property 等） |
 
-> 误报判定依据：
+> error 级误报判定依据：
 > - #123/#122 `js/user-controlled-bypass`：`if (msg.type !== 'auth')` 只是路由分支，信任根是 `jwt.verify(msg.token, SECRET)`。
 > - #37/#36 `js/type-confusion`：`q` 只用于 `String.includes()`，无 SQL/路径/命令拼接。
+>
+> warning 级误报判定依据：
+> - #543 `js/remote-property-injection`（src/db-sqlite.js:300）：L298 已显式拒绝 `__proto__`/`constructor`/`prototype`，L300 用 `Object.prototype.hasOwnProperty.call()` 白名单访问，已是标准防御写法。
+> - #28 `js/tainted-format-string`（www/websocket-manager.js:123）：JS 模板字符串非 printf，`${...}` 插值不会把字符串当格式符执行，C 威胁模型套 JS 误报。
+> - #579 `js/file-system-race`（scripts/daily-audit.js:173）：单进程同步 CLI，`readFileSync`↔`writeFileSync` 之间无异步窗口，TOCTOU 不成立。
+
+> ⚠️ 注：#624 log-injection 是 8/15 上午修 SSRF 时在拒绝分支新增的 `console.error(...${nextHop})` 引入，属同一处收尾。
 
 ---
 
