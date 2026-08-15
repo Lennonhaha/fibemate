@@ -92,6 +92,7 @@ P0 已修（commit `4785b92c`）：#578 SSRF 白名单 + 2 个 JS 引号语法 b
 | VWZ 优化研究线 | `verify_batch` + `PublicKey` 惰性缓存（`experimental/vwz-lg` 分支，本地不存在仅远程） |
 | 可视化数量口径 | 权威数字拍板 + 批量改 facts.md/README/ARCHITECTURE/announcement/viz-index |
 | 证明链全景 | 已存档 `docs/visualization-designs/07-proof-chain-panorama.md`，开源后 P1 |
+| 重放保护缺口 | `THREAT_MODEL.md:65,131-132` 已登记：API 端点补 nonce+时间窗校验、Mixnet `mix-node.js` 补「已见 nonce 缓存」（L34-35/L175-176 已有字段缺检测），8/31 后评估落地范围 |
 
 ---
 
