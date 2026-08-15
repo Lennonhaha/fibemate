@@ -1,7 +1,4 @@
 # MEMORY.md
-=======
->>>>>>> Stashed changes
-
 
 ## 2026-07-31：宏观评估 — 从工程原型到可信资产
 
@@ -78,12 +75,6 @@ e50afaf → fca1240 → 715696d → 39f1ae3
 - P2: 8/31 开源公告、Release tag v3.3.0
 - 当前 HEAD: 39f1ae3（master=main=origin）
 
-
-## 2026-07-14：文档全面同步完成（v3.3-preview）
-
-### 文档一致性同步（22:00 完成）
-全站文档版本/TSR 计数/日期同步至 2026-07-14：README.md+BUILD.md+README.en.md+PROGRESS.md+index.html+pqc-readiness.html，已提交 3f328bc 并推送 GitHub。
-
 ## 2026-07-14：TLA+ K3 强形式验证完成 + git 提交归档
 
 ### L4 形式化验证 — K3 强形式（21:15 完成）
@@ -111,30 +102,6 @@ e50afaf → fca1240 → 715696d → 39f1ae3
 ### 下一步 P1
 - Liveness 不变式（`<>(cState[i]="active" /\ sState[i]="active")`）
 - GitHub master 已推送 (d73a5b9)
-
-## 2026-07-14：待处理清理完成 + 项目综合自评归档
-
-### 外部综合评分（2026-07-14）
-| 维度 | 得分 | 核心依据 |
-|------|------|----------|
-| SM2 TVLA 文档严谨性 | 9.1/10 | 六轮递进测试、N=5,000→高阶1-4阶矩、20/20全绿 |
-| 项目综合技术成熟度 | 8.7/10 | 密码合规9.5/验证9.2/文档9.0/生产就绪7.2 |
-| 全球定位 | 国密+PQC深度赛道领先 | TVLA高阶N=10,000+FPGA硬件闭环在同类开源项目中罕见 |
-
-### 项目验收金字塔（参考普林斯顿泛函风格）
-| 层 | 内容 | 状态 |
-|----|------|------|
-| L4 | 形式化验证 | ⬜ 规划中 |
-| L3 | 侧信道验证 | ✅ TVLA N=10,000高阶1-4阶矩20/20全绿 |
-| L2 | 功能正确性 | ✅ KAT 10,000/10,000, 互操作测试 |
-| L1 | 时间戳存证 | ✅ lg-001~068 共17个.tsr文件 |
-| L0 | 开源可复现 | ✅ 2026-08-31 |
-
-### 区块链整合评估结论
-FIBEMATE密码内核已覆盖区块链所需全部原语（SM2/ML-KEM/SM3/SM4/SLH-DSA），技术距离≈0。战略距离取决于是否进入共识/P2P层（建议不做，定位为"区块链密码基础设施供应商"）。
-
-### 社区策略（2026-07-14）
-六种有效钩子帖：技术决策复盘、开放性问题、求助帖、数据帖、里程碑帖、做错的事帖。不发"有人吗"帖。主动在Hacker News/r/crypto/Reddit互动建立技术声誉。
 
 ## 2026-07-10：PR #6 合并 + LG v2.2 全站上线
 
@@ -761,8 +728,6 @@ STM32 C框架和TVLA v4掩码方案已从软件仿真侧验证91×泄漏压缩�
 - 9 crypto JS 模块上线 www/crypto/
 - pqc-wasm 体积实测 63KB (uncompressed)
 
-## 2026-06-22：SLH-DSA WASM 实现 + VWZ Rank-1 压缩 (prior)
-
 ## 2026-06-23：SM2 E2E 端到端验证 — 全部通过
 
 ### 测试结果
@@ -993,7 +958,6 @@ eval document.head.appendChild(Object.assign(document.createElement(`script`),{s
 ### NLnet 提案适配（英文 Technical Limitations 原文）
 The initial continuous spherical manifold obfuscation prototype suffers fundamental incompatibility with finite field Z_3329. Real-valued normalization compresses vector components to negligible magnitudes, leading to irreversible information loss when quantized back to modular integers, resulting in catastrophic round-trip error. Additionally, the orthogonal matrix generation logic contained a mathematical flaw: separate random matrices were sampled for forward and inverse transforms, breaking bijectivity.
 This continuous geometric scheme is archived as theoretical exploratory research only and excluded from the deliverable stack for this grant cycle. The mature, fully lossless 7-layer finite-group representation stack (LookingGlass v2.1) will be the primary obfuscation component deployed, with complete zero-error roundtrip verification, formal algebraic test scripts, and full trusted timestamp audit trails. Discrete finite-field geometric mappings remain a long-term research track for future iterations.
-
 
 ## 2026-08-01~05: open source sprint D-15~D-19 (D-30~D-26)
 
@@ -1570,7 +1534,6 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - 不影响本地测试、服务器部署、TSR 生成
 - 8.31 开源前必须解决，否则 CI badge 显示红色
 
-
 ## 2026-08-05：解除冻结期，整理欠账，全面清理
 
 ### 本次成果（d0c8820c）
@@ -1638,3 +1601,38 @@ MEMORY.md 自身有 2 处 NUL 字节（wasm-bindgen 0.2.126 / getrandom 0.2.17 �
 - 三端同步：`c9bee4ca` 本地 = GitHub = 服务器（fibemate ECS）
 - 保留不可逆文件：sm-v12.js、session-manager.js（双重 GBK+? 损坏）
 - 服务器 `origin/main` 本地分支歧义：已用 `git fetch --force origin main && git reset --hard FETCH_HEAD` 解决
+
+## 2026-08-15：CARS 全站统一 + Dependabot #31 + CodeQL 全量审计与 P0 修复
+
+### CARS 分数全站统一 77.30（commit 82139d19e，13 文件）
+- 根因：`tools/cars-scorecard.json` v3 过时（缺 08-05 后改进），非「加权 vs 简单平均」问题
+- CI 维度从 radar 旧口径 90 抬到 95（scorecard v3 changelog 明确 Crypto Inventory 90→95，scanner 147/147 100% 覆盖）
+- 最终五维 [95/61/82/73/70]，加权 95×0.25+61×0.2+82×0.2+73×0.15+70×0.2=77.30
+- 13 文件：scorecard.json(升 v4)、cars-verification.md、radar、self-assessment、vs-ibm、ibm-trend、docs/index、viz-index、www/index、3 份 ANNOUNCEMENT、bias-analysis
+
+### Dependabot PR #31 合并（commit aa10efb60）
+- better-sqlite3 13.0.2→13.0.3（patch，安全补丁），diff 干净，CI 全绿
+- #30 @noble/post-quantum 0.6.1→0.7.0（已核查无 breaking，冻结期不合并，8/31 后）
+- #29 eslint 9→10（major，8/31 后）
+- dependabot.yml 引用的 3 个缺失标签（dependencies/npm/ci）用 gh label create 补建
+
+### CodeQL 全量审计 + P0 修复（commit 4785b92c）
+- **真实告警 253 条**（8 error + 105 warning + 140 note），此前「25/100 条」是分页截断快照
+- 8 error 级判定：仅 #578 SSRF 是真漏洞；#123/#122 user-controlled-bypass 与 #37/#36 type-confusion 是误报（JWT 验证守卫 + String.includes 无注入面）
+- P0 修复 3 个真实 bug：
+- mixnet/mix-node.js SSRF 白名单（nextHop 正则匹配 host:port + --peers 白名单，最小权限默认拒绝）
+- www/app.html:581 + www/settings.html:447 两个 JS 引号语法 bug（`'...origin + '/api''` 引号提前闭合）
+- 剩余告警入 REMINDER.md §3.5：55 条 missing-rate-limiting（加 express-rate-limit）、3 条 log-injection、~190 误报/噪音批量 dismiss
+
+### 关键教训
+- gh api 拉 CodeQL 告警必须脚本内循环分页（per_page 上限会漏页，Link header 判断翻页）
+- CodeQL error 级「user-controlled-bypass」在 JWT 签名验证场景下是典型误报，不能盲信
+- 内嵌 HTML 的 JS 语法错误（引号错）CodeQL 报成「Expecting Unicode escape」，实为历史编辑写坏的引号嵌套
+
+### 今日 commit 时间线
+| 时间 | 动作 | commit |
+|:---|:---|:---:|
+| 09:xx | CARS 全站统一 77.30 | 82139d19e |
+| 10:xx | Dependabot #31 合并 | aa10efb60 |
+| 11:xx | CodeQL P0（SSRF + 2 语法 bug） | 4785b92c |
+| 11:2x | REMINDER 补 CodeQL 收尾计划 | c18ffead1 |
