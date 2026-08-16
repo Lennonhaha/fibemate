@@ -11,7 +11,7 @@
 
 use crate::hash_target::hash_to_sparse_target;
 use crate::preimage::PreimageVec;
-use crate::tensor::{public_tensor_eval, PubTensor};
+use crate::tensor::public_tensor_eval_data;
 use crate::trapdoor::{generate_trapdoor, sample_preimage, Trapdoor};
 use wasm_bindgen::prelude::*;
 
@@ -100,9 +100,8 @@ pub fn verify(pk: &PublicKey, msg: &[u8], sig: &VwzSignature) -> bool {
     let m = sig.k + 1;
     if sig.w2.len() != m || sig.w3.len() != m { return false; }
 
-    let pk_tensor = PubTensor::new(pk.k, pk.data.clone());
     let target = hash_to_sparse_target(msg, pk.k);
-    let result = public_tensor_eval(&pk_tensor, &sig.w2, &sig.w3);
+    let result = public_tensor_eval_data(pk.k, &pk.data, &sig.w2, &sig.w3);
     result == target
 }
 
@@ -140,8 +139,6 @@ pub fn verify_batch(pk: &PublicKey, msgs: js_sys::Array, sigs: js_sys::Array) ->
 /// `sigs` are serialized signatures (see `serialize_signature`).
 /// Returns one bool per item, in input order.
 pub fn verify_batch_core(pk: &PublicKey, msgs: &[Vec<u8>], sigs: &[Vec<u8>]) -> Vec<bool> {
-    // Build the tensor once.
-    let pk_tensor = PubTensor::new(pk.k, pk.data.clone());
     let mut results = Vec::with_capacity(msgs.len());
 
     for idx in 0..msgs.len() {
@@ -152,7 +149,7 @@ pub fn verify_batch_core(pk: &PublicKey, msgs: &[Vec<u8>], sigs: &[Vec<u8>]) -> 
                 Err(_) => { results.push(false); continue; }
             };
 
-            // Core verification (no clone here — tensor already built).
+            // Core verification (borrowed data — no tensor clone).
             if sig.k != pk.k {
                 false
             } else {
@@ -161,7 +158,7 @@ pub fn verify_batch_core(pk: &PublicKey, msgs: &[Vec<u8>], sigs: &[Vec<u8>]) -> 
                     false
                 } else {
                     let target = hash_to_sparse_target(msg, pk.k);
-                    let result = public_tensor_eval(&pk_tensor, &sig.w2, &sig.w3);
+                    let result = public_tensor_eval_data(pk.k, &pk.data, &sig.w2, &sig.w3);
                     result == target
                 }
             }

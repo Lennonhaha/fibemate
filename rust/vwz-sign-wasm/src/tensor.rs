@@ -126,6 +126,40 @@ pub fn public_tensor_eval(pk: &PubTensor, w2: &PreimageVec, w3: &PreimageVec) ->
     result
 }
 
+/// Evaluate public tensor directly from borrowed, fully-expanded ψ data (zero-clone).
+///
+/// Semantically identical to [`public_tensor_eval`], but takes the raw 3D slice
+/// instead of a `PubTensor` wrapper — avoiding the `pk.data.clone()` deep copy
+/// that `PubTensor::new` would otherwise force on every call.
+///
+/// `data` has shape (2k+1)×(k+1)×(k+1).
+pub fn public_tensor_eval_data(
+    k: usize,
+    data: &[Vec<Vec<u16>>],
+    w2: &PreimageVec,
+    w3: &PreimageVec,
+) -> Vec<u16> {
+    let m = k + 1;
+    let len = 2 * k + 1;
+    let mut result = vec![0u16; len];
+
+    for i1 in 0..len {
+        let mut sum = 0u16;
+        for i2 in 0..m {
+            let w2i = w2[i2];
+            if w2i == 0 {
+                continue;
+            }
+            for i3 in 0..m {
+                let term = field::mul(field::mul(w2i, w3[i3]), data[i1][i2][i3]);
+                sum = field::add(sum, term);
+            }
+        }
+        result[i1] = sum;
+    }
+    result
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
