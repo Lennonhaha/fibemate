@@ -81,7 +81,7 @@ for (const f of files) {
   const fffdCount = (s.match(/\uFFFD/g) || []).length;
   if (fffdCount > 0) {
     // Allow U+FFFD when it is part of a deliberate "detect garbled text" regex,
-    // e.g. scripts/health-check.js: /锟斤拷|�{2,}|.../ (used to flag broken webpages).
+    // e.g. scripts/health-check.js: /锟斤拷|\uFFFD{2,}|.../ (used to flag broken webpages).
     let allIntentional = true;
     for (const line of s.split('\n')) {
       if (line.includes('\uFFFD') && !/(hasGarbage|锟斤拷|garbled|乱码|detect.*corrupt)/.test(line)) {
