@@ -1,10 +1,10 @@
 //! Hash message → sparse target vector (deterministic).
 //!
 //! Uses SHAKE-256 XOF to deterministically derive:
-//!   1. k+1 distinct positions in [0, 2k]
+//!   1. k+1 distinct positions in [0, 2k+1]
 //!   2. Nonzero values in [1, q-1] at those positions
 //!
-//! Result: target vector t ∈ F_q^{2k+1} with Hamming weight exactly k+1.
+//! Result: target vector t ∈ F_q^{2k+2} with Hamming weight exactly k+1.
 
 use crate::field::Q;
 use sha3::digest::{ExtendableOutput, Update, XofReader};
@@ -12,10 +12,10 @@ use sha3::Shake256;
 
 /// Hash a message to a sparse target vector.
 ///
-/// Produces t ∈ F_q^{2k+1} with exactly k+1 nonzero entries.
+/// Produces t ∈ F_q^{2k+2} with exactly k+1 nonzero entries.
 /// Deterministic: same message → same target.
 pub fn hash_to_sparse_target(msg: &[u8], k: usize) -> Vec<u16> {
-    let n = 2 * k + 1;
+    let n = 2 * k + 2;
     let weight = k + 1;
 
     // SHAKE-256 XOF
@@ -109,7 +109,7 @@ mod tests {
     fn test_sparsity() {
         for k in [2, 4, 8] {
             let t = hash_to_sparse_target(b"test message", k);
-            let n = 2 * k + 1;
+            let n = 2 * k + 2;
             let weight = k + 1;
             assert_eq!(t.len(), n);
             let nonzero: Vec<_> = t.iter().filter(|&&v| v != 0).collect();

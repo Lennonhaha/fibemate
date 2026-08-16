@@ -1,14 +1,15 @@
 //! VWZ Hash-and-Sign Signature — Rust/WASM Implementation
 //!
 //! Based on IACR 2025/624: Trapdoor one-way functions from tensors.
-//! Implements Lemma 1 (sparse Lagrange interpolation) and Theorem 2
-//! (preimage sampling) for 3D boundary format (2k+1)×(k+1)×(k+1).
+//! Implements preimage sampling for a security-hardened **mixed
+//! Vandermonde tensor** of boundary format (2k+2)×(2k+1)×(2k+1), whose
+//! slices are rank-2 (defeating the rank-1 separation attack).
 //!
 //! Module structure:
 //! - field: F_q arithmetic with q=3329
-//! - tensor: VWZ tensor definition and evaluation
-//! - trapdoor: key generation with basis change
-//! - preimage: sparse Lagrange interpolation (Lemma 1)
+//! - tensor: mixed tensor definition, public key build and evaluation
+//! - trapdoor: key generation with (X2a,X2b,X3a,X3b) basis changes
+//! - preimage: linear algebra + Za/Zb-split preimage sampling
 //! - hash_target: SHAKE-256 → sparse target expansion
 //! - signature: Hash-and-Sign scheme with serialization
 
@@ -18,9 +19,6 @@ pub mod trapdoor;
 pub mod preimage;
 pub mod hash_target;
 pub mod signature;
-pub mod structured;
-pub mod constants;
-pub mod vwz_rank1;
 
 use wasm_bindgen::prelude::*;
 

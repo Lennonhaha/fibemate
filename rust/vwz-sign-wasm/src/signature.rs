@@ -97,7 +97,7 @@ pub fn sign(sk: &SecretKey, msg: &[u8]) -> VwzSignature {
 #[wasm_bindgen]
 pub fn verify(pk: &PublicKey, msg: &[u8], sig: &VwzSignature) -> bool {
     if sig.k != pk.k { return false; }
-    let m = sig.k + 1;
+    let m = 2 * sig.k + 1;
     if sig.w2.len() != m || sig.w3.len() != m { return false; }
 
     let target = hash_to_sparse_target(msg, pk.k);
@@ -153,7 +153,7 @@ pub fn verify_batch_core(pk: &PublicKey, msgs: &[Vec<u8>], sigs: &[Vec<u8>]) -> 
             if sig.k != pk.k {
                 false
             } else {
-                let m = sig.k + 1;
+                let m = 2 * sig.k + 1;
                 if sig.w2.len() != m || sig.w3.len() != m {
                     false
                 } else {
@@ -185,6 +185,11 @@ impl Keypair {
     pub fn secret_key_ref(&self) -> &SecretKey { &self.sk }
 }
 
+impl SecretKey {
+    /// Borrow the underlying trapdoor (bench / advanced use).
+    pub fn td_ref(&self) -> &Trapdoor { &self.td }
+}
+
 // ============================================================
 // Serialization (compact binary)
 // ============================================================
@@ -192,10 +197,12 @@ impl Keypair {
 /// Serialize public key to bytes.
 #[wasm_bindgen]
 pub fn serialize_public_key(pk: &PublicKey) -> Vec<u8> {
+    let n = 2 * pk.k + 2;
+    let m = 2 * pk.k + 1;
     let mut buf = vec![pk.k as u8];
-    for i1 in 0..(2 * pk.k + 1) {
-        for i2 in 0..(pk.k + 1) {
-            for i3 in 0..(pk.k + 1) {
+    for i1 in 0..n {
+        for i2 in 0..m {
+            for i3 in 0..m {
                 buf.extend_from_slice(&pk.data[i1][i2][i3].to_le_bytes());
             }
         }
@@ -210,8 +217,8 @@ pub fn deserialize_public_key(data: &[u8]) -> Result<PublicKey, JsValue> {
         return Err(JsValue::from_str("Empty data"));
     }
     let k = data[0] as usize;
-    let n = 2 * k + 1;
-    let m = k + 1;
+    let n = 2 * k + 2;
+    let m = 2 * k + 1;
     let expected = 1 + n * m * m * 2;
     if data.len() != expected {
         return Err(JsValue::from_str(&format!("Invalid length: {} != {}", data.len(), expected)));
@@ -229,7 +236,7 @@ pub fn deserialize_public_key(data: &[u8]) -> Result<PublicKey, JsValue> {
     Ok(PublicKey { k, data: psi })
 }
 
-/// Serialize signature to bytes. Format: 1-byte k + 2(k+1)·2-byte LE.
+/// Serialize signature to bytes. Format: 1-byte k + 2(2k+1)·2-byte LE.
 #[wasm_bindgen]
 pub fn serialize_signature(sig: &VwzSignature) -> Vec<u8> {
     let mut buf = vec![sig.k as u8];
@@ -243,7 +250,7 @@ pub fn serialize_signature(sig: &VwzSignature) -> Vec<u8> {
 pub fn deserialize_signature(data: &[u8]) -> Result<VwzSignature, JsValue> {
     if data.is_empty() { return Err(JsValue::from_str("Empty data")); }
     let k = data[0] as usize;
-    let m = k + 1;
+    let m = 2 * k + 1;
     let expected = 1 + 4 * m;
     if data.len() != expected {
         return Err(JsValue::from_str(&format!("Invalid sig length: {} != {}", data.len(), expected)));
@@ -263,18 +270,16 @@ pub fn deserialize_signature(data: &[u8]) -> Result<VwzSignature, JsValue> {
 /// Get key/signature sizes for given parameter k.
 #[wasm_bindgen]
 pub fn estimate_sizes(k: usize) -> JsValue {
-    let n = 2 * k + 1;
-    let m = k + 1;
+    let n = 2 * k + 2;
+    let m = 2 * k + 1;
     let pk_entries = n * m * m;
     let pk_bytes = pk_entries * 2;
-    let pk_rank1 = (n * m + m * m) * 2;
     let sig_bytes = 2 * m * 2;
 
     let result = serde_json::json!({
         "k": k, "N": n, "M": m,
         "pk_tensor_entries": pk_entries,
         "pk_bytes": pk_bytes,
-        "pk_bytes_rank1_compressed": pk_rank1,
         "sig_bytes": sig_bytes,
         "sig_elements": 2 * m,
     });
@@ -288,6 +293,142 @@ pub fn estimate_sizes(k: usize) -> JsValue {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::preimage::{self, solve_linear, SeedRng};
+
+    // ----------------------------------------------------------
+    // Attack-reconstruction helpers (mirror security-assessment/attack)
+    // ----------------------------------------------------------
+
+    /// Old rank-1 extraction attack: factor each slice as an outer product,
+    /// separate the bilinear equation, and forge. Returns a forgery if the
+    /// rank-1 assumption holds; `None` otherwise.
+    ///
+    /// Faithful port of `security-assessment/attack/attack_vwz.py`:
+    ///   1. extract rank-1 factors u[i1], v[i1] from each slice
+    ///   2. w2 in nullspace of {u[i1] : i1 ∈ Z} with u[i1]·w2 ≠ 0 on S
+    ///   3. w3 from affine system v[i1]·w3 = target[i1]/(u[i1]·w2) on S
+    fn attack_rank1(pk: &PublicKey, target: &[u16]) -> Option<()> {
+        let n = 2 * pk.k + 2;
+        let m = 2 * pk.k + 1;
+        let mut u = vec![vec![0u16; m]; n];
+        let mut v = vec![vec![0u16; m]; n];
+        for i1 in 0..n {
+            let mut l0 = None;
+            'outer: for l in 0..m {
+                for i2 in 0..m {
+                    if pk.data[i1][i2][l] != 0 {
+                        l0 = Some(l);
+                        break 'outer;
+                    }
+                }
+            }
+            let l0 = match l0 {
+                Some(l) => l,
+                None => return None,
+            };
+            for i2 in 0..m {
+                u[i1][i2] = pk.data[i1][i2][l0];
+            }
+            let j0 = match (0..m).find(|&j| u[i1][j] != 0) {
+                Some(j) => j,
+                None => return None,
+            };
+            let iv = crate::field::inv(u[i1][j0]);
+            for i3 in 0..m {
+                v[i1][i3] = crate::field::mul(pk.data[i1][j0][i3], iv);
+            }
+        }
+
+        let z: Vec<usize> = (0..n).filter(|&i| target[i] == 0).collect();
+        let s: Vec<usize> = (0..n).filter(|&i| target[i] != 0).collect();
+
+        // Step 3: w2 in nullspace of u[i1] for i1 in Z (exactly the real attack).
+        let rows_z: Vec<Vec<u16>> = z.iter().map(|&i1| u[i1].clone()).collect();
+        let basis = crate::preimage::rref_and_ns(&rows_z);
+        if basis.is_empty() {
+            return None;
+        }
+        let mut found = None;
+        for (bi, bv) in basis.iter().enumerate() {
+            let w2 = bv.clone();
+            let ok_on_s = s.iter().all(|&i1| preimage::dot(&u[i1], &w2) != 0);
+            if !ok_on_s {
+                // also try a sum of this basis vector with the previous one
+                if bi > 0 {
+                    let mut w2s = w2.clone();
+                    for j in 0..m {
+                        w2s[j] = crate::field::add(w2s[j], basis[bi - 1][j]);
+                    }
+                    if s.iter().all(|&i1| preimage::dot(&u[i1], &w2s) != 0) {
+                        found = Some(w2s);
+                        break;
+                    }
+                }
+                continue;
+            }
+            found = Some(w2);
+            break;
+        }
+        let w2 = found?;
+
+        // Step 4: w3 from affine system on S.
+        let rows_v: Vec<Vec<u16>> = s.iter().map(|&i1| v[i1].clone()).collect();
+        let need: Vec<u16> = s
+            .iter()
+            .map(|&i1| {
+                let d = preimage::dot(&u[i1], &w2);
+                crate::field::mul(target[i1], crate::field::inv(d))
+            })
+            .collect();
+        let w3 = solve_linear(&rows_v, &need)?;
+
+        let result = public_tensor_eval_data(pk.k, &pk.data, &w2, &w3);
+        if result == target {
+            Some(())
+        } else {
+            None
+        }
+    }
+
+    /// Fix arbitrary w2, solve w3 from the linear system. Over-determined
+    /// (n = m+1), so success would mean the fixed-w2 attack works.
+    fn attack_fixed_w2(pk: &PublicKey, target: &[u16]) -> Option<()> {
+        let n = 2 * pk.k + 2;
+        let m = 2 * pk.k + 1;
+        let mut rng = SeedRng::new(0xdead_beef);
+        for _cand in 0..16 {
+            let w2: Vec<u16> = (0..m).map(|_| rng.randrange(1, crate::field::Q)).collect();
+            // R[i1][i3] = Σ_{i2} pk[i1][i2][i3]·w2[i2]  (n×m)
+            let mut r = vec![vec![0u16; m]; n];
+            for i1 in 0..n {
+                for i3 in 0..m {
+                    let mut s = 0u64;
+                    for i2 in 0..m {
+                        s += pk.data[i1][i2][i3] as u64 * w2[i2] as u64;
+                    }
+                    r[i1][i3] = (s % crate::field::Q as u64) as u16;
+                }
+            }
+            // Solve the first m equations, then check all n.
+            let w3 = match solve_linear(&r[..m], &target[..m]) {
+                Some(w3) => w3,
+                None => continue,
+            };
+            let result = public_tensor_eval_data(pk.k, &pk.data, &w2, &w3);
+            if result == target {
+                return Some(());
+            }
+        }
+        None
+    }
+
+    fn targets_for(k: usize, msgs: &[Vec<u8>]) -> Vec<Vec<u16>> {
+        msgs.iter().map(|m| hash_to_sparse_target(m, k)).collect()
+    }
+
+    // ----------------------------------------------------------
+    // Core tests
+    // ----------------------------------------------------------
 
     #[test]
     fn test_sign_verify_basic() {
@@ -379,5 +520,77 @@ mod tests {
         let results = verify_batch_core(pk, &msgs, &sigs);
         assert_eq!(results[0], true);
         assert_eq!(results[1], false);
+    }
+
+    // ----------------------------------------------------------
+    // Security regression: known attacks must fail
+    // ----------------------------------------------------------
+
+    #[test]
+    fn test_rank1_attack_fails() {
+        // The old rank-1 extraction attack must not forge valid signatures.
+        for k in [2, 4, 8] {
+            let kp = keygen_seeded(k, 2026);
+            let pk = kp.public_key_ref();
+            let msgs: Vec<Vec<u8>> = (0..8)
+                .map(|i| format!("rank1-attack k={k} m={i}").into_bytes())
+                .collect();
+            let targets = targets_for(k, &msgs);
+            let forgeries = targets.iter().filter(|t| attack_rank1(pk, t).is_some()).count();
+            assert_eq!(forgeries, 0, "k={k}: rank-1 attack forged {forgeries}/{} targets", targets.len());
+        }
+    }
+
+    #[test]
+    fn test_fixed_w2_attack_fails() {
+        // Over-determined system (n = m+1) must block the fixed-w2 attack.
+        for k in [2, 4, 8] {
+            let kp = keygen_seeded(k, 31337);
+            let pk = kp.public_key_ref();
+            let msgs: Vec<Vec<u8>> = (0..8)
+                .map(|i| format!("fixed-w2 k={k} m={i}").into_bytes())
+                .collect();
+            let targets = targets_for(k, &msgs);
+            let forgeries = targets.iter().filter(|t| attack_fixed_w2(pk, t).is_some()).count();
+            assert_eq!(forgeries, 0, "k={k}: fixed-w2 attack forged {forgeries}/{} targets", targets.len());
+        }
+    }
+
+    #[test]
+    fn test_slices_are_rank2() {
+        // Sanity: no public-key slice may factor as a single outer product.
+        let kp = keygen_seeded(4, 555);
+        let pk = kp.public_key_ref();
+        let m = 2 * 4 + 1;
+        for i1 in 0..(2 * 4 + 2) {
+            // Pick pivot; check that the rank-1 reconstruction is NOT exact.
+            let mut l0 = None;
+            'outer: for l in 0..m {
+                for i2 in 0..m {
+                    if pk.data[i1][i2][l] != 0 {
+                        l0 = Some(l);
+                        break 'outer;
+                    }
+                }
+            }
+            let l0 = l0.expect("nonzero slice");
+            let mut u = vec![0u16; m];
+            for i2 in 0..m {
+                u[i2] = pk.data[i1][i2][l0];
+            }
+            let j0 = (0..m).find(|&j| u[j] != 0).unwrap();
+            let iv = crate::field::inv(u[j0]);
+            let mut v = vec![0u16; m];
+            for i3 in 0..m {
+                v[i3] = crate::field::mul(pk.data[i1][j0][i3], iv);
+            }
+            // If the slice were rank-1, psi[i1][i2][i3] == u[i2]·v[i3] for all.
+            let rank1_exact = (0..m).all(|i2| {
+                (0..m).all(|i3| {
+                    crate::field::mul(u[i2], v[i3]) == pk.data[i1][i2][i3]
+                })
+            });
+            assert!(!rank1_exact, "k=4 slice {i1} is rank-1 (fix ineffective)");
+        }
     }
 }

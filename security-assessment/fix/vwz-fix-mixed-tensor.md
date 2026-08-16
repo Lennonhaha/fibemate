@@ -100,10 +100,12 @@ t[i1] = P2a(λa[i1])·P3a(λc[i1]) + P2b(λb[i1])·P3b(λc[i1])
 | m（w2/w3 维度） | k+1 | 2k+1 |
 | n（target 长度） | 2k+1 | 2k+2 |
 | 公钥 | n·m² | (2k+2)·(2k+1)² |
-| k=8 公钥 | 578 字节 | ~10.4 KB |
-| k=8 签名 | 68 字节 | 68 字节 |
+| k=8 公钥 | 578 字节 | 10,404 字节 |
+| k=8 签名 | 68 字节 | 68 字节（2·(2k+1)·2） |
+| k=16 公钥 | — | 74,052 字节 |
+| k=16 签名 | — | 132 字节 |
 
-签名尺寸不变（w2,w3 仍各 m 元素，但 m 增大 → k=8 时签名 68 字节 × 2 列……注：需按 m=2k+1 重新核算，上表签名按实际脚本输出）。
+签名尺寸 = 2·m·2 字节（m=2k+1），k=8 → 68B，k=16 → 132B（已按 m=2k+1 重新核算确认）。
 
 ## 5. 验证脚本
 
@@ -120,6 +122,47 @@ t[i1] = P2a(λa[i1])·P3a(λc[i1]) + P2b(λb[i1])·P3b(λc[i1])
 
 ## 7. 后续工作
 
-- [ ] 移植到 Rust（tensor.rs / trapdoor.rs / preimage.rs / signature.rs）
-- [ ] 与官方 WASM verify() 对比验证
+- [x] 移植到 Rust（tensor.rs / trapdoor.rs / preimage.rs / signature.rs）
+- [x] 与官方 WASM verify() 对比验证
 - [ ] 形式化安全性论证（双线性系统求解困难性）
+
+## 8. Rust 移植与 WASM 验证结果（2026-08-16）
+
+### 8.1 移植内容
+
+在 `experimental/vwz-lg` 分支对 `rust/vwz-sign-wasm/` 完成修复移植：
+
+| 文件 | 改动 |
+|------|------|
+| `src/tensor.rs` | `VwzTensor` → `MixedTensor`（la/lb/lc 三列表）；保留 `PubTensor`/`public_tensor_eval`/`public_tensor_eval_data`，维度改为 m=2k+1、n=2k+2 |
+| `src/trapdoor.rs` | 新 `Trapdoor` 结构（x1, X2a/X2b/X3a/X3b, X2a⁻¹/X3a⁻¹, M2/M3, seed）；`generate_trapdoor` 生成四组可逆基变换；`build_public` 构建 rank-2 切片 |
+| `src/preimage.rs` | 线性代数核心（vand/mat_vec/mat_t_vec/transpose/mat_mul/mat_inv/rref_and_ns/solve_linear）+ `solve_preimage_mixed`（Za/Zb 划分 → u3 零空间 → u2 方阵求解）；采样 RNG 用 `seed ^ target` 派生，保持确定性签名 |
+| `src/hash_target.rs` | n 从 2k+1 → 2k+2 |
+| `src/signature.rs` | 序列化长度校验、`estimate_sizes` 按 m=2k+1 更新；新增 3 个安全回归测试（rank-1 攻击失效 / 固定-w2 攻击失效 / 切片 rank-2） |
+| `src/lib.rs` | 移除已失效模块声明（constants/structured/vwz_rank1，文件保留为历史参考，不再编译） |
+| `src/bin/bench.rs` | 修正引用与尺寸核算 |
+
+### 8.2 验证结果
+
+**Rust 单元测试（release，32/32 通过）**：
+- 合法签名验签：3 seed × k∈{2,4,8,16} × 25 msg = **300/300**
+- 采样成功率：k∈{4,8,16} × 200 target 全成功
+- **rank-1 提取攻击 0 伪造**（k∈{2,4,8} × 8 target）
+- **固定 w2 解 w3 攻击 0 伪造**（k∈{2,4,8} × 8 target）
+- 切片全部为 rank-2（非 rank-1 可分离）
+
+**WASM 端到端（`node test-mixed.mjs`，313/313 通过）**：
+- 经官方 WASM `verify()`：3 seed × k∈{2,4,8,16} × 25 msg = **300/300 接受**
+- 篡改消息/篡改签名全部拒绝；`verify_batch` 全有效 + 单点篡改检测正确
+- 序列化往返、尺寸（k=8 PK=10404B / sig=68B / N=18 / M=17）、确定性签名均符合预期
+
+**原生性能（release）**：
+
+| 操作 | k=8 | k=16 |
+|------|-----|------|
+| keygen | 0.45ms | 2.96ms |
+| sign（含采样） | 0.088ms | 0.49ms |
+| verify | 0.028ms | 0.18ms |
+| 采样 | 0.082ms | 0.49ms |
+
+**Python 修复脚本回归**：k∈{2,4,8,16} 验签 120/120、rank-1 攻击 0、fixed-w2 攻击 0（与移植前一致）。
