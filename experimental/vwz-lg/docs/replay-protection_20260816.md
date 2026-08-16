@@ -45,10 +45,33 @@
 ## 提交
 
 - `0efb56905`：feat(security): add replay protection middleware (write ops) + mixnet nonce cache
-- 分支：`experimental/vwz-lg`，已推送（`67b1a81b9..0efb56905`）
+- `1ee125d36`：docs: archive replay protection implementation record
+- `8a9193152`：fix(security): precise TTL semantics（has() → TTL 检查）
+- 分支：`experimental/vwz-lg`，已推送
+
+## 增强测试（2026-08-16 13:05 追加）
+
+用户提出补充测试方案，发现并修复了一个真实边界缺陷：
+
+**Bug：TTL 语义模糊**
+
+原实现 `seenRequestIds.has(requestId)` 只查 key 存在，不查时间戳。过期清理靠 `setInterval`（每分钟），导致「5 分钟 TTL」实际是「5~6 分钟」的模糊窗口，取决于清理器相位——TTL 过期测试会 flaky。
+
+**修复：**
+- `src/index.js`：`has()` → `get()` + `Date.now() - prev <= REPLAY_TTL` 判定
+- `mixnet/mix-node.js`：`isNonceReplayed` 同样改为 TTL 检查
+- 清理器只负责防内存膨胀，不再承担正确性职责
+
+**测试结果（13/13）：**
+- P0 并发：10 个同 ID 并发 → 恰好 1 放行、9 个 425 ✅
+- P0 TTL 精确过期（50ms）：TTL 内拒绝、过期后放行 ✅
+- P0 TTL 边界：超过 TTL 后放行 ✅
+- P1 内存膨胀：10000 唯一 ID，Map 大小正确、旧 ID 仍拦截 ✅
+- P2 异常输入：空字符串/超长/特殊字符/Unicode/undefined 均正确处理 ✅
 
 ## 后续（8/31 后合并 main）
 
 - 重放保护属于服务端安全增强，不涉 PQC 核心，8/31 后评估是否合并 main
 - 注意：全局 `app.use('/api/', replayProtection)` 要求所有写操作客户端提供 X-Request-Id，合并前需确认上游网关/客户端已注入该 header，否则会 400
 - 生产环境建议：Map 是内存态，多实例部署需换成 Redis 等共享存储（当前单实例够用）
+- 待补：给重放检测加 `logSecurity()` 日志记录，方便生产监控 `REPLAY_DETECTED` 计数
