@@ -106,6 +106,72 @@ pub fn verify(pk: &PublicKey, msg: &[u8], sig: &VwzSignature) -> bool {
     result == target
 }
 
+/// Batch-verify many signatures against a single public key.
+///
+/// Inputs (parallel JS arrays, same length):
+///   - `msgs`: array of `Uint8Array` (the messages)
+///   - `sigs`: array of `Uint8Array` (signatures serialized via `serialize_signature`)
+/// Output: a JS array of booleans, one per item, in input order.
+///
+/// The public key tensor is cloned **once** and reused for every signature,
+/// whereas calling `verify` N times clones the tensor N times. For large k
+/// (e.g. k=16, PK ~19KB) this removes the dominant per-call allocation cost.
+#[wasm_bindgen]
+pub fn verify_batch(pk: &PublicKey, msgs: js_sys::Array, sigs: js_sys::Array) -> js_sys::Array {
+    // Convert JS inputs to pure-Rust types.
+    let n = msgs.length();
+    let mut msg_vecs: Vec<Vec<u8>> = Vec::with_capacity(n as usize);
+    let mut sig_vecs: Vec<Vec<u8>> = Vec::with_capacity(n as usize);
+    for idx in 0..n {
+        msg_vecs.push(js_sys::Uint8Array::new(&msgs.get(idx)).to_vec());
+        sig_vecs.push(js_sys::Uint8Array::new(&sigs.get(idx)).to_vec());
+    }
+
+    let results = verify_batch_core(pk, &msg_vecs, &sig_vecs);
+    let arr = js_sys::Array::new();
+    for ok in results {
+        arr.push(&JsValue::from_bool(ok));
+    }
+    arr
+}
+
+/// Pure-Rust batch verification core (testable without wasm runtime).
+///
+/// `sigs` are serialized signatures (see `serialize_signature`).
+/// Returns one bool per item, in input order.
+pub fn verify_batch_core(pk: &PublicKey, msgs: &[Vec<u8>], sigs: &[Vec<u8>]) -> Vec<bool> {
+    // Build the tensor once.
+    let pk_tensor = PubTensor::new(pk.k, pk.data.clone());
+    let mut results = Vec::with_capacity(msgs.len());
+
+    for idx in 0..msgs.len() {
+        let ok = {
+            let msg = &msgs[idx];
+            let sig: VwzSignature = match deserialize_signature(&sigs[idx]) {
+                Ok(s) => s,
+                Err(_) => { results.push(false); continue; }
+            };
+
+            // Core verification (no clone here — tensor already built).
+            if sig.k != pk.k {
+                false
+            } else {
+                let m = sig.k + 1;
+                if sig.w2.len() != m || sig.w3.len() != m {
+                    false
+                } else {
+                    let target = hash_to_sparse_target(msg, pk.k);
+                    let result = public_tensor_eval(&pk_tensor, &sig.w2, &sig.w3);
+                    result == target
+                }
+            }
+        };
+        results.push(ok);
+    }
+
+    results
+}
+
 // ============================================================
 // Accessors for test modules
 // ============================================================
@@ -272,5 +338,49 @@ mod tests {
         let msg = b"large k test";
         let sig = sign(kp.secret_key_ref(), msg);
         assert!(verify(kp.public_key_ref(), msg, &sig));
+    }
+
+    #[test]
+    fn test_verify_batch_all_valid() {
+        let kp = keygen_seeded(4, 7);
+        let pk = kp.public_key_ref();
+
+        let mut msgs: Vec<Vec<u8>> = Vec::new();
+        let mut sigs: Vec<Vec<u8>> = Vec::new();
+        for i in 0..5u32 {
+            let msg: Vec<u8> = format!("batch msg {i}").into_bytes();
+            let sig = sign(kp.secret_key_ref(), &msg);
+            msgs.push(msg);
+            sigs.push(serialize_signature(&sig));
+        }
+
+        let results = verify_batch_core(pk, &msgs, &sigs);
+        assert_eq!(results.len(), 5);
+        for (i, ok) in results.iter().enumerate() {
+            assert!(*ok, "item {i} should verify");
+        }
+    }
+
+    #[test]
+    fn test_verify_batch_detects_tamper() {
+        let kp = keygen_seeded(4, 99);
+        let pk = kp.public_key_ref();
+
+        let mut msgs: Vec<Vec<u8>> = Vec::new();
+        let mut sigs: Vec<Vec<u8>> = Vec::new();
+        // valid
+        let msg_ok: Vec<u8> = b"ok".to_vec();
+        let sig_ok = sign(kp.secret_key_ref(), &msg_ok);
+        msgs.push(msg_ok);
+        sigs.push(serialize_signature(&sig_ok));
+
+        // tampered: wrong message with a valid signature
+        let msg_bad: Vec<u8> = b"tampered".to_vec();
+        msgs.push(msg_bad);
+        sigs.push(serialize_signature(&sig_ok));
+
+        let results = verify_batch_core(pk, &msgs, &sigs);
+        assert_eq!(results[0], true);
+        assert_eq!(results[1], false);
     }
 }
