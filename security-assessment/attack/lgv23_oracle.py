@@ -148,6 +148,85 @@ class CryptoBinding:
         return bytes(b ^ h[i % 32] for i, b in enumerate(data))
     unbind = bind
 
+# ---- diffuse.rs: 全块扩散 (Stage-3) ----
+# GF(256) 乘法 (AES 多项式 0x11b)
+def gf_mul(a, b):
+    p = 0
+    for _ in range(8):
+        if b & 1:
+            p ^= a
+        hi = a & 0x80
+        a = (a << 1) & 0xFF
+        if hi:
+            a ^= 0x1B
+        b >>= 1
+    return p & 0xFF
+
+# splitmix64 雪崩 -> 每行独立 seed (与 Rust diffuse.rs::row_seed 一致)
+def _row_seed(master, pass_, row):
+    s = (master ^ ((pass_ * 0x9E3779B97F4A7C15) & MASK64)
+         ^ (((row + 1) * 0xBF58476D1CE4E5B9) & MASK64)) & MASK64
+    s ^= (s >> 30); s = (s * 0xBF58476D1CE4E5B9) & MASK64
+    s ^= (s >> 27); s = (s * 0x94D049BB133111EB) & MASK64
+    s ^= (s >> 31)
+    return s & MASK64
+
+_DIFFUSE_DOMAIN = 0x11A7E0F05EED11A7
+
+def diffuse_forward(data, seed, session_key):
+    n = len(data)
+    if n == 0:
+        return
+    master = (seed ^ session_key ^ _DIFFUSE_DOMAIN) & MASK64
+    t = [0] * n
+    # pass1: 下三角 t[i] = b1[i] ^ Σ_{j<i} A1[i][j]·in[j] ^ in[i]
+    for i in range(n):
+        rng = XorShift64(_row_seed(master, 1, i))
+        b1 = rng.next_u8()
+        s = b1
+        for j in range(i):
+            c = rng.next_u8()
+            if c:
+                s ^= gf_mul(c, data[j])
+        t[i] = s ^ data[i]
+    # pass2: 上三角 out[i] = b2[i] ^ Σ_{j>i} A2[i][j]·t[j] ^ t[i]
+    for i in range(n):
+        rng = XorShift64(_row_seed(master, 2, i))
+        b2 = rng.next_u8()
+        s = b2
+        for j in range(i + 1, n):
+            c = rng.next_u8()
+            if c:
+                s ^= gf_mul(c, t[j])
+        data[i] = s ^ t[i]
+
+def diffuse_inverse(data, seed, session_key):
+    n = len(data)
+    if n == 0:
+        return
+    master = (seed ^ session_key ^ _DIFFUSE_DOMAIN) & MASK64
+    t = [0] * n
+    # undo pass2: t[i] = out[i] ^ b2[i] ^ Σ_{j>i} A2[i][j]·t[j]
+    for i in range(n - 1, -1, -1):
+        rng = XorShift64(_row_seed(master, 2, i))
+        b2 = rng.next_u8()
+        s = b2
+        for j in range(i + 1, n):
+            c = rng.next_u8()
+            if c:
+                s ^= gf_mul(c, t[j])
+        t[i] = data[i] ^ s
+    # undo pass1: in[i] = t[i] ^ b1[i] ^ Σ_{j<i} A1[i][j]·in[j]
+    for i in range(n):
+        rng = XorShift64(_row_seed(master, 1, i))
+        b1 = rng.next_u8()
+        s = b1
+        for j in range(i):
+            c = rng.next_u8()
+            if c:
+                s ^= gf_mul(c, data[j])
+        data[i] = t[i] ^ s
+
 # ---- 公开 API（lib.rs） ----
 def lgv2_confuse(data, seed):
     d = bytearray(data)
@@ -274,12 +353,14 @@ def vm_ops(data, seed, session_key, depth, invert):
 def lgv3_pipeline_obfuscate(data, seed, session_key, depth):
     d = bytearray(data)
     full_mix_forward_depth(d, seed, session_key, depth)
+    diffuse_forward(d, seed, session_key)
     vm_ops(d, seed, session_key, depth, invert=False)
     return bytes(d)
 
 def lgv3_pipeline_deobfuscate(data, seed, session_key, depth):
     d = bytearray(data)
     vm_ops(d, seed, session_key, depth, invert=True)
+    diffuse_inverse(d, seed, session_key)
     full_mix_inverse_depth(d, seed, session_key, depth)
     return bytes(d)
 

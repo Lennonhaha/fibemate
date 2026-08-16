@@ -22,6 +22,7 @@ pub mod premix;
 pub mod opcode;
 pub mod vm;
 pub mod pipeline;
+pub mod diffuse;
 
 use wasm_bindgen::prelude::*;
 
@@ -34,6 +35,7 @@ pub use cleanup::SecureBuffer;
 use wreath::{confuse_full, deconfuse_full};
 use premix::{full_mix_forward_depth, full_mix_inverse_depth};
 use pipeline::{obfuscate, deobfuscate, compile_program, compile_inverse_program};
+use diffuse::{diffuse_forward, diffuse_inverse};
 
 // ============================================================
 // WASM 公开 API — 完全向后兼容 v2.2.2
@@ -166,6 +168,25 @@ pub fn lgv3_pipeline_bytecode_inverse(seed: u64, session_key: u64, depth: usize)
     bc.iter().map(|b| format!("{:02x}", b)).collect::<String>()
 }
 
+/// Stage-3: 全块扩散 (seed 派生 GF(256) 下/上三角线性混合)
+/// 单字节扰动扩散到近全块，黑盒攻击的 sigma 定位步骤失效。
+#[wasm_bindgen]
+pub fn lgv3_diffuse(data: &[u8], seed: u64, session_key: u64) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    diffuse_forward(&mut result, seed, session_key);
+    result
+}
+
+/// Stage-3: 全块扩散逆运算
+#[wasm_bindgen]
+pub fn lgv3_diffuse_inverse(data: &[u8], seed: u64, session_key: u64) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    diffuse_inverse(&mut result, seed, session_key);
+    result
+}
+
 #[wasm_bindgen]
 pub fn lgv2_bind_kem(data: &[u8], kem_ss: &[u8]) -> Vec<u8> {
     if data.is_empty() || kem_ss.len() != 32 { return vec![]; }
@@ -229,7 +250,7 @@ pub fn lgv3_verify_invertibility(seed: u64) -> bool {
 #[wasm_bindgen]
 pub fn lgv3_audit_log(data_len: usize, seed: u64, depth: usize) -> String {
     format!(
-        r#"{{\"version\":\"LG v2.3.0-alpha-stage2\",\"op\":\"confuse\",\"data_len\":{},\"seed\":\"{:016x}\",\"depth\":{}/{},\"modules\":[\"sbox\",\"wreath\",\"bind\",\"cleanup\",\"premix\",\"opcode\",\"vm\",\"pipeline\"],\"baseline\":\"v2.2.2 (f9cc379)\"}}"#,
+        r#"{{\"version\":\"LG v2.3.0-alpha-stage2\",\"op\":\"confuse\",\"data_len\":{},\"seed\":\"{:016x}\",\"depth\":{}/{},\"modules\":[\"sbox\",\"wreath\",\"bind\",\"cleanup\",\"premix\",\"opcode\",\"vm\",\"pipeline\",\"diffuse\"],\"baseline\":\"v2.2.2 (f9cc379)\"}}"#,
         data_len, seed, depth, NUM_LAYERS
     )
 }

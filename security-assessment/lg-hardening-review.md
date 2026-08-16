@@ -127,3 +127,54 @@ seed 空间只在以下场景才成为安全瓶颈：
 
 - `attack/lg_hardening_proof.py` — 实证脚本（固定 MDS 可剥除 / seed 化组矩阵 / seed 化全块线性混合）
 - `attack/lgv23_oracle.py` — LG v2.3 Rust 语义 Python 复刻（实证 1 的 confuse 底座）
+
+---
+
+## 5. 实现落地：LG v2.3 全块扩散加固（2026-08-16）
+
+用户确认立即实现（突破原定 8/31 冻结期），按 §2.3 实证 3 的方案在 `experimental/vwz-lg` 分支落地。
+
+### 5.1 新增 `lg-v2.3/src/diffuse.rs`（Stage-3 全块扩散层）
+
+seed 派生的 GF(256) 双三角可逆线性映射（AES 多项式 0x11b），完全对齐实证 3 的 `feistel_full`：
+
+- **pass1 下三角**：`t[i] = b1[i] ^ Σ_{j<i} A1[i][j]·in[j] ^ in[i]`
+- **pass2 上三角**：`out[i] = b2[i] ^ Σ_{j>i} A2[i][j]·t[j] ^ t[i]`
+- 每个输出字节依赖全部 N 个输入字节
+- 系数 `A1/A2/b1/b2` 全部由 `(seed, session_key)` 经 splitmix64 逐行派生（`row_seed(master, pass, row)`），攻击者未知、无法解析剥除
+- 内存 O(N)：系数按行再生，不物化 N×N 矩阵
+- 精确可逆：`diffuse_inverse` 逆向两遍三角方程
+
+### 5.2 接入管道
+
+```
+obfuscate:   premix → Wreath(depth) → diffuse(seed,sk) → VM(program)
+deobfuscate: de-VM → diffuse_inverse → de-Wreath → unpremix
+```
+
+新增 WASM 导出 `lgv3_diffuse` / `lgv3_diffuse_inverse`（独立使用）与 audit log 模块列表更新。
+
+### 5.3 验证结果
+
+**Rust**（`cargo test --release`，54/54 通过）：
+- diffuse roundtrip：n ∈ {1,4,16,64,256,1000} × 3 seed × 3 sk 全过
+- `test_diffuse_full_block_spread`：N=64 单字节扰动 min ≥ 32 字节受影响
+- `test_pipeline_full_block_diffusion`：pipeline 全链路单字节扰动 ≥ n/2 字节受影响
+- `test_pipeline_sigma_localization_fails`：全 N 个扰动均无"恰好 1 字节依赖"→ σ 定位失败
+- 原 13 项 v2.2.2/v2.3 回归 + Stage-1/2 测试全部保持通过
+
+**Python**（oracle 同步更新 diffuse 层）：
+- `lgv23_oracle.py` 自检：6/6 roundtrip PASS（含 pipeline）
+- `lg_diffusion_fix_check.py`：roundtrip PASS；单字节扰动影响 min=62/max=64（N=64）；**无 1 字节依赖，σ 定位失败，原攻击失效**；多种子/会话/depth 组合均达标
+
+### 5.4 残余风险（诚实边界）
+
+1. **线性层本身仍可被选择明文恢复**：若攻击者拥有 oracle 并采集 ≥N 个线性无关选明文输出，可解出整张 N×N 矩阵再取逆剥除（工程上为 O(N³) 线性代数）。本轮只在管道的 VM 层之前插入**一遍**扩散；§2.4 建议的"扩散 + 逐字节层交替 ≥2 轮"尚未实施。
+2. **未覆盖其余变体**：本次仅加固 `lgv3_pipeline_obfuscate`（premix → Wreath → diffuse → VM）。`lgv2_confuse`/`confuse_ex`/`confuse_mix`/`confuse_full` 等旧 API 仍无全块扩散，黑盒攻击对它们依然有效。
+3. **定位修正**：LG 是逆向工程开销层，不提供密码学安全；全块扩散把黑盒重构从 O(N·256) 提升为线性代数/种子搜索级，仍可被有 oracle 的强攻击者恢复。
+
+### 5.5 后续建议
+
+- 在全部变体的最终输出前统一追加 diffuse 层（含 KEM 绑定路径）
+- 实现"扩散 ↔ 逐字节非线性"多轮交替，把恢复推向非线性系统
+- 扩散层系数改用 ChaCha20/AES 密钥派生（§2.4 要点 2），避免 XorShift64 弱 PRNG 被统计攻击
