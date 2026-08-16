@@ -48,3 +48,32 @@ verify_batch 本身仍是有效且有价值的改进（纯新增、零回归、1
 
 - `d70043498`：feat(vwz): add verify_batch API（signature.rs + test-batch.js，2 files, +216）
 - 分支：`experimental/vwz-lg`（研究线），已推送，三端待同步
+
+---
+
+## 追加：惰性缓存真正实现（同日 12:19 用户指令）
+
+用户明确指令「VWZ 惰性缓存现在做」。读真实代码后发现：**「缓存 PubTensor」是伪命题**——`PubTensor` 只是 `{k, k1, data}` 的零拷贝薄包装，`PubTensor::new` 本身不 clone；真正的 clone 是 `pk.data.clone()` 深拷贝。
+
+**正确实现 = 消除 clone（借用 data），而非缓存：**
+
+1. `tensor.rs` 新增 `public_tensor_eval_data(k, &[Vec<Vec<u16>>], w2, w3)`——直接接受借用切片，零 clone、零内存翻倍、零 `RefCell`。旧 `public_tensor_eval` 保留（被 `vwz_rank1.rs` rank-1 压缩研究线使用，不能删）。
+2. `signature.rs` 的 `verify` 和 `verify_batch_core` 改用 `public_tensor_eval_data(pk.k, &pk.data, ...)`，删除 `pk.data.clone()`。
+
+**实测性能（真实 WASM，消除 clone 后）：**
+
+| k | 消除前 verify×20 | 消除后 verify×20 | 加速比 |
+|:--:|:--:|:--:|:--:|
+| 8 | 3.86ms | 3.84ms | ~1.0x |
+| 16 | 6.49ms | 2.13ms | **3.05x** |
+| 32 | 21.73ms | 14.37ms | **1.51x** |
+
+**关键结论：**
+- 消除 clone 才是真正优化点，k=16 单次 verify 快 3x、k=32 快 1.5x。
+- 之前预估「clone 是主导开销」在 k≥16 时成立，只是 k=8（PK 468B）时 clone 忽略不计。
+- verify_batch 在 verify 已快后**优势消失**（额外反序列化开销致 k=16 变 0.80x）——批量 API 保留但不作为性能卖点，真实收益来自借用 data。
+
+**提交：**
+- `165b84584`：perf(vwz): eliminate pk.data.clone() in verify via borrowed tensor eval（signature.rs + tensor.rs，+38/-7）
+
+**验证：** 38 Rust 测试全通过、wasm-pack 打包成功、Node.js 端到端全过。未引入新警告（unused import 均为预先存在）。
