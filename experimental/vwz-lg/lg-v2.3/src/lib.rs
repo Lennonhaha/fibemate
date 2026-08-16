@@ -131,37 +131,37 @@ pub fn lgv3_active_dim() -> usize {
 // 在 Stage-1 premix 之上叠加一个 seed 驱动的 VM 混淆层
 // ============================================================
 
-/// Stage-2: 全管道混淆 (premix + VM program + Wreath)
-/// Architecture: premix -> VM(seed-compiled program) -> Wreath
+/// Stage-2: 全管道混淆 (premix + Wreath(depth) + VM program)
+/// Architecture: premix -> Wreath(depth) -> VM(seed,session,depth 编译的程序)
 #[wasm_bindgen]
-pub fn lgv3_pipeline_obfuscate(data: &[u8], seed: u64, session_key: u64) -> Vec<u8> {
+pub fn lgv3_pipeline_obfuscate(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
     if data.is_empty() { return vec![]; }
     let mut result = data.to_vec();
-    obfuscate(&mut result, seed, session_key);
+    obfuscate(&mut result, seed, session_key, depth);
     result
 }
 
 /// Stage-2: 全管道解混淆 (inverse)
 #[wasm_bindgen]
-pub fn lgv3_pipeline_deobfuscate(data: &[u8], seed: u64, session_key: u64) -> Vec<u8> {
+pub fn lgv3_pipeline_deobfuscate(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
     if data.is_empty() { return vec![]; }
     let mut result = data.to_vec();
-    deobfuscate(&mut result, seed, session_key);
+    deobfuscate(&mut result, seed, session_key, depth);
     result
 }
 
-/// Stage-2: 返回 seed 编译出的 VM 字节码 (hex 编码，供审计/调试)
+/// Stage-2: 返回 (seed, session_key, depth) 编译出的 VM 字节码 (hex 编码，供审计/调试)
 #[wasm_bindgen]
-pub fn lgv3_pipeline_bytecode(seed: u64) -> String {
-    let prog = compile_program(seed);
+pub fn lgv3_pipeline_bytecode(seed: u64, session_key: u64, depth: usize) -> String {
+    let prog = compile_program(seed, session_key, depth);
     let bc = prog.to_bytecode();
     bc.iter().map(|b| format!("{:02x}", b)).collect::<String>()
 }
 
-/// Stage-2: 返回 seed 编译出的逆 VM 字节码 (hex 编码)
+/// Stage-2: 返回 (seed, session_key, depth) 编译出的逆 VM 字节码 (hex 编码)
 #[wasm_bindgen]
-pub fn lgv3_pipeline_bytecode_inverse(seed: u64) -> String {
-    let prog = compile_inverse_program(seed);
+pub fn lgv3_pipeline_bytecode_inverse(seed: u64, session_key: u64, depth: usize) -> String {
+    let prog = compile_inverse_program(seed, session_key, depth);
     let bc = prog.to_bytecode();
     bc.iter().map(|b| format!("{:02x}", b)).collect::<String>()
 }
@@ -436,9 +436,9 @@ mod tests {
     fn test_stage2_pipeline_roundtrip() {
         for n in [1usize, 4, 100, 256, 1000] {
             let data: Vec<u8> = (0..n).map(|i| (i * 7) as u8).collect();
-            let c = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD);
+            let c = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
             assert_ne!(c, data, "pipeline obfuscate must change data (n={})", n);
-            let r = lgv3_pipeline_deobfuscate(&c, 0x1234, 0xDEAD);
+            let r = lgv3_pipeline_deobfuscate(&c, 0x1234, 0xDEAD, 7);
             assert_eq!(r, data, "pipeline roundtrip failed (n={})", n);
         }
     }
@@ -446,25 +446,33 @@ mod tests {
     #[test]
     fn test_stage2_pipeline_session_independence() {
         let data: Vec<u8> = (0..256).map(|i| i as u8).collect();
-        let c1 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD);
-        let c2 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xBEEF);
+        let c1 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        let c2 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xBEEF, 7);
         assert_ne!(c1, c2, "different session must differ");
-        let c3 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD);
+        let c3 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
         assert_eq!(c1, c3, "same seed+session must be deterministic");
     }
 
     #[test]
     fn test_stage2_bytecode_differs() {
-        let b1 = lgv3_pipeline_bytecode(1);
-        let b2 = lgv3_pipeline_bytecode(2);
+        let b1 = lgv3_pipeline_bytecode(1, 0, 7);
+        let b2 = lgv3_pipeline_bytecode(2, 0, 7);
         assert_ne!(b1, b2, "different seeds must produce different bytecode");
         assert!(!b1.is_empty(), "bytecode must not be empty");
     }
 
     #[test]
+    fn test_stage2_pipeline_depth_sensitivity() {
+        let data: Vec<u8> = (0..256).map(|i| i as u8).collect();
+        let c1 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 3);
+        let c2 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        assert_ne!(c1, c2, "different depth must differ");
+    }
+
+    #[test]
     fn test_stage2_empty_input() {
         let empty: Vec<u8> = vec![];
-        let c = lgv3_pipeline_obfuscate(&empty, 0x1234, 0xDEAD);
+        let c = lgv3_pipeline_obfuscate(&empty, 0x1234, 0xDEAD, 7);
         assert_eq!(c.len(), 0);
     }
 }
