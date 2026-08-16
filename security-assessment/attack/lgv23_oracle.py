@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """LG v2.3 Rust 源码的 Python 精确重实现（oracle）——用于验证黑盒攻击对全部变体有效。
-对应文件：experimental/vwz-lg/lg-v2.3/src/{wreath,bind,premix,vm,pipeline}.rs
+对应文件：experimental/vwz-lg/lg-v2.3/src/{wreath,bind,premix,vm,pipeline,diffuse,hardening}.rs
 """
 import hashlib
 
@@ -28,6 +28,71 @@ for _i, _v in enumerate(SBOX):
     INV_SBOX[_v] = _i
 
 MASK64 = (1 << 64) - 1
+
+# ---- bind.rs: Keccak-256（0x01 padding，非 SHA3-256） ----
+_KECCAK_RATE = 136
+_KECCAK_ROUNDS = 24
+_RC = [
+    0x0000000000000001, 0x0000000000008082, 0x800000000000808A,
+    0x8000000080008000, 0x000000000000808B, 0x0000000080000001,
+    0x8000000080008081, 0x8000000000008009, 0x000000000000008A,
+    0x0000000000000088, 0x0000000080008009, 0x000000008000000A,
+    0x000000008000808B, 0x800000000000008B, 0x8000000000008089,
+    0x8000000000008003, 0x8000000000008002, 0x8000000000000080,
+    0x000000000000800A, 0x800000008000000A, 0x8000000080008081,
+    0x8000000000008080, 0x0000000080000001, 0x8000000080008008,
+]
+_RHO = [
+    0, 1, 62, 28, 27, 36, 44, 6, 55, 20, 3, 10, 43, 25, 39,
+    41, 45, 15, 21, 8, 18, 2, 61, 56, 14,
+]
+
+def _rotl64(x, n):
+    return ((x << n) | (x >> (64 - n))) & MASK64
+
+def _keccak_f(state):
+    for r in range(_KECCAK_ROUNDS):
+        c = [state[x] ^ state[5+x] ^ state[10+x] ^ state[15+x] ^ state[20+x] for x in range(5)]
+        d = [c[(x+4) % 5] ^ _rotl64(c[(x+1) % 5], 1) for x in range(5)]
+        for x in range(5):
+            for y in range(5):
+                state[x + 5*y] ^= d[x]
+        temp = [0]*25
+        temp[0] = state[0]
+        x, y = 1, 0
+        for t in range(24):
+            nx, ny = y, (2*x + 3*y) % 5
+            temp[nx + 5*ny] = _rotl64(state[t+1], _RHO[t+1])
+            x, y = nx, ny
+        for y in range(5):
+            i0 = 5*y
+            for x in range(5):
+                state[x + i0] = temp[x + i0]
+            for x in range(5):
+                temp[x + i0] = state[x + i0] ^ ((~state[(x+1) % 5 + i0]) & state[(x+2) % 5 + i0])
+        state[0] ^= _RC[r]
+    return state
+
+def keccak256(data):
+    state = [0]*25
+    i = 0
+    while i + _KECCAK_RATE <= len(data):
+        block = data[i:i+_KECCAK_RATE]
+        for j in range(_KECCAK_RATE // 8):
+            state[j] ^= int.from_bytes(block[j*8:(j+1)*8], 'little')
+        _keccak_f(state)
+        i += _KECCAK_RATE
+    block = bytearray(_KECCAK_RATE)
+    block[0:len(data)-i] = data[i:]
+    block[len(data)-i] = 0x01
+    block[_KECCAK_RATE-1] |= 0x80
+    for j in range(_KECCAK_RATE // 8):
+        state[j] ^= int.from_bytes(block[j*8:(j+1)*8], 'little')
+    _keccak_f(state)
+    out = bytearray(32)
+    for j in range(4):
+        out[j*8:(j+1)*8] = state[j].to_bytes(8, 'little')
+    return bytes(out)
 
 # ---- wreath.rs: XorShift64 ----
 class XorShift64:
@@ -136,7 +201,7 @@ def full_mix_inverse_depth(data, seed, session_key, depth):
     deconfuse_chunk_depth(data, seed, LayerSeeds(seed), depth)
     postmix(data, key)
 
-# ---- bind.rs: CryptoBinding (标准 SHA3-256 等价于 Rust 的 Keccak-256) ----
+# ---- bind.rs: CryptoBinding (Keccak-256, 与 Rust 一致) ----
 class CryptoBinding:
     def __init__(self, ss):
         self.ss = bytes(ss)
@@ -144,7 +209,7 @@ class CryptoBinding:
         if not data:
             return b""
         label = b"LGv2-KEM-BIND-v1"
-        h = hashlib.sha3_256(label + self.ss).digest()
+        h = keccak256(label + self.ss)
         return bytes(b ^ h[i % 32] for i, b in enumerate(data))
     unbind = bind
 
@@ -227,14 +292,50 @@ def diffuse_inverse(data, seed, session_key):
                 s ^= gf_mul(c, data[j])
         data[i] = t[i] ^ s
 
+# ---- hardening.rs: 多轮扩散↔S-box 交替加固层 (Stage-3) ----
+HARDEN_ROUNDS = 2
+_HARDEN_DOMAIN = b"LGV3-HARDEN-v1"
+
+def round_key(seed, session_key, rnd):
+    inp = _HARDEN_DOMAIN + seed.to_bytes(8, 'little') + session_key.to_bytes(8, 'little') + rnd.to_bytes(8, 'little')
+    return int.from_bytes(keccak256(inp)[:8], 'little')
+
+def sbox_mix(data, rk):
+    rng = XorShift64(rk)
+    for i in range(len(data)):
+        data[i] = SBOX[data[i] ^ rng.next_u8()]
+
+def inv_sbox_mix(data, rk):
+    rng = XorShift64(rk)
+    for i in range(len(data)):
+        data[i] = INV_SBOX[data[i]] ^ rng.next_u8()
+
+def harden_forward(data, seed, session_key, rounds=HARDEN_ROUNDS):
+    if not data:
+        return
+    for r in range(rounds):
+        rk = round_key(seed, session_key, r)
+        diffuse_forward(data, rk, session_key)
+        sbox_mix(data, rk)
+
+def harden_inverse(data, seed, session_key, rounds=HARDEN_ROUNDS):
+    if not data:
+        return
+    for r in range(rounds - 1, -1, -1):
+        rk = round_key(seed, session_key, r)
+        inv_sbox_mix(data, rk)
+        diffuse_inverse(data, rk, session_key)
+
 # ---- 公开 API（lib.rs） ----
 def lgv2_confuse(data, seed):
     d = bytearray(data)
     confuse_full(d, seed)
+    harden_forward(d, seed, 0)
     return bytes(d)
 
 def lgv2_deconfuse(data, seed):
     d = bytearray(data)
+    harden_inverse(d, seed, 0)
     deconfuse_full(d, seed)
     return bytes(d)
 
@@ -242,21 +343,25 @@ def lgv2_confuse_ex(data, seed, session_key, depth):
     combined = (seed + session_key) & MASK64
     d = bytearray(data)
     confuse_chunk_depth(d, combined, LayerSeeds(combined), depth)
+    harden_forward(d, seed, session_key)
     return bytes(d)
 
 def lgv2_deconfuse_ex(data, seed, session_key, depth):
     combined = (seed + session_key) & MASK64
     d = bytearray(data)
+    harden_inverse(d, seed, session_key)
     deconfuse_chunk_depth(d, combined, LayerSeeds(combined), depth)
     return bytes(d)
 
 def lgv3_confuse_mix(data, seed, session_key, depth):
     d = bytearray(data)
     full_mix_forward_depth(d, seed, session_key, depth)
+    harden_forward(d, seed, session_key)
     return bytes(d)
 
 def lgv3_deconfuse_mix(data, seed, session_key, depth):
     d = bytearray(data)
+    harden_inverse(d, seed, session_key)
     full_mix_inverse_depth(d, seed, session_key, depth)
     return bytes(d)
 
@@ -270,12 +375,14 @@ def lgv2_confuse_full(data, seed, session_key, kem_ss, depth):
     combined = (seed + session_key) & MASK64
     d = bytearray(data)
     confuse_chunk_depth(d, combined, LayerSeeds(combined), depth)
+    harden_forward(d, seed, session_key)
     return CryptoBinding(kem_ss).bind(d)
 
 def lgv2_deconfuse_full(data, seed, session_key, kem_ss, depth):
     unbound = CryptoBinding(kem_ss).bind(data)
     combined = (seed + session_key) & MASK64
     d = bytearray(unbound)
+    harden_inverse(d, seed, session_key)
     deconfuse_chunk_depth(d, combined, LayerSeeds(combined), depth)
     return bytes(d)
 
@@ -353,14 +460,14 @@ def vm_ops(data, seed, session_key, depth, invert):
 def lgv3_pipeline_obfuscate(data, seed, session_key, depth):
     d = bytearray(data)
     full_mix_forward_depth(d, seed, session_key, depth)
-    diffuse_forward(d, seed, session_key)
+    harden_forward(d, seed, session_key)
     vm_ops(d, seed, session_key, depth, invert=False)
     return bytes(d)
 
 def lgv3_pipeline_deobfuscate(data, seed, session_key, depth):
     d = bytearray(data)
     vm_ops(d, seed, session_key, depth, invert=True)
-    diffuse_inverse(d, seed, session_key)
+    harden_inverse(d, seed, session_key)
     full_mix_inverse_depth(d, seed, session_key, depth)
     return bytes(d)
 

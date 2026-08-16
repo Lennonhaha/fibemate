@@ -75,7 +75,7 @@ fn keccak_f(state: &mut [u64; 25]) {
     }
 }
 
-fn keccak256(data: &[u8]) -> [u8; 32] {
+pub(crate) fn keccak256(data: &[u8]) -> [u8; 32] {
     let mut state = [0u64; 25];
     let mut block = [0u8; KECCAK_RATE];
     let mut i = 0;

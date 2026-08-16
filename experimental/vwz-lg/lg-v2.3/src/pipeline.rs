@@ -19,7 +19,7 @@
 use crate::opcode::{Op, OpcodeMap};
 use crate::premix::{full_mix_forward_depth, full_mix_inverse_depth};
 use crate::vm::{Instr, Program, Vm};
-use crate::diffuse::{diffuse_forward, diffuse_inverse};
+use crate::hardening::{harden_forward, harden_inverse, HARDEN_ROUNDS};
 
 /// Extract the 7-bit parameter from a seed byte (mask off bit 7 so operands
 /// never accidentally carry the inverse flag).
@@ -103,21 +103,22 @@ pub fn compile_inverse_program(seed: u64, session_key: u64, depth: usize) -> Pro
 
 /// Run the full Stage-2 obfuscation pipeline (forward) on a byte buffer.
 ///
-///   data -> premix -> Wreath(depth) -> diffuse(seed,sk) -> VM(forward program)
+///   data -> premix -> Wreath(depth) -> harden[diffuse+sbox]×R -> VM(forward program)
 ///
-/// The diffuse stage is the Stage-3 hardening: a seed-derived full-block
-/// GF(256) linear mix (lower-triangular pass1 + upper-triangular pass2) that
-/// makes every output byte depend on every input byte, so the single-byte
-/// perturbation step of the black-box attack can no longer localize a 1-byte
-/// dependency (see security-assessment/lg-hardening-review.md).
+/// The harden stage is the Stage-3 hardening: multi-round full-block GF(256)
+/// diffusion alternating with a per-byte nonlinear S-box mix, with round keys
+/// derived from (seed, session_key, round) via Keccak-256. Every output byte
+/// depends on every input byte and the composite is nonlinear, so the
+/// single-byte perturbation step of the black-box attack cannot localize a
+/// 1-byte dependency (see security-assessment/lg-hardening-review.md).
 pub fn obfuscate(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
     if data.is_empty() {
         return;
     }
     // Stage-1 premix + Wreath(depth) covers all bytes first.
     full_mix_forward_depth(data, seed, session_key, depth);
-    // Stage-3 full-block diffusion (seed-derived, invertible).
-    diffuse_forward(data, seed, session_key);
+    // Stage-3 multi-round full-block hardening (diffuse + S-box, seed-derived).
+    harden_forward(data, seed, session_key, HARDEN_ROUNDS);
     // Stage-2 VM program adds a second, independent confusion layer.
     let prog = compile_program(seed, session_key, depth);
     let mut vm = Vm::new(data.to_vec());
@@ -135,9 +136,9 @@ pub fn deobfuscate(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
     let mut vm = Vm::new(data.to_vec());
     vm.run(&prog);
 
-    // Undo the full-block diffusion.
+    // Undo the multi-round full-block hardening.
     let mut buf = vm.data;
-    diffuse_inverse(&mut buf, seed, session_key);
+    harden_inverse(&mut buf, seed, session_key, HARDEN_ROUNDS);
 
     // Undo the premix/Wreath (Stage-1 inverse).
     full_mix_inverse_depth(&mut buf, seed, session_key, depth);

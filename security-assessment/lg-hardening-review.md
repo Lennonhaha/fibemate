@@ -148,33 +148,51 @@ seed 派生的 GF(256) 双三角可逆线性映射（AES 多项式 0x11b），�
 ### 5.2 接入管道
 
 ```
-obfuscate:   premix → Wreath(depth) → diffuse(seed,sk) → VM(program)
-deobfuscate: de-VM → diffuse_inverse → de-Wreath → unpremix
+obfuscate:   premix → Wreath(depth) → harden[diffuse+sbox]×2 → VM(program)
+deobfuscate: de-VM → harden⁻¹ → de-Wreath → unpremix
 ```
 
 新增 WASM 导出 `lgv3_diffuse` / `lgv3_diffuse_inverse`（独立使用）与 audit log 模块列表更新。
 
-### 5.3 验证结果
+### 5.3 完整加固落地（取消 8/31 冻结，2026-08-16）
 
-**Rust**（`cargo test --release`，54/54 通过）：
-- diffuse roundtrip：n ∈ {1,4,16,64,256,1000} × 3 seed × 3 sk 全过
-- `test_diffuse_full_block_spread`：N=64 单字节扰动 min ≥ 32 字节受影响
-- `test_pipeline_full_block_diffusion`：pipeline 全链路单字节扰动 ≥ n/2 字节受影响
-- `test_pipeline_sigma_localization_fails`：全 N 个扰动均无"恰好 1 字节依赖"→ σ 定位失败
+按 §2.4 推荐方案**完整落地**（`hardening.rs` + 全部变体接入），不再停留于单层 diffuse：
+
+```
+harden_forward:  [ diffuse_forward(rk) → sbox_mix(rk) ] × HARDEN_ROUNDS(=2)
+harden_inverse:  [ inv_sbox_mix(rk) → diffuse_inverse(rk) ] × 2（逆序）
+round_key(seed, sk, round) = u64(Keccak-256("LGV3-HARDEN-v1"‖seed‖sk‖round))
+```
+
+- **Keccak-256 强密钥派生**（§2.4 要点 2）：替换 XorShift64 裸派生，攻击者无法从弱 PRNG 重构每轮扩散系数；CryptoBinding 同步改用同源 Keccak-256（与 Rust 一致）
+- **扩散 ↔ S-box 交替 ≥2 轮**（§2.4 要点 3）：线性扩散后被逐字节非线性 S-box 层打断，复合变换非线性，选择明文恢复从 N×N 线性代数求解升级为非线性方程组，防止"剥除一侧"的简化攻击
+- **全部变体统一接入**（§5.5 后续建议 1）：`lgv2_confuse`/`confuse_d`/`confuse_ex`/`confuse_mix`/`confuse_full`（KEM 绑定路径）/pipeline 全部套 `harden_forward`/`harden_inverse`，黑盒攻击失效不再只限于 pipeline
+
+### 5.3.1 验证结果（完整加固）
+
+**Rust**（`cargo test --release`，61/61 通过）：
+- `hardening` 模块 7 项测试：round_key 区分度 / roundtrip（6 尺寸 × 4 seed × 3 sk）/ 确定性 / seed+session 敏感 / 全块扩散 / σ 定位失败
+- 新交叉验证 `test_compare_with_python_all_variants`：confuse_ex / confuse_mix / confuse_full / pipeline 四变体首 8 字节与 Python oracle 精确一致
 - 原 13 项 v2.2.2/v2.3 回归 + Stage-1/2 测试全部保持通过
 
-**Python**（oracle 同步更新 diffuse 层）：
-- `lgv23_oracle.py` 自检：6/6 roundtrip PASS（含 pipeline）
-- `lg_diffusion_fix_check.py`：roundtrip PASS；单字节扰动影响 min=62/max=64（N=64）；**无 1 字节依赖，σ 定位失败，原攻击失效**；多种子/会话/depth 组合均达标
+**Python oracle**（`lgv23_oracle.py`，新增 keccak256/hardening 复刻 + CryptoBinding 改用同源 Keccak-256）：
+- 自检 6/6 roundtrip PASS
+- `lg_diffusion_fix_check.py` 扩展至**全部 5 变体**：单字节扰动 min=61~63/64，无 1 字节依赖，σ 定位全部失败；多种子/会话/depth 组合（3 组 × 5 变体）均达标
+
+**Node WASM**（`attack/test-lgv3-hardening.js`，真实 pkg 验证）：
+- 6 变体 roundtrip 全 PASS
+- 6 变体扩散 min≥62/64 全 PASS
+- 6 变体 σ 定位全失败；3 组 pipeline 参数组合全达标
 
 ### 5.4 残余风险（诚实边界）
 
-1. **线性层本身仍可被选择明文恢复**：若攻击者拥有 oracle 并采集 ≥N 个线性无关选明文输出，可解出整张 N×N 矩阵再取逆剥除（工程上为 O(N³) 线性代数）。本轮只在管道的 VM 层之前插入**一遍**扩散；§2.4 建议的"扩散 + 逐字节层交替 ≥2 轮"尚未实施。
-2. **未覆盖其余变体**：本次仅加固 `lgv3_pipeline_obfuscate`（premix → Wreath → diffuse → VM）。`lgv2_confuse`/`confuse_ex`/`confuse_mix`/`confuse_full` 等旧 API 仍无全块扩散，黑盒攻击对它们依然有效。
-3. **定位修正**：LG 是逆向工程开销层，不提供密码学安全；全块扩散把黑盒重构从 O(N·256) 提升为线性代数/种子搜索级，仍可被有 oracle 的强攻击者恢复。
+1. **线性层本身仍可被选择明文+线性代数恢复**：若攻击者拥有 oracle 并采集 ≥N 个线性无关选明文输出，可解出整张 N×N 矩阵再取逆剥除（工程上为 O(N³)）。多轮"S-box ↔ 扩散"交替已把恢复从纯线性求解推向非线性方程组，显著提高门槛，但完整安全性仍属混淆/逆向工程开销层，不提供密码学安全证明。
+2. **Keccak-256 轮密钥仍需与 seed 空间组合评估**：harden 的最终强度受 seed/session 空间约束；对已知 seed 的离线暴力场景（如 seed 泄露）仍需密钥管理层面的保护。
+3. **定位修正**：LG 是逆向工程开销层，不提供密码学安全；全块扩散 + 多轮非线性把黑盒重构从 O(N·256) 提升为非线性系统求解/种子搜索级，仍可被有 oracle 的强攻击者恢复。
 
-### 5.5 后续建议
+### 5.5 落地记录（2026-08-16，完整版）
 
-- 在全部变体的最终输出前统一追加 diffuse 层（含 KEM 绑定路径）
-- 实现"扩散 ↔ 逐字节非线性"多轮交替，把恢复推向非线性系统
-- 扩散层系数改用 ChaCha20/AES 密钥派生（§2.4 要点 2），避免 XorShift64 弱 PRNG 被统计攻击
+- [x] 全部变体最终输出前统一追加 harden 层（含 KEM 绑定路径）——§5.5 建议 1 已落地
+- [x] 实现"扩散 ↔ 逐字节非线性"多轮交替——§5.5 建议 2 已落地（HARDEN_ROUNDS=2）
+- [x] 扩散层系数改用强密钥派生——§5.5 建议 3 已落地（Keccak-256 域分离派生，替代 XorShift64 裸派生）
+- [x] 冻结期解除：用户确认完整落地（取消原定 8/31 只做单层 diffuse 的折中方案）

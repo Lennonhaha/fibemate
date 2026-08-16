@@ -23,6 +23,7 @@ pub mod opcode;
 pub mod vm;
 pub mod pipeline;
 pub mod diffuse;
+pub mod hardening;
 
 use wasm_bindgen::prelude::*;
 
@@ -36,6 +37,7 @@ use wreath::{confuse_full, deconfuse_full};
 use premix::{full_mix_forward_depth, full_mix_inverse_depth};
 use pipeline::{obfuscate, deobfuscate, compile_program, compile_inverse_program};
 use diffuse::{diffuse_forward, diffuse_inverse};
+use hardening::{harden_forward, harden_inverse, HARDEN_ROUNDS};
 
 // ============================================================
 // WASM 公开 API — 完全向后兼容 v2.2.2
@@ -46,6 +48,7 @@ pub fn lgv2_confuse(data: &[u8], seed: u64) -> Vec<u8> {
     if data.is_empty() { return vec![]; }
     let mut result = data.to_vec();
     confuse_full(&mut result, seed);
+    harden_forward(&mut result, seed, 0, HARDEN_ROUNDS);
     result
 }
 
@@ -55,6 +58,7 @@ pub fn lgv2_confuse_d(data: &[u8], seed: u64, depth: usize) -> Vec<u8> {
     let seeds = LayerSeeds::new(seed);
     let mut result = data.to_vec();
     confuse_chunk_depth(&mut result, seed, &seeds, depth);
+    harden_forward(&mut result, seed, 0, HARDEN_ROUNDS);
     result
 }
 
@@ -62,6 +66,7 @@ pub fn lgv2_confuse_d(data: &[u8], seed: u64, depth: usize) -> Vec<u8> {
 pub fn lgv2_deconfuse(data: &[u8], seed: u64) -> Vec<u8> {
     if data.is_empty() { return vec![]; }
     let mut result = data.to_vec();
+    harden_inverse(&mut result, seed, 0, HARDEN_ROUNDS);
     deconfuse_full(&mut result, seed);
     result
 }
@@ -71,6 +76,7 @@ pub fn lgv2_deconfuse_d(data: &[u8], seed: u64, depth: usize) -> Vec<u8> {
     if data.is_empty() { return vec![]; }
     let seeds = LayerSeeds::new(seed);
     let mut result = data.to_vec();
+    harden_inverse(&mut result, seed, 0, HARDEN_ROUNDS);
     deconfuse_chunk_depth(&mut result, seed, &seeds, depth);
     result
 }
@@ -81,6 +87,7 @@ pub fn lgv2_confuse_ex(data: &[u8], seed: u64, session_key: u64, depth: usize) -
     let mut buf = SecureBuffer::from_slice(data);
     let combined_seed = seed.wrapping_add(session_key);
     confuse_chunk_depth(buf.get_mut(), combined_seed, &LayerSeeds::new(combined_seed), depth);
+    harden_forward(buf.get_mut(), seed, session_key, HARDEN_ROUNDS);
     let result = buf.get().to_vec();
     buf.zeroize();
     result
@@ -90,6 +97,7 @@ pub fn lgv2_confuse_ex(data: &[u8], seed: u64, session_key: u64, depth: usize) -
 pub fn lgv2_deconfuse_ex(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
     if data.is_empty() { return vec![]; }
     let mut buf = SecureBuffer::from_slice(data);
+    harden_inverse(buf.get_mut(), seed, session_key, HARDEN_ROUNDS);
     let combined_seed = seed.wrapping_add(session_key);
     deconfuse_chunk_depth(buf.get_mut(), combined_seed, &LayerSeeds::new(combined_seed), depth);
     let result = buf.get().to_vec();
@@ -110,6 +118,7 @@ pub fn lgv3_confuse_mix(data: &[u8], seed: u64, session_key: u64, depth: usize) 
     if data.is_empty() { return vec![]; }
     let mut result = data.to_vec();
     full_mix_forward_depth(&mut result, seed, session_key, depth);
+    harden_forward(&mut result, seed, session_key, HARDEN_ROUNDS);
     result
 }
 
@@ -118,6 +127,7 @@ pub fn lgv3_confuse_mix(data: &[u8], seed: u64, session_key: u64, depth: usize) 
 pub fn lgv3_deconfuse_mix(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
     if data.is_empty() { return vec![]; }
     let mut result = data.to_vec();
+    harden_inverse(&mut result, seed, session_key, HARDEN_ROUNDS);
     full_mix_inverse_depth(&mut result, seed, session_key, depth);
     result
 }
@@ -211,6 +221,7 @@ pub fn lgv2_confuse_full(data: &[u8], seed: u64, session_key: u64, kem_ss: &[u8]
     let mut buf = SecureBuffer::from_slice(data);
     let combined_seed = seed.wrapping_add(session_key);
     confuse_chunk_depth(buf.get_mut(), combined_seed, &LayerSeeds::new(combined_seed), depth);
+    harden_forward(buf.get_mut(), seed, session_key, HARDEN_ROUNDS);
     let mut ss = [0u8; 32];
     ss.copy_from_slice(&kem_ss[..32]);
     let binding = CryptoBinding::new(&ss);
@@ -228,6 +239,7 @@ pub fn lgv2_deconfuse_full(data: &[u8], seed: u64, session_key: u64, kem_ss: &[u
     let unbound = binding.unbind(data);
     if unbound.is_empty() { return vec![]; }
     let mut buf = SecureBuffer::from_slice(&unbound);
+    harden_inverse(buf.get_mut(), seed, session_key, HARDEN_ROUNDS);
     let combined_seed = seed.wrapping_add(session_key);
     deconfuse_chunk_depth(buf.get_mut(), combined_seed, &LayerSeeds::new(combined_seed), depth);
     let result = buf.get().to_vec();
@@ -250,7 +262,7 @@ pub fn lgv3_verify_invertibility(seed: u64) -> bool {
 #[wasm_bindgen]
 pub fn lgv3_audit_log(data_len: usize, seed: u64, depth: usize) -> String {
     format!(
-        r#"{{\"version\":\"LG v2.3.0-alpha-stage2\",\"op\":\"confuse\",\"data_len\":{},\"seed\":\"{:016x}\",\"depth\":{}/{},\"modules\":[\"sbox\",\"wreath\",\"bind\",\"cleanup\",\"premix\",\"opcode\",\"vm\",\"pipeline\",\"diffuse\"],\"baseline\":\"v2.2.2 (f9cc379)\"}}"#,
+        r#"{{\"version\":\"LG v2.3.0-alpha-stage2\",\"op\":\"confuse\",\"data_len\":{},\"seed\":\"{:016x}\",\"depth\":{}/{},\"modules\":[\"sbox\",\"wreath\",\"bind\",\"cleanup\",\"premix\",\"opcode\",\"vm\",\"pipeline\",\"diffuse\",\"hardening\"],\"baseline\":\"v2.2.2 (f9cc379)\"}}"#,
         data_len, seed, depth, NUM_LAYERS
     )
 }
@@ -273,8 +285,24 @@ mod tests {
     fn test_compare_with_python_100b() {
         let data: Vec<u8> = (0..100).map(|i| (i * 7) as u8).collect();
         let confused = lgv2_confuse(&data, 0x1234);
-        let expected_first8 = vec![215, 243, 99, 104, 54, 216, 205, 254];
+        let expected_first8 = vec![56, 9, 85, 47, 45, 143, 48, 225];
         assert_eq!(&confused[..8], &expected_first8[..], "100B first 8 bytes must match Python");
+    }
+
+    #[test]
+    fn test_compare_with_python_all_variants() {
+        // Stage-3 harden 落地后，全部变体输出与 Python oracle 交叉验证。
+        let data: Vec<u8> = (0..100).map(|i| (i * 7) as u8).collect();
+        let ss: Vec<u8> = vec![0x42u8; 32];
+        let cases: Vec<(Vec<u8>, Vec<u8>)> = vec![
+            (lgv2_confuse_ex(&data, 0x1234, 0xDEAD, 7), vec![238, 86, 135, 63, 135, 33, 2, 7]),
+            (lgv3_confuse_mix(&data, 0x1234, 0xDEAD, 7), vec![252, 25, 57, 216, 205, 7, 125, 32]),
+            (lgv2_confuse_full(&data, 0x1234, 0xDEAD, &ss, 7), vec![192, 191, 95, 199, 193, 213, 79, 225]),
+            (lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7), vec![25, 64, 55, 144, 43, 105, 160, 124]),
+        ];
+        for (i, (got, exp)) in cases.iter().enumerate() {
+            assert_eq!(&got[..8], &exp[..], "variant {} first 8 bytes must match Python", i);
+        }
     }
 
     #[test]
