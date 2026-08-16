@@ -1,0 +1,94 @@
+# Native C Addon CI — ML-KEM-768 (Linux + macOS native, Windows JS fallback)
+#
+# Verifies the C addon compiles and works on Linux/macOS.
+# Windows is tested via JS-only fallback (native addon is optional on Windows;
+# pqc-kem falls back to pure-JS implementation automatically).
+#
+# Separate from ci.yml which covers JS-level API tests.
+
+name: Native Addon CI
+
+on:
+  push:
+    paths:
+      - 'packages/pqc-kem/native/**'
+      - '.github/workflows/ci-native.yml'
+      - 'packages/pqc-kem/package.json'
+  pull_request:
+    paths:
+      - 'packages/pqc-kem/native/**'
+      - '.github/workflows/ci-native.yml'
+      - 'packages/pqc-kem/package.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # Linux + macOS native builds
+  build-native:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        node: [20, 22]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install build tools (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      - name: npm install (addon deps)
+        working-directory: packages/pqc-kem
+        run: npm install
+
+      - name: Build C addon
+        working-directory: packages/pqc-kem
+        run: npm run build:native:release
+
+      - name: Run native tests
+        working-directory: packages/pqc-kem
+        run: node ../../scripts/test-native-addon.cjs
+
+      - name: Performance benchmark (500 rounds)
+        working-directory: packages/pqc-kem
+        run: node ../../scripts/mlkem-bench-native.cjs 500
+
+  # Windows: JS fallback only (native addon not available on Windows runner)
+  build-windows-js:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: npm install (JS-only, no native build)
+        working-directory: packages/pqc-kem
+        run: npm install
+
+      - name: Verify JS implementation loads
+        working-directory: packages/pqc-kem
+        run: node ../../scripts/smoke-test.js
+
+  # Nightly: full 10000-round regression (Linux only)
+  nightly-regression:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with: { node-version: '22' }
+      - run: sudo apt-get update && sudo apt-get install -y build-essential
+      - working-directory: packages/pqc-kem
+        run: npm install && npm run build:native:release
+      - working-directory: packages/pqc-kem
+        run: node ../../scripts/mlkem-bench-native.cjs 10000

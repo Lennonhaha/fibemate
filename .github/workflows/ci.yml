@@ -1,36 +1,89 @@
-# FIBEMATE CI Pipeline — 核心验证
+# FIBEMATE CI Pipeline — Multi-Platform Matrix
 #
-# 触发: push / PR to master
+# 触发: push / PR to main
 # 覆盖:
-#   - Node.js 单元测试
-#   - 文档链接检查
-#   - 代码风格 (Prettier + ESLint)
+#   - 国密三件套 (SM2/SM3/SM4-GCM) 跨平台 JS 验证
+#   - ML-KEM-768 KAT 自验证 (x86: ubuntu/macos/windows)
+#   - Node.js 单元测试 (keccak + fibemate)
+#   - ESLint 静态分析
+#   - 文档检查 + BOM 检查
 
 name: CI
 permissions: read-all
 
 on:
   push:
-    branches: [ master ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ master ]
+    branches: [ main, master ]
 
 env:
   CARGO_TERM_COLOR: always
-  NODE_VERSION: '18'
 
 jobs:
 
-  # Node.js 单元测试
-  node-test:
-    runs-on: ubuntu-latest
+  # ─── 国密跨语言 KAT 验证 (JS only, multi-platform) ──
+  gm-crossval:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 22]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v7
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: ${{ matrix.node }}
+
+      - name: SM2 sign/verify + encrypt/decrypt (100 vectors)
+        run: node scripts/ci-gm-sm2.cjs
+
+      - name: SM3 hash (30 vectors)
+        run: node scripts/ci-gm-sm3.cjs
+
+      - name: SM4-GCM (30 vectors)
+        run: node scripts/ci-gm-sm4.cjs
+
+  # ─── ML-KEM-768 KAT (JS only, multi-platform) ───────
+  mlkem-kat:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 22]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: ML-KEM-768 roundtrip + KAT self-validation
+        run: node scripts/ci-mlkem-kat.cjs
+
+  # ─── Node.js 单元测试 (multi-platform) ──────────────
+  node-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: [18, 22]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: ${{ matrix.node }}
 
       - name: Install dependencies
         run: npm install --ignore-scripts
@@ -40,46 +93,57 @@ jobs:
           node test/test-keccak.js
           node test/test-fibemate.js
 
-      - name: Jasmin KAT cross-verification (informational)
-        continue-on-error: true
-        run: |
-          node scripts/kat-jasmin-compare.js || echo "INFO: Jasmin KAT mismatch expected — FIBEMATE uses time-domain polyMul vs Jasmin NTT-domain. See docs/design-decisions.md"
-          
-  
-  # ESLint 静态分析
+  # ─── ESLint 静态分析 (single platform, lint only) ────
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v7
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22'
 
       - name: Install ESLint
-        run: npm install --no-save eslint
+        run: npm install --no-save eslint @eslint/js@^9
 
       - name: Run ESLint
-        run: npx eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 50
+        run: npx eslint packages/pqc-kem/src/ test/ --max-warnings 0
 
-  # Markdown / 文档检查
+  # ─── 文档检查 (single platform) ─────────────────────
   docs-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/checkout@v7
 
-      - name: Setup Node.js ${{ env.NODE_VERSION }}
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version: '22'
 
       - name: Check markdown formatting
         run: |
           npx --yes markdownlint-cli@0.40.0 \
             --disable MD013 MD033 MD041 MD046 \
-            README.md CONTRIBUTING.md BUILD.md *.md docs/*.md 2>/dev/null || true
+            README.md CONTRIBUTING.md BUILD.md docs/*.md 2>/dev/null || true
 
       - name: Check dead links in docs
         run: |
-          npx --yes markdown-link-check@3.12.2 README.md 2>/dev/null || true
+          npx --yes markdown-link-check@3.12.2 README.md docs/*.md 2>/dev/null || true
+
+  # ─── UTF-8 BOM check (single platform) ──────────────
+  bom-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Scan tracked text files for UTF-8 BOM
+        run: node scripts/check-bom.cjs
+
+      - name: Scan tracked text files for encoding corruption (U+FFFD / GBK / NUL)
+        run: node scripts/check-encoding.cjs

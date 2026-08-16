@@ -1,0 +1,75 @@
+# FIBEMATE Nightly - Phase 1: Lightweight but Real Checks
+#
+# Trigger: Daily at 06:00 UTC (14:00 CST)
+# Phase 1 Goal: Move from "placeholder success" to "lightweight validation"
+#   - KAT quick sampling (100 rounds, not 10k)
+#   - ESLint strict check
+#   - Smoke test (module loads, basic roundtrip)
+#   - FAIL on error (no more || echo SKIP)
+#
+# Phase 2 (pre 8-31): Full KAT 10k, TVLA summary, RTL lint
+# Phase 3 (post 8-31): OSS-Fuzz harness, perf regression baseline
+
+name: Nightly
+permissions: read-all
+
+on:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '22'
+  CARGO_TERM_COLOR: always
+
+jobs:
+
+  # === Phase 1: Core validation (was placeholder) ===
+  core-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install npm deps
+        run: npm install
+
+      - name: ESLint strict check
+        run: npm run lint
+        # FAIL on error — no || echo SKIP
+
+      # KAT quick sampling (100 rounds)
+      # Full KAT 10k is NOT run in Nightly Phase 1 (see scripts/kat-quick.js header)
+      - name: Quick KAT sampling (100 rounds)
+        run: node scripts/kat-quick.js --quick --samples 100
+        # FAIL on mismatch — this is the real gate
+
+      - name: Smoke test — module loads + basic roundtrip
+        run: node scripts/smoke-test.js
+        # FAIL on exception
+
+  # === Cross-lang equivalence (existing, keep) ===
+  cross-lang:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install npm deps
+        run: npm install
+
+      - name: Cross-lang seed test
+        run: node test/test-cross-lang-seeded.js
+
+  # === STM32 / liboqs: NOT included in Phase 1 (deferred to Phase 2) ===
+  # Reason: Nightly Phase 1 goal is "lightweight validation", not "full coverage"
+  # STM32 needs cross-compiler toolchain; liboqs needs system package install
+  # Both will be added in Phase 2 (pre 8-31) after core validation stabilizes
