@@ -25,6 +25,25 @@ const delayQueue = new Map();
 let requestCount = 0;
 let messageLog = [];
 
+// 已见 nonce 缓存（防重放，内存计数器）
+const seenNonces = new Map(); // key: nonce | value: timestamp
+const NONCE_TTL = 10 * 60_000; // 10 分钟窗口
+
+// 定期清理过期 nonce，避免内存泄漏
+setInterval(() => {
+  const now = Date.now();
+  for (const [nonce, ts] of seenNonces) {
+    if (now - ts > NONCE_TTL) seenNonces.delete(nonce);
+  }
+}, 60_000); // 每分钟清理一次
+
+function isNonceReplayed(nonce) {
+  if (!nonce) return false; // 无 nonce 不拦截（保持向后兼容，由上层决定）
+  if (seenNonces.has(nonce)) return true;
+  seenNonces.set(nonce, Date.now());
+  return false;
+}
+
 // Sphinx 包格式简化实现（实际应为洋葱加密）
 class SphinxPacket {
   constructor(payload, nextHop, routingInfo) {
@@ -65,6 +84,12 @@ function mixDelay(handler) {
 app.post('/relay', (req, res) => {
   requestCount++;
   const packet = req.body;
+
+  // 重放保护：同一 nonce 只接受一次
+  if (isNonceReplayed(packet.nonce)) {
+    console.log(`[Node ${PORT}] Replay detected, rejected nonce: ${packet.nonce || 'N/A'}`);
+    return res.status(425).json({ status: 'rejected', error: 'Replay detected', code: 'REPLAY_DETECTED' });
+  }
   
   console.log(`[Node ${PORT}] Received packet #${requestCount} (nonce: ${packet.nonce || 'N/A'})`);
 

@@ -311,6 +311,40 @@ const rateLimitMiddleware = (req, res, next) => {
 };
 
 // ========================
+// 重放保护（内存计数器，防重复请求）
+// 仅保护写操作（POST/PUT/DELETE/PATCH），GET 等幂等请求不要求 X-Request-Id
+// ========================
+const seenRequestIds = new Map(); // key: X-Request-Id | value: timestamp
+const REPLAY_TTL = 5 * 60_000;    // 5 分钟窗口
+
+// 定期清理过期条目，避免内存泄漏
+setInterval(() => {
+  const now = Date.now();
+  for (const [id, ts] of seenRequestIds) {
+    if (now - ts > REPLAY_TTL) seenRequestIds.delete(id);
+  }
+}, 60_000); // 每分钟清理一次
+
+const replayProtection = (req, res, next) => {
+  const writeMethods = ['POST', 'PUT', 'DELETE', 'PATCH'];
+  if (!writeMethods.includes(req.method)) return next();
+
+  const requestId = req.headers['x-request-id'];
+  if (!requestId) {
+    return res.status(400).json({ error: '缺少 X-Request-Id 头', code: 'MISSING_REQUEST_ID' });
+  }
+  if (seenRequestIds.has(requestId)) {
+    return res.status(425).json({ error: '检测到重放请求', code: 'REPLAY_DETECTED' });
+  }
+  seenRequestIds.set(requestId, Date.now());
+  res.setHeader('X-Request-Id', requestId);
+  next();
+};
+
+// 挂载重放保护到所有 /api/* 写操作（必须在路由定义之前）
+app.use('/api/', replayProtection);
+
+// ========================
 // POST /api/auth/refresh - 刷新 access token
 // ========================
 app.post('/api/auth/refresh', rateLimitMiddleware, (req, res) => {
