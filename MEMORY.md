@@ -1098,3 +1098,12 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 ## 技术规范偏好
 
 - 时间戳存证体系使用DigiCert+FreeTSA双机构签发，TSR序列完整对齐至78份manifest条目（lg-033~076从服务器拉取补齐）
+
+[Project Knowledge Summary]
+- Date: 2026-08-16
+- Context: Discovered by Agent while performing third-party attack assessment of VWZ signature (experimental/vwz-lg) and LookingGlass v2.2.3
+- Category: Environment Configuration
+- Instructions:
+  - 当前工作环境无 Rust 工具链（cargo/rustc/wasm-pack 全部缺失），无法本地重编译仓库的 Rust→WASM 源码；需直接使用仓库内预编译 WASM 产物（如 www/crypto/vwz/bg.wasm、www/crypto/lgv2/bg.wasm）
+  - pip 可安装 frida-tools / angr 等分析套件；本次 LG v2.2.3 逆袭采用纯黑盒扰动方法完成，未依赖 Frida/Angr/反汇编
+  - 攻击评估报告与可复现脚本存放在 security-assessment/ 目录（README.md + vwz-attack-assessment.md + lg-v2-attack-assessment.md + attack/），结论：VWZ 可多项式时间完全伪造签名（切片 rank-1 退化），LG v2.2.3 混淆等价逐字节 S-box+位置置换、可 100% 还原
