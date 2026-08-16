@@ -39,7 +39,8 @@ setInterval(() => {
 
 function isNonceReplayed(nonce) {
   if (!nonce) return false; // 无 nonce 不拦截（保持向后兼容，由上层决定）
-  if (seenNonces.has(nonce)) return true;
+  const prevTs = seenNonces.get(nonce);
+  if (prevTs !== undefined && Date.now() - prevTs <= NONCE_TTL) return true;
   seenNonces.set(nonce, Date.now());
   return false;
 }

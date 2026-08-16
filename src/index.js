@@ -333,7 +333,8 @@ const replayProtection = (req, res, next) => {
   if (!requestId) {
     return res.status(400).json({ error: '缺少 X-Request-Id 头', code: 'MISSING_REQUEST_ID' });
   }
-  if (seenRequestIds.has(requestId)) {
+  const prevTs = seenRequestIds.get(requestId);
+  if (prevTs !== undefined && Date.now() - prevTs <= REPLAY_TTL) {
     return res.status(425).json({ error: '检测到重放请求', code: 'REPLAY_DETECTED' });
   }
   seenRequestIds.set(requestId, Date.now());
