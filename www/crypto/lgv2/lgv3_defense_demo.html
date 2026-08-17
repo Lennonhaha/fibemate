@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.4 — 运行时主动防御状态机</title>
+<style>
+  :root { --glass: rgba(16,14,8,.66); --line: rgba(255,207,92,.22); --acc: #ffcf5c; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(1200px 700px at 70% -10%, #1a1508 0%, #070a08 55%); color: #efe7d2; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 28px 20px 40px; }
+  .title { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .title h1 { font-size: 17px; margin: 0; letter-spacing: 1px; color: #ffdf8a; }
+  .title .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px #3ddc84; }
+  .title .dot.busy { background: #ffb454; box-shadow: 0 0 10px #ffb454; }
+  .sub { font-size: 11px; color: #b3a176; margin-bottom: 20px; }
+  .card { background: var(--glass); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+  .card h2 { font-size: 12px; margin: 0 0 12px; letter-spacing: 2px; color: #ffd76e; font-weight: 600; }
+  .levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .lvl { border: 1px solid rgba(255,207,92,.3); background: rgba(10,8,4,.55); border-radius: 10px; padding: 12px; cursor: pointer; transition: all .18s; }
+  .lvl:hover { border-color: rgba(255,207,92,.6); }
+  .lvl.on { border-color: #ffd700; background: linear-gradient(180deg, rgba(255,207,92,.2), rgba(10,8,4,.55)); box-shadow: 0 0 18px rgba(255,215,0,.35); }
+  .lvl .n { font-size: 19px; color: #ffdf8a; font-weight: 700; }
+  .lvl .t { font-size: 11px; color: #ffe9b0; margin: 4px 0 6px; }
+  .lvl .d { font-size: 10px; color: #8f7f57; line-height: 1.5; }
+  .btnrow { display: flex; gap: 10px; margin-top: 14px; }
+  .btn { border: 1px solid rgba(255,207,92,.5); background: linear-gradient(180deg, rgba(255,207,92,.22), rgba(255,207,92,.06)); color: #ffe9b0; border-radius: 8px; padding: 8px 22px; font-family: inherit; font-size: 12px; cursor: pointer; letter-spacing: 1px; transition: all .18s; }
+  .btn:hover { background: linear-gradient(180deg, rgba(255,207,92,.4), rgba(255,207,92,.14)); box-shadow: 0 0 18px rgba(255,207,92,.4); }
+  .btn.primary { background: linear-gradient(180deg, #ffc43d, #e89a0a); border-color: #ffd76e; color: #2a1d00; font-weight: 700; }
+  .btn.primary:hover { box-shadow: 0 0 26px rgba(255,196,61,.6); }
+  .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 900px) { .cols { grid-template-columns: 1fr; } .levels { grid-template-columns: repeat(2, 1fr); } }
+  .svcard { background: rgba(10,8,4,.6); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .svcard .k { font-size: 10px; color: #b3a176; letter-spacing: 1px; text-transform: uppercase; }
+  .svcard .v { font-size: 16px; margin-top: 5px; color: #fff3d6; }
+  .svcard .v b { color: #ffd76e; }
+  .pill { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 700; letter-spacing: 1px; }
+  .pill.normal { background: rgba(61,220,132,.16); color: #3ddc84; border: 1px solid rgba(61,220,132,.4); }
+  .pill.poison { background: rgba(255,120,90,.16); color: #ff8a6a; border: 1px solid rgba(255,120,90,.45); }
+  .pill.bold { animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,120,90,.5); } 50% { box-shadow: 0 0 14px 3px rgba(255,120,90,.55); } }
+  .grid4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 4px; }
+  #sm { width: 100%; height: 190px; display: block; }
+  .opaque { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  .shield { width: 54px; height: 54px; border-radius: 50%; border: 2px solid #ffd700; display: flex; align-items: center; justify-content: center; font-size: 22px; color: #ffd700; box-shadow: 0 0 20px rgba(255,215,0,.5), inset 0 0 12px rgba(255,215,0,.25); animation: breathe 2.2s ease-in-out infinite; }
+  @keyframes breathe { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+  .otick { font-size: 11px; color: #8f7f57; line-height: 1.9; }
+  .otick b { color: #3ddc84; }
+  .hexline { font-size: 11px; color: #c9b98c; word-break: break-all; line-height: 1.7; }
+  .hexline b { color: #ffe9b0; }
+  .note { font-size: 10px; color: #8f7f57; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title"><div class="dot" id="dot"></div><h1>LG v2.4 · 运行时主动防御状态机</h1></div>
+  <div class="sub">防御引擎按等级挂载反调试 / 投毒链路 · 持续异常触发投毒响应 · level=0 全旁路，与 Stage-2 逐字节一致</div>
+
+  <div class="card">
+    <h2>防御等级 / DEFENSE LEVEL</h2>
+    <div class="levels">
+      <div class="lvl" data-l="0"><div class="n">L0</div><div class="t">旁路</div><div class="d">完全关闭防御引擎，输出与 Stage-2 逐字节一致，零开销。</div></div>
+      <div class="lvl" data-l="1"><div class="n">L1</div><div class="t">轻量</div><div class="d">基础执行检查与时间基线，低开销，适合常规运行。</div></div>
+      <div class="lvl" data-l="2"><div class="n">L2</div><div class="t">标准</div><div class="d">基线校准 + 异常累积，持续偏差触发投毒响应。</div></div>
+      <div class="lvl" data-l="3"><div class="n">L3</div><div class="t">全量</div><div class="d">完整反调试 / 反篡改矩阵，覆盖全部检查点。</div></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" id="apply">应用配置</button>
+      <button class="btn" id="reset">恢复默认 (L0)</button>
+    </div>
+  </div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>引擎状态 / ENGINE STATUS</h2>
+      <div class="grid4">
+        <div class="svcard"><div class="k">Level</div><div class="v" id="sLevel">-</div></div>
+        <div class="svcard"><div class="k">Mode</div><div class="v"><span class="pill" id="sMode">-</span></div></div>
+        <div class="svcard"><div class="k">异常计数</div><div class="v" id="sAnomaly">-</div></div>
+        <div class="svcard"><div class="k">基线样本</div><div class="v" id="sBaseline">-</div></div>
+      </div>
+      <div class="note" style="margin-top:10px">引擎运行于 WASM 内部（thread_local 单例）。Level &gt; 0 时挂载反调试 / 投毒链路；持续时序异常使引擎进入投毒模式，静默破坏输出、保留审计可比性。恢复 L0 将重置模式与基线。</div>
+    </div>
+
+    <div class="card">
+      <h2>状态转移 / STATE MACHINE</h2>
+      <canvas id="sm"></canvas>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>数学盾牌 / OPAQUE PREDICATES</h2>
+    <div class="opaque">
+      <div class="shield" id="shield">✓</div>
+      <div>
+        <div class="otick">谓词族：<b id="fam">-</b></div>
+        <div class="otick">当前求值：<b id="opqLine">-</b> <span id="opqRes">-</span></div>
+        <div class="otick">每 900ms 随机输入 x，<b>恒真</b> 数学谓词持续验证（False 即实现被破坏）</div>
+      </div>
+    </div>
+    <div class="hexline" style="margin-top:10px">编译程序携带的谓词配置（seed / session / depth=7）：<b id="cfgLine">-</b></div>
+    <div class="note">不透明谓词 = 经 VM 编译的程序携带的恒真算术条件（如 a·b-b·a=0），对静态分析呈现为不可判定的分支，但运行期恒返回真，不改字节输出。</div>
+  </div>
+</div>
+
+<script type="module">
+  import init, { lgv3_defense_configure, lgv3_defense_status, lgv3_opaque_families, lgv3_opaque_check, lgv3_opaque_program_cfg } from './lgv2_3.js';
+
+  const $ = id => document.getElementById(id);
+  const LEVELS = ['旁路', '轻量', '标准', '全量'];
+  const smc = $('sm');
+  const sctx = smc.getContext('2d');
+  const sdpr = Math.min(window.devicePixelRatio || 1, 2);
+  let active = 0;
+
+  function sizeSM() {
+    const w = smc.clientWidth, h = 190;
+    smc.width = w * sdpr;
+    smc.height = h * sdpr;
+    sctx.setTransform(sdpr, 0, 0, sdpr, 0, 0);
+    return { w, h };
+  }
+
+  function roundPath(c, x, y, w, h, r) {
+    c.beginPath();
+    c.moveTo(x + r, y);
+    c.arcTo(x + w, y, x + w, y + h, r);
+    c.arcTo(x + w, y + h, x, y + h, r);
+    c.arcTo(x, y + h, x, y, r);
+    c.arcTo(x, y, x + w, y, r);
+    c.closePath();
+  }
+
+  function drawSM() {
+    const { w, h } = sizeSM();
+    sctx.clearRect(0, 0, w, h);
+    const bw = Math.min(250, (w - 60) / 2);
+    const bh = 92;
+    const y = (h - bh) / 2 - 14;
+    const xA = 24, xB = w - 24 - bw;
+    sctx.save();
+    sctx.textAlign = 'left';
+    sctx.fillStyle = '#b3a176';
+    sctx.font = '11px ui-monospace, monospace';
+    sctx.fillText('NORMAL', xA, y - 16);
+    sctx.fillText('POISONING', xB, y - 16);
+    sctx.restore();
+
+    const gA = sctx.createLinearGradient(0, y, 0, y + bh);
+    gA.addColorStop(0, 'rgba(61,220,132,.35)');
+    gA.addColorStop(1, 'rgba(61,220,132,.08)');
+    sctx.fillStyle = gA;
+    sctx.strokeStyle = 'rgba(61,220,132,.6)';
+    sctx.lineWidth = 1.5;
+    roundPath(sctx, xA, y, bw, bh, 10);
+    sctx.fill();
+    sctx.stroke();
+    sctx.fillStyle = '#9af0c8';
+    sctx.font = '13px ui-monospace, monospace';
+    sctx.textAlign = 'center';
+    sctx.fillText('正常校准', xA + bw / 2, y + 32);
+    sctx.fillStyle = '#b3cfc2';
+    sctx.font = '10px ui-monospace, monospace';
+    sctx.fillText('执行/内存检查通过', xA + bw / 2, y + 52);
+    sctx.fillText('基线样本累积中…', xA + bw / 2, y + 68);
+
+    const gB = sctx.createLinearGradient(0, y, 0, y + bh);
+    gB.addColorStop(0, 'rgba(255,120,90,.4)');
+    gB.addColorStop(1, 'rgba(255,120,90,.1)');
+    sctx.fillStyle = gB;
+    sctx.strokeStyle = 'rgba(255,138,106,.7)';
+    roundPath(sctx, xB, y, bw, bh, 10);
+    sctx.fill();
+    sctx.stroke();
+    sctx.fillStyle = '#ffb0a0';
+    sctx.textAlign = 'center';
+    sctx.fillText('投毒响应', xB + bw / 2, y + 32);
+    sctx.fillStyle = '#d9b0a6';
+    sctx.font = '10px ui-monospace, monospace';
+    sctx.fillText('静默篡改输出', xB + bw / 2, y + 52);
+    sctx.fillText('审计痕迹可比', xB + bw / 2, y + 68);
+
+    const my = y + bh / 2;
+    sctx.strokeStyle = 'rgba(255,138,106,.8)';
+    sctx.lineWidth = 1.8;
+    sctx.beginPath();
+    sctx.moveTo(xA + bw + 6, my - 12);
+    sctx.quadraticCurveTo((xA + xB + bw) / 2, my - 46, xB - 6, my - 12);
+    sctx.stroke();
+    sctx.beginPath();
+    sctx.moveTo(xB - 12, my - 8);
+    sctx.lineTo(xB - 6, my - 12);
+    sctx.lineTo(xB - 9, my - 19);
+    sctx.closePath();
+    sctx.fillStyle = 'rgba(255,138,106,.9)';
+    sctx.fill();
+    sctx.fillStyle = '#b07d6d';
+    sctx.font = '10px ui-monospace, monospace';
+    sctx.textAlign = 'center';
+    sctx.fillText('持续异常 · 超过阈值', (xA + xB + bw) / 2, my - 52);
+
+    sctx.strokeStyle = 'rgba(255,207,92,.65)';
+    sctx.lineWidth = 1.6;
+    sctx.beginPath();
+    sctx.moveTo(xB, my + 12);
+    sctx.quadraticCurveTo((xA + xB + bw) / 2, my + 46, xA + bw + 6, my + 12);
+    sctx.stroke();
+    sctx.beginPath();
+    sctx.moveTo(xA + bw + 1, my + 18);
+    sctx.lineTo(xA + bw + 6, my + 12);
+    sctx.lineTo(xA + bw + 13, my + 15);
+    sctx.closePath();
+    sctx.fillStyle = 'rgba(255,207,92,.85)';
+    sctx.fill();
+    sctx.fillStyle = '#8f7f57';
+    sctx.textAlign = 'center';
+    sctx.fillText('configure(L0) · 重置引擎', (xA + xB + bw) / 2, my + 52);
+  }
+
+  function refreshStatus() {
+    const st = JSON.parse(lgv3_defense_status());
+    $('sLevel').innerHTML = 'L' + st.level + ' <b>· ' + LEVELS[st.level] + '</b>';
+    const pill = $('sMode');
+    const mode = st.mode;
+    pill.className = 'pill ' + (mode === 1 ? 'poison bold' : 'normal');
+    pill.textContent = mode === 1 ? 'POISONING' : 'NORMAL';
+    $('sAnomaly').textContent = st.anomaly_count;
+    $('sBaseline').textContent = st.baseline_samples;
+    drawSM();
+  }
+
+  function apply(level) {
+    active = level;
+    document.querySelectorAll('.lvl').forEach(el => el.classList.toggle('on', +el.dataset.l === level));
+    lgv3_defense_configure(level, 0);
+    refreshStatus();
+  }
+
+  $('apply').addEventListener('click', () => apply(active));
+  $('reset').addEventListener('click', () => apply(0));
+  document.querySelectorAll('.lvl').forEach(el => {
+    el.addEventListener('click', () => {
+      apply(+el.dataset.l);
+      $('dot').className = 'dot';
+    });
+  });
+
+  let fams = [];
+  function tickOpaque() {
+    const f0 = fams[Math.floor(Math.random() * fams.length)] || '';
+    const id = fams.indexOf(f0);
+    const x = (Math.random() * 0x1fffffff) | 0;
+    const ok = id >= 0 && lgv3_opaque_check(id, BigInt(x));
+    $('opqLine').textContent = f0 + '(x=0x' + x.toString(16) + ')';
+    const res = $('opqRes');
+    res.textContent = ok ? '→ TRUE ✓' : '→ FALSE ✗';
+    res.style.color = ok ? '#3ddc84' : '#ff8a6a';
+    setTimeout(tickOpaque, 900);
+  }
+
+  function setupOpaque() {
+    fams = (lgv3_opaque_families() || '').split(',').filter(Boolean);
+    $('fam').textContent = fams.join(' · ');
+    tickOpaque();
+    $('cfgLine').textContent = lgv3_opaque_program_cfg(0xcafen, 0x1234n, 7);
+  }
+
+  addEventListener('resize', drawSM);
+
+  async function main() {
+    await init();
+    $('dot').className = 'dot';
+    document.querySelector('.lvl[data-l="0"]').classList.add('on');
+    setupOpaque();
+    refreshStatus();
+  }
+  main().catch(e => { $('dot').className = 'dot'; alert('加载失败：' + e.message); });
+</script>
+</body>
+</html>
