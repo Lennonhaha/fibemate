@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.3 diffuse — 3D 高清扩散颗粒云</title>
+<style>
+  :root { --glass: rgba(16,14,8,.66); --line: rgba(255,207,92,.22); --acc: #ffcf5c; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #070a08; color: #efe7d2; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #scene { position: fixed; inset: 0; }
+  #scene canvas { display: block; }
+  .hud { position: fixed; z-index: 10; background: var(--glass); border: 1px solid var(--line); border-radius: 12px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 8px 40px rgba(0,0,0,.45); }
+  #titlebar { top: 16px; left: 50%; transform: translateX(-50%); padding: 10px 22px; display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+  #titlebar h1 { font-size: 15px; margin: 0; letter-spacing: 1px; color: #ffdf8a; }
+  #titlebar .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px #3ddc84; }
+  #titlebar .dot.busy { background: #ffb454; box-shadow: 0 0 10px #ffb454; }
+  #titlebar .sub { font-size: 11px; color: #b3a176; }
+  #panel { left: 16px; bottom: 16px; width: 320px; padding: 16px; }
+  #panel h2 { font-size: 12px; margin: 0 0 12px; letter-spacing: 2px; color: #ffd76e; font-weight: 600; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .row label { flex: 0 0 96px; font-size: 11px; color: #c9b98c; }
+  .row input[type=text], .row input[type=number], .row select { flex: 1; background: rgba(10,8,4,.75); color: #fff3d6; border: 1px solid #6b5a2e; border-radius: 6px; padding: 6px 9px; font-family: inherit; font-size: 12px; outline: none; }
+  .row input:focus, .row select:focus { border-color: var(--acc); box-shadow: 0 0 0 2px rgba(255,207,92,.2); }
+  .row input[type=checkbox] { accent-color: #ffcf5c; width: 15px; height: 15px; }
+  .btn { flex: 1; border: 1px solid rgba(255,207,92,.5); background: linear-gradient(180deg, rgba(255,207,92,.22), rgba(255,207,92,.06)); color: #ffe9b0; border-radius: 8px; padding: 9px 0; font-family: inherit; font-size: 12px; cursor: pointer; letter-spacing: 1px; transition: all .18s; }
+  .btn:hover { background: linear-gradient(180deg, rgba(255,207,92,.4), rgba(255,207,92,.14)); box-shadow: 0 0 18px rgba(255,207,92,.4); }
+  .btn.primary { background: linear-gradient(180deg, #ffc43d, #e89a0a); border-color: #ffd76e; color: #2a1d00; font-weight: 700; }
+  .btn.primary:hover { box-shadow: 0 0 26px rgba(255,196,61,.6); }
+  .btnrow { display: flex; gap: 8px; margin-bottom: 9px; }
+  .btnsmall { flex: 0 0 auto; background: rgba(255,207,92,.14); border: 1px solid rgba(255,207,92,.35); color: #ffe9b0; border-radius: 6px; padding: 6px 10px; font-family: inherit; font-size: 11px; cursor: pointer; }
+  .btnsmall:hover { background: rgba(255,207,92,.3); }
+  .hint { font-size: 10px; color: #8f7f57; line-height: 1.6; margin-top: 6px; }
+  .hint b { color: #ffcf5c; }
+  #stats { right: 16px; bottom: 16px; width: 300px; padding: 16px; }
+  #stats h2 { font-size: 12px; margin: 0 0 12px; letter-spacing: 2px; color: #ffd76e; font-weight: 600; }
+  .srow { display: flex; justify-content: space-between; font-size: 11px; color: #b3a176; padding: 4px 0; border-bottom: 1px dashed rgba(255,207,92,.12); }
+  .srow .v { color: #fff3d6; }
+  .srow .v b { color: #ffd76e; }
+  .srow .v.hot { color: #ff9d7a; }
+  #legend { position: fixed; z-index: 10; right: 16px; top: 16px; padding: 12px 14px; }
+  #legend .row2 { display: flex; align-items: center; gap: 8px; font-size: 11px; color: #c9b98c; }
+  #legend .grad { width: 140px; height: 10px; border-radius: 5px; background: linear-gradient(90deg, #0d1240 0%, #3a3fd0 25%, #10b981 50%, #ff9e2c 75%, #ffd700 100%); box-shadow: 0 0 12px rgba(255,215,0,.35); }
+  #toast { position: fixed; z-index: 20; left: 50%; bottom: 40px; transform: translateX(-50%) translateY(20px); background: rgba(24,18,4,.92); border: 1px solid rgba(255,207,92,.45); color: #ffe9b0; padding: 8px 18px; border-radius: 20px; font-size: 12px; opacity: 0; transition: all .3s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  @media (max-width: 1100px) { #stats { display: none; } }
+
+  #disclaimer { position: fixed; z-index: 15; left: 50%; top: 76px; transform: translateX(-50%); width: min(92vw, 760px); background: rgba(20,14,4,.85); border: 1px solid rgba(255,157,122,.4); border-radius: 10px; padding: 10px 14px; font-size: 11px; color: #ffb08a; line-height: 1.55; backdrop-filter: blur(10px); text-align: center; }
+  #disclaimer b { color: #ff8a5c; }
+  #disclaimer code { color: #ffd76e; font-family: inherit; }
+
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div id="disclaimer">
+  ⚠️ <b>诚实声明</b>：本页可视化 <code>lgv3_diffuse</code>（LookingGlass v2.3 扩散混淆）的<strong>运行态扩散行为</strong>。
+  LookingGlass 是<strong>混淆引擎</strong>，<strong>不提供密码学安全保证</strong>，不增强 LWE 格硬度，默认关闭、永不进入生产加密路径。
+  此页面仅作研究展示，对应 <code>experimental/vwz-lg/lg-v2.3/src/diffuse.rs</code>。
+</div>
+
+
+<div id="titlebar" class="hud">
+  <div class="dot" id="dot"></div>
+  <h1>LG v2.3 · diffuse 扩散颗粒云</h1><div class="sub" style="color:#ff8a5c;font-size:10px;">研究展示 · 默认关闭</div>
+  <div class="sub" id="wasmState">WASM 加载中…</div>
+</div>
+
+<div id="legend" class="hud">
+  <div class="row2"><span>0x00</span><div class="grad"></div><span>0xFF</span></div>
+</div>
+
+<div id="panel" class="hud">
+  <h2>控制台 / CONSOLE</h2>
+  <div class="row"><label>seed (hex)</label><input id="seed" value="1234" spellcheck="false"></div>
+  <div class="row"><label>session_key</label><input id="sk" value="dead" spellcheck="false"></div>
+  <div class="row"><label>数据规模</label>
+    <select id="size">
+      <option value="256">256 B (16×16)</option>
+      <option value="1024" selected>1024 B (32×32)</option>
+      <option value="4096">4096 B (64×64)</option>
+    </select>
+  </div>
+  <div class="row"><label>数据模式</label>
+    <select id="mode">
+      <option value="ramp">渐变 (i*7)</option>
+      <option value="sine">正弦地形</option>
+      <option value="prng">伪随机</option>
+      <option value="zero">全零</option>
+    </select>
+  </div>
+  <div class="row"><label>扰动位置</label>
+    <input id="pos" type="number" min="0" max="1023" value="0">
+    <button class="btnsmall" id="randPos">随机</button>
+  </div>
+  <div class="btnrow"><button class="btn" id="genBtn">重新生成</button><button class="btn primary" id="distBtn">扰动扩散</button></div>
+  <div class="btnrow"><button class="btn" id="viewBtn">重置视角</button><button class="btn" id="spinBtn">自动旋转:开</button></div>
+  <div class="row" style="margin-bottom:0"><label>网格地面</label><input type="checkbox" id="gridChk" checked></div>
+  <div class="hint">左键旋转 · 滚轮缩放 · 右键平移 · <b>点击输入云</b>中的粒子即可选中扰动位置，再点「扰动扩散」观察扩散波。</div>
+</div>
+
+<div id="stats" class="hud">
+  <h2>指标 / METRICS</h2>
+  <div class="srow"><span>输入 Shannon 熵</span><span class="v" id="mEntIn">-</span></div>
+  <div class="srow"><span>输出 Shannon 熵</span><span class="v" id="mEntOut">-</span></div>
+  <div class="srow"><span>输入非零字节</span><span class="v" id="mNzIn">-</span></div>
+  <div class="srow"><span>输出非零字节</span><span class="v" id="mNzOut">-</span></div>
+  <div class="srow"><span>扰动后扩散字节</span><span class="v" id="mDiff">-</span></div>
+  <div class="srow"><span>diffuse 耗时</span><span class="v" id="mTime">-</span></div>
+  <div class="srow"><span>渲染帧率</span><span class="v" id="mFps">-</span></div>
+  <div class="srow"><span>往返可逆性</span><span class="v" id="mRt">-</span></div>
+  <div class="srow"><span>数据规模</span><span class="v" id="mSize">-</span></div>
+</div>
+
+<div id="toast"></div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js" } }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from './vendor/three/examples/jsm/controls/OrbitControls.js';
+  import init, { lgv3_diffuse, lgv3_diffuse_inverse } from './lgv2_3.js';
+
+  const $ = id => document.getElementById(id);
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x070a08, 0.006);
+  scene.background = new THREE.Color(0x070a08);
+
+  const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 2000);
+  camera.position.set(20, 120, 150);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.35;
+  $('scene').appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.minDistance = 30;
+  controls.maxDistance = 700;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.8;
+  controls.target.set(32, 0, 16);
+
+  scene.add(new THREE.AmbientLight(0xffe8c0, 0.4));
+  const dir = new THREE.DirectionalLight(0xfff0d0, 1.0);
+  dir.position.set(60, 120, 40);
+  scene.add(dir);
+  const pt = new THREE.PointLight(0xffc76a, 2.2, 500);
+  pt.position.set(32, 55, 16);
+  scene.add(pt);
+
+  const gridHelper = new THREE.GridHelper(140, 70, 0x8a6d1f, 0x3a2f12);
+  gridHelper.position.set(32, -0.4, 16);
+  gridHelper.material.transparent = true;
+  gridHelper.material.opacity = 0.5;
+  scene.add(gridHelper);
+
+  function makeDotTexture() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.35, 'rgba(255,255,255,.55)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    const t = new THREE.CanvasTexture(c);
+    return t;
+  }
+  const dotTex = makeDotTexture();
+
+  const starGeom = new THREE.BufferGeometry();
+  const starCount = 4000;
+  const sp = new Float32Array(starCount * 3);
+  const ss = new Float32Array(starCount);
+  for (let i = 0; i < starCount; i++) {
+    sp[i*3] = (Math.random() - 0.5) * 700;
+    sp[i*3+1] = Math.random() * 260 - 20;
+    sp[i*3+2] = (Math.random() - 0.5) * 700;
+    ss[i] = 0.6 + Math.random() * 1.6;
+  }
+  starGeom.setAttribute('position', new THREE.BufferAttribute(sp, 3));
+  const starMat = new THREE.PointsMaterial({ size: 1.6, map: dotTex, transparent: true, opacity: 0.75, depthWrite: false, color: 0xffd27a, sizeAttenuation: true });
+  scene.add(new THREE.Points(starGeom, starMat));
+
+  const state = {
+    N: 1024, seed: 0x1234n, sk: 0xdeadn, mode: 'ramp', pos: 0,
+    data: null, out: null, out2: null, changed: new Set(),
+    inPoints: null, outPoints: null, hiPoints: null, ring: null
+  };
+
+  const inMat = new THREE.PointsMaterial({ size: 1.15, map: dotTex, vertexColors: true, transparent: true, opacity: 1, depthWrite: false, sizeAttenuation: true });
+  const outMat = new THREE.PointsMaterial({ size: 2.1, map: dotTex, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+  const hiMat = new THREE.PointsMaterial({ size: 2.6, color: 0xffe066, map: dotTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, sizeAttenuation: true });
+
+  const inGeom = new THREE.BufferGeometry();
+  const outGeom = new THREE.BufferGeometry();
+  const hiGeom = new THREE.BufferGeometry();
+  state.inPoints = new THREE.Points(inGeom, inMat);
+  state.outPoints = new THREE.Points(outGeom, outMat);
+  state.hiPoints = new THREE.Points(hiGeom, hiMat);
+  scene.add(state.inPoints);
+  scene.add(state.outPoints);
+  scene.add(state.hiPoints);
+
+  const ringMat = new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending });
+  state.ring = new THREE.Mesh(new THREE.RingGeometry(0.7, 1, 64), ringMat);
+  state.ring.rotation.x = -Math.PI / 2;
+  state.ring.visible = false;
+  scene.add(state.ring);
+  const ringState = { t: 0, active: false };
+
+  const raycaster = new THREE.Raycaster();
+  raycaster.params.Points.threshold = 1.6;
+  const pointer = new THREE.Vector2();
+  const pickIn = new THREE.Vector3();
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function genData(mode, n) {
+    const buf = new Uint8Array(n);
+    const rng = mulberry32(0xCAFEBABE);
+    const side = Math.sqrt(n) | 0;
+    for (let i = 0; i < n; i++) {
+      const x = i % side, y = (i / side) | 0;
+      if (mode === 'ramp') buf[i] = (i * 7) & 0xff;
+      else if (mode === 'sine') buf[i] = (0xff * (0.5 + 0.5 * Math.sin(x * 0.5) * Math.cos(y * 0.5))) | 0;
+      else if (mode === 'prng') buf[i] = (rng() * 256) | 0;
+    }
+    return buf;
+  }
+
+  function entropy(bytes) {
+    const cnt = new Array(256).fill(0);
+    for (let i = 0; i < bytes.length; i++) cnt[bytes[i]]++;
+    let e = 0;
+    for (const c of cnt) { if (c) { const p = c / bytes.length; e -= p * Math.log2(p); } }
+    return e;
+  }
+
+  const KLIMT = [
+    [0, new THREE.Color(0x0d1240)],
+    [64, new THREE.Color(0x3a3fd0)],
+    [128, new THREE.Color(0x10b981)],
+    [192, new THREE.Color(0xff9e2c)],
+    [255, new THREE.Color(0xffd700)]
+  ];
+  function colorByte(v) {
+    const c = new THREE.Color();
+    for (let i = 0; i < KLIMT.length - 1; i++) {
+      const v0 = KLIMT[i][0], c0 = KLIMT[i][1];
+      const v1 = KLIMT[i + 1][0], c1 = KLIMT[i + 1][1];
+      if (v >= v0 && v <= v1) {
+        return c.copy(c0).lerp(c1, (v - v0) / (v1 - v0));
+      }
+    }
+    return c.setHex(0xffd700);
+  }
+
+  function fillGrid(geom, bytes, gridX, gridZ) {
+    const n = bytes.length;
+    const side = Math.sqrt(n) | 0;
+    const pos = new Float32Array(n * 3);
+    const col = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) {
+      const x = i % side;
+      const z = (i / side) | 0;
+      const v = bytes[i];
+      pos[i*3] = gridX + x;
+      pos[i*3+1] = 0.25 + (v / 255) * 7.5;
+      pos[i*3+2] = gridZ + z;
+      colorByte(v).toArray(col, i*3);
+    }
+    geom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geom.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    geom.attributes.position.needsUpdate = true;
+    geom.attributes.color.needsUpdate = true;
+    geom.computeBoundingSphere();
+  }
+
+  function buildClouds() {
+    const side = Math.sqrt(state.N) | 0;
+    const gap = side * 0.16;
+    fillGrid(inGeom, state.data, 0, 0);
+    fillGrid(outGeom, state.out, side + gap, 0);
+    hiGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3));
+    hiGeom.setAttribute('color', new THREE.BufferAttribute(new Float32Array(0), 3));
+    const mid = (side + gap) / 2;
+    controls.target.set(mid, 0, side / 2);
+    camera.position.set(mid - 20, 100, 170);
+  }
+
+  function setHighlight() {
+    const n = state.changed.size;
+    if (!n) { hiGeom.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3)); hiGeom.attributes.position.needsUpdate = true; return; }
+    const pos = new Float32Array(n * 3);
+    let k = 0;
+    const side = Math.sqrt(state.N) | 0;
+    const gap = side * 0.16;
+    for (const i of state.changed) {
+      const x = i % side, z = (i / side) | 0;
+      pos[k*3] = side + gap + x;
+      pos[k*3+1] = 0.25 + (state.out2[i] / 255) * 7.5;
+      pos[k*3+2] = z;
+      k++;
+    }
+    hiGeom.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    hiGeom.attributes.position.needsUpdate = true;
+    hiGeom.computeBoundingSphere();
+  }
+
+  function fireRing(x, z) {
+    state.ring.position.set(x, 1.2, z);
+    ringState.t = 0;
+    ringState.active = true;
+    state.ring.visible = true;
+    state.ring.scale.setScalar(0.01);
+  }
+
+  function toast(msg, ms = 2200) {
+    const el = $('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => el.classList.remove('show'), ms);
+  }
+
+  function computeDiffuse() {
+    const t0 = performance.now();
+    const out = lgv3_diffuse(state.data, state.seed, state.sk);
+    const ms = performance.now() - t0;
+    const rt = lgv3_diffuse_inverse(out, state.seed, state.sk);
+    const reversible = rt.length === state.N && rt.every((v, i) => v === state.data[i]);
+    return { out, ms, reversible };
+  }
+
+  function generate() {
+    $('dot').className = 'dot busy';
+    const side = Math.sqrt(state.N) | 0;
+    state.data = genData(state.mode, state.N);
+    const { out, ms, reversible } = computeDiffuse();
+    state.out = out;
+    state.changed.clear();
+    buildClouds();
+    $('mTime').textContent = ms.toFixed(1) + ' ms';
+    $('mSize').textContent = state.N + ' B (' + side + '×' + side + ')';
+    $('mEntIn').textContent = entropy(state.data).toFixed(3) + ' bit';
+    $('mEntOut').textContent = entropy(state.out).toFixed(3) + ' bit';
+    $('mNzIn').textContent = state.data.reduce((a, v) => a + (v !== 0), 0) + '/' + state.N;
+    $('mNzOut').textContent = state.out.reduce((a, v) => a + (v !== 0), 0) + '/' + state.N;
+    $('mDiff').textContent = '-';
+    $('mRt').textContent = reversible ? '通过' : '失败';
+    $('pos').max = state.N - 1;
+    $('dot').className = 'dot';
+  }
+
+  function disturb() {
+    const t0 = performance.now();
+    const d2 = state.data.slice();
+    d2[state.pos] ^= 1;
+    const out2 = lgv3_diffuse(d2, state.seed, state.sk);
+    const ms = performance.now() - t0;
+    state.out2 = out2;
+    state.changed.clear();
+    for (let i = 0; i < state.N; i++) if (state.out[i] !== out2[i]) state.changed.add(i);
+    setHighlight();
+    const side = Math.sqrt(state.N) | 0;
+    fireRing((state.pos % side) + 0.5, ((state.pos / side) | 0) + 0.5);
+    $('mTime').textContent = ms.toFixed(1) + ' ms';
+    const el = $('mDiff');
+    el.className = state.changed.size >= state.N / 2 ? 'v' : 'v hot';
+    el.innerHTML = '<b>' + state.changed.size + '</b>/' + state.N;
+    toast('扰动 #' + state.pos + ' 扩散到 ' + state.changed.size + ' 个输出字节');
+  }
+
+  function parseHex(input, label) {
+    const s = input.value.trim().replace(/^0x/i, '');
+    if (s.length > 16) throw new Error(label + ' 超过 16 位 hex');
+    if (!/^[0-9a-fA-F]*$/.test(s)) throw new Error(label + ' 非法 hex');
+    return BigInt('0x' + (s || '0').padStart(16, '0'));
+  }
+
+  $('genBtn').addEventListener('click', () => {
+    try {
+      state.seed = parseHex($('seed'), 'seed');
+      state.sk = parseHex($('sk'), 'session_key');
+      state.N = parseInt($('size').value, 10);
+      state.mode = $('mode').value;
+      state.pos = Math.min(state.N - 1, Math.max(0, parseInt($('pos').value) || 0));
+      generate();
+    } catch (e) { toast('错误：' + e.message); }
+  });
+
+  $('distBtn').addEventListener('click', () => {
+    state.pos = Math.min(state.N - 1, Math.max(0, parseInt($('pos').value) || 0));
+    if (!state.data) generate();
+    disturb();
+  });
+
+  $('randPos').addEventListener('click', () => {
+    state.pos = (Math.random() * state.N) | 0;
+    $('pos').value = state.pos;
+    if (state.data) disturb();
+  });
+
+  $('viewBtn').addEventListener('click', () => {
+    const side = Math.sqrt(state.N) | 0;
+    const gap = side * 0.16;
+    controls.target.set((side + gap) / 2, 0, side / 2);
+    camera.position.set((side + gap) / 2 - 20, 100, 170);
+  });
+
+  $('spinBtn').addEventListener('click', () => {
+    controls.autoRotate = !controls.autoRotate;
+    $('spinBtn').textContent = '自动旋转:' + (controls.autoRotate ? '开' : '关');
+  });
+
+  $('gridChk').addEventListener('change', () => { gridHelper.visible = $('gridChk').checked; });
+
+  renderer.domElement.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return;
+    pointer.x = (e.clientX / innerWidth) * 2 - 1;
+    pointer.y = -(e.clientY / innerHeight) * 2 + 1;
+    raycaster.setFromCamera(pointer, camera);
+    const hits = raycaster.intersectObject(state.inPoints, false);
+    if (!hits.length) return;
+    const p = hits[0].point;
+    const idx = hits[0].index;
+    state.pos = idx;
+    $('pos').value = idx;
+    toast('选中输入字节 #' + idx + '（点击「扰动扩散」）');
+  });
+
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  const clock = new THREE.Clock();
+  let fpsAcc = 0, fpsN = 0, fpsT = performance.now();
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = clock.getDelta();
+    controls.update();
+    hiMat.size = 2.8 + Math.sin(performance.now() * 0.006) * 1.0;
+    if (ringState.active) {
+      ringState.t += dt;
+      const k = ringState.t / 1.2;
+      state.ring.scale.setScalar(0.05 + k * 26);
+      ringMat.opacity = Math.max(0, 0.6 * (1 - k));
+      if (k >= 1) { ringState.active = false; state.ring.visible = false; }
+    }
+    renderer.render(scene, camera);
+    fpsAcc += dt; fpsN++;
+    if (performance.now() - fpsT > 800) {
+      $('mFps').textContent = (fpsN / fpsAcc).toFixed(0) + ' fps';
+      fpsAcc = 0; fpsN = 0; fpsT = performance.now();
+    }
+  }
+
+  async function main() {
+    await init();
+    $('wasmState').textContent = 'WASM 就绪 · diff 已激活';
+    $('dot').className = 'dot';
+    state.seed = 0x1234n;
+    state.sk = 0xdeadn;
+    state.N = parseInt($('size').value, 10);
+    state.mode = $('mode').value;
+    generate();
+    animate();
+  }
+
+  main().catch(e => { $('wasmState').textContent = '加载失败'; toast('错误：' + e.message, 5000); });
+</script>
+</body>
+</html>
