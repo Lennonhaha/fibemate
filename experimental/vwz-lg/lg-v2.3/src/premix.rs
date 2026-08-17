@@ -65,6 +65,24 @@ pub fn full_mix_inverse_depth(data: &mut [u8], seed: u64, session_key: u64, dept
     postmix(data, key);
 }
 
+// ---- Dynamic-path depth variant (Sprint 4) ----
+// Same premix/Wreath/postmix structure, but the Wreath core selects between
+// Standard and Substitute per layer from session_key. Session-key-derived
+// path choice strengthens session independence beyond the fixed pipeline.
+pub fn full_mix_forward_depth_dynamic(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
+    let key = seed.wrapping_add(session_key);
+    premix(data, key);
+    crate::wreath::confuse_chunk_depth_dynamic(data, seed, session_key, &crate::wreath::LayerSeeds::new(seed), depth);
+    postmix(data, key);
+}
+
+pub fn full_mix_inverse_depth_dynamic(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
+    let key = seed.wrapping_add(session_key);
+    premix(data, key);
+    crate::wreath::deconfuse_chunk_depth_dynamic(data, seed, session_key, &crate::wreath::LayerSeeds::new(seed), depth);
+    postmix(data, key);
+}
+
 // ---- Depth=0 variant (premix only, for testing) ----
 pub fn premix_only(data: &mut [u8], seed: u64, session_key: u64) {
     let key = seed.wrapping_add(session_key);

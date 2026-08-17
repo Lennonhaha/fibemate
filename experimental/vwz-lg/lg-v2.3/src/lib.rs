@@ -37,9 +37,9 @@ pub use wreath::{XorShift64, layer_seed, LayerSeeds, confuse_chunk_depth, deconf
 pub use bind::CryptoBinding;
 pub use cleanup::SecureBuffer;
 
-use wreath::{confuse_full, deconfuse_full};
+use wreath::{confuse_full, deconfuse_full, dynamic_path_mode};
 use premix::{full_mix_forward_depth, full_mix_inverse_depth};
-use pipeline::{obfuscate, deobfuscate, compile_program, compile_inverse_program};
+use pipeline::{obfuscate, deobfuscate, compile_program, compile_inverse_program, obfuscate_dynamic, deobfuscate_dynamic};
 use seal::{obfuscate_sealed, deobfuscate_sealed, rand_seed};
 use diffuse::{diffuse_forward, diffuse_inverse};
 use hardening::{harden_forward, harden_inverse, HARDEN_ROUNDS};
@@ -353,6 +353,45 @@ pub fn lgv3_sealed_deobfuscate(data: &[u8], seed: u64, session_key: u64, depth: 
 #[wasm_bindgen]
 pub fn lgv3_rand_seed(seed: u64, session_key: u64, depth: usize) -> String {
     format!("{:016x}", rand_seed(seed, session_key, depth))
+}
+
+// ============================================================
+// v2.4-dynamic Sprint 4: 动态路径 (dynamic_path) API
+//   - lgv3_pipeline_obfuscate_dynamic:   混淆，Wreath 层按 session_key 双路径
+//   - lgv3_pipeline_deobfuscate_dynamic: 解混淆 (与上方成对)
+//   - lgv3_dynamic_path_profile: 返回 session_key 各层的路径选择 (审计/测试)
+//   - 向后兼容: 非 dynamic 变体输出字节级不变 (黄金向量仍通过)
+// ============================================================
+
+/// Sprint 4: 动态路径混淆 — Wreath 核心在 Standard/Substitute 之间按
+/// session_key 逐层选择。不同 session 走不同混淆路径，session 独立性
+/// 高于固定管线。路径选择不依赖数据, forward/inverse 天然一致。
+#[wasm_bindgen]
+pub fn lgv3_pipeline_obfuscate_dynamic(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    obfuscate_dynamic(&mut result, seed, session_key, depth);
+    result
+}
+
+/// Sprint 4: 动态路径解混淆 (须与 lgv3_pipeline_obfuscate_dynamic 用相同
+/// seed/session_key/depth)。
+#[wasm_bindgen]
+pub fn lgv3_pipeline_deobfuscate_dynamic(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    deobfuscate_dynamic(&mut result, seed, session_key, depth);
+    result
+}
+
+/// Sprint 4: 返回 session_key 下 NUM_LAYERS 层的路径选择字符串
+/// ('S' = Substitute 恒等层, 'T' = Standard 真实变换层)，供审计/测试
+/// 验证不同 session 产生不同路径分布。
+#[wasm_bindgen]
+pub fn lgv3_dynamic_path_profile(session_key: u64) -> String {
+    (0..NUM_LAYERS)
+        .map(|li| if dynamic_path_mode(session_key, li) { 'S' } else { 'T' })
+        .collect()
 }
 
 // ============================================================
@@ -805,5 +844,132 @@ mod tests {
         let c1 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
         let c2 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xBEEF, 7);
         assert_ne!(c1, c2, "all-zero input must still diverge across sessions");
+    }
+
+    // ---- Sprint 4: dynamic path (Wreath 层内双路径) ----
+
+    #[test]
+    fn test_sprint4_dynamic_roundtrip() {
+        for n in [1usize, 4, 64, 256, 840] {
+            let data: Vec<u8> = (0..n).map(|i| (i * 7) as u8).collect();
+            for seed in [0u64, 0x1234, 0xDEADBEEF] {
+                for sk in [0u64, 0x1111, 0xBEEF, 0xCAFE] {
+                    for depth in [1usize, 3, 7] {
+                        let mut c = data.clone();
+                        obfuscate_dynamic(&mut c, seed, sk, depth);
+                        assert_ne!(c, data, "dynamic obfuscate must change data (n={}, seed={}, sk={}, d={})", n, seed, sk, depth);
+                        deobfuscate_dynamic(&mut c, seed, sk, depth);
+                        assert_eq!(c, data, "dynamic roundtrip failed (n={}, seed={}, sk={}, d={})", n, seed, sk, depth);
+                    }
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_sprint4_dynamic_wasm_api() {
+        let data: Vec<u8> = (0..256).map(|i| (i * 3) as u8).collect();
+        let enc = lgv3_pipeline_obfuscate_dynamic(&data, 0xABCD, 0xFEED, 7);
+        assert_ne!(enc, data, "dynamic WASM obfuscate must change data");
+        let dec = lgv3_pipeline_deobfuscate_dynamic(&enc, 0xABCD, 0xFEED, 7);
+        assert_eq!(dec, data, "dynamic WASM roundtrip");
+    }
+
+    #[test]
+    fn test_sprint4_dynamic_positive_session_diff() {
+        // 不同 session_key 在 dynamic 路径下必须发散（比固定路径更强）。
+        let seeds = [0u64, 0x1234, 0xDEADBEEF];
+        let sk_pairs = [(0x1000u64, 0x2000u64), (0xBEEFu64, 0xCAFEu64)];
+        for &n in &[64usize, 256] {
+            let data: Vec<u8> = (0..n).map(|i| (i * 7) as u8).collect();
+            for &seed in &seeds {
+                for &(sk1, sk2) in &sk_pairs {
+                    let mut o1 = data.clone();
+                    let mut o2 = data.clone();
+                    obfuscate_dynamic(&mut o1, seed, sk1, 7);
+                    obfuscate_dynamic(&mut o2, seed, sk2, 7);
+                    let changed = o1.iter().zip(o2.iter()).filter(|(a, b)| a != b).count();
+                    assert!(
+                        changed > 0,
+                        "dynamic session diff must be positive (n={}, seed={}, sk1={:x}, sk2={:x})",
+                        n, seed, sk1, sk2
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_sprint4_dynamic_deterministic() {
+        let data: Vec<u8> = (0..128).map(|i| i as u8).collect();
+        let a = lgv3_pipeline_obfuscate_dynamic(&data, 0x7777, 0x8888, 7);
+        let b = lgv3_pipeline_obfuscate_dynamic(&data, 0x7777, 0x8888, 7);
+        assert_eq!(a, b, "dynamic output must be deterministic for same params");
+    }
+
+    #[test]
+    fn test_sprint4_dynamic_wrong_key_fails() {
+        let data: Vec<u8> = (0..200).map(|i| (i * 5) as u8).collect();
+        let enc = lgv3_pipeline_obfuscate_dynamic(&data, 0x1111, 0x2222, 7);
+        let dec = lgv3_pipeline_deobfuscate_dynamic(&enc, 0x1111, 0x3333, 7);
+        assert_ne!(dec, data, "wrong session_key must not restore dynamic data");
+    }
+
+    #[test]
+    fn test_sprint4_dynamic_path_profile_varies() {
+        // 路径选择必须随 session_key 变化，且同时覆盖 Standard 与 Substitute。
+        let p1 = lgv3_dynamic_path_profile(0x1111);
+        let p2 = lgv3_dynamic_path_profile(0x2222);
+        assert_eq!(p1.len(), NUM_LAYERS, "profile must cover all layers");
+        assert_ne!(p1, p2, "different sessions must pick different paths");
+        // 至少一个 Substitute 与一个 Standard 被选中（双路径都真实可达）。
+        assert!(p1.contains('S'), "profile must include Substitute: {}", p1);
+        assert!(p1.contains('T'), "profile must include Standard: {}", p1);
+        // 确定性。
+        assert_eq!(p1, lgv3_dynamic_path_profile(0x1111), "path profile must be deterministic");
+    }
+
+    #[test]
+    fn test_sprint4_dynamic_all_zero_input() {
+        // 256B 全 0 输入在 dynamic 路径下也必须全字节发散且 roundtrip。
+        let data = vec![0u8; 256];
+        let c = lgv3_pipeline_obfuscate_dynamic(&data, 0x1234, 0xDEAD, 7);
+        assert_ne!(c, data, "dynamic must change all-zero input");
+        let changed = c.iter().filter(|&&b| b != 0).count();
+        assert!(
+            changed >= 256,
+            "dynamic all-zero must flip all 256 bytes (got {})",
+            changed
+        );
+        let r = lgv3_pipeline_deobfuscate_dynamic(&c, 0x1234, 0xDEAD, 7);
+        assert_eq!(r, data, "dynamic all-zero roundtrip");
+    }
+
+    #[test]
+    fn test_sprint4_fixed_paths_unchanged() {
+        // 向后兼容: dynamic 变体引入不得改变固定管线输出 (黄金向量回归)。
+        let data: Vec<u8> = (0..100).map(|i| (i * 7) as u8).collect();
+        let a = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        let b = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        assert_eq!(&a[..8], &[25u8, 64, 55, 144, 43, 105, 160, 124], "fixed golden vector must be unchanged");
+        assert_eq!(a, b, "fixed path deterministic");
+    }
+
+    #[test]
+    fn test_sprint4_dynamic_differs_from_fixed() {
+        // dynamic 与固定管线输出应当不同（至少某些层走了 Substitute）。
+        // 用一个确实混入 Substitute 的 session_key（profile 已含 'S'）。
+        let data: Vec<u8> = (0..256).map(|i| i as u8).collect();
+        let mut sk = 1u64;
+        while !lgv3_dynamic_path_profile(sk).contains('S') {
+            sk += 1;
+        }
+        let fixed = lgv3_pipeline_obfuscate(&data, 0x1234, sk, 7);
+        let dynamic = lgv3_pipeline_obfuscate_dynamic(&data, 0x1234, sk, 7);
+        assert_ne!(
+            fixed, dynamic,
+            "dynamic path must diverge from fixed pipeline when Substitute is active (sk={:x})",
+            sk
+        );
     }
 }

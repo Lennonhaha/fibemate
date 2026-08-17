@@ -19,7 +19,7 @@
 use crate::cff::CffMap;
 use crate::defense::{self, DEFENSE_LEVEL_OFF};
 use crate::opcode::{Op, OpcodeMap};
-use crate::premix::{full_mix_forward_depth, full_mix_inverse_depth};
+use crate::premix::{full_mix_forward_depth, full_mix_inverse_depth, full_mix_forward_depth_dynamic, full_mix_inverse_depth_dynamic};
 use crate::vm::{Instr, Program, Vm};
 use crate::hardening::{harden_forward, harden_inverse, HARDEN_ROUNDS};
 
@@ -114,12 +114,27 @@ pub fn compile_inverse_program(seed: u64, session_key: u64, depth: usize) -> Pro
 /// single-byte perturbation step of the black-box attack cannot localize a
 /// 1-byte dependency (see security-assessment/lg-hardening-review.md).
 pub fn obfuscate(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
+    obfuscate_impl(data, seed, session_key, depth, false);
+}
+
+/// Sprint 4 dynamic-path variant: the Wreath core selects between Standard
+/// and Substitute per layer from session_key, so different sessions walk
+/// different confusion paths. All other stages are identical to `obfuscate`.
+pub fn obfuscate_dynamic(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
+    obfuscate_impl(data, seed, session_key, depth, true);
+}
+
+fn obfuscate_impl(data: &mut [u8], seed: u64, session_key: u64, depth: usize, dynamic: bool) {
     if data.is_empty() {
         return;
     }
     defense::with_engine(|engine| {
         // Stage-1 premix + Wreath(depth) covers all bytes first.
-        full_mix_forward_depth(data, seed, session_key, depth);
+        if dynamic {
+            full_mix_forward_depth_dynamic(data, seed, session_key, depth);
+        } else {
+            full_mix_forward_depth(data, seed, session_key, depth);
+        }
         // Stage-3 multi-round full-block hardening (diffuse + S-box, seed-derived).
         harden_forward(data, seed, session_key, HARDEN_ROUNDS);
         // Stage-2 VM program adds a second, independent confusion layer.
@@ -139,6 +154,16 @@ pub fn obfuscate(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
 
 /// Run the full Stage-2 deobfuscation pipeline (inverse) on a byte buffer.
 pub fn deobfuscate(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
+    deobfuscate_impl(data, seed, session_key, depth, false);
+}
+
+/// Sprint 4 dynamic-path inverse. Must pair with `obfuscate_dynamic` using the
+/// same (seed, session_key, depth).
+pub fn deobfuscate_dynamic(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
+    deobfuscate_impl(data, seed, session_key, depth, true);
+}
+
+fn deobfuscate_impl(data: &mut [u8], seed: u64, session_key: u64, depth: usize, dynamic: bool) {
     if data.is_empty() {
         return;
     }
@@ -160,7 +185,11 @@ pub fn deobfuscate(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
         harden_inverse(&mut buf, seed, session_key, HARDEN_ROUNDS);
 
         // Undo the premix/Wreath (Stage-1 inverse).
-        full_mix_inverse_depth(&mut buf, seed, session_key, depth);
+        if dynamic {
+            full_mix_inverse_depth_dynamic(&mut buf, seed, session_key, depth);
+        } else {
+            full_mix_inverse_depth(&mut buf, seed, session_key, depth);
+        }
         data.copy_from_slice(&buf);
     });
 }
