@@ -26,6 +26,8 @@ pub mod pipeline;
 pub mod diffuse;
 pub mod hardening;
 pub mod defense;
+pub mod chacha8;
+pub mod seal;
 
 use wasm_bindgen::prelude::*;
 
@@ -38,6 +40,7 @@ pub use cleanup::SecureBuffer;
 use wreath::{confuse_full, deconfuse_full};
 use premix::{full_mix_forward_depth, full_mix_inverse_depth};
 use pipeline::{obfuscate, deobfuscate, compile_program, compile_inverse_program};
+use seal::{obfuscate_sealed, deobfuscate_sealed, rand_seed};
 use diffuse::{diffuse_forward, diffuse_inverse};
 use hardening::{harden_forward, harden_inverse, HARDEN_ROUNDS};
 
@@ -315,6 +318,41 @@ pub fn lgv3_session_diff_ratio(data: &[u8], seed: u64, sk1: u64, sk2: u64, depth
         .filter(|(a, b)| a != b)
         .count();
     changed as f64 / data.len() as f64
+}
+
+// ============================================================
+// v2.4-dynamic Sprint 3: 密封层 API (Stage-3 变异+加密)
+//   - lgv3_sealed_obfuscate:   混淆 + ChaCha8 流加密 (rand_seed 派生密钥)
+//   - lgv3_sealed_deobfuscate: ChaCha8 解密 + 反混淆
+//   - lgv3_rand_seed:          暴露 rand_seed 随机化派生 (供审计/测试)
+// ============================================================
+
+/// Sprint 3: 密封混淆 — obfuscate(seed,session,depth) 后叠加 ChaCha8 流加密。
+///
+/// 密钥/nonce 由 keccak256(seed, session_key, depth) 派生 (rand_seed 随机化,
+/// 非线性, 打破 Stage-2 的 seed^session_key 线性可逆)。输出为密文, 没有
+/// session 派生的密钥连反混淆管道都无法直接作用。
+#[wasm_bindgen]
+pub fn lgv3_sealed_obfuscate(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    obfuscate_sealed(&mut result, seed, session_key, depth);
+    result
+}
+
+/// Sprint 3: 密封解混淆 — 先 ChaCha8 解密, 再 deobfuscate(seed,session,depth)。
+#[wasm_bindgen]
+pub fn lgv3_sealed_deobfuscate(data: &[u8], seed: u64, session_key: u64, depth: usize) -> Vec<u8> {
+    if data.is_empty() { return vec![]; }
+    let mut result = data.to_vec();
+    deobfuscate_sealed(&mut result, seed, session_key, depth);
+    result
+}
+
+/// Sprint 3: 返回 (seed, session_key, depth) 的 rand_seed 派生值 (hex, 审计用)。
+#[wasm_bindgen]
+pub fn lgv3_rand_seed(seed: u64, session_key: u64, depth: usize) -> String {
+    format!("{:016x}", rand_seed(seed, session_key, depth))
 }
 
 // ============================================================
@@ -653,5 +691,119 @@ mod tests {
     fn test_sprint2_session_diff_empty_input() {
         let empty: Vec<u8> = vec![];
         assert_eq!(lgv3_session_diff_ratio(&empty, 1, 2, 3, 7), 0.0);
+    }
+
+    // ---- Sprint 3: sealed layer (Stage-3 变异+加密) ----
+
+    #[test]
+    fn test_sprint3_sealed_roundtrip() {
+        for n in [0usize, 1, 64, 256, 840, 2000] {
+            let data: Vec<u8> = (0..n).map(|i| (i * 3 + 7) as u8).collect();
+            let mut enc = data.clone();
+            obfuscate_sealed(&mut enc, 0x1234, 0xDEAD, 7);
+            if n > 0 {
+                assert_ne!(enc, data, "sealed must change data (n={})", n);
+            }
+            let mut dec = enc.clone();
+            deobfuscate_sealed(&mut dec, 0x1234, 0xDEAD, 7);
+            assert_eq!(dec, data, "sealed roundtrip (n={})", n);
+        }
+    }
+
+    #[test]
+    fn test_sprint3_sealed_wasm_api() {
+        let data: Vec<u8> = (0..256).map(|i| (i * 5) as u8).collect();
+        let enc = lgv3_sealed_obfuscate(&data, 0xABCD, 0xFEED, 7);
+        assert_ne!(enc, data);
+        let dec = lgv3_sealed_deobfuscate(&enc, 0xABCD, 0xFEED, 7);
+        assert_eq!(dec, data);
+    }
+
+    #[test]
+    fn test_sprint3_sealed_differs_from_plain() {
+        let data: Vec<u8> = (0..128).map(|i| i as u8).collect();
+        let plain = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        let sealed = lgv3_sealed_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        assert_ne!(plain, sealed, "sealed layer must add an extra transform");
+    }
+
+    #[test]
+    fn test_sprint3_sealed_key_sensitivity() {
+        let data: Vec<u8> = (0..256).map(|i| i as u8).collect();
+        let c1 = lgv3_sealed_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        let c2 = lgv3_sealed_obfuscate(&data, 0x1234, 0xDEAD_1, 7);
+        let diff = c1.iter().zip(c2.iter()).filter(|(a, b)| a != b).count();
+        assert!(diff > 0, "session_key must perturb sealed output");
+    }
+
+    #[test]
+    fn test_sprint3_sealed_wrong_key_fails() {
+        let data: Vec<u8> = (0..200).map(|i| (i * 5) as u8).collect();
+        let enc = lgv3_sealed_obfuscate(&data, 0x1111, 0x2222, 7);
+        let dec = lgv3_sealed_deobfuscate(&enc, 0x1111, 0x3333, 7);
+        assert_ne!(dec, data, "wrong session_key must not restore data");
+    }
+
+    #[test]
+    fn test_sprint3_rand_seed_nonlinear() {
+        // rand_seed 必须非线性 (不等于 Stage-2 的 seed ^ session ^ depth*k)。
+        let lin = 0x1234u64 ^ 0xDEADu64 ^ (7u64).wrapping_mul(0x9E37_79B9_7F4A_7C15);
+        assert_ne!(rand_seed(0x1234, 0xDEAD, 7), lin);
+        assert_ne!(rand_seed(0x1234, 0xDEAD, 7), rand_seed(0x1235, 0xDEAD, 7));
+        assert_ne!(rand_seed(0x1234, 0xDEAD, 7), rand_seed(0x1234, 0xDEAD, 8));
+    }
+
+    #[test]
+    fn test_sprint3_sealed_deterministic() {
+        let data: Vec<u8> = (0..128).map(|i| i as u8).collect();
+        let a = lgv3_sealed_obfuscate(&data, 0x7777, 0x8888, 7);
+        let b = lgv3_sealed_obfuscate(&data, 0x7777, 0x8888, 7);
+        assert_eq!(a, b, "sealed output must be deterministic for same params");
+    }
+
+    // ---- Sprint 3: 256B 全 0 输入验证 (stage1/2 文档收尾漏项) ----
+
+    #[test]
+    fn test_sprint3_all_zero_256b_pipeline() {
+        // 256B 全 0 输入: 混淆输出必须全字节变化 (非 premix XorShift64 自举问题),
+        // 且 roundtrip 精确还原。
+        let data = vec![0u8; 256];
+        let c = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        assert_ne!(c, data, "pipeline must change all-zero input");
+        let changed = c.iter().filter(|&&b| b != 0).count();
+        assert!(
+            changed >= 256,
+            "all-zero input must flip all 256 bytes (got {})",
+            changed
+        );
+        let r = lgv3_pipeline_deobfuscate(&c, 0x1234, 0xDEAD, 7);
+        assert_eq!(r, data, "all-zero roundtrip");
+    }
+
+    #[test]
+    fn test_sprint3_all_zero_256b_sealed() {
+        // 密封层同样覆盖 256B 全 0 输入。注意: ChaCha8 流加密的 keystream
+        // 每字节有 1/256 概率恰为 0x00 (与输入 0x00 异或后仍为 0), 属正常
+        // 概率事件, 因此断言"绝大多数字节变化"而非"全部 256 字节变化"。
+        let data = vec![0u8; 256];
+        let c = lgv3_sealed_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        assert_ne!(c, data);
+        let changed = c.iter().filter(|&&b| b != 0).count();
+        assert!(
+            changed >= 230,
+            "sealed all-zero must flip the vast majority of bytes (got {})",
+            changed
+        );
+        let r = lgv3_sealed_deobfuscate(&c, 0x1234, 0xDEAD, 7);
+        assert_eq!(r, data);
+    }
+
+    #[test]
+    fn test_sprint3_all_zero_256b_session_diff() {
+        // 全 0 输入下, 不同 session 也必须产出不同输出。
+        let data = vec![0u8; 256];
+        let c1 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        let c2 = lgv3_pipeline_obfuscate(&data, 0x1234, 0xBEEF, 7);
+        assert_ne!(c1, c2, "all-zero input must still diverge across sessions");
     }
 }
