@@ -48,6 +48,11 @@ updates:
         # Transitive — DoS in minimist/path-to-regexp chain
       - dependency-name: "express"
         # Many transitive vulnerabilities in express <5 — using restify instead
+      - dependency-name: "electron"
+        # tools/pqc-desktop is an unfinished skeleton (assets/content/lib dirs
+        # absent, cannot build). Frozen at ^28.0.0 until desktop client is
+        # actually developed. Not part of the PQC core library.
+
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
