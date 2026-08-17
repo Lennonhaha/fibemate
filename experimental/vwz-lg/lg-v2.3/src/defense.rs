@@ -185,6 +185,19 @@ impl DefenseEngine {
         }
     }
 
+    /// Sprint 5: feed a program-level integrity verdict. `ok == false` means an
+    /// opaque-predicate checkpoint failed (statically unreachable on a clean
+    /// binary), i.e. the program state was tampered at runtime. Counts as an
+    /// anomaly so sustained tampering drives the engine into Poisoning mode.
+    pub fn check_opaque(&mut self, ok: bool) {
+        if !self.enabled() {
+            return;
+        }
+        if !ok {
+            self.record_anomaly();
+        }
+    }
+
     fn baseline_stats(&self) -> (f64, f64) {
         let n = self.baseline_samples.len() as f64;
         let mean = self.baseline_samples.iter().map(|&v| v as f64).sum::<f64>() / n;

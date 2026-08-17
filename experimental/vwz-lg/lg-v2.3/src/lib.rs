@@ -28,6 +28,7 @@ pub mod hardening;
 pub mod defense;
 pub mod chacha8;
 pub mod seal;
+pub mod opaque;
 
 use wasm_bindgen::prelude::*;
 
@@ -43,6 +44,7 @@ use pipeline::{obfuscate, deobfuscate, compile_program, compile_inverse_program,
 use seal::{obfuscate_sealed, deobfuscate_sealed, rand_seed};
 use diffuse::{diffuse_forward, diffuse_inverse};
 use hardening::{harden_forward, harden_inverse, HARDEN_ROUNDS};
+use opaque::{OpaqueFamily, NUM_FAMILIES};
 
 // ============================================================
 // WASM 公开 API — 完全向后兼容 v2.2.2
@@ -392,6 +394,43 @@ pub fn lgv3_dynamic_path_profile(session_key: u64) -> String {
     (0..NUM_LAYERS)
         .map(|li| if dynamic_path_mode(session_key, li) { 'S' } else { 'T' })
         .collect()
+}
+
+// ============================================================
+// v2.4-dynamic Sprint 5: 独立算术不透明谓词 (opaque predicates) API
+//   - lgv3_opaque_families:    列出全部谓词族 (审计)
+//   - lgv3_opaque_check:       单点求值一个恒真算术谓词
+//   - lgv3_opaque_program_cfg: 返回 (seed,session,depth) 编译程序携带的
+//                              谓词族 + 盐 (hex)，供审计/静态分析对照
+//   - 接入: VM run/run_defended 每步 checkpoint，恒真，不改字节输出
+// ============================================================
+
+/// Sprint 5: 返回全部不透明谓词族的名称 (逗号分隔，审计用)。
+#[wasm_bindgen]
+pub fn lgv3_opaque_families() -> String {
+    OpaqueFamily::all()
+        .iter()
+        .map(|f| f.name().to_string())
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+/// Sprint 5: 求值第 `family_id` 个不透明谓词在输入 `x` 下的结果。
+/// 对任意 x 恒返回 true (数学恒真)；若返回 false 说明实现被破坏。
+#[wasm_bindgen]
+pub fn lgv3_opaque_check(family_id: u32, x: u64) -> bool {
+    match OpaqueFamily::from_id(family_id) {
+        Some(f) => f.eval(x),
+        None => false,
+    }
+}
+
+/// Sprint 5: 返回 (seed, session_key, depth) 编译出的 VM 程序所携带的
+/// 不透明谓词配置 "family,salt_hex" (与 compile_program 完全一致)。
+#[wasm_bindgen]
+pub fn lgv3_opaque_program_cfg(seed: u64, session_key: u64, depth: usize) -> String {
+    let prog = compile_program(seed, session_key, depth);
+    format!("{},{:016x}", prog.opaque.family.name(), prog.opaque.salt)
 }
 
 // ============================================================
@@ -971,5 +1010,102 @@ mod tests {
             "dynamic path must diverge from fixed pipeline when Substitute is active (sk={:x})",
             sk
         );
+    }
+
+    // ---- Sprint 5: 独立算术不透明谓词 ----
+
+    #[test]
+    fn test_sprint5_opaque_check_true_for_all_inputs() {
+        // 每个谓词族对边界值 + 伪随机样本必须恒真。
+        let families = lgv3_opaque_families();
+        assert_eq!(families.split(',').count(), NUM_FAMILIES, "families list");
+        for id in 0..NUM_FAMILIES as u32 {
+            for x in [0u64, 1, 2, 3, 6, 7, u64::MAX, u64::MAX - 1] {
+                assert!(
+                    lgv3_opaque_check(id, x),
+                    "family {} must be true for x={:#x}",
+                    id,
+                    x
+                );
+            }
+        }
+    }
+
+    #[test]
+    fn test_sprint5_program_cfg_derived_and_consistent() {
+        // (seed,session,depth) -> 唯一 cfg; forward/inverse 程序共享同一配置。
+        let cfg1 = lgv3_opaque_program_cfg(0x1234, 0xDEAD, 7);
+        let cfg2 = lgv3_opaque_program_cfg(0x1234, 0xDEAD, 7);
+        assert_eq!(cfg1, cfg2, "opaque cfg must be deterministic");
+        let cfg3 = lgv3_opaque_program_cfg(0x1234, 0xBEEF, 7);
+        assert_ne!(cfg1, cfg3, "different session must change opaque cfg");
+        let fwd = compile_program(0x1234, 0xDEAD, 7);
+        let inv = compile_inverse_program(0x1234, 0xDEAD, 7);
+        assert_eq!(fwd.opaque.family, inv.opaque.family, "forward/inverse share family");
+        assert_eq!(fwd.opaque.salt, inv.opaque.salt, "forward/inverse share salt");
+    }
+
+    #[test]
+    fn test_sprint5_opaque_roundtrip_stable() {
+        // checkpoint 恒真 -> 不改变 roundtrip 与字节输出 (黄金向量回归)。
+        for n in [1usize, 64, 256] {
+            let data: Vec<u8> = (0..n).map(|i| (i * 11) as u8).collect();
+            for seed in [0u64, 0x1234, 0xDEADBEEF] {
+                for sk in [0x1111u64, 0xBEEF] {
+                    let mut c = data.clone();
+                    obfuscate(&mut c, seed, sk, 5);
+                    deobfuscate(&mut c, seed, sk, 5);
+                    assert_eq!(c, data, "opaque checkpoint must not break roundtrip (n={}, seed={:#x}, sk={:#x})", n, seed, sk);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_sprint5_opaque_byte_identical_to_golden() {
+        // 固定黄金向量必须逐字节不变 (Sprint 4 已锁定)。
+        let data: Vec<u8> = (0..100).map(|i| (i * 7) as u8).collect();
+        let out = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        assert_eq!(&out[..8], &[25u8, 64, 55, 144, 43, 105, 160, 124], "opaque injection must not change golden vector");
+    }
+
+    #[test]
+    fn test_sprint5_opaque_defense_compose() {
+        // 谓词检查 + 防御引擎组合: 干净环境下不产生异常 (不投毒)。
+        defense::configure(3, 0);
+        let data: Vec<u8> = (0..128).map(|i| (i * 3) as u8).collect();
+        let mut ok = true;
+        for _ in 0..6 {
+            let mut c = data.clone();
+            obfuscate(&mut c, 0xCAFE, 0xDEAD, 7);
+            deobfuscate(&mut c, 0xCAFE, 0xDEAD, 7);
+            ok &= c == data;
+        }
+        defense::configure(0, 0);
+        assert!(ok, "opaque + defense must keep clean-env roundtrip intact");
+    }
+
+    #[test]
+    fn test_sprint5_opaque_config_varies_across_seeds() {
+        // 不同 seed 应倾向选择不同谓词族 (至少不是全部相同)。
+        let mut seen = std::collections::HashSet::new();
+        for seed in 0..128u64 {
+            let cfg = opaque::config_from_seed(seed);
+            seen.insert(cfg.family);
+        }
+        assert!(seen.len() >= 2, "opaque families must vary across seeds");
+    }
+
+    #[test]
+    fn test_sprint5_opaque_wasm_api() {
+        let fam = lgv3_opaque_families();
+        assert!(fam.contains("FermatMod5"), "families list contains FermatMod5: {}", fam);
+        assert!(fam.contains("CubicMod6"), "families list contains CubicMod6: {}", fam);
+        assert!(lgv3_opaque_check(0, 12345), "family 0 always true");
+        assert!(!lgv3_opaque_check(999, 1), "invalid family id -> false");
+        let cfg = lgv3_opaque_program_cfg(0x7777, 0x8888, 7);
+        let parts: Vec<&str> = cfg.split(',').collect();
+        assert_eq!(parts.len(), 2, "cfg = family,salt: {}", cfg);
+        assert!(parts[1].len() == 16, "salt must be 16 hex chars: {}", parts[1]);
     }
 }

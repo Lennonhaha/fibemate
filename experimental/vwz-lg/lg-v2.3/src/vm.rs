@@ -21,6 +21,7 @@
 
 use crate::cff::CffMap;
 use crate::defense::{self, fnv1a64, DefenseEngine};
+use crate::opaque::{self, OpaqueConfig};
 use crate::opcode::{Op, OpcodeMap, NUM_OPS};
 use crate::sbox::{SBOX, INV_SBOX};
 use crate::wreath::{layer_seed, XorShift64};
@@ -52,6 +53,10 @@ pub struct Program {
     pub instrs: Vec<Instr>,
     pub map: OpcodeMap,
     pub cff: CffMap,
+    /// Sprint 5: seed-derived opaque-predicate config (family + salt). Derived
+    /// from the opcode map + CFF table so it varies with (seed, session_key,
+    /// depth) and is identical for forward/inverse programs of one triple.
+    pub opaque: OpaqueConfig,
     handlers: [StepHandler; NUM_OPS],
 }
 
@@ -161,10 +166,18 @@ impl Program {
         for slot in 0..NUM_OPS {
             handlers[slot] = HANDLERS_BY_OP[rev[slot]];
         }
+        // Sprint 5: opaque config derives from the seed-parameterized dispatch
+        // tables (map + CFF), never from instruction content, so forward and
+        // inverse programs of the same (seed, session, depth) share one config.
+        let mut seed_buf = Vec::with_capacity(map.map.len() + cff.order.len());
+        seed_buf.extend_from_slice(&map.map);
+        seed_buf.extend_from_slice(&cff.order);
+        let opaque = opaque::config_from_seed(fnv1a64(&seed_buf));
         Self {
             instrs,
             map,
             cff,
+            opaque,
             handlers,
         }
     }
@@ -253,6 +266,14 @@ impl Vm {
             }
             self.steps += 1;
 
+            // Sprint 5: opaque-predicate checkpoint — always true on a clean
+            // binary (arithmetic identity), so it never alters semantics or
+            // output bytes. A false return here means the program state was
+            // patched at runtime (statically unreachable).
+            if !opaque::checkpoint(&prog.opaque, self.pc, self.steps) {
+                return false;
+            }
+
             let ins = prog.instrs[self.pc];
             let next_pc = self.pc + 1;
 
@@ -297,6 +318,14 @@ impl Vm {
                 return false;
             }
             self.steps += 1;
+
+            // Sprint 5: opaque-predicate checkpoint. Feeds the watchdog with a
+            // tamper verdict; on a clean binary it is always true so no anomaly
+            // is ever recorded.
+            let ok = opaque::checkpoint(&prog.opaque, self.pc, self.steps);
+            if !ok {
+                engine.check_opaque(false);
+            }
 
             let ins = prog.instrs[self.pc];
             let next_pc = self.pc + 1;
