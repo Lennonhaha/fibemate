@@ -19,6 +19,7 @@
 //   - bits 0..6 (0x7F) are the operation parameter.
 //   - Self-inverse ops (XOR, Swap, Rev) ignore the flag.
 
+use crate::defense::{self, fnv1a64, DefenseEngine};
 use crate::opcode::{Op, OpcodeMap};
 use crate::sbox::{SBOX, INV_SBOX};
 use crate::wreath::{layer_seed, XorShift64};
@@ -166,6 +167,88 @@ impl Vm {
         true
     }
 
+    /// Execute a decoded program under the active-defense watchdog.
+    ///
+    /// Same semantics as [`Self::run`] (returns true on clean halt) but:
+    ///   - records the full execution time and feeds it to the engine
+    ///   - samples ~`sample_ratio`-th of VM steps for a memory-integrity check
+    ///
+    /// The watchdog is passive: it never aborts execution and never crashes.
+    /// If the engine flips to Poisoning mode the caller decides how to respond.
+    pub fn run_defended(&mut self, prog: &Program, engine: &mut DefenseEngine) -> bool {
+        let start = defense::clock_ns();
+        let mem_base = prog_checksum(prog);
+        self.pc = 0;
+        self.steps = 0;
+        let n = prog.instrs.len();
+
+        while self.pc < n {
+            if self.steps >= MAX_STEPS {
+                engine.check_memory(mem_base, prog_checksum(prog));
+                engine.check_execution(defense::clock_ns() - start);
+                return false;
+            }
+            self.steps += 1;
+
+            let ins = prog.instrs[self.pc];
+            let next_pc = self.pc + 1;
+
+            match ins.op {
+                Op::OpNop => {}
+                Op::OpWreath => self.exec_wreath(ins.operand),
+                Op::OpShuffle => self.exec_shuffle(ins.operand),
+                Op::OpSbox => self.exec_sbox(ins.operand),
+                Op::OpXor => self.exec_xor(ins.operand),
+                Op::OpAdd => self.exec_add(ins.operand),
+                Op::OpMix => self.exec_mix(ins.operand),
+                Op::OpSwap => self.exec_swap(ins.operand),
+                Op::OpRot => self.exec_rot(ins.operand),
+                Op::OpJmp => {
+                    let target = (ins.operand as usize).min(n);
+                    self.pc = target;
+                    continue;
+                }
+                Op::OpPush => {
+                    if self.stack.len() >= MAX_STACK {
+                        engine.check_memory(mem_base, prog_checksum(prog));
+                        engine.check_execution(defense::clock_ns() - start);
+                        return false;
+                    }
+                    self.stack.push(ins.operand);
+                }
+                Op::OpPop => {
+                    let _ = self.stack.pop();
+                }
+                Op::OpDup => {
+                    if self.stack.len() >= MAX_STACK {
+                        engine.check_memory(mem_base, prog_checksum(prog));
+                        engine.check_execution(defense::clock_ns() - start);
+                        return false;
+                    }
+                    let top = self.stack.last().copied().unwrap_or(0);
+                    self.stack.push(top);
+                }
+                Op::OpRev => self.exec_rev(),
+                Op::OpEnter => {}
+                Op::OpHalt => {
+                    engine.check_memory(mem_base, prog_checksum(prog));
+                    engine.check_execution(defense::clock_ns() - start);
+                    return true;
+                }
+            }
+
+            if self.steps % engine.config.sample_ratio == 0 {
+                engine.check_memory(mem_base, prog_checksum(prog));
+            }
+
+            self.pc = next_pc;
+        }
+
+        engine.check_memory(mem_base, prog_checksum(prog));
+        engine.check_execution(defense::clock_ns() - start);
+        true
+    }
+
     // ---- individual pipeline operations (all invertible via bit-7 flag) ----
 
     fn exec_wreath(&mut self, layer: u8) {
@@ -304,6 +387,19 @@ impl Vm {
     fn exec_rev(&mut self) {
         self.data.reverse();
     }
+}
+
+/// FNV-1a checksum over a compiled program's opcode map + instruction stream.
+/// This is the memory-integrity reference for the VM Context: tampering with
+/// the program bytes (patch) or the seed-derived opcode map flips the checksum.
+pub fn prog_checksum(prog: &Program) -> u64 {
+    let mut buf = Vec::with_capacity(prog.instrs.len() * 2 + prog.map.map.len());
+    buf.extend_from_slice(&prog.map.map);
+    for ins in &prog.instrs {
+        buf.push(ins.op.index());
+        buf.push(ins.operand);
+    }
+    fnv1a64(&buf)
 }
 
 #[cfg(test)]
@@ -461,5 +557,54 @@ mod tests {
         assert!(vm.run(&prog));
         assert_eq!(vm.stack.len(), 1);
         assert_eq!(vm.stack[0], 0xAB);
+    }
+
+    #[test]
+    fn test_run_defended_bypass_matches_run() {
+        // Level 0 (default) must behave byte-identically to plain run().
+        use crate::defense::{DefenseConfig, DEFENSE_LEVEL_OFF};
+        let seed = 0x1234;
+        let prog = Program {
+            instrs: vec![Instr { op: Op::OpSbox, operand: 0 }],
+            map: OpcodeMap::new(seed),
+        };
+        let mut engine = DefenseEngine::new(DefenseConfig {
+            level: DEFENSE_LEVEL_OFF,
+            ..Default::default()
+        });
+        let data = sample(256);
+        let mut vm = Vm::new(data.clone());
+        assert!(vm.run(&prog));
+        let expected = vm.data.clone();
+
+        let mut vm2 = Vm::new(data.clone());
+        assert!(vm2.run_defended(&prog, &mut engine));
+        assert_eq!(vm2.data, expected, "level-0 defended run must match plain run");
+    }
+
+    #[test]
+    fn test_run_defended_calibrates_and_stays_clean() {
+        use crate::defense::{DefenseConfig, DEFENSE_LEVEL_STANDARD};
+        let seed = 0xDEAD;
+        let prog = Program {
+            instrs: vec![
+                Instr { op: Op::OpShuffle, operand: 3 },
+                Instr { op: Op::OpXor, operand: 7 },
+                Instr { op: Op::OpSbox, operand: 0 },
+                Instr { op: Op::OpRev, operand: 0 },
+            ],
+            map: OpcodeMap::new(seed),
+        };
+        let mut engine = DefenseEngine::new(DefenseConfig {
+            level: DEFENSE_LEVEL_STANDARD,
+            ..Default::default()
+        });
+        let data = sample(128);
+        for _ in 0..6 {
+            let mut vm = Vm::new(data.clone());
+            assert!(vm.run_defended(&prog, &mut engine));
+        }
+        assert!(!engine.poisoning(), "normal timing must not poison");
+        assert!(engine.baseline_sample_count() >= 4);
     }
 }

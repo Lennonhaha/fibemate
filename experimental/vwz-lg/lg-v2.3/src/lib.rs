@@ -24,6 +24,7 @@ pub mod vm;
 pub mod pipeline;
 pub mod diffuse;
 pub mod hardening;
+pub mod defense;
 
 use wasm_bindgen::prelude::*;
 
@@ -262,7 +263,7 @@ pub fn lgv3_verify_invertibility(seed: u64) -> bool {
 #[wasm_bindgen]
 pub fn lgv3_audit_log(data_len: usize, seed: u64, depth: usize) -> String {
     format!(
-        r#"{{\"version\":\"LG v2.3.0-alpha-stage2\",\"op\":\"confuse\",\"data_len\":{},\"seed\":\"{:016x}\",\"depth\":{}/{},\"modules\":[\"sbox\",\"wreath\",\"bind\",\"cleanup\",\"premix\",\"opcode\",\"vm\",\"pipeline\",\"diffuse\",\"hardening\"],\"baseline\":\"v2.2.2 (f9cc379)\"}}"#,
+        r#"{{\"version\":\"LG v2.3.0-alpha-stage2\",\"op\":\"confuse\",\"data_len\":{},\"seed\":\"{:016x}\",\"depth\":{}/{},\"modules\":[\"sbox\",\"wreath\",\"bind\",\"cleanup\",\"premix\",\"opcode\",\"vm\",\"pipeline\",\"diffuse\",\"hardening\",\"defense\"],\"baseline\":\"v2.2.2 (f9cc379)\"}}"#,
         data_len, seed, depth, NUM_LAYERS
     )
 }
@@ -270,6 +271,26 @@ pub fn lgv3_audit_log(data_len: usize, seed: u64, depth: usize) -> String {
 #[wasm_bindgen]
 pub fn lgv2_version() -> String {
     "LG v2.3-alpha-stage2 (programmable pipeline VM, backward-compatible API)".to_string()
+}
+
+// ============================================================
+// v2.4-dynamic Sprint 1: 运行时主动防御 API
+//   - lgv3_defense_configure: 设置防御等级 (0=旁路, 1=轻, 2=标准, 3=全量)
+//   - lgv3_defense_status:    返回防御状态 JSON (不含密钥材料)
+// ============================================================
+
+/// Set the runtime active-defense level. Returns 0 on success, non-zero if the
+/// level is invalid. level=0 fully bypasses and is byte-identical to Stage-2.
+#[wasm_bindgen]
+pub fn lgv3_defense_configure(level: u32, flags: u32) -> i32 {
+    defense::configure(level, flags)
+}
+
+/// JSON status of the defense engine (level, mode, anomaly count, baseline
+/// sample count). Never contains seed/session/depth material.
+#[wasm_bindgen]
+pub fn lgv3_defense_status() -> String {
+    defense::status_json()
 }
 
 // ============================================================

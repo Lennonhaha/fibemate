@@ -16,6 +16,7 @@
 // Forward ops use operands < 0x80; inverse ops set bit 7. Self-inverse ops
 // (XOR, Swap, Rev) need no inverse counterpart.
 
+use crate::defense::{self, DEFENSE_LEVEL_OFF};
 use crate::opcode::{Op, OpcodeMap};
 use crate::premix::{full_mix_forward_depth, full_mix_inverse_depth};
 use crate::vm::{Instr, Program, Vm};
@@ -115,15 +116,24 @@ pub fn obfuscate(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
     if data.is_empty() {
         return;
     }
-    // Stage-1 premix + Wreath(depth) covers all bytes first.
-    full_mix_forward_depth(data, seed, session_key, depth);
-    // Stage-3 multi-round full-block hardening (diffuse + S-box, seed-derived).
-    harden_forward(data, seed, session_key, HARDEN_ROUNDS);
-    // Stage-2 VM program adds a second, independent confusion layer.
-    let prog = compile_program(seed, session_key, depth);
-    let mut vm = Vm::new(data.to_vec());
-    vm.run(&prog);
-    data.copy_from_slice(&vm.data);
+    defense::with_engine(|engine| {
+        // Stage-1 premix + Wreath(depth) covers all bytes first.
+        full_mix_forward_depth(data, seed, session_key, depth);
+        // Stage-3 multi-round full-block hardening (diffuse + S-box, seed-derived).
+        harden_forward(data, seed, session_key, HARDEN_ROUNDS);
+        // Stage-2 VM program adds a second, independent confusion layer.
+        let prog = compile_program(seed, session_key, depth);
+        let mut vm = Vm::new(data.to_vec());
+        if engine.config.level > DEFENSE_LEVEL_OFF {
+            vm.run_defended(&prog, engine);
+            if engine.poisoning() {
+                defense::poison(&mut vm.data);
+            }
+        } else {
+            vm.run(&prog);
+        }
+        data.copy_from_slice(&vm.data);
+    });
 }
 
 /// Run the full Stage-2 deobfuscation pipeline (inverse) on a byte buffer.
@@ -131,23 +141,33 @@ pub fn deobfuscate(data: &mut [u8], seed: u64, session_key: u64, depth: usize) {
     if data.is_empty() {
         return;
     }
-    // Undo the VM layer first (inverse program).
-    let prog = compile_inverse_program(seed, session_key, depth);
-    let mut vm = Vm::new(data.to_vec());
-    vm.run(&prog);
+    defense::with_engine(|engine| {
+        // Undo the VM layer first (inverse program).
+        let prog = compile_inverse_program(seed, session_key, depth);
+        let mut vm = Vm::new(data.to_vec());
+        if engine.config.level > DEFENSE_LEVEL_OFF {
+            vm.run_defended(&prog, engine);
+            if engine.poisoning() {
+                defense::poison(&mut vm.data);
+            }
+        } else {
+            vm.run(&prog);
+        }
 
-    // Undo the multi-round full-block hardening.
-    let mut buf = vm.data;
-    harden_inverse(&mut buf, seed, session_key, HARDEN_ROUNDS);
+        // Undo the multi-round full-block hardening.
+        let mut buf = vm.data;
+        harden_inverse(&mut buf, seed, session_key, HARDEN_ROUNDS);
 
-    // Undo the premix/Wreath (Stage-1 inverse).
-    full_mix_inverse_depth(&mut buf, seed, session_key, depth);
-    data.copy_from_slice(&buf);
+        // Undo the premix/Wreath (Stage-1 inverse).
+        full_mix_inverse_depth(&mut buf, seed, session_key, depth);
+        data.copy_from_slice(&buf);
+    });
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::defense::{self, DEFENSE_LEVEL_OFF, DEFENSE_LEVEL_STANDARD};
 
     fn sample(n: usize) -> Vec<u8> {
         (0..n).map(|i| (i * 7) as u8).collect()
@@ -293,5 +313,32 @@ mod tests {
             !single_dep_found,
             "a single-byte dependency was found — black-box attack would succeed"
         );
+    }
+
+    #[test]
+    fn test_pipeline_defense_enabled_roundtrip_stable() {
+        // With the active-defense watchdog engaged, a clean environment must
+        // still round-trip byte-identically (no poisoning).
+        defense::configure(DEFENSE_LEVEL_STANDARD, 0);
+        let data = sample(64);
+        let mut all_ok = true;
+        for _ in 0..8 {
+            let mut c = data.clone();
+            obfuscate(&mut c, 0x1234, 0xDEAD, 7);
+            deobfuscate(&mut c, 0x1234, 0xDEAD, 7);
+            all_ok &= c == data;
+        }
+        defense::configure(DEFENSE_LEVEL_OFF, 0);
+        assert!(all_ok, "clean env must keep defended roundtrip intact");
+    }
+
+    #[test]
+    fn test_defense_configure_reflected_in_status() {
+        defense::configure(DEFENSE_LEVEL_STANDARD, 0);
+        let st = defense::status_json();
+        assert!(st.contains("\"level\":2"), "status must report level 2: {}", st);
+        defense::configure(DEFENSE_LEVEL_OFF, 0);
+        let st = defense::status_json();
+        assert!(st.contains("\"level\":0"), "status must report level 0: {}", st);
     }
 }
