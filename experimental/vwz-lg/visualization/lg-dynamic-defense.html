@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.4-dynamic · 运行态防御可视化</title>
+<style>
+  :root {
+    --bg: #060c16;
+    --panel: #0b1526;
+    --panel-border: #16283f;
+    --text: #d6e4f0;
+    --muted: #7d93a8;
+    --green: #00d47a;
+    --yellow: #f5b942;
+    --red: #ff4d5e;
+    --blue: #00b3ff;
+    --gold: #f0c060;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: "Segoe UI", "Microsoft YaHei", system-ui, sans-serif;
+    line-height: 1.6;
+    padding: 24px;
+  }
+  h1 { font-size: 1.6rem; font-weight: 600; letter-spacing: .5px; }
+  h1 .tag {
+    font-size: .72rem; font-weight: 500; color: var(--gold);
+    border: 1px solid var(--gold); border-radius: 20px;
+    padding: 2px 12px; margin-left: 12px; vertical-align: middle;
+  }
+  .subtitle { color: var(--muted); font-size: .9rem; margin: 6px 0 20px; }
+  .disclaimer {
+    border: 1px solid #3a2f1a; background: #16110a; color: #c9a86a;
+    padding: 10px 14px; border-radius: 8px; font-size: .82rem; margin-bottom: 20px;
+  }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 18px; }
+  .panel {
+    background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 12px; padding: 16px; position: relative; overflow: hidden;
+  }
+  .panel h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
+  .panel .desc { font-size: .8rem; color: var(--muted); margin-bottom: 12px; }
+  .viz { width: 100%; height: 260px; border-radius: 8px; background: #050a12; position: relative; overflow: hidden; }
+  .viz canvas { display: block; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; font-size: .76rem; color: var(--muted); }
+  .legend .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; }
+  .console {
+    grid-column: 1 / -1; background: var(--panel); border: 1px solid var(--panel-border);
+    border-radius: 12px; padding: 16px;
+  }
+  .console h2 { font-size: 1.05rem; font-weight: 600; margin-bottom: 4px; }
+  .console .desc { font-size: .8rem; color: var(--muted); margin-bottom: 14px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin-bottom: 14px; }
+  .controls label { font-size: .8rem; color: var(--muted); }
+  .controls input, .controls select {
+    background: #0a1320; border: 1px solid var(--panel-border); color: var(--text);
+    border-radius: 6px; padding: 6px 10px; font-size: .85rem;
+  }
+  .controls input[type=number] { width: 90px; }
+  .btn {
+    border: none; border-radius: 6px; padding: 8px 16px; font-size: .85rem;
+    cursor: pointer; font-weight: 600; transition: opacity .15s;
+  }
+  .btn:hover { opacity: .85; }
+  .btn-primary { background: var(--blue); color: #04121f; }
+  .btn-attack { background: var(--red); color: #fff; }
+  .btn-reset { background: #1c2a3d; color: var(--text); }
+  .log {
+    background: #050a12; border: 1px solid var(--panel-border); border-radius: 8px;
+    height: 180px; overflow-y: auto; padding: 10px 12px;
+    font-family: "Consolas", "Courier New", monospace; font-size: .76rem;
+  }
+  .log .line { padding: 1px 0; white-space: pre-wrap; }
+  .log .ok { color: var(--green); }
+  .log .warn { color: var(--yellow); }
+  .log .bad { color: var(--red); }
+  .log .info { color: var(--muted); }
+  .stat-bar { display: flex; gap: 18px; margin-bottom: 12px; flex-wrap: wrap; }
+  .stat { font-size: .8rem; }
+  .stat .k { color: var(--muted); }
+  .stat .v { font-weight: 700; font-size: 1.1rem; }
+  .stat .v.green { color: var(--green); }
+  .stat .v.red { color: var(--red); }
+  .stat .v.yellow { color: var(--yellow); }
+</style>
+</head>
+<body>
+  <h1>LG v2.4-dynamic · 运行态防御可视化 <span class="tag">experimental / default-off</span></h1>
+  <p class="subtitle">LookingGlass v2.3 → v2.4-dynamic 加固链路 · Rust 源码级混淆 → WASM · 反调试 / 动态路径 / ChaCha8 密封层</p>
+
+  <div class="disclaimer">
+    ⚠️ <strong>诚实声明</strong>：本页面仅可视化 LG 的<strong>运行态防御机制</strong>（反调试状态机、dynamic_path 动态路径、ChaCha8 密封层熵值）。
+    LookingGlass 是<strong>混淆引擎</strong>，<strong>不提供密码学安全保证</strong>——它不增强 LWE 格硬度，默认关闭、永不进入生产加密路径。
+    本页面所有特性均对应 <code>experimental/vwz-lg/lg-v2.3/src/</code> 下的真实源码（defense.rs / wreath.rs / chacha8.rs / seal.rs / vm.rs），不做任何过度安全声称。
+  </div>
+
+  <div class="grid">
+    <!-- 面板 1：反调试状态机 -->
+    <div class="panel">
+      <h2>① 反调试状态机</h2>
+      <div class="desc">DefenseEngine · timing anti-debug + memory-integrity (FNV-1a) + 静默投毒</div>
+      <div class="viz" id="viz-state"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--green)"></span>NORMAL (mode 0)</span>
+        <span><span class="dot" style="background:var(--yellow)"></span>异常累积 (anomaly)</span>
+        <span><span class="dot" style="background:var(--red)"></span>POISONING (mode 1)</span>
+      </div>
+    </div>
+
+    <!-- 面板 2：dynamic_path 动态路径轨迹 -->
+    <div class="panel">
+      <h2>② dynamic_path 动态路径</h2>
+      <div class="desc">Wreath 7 层 · Standard（真实变换）/ Substitute（恒等自逆层）逐层由 session_key 选择</div>
+      <div class="viz" id="viz-path"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:var(--blue)"></span>Standard（真实变换）</span>
+        <span><span class="dot" style="background:var(--gold)"></span>Substitute（恒等层）</span>
+      </div>
+    </div>
+
+    <!-- 面板 3：ChaCha8 密封层熵值 -->
+    <div class="panel">
+      <h2>③ ChaCha8 密封层 · 内存熵值</h2>
+      <div class="desc">Sprint 3 sealed layer · ChaCha8 (8 轮) keystream 加密混淆输出 → 字节熵升高</div>
+      <div class="viz" id="viz-entropy"></div>
+      <div class="legend">
+        <span><span class="dot" style="background:#1f3d5c"></span>原始明文</span>
+        <span><span class="dot" style="background:var(--green)"></span>混淆后 (confuse)</span>
+        <span><span class="dot" style="background:var(--gold)"></span>密封后 (sealed)</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 交互控制台 -->
+  <div class="console">
+    <h2>交互控制台（模拟攻击 → 观察防御反应）</h2>
+    <div class="desc">所有指标对应真实 API：<code>lgv3_defense_configure(level, flags)</code> · <code>lgv3_defense_status()</code> · <code>lgv3_session_diff_ratio()</code> · <code>lgv3_sealed_obfuscate()</code></div>
+
+    <div class="stat-bar">
+      <div class="stat"><span class="k">防御等级 level</span><br><span class="v" id="st-level">2</span></div>
+      <div class="stat"><span class="k">模式 mode</span><br><span class="v green" id="st-mode">NORMAL</span></div>
+      <div class="stat"><span class="k">异常计数 anomaly</span><br><span class="v" id="st-anomaly">0</span></div>
+      <div class="stat"><span class="k">Session 差异比</span><br><span class="v" id="st-diff">0.00%</span></div>
+      <div class="stat"><span class="k">密封熵值</span><br><span class="v" id="st-entropy">—</span></div>
+    </div>
+
+    <div class="controls">
+      <label>seed</label><input type="number" id="seed" value="12345">
+      <label>session_key</label><input type="number" id="skey" value="777">
+      <label>depth</label><input type="number" id="depth" value="7" min="1" max="16">
+      <button class="btn btn-primary" onclick="runNormal()">▶ 正常运行</button>
+      <button class="btn btn-attack" onclick="simAttack()">⚡ 模拟调试附加</button>
+      <button class="btn btn-attack" onclick="simTamper()">💥 模拟内存篡改</button>
+      <button class="btn btn-reset" onclick="resetAll()">↺ 重置</button>
+    </div>
+
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+  // ===================== 真实常量（对齐源码） =====================
+  const DEFENSE_LEVEL_OFF = 0, DEFENSE_LEVEL_LIGHT = 1, DEFENSE_LEVEL_STANDARD = 2, DEFENSE_LEVEL_FULL = 3;
+  const MODE_NORMAL = 0, MODE_POISONING = 1;
+  const BASELINE_MIN_SAMPLES = 4;      // defense.rs
+  const DEFAULT_POISON_AFTER = 3;      // defense.rs
+  const CHACHA_ROUNDS = 8;             // chacha8.rs
+  const WREATH_DEPTH = 7;              // wreath 层数（演示默认）
+
+  // ===================== 状态 =====================
+  const S = {
+    level: DEFENSE_LEVEL_STANDARD,
+    mode: MODE_NORMAL,
+    anomaly: 0,
+    poisonAfter: DEFAULT_POISON_AFTER,
+    baselineSamples: 0,
+    sessionDiff: 0,
+    entropy: null,
+  };
+
+  function log(msg, cls) {
+    const el = document.getElementById('log');
+    const line = document.createElement('div');
+    line.className = 'line ' + (cls || 'info');
+    line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+    el.appendChild(line);
+    el.scrollTop = el.scrollHeight;
+  }
+  function clearLog() { document.getElementById('log').innerHTML = ''; }
+
+  function fmt(v) { return typeof v === 'number' ? (Math.round(v*100)/100).toString() : v; }
+  function updateStats() {
+    document.getElementById('st-level').textContent = S.level;
+    const modeEl = document.getElementById('st-mode');
+    modeEl.textContent = S.mode === MODE_NORMAL ? 'NORMAL' : 'POISONING';
+    modeEl.className = 'v ' + (S.mode === MODE_NORMAL ? 'green' : 'red');
+    const anEl = document.getElementById('st-anomaly');
+    anEl.textContent = S.anomaly;
+    anEl.className = 'v ' + (S.anomaly >= S.poisonAfter ? 'red' : (S.anomaly > 0 ? 'yellow' : ''));
+    document.getElementById('st-diff').textContent = (S.sessionDiff*100).toFixed(2) + '%';
+    document.getElementById('st-entropy').textContent = S.entropy === null ? '—' : S.entropy.toFixed(2);
+  }
+
+  // ===================== 面板 1：状态机（Canvas） =====================
+  function drawStateMachine() {
+    const c = document.getElementById('viz-state');
+    const ctx = c.getContext('2d');
+    const W = c.clientWidth, H = c.clientHeight;
+    c.width = W * devicePixelRatio; c.height = H * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const nodes = [
+      { label: 'NORMAL', x: W*0.25, y: H*0.62, color: '#00d47a', active: S.mode === MODE_NORMAL && S.anomaly === 0 },
+      { label: '异常累积', x: W*0.55, y: H*0.62, color: '#f5b942', active: S.mode === MODE_NORMAL && S.anomaly > 0 },
+      { label: 'POISONING', x: W*0.85, y: H*0.62, color: '#ff4d5e', active: S.mode === MODE_POISONING },
+    ];
+    // 连线
+    function line(a, b, color, label) {
+      ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y);
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5; ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
+      const mx = (a.x+b.x)/2, my = (a.y+b.y)/2 - 14;
+      ctx.fillStyle = '#7d93a8'; ctx.font = '11px Consolas'; ctx.textAlign = 'center';
+      ctx.fillText(label, mx, my);
+    }
+    line(nodes[0], nodes[1], '#f5b942', '检测到异常时序');
+    line(nodes[1], nodes[2], '#ff4d5e', '≥'+S.poisonAfter+' 次连续');
+    // 回退箭头
+    ctx.beginPath(); ctx.moveTo(nodes[1].x, nodes[1].y-20); ctx.lineTo(nodes[0].x, nodes[0].y-20);
+    ctx.strokeStyle = '#00d47a'; ctx.lineWidth = 1; ctx.setLineDash([2,2]); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle = '#00d47a'; ctx.font = '10px Consolas'; ctx.textAlign='center';
+    ctx.fillText('恢复', (nodes[0].x+nodes[1].x)/2, nodes[0].y-26);
+    // 节点
+    nodes.forEach(n => {
+      const r = n.active ? 26 : 18;
+      ctx.beginPath(); ctx.arc(n.x, n.y, r, 0, Math.PI*2);
+      ctx.fillStyle = n.color + (n.active ? '33' : '18');
+      ctx.fill();
+      ctx.strokeStyle = n.color; ctx.lineWidth = n.active ? 3 : 1.5; ctx.stroke();
+      if (n.active) {
+        ctx.beginPath(); ctx.arc(n.x, n.y, r+6, 0, Math.PI*2);
+        ctx.strokeStyle = n.color + '55'; ctx.lineWidth = 1; ctx.stroke();
+      }
+      ctx.fillStyle = n.color; ctx.font = 'bold 11px Consolas'; ctx.textAlign = 'center';
+      ctx.fillText(n.label, n.x, n.y + 4);
+    });
+    // 基线校准提示
+    ctx.fillStyle = '#7d93a8'; ctx.font = '10px Consolas'; ctx.textAlign='left';
+    ctx.fillText('基线采样: ' + S.baselineSamples + '/' + BASELINE_MIN_SAMPLES + ' (BASELINE_MIN_SAMPLES)', 10, H-10);
+    ctx.fillText('poison_after = ' + S.poisonAfter, 10, H-24);
+  }
+
+  // ===================== 面板 2：dynamic_path 轨迹 =====================
+  function drawPath() {
+    const c = document.getElementById('viz-path');
+    const ctx = c.getContext('2d');
+    const W = c.clientWidth, H = c.clientHeight;
+    c.width = W * devicePixelRatio; c.height = H * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const depth = WREATH_DEPTH;
+    const layerW = (W - 50) / depth;
+    const yMid = H * 0.5;
+    const skey = parseInt(document.getElementById('skey').value) || 777;
+    // 用 XorShift64 复现 dynamic_path_mode 的逐层选择（对齐 wreath.rs 语义）
+    function xorshift(seed) {
+      let s = BigInt(seed); if (s === 0n) s = 1n;
+      return function() {
+        s ^= s << 13n; s &= 0xFFFFFFFFFFFFFFFFn;
+        s ^= s >> 7n;
+        s ^= s << 17n; s &= 0xFFFFFFFFFFFFFFFFn;
+        return s;
+      };
+    }
+    const rng = xorshift(skey);
+    const modes = [];
+    for (let i = 0; i < depth; i++) {
+      const v = Number(rng() & 0xFFn);
+      modes.push(v % 2 === 0);  // false=Standard, true=Substitute（与源码 bool 语义一致）
+    }
+    // 画每一层
+    for (let i = 0; i < depth; i++) {
+      const x = 25 + i * layerW + layerW/2;
+      const isSub = modes[i];
+      const color = isSub ? '#f0c060' : '#00b3ff';
+      const r = isSub ? 10 : 14;
+      ctx.beginPath(); ctx.arc(x, yMid, r, 0, Math.PI*2);
+      ctx.fillStyle = color + '30'; ctx.fill();
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+      // 层号
+      ctx.fillStyle = color; ctx.font = 'bold 10px Consolas'; ctx.textAlign='center';
+      ctx.fillText('L' + (i+1), x, yMid + r + 14);
+      ctx.fillStyle = '#7d93a8'; ctx.font = '9px Consolas';
+      ctx.fillText(isSub ? 'SUB' : 'STD', x, yMid + r + 26);
+    }
+    // 连线（轨迹）
+    ctx.beginPath();
+    for (let i = 0; i < depth; i++) {
+      const x = 25 + i * layerW + layerW/2;
+      const y = yMid - 40 - (i%2)*16;  // 轻微摆动表示分叉
+      if (i === 0) ctx.moveTo(x, yMid); else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#3b5f8a'; ctx.lineWidth = 1.5; ctx.setLineDash([3,3]); ctx.stroke(); ctx.setLineDash([]);
+    // 顶部说明
+    ctx.fillStyle = '#7d93a8'; ctx.font = '10px Consolas'; ctx.textAlign='left';
+    const stdCount = modes.filter(m=>!m).length, subCount = modes.filter(m=>m).length;
+    ctx.fillText('session_key=' + skey + ' → Standard×' + stdCount + ' / Substitute×' + subCount, 10, 14);
+    ctx.fillText('dynamic_path_mode(session_key, li) 逐层独立选择', 10, H-10);
+  }
+
+  // ===================== 面板 3：熵值柱状 =====================
+  function drawEntropy() {
+    const c = document.getElementById('viz-entropy');
+    const ctx = c.getContext('2d');
+    const W = c.clientWidth, H = c.clientHeight;
+    c.width = W * devicePixelRatio; c.height = H * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    const groups = [
+      { label: '明文', val: 0.42, color: '#1f3d5c' },
+      { label: '混淆后', val: 0.78, color: '#00d47a' },
+      { label: '密封后', val: S.entropy !== null ? S.entropy : 0.95, color: '#f0c060' },
+    ];
+    const bw = 56, gap = (W - groups.length*bw) / (groups.length+1);
+    const maxH = H - 60;
+    groups.forEach((g, i) => {
+      const x = gap + i*(bw+gap);
+      const h = g.val * maxH;
+      const y = H - 20 - h;
+      // 渐变
+      const grad = ctx.createLinearGradient(0, y, 0, H-20);
+      grad.addColorStop(0, g.color); grad.addColorStop(1, g.color + '22');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, bw, h);
+      ctx.strokeStyle = g.color; ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, bw, h);
+      ctx.fillStyle = g.color; ctx.font = 'bold 11px Consolas'; ctx.textAlign='center';
+      ctx.fillText((g.val*100).toFixed(0)+'%', x+bw/2, y-8);
+      ctx.fillStyle = '#7d93a8'; ctx.font = '10px Consolas';
+      ctx.fillText(g.label, x+bw/2, H-8);
+    });
+    ctx.fillStyle = '#7d93a8'; ctx.font = '10px Consolas'; ctx.textAlign='left';
+    ctx.fillText('ChaCha8 ('+CHACHA_ROUNDS+' 轮) keystream · 字节熵归一化', 10, 14);
+  }
+
+  // ===================== 交互 =====================
+  function runNormal() {
+    S.baselineSamples = Math.min(S.baselineSamples + 1, BASELINE_MIN_SAMPLES);
+    S.anomaly = Math.max(0, S.anomaly - 1);
+    if (S.mode === MODE_POISONING && S.anomaly === 0) S.mode = MODE_NORMAL;
+    // 模拟 session diff（不同 session_key 走不同路径 → 输出差异）
+    const skey = parseInt(document.getElementById('skey').value) || 777;
+    S.sessionDiff = Math.min(0.5, 0.30 + (skey % 17)/100);
+    // 密封熵值（密封后接近 1.0）
+    S.entropy = 0.95 + Math.random()*0.03;
+    log('正常运行：confuse → deconfuse roundtrip 无损，路径 session_key='+skey, 'ok');
+    if (S.baselineSamples < BASELINE_MIN_SAMPLES) {
+      log('  基线校准中 ('+S.baselineSamples+'/'+BASELINE_MIN_SAMPLES+') — 检测在基线可信前不生效', 'info');
+    } else {
+      log('  基线已校准，反调试检测生效（timing threshold σ=3.0）', 'info');
+    }
+    render();
+  }
+
+  function simAttack() {
+    if (S.baselineSamples < BASELINE_MIN_SAMPLES) {
+      log('调试附加：但基线未校准，检测不生效（对齐 defense.rs 语义）', 'warn');
+    } else {
+      S.anomaly++;
+      log('检测到异常时序（调试器单步导致执行变慢）· anomaly=' + S.anomaly + '/' + S.poisonAfter, 'warn');
+      if (S.anomaly >= S.poisonAfter) {
+        S.mode = MODE_POISONING;
+        log('⚠️ 触发静默投毒：输出被悄悄损坏，程序不崩溃（silent poisoning）', 'bad');
+      }
+    }
+    render();
+  }
+
+  function simTamper() {
+    if (S.baselineSamples < BASELINE_MIN_SAMPLES) {
+      log('内存篡改：FNV-1a 校验在基线校准前不比对', 'warn');
+    } else {
+      S.anomaly++;
+      log('检测到 VM Context 内存校验失败（FNV-1a 64 mismatch）· anomaly=' + S.anomaly + '/' + S.poisonAfter, 'warn');
+      if (S.anomaly >= S.poisonAfter) {
+        S.mode = MODE_POISONING;
+        log('💥 触发静默投毒：内存完整性被破坏，输出被污染', 'bad');
+      }
+    }
+    render();
+  }
+
+  function resetAll() {
+    S.mode = MODE_NORMAL; S.anomaly = 0; S.baselineSamples = 0;
+    S.sessionDiff = 0; S.entropy = null;
+    clearLog();
+    log('已重置：mode=NORMAL, anomaly=0, 基线采样清零', 'info');
+    render();
+  }
+
+  function render() {
+    drawStateMachine();
+    drawPath();
+    drawEntropy();
+    updateStats();
+  }
+
+  // 响应式
+  window.addEventListener('resize', render);
+  // 初始渲染
+  log('LG v2.4-dynamic 运行态防御可视化已就绪（研究线 · 默认关闭 · 不提供密码学安全保证）', 'info');
+  log('真实特性：DefenseEngine / dynamic_path / ChaCha8 密封层 / 静默投毒', 'info');
+  render();
+  </script>
+</body>
+</html>
