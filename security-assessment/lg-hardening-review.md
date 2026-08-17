@@ -184,6 +184,19 @@ round_key(seed, sk, round) = u64(Keccak-256("LGV3-HARDEN-v1"‖seed‖sk‖round
 - 6 变体扩散 min≥62/64 全 PASS
 - 6 变体 σ 定位全失败；3 组 pipeline 参数组合全达标
 
+**雪崩效应**（`attack/lg-avalanche-test.py`，N=256 随机输入 × 1000 trials × 随机 1 bit 翻转）：
+
+| 变体 | 字节级雪崩 | bit 级雪崩 |
+|:---|:---:|:---:|
+| 原始 LG v2.3（Wreath，无扩散） | 0.39%（=1/256，逐字节独立） | 0.20% |
+| lgv2_confuse（+harden） | 99.61% | 50.00% |
+| lgv2_confuse_ex（+harden） | 99.60% | 49.99% |
+| lgv3_confuse_mix（+harden） | 99.64% | 50.01% |
+| lgv2_confuse_full（+harden,KEM） | 99.60% | 49.99% |
+| lgv3_pipeline_obfuscate（+harden） | 99.64% | 50.02% |
+
+bit 级雪崩稳定落在理想区间（≈50%），字节级近满块（每输出字节都依赖全部输入字节），从"逐字节独立"（0.39%）跃升为全块扩散。
+
 ### 5.4 残余风险（诚实边界）
 
 1. **线性层本身仍可被选择明文+线性代数恢复**：若攻击者拥有 oracle 并采集 ≥N 个线性无关选明文输出，可解出整张 N×N 矩阵再取逆剥除（工程上为 O(N³)）。多轮"S-box ↔ 扩散"交替已把恢复从纯线性求解推向非线性方程组，显著提高门槛，但完整安全性仍属混淆/逆向工程开销层，不提供密码学安全证明。
