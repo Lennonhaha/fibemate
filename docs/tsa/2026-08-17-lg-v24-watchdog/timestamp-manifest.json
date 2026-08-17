@@ -1,0 +1,33 @@
+[
+  {
+    "file": "lg-105-defense.rs",
+    "size": 33364,
+    "sha256": "4F592A92639A0C77E8387F112D40C010B410DA9D5818A8B75E3FFD4D2F19D860",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-08-17T17:01:45+08:00"
+  }
+,
+  {
+    "file": "lg-106-vm.rs",
+    "size": 49410,
+    "sha256": "0F94C9D381838E6696DFCC948651E46A83394103FB951165C8AFEAD9E5765309",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-08-17T17:01:45+08:00"
+  }
+,
+  {
+    "file": "lg-107-lgv2_3.wasm",
+    "size": 109809,
+    "sha256": "3BCDD4F7C5E8D01A86C1C2060459816505DF93D14E7516E60A1F6CA9261F8934",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-08-17T17:01:45+08:00"
+  }
+,
+  {
+    "file": "lg-108-watchdog-wasm-verify.md",
+    "size": 4505,
+    "sha256": "4AA3910FDC35B190E9D9CFFBBBD70EF4C2D67BE2D8E16ED2D30EE83281C513D0",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-08-17T17:01:45+08:00"
+  }
+]
