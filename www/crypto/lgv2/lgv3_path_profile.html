@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.4 — 动态路径轨迹</title>
+<style>
+  :root { --glass: rgba(16,14,8,.66); --line: rgba(255,207,92,.22); --acc: #ffcf5c; --gold: #ffd700; --amber: #ff9e2c; --green: #10b981; --blue: #3a3fd0; }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(1200px 700px at 70% -10%, #1a1508 0%, #070a08 55%); color: #efe7d2; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  .wrap { max-width: 1060px; margin: 0 auto; padding: 28px 20px 40px; }
+  .title { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; }
+  .title h1 { font-size: 17px; margin: 0; letter-spacing: 1px; color: #ffdf8a; }
+  .title .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px #3ddc84; }
+  .title .dot.busy { background: #ffb454; box-shadow: 0 0 10px #ffb454; }
+  .sub { font-size: 11px; color: #b3a176; margin-bottom: 20px; }
+  .card { background: var(--glass); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; backdrop-filter: blur(12px); margin-bottom: 16px; }
+  .card h2 { font-size: 12px; margin: 0 0 12px; letter-spacing: 2px; color: #ffd76e; font-weight: 600; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; flex-wrap: wrap; }
+  .row label { flex: 0 0 130px; font-size: 11px; color: #c9b98c; }
+  .row input { flex: 1; min-width: 140px; background: rgba(10,8,4,.75); color: #fff3d6; border: 1px solid #6b5a2e; border-radius: 6px; padding: 7px 10px; font-family: inherit; font-size: 12px; outline: none; }
+  .row input:focus { border-color: var(--acc); box-shadow: 0 0 0 2px rgba(255,207,92,.2); }
+  .btn { border: 1px solid rgba(255,207,92,.5); background: linear-gradient(180deg, rgba(255,207,92,.22), rgba(255,207,92,.06)); color: #ffe9b0; border-radius: 8px; padding: 8px 20px; font-family: inherit; font-size: 12px; cursor: pointer; letter-spacing: 1px; transition: all .18s; }
+  .btn:hover { background: linear-gradient(180deg, rgba(255,207,92,.4), rgba(255,207,92,.14)); box-shadow: 0 0 18px rgba(255,207,92,.4); }
+  .btn.primary { background: linear-gradient(180deg, #ffc43d, #e89a0a); border-color: #ffd76e; color: #2a1d00; font-weight: 700; }
+  .btn.primary:hover { box-shadow: 0 0 26px rgba(255,196,61,.6); }
+  .btnsmall { background: rgba(255,207,92,.14); border: 1px solid rgba(255,207,92,.35); color: #ffe9b0; border-radius: 6px; padding: 7px 14px; font-family: inherit; font-size: 11px; cursor: pointer; }
+  .btnsmall:hover { background: rgba(255,207,92,.3); }
+  #pipe { width: 100%; height: 300px; display: block; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .scard { background: rgba(10,8,4,.6); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; }
+  .scard .k { font-size: 10px; color: #b3a176; letter-spacing: 1px; text-transform: uppercase; }
+  .scard .v { font-size: 17px; margin-top: 5px; color: #fff3d6; word-break: break-all; }
+  .scard .v b { color: #ffd76e; }
+  .scard .v.fp { font-size: 21px; letter-spacing: 6px; font-weight: 700; color: #ffdf8a; }
+  .scard .v.ok { color: #3ddc84; }
+  .scard .v.bad { color: #ff9d7a; }
+  .bar { height: 7px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; margin-top: 7px; }
+  .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #3a3fd0, #10b981, #ff9e2c, #ffd700); transition: width .5s; }
+  .hex { font-size: 11px; color: #c9b98c; word-break: break-all; line-height: 1.7; }
+  .hex b { color: #ffe9b0; }
+  .legend { display: flex; gap: 18px; font-size: 11px; color: #c9b98c; margin-top: 8px; }
+  .legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -2px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="title"><div class="dot" id="dot"></div><h1>LG v2.4 · 动态路径轨迹</h1></div>
+  <div class="sub">session_key 逐层驱动 Wreath 层在「S 恒等 / T 真实变换」间选择 · 不同 session 走不同混淆路径 · 前向/逆向天然一致</div>
+
+  <div class="card">
+    <h2>会话配置 / SESSION</h2>
+    <div class="row"><label>session A (hex)</label><input id="skA" value="1234" spellcheck="false"></div>
+    <div class="row"><label>session B (hex)</label><input id="skB" value="abcd" spellcheck="false"></div>
+    <div class="row"><label>seed (hex)</label><input id="seed" value="cafe" spellcheck="false"></div>
+    <div class="row" style="margin-bottom:0">
+      <label>数据</label>
+      <select id="dlen" style="background:rgba(10,8,4,.75);color:#fff3d6;border:1px solid #6b5a2e;border-radius:6px;padding:7px 10px;font-family:inherit;font-size:12px">
+        <option value="16">16 B</option>
+        <option value="64">64 B</option>
+        <option value="256">256 B</option>
+      </select>
+      <button class="btn primary" id="run">生成轨迹</button>
+      <button class="btnsmall" id="rnd">随机化</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>7 层路径管线 / PATH LAYERS</h2>
+    <canvas id="pipe"></canvas>
+    <div class="legend">
+      <span><i style="background:#10b981"></i>S · Substitute 恒等层（SBOX→INV_SBOX→XOR→XOR 自抵消）</span>
+      <span><i style="background:#ff9e2c"></i>T · Standard 真实变换层（置换 + SBOX + XOR）</span>
+      <span><i style="background:#fff"></i>差异层（A/B 路径不同）</span>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="scard"><div class="k">Session A 指纹</div><div class="v fp" id="fpA">-</div></div>
+    <div class="scard"><div class="k">Session B 指纹</div><div class="v fp" id="fpB">-</div></div>
+    <div class="scard"><div class="k">路径差异层</div><div class="v" id="diffLayers">-</div></div>
+    <div class="scard"><div class="k">输出分歧比例</div><div class="v" id="ratio">-</div><div class="bar"><i id="ratioBar"></i></div></div>
+    <div class="scard"><div class="k">动态管道可逆性</div><div class="v" id="rev">-</div></div>
+  </div>
+
+  <div class="card">
+    <h2>数据流（session A · 动态路径混淆前后）</h2>
+    <div class="hex">输入 <b id="inHex">-</b></div>
+    <div class="hex">输出 <b id="outHex">-</b></div>
+    <div class="hex">还原 <b id="backHex">-</b></div>
+  </div>
+</div>
+
+<script type="module">
+  import init, { lgv3_dynamic_path_profile, lgv3_session_diff_ratio, lgv3_pipeline_obfuscate_dynamic, lgv3_pipeline_deobfuscate_dynamic } from './lgv2_3.js';
+
+  const $ = id => document.getElementById(id);
+  const N = 7;
+  const canvas = $('pipe');
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  let state = { fpA: '', fpB: '', out: null, data: null };
+
+  function parseHex(input, label) {
+    const s = input.value.trim().replace(/^0x/i, '');
+    if (s.length > 16) throw new Error(label + ' 超过 16 位 hex');
+    if (!/^[0-9a-fA-F]*$/.test(s)) throw new Error(label + ' 非法 hex');
+    return BigInt('0x' + (s || '0').padStart(16, '0'));
+  }
+
+  function layout() {
+    const w = canvas.clientWidth;
+    const h = 300;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  function drawNode(x, y, w, h, type, label, diff) {
+    ctx.save();
+    const grad = ctx.createLinearGradient(x, y, x, y + h);
+    if (type === 'S') { grad.addColorStop(0, '#157a5c'); grad.addColorStop(1, '#0b3b2d'); }
+    else { grad.addColorStop(0, '#c77e1e'); grad.addColorStop(1, '#6b3f08'); }
+    ctx.fillStyle = grad;
+    roundRect(x, y, w, h, 8);
+    ctx.fill();
+    if (diff) {
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = '#ffffff';
+      ctx.shadowColor = '#ffffff';
+      ctx.shadowBlur = 10;
+      roundRect(x - 1.5, y - 1.5, w + 3, h + 3, 10);
+      ctx.stroke();
+      ctx.shadowBlur = 0;
+    } else {
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = 'rgba(255,207,92,.4)';
+      roundRect(x, y, w, h, 8);
+      ctx.stroke();
+    }
+    ctx.fillStyle = type === 'S' ? '#8af0d0' : '#ffe9b0';
+    ctx.font = '600 15px ui-monospace, monospace';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(type === 'S' ? 'S' : 'T', x + w / 2, y + 16);
+    ctx.fillStyle = type === 'S' ? '#c9f5e5' : '#ffe0a8';
+    ctx.font = '10px ui-monospace, monospace';
+    ctx.fillText(label, x + w / 2, y + 34);
+    ctx.restore();
+  }
+
+  function roundRect(x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function arrow(x1, y, x2, col) {
+    ctx.strokeStyle = col;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(x1, y);
+    ctx.lineTo(x2 - 6, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2 - 6, y - 4);
+    ctx.lineTo(x2, y);
+    ctx.lineTo(x2 - 6, y + 4);
+    ctx.closePath();
+    ctx.fillStyle = col;
+    ctx.fill();
+  }
+
+  function drawPipe() {
+    const { w, h } = layout();
+    ctx.clearRect(0, 0, w, h);
+    const nw = 78, nh = 46, gap = 18;
+    const total = N * nw + (N - 1) * gap;
+    let x0 = (w - total) / 2;
+    if (x0 < 10) { x0 = 10; }
+    const yA = 62, yB = 190;
+    const fpA = state.fpA, fpB = state.fpB;
+    const layers = [];
+    for (let i = 0; i < N; i++) {
+      const diff = fpA && fpB && fpA[i] !== fpB[i];
+      const cx = x0 + i * (nw + gap);
+      layers.push({ cx, diff });
+      const ax1 = i === 0 ? x0 - 70 : x0 + (i - 1) * (nw + gap) + nw;
+      arrow(ax1 + 2, yA + nh / 2, cx - 2, 'rgba(255,207,92,.5)');
+      arrow(ax1 + 2, yB + nh / 2, cx - 2, 'rgba(255,207,92,.5)');
+    }
+    ctx.save();
+    ctx.fillStyle = '#b3a176';
+    ctx.font = '11px ui-monospace, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText('Session A 路径', x0, yA - 14);
+    ctx.fillText('Session B 路径', x0, yB - 14);
+    ctx.restore();
+    for (let i = 0; i < N; i++) {
+      const cx = x0 + i * (nw + gap);
+      if (fpA) drawNode(cx, yA, nw, nh, fpA[i] === 'S' ? 'S' : 'T', fpA[i] === 'S' ? '恒等层' : '真实变换', layers[i].diff);
+      if (fpB) drawNode(cx, yB, nw, nh, fpB[i] === 'S' ? 'S' : 'T', fpB[i] === 'S' ? '恒等层' : '真实变换', layers[i].diff);
+      ctx.save();
+      ctx.fillStyle = '#7d6b3d';
+      ctx.font = '10px ui-monospace, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('L' + (i + 1), cx + nw / 2, yB + nh + 18);
+      ctx.restore();
+    }
+    drawPacket(x0, yA, nw, gap);
+  }
+
+  function drawPacket(x0, yA, nw, gap) {
+    const t = (performance.now() / 2600) % 1;
+    const segs = N + 1;
+    const pos = t * segs;
+    const seg = Math.floor(pos);
+    const f = pos - seg;
+    let x;
+    if (seg === 0) x = x0 - 70 + f * (nw + 8);
+    else if (seg >= N) x = x0 + (N - 1) * (nw + gap) + nw + 8 + f * 60;
+    else x = x0 + (seg - 1) * (nw + gap) + nw + 8 + f * gap;
+    const y = yA + 23;
+    ctx.save();
+    ctx.shadowColor = '#ffd700';
+    ctx.shadowBlur = 12;
+    ctx.fillStyle = '#ffd700';
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = 'rgba(255,215,0,.25)';
+    ctx.beginPath();
+    ctx.arc(x, y, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function run() {
+    const dot = $('dot');
+    dot.className = 'dot busy';
+    try {
+      const skA = parseHex($('skA'), 'session A');
+      const skB = parseHex($('skB'), 'session B');
+      const seed = parseHex($('seed'), 'seed');
+      const dlen = parseInt($('dlen').value, 10);
+
+      const fpA = lgv3_dynamic_path_profile(skA);
+      const fpB = lgv3_dynamic_path_profile(skB);
+      state.fpA = fpA;
+      state.fpB = fpB;
+
+      const data = new Uint8Array(dlen);
+      const rng = mulberry32(0xCAFEBABE);
+      for (let i = 0; i < dlen; i++) data[i] = (rng() * 256) | 0;
+      state.data = data;
+
+      const out = lgv3_pipeline_obfuscate_dynamic(data, seed, skA, N);
+      state.out = out;
+      const back = lgv3_pipeline_deobfuscate_dynamic(out, seed, skA, N);
+      const reversible = back.length === dlen && back.every((v, i) => v === data[i]);
+
+      const ratio = lgv3_session_diff_ratio(data, seed, skA, skB, N);
+
+      $('fpA').textContent = fpA;
+      $('fpB').textContent = fpB;
+      const diffLayers = [...fpA].filter((c, i) => c !== fpB[i]).length;
+      $('diffLayers').textContent = diffLayers + ' / ' + N;
+      $('ratio').innerHTML = '<b>' + (ratio * 100).toFixed(1) + '%</b>';
+      $('ratioBar').style.width = (ratio * 100).toFixed(0) + '%';
+      const rev = $('rev');
+      rev.className = 'v ' + (reversible ? 'ok' : 'bad');
+      rev.textContent = reversible ? '还原一致' : '还原失败';
+
+      $('inHex').textContent = hex(data);
+      $('outHex').textContent = hex(out);
+      $('backHex').textContent = hex(back);
+      drawPipe();
+      dot.className = 'dot';
+    } catch (e) {
+      dot.className = 'dot';
+      alert('错误：' + e.message);
+    }
+  }
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function rndHex32() {
+    return Math.floor(Math.random() * 0x100000000).toString(16).padStart(8, '0');
+  }
+
+  function hex(u8) {
+    const N = Math.min(u8.length, 64);
+    const parts = [];
+    for (let i = 0; i < N; i += 16) {
+      parts.push([...u8.subarray(i, i + 16)].map(b => b.toString(16).padStart(2, '0')).join(' '));
+    }
+    return parts.join('  ') + (u8.length > N ? '  …' : '');
+  }
+
+  $('run').addEventListener('click', run);
+  $('rnd').addEventListener('click', () => {
+    let a = rndHex32(), b = rndHex32();
+    while (a === b) b = rndHex32();
+    $('skA').value = a;
+    $('skB').value = b;
+    run();
+  });
+  addEventListener('resize', drawPipe);
+
+  function frame() {
+    if (state.fpA) drawPipe();
+    requestAnimationFrame(frame);
+  }
+
+  async function main() {
+    await init();
+    $('dot').className = 'dot';
+    run();
+    frame();
+  }
+  main().catch(e => { $('dot').className = 'dot'; alert('加载失败：' + e.message); });
+</script>
+</body>
+</html>

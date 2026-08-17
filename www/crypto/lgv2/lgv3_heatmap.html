@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.3 diffuse 全块扩散热力图</title>
+<style>
+  body { margin: 0; padding: 24px; background: #0f1420; color: #d7e0f0; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  h1 { font-size: 20px; margin: 0 0 4px; color: #9fd0ff; }
+  .sub { color: #7b8aa5; font-size: 12px; margin-bottom: 18px; }
+  #ctrl { display: flex; flex-wrap: wrap; gap: 12px 20px; align-items: center; background: #161d2e; border: 1px solid #24304a; border-radius: 8px; padding: 14px 16px; margin-bottom: 18px; }
+  #ctrl label { font-size: 12px; color: #9fb3d4; display: flex; flex-direction: column; gap: 4px; }
+  #ctrl input, #ctrl select { background: #0f1420; color: #d7e0f0; border: 1px solid #2c3a5c; border-radius: 4px; padding: 5px 8px; font-family: inherit; font-size: 13px; }
+  #ctrl button { background: #1e5fb8; border: none; color: #fff; padding: 8px 18px; border-radius: 5px; cursor: pointer; font-size: 13px; font-weight: 600; }
+  #ctrl button:hover { background: #2870d0; }
+  #view { display: flex; flex-wrap: wrap; gap: 24px; }
+  .gridwrap { background: #161d2e; border: 1px solid #24304a; border-radius: 8px; padding: 12px; }
+  .gridwrap h3 { margin: 0 0 8px; font-size: 13px; color: #9fd0ff; font-weight: 500; }
+  .gridwrap canvas { display: block; border: 1px solid #24304a; border-radius: 4px; image-rendering: pixelated; }
+  #stats { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 18px; }
+  .card { background: #161d2e; border: 1px solid #24304a; border-radius: 8px; padding: 12px 16px; min-width: 180px; }
+  .card .k { font-size: 11px; color: #7b8aa5; text-transform: uppercase; letter-spacing: 1px; }
+  .card .v { font-size: 20px; margin-top: 4px; color: #e8f0ff; }
+  .card .v b { color: #ffd27a; }
+  .warn { color: #ff9d7a; }
+  #status { margin-top: 14px; font-size: 12px; color: #7b8aa5; }
+</style>
+</head>
+<body>
+  <h1>LG v2.3 — diffuse 全块扩散热力图</h1>
+  <div class="sub">AES 域 GF(256) 三角扩散层 · 单字节扰动在 256 字节输出中的扩散演示 · seed = {seed} xor {session_key}</div>
+
+  <div id="ctrl">
+    <label>seed (hex)
+      <input id="seed" value="1234" size="16" spellcheck="false">
+    </label>
+    <label>session_key (hex)
+      <input id="sk" value="dead" size="16" spellcheck="false">
+    </label>
+    <label>数据模式
+      <select id="mode">
+        <option value="ramp">递增 (i*7)</option>
+        <option value="zero">全零</option>
+        <option value="prng">伪随机 (固定种子)</option>
+      </select>
+    </label>
+    <label>扰动字节位置 (0-255)
+      <input id="pos" value="0" type="number" min="0" max="255">
+    </label>
+    <button id="run">扩散</button>
+  </div>
+
+  <div id="view">
+    <div class="gridwrap"><h3>输入数据 (256B)</h3><canvas id="in"></canvas></div>
+    <div class="gridwrap"><h3>diffuse 输出</h3><canvas id="out"></canvas></div>
+    <div class="gridwrap"><h3>扰动后输出（白框 = 变化的字节）</h3><canvas id="out2"></canvas></div>
+  </div>
+
+  <div id="stats">
+    <div class="card"><div class="k">输入 Shannon 熵</div><div class="v" id="entIn">-</div></div>
+    <div class="card"><div class="k">输出 Shannon 熵</div><div class="v" id="entOut">-</div></div>
+    <div class="card"><div class="k">输入非零字节</div><div class="v" id="nzIn">-</div></div>
+    <div class="card"><div class="k">输出非零字节</div><div class="v" id="nzOut">-</div></div>
+    <div class="card"><div class="k">扰动扩散</div><div class="v" id="diffuseCnt">-</div></div>
+    <div class="card"><div class="k">往返可逆性</div><div class="v" id="rt">-</div></div>
+  </div>
+
+  <div id="status"></div>
+
+  <script type="module">
+    import init, { lgv3_diffuse, lgv3_diffuse_inverse } from './lgv2_3.js';
+
+    const N = 256;
+    const GRID = 16;
+    const CELL = 18;
+
+    function mulberry32(a) {
+      return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function genData(mode) {
+      const buf = new Uint8Array(N);
+      if (mode === 'ramp') {
+        for (let i = 0; i < N; i++) buf[i] = (i * 7) & 0xff;
+      } else if (mode === 'prng') {
+        const rng = mulberry32(0xCAFEBABE);
+        for (let i = 0; i < N; i++) buf[i] = (rng() * 256) | 0;
+      }
+      return buf;
+    }
+
+    function entropy(bytes) {
+      const cnt = new Array(256).fill(0);
+      for (let i = 0; i < bytes.length; i++) cnt[bytes[i]]++;
+      let e = 0;
+      for (let c of cnt) {
+        if (c === 0) continue;
+        const p = c / bytes.length;
+        e -= p * Math.log2(p);
+      }
+      return e;
+    }
+
+    function colorByte(v) {
+      if (v === 0) return 'hsl(240, 60%, 12%)';
+      const hue = 240 - (v / 255) * 240;
+      return `hsl(${hue}, 92%, 55%)`;
+    }
+
+    function drawGrid(canvas, bytes, changed) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = GRID * CELL;
+      canvas.height = GRID * CELL;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      for (let i = 0; i < N; i++) {
+        const x = (i % GRID) * CELL;
+        const y = Math.floor(i / GRID) * CELL;
+        ctx.fillStyle = colorByte(bytes[i]);
+        ctx.fillRect(x, y, CELL, CELL);
+        if (changed && changed.has(i)) {
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2;
+          ctx.strokeRect(x + 1, y + 1, CELL - 2, CELL - 2);
+        }
+      }
+    }
+
+    function parseHex(input, label) {
+      const s = input.value.trim().replace(/^0x/i, '');
+      if (s.length > 16) throw new Error(label + ' 超过 16 位 hex');
+      if (!/^[0-9a-fA-F]*$/.test(s)) throw new Error(label + ' 不是合法 hex');
+      return BigInt('0x' + (s || '0').padStart(16, '0'));
+    }
+
+    async function main() {
+      await init();
+      const status = document.getElementById('status');
+      status.textContent = 'WASM 已加载（lgv2_3_bg.wasm）';
+      document.getElementById('run').addEventListener('click', run);
+      run();
+    }
+
+    function run() {
+      const status = document.getElementById('status');
+      try {
+        const seed = parseHex(document.getElementById('seed'), 'seed');
+        const sk = parseHex(document.getElementById('sk'), 'session_key');
+        const mode = document.getElementById('mode').value;
+        const pos = Math.min(255, Math.max(0, parseInt(document.getElementById('pos').value) || 0));
+
+        const data = genData(mode);
+        const out = lgv3_diffuse(data, seed, sk);
+
+        drawGrid(document.getElementById('in'), data);
+        drawGrid(document.getElementById('out'), out);
+
+        const d2 = data.slice();
+        d2[pos] ^= 1;
+        const out2 = lgv3_diffuse(d2, seed, sk);
+        const changed = new Set();
+        for (let i = 0; i < N; i++) if (out[i] !== out2[i]) changed.add(i);
+        drawGrid(document.getElementById('out2'), out2, changed);
+
+        const rt = lgv3_diffuse_inverse(out, seed, sk);
+        const reversible = rt.length === N && rt.every((v, i) => v === data[i]);
+
+        document.getElementById('entIn').textContent = entropy(data).toFixed(3) + ' bit';
+        document.getElementById('entOut').textContent = entropy(out).toFixed(3) + ' bit';
+        document.getElementById('nzIn').textContent = data.reduce((a, v) => a + (v !== 0 ? 1 : 0), 0) + '/256';
+        document.getElementById('nzOut').textContent = out.reduce((a, v) => a + (v !== 0 ? 1 : 0), 0) + '/256';
+        const dcount = changed.size;
+        const el = document.getElementById('diffuseCnt');
+        el.className = dcount >= N / 2 ? '' : 'warn';
+        el.innerHTML = `<b>${dcount}</b>/256 字节（位置 ${pos}）`;
+        document.getElementById('rt').innerHTML = reversible ? '通过' : '失败';
+        status.textContent = '计算完成：seed=0x' + seed.toString(16) + ' session=0x' + sk.toString(16) + ' pos=' + pos;
+      } catch (e) {
+        status.textContent = '错误：' + e.message;
+      }
+    }
+
+    main();
+  </script>
+</body>
+</html>
