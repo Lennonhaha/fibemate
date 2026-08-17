@@ -56,3 +56,17 @@
 
 - 这是**研究线产物进 main**，但页面诚实声明已明确「默认关闭、不提供密码学安全保证」，符合合规要求。
 - subtitle 里「26 个交互式 3D 可视化」是历史遗留打架数字（与 stats「可视化页面 15」口径不一致），本次**未动**，属既有「可视化数量口径待统一」待办，不在本次范围。
+
+---
+
+## ⚠️ 后续收敛（2026-08-17 14:20）
+
+本页面 `www/docs/lgv3-diffuse-heatmap/` 已于同日被收敛移除。
+
+**原因**：另一位协作方 monkeycode-ai 在 `5cdaf2270` 推入了更完整的 6 个 LG 可视化 demo（`www/crypto/lgv2/`：heatmap 2D/3D、path_profile 2D/3D、defense_demo 2D/3D），与本页面功能重叠。经用户拍板：
+
+1. **移除**本单页面目录 `www/docs/lgv3-diffuse-heatmap/`（被 monkeycode 的 3D 颗粒云覆盖）
+2. **收敛资产**：`www/crypto/lgv2/` 下的 `lgv2_3.js`/`lgv2_3_bg.wasm`/`three.module.js` 作为唯一官方资产（blob hash 与本目录完全一致，逐字节相同）
+3. **清理引用**：viz-index.html 删本页卡片（22→21 卡）、.gitignore 删本目录反忽略规则
+
+**最终状态**：官网 LG 可视化统一走 `www/crypto/lgv2/`，viz-index 21 张卡，无冗余资产。

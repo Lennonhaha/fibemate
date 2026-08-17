@@ -102,7 +102,6 @@ Desktop.ini
 # Build artifacts
 !www/crypto/lgv2/*.wasm
 !www/crypto/vwz/*.wasm
-!www/docs/lgv3-diffuse-heatmap/*.wasm
 *.wasm
 *.woff2
 
