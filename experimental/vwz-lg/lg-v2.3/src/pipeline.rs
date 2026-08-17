@@ -16,6 +16,7 @@
 // Forward ops use operands < 0x80; inverse ops set bit 7. Self-inverse ops
 // (XOR, Swap, Rev) need no inverse counterpart.
 
+use crate::cff::CffMap;
 use crate::defense::{self, DEFENSE_LEVEL_OFF};
 use crate::opcode::{Op, OpcodeMap};
 use crate::premix::{full_mix_forward_depth, full_mix_inverse_depth};
@@ -66,7 +67,7 @@ pub fn compile_program(seed: u64, session_key: u64, depth: usize) -> Program {
         Instr { op: Op::OpRev, operand: 0 },
     ];
 
-    Program { instrs, map }
+    Program::new(instrs, map, CffMap::new(map_seed(seed, session_key, depth)))
 }
 
 /// Compile the inverse (deobfuscation) VM program from the same triple.
@@ -99,7 +100,7 @@ pub fn compile_inverse_program(seed: u64, session_key: u64, depth: usize) -> Pro
         Instr { op: Op::OpShuffle, operand: o1 | 0x80 }, // inverse shuffle
     ];
 
-    Program { instrs, map }
+    Program::new(instrs, map, CffMap::new(map_seed(seed, session_key, depth)))
 }
 
 /// Run the full Stage-2 obfuscation pipeline (forward) on a byte buffer.

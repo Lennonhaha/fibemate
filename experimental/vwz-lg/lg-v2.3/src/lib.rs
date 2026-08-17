@@ -21,6 +21,7 @@ pub mod cleanup;
 pub mod premix;
 pub mod opcode;
 pub mod vm;
+pub mod cff;
 pub mod pipeline;
 pub mod diffuse;
 pub mod hardening;
@@ -293,6 +294,29 @@ pub fn lgv3_defense_status() -> String {
     defense::status_json()
 }
 
+/// Sprint 2: quantify how much two different session keys diverge the output.
+///
+/// Returns the fraction of bytes that differ between `obfuscate(data, seed,
+/// sk1, depth)` and `obfuscate(data, seed, sk2, depth)`. A value near 1 means
+/// the session key perturbs essentially the whole block; 0 would mean the
+/// session key never reached the confusion path (a regression signal).
+#[wasm_bindgen]
+pub fn lgv3_session_diff_ratio(data: &[u8], seed: u64, sk1: u64, sk2: u64, depth: usize) -> f64 {
+    if data.is_empty() || sk1 == sk2 {
+        return 0.0;
+    }
+    let mut out1 = data.to_vec();
+    let mut out2 = data.to_vec();
+    obfuscate(&mut out1, seed, sk1, depth);
+    obfuscate(&mut out2, seed, sk2, depth);
+    let changed = out1
+        .iter()
+        .zip(out2.iter())
+        .filter(|(a, b)| a != b)
+        .count();
+    changed as f64 / data.len() as f64
+}
+
 // ============================================================
 // 单元测试 — 10 项原有 + 3 项 v3 新增 = 13 项
 // ============================================================
@@ -544,5 +568,90 @@ mod tests {
         let empty: Vec<u8> = vec![];
         let c = lgv3_pipeline_obfuscate(&empty, 0x1234, 0xDEAD, 7);
         assert_eq!(c.len(), 0);
+    }
+
+    // ---- Sprint 2: control-flow flattening regression ----
+
+    #[test]
+    fn test_sprint2_cff_roundtrip_stable() {
+        // The flattened dispatch must not change pipeline semantics.
+        for n in [1usize, 64, 256] {
+            let data: Vec<u8> = (0..n).map(|i| (i * 11) as u8).collect();
+            for seed in [0u64, 0x1234, 0xDEADBEEF] {
+                for sk in [0x1111u64, 0xBEEF] {
+                    let mut c = data.clone();
+                    obfuscate(&mut c, seed, sk, 5);
+                    deobfuscate(&mut c, seed, sk, 5);
+                    assert_eq!(c, data, "CFF roundtrip failed (n={}, seed={}, sk={})", n, seed, sk);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_sprint2_cff_level0_byte_identical() {
+        // Defense bypass path stays byte-identical to the plain pipeline.
+        defense::configure(0, 0);
+        let data: Vec<u8> = (0..128).map(|i| i as u8).collect();
+        let a = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        let b = lgv3_pipeline_obfuscate(&data, 0x1234, 0xDEAD, 7);
+        assert_eq!(a, b, "deterministic under CFF");
+        let r = lgv3_pipeline_deobfuscate(&a, 0x1234, 0xDEAD, 7);
+        assert_eq!(r, data);
+    }
+
+    #[test]
+    fn test_sprint2_cff_defense_enabled_stable() {
+        // Defense engine + CFF dispatch compose without poisoning in clean env.
+        defense::configure(3, 0);
+        let data: Vec<u8> = (0..128).map(|i| (i * 3) as u8).collect();
+        let mut ok = true;
+        for _ in 0..6 {
+            let mut c = data.clone();
+            obfuscate(&mut c, 0xCAFE, 0xDEAD, 7);
+            deobfuscate(&mut c, 0xCAFE, 0xDEAD, 7);
+            ok &= c == data;
+        }
+        defense::configure(0, 0);
+        assert!(ok, "CFF + defense must keep clean-env roundtrip intact");
+    }
+
+    // ---- Sprint 2: session diff quantification ----
+
+    #[test]
+    fn test_sprint2_session_diff_positive_all_samples() {
+        // Different session keys must perturb the output. No sample may be 0.
+        let seeds = [0u64, 0x1234, 0xDEADBEEF];
+        let sk_pairs = [(0x1000u64, 0x2000u64), (0xBEEFu64, 0xCAFEu64)];
+        let sizes = [64usize, 256];
+        for &n in &sizes {
+            let data: Vec<u8> = (0..n).map(|i| (i * 7) as u8).collect();
+            for &seed in &seeds {
+                for &(sk1, sk2) in &sk_pairs {
+                    let r = lgv3_session_diff_ratio(&data, seed, sk1, sk2, 7);
+                    assert!(
+                        r > 0.0,
+                        "session diff must be positive (n={}, seed={}, sk1={}, sk2={})",
+                        n, seed, sk1, sk2
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn test_sprint2_session_diff_discriminates() {
+        // Same session key => identical output (ratio 0); different => > 0.
+        let data: Vec<u8> = (0..256).map(|i| i as u8).collect();
+        let same = lgv3_session_diff_ratio(&data, 0x1234, 0xBEEF, 0xBEEF, 7);
+        assert_eq!(same, 0.0, "identical sessions must have zero diff");
+        let diff = lgv3_session_diff_ratio(&data, 0x1234, 0xBEEF, 0xCAFE, 7);
+        assert!(diff > 0.0, "different sessions must diverge");
+    }
+
+    #[test]
+    fn test_sprint2_session_diff_empty_input() {
+        let empty: Vec<u8> = vec![];
+        assert_eq!(lgv3_session_diff_ratio(&empty, 1, 2, 3, 7), 0.0);
     }
 }

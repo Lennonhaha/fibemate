@@ -19,8 +19,9 @@
 //   - bits 0..6 (0x7F) are the operation parameter.
 //   - Self-inverse ops (XOR, Swap, Rev) ignore the flag.
 
+use crate::cff::CffMap;
 use crate::defense::{self, fnv1a64, DefenseEngine};
-use crate::opcode::{Op, OpcodeMap};
+use crate::opcode::{Op, OpcodeMap, NUM_OPS};
 use crate::sbox::{SBOX, INV_SBOX};
 use crate::wreath::{layer_seed, XorShift64};
 
@@ -31,14 +32,143 @@ pub struct Instr {
     pub operand: u8,
 }
 
+/// Control-flow outcome of one flattened dispatch step.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Step {
+    Next,
+    Jump(usize),
+    Halt,
+    Abort,
+}
+
 /// A compiled program: a sequence of instructions plus the opcode map used
 /// to encode them. Encoding and execution share this struct.
+///
+/// Sprint 2: the `cff` table reorders opcode -> handler dispatch, and
+/// `handlers` is the dispatch vector indexed by `cff.slot(op)`. The mapping
+/// is seed-derived, so no static opcode -> handler table is baked into the
+/// binary and every (seed, session_key, depth) triple dispatches differently.
 pub struct Program {
     pub instrs: Vec<Instr>,
     pub map: OpcodeMap,
+    pub cff: CffMap,
+    handlers: [StepHandler; NUM_OPS],
 }
 
+/// Handler signature: operate on the VM buffer for one decoded instruction.
+type StepHandler = fn(&mut Vm, Instr) -> Step;
+
+// Per-canonical-op handlers, in canonical order (slot = cff.order[op.index()]).
+fn h_nop(_vm: &mut Vm, _ins: Instr) -> Step {
+    Step::Next
+}
+fn h_wreath(vm: &mut Vm, ins: Instr) -> Step {
+    vm.exec_wreath(ins.operand);
+    Step::Next
+}
+fn h_shuffle(vm: &mut Vm, ins: Instr) -> Step {
+    vm.exec_shuffle(ins.operand);
+    Step::Next
+}
+fn h_sbox(vm: &mut Vm, ins: Instr) -> Step {
+    vm.exec_sbox(ins.operand);
+    Step::Next
+}
+fn h_xor(vm: &mut Vm, ins: Instr) -> Step {
+    vm.exec_xor(ins.operand);
+    Step::Next
+}
+fn h_add(vm: &mut Vm, ins: Instr) -> Step {
+    vm.exec_add(ins.operand);
+    Step::Next
+}
+fn h_mix(vm: &mut Vm, ins: Instr) -> Step {
+    vm.exec_mix(ins.operand);
+    Step::Next
+}
+fn h_swap(vm: &mut Vm, ins: Instr) -> Step {
+    vm.exec_swap(ins.operand);
+    Step::Next
+}
+fn h_rot(vm: &mut Vm, ins: Instr) -> Step {
+    vm.exec_rot(ins.operand);
+    Step::Next
+}
+fn h_jmp(_vm: &mut Vm, ins: Instr) -> Step {
+    Step::Jump(ins.operand as usize)
+}
+fn h_push(vm: &mut Vm, ins: Instr) -> Step {
+    if vm.stack.len() >= MAX_STACK {
+        return Step::Abort;
+    }
+    vm.stack.push(ins.operand);
+    Step::Next
+}
+fn h_pop(vm: &mut Vm, _ins: Instr) -> Step {
+    let _ = vm.stack.pop();
+    Step::Next
+}
+fn h_dup(vm: &mut Vm, _ins: Instr) -> Step {
+    if vm.stack.len() >= MAX_STACK {
+        return Step::Abort;
+    }
+    let top = vm.stack.last().copied().unwrap_or(0);
+    vm.stack.push(top);
+    Step::Next
+}
+fn h_rev(vm: &mut Vm, _ins: Instr) -> Step {
+    vm.exec_rev();
+    Step::Next
+}
+fn h_enter(_vm: &mut Vm, _ins: Instr) -> Step {
+    Step::Next
+}
+fn h_halt(_vm: &mut Vm, _ins: Instr) -> Step {
+    Step::Halt
+}
+
+const HANDLERS_BY_OP: [StepHandler; NUM_OPS] = [
+    h_nop,
+    h_wreath,
+    h_shuffle,
+    h_sbox,
+    h_xor,
+    h_add,
+    h_mix,
+    h_swap,
+    h_rot,
+    h_jmp,
+    h_push,
+    h_pop,
+    h_dup,
+    h_rev,
+    h_enter,
+    h_halt,
+];
+
 impl Program {
+    /// Build a program with a seed-derived flattening table.
+    ///
+    /// `handlers[slot]` is the handler for the op whose flattened slot equals
+    /// `slot`, i.e. `handlers[cff.order[op.index()]]` always reaches the
+    /// correct op handler — but the correspondence is invisible statically.
+    pub fn new(instrs: Vec<Instr>, map: OpcodeMap, cff: CffMap) -> Self {
+        let mut rev = [0usize; NUM_OPS];
+        for i in 0..NUM_OPS {
+            rev[cff.order[i] as usize] = i;
+        }
+        let mut handlers: [StepHandler; NUM_OPS] = [h_nop as StepHandler; NUM_OPS];
+        for slot in 0..NUM_OPS {
+            handlers[slot] = HANDLERS_BY_OP[rev[slot]];
+        }
+        Self {
+            instrs,
+            map,
+            cff,
+            handlers,
+        }
+    }
+
     /// Serialize the program into raw bytecode (opcodes encoded via the map,
     /// operands stored verbatim after each opcode). An enter marker is
     /// prepended and a halt marker appended automatically.
@@ -60,6 +190,7 @@ impl Program {
             return None;
         }
         let map = OpcodeMap::new(seed);
+        let cff = CffMap::new(seed);
         let mut instrs = Vec::with_capacity(bytes.len() / 2);
         let mut i = 0;
         // Skip leading enter marker if present.
@@ -79,7 +210,7 @@ impl Program {
             instrs.push(Instr { op, operand });
             i += 2;
         }
-        Some(Program { instrs, map })
+        Some(Program::new(instrs, map, cff))
     }
 }
 
@@ -125,41 +256,18 @@ impl Vm {
             let ins = prog.instrs[self.pc];
             let next_pc = self.pc + 1;
 
-            match ins.op {
-                Op::OpNop => {}
-                Op::OpWreath => self.exec_wreath(ins.operand),
-                Op::OpShuffle => self.exec_shuffle(ins.operand),
-                Op::OpSbox => self.exec_sbox(ins.operand),
-                Op::OpXor => self.exec_xor(ins.operand),
-                Op::OpAdd => self.exec_add(ins.operand),
-                Op::OpMix => self.exec_mix(ins.operand),
-                Op::OpSwap => self.exec_swap(ins.operand),
-                Op::OpRot => self.exec_rot(ins.operand),
-                Op::OpJmp => {
-                    // Jump to operand offset (clamped to program bounds).
-                    let target = (ins.operand as usize).min(n);
-                    self.pc = target;
-                    continue; // skip the default pc advance
+            // Flattened dispatch: slot = cff.order[op.index()], handler is
+            // looked up by slot so the opcode -> handler mapping is invisible
+            // to static CFG recovery.
+            let slot = prog.cff.slot(ins.op);
+            match prog.handlers[slot as usize](self, ins) {
+                Step::Next => {}
+                Step::Jump(target) => {
+                    self.pc = target.min(n);
+                    continue;
                 }
-                Op::OpPush => {
-                    if self.stack.len() >= MAX_STACK {
-                        return false;
-                    }
-                    self.stack.push(ins.operand);
-                }
-                Op::OpPop => {
-                    let _ = self.stack.pop();
-                }
-                Op::OpDup => {
-                    if self.stack.len() >= MAX_STACK {
-                        return false;
-                    }
-                    let top = self.stack.last().copied().unwrap_or(0);
-                    self.stack.push(top);
-                }
-                Op::OpRev => self.exec_rev(),
-                Op::OpEnter => {} // setup marker: no-op
-                Op::OpHalt => return true,
+                Step::Halt => return true,
+                Step::Abort => return false,
             }
 
             self.pc = next_pc;
@@ -193,47 +301,22 @@ impl Vm {
             let ins = prog.instrs[self.pc];
             let next_pc = self.pc + 1;
 
-            match ins.op {
-                Op::OpNop => {}
-                Op::OpWreath => self.exec_wreath(ins.operand),
-                Op::OpShuffle => self.exec_shuffle(ins.operand),
-                Op::OpSbox => self.exec_sbox(ins.operand),
-                Op::OpXor => self.exec_xor(ins.operand),
-                Op::OpAdd => self.exec_add(ins.operand),
-                Op::OpMix => self.exec_mix(ins.operand),
-                Op::OpSwap => self.exec_swap(ins.operand),
-                Op::OpRot => self.exec_rot(ins.operand),
-                Op::OpJmp => {
-                    let target = (ins.operand as usize).min(n);
-                    self.pc = target;
+            let slot = prog.cff.slot(ins.op);
+            match prog.handlers[slot as usize](self, ins) {
+                Step::Next => {}
+                Step::Jump(target) => {
+                    self.pc = target.min(n);
                     continue;
                 }
-                Op::OpPush => {
-                    if self.stack.len() >= MAX_STACK {
-                        engine.check_memory(mem_base, prog_checksum(prog));
-                        engine.check_execution(defense::clock_ns() - start);
-                        return false;
-                    }
-                    self.stack.push(ins.operand);
-                }
-                Op::OpPop => {
-                    let _ = self.stack.pop();
-                }
-                Op::OpDup => {
-                    if self.stack.len() >= MAX_STACK {
-                        engine.check_memory(mem_base, prog_checksum(prog));
-                        engine.check_execution(defense::clock_ns() - start);
-                        return false;
-                    }
-                    let top = self.stack.last().copied().unwrap_or(0);
-                    self.stack.push(top);
-                }
-                Op::OpRev => self.exec_rev(),
-                Op::OpEnter => {}
-                Op::OpHalt => {
+                Step::Halt => {
                     engine.check_memory(mem_base, prog_checksum(prog));
                     engine.check_execution(defense::clock_ns() - start);
                     return true;
+                }
+                Step::Abort => {
+                    engine.check_memory(mem_base, prog_checksum(prog));
+                    engine.check_execution(defense::clock_ns() - start);
+                    return false;
                 }
             }
 
@@ -389,12 +472,14 @@ impl Vm {
     }
 }
 
-/// FNV-1a checksum over a compiled program's opcode map + instruction stream.
-/// This is the memory-integrity reference for the VM Context: tampering with
-/// the program bytes (patch) or the seed-derived opcode map flips the checksum.
+/// FNV-1a checksum over a compiled program's opcode map + CFF dispatch table
+/// + instruction stream. This is the memory-integrity reference for the VM
+/// Context: tampering with the program bytes (patch), the seed-derived opcode
+/// map, or the flattened dispatch table flips the checksum.
 pub fn prog_checksum(prog: &Program) -> u64 {
-    let mut buf = Vec::with_capacity(prog.instrs.len() * 2 + prog.map.map.len());
+    let mut buf = Vec::with_capacity(prog.instrs.len() * 2 + prog.map.map.len() + 16);
     buf.extend_from_slice(&prog.map.map);
+    buf.extend_from_slice(&prog.cff.order);
     for ins in &prog.instrs {
         buf.push(ins.op.index());
         buf.push(ins.operand);
@@ -410,6 +495,10 @@ mod tests {
         (0..n).map(|i| (i * 7) as u8).collect()
     }
 
+    fn prog(instrs: Vec<Instr>, seed: u64) -> Program {
+        Program::new(instrs, OpcodeMap::new(seed), CffMap::new(seed))
+    }
+
     #[test]
     fn test_program_bytecode_roundtrip() {
         let seed = 0x1234;
@@ -418,7 +507,7 @@ mod tests {
             Instr { op: Op::OpSbox, operand: 0 },
             Instr { op: Op::OpRot, operand: 3 },
         ];
-        let prog = Program { instrs, map };
+        let prog = prog(instrs, seed);
         let bc = prog.to_bytecode();
         let decoded = Program::from_bytecode(&bc, seed).expect("decode failed");
         assert_eq!(decoded.instrs.len(), prog.instrs.len());
@@ -432,14 +521,8 @@ mod tests {
     fn test_vm_sbox_roundtrip() {
         // Forward program: SBOX; inverse program: INV_SBOX (bit7 set).
         let seed = 42;
-        let fwd = Program {
-            instrs: vec![Instr { op: Op::OpSbox, operand: 0 }],
-            map: OpcodeMap::new(seed),
-        };
-        let inv = Program {
-            instrs: vec![Instr { op: Op::OpSbox, operand: 0x80 }],
-            map: OpcodeMap::new(seed),
-        };
+        let fwd = prog(vec![Instr { op: Op::OpSbox, operand: 0 }], seed);
+        let inv = prog(vec![Instr { op: Op::OpSbox, operand: 0x80 }], seed);
         let data = sample(256);
         let mut vm = Vm::new(data.clone());
         assert!(vm.run(&fwd));
@@ -454,14 +537,8 @@ mod tests {
         let data = sample(100);
         let k = 17u8;
         let seed = 7;
-        let fwd = Program {
-            instrs: vec![Instr { op: Op::OpRot, operand: k }],
-            map: OpcodeMap::new(seed),
-        };
-        let inv = Program {
-            instrs: vec![Instr { op: Op::OpRot, operand: k | 0x80 }],
-            map: OpcodeMap::new(seed),
-        };
+        let fwd = prog(vec![Instr { op: Op::OpRot, operand: k }], seed);
+        let inv = prog(vec![Instr { op: Op::OpRot, operand: k | 0x80 }], seed);
         let mut vm = Vm::new(data.clone());
         assert!(vm.run(&fwd));
         let mut vm2 = Vm::new(vm.data.clone());
@@ -474,14 +551,8 @@ mod tests {
         let data = sample(200);
         let operand = 11u8;
         let seed = 9;
-        let fwd = Program {
-            instrs: vec![Instr { op: Op::OpShuffle, operand }],
-            map: OpcodeMap::new(seed),
-        };
-        let inv = Program {
-            instrs: vec![Instr { op: Op::OpShuffle, operand: operand | 0x80 }],
-            map: OpcodeMap::new(seed),
-        };
+        let fwd = prog(vec![Instr { op: Op::OpShuffle, operand }], seed);
+        let inv = prog(vec![Instr { op: Op::OpShuffle, operand: operand | 0x80 }], seed);
         let mut vm = Vm::new(data.clone());
         assert!(vm.run(&fwd));
         assert_ne!(vm.data, data, "shuffle must change data");
@@ -495,14 +566,8 @@ mod tests {
         let data = sample(256);
         let k = 0x42u8;
         let seed = 11;
-        let fwd = Program {
-            instrs: vec![Instr { op: Op::OpAdd, operand: k }],
-            map: OpcodeMap::new(seed),
-        };
-        let inv = Program {
-            instrs: vec![Instr { op: Op::OpAdd, operand: k | 0x80 }],
-            map: OpcodeMap::new(seed),
-        };
+        let fwd = prog(vec![Instr { op: Op::OpAdd, operand: k }], seed);
+        let inv = prog(vec![Instr { op: Op::OpAdd, operand: k | 0x80 }], seed);
         let mut vm = Vm::new(data.clone());
         assert!(vm.run(&fwd));
         let mut vm2 = Vm::new(vm.data.clone());
@@ -515,14 +580,8 @@ mod tests {
         let data = sample(256);
         let k = 0x33u8;
         let seed = 13;
-        let fwd = Program {
-            instrs: vec![Instr { op: Op::OpMix, operand: k }],
-            map: OpcodeMap::new(seed),
-        };
-        let inv = Program {
-            instrs: vec![Instr { op: Op::OpMix, operand: k | 0x80 }],
-            map: OpcodeMap::new(seed),
-        };
+        let fwd = prog(vec![Instr { op: Op::OpMix, operand: k }], seed);
+        let inv = prog(vec![Instr { op: Op::OpMix, operand: k | 0x80 }], seed);
         let mut vm = Vm::new(data.clone());
         assert!(vm.run(&fwd));
         let mut vm2 = Vm::new(vm.data.clone());
@@ -534,10 +593,7 @@ mod tests {
     fn test_vm_runaway_guard() {
         // A self-loop jump should be stopped by the step budget.
         let seed = 3;
-        let prog = Program {
-            instrs: vec![Instr { op: Op::OpJmp, operand: 0 }], // jump to self
-            map: OpcodeMap::new(seed),
-        };
+        let prog = prog(vec![Instr { op: Op::OpJmp, operand: 0 }], seed); // jump to self
         let mut vm = Vm::new(sample(10));
         assert!(!vm.run(&prog), "runaway loop must be stopped");
     }
@@ -545,14 +601,14 @@ mod tests {
     #[test]
     fn test_vm_stack_ops() {
         let seed = 5;
-        let prog = Program {
-            instrs: vec![
+        let prog = prog(
+            vec![
                 Instr { op: Op::OpPush, operand: 0xAB },
                 Instr { op: Op::OpDup, operand: 0 },
                 Instr { op: Op::OpPop, operand: 0 },
             ],
-            map: OpcodeMap::new(seed),
-        };
+            seed,
+        );
         let mut vm = Vm::new(sample(10));
         assert!(vm.run(&prog));
         assert_eq!(vm.stack.len(), 1);
@@ -564,10 +620,7 @@ mod tests {
         // Level 0 (default) must behave byte-identically to plain run().
         use crate::defense::{DefenseConfig, DEFENSE_LEVEL_OFF};
         let seed = 0x1234;
-        let prog = Program {
-            instrs: vec![Instr { op: Op::OpSbox, operand: 0 }],
-            map: OpcodeMap::new(seed),
-        };
+        let prog = prog(vec![Instr { op: Op::OpSbox, operand: 0 }], seed);
         let mut engine = DefenseEngine::new(DefenseConfig {
             level: DEFENSE_LEVEL_OFF,
             ..Default::default()
@@ -586,15 +639,15 @@ mod tests {
     fn test_run_defended_calibrates_and_stays_clean() {
         use crate::defense::{DefenseConfig, DEFENSE_LEVEL_STANDARD};
         let seed = 0xDEAD;
-        let prog = Program {
-            instrs: vec![
+        let prog = prog(
+            vec![
                 Instr { op: Op::OpShuffle, operand: 3 },
                 Instr { op: Op::OpXor, operand: 7 },
                 Instr { op: Op::OpSbox, operand: 0 },
                 Instr { op: Op::OpRev, operand: 0 },
             ],
-            map: OpcodeMap::new(seed),
-        };
+            seed,
+        );
         let mut engine = DefenseEngine::new(DefenseConfig {
             level: DEFENSE_LEVEL_STANDARD,
             ..Default::default()
