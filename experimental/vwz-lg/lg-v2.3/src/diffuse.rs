@@ -18,28 +18,73 @@
 // attacker cannot peel them off the way a fixed MDS matrix can be peeled.
 // Both passes are exactly invertible; memory is O(N) (coefficients are
 // regenerated deterministically per row, no N×N matrix is materialized).
+//
+// Performance notes (vwz-lg): the per-step GF(256) multiply is O(1) via a
+// 512-byte log/exp table (built with the primitive element 0x03, since 0x02
+// has order 51 in this field) instead of the 8-iteration while loop. The
+// coefficient sequence and GF results are byte-identical to the previous
+// implementation.
 
 use crate::wreath::XorShift64;
 
 /// GF(256) reduction polynomial 0x11b (byte form).
 const GF_POLY: u8 = 0x1B;
 
-/// GF(256) multiplication with AES polynomial 0x11b.
-#[inline]
-pub fn gf_mul(mut a: u8, mut b: u8) -> u8 {
-    let mut p = 0u8;
-    while b != 0 {
-        if b & 1 != 0 {
-            p ^= a;
-        }
-        let hi = a & 0x80;
-        a <<= 1;
-        if hi != 0 {
-            a ^= GF_POLY;
-        }
-        b >>= 1;
+/// exp[i] = 0x03^i in GF(256) for i in 0..=254 (0x03 is a primitive element,
+/// order 255), then period-255 repeated up to index 508 so LOG[a] + LOG[b]
+/// ∈ [0,508] needs no modulo.
+static EXP: [u8; 512] = build_exp();
+
+/// log[0x03^i] = i for non-zero 0x03^i; log[0] is unused (gf_mul checks zero).
+static LOG: [u8; 256] = build_log();
+
+// The AES polynomial 0x11b is irreducible but NOT primitive: the element
+// 0x02 has multiplicative order 51. Use the primitive element 0x03 (order
+// 255) as the generator for the log/exp tables so every non-zero byte is
+// covered.
+const GEN: u8 = 0x03;
+
+const fn build_exp() -> [u8; 512] {
+    let mut exp = [0u8; 512];
+    let mut x: u8 = 1;
+    let mut i = 0usize;
+    while i < 255 {
+        exp[i] = x;
+        let hi = x & 0x80;
+        let dbl = if hi != 0 { (x << 1) ^ GF_POLY } else { x << 1 };
+        x = dbl ^ x; // multiply by GEN
+        i += 1;
     }
-    p
+    let mut i = 255usize;
+    while i < 512 {
+        exp[i] = exp[i - 255];
+        i += 1;
+    }
+    exp
+}
+
+const fn build_log() -> [u8; 256] {
+    let mut log = [0u8; 256];
+    let mut x: u8 = 1;
+    let mut i: u8 = 0;
+    while x != 1 || i == 0 {
+        log[x as usize] = i;
+        let hi = x & 0x80;
+        let dbl = if hi != 0 { (x << 1) ^ GF_POLY } else { x << 1 };
+        x = dbl ^ x; // multiply by GEN
+        i = i.wrapping_add(1);
+    }
+    log
+}
+
+/// GF(256) multiplication with AES polynomial 0x11b (log/exp lookup).
+#[inline]
+pub fn gf_mul(a: u8, b: u8) -> u8 {
+    if a == 0 || b == 0 {
+        0
+    } else {
+        EXP[LOG[a as usize] as usize + LOG[b as usize] as usize]
+    }
 }
 
 /// splitmix64-style avalanche of (master, pass, row) into a per-row seed.
@@ -71,8 +116,7 @@ pub fn diffuse_forward(data: &mut [u8], seed: u64, session_key: u64) {
         let b1 = rng.next_u8();
         let mut s = b1;
         for j in 0..i {
-            let c = rng.next_u8();
-            s ^= gf_mul(c, data[j]);
+            s ^= gf_mul(rng.next_u8(), data[j]);
         }
         t[i] = s ^ data[i];
     }
@@ -83,8 +127,7 @@ pub fn diffuse_forward(data: &mut [u8], seed: u64, session_key: u64) {
         let b2 = rng.next_u8();
         let mut s = b2;
         for j in (i + 1)..n {
-            let c = rng.next_u8();
-            s ^= gf_mul(c, t[j]);
+            s ^= gf_mul(rng.next_u8(), t[j]);
         }
         data[i] = s ^ t[i];
     }
@@ -105,8 +148,7 @@ pub fn diffuse_inverse(data: &mut [u8], seed: u64, session_key: u64) {
         let b2 = rng.next_u8();
         let mut s = b2;
         for j in (i + 1)..n {
-            let c = rng.next_u8();
-            s ^= gf_mul(c, t[j]);
+            s ^= gf_mul(rng.next_u8(), t[j]);
         }
         t[i] = data[i] ^ s;
     }
@@ -117,8 +159,7 @@ pub fn diffuse_inverse(data: &mut [u8], seed: u64, session_key: u64) {
         let b1 = rng.next_u8();
         let mut s = b1;
         for j in 0..i {
-            let c = rng.next_u8();
-            s ^= gf_mul(c, data[j]); // data[j] for j<i already recovered
+            s ^= gf_mul(rng.next_u8(), data[j]); // data[j] for j<i already recovered
         }
         data[i] = t[i] ^ s;
     }
@@ -142,6 +183,33 @@ mod tests {
         // 0x02 * x is left-shift with reduction.
         assert_eq!(gf_mul(0x02, 0x80), 0x1B);
         assert_eq!(gf_mul(0x02, 0x40), 0x80);
+    }
+
+    #[test]
+    fn test_gf_mul_full_table_matches_reference() {
+        // Exhaustive equivalence: lookup table vs shift-reduce reference.
+        fn ref_mul(a: u8, b: u8) -> u8 {
+            let mut p = 0u8;
+            let mut x = a;
+            let mut y = b;
+            while y != 0 {
+                if y & 1 != 0 {
+                    p ^= x;
+                }
+                let hi = x & 0x80;
+                x <<= 1;
+                if hi != 0 {
+                    x ^= GF_POLY;
+                }
+                y >>= 1;
+            }
+            p
+        }
+        for a in 0u16..256 {
+            for b in 0u16..256 {
+                assert_eq!(gf_mul(a as u8, b as u8), ref_mul(a as u8, b as u8));
+            }
+        }
     }
 
     #[test]
