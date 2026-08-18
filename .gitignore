@@ -421,6 +421,7 @@ generated-images/
 scripts/check-*.js
 scripts/check-*.py
 scripts/check-*.sh
+!scripts/check-encoding-cron.sh
 scripts/dismiss-*.js
 scripts/dismiss-*.py
 scripts/debug-*.py
