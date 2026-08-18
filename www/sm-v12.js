@@ -2,17 +2,17 @@
 /**
  * FIBEMATE SessionManager v1.0
  * ==========================================
- * 缂備胶鍠嶇粩瀛樺濮樺磭妯堢紒鐙呯磿閹﹦浠?闁?閻忓繋娴囬ˉ?X3DH + PQ 婵烇絽鍢查幃搴ㄥ箵閳╁啫顤?+ Double Ratchet
+ * 会话管理器：会话存储 + 密钥协商，支持 X3DH + PQ 密钥封装 + Double Ratchet
  * 
- * 閻犱焦宕橀鎼佸储閻斿嘲鐏熼柨? *   1. 閻犲鍟伴弫銈夊棘鐟欏嫭锟ラ梻鍥ｅ亾闁活厹鍎垫禍楣冨箵閳╁啫顤佺紓浣告婵☆參鏁嶉崸鏄籭tiate/respond/complete 闁告劕鎳橀崕鎾嚊椤忓嫬袟閻庣懓鏈崹姘舵晬? *   2. Session 閻庣數顢婇挅鍕箹閸濆嫮鏁ㄩ悗鐟版湰閺嗭綁宕楅崘褌绻嗛柟顓у灲缁辨獑ipherSuite / pqEnabled / ratchetSteps / lastActive / degradeReason闁? *   3. 濞存粌顑勫▎銏°仚閸楃偛袟闁?established' | 'ratchet-step' | 'degraded' | 'expired' | 'pq-enabled' | 'pq-failed'
- *   4. 闁告碍鍨甸幃妤呭礂閻撳寒鍟囬柨娑欑煯缁楀鎯嶉弶鎴炵稁闁绘粎澧楀﹢?MessageCrypto API
+ *   1. 密钥交换握手（三阶段 initiate/respond/complete），生成共享会话密钥
+ *   2. Session 元数据持久化：cipherSuite / pqEnabled / ratchetSteps / lastActive / degradeReason
  *
- * 濞撴碍绻嗙粋鍡涙晬? *   - window.DoubleRatchet闁挎稑鐗嗘慨鐐存姜?double-ratchet.js闁? *   - window.MLKEM768闁挎稑鐗嗚ぐ鏌ユ焻婢舵稓绀夐柛鏃傚Ь濞?kyber_nt_v3.js闁? *   - IndexedDB闁挎稑鐗撻埀顒佷亢缁?MessageCrypto.initDB 闁告帗绻傞～鎰板礌閺嶇數绀? */
+ *   3. 事件通知 + 消息加解密（依赖 DoubleRatchet / MLKEM768 / IndexedDB） */
 
 const SessionManager = (() => {
   'use strict';
 
-  // ---- 濞撴碍绻嗙粋鍡椢涢埀顒勫蓟?----
+  // ---- 依赖加载 ----
   function requireDoubleRatchet() {
     if (!window.DoubleRatchet) throw new Error('[SessionManager] DoubleRatchet not loaded');
     return window.DoubleRatchet;
@@ -21,7 +21,7 @@ const SessionManager = (() => {
     return window.MLKEM768 || null;
   }
 
-  // ---- Session 闁稿繐鍟╂穱濠囧箒椤栨凹鍤犻悹?----
+  // ---- Session 信息结构 ----
   // Session info helper
   function makeSessionInfo(peerId, record) {
     const info = {
@@ -38,7 +38,7 @@ const SessionManager = (() => {
     return info;
   }
 
-  // ---- 濞存粌顑勫▎銏㈠寲閼姐倗鍩?----
+  // ---- 事件系统 ----
   const _listeners = {};
   function emit(event, data) {
     ( _listeners[event] || [] ).forEach(cb => {
@@ -51,7 +51,7 @@ const SessionManager = (() => {
     return () => { _listeners[event] = _listeners[event].filter(cb => cb !== callback); };
   }
 
-  // ---- IndexedDB 闁归晲妞掔粻娆撳礌?schema v2 ----
+  // ---- IndexedDB 存储 schema v2 ----
   // 存储: peerId, state (DoubleRatchet export), meta - cipherSuite / pqEnabled / pqDegradeReason / ratchetSteps / lastActive / createdAt
   const DB_NAME = 'fibemate_crypto';
   const STORE_NAME = 'sessions_v2';
@@ -122,15 +122,15 @@ const SessionManager = (() => {
     });
   }
 
-  // ---- 闁告劕鎳庨悺銊х磽閹惧磭鎽?+ 閺夆晜鍔橀、鎴﹀籍?Session 閻庣數顢婇挅?----
-  // _sessions: peerId 闁?{ drState, meta, createdAt }
+  // ---- 会话映射（内存缓存）+ 持久化 Session 状态 ----
+  // _sessions: peerId -> { drState, meta, createdAt }
   const _sessions = new Map();
 
-  // ---- 闁哄秶顭堢缓楣冩晬濮?DH + PQ 婵烇絽鍢查幃搴ㄥ箵閳╁啫顤侀柨娑樼墕閸炴挳鏌堥…鎺旂 ----
+  // ---- 三阶段握手：X3DH + PQ 密钥封装 + Double Ratchet ----
 
   /**
-   * 闁告瑦鍨奸幑锝嗙閻氬绀凙lice闁挎稑顦弲鍫曟晬濮橆剙绲洪悹褔鏀辫ぐ娆撳箥鐎ｅ墎绀夐弶鈺傛煥濞?{ identityPublic, ephemeralPublic, pqPk? }
-   * 濞?WebSocket 婵炴垵鐗婃导鍛磼閸曨噮妫呭ù锝堟硶閺?   */
+   * 发起方握手：Alice 生成身份密钥/临时密钥/PQ 密钥对，返回 { identityPublic, ephemeralPublic, pqPk? }
+   * 通过 WebSocket 传输密钥交换数据   */
   async function _initiateHandshake(peerId, skipPQ = false) {
     const DR = requireDoubleRatchet();
     const mlkem = getMLKEM();
@@ -171,7 +171,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 闁告繂绉寸花鏌ュ棘閻у摜绀凚ob闁挎稑顦弲鍫曟晬濮橆厽鏆柛?Alice 闁汇劌瀚ぐ娆撳箥鐎ｎ収鍤炴慨鐟板亰缁辨繄鎷嬮敍鍕毈 shared secret闁挎稑鑻悾顒勫箣?Double Ratchet 闁告帗绻傞～鎰板礌?   * 閺夆晜鏌ㄥú?{ identityPublic, publicKey, signedPreKeyPublic, ephemeralPublic, pqCt?, pqEnabled }
+   * 响应方握手：Bob 接收 Alice 密钥，计算 X3DH 共享密钥，初始化 Double Ratchet，返回 { identityPublic, signedPreKeyPublic, pqCt?, pqEnabled }
    */
   async function _respondHandshake(peerId, aliceIdentityPublic, aliceEphemeralPublic, alicePQPublic) {
     const DR = requireDoubleRatchet();
@@ -252,7 +252,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 闁告瑦鍨奸幑锝嗙閻氬绀凙lice闁挎稑顦弲鍫曟晬濮橆厽鏆柛?Bob 闁汇劌瀚幖閿嬫償閺冩挾绀夐悗鐟版湰閸ㄦ岸骞撻埄鍐杹
+   * 完成握手：Alice 处理 Bob 的响应，完成密钥协商
    */
   async function _completeHandshake(peerId, bobIdentityPublic, bobSignedPreKeyPublic, bobPQCiphertext) {
     const DR = requireDoubleRatchet();
@@ -340,11 +340,11 @@ const SessionManager = (() => {
     return { pqEnabled };
   }
 
-  // ---- 闁稿浚鍓欓崣?API ----
+  // ---- 公开 API ----
 
   /**
-   * 闁告帗绋戠紓?闁告瑦鍨奸幑锝嗗濮樺磭妯堥柨娑樼墕瑜板倻鎸ч摎鍌涚溄濞撴皜宥囩
-   * 闁告劕鎳橀崕瀵糕偓鐟版湰閸?X3DH+PQ 闁圭儵鍓濇晶婊堝矗閸屾稒娈堕柣銏㈠枑閸?   * 閺夆晜鏌ㄥú鏍箵閳╁啫顤佹繛鎴濈墛娴煎懐鎷归悢缁樼グ闁挎稑鐬奸弫杈╂嫬閸愵亝鏆忛柡鍌氱秺閳ь剚淇虹换?WebSocket 闁告瑦鍨块埀?   *
+   * 创建会话（发起方握手，即 _initiateHandshake 的封装）
+   * 若会话已存在则返回现有信息；否则发起 X3DH+PQ 握手   *
    * @param {string} peerId
    * @returns {Promise<object>} { identityPublic, ephemeralPublic, pqPk? }
    */
@@ -357,7 +357,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 闁规亽鍎辫ぐ鍫ュ箵閳╁啫顤侀柨娑樼墕閹奸攱鎯旈弮鈧弻鐔哥瑹瑜濈槐?   * 閻犲鍟伴弫銈夊棘鐟欏嫭鏆柛?WebSocket 闁圭儵鍓濇晶婊冣槈閸喍绱栭柛姘唉閻ㄧ喖鎮介妸锔诲妰闁告垼濮ら弳?   *
+   * 接受会话（响应方握手，即 _respondHandshake 的封装）   *
    * @param {string} peerId
    * @param {number[]} aliceIdentityPublic
    * @param {number[]} aliceEphemeralPublic
@@ -372,7 +372,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 閻庣懓鏈崹姘濮樺磭妯堢€点倛娅ｉ悵娑㈡晬閸繂绲洪悹褑娓瑰Ч澶嬬瑹瑜濈槐婵嬪绩鐠哄搫鐓?Bob 闁告繂绉寸花鏌ュ触鎼搭垳绀?   *
+   * 完成会话（处理 Bob 的响应，即 _completeHandshake 的封装）   *
    * @param {string} peerId
    * @param {number[]} bobIdentityPublic
    * @param {number[]} bobSignedPreKeyPublic
@@ -381,7 +381,7 @@ const SessionManager = (() => {
    */
   async function finalizeSession(peerId, bobIdentityPublic, bobSignedPreKeyPublic, bobPQCiphertext) {
     const result = await _completeHandshake(peerId, bobIdentityPublic, bobSignedPreKeyPublic, bobPQCiphertext);
-    // 濠碘€冲€归悘?degraded=true闁挎稑鐬煎ú鍧楀箳閵夆斁鍋撹箛搴ｇ倞闁挎稑濂旂粭澶愬礆濞戞绱?session
+    // 若 degraded=true 则直接返回结果，跳过会话创建
     if (result.degraded) {
       return result;
     }
@@ -389,7 +389,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 闁告梻濮撮惁鎴濃槈閸喍绱?   *
+   * 加密消息   *
    * @param {string} peerId
    * @param {string} plaintext
    * @returns {Promise<{ ciphertext: number[], iv: number[], header: object }>}
@@ -432,7 +432,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 閻熸瑱绲介惁鎴濃槈閸喍绱?   *
+   * 解密消息   *
    * @param {string} peerId
    * @param {number[]} ciphertext
    * @param {number[]} iv
@@ -475,7 +475,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 闁兼儳鍢茶ぐ鍥ㄥ濮樺磭妯堥柣妯垮煐閳ь兛绀侀幓鈺呮偂?   *
+   * 获取会话状态   *
    * @param {string} peerId
    * @returns {Promise<object|null>}
    */
@@ -486,7 +486,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 婵☆偀鍋撻柡灞诲劙缁辨壆鎷犲┑鍥ㄐ﹂柛姘剧畱閻°劑宕?   *
+   * 判断会话是否存在   *
    * @param {string} peerId
    * @returns {Promise<boolean>}
    */
@@ -495,7 +495,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 闁告帞濞€濞呭孩瀵煎宕囨▓
+   * 删除会话
    *
    * @param {string} peerId
    */
@@ -507,7 +507,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 婵炴挸鎳樺▍搴ㄥ箥閳ь剟寮垫径濠勭濠㈣泛瀚幃濠囨儍閸曨剙缍戦柟闈涱儜缁辨┒ebSocket 闁哄偆鍘鹃崵搴ㄥ籍閹壆娈堕柣銏╃厜缁?   */
+   * 清除所有待处理的握手（断开 WebSocket 时清理）   */
   function clearPending() {
     for (const key of _sessions.keys()) {
       if (key.startsWith('_pending_')) _sessions.delete(key);
@@ -516,7 +516,7 @@ const SessionManager = (() => {
   }
 
   /**
-   * 闁告帗顨呴崵顓㈠箥閳ь剟寮垫径澶岀獥閻?peerId
+   * 列出所有会话的 peerId
    *
    * @returns {Promise<string[]>}
    */
@@ -531,10 +531,10 @@ const SessionManager = (() => {
     });
   }
 
-  // ---- 濞存粌顑勫▎?API ----
-  // 闁衡偓椤栨稑鐦柣?events: 'established', 'ratchet-step', 'degraded', 'expired', 'pq-enabled', 'pq-failed'
+  // ---- 事件 API ----
+  // 支持事件: 'established', 'ratchet-step', 'degraded', 'expired', 'pq-enabled', 'pq-failed'
 
-  // ---- 闁告碍鍨甸幃妤呭礂閻撳寒鍟囨俊妞煎劜鐢挳鏁嶉崼婊呯憹闁煎浜滄慨鈺冩啺閸℃瑦纾伴柨娑樼灱閺佽鲸娼绘担鐩掆晠鎳樺顓熸嫳闁哄嫭鍎崇槐锛勬嫬閸愵亝鏆忛柨?---
+  // ---- 兼容桥（旧 API 命名映射）----
   function _installCompatBridge() {
     if (typeof window === 'undefined') return;
     window.SessionManagerCompat = {
@@ -552,7 +552,7 @@ const SessionManager = (() => {
   }
   _installCompatBridge();
 
-  // ---- 閻庣數鍘ч崵?----
+  // ---- 导出 ----
   return {
     createSession,
     acceptSession,
