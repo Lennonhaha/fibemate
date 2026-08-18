@@ -372,14 +372,14 @@ grep -c 'ecosystem\.config\.js' .gitignore  # 应为 1
 本项目提供基础部署镜像，覆盖静态站点与子服务，便于标准化交付与评审。
 
 ### 构建镜像
-`ash
+`bash
 docker build -t fibemate:local .
 # 或
 docker compose build
 `
 
 ### 运行
-`ash
+`bash
 docker compose up -d
 # 访问 http://localhost:8080
 `
@@ -389,7 +389,7 @@ docker compose up -d
 - **nginx** : 8080 提供 www/ 静态资源，并反代 /api /ws /health → 3002，/v1 → 3001
 - **www/src/server-main.js** : 3002（Web / ZX 服务）
 - **reg-server/server.js** : 3080（WS）/ 3081（health）
-- **src/index.js**（noir-backend）: 3001 —— 依赖原生 ML-KEM 插件 ddon/build/Release/mlkem.node
+- **src/index.js**（noir-backend）: 3001 —— 依赖原生 ML-KEM 插件 addon/build/Release/mlkem.node
 
 ### 已知约束
 - 主 API（3001）依赖原生 ML-KEM 插件，该插件源码当前**未纳入本仓库**；默认镜像中 3001 不启动（docker-start.sh 会打印警告并继续）。如需 3001，在构建期通过 ADDON_DIR 提供源码并构建（见 Dockerfile 注释）。
@@ -406,7 +406,7 @@ docker compose up -d
 - scripts/verify-tsr.js —— Node，跨平台，用 Node crypto 做文件完整性校验
 
 ### 用法
-`ash
+`bash
 # Bash
 ./scripts/verify-tsr.sh www/docs/tsa digicert-certs/digicert-tsa-chain.pem
 
@@ -422,7 +422,7 @@ node scripts/verify-tsr.js www/docs/tsa digicert-certs/digicert-tsa-chain.pem
 digicert-certs/digicert-tsa-chain.pem 含 DigiCert 2025 TSA 完整链（leaf + 中间 + 根）。历史早期时间戳（2026-05 / 06 由 FreeTSA 或 DigiCert 早期证书签发）需对应时期的 CA 链，不在本仓库内，故对这些旧 .tsr 的 	s -verify 会 FAIL —— 这**不代表时间戳无效**，仅表示验证链未随仓库分发。
 
 ### 已知可复现性缺口
-- 部分 .tsr 的 .sha256 清单所引用的原始文件，在后续提交中被修改过，导致「文件完整性」校验 FAIL（例如 lg-074 对应的 pga-l8l9-43-tests_2026-07-15.md）。时间戳本身有效且精确绑定到生成时的哈希；该 FAIL 仅说明**当前仓库中的文件已非被时间戳的字节**。如需严格字节级复现，应冻结被时间戳文件或将其纳入存证归档目录随仓库分发。
+- 部分 .tsr 的 .sha256 清单所引用的原始文件，在后续提交中被修改过，导致「文件完整性」校验 FAIL（例如 lg-074 对应的 fpga-l8l9-43-tests_2026-07-15.md）。时间戳本身有效且精确绑定到生成时的哈希；该 FAIL 仅说明**当前仓库中的文件已非被时间戳的字节**。如需严格字节级复现，应冻结被时间戳文件或将其纳入存证归档目录随仓库分发。
 
 ## 可复现构建与版本锁定（消除隐性版本差异）
 

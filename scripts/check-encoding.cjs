@@ -128,6 +128,22 @@ for (const f of files) {
     issues.push({ file: f, kind: 'NUL byte (binary as text)' });
     continue;
   }
+  // 2b. ASCII control chars 0x01-0x08 / 0x0B / 0x0C / 0x0E-0x1F (corruption markers).
+  //     Root cause (2026-08-18): literal \a \b \f escape sequences got written as real
+  //     control bytes, replacing the FIRST letter of words (\b ash->bash, \a ddon->addon,
+  //     \f 04a282->f04a282). \t \n \r are legitimate; 0x00 handled above.
+  //     Exemption: ietf/ draft-*.txt use \f (0x0C) as standard RFC section page-breaks.
+  {
+    const ffLegit = f.startsWith('ietf/');
+    for (let i = 0; i < buf.length; i++) {
+      const c = buf[i];
+      if (c < 0x20 && c !== 0x09 && c !== 0x0a && c !== 0x0d && c !== 0x00) {
+        if (c === 0x0c && ffLegit) continue;
+        issues.push({ file: f, kind: `ASCII control char 0x${c.toString(16).padStart(2, '0')} (offset ${i})` });
+        break;
+      }
+    }
+  }
   // 3. U+FFFD replacement char (the irreversible-damage marker)
   const s = buf.toString('utf8');
   const fffdCount = (s.match(/\uFFFD/g) || []).length;
