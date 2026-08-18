@@ -690,10 +690,27 @@ STM32 C框架和TVLA v4掩码方案已从软件仿真侧验证91×泄漏压缩�
 - [2026-08-13] SM2 WASM 重写完成（AssemblyScript，独立第二实现用于交叉验证）：field/curve/sm3/sm2 四层 Array<u64>；内存泄漏根因=StaticArray 在 minimal runtime 永久泄漏，改 Array + incremental runtime 后 1500 次 mulGX 稳定 16MB；11 项验证全绿（field 3000 组、SM2 KAT 验签/解密各 100、JS↔WASM 交叉 1000、内存 1500 次）；性能 mulGX=60.78ms/op（incremental），WASM 价值=交叉验证非性能；10,000 组 KAT（约 81 分钟）、Comb 窗口优化、TVLA 均 8/31 后；js v1.3 已是恒定时间 Montgomery Ladder，WASM 选方案 A 不追求性能；全部本地未 commit 未 push，等用户回「推」
 - [2026-08-13] CodeQL 批量整治：根因是长期没人看 CodeQL 页面致积累 492 条；已修复全局限流 600/15min + 登录 30/15min、原型污染防护（db 层 hasOwnProperty）、ML-KEM 私钥 IndexedDB+AES-GCM 加密存储（extractable:false）、ReDoS 正则改 split；真实 error 3 条全误报/死副本（www/crypto/crypto/ 死副本，活跃代码已改）；教训：告警异步需等重扫、必须读真实代码定级、String() 套 req.params.userId 是空操作、prototype pollution 本质是 db 层 __proto__ 返回 Object.prototype（truthy）绕过 if 守卫；待删死副本目录 www/crypto/crypto/（用户回「删」后执行）
 - [2026-08-13] SM2 WASM 内存泄漏架构级 blocker：StaticArray 非托管类型在 stub/minimal runtime 永久泄漏，mulGX ~700 次后 WASM 内存 16MB→4GB 崩溃；只有 incremental runtime 有完整 GC；先环境自检优先；AssemblyScript 0.28.20（wasm-sm2/package.json 独立安装绕过根 better-sqlite3 的 node-gyp）
-- [2026-08-14] GBK 双重误解码三类损坏：类型 A 符号级可还原（鈥?→—、鈫?→→，已修 double-ratchet-pq.js 14 处 + TIMESTAMP-MANIFEST.md 1 处）；类型 B 双重 GBK+emoji 丢失有干净历史可恢复（FAQ.html/sm2-frontend-verification.html 从 db81c7f55、timestamps/index.html 从 69b9a22c4，共 3 文件）；类型 C 双重 GBK+? 替换符无干净历史不可逆（session-manager.js 24283 字节 + sm-v12.js 20218 字节，从 initial commit 就损坏，服务器所有副本同样损坏，选 A 保留现状，逻辑完整仅中文注释乱码）；emoji 4 字节 UTF-8 被 GBK 替换成 ?（0x3F）信息永久丢失；GBK 指纹检测正则 /鈥|鈫|鈺|鈮|閬|閳|閸|閺|閻/
+- 2026-08-15 重建干净版 C:\Users\maivs\Desktop\sm2-frontend-verification.html 纯 UTF-8（U+FFFD=0、518 正确汉字、5286B，打包版 6.6KB 内联 CSS+字体栈 PingFang/微软雅黑/Noto Sans CJK/文泉驿）；8/14 曾用 db81c7f55 恢复 4059B 旧版；根因=GBK 字节被当 UTF-8 写入成 Extension B 汉字（U+9000-U+9FFF 区），此区有大量合法常用汉字（集/验/链/钥）非损坏，Tauri/WebView2 字体栈无覆盖需替换 BMP 等价字
 - [2026-08-14] 编码铁律补充：PowerShell > 重定向是 UTF-16，git show ... > file 会写坏文件（size 翻倍+U+FFFD），必须用 node fs.writeFileSync(path, content, 'utf8')；正则里 \uFFFD 后不能拼半角 ?（是量词），需 \uFFFD\uFF1F 或转义；PowerShell 读 UTF-8 报「中文字 45 次重复」是误报（按 GBK 解码多字节序列致显示层 45 倍爆炸），判文件是否损坏必须用 node 权威检测别看终端
 - [2026-08-15] sm2-frontend-verification.html 编码修复：原 GBK 被工具当 UTF-8 写入，52 个中文字符 GBK 字节被解释成 Extension B 汉字（U+9000-U+9FFF，如驗/鏈/鑰）致 Tauri/WebView2 渲染不出，Electron 正常；基于上下文逐字符推断重写 518 个正确汉字、U+FFFD=0、5286 字节；关键发现 U+9000-U+9FFF 有大量合法常用汉字（集/验/链/钥），不是损坏只是 Extension B 区段；打包版存桌面 C:\Users\maivs\Desktop\sm2-frontend-verification.html（CSS 全内联零依赖、字体栈覆盖 PingFang SC/微软雅黑/Noto Sans CJK/文泉驿、深色主题、斑马纹表格、代码高亮）
 - [2026-08-15] 重放保护缺口（THREAT_MODEL.md:65,131-132）：方案定稿=跳过一期注入式（零收益），8/31 后直接用 Redis/lru-cache 做二期校验式；记录 commit 1fb09dc6 + 定稿 4141723，冻结期零代码改动
+- 2026-08-16 在 experimental/vwz-lg 研究线分支实施重放保护（A-A-B 方案：零新依赖手写 Map、只保护写操作 POST/PUT/DELETE/PATCH、强制 X-Request-Id 缺失返回 400），提交 8a9193152 修复 TTL 语义（has() 改为精确 Date.now()-prevTs <= REPLAY_TTL 精确 5 分钟），6c81c497d 归档增强测试 13/13 通过（P0 并发 10 同 ID→1 放行 9 拒绝、P0 TTL 50ms、P1 内存 10000 唯一 ID、P2 异常输入）；多实例部署需 8/31 后换 Redis；已核实上游网关 nginx $request_id 是否注入 X-Request-Id
+- 攻击测试方向三个根本性错误已纠正：① VWZ BKZ 攻击是重复劳动（格基安全已于 2026-06-22 评估完毕，结论 Õ(q^130) ≥ 2^2080 不可行）；② LG v2.3 是 Rust crate 而非 WASM 文件，angr wasm backend 实验性且 LG 设计目标是不防动态分析；③ VWZ（签名方案）与 LG（混淆引擎）攻击目标/方法/判定标准完全不同不应混为一谈。归档 docs/attack-testing-status_20260816.md（提交 a0ef4e524）
+- 2026-08-17 LG v2.4-dynamic Sprint 1-5 完整交付：反调试+内存校验+静默投毒(S1)、CFF 分派表+session diff 量化(S2)、ChaCha8 密封层+rand_seed(S3)、dynamic_path+不透明谓词(S4)、独立算术不透明谓词(S5)，测试 124/124 全绿，WASM gzip 35.5KB，提交 2f0655e→749b1cd，PR #33 留痕（CONFLICTING，8/31 评估统一处理）
+- LG harden O(n²) 优化已提出方案 D（查表+行种子预计算），预期 8KB harden 从 1.37s 降到 ~0.15s，待处理；对比方向包括查表法、分块扩散、行种子预计算、混合方案、AES/ChaCha8 流扩散
+- 2026-08-17 最终决定方案B：回退磁盘 www/index.html 至与 Git HEAD (477d388c) 一致（git checkout HEAD -- www/index.html），确认 147191 字节且 git status 干净；monkeycode-ai 曾通过 SSH localhost 直接改服务器 www/index.html 绕过 Git 流程导致三端不一致，已明确未来所有代码变更走 commit→push→部署流程，不允许直接改服务器文件；社区动态功能应通过 PR 提交并实现为从 GitHub API 动态拉取而非硬编码静态快照
+- 用户工作内容三个可视化模型：LG v2.3 扩散颗粒云 diffuse.rs（克里姆特金箔配色、输入/输出熵值对比、单字节扰动冲击波）、LG v2.4 动态路径轨迹 wreath.rs（session 驱动 7 层路径选择，蓝=Standard/金=Substitute，双 session 分歧比例）、LG v2.4 防御状态机 defense.rs（L0-L3 防御等级、NORMAL→POISONING 状态迁移、恒真谓词盾牌）
+- 冻结期（8/31 前）纪律：不写代码、不动环境、攻击测试全押后；8/31 后攻击测试路线：README 5 步攻击链对齐 LG v2.3（P0）、差分/雪崩测试（P1）、VWZ 伪造失败率（P2）、异常输入+日志记录（P2）；8/31 后随合并 main 补 logSecurity() 日志记录功能
+- 用户固定工作流偏好：先核实真实状态再决定动手；对 AI 生成的输入源，在给出方案前先核实路径和依赖（ls -la、grep），从源头过滤虚构内容
+- 2026-08-17 完成 LG v2.3 雪崩测试：N=256、1000 trials、随机 1 bit 翻转，加固后字节级雪崩 99.6%、bit 级 50.00% 达理想值，原黑盒攻击 σ 定位失效
+- 服务器分支操作教训：server reset 用指定 commit 而非 origin/main（本地歧义分支 refs/heads/origin/main 会抢先）；master 删除远分支前先问清楚用户可能改主意；'.gitignore 需全面覆盖所有文件类型（.html .md .rs .wasm），'可视化不是代码''文档无害'是陷阱
+- 2026-08-13 顶层现状：8 份设计文档实现（CLI×5+VS Code 插件+CTF+Docker+Electron）、格密码 101 页面上线（commit 9f9b9fa26，首页卡片 36→37）量子攻击 101+格密码 101 形成完整因果对、ReDoS 修复 #544（pqc-deploy parseManifest 正则 /\/.*$/ 换 split('/')[0]）、STYLE_GUIDE.md §五 ReDoS 规范固化、国密 101 定位修正为'国密技术深潜'（8/31 后优先做）
+- 2026-08-14 三层护盾页 fibemate-architecture-shield.html 升级（commit f2a1b53b9→2975dce2）：黄道十二宫环高亮 Cancer(105°)成都西南+Sagittarius(240°)哈尔滨东北、暗青蓝蜂窝背景、纯英文界面（187 中文字全在 JS 注释）、霓虹青 #00d4d4 六面体、莫兰迪色板球体、星体呼吸脉动+星座入场动画+流光粒子+点击交互（12 护盾节点弹技术栈卡片）、首页已加三层护盾入口卡片
+- fetch 后检查新 commits 需重算：对 main 进行干净最终分类；部署与 push 分离策略（纯静态产物直接部署 nginx，工具类需 push 后才能用）；VWZ 测试缺口：Frida 真实 WASM 追踪/Angr 符号执行/大块数据未执行，Python 模拟（XOR+S-box）与真实 WASM（affine Kronecker+sparse offset）是不同数学模型
+- 2026-08-14 D-17 编码修复后：全仓库 UTF-8/GBK 双修复完成，字符级 GBK 指纹检测正则 /鈥|鈫|鈺|鈮|閬|閳|閸|閺|閻/；两不可逆文件选用 A（保留现状）session-manager.js + sm-v12.js 逻辑完整仅中文注释乱码；double-ratchet-pq.js 14 处（13 em-dash+1 箭头）已修；教训：文件名宜含 GITHUB token 存证、timestamps 目录保持
+- 开源倒计时 D-17（2026-08-14 口径）：8/31 前待办=公告 6 份草稿最终定稿（用户侧）、E 盘备份更新（用户侧 backup.bat）、Dependabot 重扫确认（29-45 open 告警，7 high 全在 electron/tools/pqc-desktop 非 PQC 核心）、工作区清理、CodeQL 剩余 error 加 // codeql[...] 注释豁免、部署应急三文档（VDP/IRF/KEY-COMPROMISE）。8/31 后=不可逆 2 文件、VWZ VMQ-SPARSE 归约、ML-KEM-768 TVLA、Fuzzing、第三方独立审计（2027 Q2）、fibemate.net SSL 续期（10 月中 cron 已设）、Docker+OpenAPI+贡献者指南
+- 2026-08-15 风险矩阵升级 v1.2：P-256/ECDH 降 MEDIUM、HMAC-SM3 降 MEDIUM、SLH-DSA 标记实验组件，新增 ecdh-p256-kat.cjs + hmac-sm3-kat.cjs 验证脚本；流量混淆实验完成 StaticPad/PerPhase/BudgetPooling 三策略决策表（零延迟→StaticPad、中延迟→BudgetPool J=3000、最大混淆→PerPhase）；confusion-visualizer.html 三轴 3D 可视化器上线 fibemate.net/docs/；Three.js 589KB 已本地化到 /docs/ 不走 CDN
+- 2026-08-15 构建成功：Tauri 3.0.0 安装包 NSIS 路径 56.56MB（旧 Electron 2.20.0 168.62MB，缩 66%），建议选 A 先备份旧版 D:\FIBEMATE\backup-electron-2.20.0 再静默安装新版（待用户确认）；GitHub Actions CI 中 bom-check job 失败（其余 20 job 全绿）疑编码/BOM 检测问题待本地复现
 
 ## 2026-06-25：路径 C PQC Hybrid 上线 — 900/900 高压通过
 
@@ -788,6 +805,7 @@ eval document.head.appendChild(Object.assign(document.createElement(`script`),{s
 - 用户偏好：直接干、能API推的不用人工网页操作、独立零依赖改动立即推
 - 用户叫maivs的刘天赫，15岁（截至2026-07-07），独立开发后量子密码学项目FIBEMATE，已开源（GPLv3），GitHub账号Lennonhaha，仓库fibemate，上海做硬件/密码安全
 - [2026-08-15] 用户坚持冻结期纪律（8/31 前只动文档不写代码），注重工程纪律；所有文件必须先保存到桌面，未经人工审核不允许私自上传；用户 GitHub 账户 Lennonhaha；偏好诚实透明、不美化不贬低（「数据诚实」项目精神）、知道自己差距比假装完美更专业；所有对外/推送前必须询问，禁止私自上传代码
+- 八月战报持续：8/12-8/15 完成 randombytes.c 空壳改 CSPRNG、全局限流、原型污染防护、ML-KEM 私钥加密、CodeQL 493 条分类清零、SM2 WASM 重写 11/11 验证、8 份设计文档实现、2 个 101 科普页、三层护盾星座页、Charset 全修复。2026-08-12 用户明确身份：FIBEMATE 开源密码平台独立开发者，8/31 开源自研发布，仓库 2 stars、贡献者 2 人（本人+dependabot），追求 OpenSSF 最佳实践徽章与可持续商业模式，多系列部署到 KAT/TVLA/TSR 模块化，物理瓶颈=以 ML-KEM 替代 RSA/ECC 应对量子威胁
 
 ## 2026-06-30：FPGA v5 硬件防护现状
 
@@ -1187,7 +1205,7 @@ This continuous geometric scheme is archived as theoretical exploratory research
 ### git 推送路径（无 GitHub SSH key）
 - 本机 SSH key 全部无 GitHub 授权（fibemate*.pem 用于服务器）
 - 方案：git bundle → SCP 到服务器 → cherry-pick → HTTPS push → bundle sync 回 workspace
-- GitHub master：04a282 → 8622b11 ✅
+- GitHub master：f04a282 → 8622b11 ✅
 
 ## 2026-07-15 03:30-04:15：FPGA UART 物理层验证诊断
 
@@ -1196,7 +1214,7 @@ This continuous geometric scheme is archived as theoretical exploratory research
   唯一修复：重启电脑 → USB 重新枚举
 - **Vivado**：exit -1073741515 (0xC0000135) 无法启动。根因：XILINX_LICENSE_FILE 未设置，D:\Vivado2021_1 中的 .7z 许可证文件全是 0 字节。hw_server (24MB) 独立运行无需许可证，可以启动。
 - **CP2102 UART**：COM20 正常工作，读取 0 bytes（FPGA 未发送数据）
-- **Bitstream**：ibemate_fpga_v5_2b.bit (558 KB) 已生成但从未烧录
+- **Bitstream**：fibemate_fpga_v5_2b.bit (558 KB) 已生成但从未烧录
 
 ### 关键发现
 - hw_server 在 PID 3628，监听 TCP 3121 ✅
@@ -1207,7 +1225,7 @@ This continuous geometric scheme is archived as theoretical exploratory research
 - XDC 潜在冲突：uart_rx (M18) 与 led[0] (M18) 同一引脚
 
 ### 完整诊断报告
-- 报告文件：pga_uart_diag_2026-07-15.md
+- 报告文件：fpga_uart_diag_2026-07-15.md
 
 ### 下一步
 - P0：重启电脑 → 运行 install_digilent.exe → 烧录 bitstream
@@ -1220,8 +1238,8 @@ This continuous geometric scheme is archived as theoretical exploratory research
 - **烧录**：通过 Digilent HS2 (FT232H) JTAG 成功（HIGH）。FPGA 运行中。
 - **Bitstream**：
 - ibemate_fpga_v5_3.bit（571KB）：完整 RTL（NTT+UART boot），综合 DCP + 干净 impl_constraints.xdc
-- link_top.bit（2140KB）：115200 8N1 连续发送 0x55 on M18（uart_tx）
-- link_1hz.bit（2192KB）：1Hz 双 LED blink（N19+T19），用于硬件验证
+- blink_top.bit（2140KB）：115200 8N1 连续发送 0x55 on M18（uart_tx）
+- blink_1hz.bit（2192KB）：1Hz 双 LED blink（N19+T19），用于硬件验证
 - **约束文件**：E:\fpga\fibemate\reports\impl_constraints.xdc（干净版，含 M18/N19/T19）
 - **UART 诊断**：CP2102 COM20 工作正常（Status=OK），但只收到 1 byte 0x00
 - 原因：PMOD 接线可能未正确连接 M18（uart_tx）或 CP2102 RXD
@@ -1427,8 +1445,8 @@ Bob->Alice: e2e-respond (key_share 1253B + mlkem_ct 1088B)
 ### 关键教训
 - core.autocrlf=true + .gitattributes text 产生 CRLF phantom
 - 解决：git add --renormalize + 一次归一化 commit
-- ECS 团队 CRLF 归一化在 a4cba6，通过 bundle 合并
-- GitHub OAuth token 缺 workflow scope 导致含 ci.yml 的提交被拒（基于已上线的 ci.yml 绕过）
+- ECS 团队 CRLF 归一化在 ba4cba6，通过 bundle 合并
+- GitHub 2FA 最终真相（2026-08-12）：7月误诊失败为 2FA、实际从未启用；已在 GitHub Settings 手动启用（Authenticator App），recovery codes 已查看；桌面 key.txt 是阿里云 AccessKey 片段非 GitHub 码；2FA 生效后 P0 全清、Nightly CI 等 10 工作流全部 success。GitHub token gho_Lau7... + gho_wZTR... 待用户手动 Revoke
 
 ### GitHub OAuth Token
 - [GITHUB_OAUTH_TOKEN] (会话级，未持久化)
@@ -1468,9 +1486,9 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - 解决方案：从 bundle 中提取非 workflow 文件，服务器上单独提交推送
 
 ### 推送状态
-- GitHub: c816b9 ✅
-- 服务器 live: c816b9 ✅
-- 本地 workspace: c816b9 ✅
+- GitHub: ac816b9 ✅
+- 服务器 live: ac816b9 ✅
+- 本地 workspace: ac816b9 ✅
 - 三端同步完成
 
 ### 教训
@@ -1483,7 +1501,7 @@ GitHub Discussion 和 README 中的中文在 PowerShell Get-Content 下显示乱
 - 时间戳存证体系使用 DigiCert+FreeTSA 双机构签发，TSR 已累计至 215 条 manifest / 225+ 文件（8/13 口径），8 月已产 135 份 TSR，倒计时至 8.31 开源
 - README 使用公司蓝 #0052CC 配色，每页不超过 5 行，简洁风格。
 - GitHub OAuth token 缺 workflow scope，无法推送含 .github/workflows/ 的提交；GitHub 强制 2FA（8/31 前必须启用否则所有 Actions 停止），已于 8/12 启用；PowerShell ConvertTo-Json 将中文转为 \uXXXX 转义
-- Git 工作流偏好：使用 GitHub 管理项目、通过 TSR（时间戳存证）固化代码提交、通过官网（fibemate.net）发布项目信息。本地 master 分支切换为 main 后需删除。代码提交使用 commit message 规范，GitHub 默认分支已从 master 切换为 main。
+- 分支现状（2026-08-12 后）：main/master/experimental/ntt-optimization/experimental/vwz-lg 四分支，master 与 main 对齐 18d5b469/477d388c；research 分支（experimental/vwz-lg）只在本地+GitHub，服务器只跟踪 main 不部署研究线；主分支已从 master 切 main，后续新开分支默认 main
 
 ## 2026-07-25：项目全面评价 9.3/10 + 双棘轮 PQ 全链路闭环
 
