@@ -20,6 +20,49 @@ const fs = require('fs');
 
 const PATTERN = /\.(js|mjs|cjs|jsx|ts|tsx|html|htm|md|json|css|scss|ya?ml|toml|py|rs|sh|ps1|sql|vue|txt|tcl|xml)$/i;
 
+// --- GBK mojibake fingerprints ---
+// When correct UTF-8 Chinese is mis-decoded as GBK (the 2026-08-14 corruption
+// class), two tell-tale signals appear that are ABSENT from legitimate UTF-8:
+//   1. PUA (Private Use Area) chars U+E000–U+F8FF — GBK maps some byte pairs
+//      here; real UTF-8 Chinese text never contains PUA.
+//   2. High-frequency mojibake hanzi (e.g. 鈹 锛 鈫) — these are the GBK
+//      mis-decode of common chars (##, ，, →).
+// Both are invisible to isValidUtf8() (the bytes are legal UTF-8), so we scan
+// for them explicitly. Fingerprints were extracted from real corrupted files
+// and verified to appear 0 times in clean files.
+const GBK_MOJIBAKE_HANZI = [
+  '\u9239', // 鈹 — "##" heading marker
+  '\u951B', // 锛 — "，" fullwidth comma
+  '\u922B', // 鈫 — "→" arrow
+  '\u9359', // 鍙 — "号"
+  '\u9428', // 鐨 — "的"
+  '\u93C3', // 鏃 — "时"
+  '\u934F', // 鍏 — "关"
+  '\u93AC', // 鎬 — "总"
+  '\u93B4', // 鎴 — "战"
+  '\u7487', // 璇 — "试"
+  '\u9286', // 銆 — "（"
+  '\u93C2', // 鏂 — "方"
+  '\u6D93', // 涓 — "中"
+  '\u701B', // 瀛 — "学"
+  '\u8BF2', // 诲 — "设"
+];
+
+function hasPuaChar(s) {
+  for (const ch of s) {
+    const cp = ch.codePointAt(0);
+    if (cp >= 0xE000 && cp <= 0xF8FF) return ch;
+  }
+  return null;
+}
+
+function findMojibakeHanzi(s) {
+  for (const ch of s) {
+    if (GBK_MOJIBAKE_HANZI.includes(ch)) return ch;
+  }
+  return null;
+}
+
 // --- UTF-8 strict decode helper: returns true if buffer is valid UTF-8 ---
 function isValidUtf8(buf) {
   let i = 0;
@@ -62,8 +105,17 @@ function listFiles(args) {
 const files = listFiles(process.argv.slice(2));
 const issues = []; // { file, kind }
 
+// Self-exemption: the detector scripts define the mojibake fingerprint tables,
+// so their own comments legitimately contain the fingerprint characters.
+const SELF_SCRIPTS = new Set([
+  'scripts/check-encoding.cjs',
+  'scripts/check-bom.cjs',
+  'scripts/health-check.js',
+]);
+
 for (const f of files) {
   if (!fs.existsSync(f)) continue;
+  if (SELF_SCRIPTS.has(f)) continue;
   let buf;
   try { buf = fs.readFileSync(f); } catch (e) { issues.push({ file: f, kind: `unreadable: ${e.message}` }); continue; }
 
@@ -96,6 +148,31 @@ for (const f of files) {
   // 4. Invalid UTF-8 (GBK-misdecoded Chinese still shows as raw bytes)
   if (!isValidUtf8(buf)) {
     issues.push({ file: f, kind: 'invalid UTF-8 byte sequence (GBK misdecode?)' });
+    continue;
+  }
+  // 5. GBK mojibake fingerprints (legal UTF-8 but semantically garbled)
+  //    Exempt lines that deliberately document the corruption class
+  //    (audit logs / this script itself), same convention as U+FFFD above.
+  const s5 = buf.toString('utf8');
+  const puaChar = hasPuaChar(s5);
+  const mojiChar = findMojibakeHanzi(s5);
+  if (puaChar || mojiChar) {
+    // Determine whether every offending line is an intentional sample
+    let allIntentional = true;
+    for (const line of s5.split('\n')) {
+      const hasPua = hasPuaChar(line) !== null;
+      const hasMoji = findMojibakeHanzi(line) !== null;
+      if ((hasPua || hasMoji) && !/(hasGarbage|锟斤拷|garbled|乱码|mojibake|detect.*corrupt|misdecode|GBK|\uFFFD|鈥\?|鈫\?|锛\?|→)/.test(line)) {
+        allIntentional = false;
+        break;
+      }
+    }
+    if (!allIntentional) {
+      const kind = puaChar
+        ? `GBK mojibake (PUA U+${puaChar.codePointAt(0).toString(16).toUpperCase()})`
+        : `GBK mojibake (hanzi ${JSON.stringify(mojiChar)})`;
+      issues.push({ file: f, kind });
+    }
   }
 }
 
