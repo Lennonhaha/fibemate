@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · 使用流程 3D 可视化 — 登录 → E2E 加密通信</title>
+<meta name="description" content="FIBEMATE 使用流程交互式 3D 可视化：身份认证 → 密钥生成 → P2P 建连 → 双棘轮握手 → 消息加密 → 解密与前向安全。ML-KEM-768 + Double Ratchet。">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#030608;color:#b8c0d0;font-family:-apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;overflow:hidden}
+canvas#c{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+#vignette{position:fixed;inset:0;z-index:1;pointer-events:none;background:radial-gradient(ellipse at center,rgba(0,0,0,0) 55%,rgba(0,0,0,.42) 100%)}
+#ui{position:fixed;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;display:flex;flex-direction:column;justify-content:space-between}
+#top{display:flex;align-items:flex-start;justify-content:space-between;padding:16px 20px;background:linear-gradient(180deg,rgba(11,15,25,.92) 0%,transparent 100%)}
+#left{max-width:62%}
+#badge{display:inline-block;background:linear-gradient(135deg,#00b4a0,#00E5C3);color:#04211c;font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;letter-spacing:.5px;margin-bottom:6px}
+#title{font-size:19px;font-weight:700;color:#fff;letter-spacing:.3px}
+#subtitle{font-size:12.5px;color:#8a9ab0;margin-top:4px;line-height:1.55;max-width:640px}
+#legend{display:flex;gap:12px;flex-wrap:wrap;margin-top:8px}
+.li{display:flex;align-items:center;gap:5px;font-size:11px;color:#6a7a9a}
+.dot{width:8px;height:8px;border-radius:50%}
+#right{text-align:right;font-size:11px;color:#3a4a6a;line-height:1.7}
+#bottom{padding:16px 20px 14px;background:linear-gradient(0deg,rgba(11,15,25,.94) 0%,transparent 100%);display:flex;flex-direction:column;align-items:center;gap:9px;pointer-events:all}
+#fw{display:none;min-height:22px}
+#formula{font-family:ui-monospace,Consolas,monospace;font-size:12px;color:#5ecf8a;background:rgba(20,50,40,.6);padding:7px 16px;border-radius:6px;border:1px solid rgba(94,207,138,.22);max-width:720px;text-align:center;word-break:break-all}
+#dp{display:flex;gap:8px;flex-wrap:wrap;max-width:780px;justify-content:center}
+.dp{font-family:ui-monospace,Consolas,monospace;font-size:10.5px;color:#6a8aaa;background:rgba(20,30,50,.7);padding:4px 10px;border-radius:4px;border:1px solid rgba(80,120,180,.2);max-width:210px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dp span{color:#8ab4e0}
+#nav{display:flex;align-items:center;gap:12px}
+.btn{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);color:#c0cce0;font-size:13px;padding:8px 20px;border-radius:8px;cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn:active{transform:scale(.97)}
+#prevBtn{opacity:.4}
+#nextBtn{background:linear-gradient(135deg,#00b4a0,#00E5C3);border:none;color:#04211c;font-weight:600;min-width:120px}
+#nextBtn:hover{background:linear-gradient(135deg,#00c9b0,#2cffe0)}
+#counter{font-size:12px;color:#4a5a7a}
+#progress{display:flex;gap:3px;margin-top:2px}
+.pg{width:30px;height:3px;border-radius:2px;background:rgba(255,255,255,.1);transition:background .3s}
+.pg.active{background:#00E5C3}
+.pg.done{background:#1a6a5a}
+
+/* ===== 登录卡片浮层（仅 Step 1） ===== */
+#loginOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none}
+.login-card{width:300px;padding:32px 26px 24px;background:linear-gradient(145deg,rgba(17,25,22,.92),rgba(13,21,18,.92));
+  border:1px solid rgba(0,180,140,.14);border-radius:18px;
+  box-shadow:0 32px 80px rgba(0,0,0,.6),0 0 90px rgba(0,229,195,.05)}
+.logo-area{display:flex;flex-direction:column;align-items:center;margin-bottom:14px}
+.shield-logo{position:relative;width:56px;height:64px;margin-bottom:12px;filter:drop-shadow(0 0 14px rgba(0,229,195,.45))}
+.shield-logo::before{content:'';position:absolute;top:50%;left:50%;width:150px;height:150px;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(0,229,195,.55) 0%,rgba(0,229,195,.18) 40%,rgba(0,229,195,0) 70%);
+  border-radius:50%;z-index:-1;pointer-events:none;
+  animation:shieldBreathe 3.2s ease-in-out infinite}
+@keyframes shieldBreathe{
+  0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.82)}
+  50%{opacity:1;transform:translate(-50%,-50%) scale(1.18)}
+}
+.brand-name{font-size:22px;font-weight:700;letter-spacing:5px;color:#fff;margin-bottom:5px}
+.brand-sub{font-size:9px;color:#8a9ab0;letter-spacing:1.5px}
+.security-badge{display:flex;align-items:center;justify-content:center;gap:6px;margin:0 auto 18px;padding:4px 10px;
+  border:1px solid rgba(0,229,195,.2);border-radius:10px;background:rgba(0,229,195,.08);
+  font-size:9px;color:#00E5C3;letter-spacing:.5px;width:fit-content}
+.login-tabs{display:flex;gap:4px;background:rgba(255,255,255,.05);border-radius:8px;padding:3px;margin-bottom:14px}
+.tab-btn{flex:1;padding:7px 10px;border:none;border-radius:6px;background:transparent;color:#8a9ab0;font-family:inherit;font-size:12px}
+.tab-btn.active{background:#0d3b39;color:#00E5C3}
+.login-form{display:flex;flex-direction:column;gap:9px}
+.input-group input{width:100%;padding:11px 12px;background:#162019;border:1px solid rgba(0,180,140,.1);border-radius:7px;color:#fff;font-size:13px;font-family:inherit}
+.input-group input::placeholder{color:#555}
+.btn-primary{display:flex;align-items:center;justify-content:center;width:100%;padding:11px;margin-top:4px;
+  background:linear-gradient(135deg,#00E5C3,#00b4a0);border:none;border-radius:7px;color:#04211c;font-size:13px;font-weight:600;font-family:inherit;letter-spacing:1px}
+.footer-badge{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:16px;font-size:8px;color:#556;letter-spacing:1px}
+
+/* ===== 主界面浮层（登录后） ===== */
+#mainOverlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:20}
+.main-window{width:min(1240px,96vw);height:min(560px,72vh);display:flex;border-radius:16px;overflow:hidden;
+  background:#0d1512;border:1px solid rgba(0,180,140,.16);
+  box-shadow:0 40px 120px rgba(0,0,0,.7),0 0 80px rgba(0,229,195,.06)}
+/* 左侧应用框（侧边栏） */
+.sidebar{width:190px;min-width:190px;background:#0a100e;border-right:1px solid rgba(0,180,140,.1);display:flex;flex-direction:column}
+.sb-logo{display:flex;align-items:center;gap:9px;padding:18px 16px 14px}
+.sb-logo svg{width:26px;height:29px;filter:drop-shadow(0 0 8px rgba(0,229,195,.5))}
+.sb-logo .t{font-size:15px;font-weight:700;letter-spacing:3px;color:#fff}
+.sb-search{margin:0 12px 12px;padding:8px 12px;background:#12201b;border:1px solid rgba(0,180,140,.08);border-radius:8px;font-size:11px;color:#5a6a5a}
+.sb-nav{flex:1;display:flex;flex-direction:column;gap:2px;padding:0 8px}
+.sb-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:8px;font-size:13px;color:#8a9ab0;cursor:default;
+  animation:menuSweep 6s ease-in-out infinite}
+.sb-item .ic{width:16px;text-align:center;font-size:14px}
+.sb-item:nth-child(1){animation-delay:0s}
+.sb-item:nth-child(2){animation-delay:0.8s}
+.sb-item:nth-child(3){animation-delay:1.6s}
+.sb-item:nth-child(4){animation-delay:2.4s}
+.sb-item:nth-child(5){animation-delay:3.2s}
+@keyframes menuSweep{
+  0%,14%{background:rgba(0,229,195,.16);color:#00E5C3}
+  20%,80%{background:transparent;color:#8a9ab0}
+  86%,100%{background:rgba(0,229,195,.16);color:#00E5C3}
+}
+.sb-user{display:flex;align-items:center;gap:8px;padding:14px 16px;border-top:1px solid rgba(0,180,140,.1);font-size:11px;color:#5a6a6a}
+.sb-user .ava{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#00c896,#00E5C3);display:flex;align-items:center;justify-content:center;color:#04211c;font-weight:700;font-size:11px}
+/* 右侧对话框界面 */
+.chat-pane{flex:1;display:flex;flex-direction:column;min-width:0}
+.chat-header{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid rgba(0,180,140,.1)}
+.chat-header .peer{font-size:14px;font-weight:600;color:#fff}
+.chat-header .online{width:7px;height:7px;border-radius:50%;background:#00E5C3;box-shadow:0 0 8px #00E5C3}
+.chat-header .spacer{flex:1}
+.e2e-badge{display:flex;align-items:center;gap:5px;padding:4px 10px;border:1px solid rgba(0,229,195,.25);border-radius:12px;font-size:10px;color:#00E5C3;
+  animation:e2ePulse 2.4s ease-in-out infinite}
+@keyframes e2ePulse{0%,100%{box-shadow:0 0 0 rgba(0,229,195,0)}50%{box-shadow:0 0 14px rgba(0,229,195,.5)}}
+.mode-btns{display:flex;gap:4px}
+.mode-btn{padding:5px 10px;border-radius:7px;font-size:10px;border:1px solid rgba(0,180,140,.15);color:#8a9ab0;cursor:default}
+.mode-btn.on{background:#0d3b39;color:#00E5C3;border-color:rgba(0,229,195,.3);animation:modeBlink 3s ease-in-out infinite}
+@keyframes modeBlink{0%,100%{background:#0d3b39}50%{background:rgba(0,229,195,.28)}}
+.chat-msgs{flex:1;display:flex;flex-direction:column;gap:10px;padding:18px;overflow:hidden;background:radial-gradient(circle at 50% 0%,rgba(0,229,195,.03),transparent 60%)}
+.msg{max-width:64%;padding:10px 14px;border-radius:12px;font-size:12.5px;line-height:1.5;animation:msgPop .6s both}
+.msg.in{align-self:flex-start;background:#162019;color:#c8d4c8;border-bottom-left-radius:4px}
+.msg.out{align-self:flex-end;background:linear-gradient(135deg,#00b4a0,#00E5C3);color:#04211c;border-bottom-right-radius:4px}
+.msg .mt{font-size:9px;opacity:.55;margin-top:4px}
+.msg:nth-child(1){animation-delay:.3s}
+.msg:nth-child(2){animation-delay:.9s}
+.msg:nth-child(3){animation-delay:1.5s}
+.msg:nth-child(4){animation-delay:2.1s}
+.msg:nth-child(5){animation-delay:2.7s}
+.msg.burn{animation-delay:.2s}
+@keyframes msgPop{0%{opacity:0;transform:translateY(14px) scale(.92)}100%{opacity:1;transform:translateY(0) scale(1)}}
+.typing{display:flex;gap:4px;align-self:flex-start;padding:8px 14px;background:#162019;border-radius:12px;border-bottom-left-radius:4px}
+.typing span{width:6px;height:6px;border-radius:50%;background:#00E5C3;animation:typingDot 1.1s ease-in-out infinite}
+.typing span:nth-child(2){animation-delay:.18s}
+.typing span:nth-child(3){animation-delay:.36s}
+@keyframes typingDot{0%,100%{opacity:.25;transform:translateY(0)}50%{opacity:1;transform:translateY(-4px)}}
+.chat-input{display:flex;align-items:center;gap:8px;padding:14px 16px;border-top:1px solid rgba(0,180,140,.1)}
+.chat-input input{flex:1;padding:11px 14px;background:#12201b;border:1px solid rgba(0,180,140,.12);border-radius:9px;color:#fff;font-size:13px;font-family:inherit}
+.chat-input input::placeholder{color:#4a5a4a}
+.icon-btn{width:36px;height:36px;border-radius:9px;background:#12201b;border:1px solid rgba(0,180,140,.12);color:#8a9ab0;font-size:16px;display:flex;align-items:center;justify-content:center}
+.send-btn{display:flex;align-items:center;gap:6px;padding:10px 18px;border:none;border-radius:9px;background:linear-gradient(135deg,#00E5C3,#00b4a0);color:#04211c;font-size:13px;font-weight:600;font-family:inherit;
+  animation:sendPulse 2s ease-in-out infinite}
+@keyframes sendPulse{0%,100%{box-shadow:0 0 0 rgba(0,229,195,0)}50%{box-shadow:0 0 20px rgba(0,229,195,.65)}}
+
+/* ===== 会话列表 ===== */
+.conv-list{width:250px;min-width:250px;background:#0b120f;border-right:1px solid rgba(0,180,140,.1);display:flex;flex-direction:column;padding:10px 8px}
+.conv-title{font-size:11px;color:#5a6a7a;padding:6px 10px;letter-spacing:1px}
+.conv-item{display:flex;align-items:center;gap:10px;padding:10px;border-radius:10px;position:relative}
+.conv-item .ava{width:34px;height:34px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;background:linear-gradient(135deg,#1a3a30,#122);color:#00E5C3}
+.conv-item.active{background:rgba(0,229,195,.12)}
+.conv-item.active .ava{background:linear-gradient(135deg,#00c896,#00E5C3);color:#04211c}
+.ci{flex:1;min-width:0}
+.cn{font-size:13px;font-weight:600;color:#d8e4d8}
+.cp{font-size:11px;color:#6a7a8a;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.unread{background:#00E5C3;color:#04211c;font-size:10px;font-weight:700;border-radius:10px;padding:2px 7px;flex-shrink:0}
+/* ===== 密钥指纹验证 ===== */
+.fingerprint{display:flex;align-items:center;gap:10px;padding:7px 18px;background:rgba(0,229,195,.05);border-bottom:1px solid rgba(0,180,140,.1);font-size:10.5px;color:#8a9ab0}
+.fp-label{color:#5ecf8a;font-weight:600}
+.fp-nums{font-family:ui-monospace,Consolas,monospace;font-size:11px;color:#00E5C3;letter-spacing:1px}
+.fp-ok{color:#5ecf8a;font-weight:700;margin-left:auto}
+/* ===== 阅后即焚 ===== */
+.msg.burn{border:1px solid rgba(255,122,69,.35);background:rgba(255,122,69,.08)}
+.burn-timer{color:#ff7a45;font-weight:700}
+.burn-bar{height:3px;margin-top:6px;border-radius:2px;background:rgba(255,122,69,.3);position:relative;overflow:hidden}
+.burn-bar::after{content:'';position:absolute;top:0;left:0;height:100%;width:100%;background:linear-gradient(90deg,#ff7a45,#ff9800);animation:burnCountdown 5s linear infinite}
+@keyframes burnCountdown{0%{width:100%}100%{width:0}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="vignette"></div>
+
+<div id="ui">
+  <div id="top">
+    <div id="left">
+      <div id="badge">Step 1 / 7</div>
+      <div id="title">FIBEMATE 使用流程</div>
+      <div id="subtitle">身份认证 → 密钥生成 → P2P 建连 → 双棘轮握手 → 消息加密 → 解密与前向安全</div>
+      <div id="legend">
+        <div class="li"><div class="dot" style="background:#00c896"></div>Alice</div>
+        <div class="li"><div class="dot" style="background:#ff7043"></div>Bob</div>
+        <div class="li"><div class="dot" style="background:#5CFFE3"></div>密钥 / 晶体</div>
+        <div class="li"><div class="dot" style="background:#00b4d8"></div>信令服务器</div>
+        <div class="li"><div class="dot" style="background:#ff9800"></div>加密数据包</div>
+        <div class="li"><div class="dot" style="background:#ffffff"></div>密钥令牌</div>
+      </div>
+    </div>
+    <div id="right">
+      <div style="color:#5a8a6a">ML-KEM-768 · E2EE</div>
+      <div style="margin-top:2px">可拖拽旋转 · 滚轮缩放</div>
+      <div style="margin-top:2px">← → 键切换步骤</div>
+    </div>
+  </div>
+
+  <div id="bottom">
+    <div id="fw"><div id="formula"></div></div>
+    <div id="dp"></div>
+    <div id="nav">
+      <button class="btn" id="prevBtn" onclick="prevStep()">&#8592; 上一步</button>
+      <button class="btn" id="nextBtn" onclick="nextStep()">下一步 &#8594;</button>
+    </div>
+    <div id="counter">Step 1 of 7</div>
+    <div id="progress"></div>
+  </div>
+</div>
+
+<!-- 登录卡片浮层 -->
+<div id="loginOverlay">
+  <div class="login-card">
+    <div class="logo-area">
+      <div class="shield-logo">
+        <svg viewBox="0 0 64 72" fill="none">
+          <defs><linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#5CFFE3"/><stop offset="100%" style="stop-color:#00E5C3"/>
+          </linearGradient></defs>
+          <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z" stroke="url(#shieldGrad)" stroke-width="2.5" fill="none"/>
+          <path d="M32 12L50 20V36C50 46 42 54 32 58C22 54 14 46 14 36V20L32 12Z" stroke="url(#shieldGrad)" stroke-width="1.5" fill="none" opacity="0.6"/>
+          <circle cx="32" cy="32" r="6" stroke="url(#shieldGrad)" stroke-width="2" fill="none"/>
+          <path d="M32 38V48" stroke="url(#shieldGrad)" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <h1 class="brand-name">FIBEMATE</h1>
+      <p class="brand-sub">SECURITY-FIRST MESSAGING · E2E ENCRYPTION</p>
+    </div>
+    <div class="security-badge">End-to-End Encryption · Zero-Knowledge Proof</div>
+    <div class="login-tabs">
+      <button class="tab-btn active">密码登录</button>
+      <button class="tab-btn">手机号登录</button>
+    </div>
+    <div class="login-form">
+      <div class="input-group"><input type="text" value="alice@fibemate.net" readonly></div>
+      <div class="input-group"><input type="password" value="SecurePass2026!" readonly></div>
+      <button class="btn-primary">登 录 · 注 册</button>
+    </div>
+    <div class="footer-badge">ZERO-KNOWLEDGE · PRIVACY FIRST</div>
+  </div>
+</div>
+
+<!-- 主界面浮层（登录后） -->
+<div id="mainOverlay">
+  <div class="main-window">
+    <!-- 左侧应用框 -->
+    <div class="sidebar">
+      <div class="sb-logo">
+        <svg viewBox="0 0 64 72" fill="none">
+          <defs><linearGradient id="sbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#5CFFE3"/><stop offset="100%" style="stop-color:#00E5C3"/>
+          </linearGradient></defs>
+          <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z" stroke="url(#sbGrad)" stroke-width="2.5" fill="none"/>
+          <circle cx="32" cy="32" r="6" stroke="url(#sbGrad)" stroke-width="2" fill="none"/>
+        </svg>
+        <span class="t">FIBEMATE</span>
+      </div>
+      <div class="sb-search">🔍 搜索会话…</div>
+      <div class="sb-nav">
+        <div class="sb-item"><span class="ic">💬</span>消息</div>
+        <div class="sb-item"><span class="ic">👥</span>联系人</div>
+        <div class="sb-item"><span class="ic">🔐</span>保险库</div>
+        <div class="sb-item"><span class="ic">🔑</span>密钥</div>
+        <div class="sb-item"><span class="ic">⚙️</span>设置</div>
+      </div>
+      <div class="sb-user"><div class="ava">A</div>alice@fibemate.net</div>
+    </div>
+    <!-- 会话列表 -->
+    <div class="conv-list">
+      <div class="conv-title">会话</div>
+      <div class="conv-item active"><div class="ava">B</div><div class="ci"><div class="cn">Bob</div><div class="cp">双棘轮已建立，前向安全 ✅</div></div><span class="unread">2</span></div>
+      <div class="conv-item"><div class="ava">C</div><div class="ci"><div class="cn">Carol</div><div class="cp">国密通道测试通过 🇨🇳</div></div></div>
+      <div class="conv-item"><div class="ava">安</div><div class="ci"><div class="cn">安全群组</div><div class="cp">ML-KEM-768 密钥轮换完成</div></div></div>
+      <div class="conv-item"><div class="ava">🔐</div><div class="ci"><div class="cn">密钥保险库</div><div class="cp">3 条新通知</div></div></div>
+    </div>
+    <!-- 右侧对话框 -->
+    <div class="chat-pane">
+      <div class="chat-header">
+        <span class="online"></span>
+        <span class="peer">Bob</span>
+        <span class="spacer"></span>
+        <div class="mode-btns">
+          <div class="mode-btn on">AES-GCM 双棘轮</div>
+          <div class="mode-btn">SM4-GM 国密</div>
+        </div>
+        <div class="e2e-badge">🔒 端到端加密</div>
+      </div>
+      <div class="fingerprint">
+        <span class="fp-label">🔑 Safety Number 已验证</span>
+        <span class="fp-nums">85 42 19 63 07 51</span>
+        <span class="fp-nums">85 42 19 63 07 51</span>
+        <span class="fp-ok">✓ 匹配</span>
+      </div>
+      <div class="chat-msgs">
+        <div class="msg in">你好 Alice！我们现在的通信是完全端到端加密的 🔐<div class="mt">09:12 · 已解密</div></div>
+        <div class="msg out">收到！密钥已经通过 ML-KEM-768 封装完成 🚀<div class="mt">09:13 · 已加密</div></div>
+        <div class="msg in">双棘轮已建立，每条消息用一次性密钥令牌，前向安全 ✅<div class="mt">09:14 · 已解密</div></div>
+        <div class="msg out">两条通道都验证通过了，合规场景随时用国密 🇨🇳<div class="mt">09:14 · 已加密</div></div>
+        <div class="msg in burn">🔥 阅后即焚：这份一次性会议密钥将自动销毁<div class="mt">09:15 · 已解密 · <span class="burn-timer">05s</span></div><div class="burn-bar"></div></div>
+        <div class="typing"><span></span><span></span><span></span></div>
+      </div>
+      <div class="chat-input">
+        <div class="icon-btn">📎</div>
+        <input type="text" value="发送一条加密消息…" readonly>
+        <div class="icon-btn">🔥</div>
+        <div class="send-btn">发送 ➤</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="vendor/three.min.js"></script>
+<script src="vendor/postprocessing/Pass.js"></script>
+<script src="vendor/postprocessing/shaders/CopyShader.js"></script>
+<script src="vendor/postprocessing/shaders/LuminosityHighPassShader.js"></script>
+<script src="vendor/postprocessing/EffectComposer.js"></script>
+<script src="vendor/postprocessing/RenderPass.js"></script>
+<script src="vendor/postprocessing/ShaderPass.js"></script>
+<script src="vendor/postprocessing/MaskPass.js"></script>
+<script src="vendor/postprocessing/UnrealBloomPass.js"></script>
+<script src="vendor/OrbitControls.js"></script>
+<script>
+// ============================================================
+//  THREE.JS SETUP
+// ============================================================
+var canvas = document.getElementById('c');
+var renderer = new THREE.WebGLRenderer({canvas:canvas, antialias:true, alpha:false, powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setClearColor(0x030608);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.65;
+if ('outputColorSpace' in renderer) renderer.outputColorSpace = THREE.SRGBColorSpace;
+else renderer.outputEncoding = THREE.sRGBEncoding;
+var scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x030608, 0.022);
+var camera = new THREE.PerspectiveCamera(55, window.innerWidth/window.innerHeight, 0.1, 100);
+camera.position.set(0, 0, 17);
+camera.lookAt(0,0,0);
+var controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08;
+controls.minDistance = 5; controls.maxDistance = 30;
+controls.autoRotate = true; controls.autoRotateSpeed = 0.5;
+
+// Bloom 后处理（泛光）
+var composer, bloomPass;
+if (typeof THREE.EffectComposer === 'function') {
+  composer = new THREE.EffectComposer(renderer);
+  composer.addPass(new THREE.RenderPass(scene, camera));
+  bloomPass = new THREE.UnrealBloomPass(
+    new THREE.Vector2(window.innerWidth, window.innerHeight),
+    0.35,   // strength 泛光强度
+    0.55,   // radius 扩散半径
+    0.8     // threshold 亮度阈值
+  );
+  composer.addPass(bloomPass);
+} else {
+  console.warn('EffectComposer 不可用，回退直接渲染');
+}
+
+// ============================================================
+//  SPRITE CACHE (文字标签)
+// ============================================================
+var _spriteCache = new Map();
+function makeSprite(text, color, x, y, z) {
+  var key = text + '|' + color;
+  if (_spriteCache.has(key)) {
+    var sp = _spriteCache.get(key).clone();
+    sp.position.set(x,y,z);
+    return sp;
+  }
+  var cv = document.createElement('canvas');
+  cv.width = 512; cv.height = 128;
+  var cx = cv.getContext('2d');
+  cx.clearRect(0,0,512,128);
+  cx.font = 'bold 22px -apple-system,Segoe UI,sans-serif';
+  cx.fillStyle = '#' + color.toString(16).padStart(6,'0');
+  cx.textAlign = 'center'; cx.textBaseline = 'middle';
+  cx.fillText(text, 256, 64);
+  var tex = new THREE.CanvasTexture(cv);
+  var sp = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, transparent:true, depthTest:false}));
+  sp.scale.set(3.2, 0.8, 1);
+  sp.position.set(x,y,z);
+  _spriteCache.set(key, sp);
+  return sp;
+}
+
+// 径向渐变圆形纹理（柔和光点，替代方形粒子）
+var _glowTexCache = new Map();
+function makeGlowTex(color) {
+  if (_glowTexCache.has(color)) return _glowTexCache.get(color);
+  var cv = document.createElement('canvas');
+  cv.width = 128; cv.height = 128;
+  var cx = cv.getContext('2d');
+  var g = cx.createRadialGradient(64,64,0, 64,64,64);
+  g.addColorStop(0, 'rgba(255,255,255,1)');
+  g.addColorStop(0.25, '#'+color.toString(16).padStart(6,'0'));
+  g.addColorStop(0.6, '#'+color.toString(16).padStart(6,'0')+'66');
+  g.addColorStop(1, 'rgba(0,0,0,0)');
+  cx.fillStyle = g;
+  cx.fillRect(0,0,128,128);
+  var tex = new THREE.CanvasTexture(cv);
+  _glowTexCache.set(color, tex);
+  return tex;
+}
+
+// ============================================================
+//  NODE FACTORY
+// ============================================================
+function mmn(pos, color, label) {
+  var m = new THREE.Group();
+  var ring = new THREE.Mesh(new THREE.RingGeometry(0.52, 0.65, 48),
+    new THREE.MeshBasicMaterial({color:color, side:THREE.DoubleSide, transparent:true, opacity:0, depthTest:false}));
+  ring.rotation.x = -Math.PI/2;
+  m.add(ring);
+  var halo = new THREE.Mesh(new THREE.SphereGeometry(0.7, 16, 16),
+    new THREE.MeshBasicMaterial({color:color, transparent:true, opacity:0, depthWrite:false}));
+  m.add(halo);
+  if (label) {
+    var sp = makeSprite(label, color, 0, 1.05, 0);
+    sp.material.opacity = 0;
+    m.add(sp);
+  }
+  m._ring = ring; m._halo = halo; m._label = label ? sp : null;
+  m._origColor = color; m._pos = pos.clone();
+  m.position.copy(pos);
+  return m;
+}
+function hiNode(n, color, intensity) {
+  if (!n._ring) return;
+  var c = color || n._origColor, i = intensity!==undefined?intensity:0.9;
+  n._ring.material.color.set(c); n._ring.material.opacity = i;
+  if (n._halo) { n._halo.material.color.set(c); n._halo.material.opacity = i*0.15; }
+  if (n._label) n._label.material.opacity = 1;
+}
+function loNode(n) {
+  if (!n._ring) return;
+  n._ring.material.opacity = 0.14; n._ring.material.color.set(n._origColor);
+  if (n._halo) n._halo.material.opacity = 0.03;
+  if (n._label) n._label.material.opacity = 0.5;
+}
+
+// ============================================================
+//  EDGE FACTORY
+// ============================================================
+function makeEdge(a, b, color) {
+  var positions = new Float32Array([a.x,a.y,a.z, b.x,b.y,b.z]);
+  var geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  var mat = new THREE.LineBasicMaterial({color:color||0x2a3a5a, transparent:true, opacity:0});
+  var line = new THREE.Line(geo, mat);
+  scene.add(line);
+  return line;
+}
+function hiEdge(e, color, opacity) { e.material.color.set(color||0x00E5C3); e.material.opacity = opacity!==undefined?opacity:0.7; }
+function loEdge(e) { e.material.opacity = 0.08; e.material.color.set(0x2a3a5a); }
+
+// ============================================================
+//  FLOW PARTICLES (数据包 / 粒子流)
+// ============================================================
+function FP(a, b, colorA, colorB, spd) {
+  this.a = a.clone(); this.b = b.clone(); this.t = Math.random();
+  this.spd = spd || 0.012; this.alive = true;
+  this.colorA = new THREE.Color(colorA); this.colorB = new THREE.Color(colorB);
+  this.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.13, 10, 10),
+    new THREE.MeshBasicMaterial({color:colorA, transparent:true, map:makeGlowTex(0xffffff)}));
+  this.trail = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10),
+    new THREE.MeshBasicMaterial({color:colorA, transparent:true, opacity:0, depthWrite:false, map:makeGlowTex(0xffffff)}));
+  scene.add(this.mesh); scene.add(this.trail);
+}
+FP.prototype.update = function(dt) {
+  this.t = (this.t + this.spd) % 1;
+  this.mesh.position.lerpVectors(this.a, this.b, this.t);
+  // 颜色渐变（前段 colorA，后段 colorB）
+  var mix = this.t < 0.5 ? this.t*2 : 1;
+  var col = this.colorA.clone().lerp(this.colorB, mix);
+  this.mesh.material.color.set(col);
+  this.mesh.material.opacity = 0.9;
+  this.trail.position.lerpVectors(this.a, this.b, Math.max(0, this.t-0.06));
+  this.trail.material.opacity = 0.25 * Math.sin(this.t * Math.PI);
+};
+FP.prototype.remove = function() { scene.remove(this.mesh); scene.remove(this.trail); this.alive = false; };
+
+var FPARTS = [];
+function spawn(a, b, colorA, colorB, n, spd) {
+  for (var i = 0; i < n; i++) {
+    var p = new FP(a, b, colorA, colorB, spd || 0.012);
+    p.t = i / n;
+    FPARTS.push(p);
+  }
+}
+function resetAll() { FPARTS.forEach(function(p){p.remove();}); FPARTS = []; }
+
+// ============================================================
+//  场景元素
+// ============================================================
+
+// 粒子场（背景漂浮）
+var PCOUNT = 500;
+var pGeo = new THREE.BufferGeometry();
+var pPos = new Float32Array(PCOUNT*3);
+var pBase = new Float32Array(PCOUNT*3);
+var pPhase = new Float32Array(PCOUNT);
+var pSize = new Float32Array(PCOUNT);
+for (var i=0;i<PCOUNT;i++){
+  pBase[i*3] = (Math.random()-0.5)*36;
+  pBase[i*3+1] = (Math.random()-0.5)*22;
+  pBase[i*3+2] = (Math.random()-0.5)*20;
+  pPos[i*3]=pBase[i*3]; pPos[i*3+1]=pBase[i*3+1]; pPos[i*3+2]=pBase[i*3+2];
+  pPhase[i] = Math.random()*Math.PI*2;
+  pSize[i] = 0.05 + Math.random()*0.12;
+}
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+pGeo.setAttribute('size', new THREE.BufferAttribute(pSize, 1));
+var pMat = new THREE.PointsMaterial({color:0x00E5C3, size:0.10, map:makeGlowTex(0x00E5C3), transparent:true, opacity:0.38, blending:THREE.AdditiveBlending, depthWrite:false, sizeAttenuation:true});
+var particles = new THREE.Points(pGeo, pMat);
+scene.add(particles);
+var particleConverge = 0; // 0 漂浮 1 汇聚
+
+// 中心光球 hub
+var hubGroup = new THREE.Group();
+var hubSphere = new THREE.Mesh(new THREE.SphereGeometry(1.4, 48, 48),
+  new THREE.MeshBasicMaterial({color:0x00E5C3, transparent:true, opacity:0}));
+var hubHalo = new THREE.Mesh(new THREE.SphereGeometry(2.4, 32, 32),
+  new THREE.MeshBasicMaterial({color:0x5CFFE3, transparent:true, opacity:0, depthWrite:false}));
+hubGroup.add(hubSphere); hubGroup.add(hubHalo);
+hubGroup.position.set(0,0,0);
+scene.add(hubGroup);
+
+// 密钥晶体（八面体，密钥生成时生长）
+var CRYSTAL = 22;
+var crystals = [];
+for (var i=0;i<CRYSTAL;i++){
+  var oct = new THREE.Mesh(new THREE.OctahedronGeometry(0.26, 1),
+    new THREE.MeshBasicMaterial({color:0x5CFFE3, transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false}));
+  var dir = new THREE.Vector3((Math.random()-0.5),(Math.random()-0.5),(Math.random()-0.5)).normalize();
+  oct.userData = {dir:dir, baseR:1.4+Math.random()*1.6, spin:Math.random()*0.02+0.005};
+  crystals.push(oct);
+  scene.add(oct);
+}
+var crystalGrow = 0;
+
+// 锁（加密隐喻）
+var lockGroup = new THREE.Group();
+var lockBody = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.8, 0.35),
+  new THREE.MeshBasicMaterial({color:0x00E5C3, transparent:true, opacity:0}));
+var lockShackle = new THREE.Mesh(new THREE.TorusGeometry(0.32, 0.1, 12, 20, Math.PI),
+  new THREE.MeshBasicMaterial({color:0x00E5C3, transparent:true, opacity:0}));
+lockShackle.position.y = 0.4;
+lockShackle.rotation.z = 0;
+lockGroup.add(lockBody); lockGroup.add(lockShackle);
+lockGroup.position.set(0, 3.4, 0);
+scene.add(lockGroup);
+var lockColor = new THREE.Color(0x00E5C3);
+var lockOpacity = 0;
+
+// 令牌爆散粒子（前向安全）
+var BURST = 36;
+var burstGeo = new THREE.BufferGeometry();
+var burstPos = new Float32Array(BURST*3);
+for (var i=0;i<BURST;i++){ burstPos[i*3]=0; burstPos[i*3+1]=0; burstPos[i*3+2]=0; }
+burstGeo.setAttribute('position', new THREE.BufferAttribute(burstPos, 3));
+var burstMat = new THREE.PointsMaterial({color:0xffffff, size:0.2, map:makeGlowTex(0xffffff), transparent:true, opacity:0, blending:THREE.AdditiveBlending, depthWrite:false});
+var burstPoints = new THREE.Points(burstGeo, burstMat);
+scene.add(burstPoints);
+var burstVel = new Float32Array(BURST*3);
+var burstLife = 0;
+var burstOrigin = new THREE.Vector3();
+
+// 节点
+var hubCore = mmn(new THREE.Vector3(0,0,0), 0x5CFFE3, '');
+var aliceNode = mmn(new THREE.Vector3(-5.5, 0, 0), 0x00c896, 'Alice');
+var bobNode   = mmn(new THREE.Vector3( 5.5, 0, 0), 0xff7043, 'Bob');
+var sigNode   = mmn(new THREE.Vector3(0, 5, 0), 0x00b4d8, '信令服务器');
+// 环上其他用户
+var RING_NODES = [];
+var ringSpots = [new THREE.Vector3(-3.2,2.8,0), new THREE.Vector3(3.2,2.8,0),
+  new THREE.Vector3(-3.6,-2.4,0), new THREE.Vector3(3.6,-2.4,0), new THREE.Vector3(0,-4,0)];
+ringSpots.forEach(function(sp){
+  var n = mmn(sp, 0x3a6a5a, '');
+  RING_NODES.push(n);
+});
+
+var ALL_NODES = [hubCore, aliceNode, bobNode, sigNode].concat(RING_NODES);
+ALL_NODES.forEach(function(n){ scene.add(n); });
+
+// 边
+var edges = [];
+function e(a, b, col){ var l = makeEdge(a._pos, b._pos, col); edges.push({line:l, color:col||0x2a3a5a}); return l; }
+var hubAliceEdge = e(hubCore, aliceNode, 0x00c896);
+var hubBobEdge   = e(hubCore, bobNode, 0xff7043);
+var hubSigEdge   = e(hubCore, sigNode, 0x00b4d8);
+var ringEdges = RING_NODES.map(function(n){ return e(hubCore, n, 0x2a3a5a); });
+var aliceSigEdge = e(aliceNode, sigNode, 0x00b4d8);
+var bobSigEdge   = e(bobNode, sigNode, 0x00b4d8);
+
+// 信令"不中继数据"标注 sprite
+var sigTagSprite = makeSprite('仅信令 · 不中继数据', 0x00b4d8, 0, 6.2, 0);
+sigTagSprite.material.opacity = 0;
+sigTagSprite.scale.set(4.2, 1.0, 1);
+scene.add(sigTagSprite);
+
+// ============================================================
+//  动画状态（applyStep 设 target，animate lerp 过渡）
+// ============================================================
+var S = {
+  loginOverlay: 0,
+  mainOverlay: 0,
+  converge: 0,
+  hubOpacity: 0, hubScale: 1,
+  crystalGrow: 0,
+  netOpacity: 0, netSpread: 0,
+  lockOpacity: 0, lockOrange: 0,
+  sigTag: 0
+};
+var T = JSON.parse(JSON.stringify(S)); // target
+
+function setT(v){
+  for (var k in v) T[k] = v[k];
+}
+
+// ============================================================
+//  STEPS 数据
+// ============================================================
+var STEPS = [
+  {
+    badge:'Step 1 / 7',
+    title:'身份认证 — 登录',
+    desc:'用户输入账号密码，客户端用 Schnorr 零知识证明完成匿名认证（不传输明文密码），本地派生加密密钥。这是进入安全会话的第一步。',
+    formula:'KDF( password || salt, "FIBEMate-Argon2id" ) → 主密钥 (32B)',
+    fps:[],
+    data:[
+      {l:'认证方式', v:'Schnorr ZK 证明'},
+      {l:'密码', v:'Argon2id 派生'},
+      {l:'登录凭据', v:'零知识 · 不落盘'},
+      {l:'会话密钥', v:'本地安全存储'}
+    ],
+    hi:[], lo:[],
+    set:function(){ setT({loginOverlay:1, mainOverlay:0, converge:0, hubOpacity:0, hubScale:1, crystalGrow:0, netOpacity:0, netSpread:0, lockOpacity:0, lockOrange:0, sigTag:0}); }
+  },
+  {
+    badge:'Step 2 / 7',
+    title:'密钥生成 — 粒子汇聚 + 晶体成形',
+    desc:'认证通过后，粒子汇聚到中心光球，密钥晶体（八面体）逐层生长成形。晶体代表从主密钥派生的身份密钥对（ML-KEM-768 公钥 + 私钥）。',
+    formula:'ML-KEM-768.KeyGen() → (pk 1184B, sk 2400B)',
+    fps:[],
+    data:[
+      {l:'ML-KEM-768', v:'pk 1184B · sk 2400B'},
+      {l:'身份密钥', v:'长期签名密钥'},
+      {l:'晶体隐喻', v:'密钥逐层生长'},
+      {l:'派生', v:'HKDF-SHA256'}
+    ],
+    hi:['hubCore'], lo:[],
+    set:function(){ setT({loginOverlay:0, mainOverlay:0, converge:1, hubOpacity:0.6, hubScale:1, crystalGrow:1, netOpacity:0, netSpread:0, lockOpacity:0, lockOrange:0, sigTag:0}); }
+  },
+  {
+    badge:'Step 3 / 7',
+    title:'登录完成 — 主界面概览',
+    desc:'认证成功后进入主界面：左侧应用框含消息 / 联系人 / 保险库 / 密钥 / 设置五大模块，右侧是与 Bob 的端到端加密对话框。顶部可切换 AES-GCM 双棘轮 / SM4-GM 国密双通道。',
+    formula:'主界面 · 消息/联系人/保险库/密钥/设置 · 双加密通道',
+    fps:[],
+    data:[
+      {l:'左侧应用框', v:'5 大模块导航'},
+      {l:'对话框', v:'端到端加密'},
+      {l:'加密通道', v:'AES-GCM / SM4-GM'},
+      {l:'安全标识', v:'E2EE 徽章脉动'}
+    ],
+    hi:[], lo:[],
+    set:function(){ setT({loginOverlay:0, mainOverlay:1, converge:0, hubOpacity:0, hubScale:1, crystalGrow:0, netOpacity:0, netSpread:0, lockOpacity:0, lockOrange:0, sigTag:0}); }
+  },
+  {
+    badge:'Step 4 / 7',
+    title:'P2P 建连 — 信令交换',
+    desc:'通过信令服务器交换 SDP / ICE 候选（仅信令，不中继任何数据）。对等节点建立直连后，网络拓扑展开。数据永远点对点，不经过任何服务器。',
+    formula:'WebRTC SDP/ICE 信令 · 数据面 P2P 直连 (DTLS-SRTP)',
+    fps:[{from:aliceNode._pos,to:sigNode._pos,cA:0x00b4d8,cB:0x00b4d8,n:4,spd:0.02},
+         {from:bobNode._pos,to:sigNode._pos,cA:0x00b4d8,cB:0x00b4d8,n:4,spd:0.02}],
+    data:[
+      {l:'信令服务器', v:'仅 SDP/ICE 交换'},
+      {l:'数据面', v:'P2P 直连'},
+      {l:'传输', v:'DTLS-SRTP'},
+      {l:'中继', v:'无 · 不中继数据'}
+    ],
+    hi:['sigNode','aliceNode','bobNode'], lo:[],
+    set:function(){ setT({loginOverlay:0, mainOverlay:0, converge:0, hubOpacity:0.35, hubScale:0.45, crystalGrow:0.6, netOpacity:1, netSpread:1, lockOpacity:0, lockOrange:0, sigTag:1}); }
+  },
+  {
+    badge:'Step 5 / 7',
+    title:'双棘轮握手 — ML-KEM 密钥封装',
+    desc:'Alice 与 Bob 运行 Hybrid X3DH：ML-KEM-768 封装 + X25519 ECDH，派生共享根密钥，建立双棘轮会话。每个消息使用一次性密钥令牌。',
+    formula:'RootKey = HKDF-SHA256( MLKEM_SS || X25519_SS, "FIBEMateHybridX3DH" )',
+    fps:[{from:aliceNode._pos,to:bobNode._pos,cA:0x00b4d8,cB:0x00b4d8,n:5,spd:0.025},
+         {from:bobNode._pos,to:aliceNode._pos,cA:0xff7043,cB:0xff7043,n:5,spd:0.025}],
+    data:[
+      {l:'ML-KEM', v:'封装 1088B 密文'},
+      {l:'X25519', v:'共享 32B'},
+      {l:'根密钥', v:'HKDF-SHA256'},
+      {l:'棘轮', v:'DH + 对称双棘轮'}
+    ],
+    hi:['aliceNode','bobNode','hubCore'], lo:['sigNode'],
+    set:function(){ setT({loginOverlay:0, mainOverlay:0, converge:0, hubOpacity:0.3, hubScale:0.4, crystalGrow:0.5, netOpacity:1, netSpread:1, lockOpacity:0.25, lockOrange:0, sigTag:0.25}); }
+  },
+  {
+    badge:'Step 6 / 7',
+    title:'消息加密发送 — 明文 → 密文',
+    desc:'Alice 键入消息，用消息密钥 AES-256-GCM 加密。数据包沿路径飞向 Bob，经过中点时锁图标由青绿变为橙红（明文 → 密文），附带头部与认证标签。',
+    formula:'AES-256-GCM( plaintext, msgKey, iv=random, AAD=header )',
+    fps:[{from:aliceNode._pos,to:bobNode._pos,cA:0x00c896,cB:0xff9800,n:8,spd:0.018}],
+    data:[
+      {l:'明文', v:'"Hello, PQ world!"'},
+      {l:'密文', v:'ct || iv || tag'},
+      {l:'消息密钥', v:'HMAC(ck, 0x01)'},
+      {l:'头部', v:'DH_pub || PN || n'}
+    ],
+    hi:['aliceNode','bobNode'], lo:['sigNode'],
+    set:function(){ setT({loginOverlay:0, mainOverlay:0, converge:0, hubOpacity:0.3, hubScale:0.4, crystalGrow:0.5, netOpacity:1, netSpread:1, lockOpacity:1, lockOrange:1, sigTag:0.25}); }
+  },
+  {
+    badge:'Step 7 / 7',
+    title:'解密与前向安全 — 令牌碎裂',
+    desc:'Bob 用同一消息密钥解密，认证标签校验通过。用完的密钥令牌即刻碎裂销毁，链密钥经 HMAC 单向前进，旧密钥无法推出新密钥 —— 前向安全。',
+    formula:'ck ← HMAC(ck, 0x02);  mk 用后即焚 · 前向安全',
+    fps:[{from:bobNode._pos,to:aliceNode._pos,cA:0xff9800,cB:0x00c896,n:6,spd:0.02}],
+    data:[
+      {l:'解密', v:'AES-256-GCM 校验 OK'},
+      {l:'旧消息密钥', v:'→ 已销毁'},
+      {l:'链密钥', v:'HMAC 单向前进'},
+      {l:'前向安全', v:'旧密钥不可逆推'}
+    ],
+    hi:['bobNode','aliceNode'], lo:['sigNode'],
+    set:function(){ setT({loginOverlay:0, mainOverlay:0, converge:0, hubOpacity:0.3, hubScale:0.4, crystalGrow:0.5, netOpacity:1, netSpread:1, lockOpacity:1, lockOrange:0, sigTag:0.25}); }
+  }
+];
+
+// ============================================================
+//  UI refs
+// ============================================================
+var elBadge=document.getElementById('badge'), elTitle=document.getElementById('title'),
+    elSub=document.getElementById('subtitle'), elCount=document.getElementById('counter'),
+    elProg=document.getElementById('progress'), elFW=document.getElementById('fw'),
+    elFormula=document.getElementById('formula'), elDP=document.getElementById('dp'),
+    elPrev=document.getElementById('prevBtn'), elNext=document.getElementById('nextBtn'),
+    elLoginOverlay=document.getElementById('loginOverlay'),
+    elMainOverlay=document.getElementById('mainOverlay'),
+    elLeft=document.getElementById('left'),
+    elRight=document.getElementById('right');
+
+// ============================================================
+//  APPLY STEP
+// ============================================================
+var curStep = -1;
+function dimAll(){
+  ALL_NODES.forEach(function(n){ loNode(n); });
+  edges.forEach(function(e){ loEdge(e.line); });
+  elFW.style.display='none'; elDP.innerHTML='';
+}
+function applyStep(idx){
+  dimAll(); resetAll();
+  curStep = idx;
+  var st = STEPS[idx];
+
+  st.set(); // 设置 target
+
+  (st.hi||[]).forEach(function(n){ hiNode(window[n]); });
+
+  (st.fps||[]).forEach(function(f){
+    spawn(f.from, f.to, f.cA, f.cB, f.n||5, f.spd||0.012);
+  });
+
+  elBadge.textContent = st.badge;
+  elTitle.textContent = st.title;
+  elSub.textContent = st.desc;
+  elCount.textContent = st.badge;
+
+  var dots=[]; for(var i=0;i<STEPS.length;i++){
+    dots.push('<div class="pg'+(i<idx?' done':i===idx?' active':'')+'"></div>');
+  }
+  elProg.innerHTML = dots.join('');
+
+  if(st.formula){ elFW.style.display='block'; elFormula.textContent = st.formula; }
+  else elFW.style.display='none';
+
+  var items=[]; (st.data||[]).forEach(function(d){
+    items.push('<div class="dp"><span>'+d.l+':</span> '+d.v+'</div>');
+  });
+  elDP.innerHTML = items.join('');
+
+  elPrev.style.opacity = idx===0 ? '0.25' : '';
+  elNext.textContent = idx===STEPS.length-1 ? '重新开始 ↻' : '下一步 →';
+}
+function nextStep(){ applyStep((curStep+1)%STEPS.length); }
+function prevStep(){ if(curStep>0) applyStep(curStep-1); }
+document.addEventListener('keydown', function(e){
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();nextStep();}
+  if(e.key==='ArrowLeft'){e.preventDefault();prevStep();}
+});
+
+// ============================================================
+//  ANIMATE LOOP
+// ============================================================
+function lerpVal(a, b, k){ return a + (b - a) * k; }
+var lastT = 0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  controls.update();
+
+  // 平滑过渡
+  var k = 0.10;
+  S.loginOverlay = lerpVal(S.loginOverlay, T.loginOverlay, k);
+  S.mainOverlay  = lerpVal(S.mainOverlay, T.mainOverlay, k);
+  S.converge     = lerpVal(S.converge, T.converge, k);
+  S.hubOpacity   = lerpVal(S.hubOpacity, T.hubOpacity, k);
+  S.hubScale     = lerpVal(S.hubScale, T.hubScale, k);
+  S.crystalGrow  = lerpVal(S.crystalGrow, T.crystalGrow, k);
+  S.netOpacity   = lerpVal(S.netOpacity, T.netOpacity, k);
+  S.netSpread    = lerpVal(S.netSpread, T.netSpread, k);
+  S.lockOpacity  = lerpVal(S.lockOpacity, T.lockOpacity, k);
+  S.lockOrange   = lerpVal(S.lockOrange, T.lockOrange, k);
+  S.sigTag       = lerpVal(S.sigTag, T.sigTag, k);
+
+  // 登录浮层（彻底隐藏，避免晶体后残留）
+  if (S.loginOverlay < 0.02) {
+    elLoginOverlay.style.display = 'none';
+  } else {
+    elLoginOverlay.style.display = 'flex';
+    elLoginOverlay.style.opacity = S.loginOverlay;
+  }
+
+  // 主界面浮层（登录后）
+  if (S.mainOverlay < 0.02) {
+    elMainOverlay.style.display = 'none';
+  } else {
+    elMainOverlay.style.display = 'flex';
+    elMainOverlay.style.opacity = S.mainOverlay;
+  }
+
+  // 主界面显示时彻底隐藏顶部 HUD，让主窗口成为焦点
+  if (S.mainOverlay > 0.5) {
+    elLeft.style.display = 'none';
+    elRight.style.display = 'none';
+  } else {
+    elLeft.style.display = '';
+    elRight.style.display = '';
+  }
+
+  // 粒子
+  var t = performance.now() * 0.0004;
+  for (var i=0;i<PCOUNT;i++){
+    var bx = pBase[i*3] + Math.sin(t + pPhase[i])*1.6;
+    var by = pBase[i*3+1] + Math.cos(t*0.8 + pPhase[i])*1.3;
+    var bz = pBase[i*3+2];
+    pPos[i*3]   = lerpVal(bx, 0, S.converge);
+    pPos[i*3+1] = lerpVal(by, 0, S.converge);
+    pPos[i*3+2] = lerpVal(bz, 0, S.converge);
+  }
+  pGeo.attributes.position.needsUpdate = true;
+  pMat.opacity = 0.6 - S.converge * 0.2;
+
+  // 光球
+  var pulse = 0.6 + Math.sin(performance.now()*0.004) * 0.15;
+  hubSphere.material.opacity = S.hubOpacity * pulse;
+  hubHalo.material.opacity = S.hubOpacity * 0.12 * pulse;
+  hubGroup.scale.setScalar(S.hubScale);
+  hubGroup.rotation.y += 0.005;
+
+  // 晶体
+  for (i=0;i<CRYSTAL;i++){
+    var c = crystals[i];
+    var r = c.userData.baseR;
+    c.position.set(c.userData.dir.x*r*S.crystalGrow, c.userData.dir.y*r*S.crystalGrow, c.userData.dir.z*r*S.crystalGrow);
+    c.material.opacity = S.crystalGrow * 0.4;
+    c.rotation.x += c.userData.spin;
+    c.rotation.y += c.userData.spin*1.3;
+  }
+
+  // 节点展开 + 高亮透明度（loNode 已设基础，这里让展开）
+  // 节点 position 已经固定，netSpread 用于环节点从 hub 展开
+  var hubPos = new THREE.Vector3(0,0,0);
+  RING_NODES.forEach(function(n, i){
+    var target = ringSpots[i];
+    n.position.set(
+      hubPos.x + (target.x-hubPos.x)*S.netSpread,
+      hubPos.y + (target.y-hubPos.y)*S.netSpread,
+      target.z
+    );
+  });
+  aliceNode.position.set(-5.5*S.netSpread, 0, 0);
+  bobNode.position.set(5.5*S.netSpread, 0, 0);
+  sigNode.position.set(0, 5*S.netSpread, 0);
+
+  // 边透明度（跟 netOpacity）
+  edges.forEach(function(e){
+    e.line.material.opacity = S.netOpacity * 0.5;
+  });
+  // 信令虚线标注
+  sigTagSprite.material.opacity = S.sigTag;
+  sigTagSprite.position.set(0, 5*S.netSpread + 1.3, 0);
+
+  // 锁
+  lockGroup.children.forEach(function(m){ m.material.opacity = S.lockOpacity; });
+  lockColor.lerpColors(new THREE.Color(0x00E5C3), new THREE.Color(0xFF7A45), S.lockOrange);
+  lockBody.material.color.set(lockColor);
+  lockShackle.material.color.set(lockColor);
+  lockGroup.position.set(0, 3.4, 0);
+  lockGroup.rotation.y += 0.01;
+
+  // 数据包流
+  FPARTS = FPARTS.filter(function(p){ return p.alive; });
+  FPARTS.forEach(function(p){ p.update(0.016); });
+
+  // 令牌爆散（step 6 触发）
+  if (burstLife > 0) {
+    burstLife -= 0.03;
+    for (i=0;i<BURST;i++){
+      burstPos[i*3] += burstVel[i*3];
+      burstPos[i*3+1] += burstVel[i*3+1];
+      burstPos[i*3+2] += burstVel[i*3+2];
+    }
+    burstGeo.attributes.position.needsUpdate = true;
+    burstMat.opacity = burstLife;
+  } else {
+    burstMat.opacity = 0;
+  }
+  // step 6 定时爆散
+  if (curStep === 5 && burstLife <= 0 && Math.random() < 0.01) {
+    burstLife = 1;
+    burstOrigin.copy(bobNode.position);
+    for (i=0;i<BURST;i++){
+      var ang = Math.random()*Math.PI*2, elev = (Math.random()-0.5)*Math.PI, spd = Math.random()*0.09+0.03;
+      burstVel[i*3] = Math.cos(ang)*Math.cos(elev)*spd;
+      burstVel[i*3+1] = Math.sin(elev)*spd;
+      burstVel[i*3+2] = Math.sin(ang)*Math.cos(elev)*spd;
+      burstPos[i*3] = burstOrigin.x; burstPos[i*3+1] = burstOrigin.y; burstPos[i*3+2] = burstOrigin.z;
+    }
+  }
+
+  if (composer) composer.render();
+  else renderer.render(scene, camera);
+}
+
+window.addEventListener('resize', function(){
+  camera.aspect = window.innerWidth/window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  if (composer) composer.setSize(window.innerWidth, window.innerHeight);
+});
+
+// ============================================================
+//  START
+// ============================================================
+applyStep(0);
+animate();
+</script>
+<div id="fibemate-footer" style="position:fixed;bottom:0;left:0;right:0;height:22px;background:rgba(8,8,13,.92);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;gap:16px;font-size:10px;color:rgba(255,255,255,.35);z-index:9999;font-family:system-ui,sans-serif;backdrop-filter:blur(4px);"><span>FIBEMATE v3.3.0</span><span>·</span><span>2026-08-20</span></div>
+</body>
+</html>
