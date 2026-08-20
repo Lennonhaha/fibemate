@@ -23,7 +23,7 @@
 >
 > You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
 >
-> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 100+ timestamped evidence records · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
+> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 261 timestamped evidence records (lg-001~108) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
@@ -34,7 +34,7 @@
 
 > ⚠️ **OpenSSF passing certifies engineering hygiene (CI, docs, license), not cryptographic correctness or security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
 
-**v3.3.0** · 2026-08-03 · TSR: lg-001~101 (200+ records, see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3.0** · 2026-08-03 · TSR: lg-001~108 (261 .tsr records, some IDs skipped; see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -384,7 +384,7 @@ fibemate/
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
-│   └── docs/            # Documentation + TSR evidence (lg-001~101)
+│   └── docs/            # Documentation + TSR evidence (lg-001~108, some IDs skipped)
 ├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
 │   └── (timing-critical IP, available on request)
 ├── c-stm32/             # STM32 C framework

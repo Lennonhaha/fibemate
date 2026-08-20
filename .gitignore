@@ -517,3 +517,9 @@ attack-lg-trace.js
 # === Whitelist: real tool entrypoints (overridden by generic rules above) ===
 !tools/tsr-verify/bin/tsr-verify.js
 !tools/pqc-desktop/main.js
+
+# --- Sensitive data (2026-08-20 audit) ---
+_deepseek_data/
+*gho_*.txt
+*git-cred*.txt
+*_REDACTED_*.log

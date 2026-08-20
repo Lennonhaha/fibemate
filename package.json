@@ -1,7 +1,7 @@
 {
-  "name": "noir-backend",
-  "version": "1.0.0",
-  "description": "Noir - E2E Encrypted Social Backend Server",
+  "name": "fibemate",
+  "version": "3.3.0",
+  "description": "FIBEMATE - E2E Encrypted Social Backend Server",
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
@@ -51,7 +51,7 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "GPL-3.0",
   "bugs": {
     "url": "https://github.com/Lennonhaha/fibemate/issues"
   },
