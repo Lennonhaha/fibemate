@@ -125,6 +125,7 @@ app.use(helmet({
 const ALLOWED_ORIGINS = [
   'app://-',           // Electron app:// 协议
   'tauri://localhost',  // Tauri 协议
+  'http://tauri.localhost',  // Tauri v2 WebView (Windows)
   'https://tauri.localhost', // Tauri HTTPS
   'file://',           // 本地文件
   'http://localhost',
