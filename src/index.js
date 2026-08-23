@@ -132,8 +132,6 @@ const ALLOWED_ORIGINS = [
   'http://localhost:',
   'http://127.0.0.1:',
   'http://127.0.0.1',
-  'http://8.156.77.68','http://8.156.77.68:3001', // ECS 服务器
-  'https://8.156.77.68', // ECS HTTPS
   'http://fibemate.net',
   'https://fibemate.net',
 ];

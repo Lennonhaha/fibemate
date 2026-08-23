@@ -30,7 +30,7 @@ function createHttpsServer(app) {
 
   if (httpsServer) {
     httpsServer.listen(3443, '0.0.0.0', () => {
-      console.log('[HTTPS] https://8.156.77.68:3443');
+      console.log('[HTTPS] Listening on port 3443');
     });
   }
 

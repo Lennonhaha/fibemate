@@ -20,8 +20,8 @@ const WebRTCModule = (() => {
         { urls: 'stun:stun1.l.google.com:19302' },
         {
             urls: [
-                'turn:8.156.77.68:3478?transport=udp',
-                'turn:8.156.77.68:3478?transport=tcp'
+                'turn:localhost:3478?transport=udp',
+                'turn:localhost:3478?transport=tcp'
             ],
             username: 'fibemate',
             credential: '5c806355df8d3e41378f27abff80b1d85943557eccb4237f'
