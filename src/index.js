@@ -1501,7 +1501,7 @@ server.listen(CONFIG.PORT, '127.0.0.1', () => {
   console.log('  🔒  Noir E2E Encrypted Backend Server');
   console.log('═══════════════════════════════════════════════');
   console.log(`  HTTP:      http://127.0.0.1:${CONFIG.PORT}`);
-  console.log(`  WebSocket: ws://127.0.0.0.1:${CONFIG.PORT}/ws`);
+  console.log(`  WebSocket: ws://127.0.0.1:${CONFIG.PORT}/ws`);
   console.log(`  Health:    http://127.0.0.1:${CONFIG.PORT}/health`);
   console.log(`  架构:      服务器零知识`);
   console.log('═══════════════════════════════════════════════');
