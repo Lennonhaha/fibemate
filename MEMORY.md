@@ -11,7 +11,7 @@
 | P0-3 | 硬编码生产IP（8.156.77.68:3001）全站清理 | `d72fcfe9b` |
 | P0-Reg | express5回归：`app.get('*')`→`app.use()`，`sm2ECDH`模块检测修复 | `a07c82277` |
 
-**当前 HEAD**：`099033247`（main=origin=local 三端一致）
+**当前 HEAD**：`dac9bfa`（main=origin=local 三端一致）
 - `099033247` docs: record P1 SM2 ECDH interop verification (all 3 concerns resolved)
 - `40d611b52` docs: MEMORY.md 更新（kat_diag 编码根因）
 - `9db551da4` fix(ci): 修复 kat_diag.html BOM+PUA 乱码导致 CI 红
@@ -84,6 +84,25 @@
 ### kat_diag.html 勘误（无乱码）
 - MEMORY.md 先前记录"娴嬭瘯璇婃柇 pre-existing double-encoding"是**误判**——PowerShell GBK 代码页解释 UTF-8 字节时的**显示伪影**，真实字符是「测试诊断」，文件字节正确（0 PUA，size=4403B）
 - GitHub Actions CI `check-encoding.cjs` 报告 OK，**无需任何修改**
+
+### 8/24 开源前收尾清理（已完成）
+
+**vwz-lg 分支清理**（`experimental/vwz-lg`）：
+- `cdda9af` fix(encoding): U+FFFD 字面（MEMORY.md/health-check.js）+ GBK PUA（session-manager.js/sm-v12.js 从 main 拉干净版）
+- `3297f59` fix(security): IP 硬编码全清（src/https-server.js/src/index.js/www/config.json/www/kat_diag.html/www/webrtc-module.js）+ 死链删除（www/index.html → launch-announcement 死链已删除）
+- vwz-lg 当前状态：代码级硬编码 IP 0 处 / PUA 0 处 / U+FFFD 0 处 ✅
+
+**dependabot ESLint ignore 决策**：
+- 8/1-8/15 实际纪律：能合就合，不能合就 ignore（cf2902b/76dc1ad），**没有主动关闭可升级 PR 的先例**
+- `dac9bfa` `.github/dependabot.yml` 加 eslint ignore（`update-types: ["version-update:semver-major"]`）
+- PR #29（eslint 9→10）将被 ignore 规则自动关闭，不阻塞发布
+- 理由：ESLint 10 major 升级存在 breaking rule changes，零容忍纪律下可能触发 CI 失败，8/31 前稳优先
+
+**fibemate-tauri 推送**（`D:\FIBEMATE\fibemate-tauri`）：
+- `9a755b2` fix(dr): idempotent dr_init + sessionExists reuse + isSent self-msg + GM cache fingerprint + webrtc buttons
+- 8 个文件全部 UTF-8 无 BOM/无PUA/无U+FFFD ✅
+- 工作区编码检查：全部通过 ✅
+- main=origin=local 三端一致 ✅
 
 ### 开源前待办（GitHub 手动操作已完成 ✅，10:04 执行）
 1. ~~GitHub → Security → Dependabot → 批量 dismiss 40 个~~ → **已 dismiss，0 open**
