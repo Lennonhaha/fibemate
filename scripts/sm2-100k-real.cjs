@@ -19,6 +19,7 @@
 const fs = require('fs');
 const crypto = require('crypto');
 const path = require('path');
+// eslint-disable-next-line custom/no-js-bigint-in-hotpath -- benchmark script, BigInt path is the subject under test
 const SM2 = require('../sm2-bigint-ec.js');
 
 const TOTAL = 100_000;

@@ -50,11 +50,13 @@ module.exports = [
   },
   {
     ignores: ["**/*.mjs", "scripts/tvla/**",
+      "scripts/archive/**",
       "scripts/bench-diff.js", "scripts/daily-audit.js",
       "scripts/eiprint-annotation.cjs", "scripts/fix-vwz-website.cjs",
       "scripts/bench-v33.cjs", "scripts/benchmark.cjs", "scripts/quick-bench-sm2.cjs",
       "scripts/smoke-test.js", "scripts/test-sm2-node-fix.js",
       "scripts/verify-gradient-quick.cjs",
+      "scripts/dismiss-via-gh.js", "scripts/setup-security-noise-filter.js",
       "packages/fml-dsa/**"]
   }
 ];

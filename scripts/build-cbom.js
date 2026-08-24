@@ -1,3 +1,4 @@
+/* eslint-disable no-useless-escape -- embedded HTML string uses \" escapes that are harmless in single-quoted JS strings */
 var fs=require('fs'),p='utf8';
 
 var scan=JSON.parse(fs.readFileSync('C:/temp/fibemate-clone/tools/crypto-audit-scan.json',p));

@@ -19,9 +19,9 @@ const PERF = {
   'SM3':          { keygenUs:null,  opsPerSec:21272, verifyUs:null,  opsPerSec3B:21272, opsPerSec1140B:4506, note:'纯 JS, 3B/1140B' },
   'SM4':          { keygenUs:null,  opsPerSec:4879,  verifyUs:null,  opsPerSecEnc:'4,879 ops/s (10B)', opsPerSecDec:'8,030 ops/s', note:'纯 JS GCM' },
   'P-256/ECDH':   { keygenUs:null,  encapsUs:null,  decapsUs:null,  opsPerSec:null,   note:'Native (Node.js crypto)' },
-  'SHA-256':      { keygenUs:null,  opsPerSec:null,  verifyUs:null,  opsPerSec:null,   note:'Native (Node.js crypto)' },
-  'AES':          { keygenUs:null,  opsPerSec:null,  verifyUs:null,  opsPerSec:null,   note:'Native (Node.js crypto, AES-256-GCM)' },
-  'NTT':          { keygenUs:null,  opsPerSec:null,  verifyUs:null,  opsPerSec:null,   note:'FPGA @50MHz, ~503 cycles' },
+  'SHA-256':      { keygenUs:null,  opsPerSec:null,  verifyUs:null,  note:'Native (Node.js crypto)' },
+  'AES':          { keygenUs:null,  opsPerSec:null,  verifyUs:null,  note:'Native (Node.js crypto, AES-256-GCM)' },
+  'NTT':          { keygenUs:null,  opsPerSec:null,  verifyUs:null,  note:'FPGA @50MHz, ~503 cycles' },
 };
 
 const SIZES = {
@@ -106,7 +106,7 @@ registry.getAlgorithmIds().forEach(id => {
   }
 
   const entry = {
-    id: id.toLowerCase().replace(/[\/\-]/g, ''),
+    id: id.toLowerCase().replace(/[/-]/g, ''),
     name: algo.name,
     cn: algo.name,
     type: TYPE_NAMES[algo.category] || algo.category,
