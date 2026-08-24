@@ -51,22 +51,25 @@
 - `f1c81b58e` 已将 MEMORY.md 从仓库删除（内含 SSH 指纹/server IP，公开仓库不能放）
 - 本地 MEMORY.md 同步删除重建，仅保留关键上下文，不含任何凭证
 
-### GitHub 安全面板状态（2026-08-24 全景扫描）
+### GitHub 安全面板状态（2026-08-24 全景扫描 + 手动 dismiss 已执行）
 
 **实质漏洞：零残留**
 - `npm audit`：**0 漏洞**（lockfile 中 path-to-regexp 8.4.2 / qs 6.15.3 / body-parser 2.3.0 全是修复版）
 - secret scanning：0 open ✅
 - CI：全绿 ✅
 
-**Dependabot 40 个历史警报（无需修复）**
-- 全是历史残留未自动关闭：ignore 列表里的 electron@`tools/pqc-desktop`（未完成骨架）、path-to-regexp/qs/body-parser/brace-expansion/express（已在 ignore 且 lockfile 已是修复版）
-- ignore 机制不自动关闭历史警报，需手动 dismiss（GitHub 操作，非代码修复）
-- **操作**：GitHub → Security → Dependabot alerts → 批量 dismiss，理由填"已升级修复版 / 已 ignore"
+**✅ Dependabot 40 个历史警报 → 已全 dismiss（10:04 执行）**
+- 理由 `tolerable_risk` + 注释"已升级修复版 / transitive 已 patch / electron 骨架已 ignore"
+- 现 Dependabot **0 open** ✅
 
-**CodeQL 30 个 open alerts（需关注）**
-- 1 **critical** `request-forgery` @ `mixnet/mix-node.js`：**代码已防御**（`--peers` 白名单 + 无 peers 时拒绝一切转发），8/14 修复前告警残留 → 建议 dismiss 并注明"已在 whitelist 修复"
-- 14 **high**：`missing-rate-limiting`（`src/index.js:230`、`backend/src/index.js:127`）+ `file-system-race`（1 处）→ **rate-limiting 是真实 P2 待办**，开源后加 `express-rate-limit`
-- 5 **medium**：log-injection + unused-var（纯代码卫生，建议开源后清理）
+**✅ CodeQL critical SSRF (#578) → 已 dismiss（10:04 执行）**
+- 理由 `false positive` + 注释"--peers whitelist 已防御，最小权限默认"
+- 现 CodeQL 剩 99 open：81 unused-var [warning 级纯卫生] + 14 high（含 2 个 rate-limiting 按用户要求保留）+ 5 medium log-injection
+
+**CodeQL 保留项（P2 待办，非阻塞）**
+- 2 high `missing-rate-limiting`：#636 `backend/src/index.js:117`、#637 `src/index.js:224` → 开源后加 `express-rate-limit`
+- 1 high `file-system-race`（未 dismiss，留作卫生整改）
+- 5 medium log-injection + 81 unused-var：纯代码卫生，可后续批量 dismiss 或不理
 
 ### GitHub 推送通道（已验证）
 - `$env:GIT_SSH_COMMAND="ssh -p 22 -o StrictHostKeyChecking=no"; git push git@github.com:Lennonhaha/fibemate.git <ref>:refs/heads/main`
@@ -82,10 +85,10 @@
 - MEMORY.md 先前记录"娴嬭瘯璇婃柇 pre-existing double-encoding"是**误判**——PowerShell GBK 代码页解释 UTF-8 字节时的**显示伪影**，真实字符是「测试诊断」，文件字节正确（0 PUA，size=4403B）
 - GitHub Actions CI `check-encoding.cjs` 报告 OK，**无需任何修改**
 
-### 开源前待办（5 分钟 GitHub 操作，非代码修复）
-1. GitHub → Security → Dependabot → 批量 dismiss 40 个历史警报
-2. GitHub → Security → Code scanning → dismiss critical SSRF（已修复）；rate-limiting 两条留 P2
-3. fibemate-tauri 聊天应用（`D:\FIBEMATE\fibemate-tauri`，独立项目）"No Rust DR session" 解密失败 bug 待落地——与 GitHub 平台仓库无关
+### 开源前待办（GitHub 手动操作已完成 ✅，10:04 执行）
+1. ~~GitHub → Security → Dependabot → 批量 dismiss 40 个~~ → **已 dismiss，0 open**
+2. ~~GitHub → Security → Code scanning → dismiss critical SSRF~~ → **已 dismiss (#578)；rate-limiting 两条 (#636/#637) 按用户要求留 open 作 P2**
+3. fibemate-tauri 聊天应用（`D:\FIBEMATE\fibemate-tauri`，独立项目）"No Rust DR session" 解密失败 bug：**用户已排查完**（根因 = `loadMessages` 解密自己发的消息 + v3.17 exe 构建竞态嵌入旧前端），修复代码已在 `main-v3.js`（09:41 写入）；**用户在 D 盘项目重新 build + 完全退出旧进程再启动即可**，本工作区不覆盖
 
 ### 根目录未跟踪文件清理（待做）
 - 大量日期戳临时文档（~180个未跟踪文件），需移入 archives/ 或 .gitignore
