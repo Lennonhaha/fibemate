@@ -746,7 +746,9 @@
     </script>
 </head>
 <body>
+<a href="#main-content" class="skip-link" style="position:absolute;top:-9999px;left:0;z-index:9999;background:#1a1a2e;color:#00E5C3;padding:12px 20px;text-decoration:none;border-radius:0 0 6px 0;font-size:14px;" onfocus="this.style.top='0'" onblur="this.style.top='-9999px'">跳过导航，直接进入正文 (Skip to main content)</a>
 <style>
+.skip-link:focus{top:0!important;outline:2px solid #00E5C3;}
 .countdown-banner {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #e2e8f0;
@@ -877,6 +879,9 @@
         </ul>
         <a href="login.html" class="nav-cta">开始使用</a>
     </nav>
+
+    <!-- Main content -->
+    <main id="main-content">
 
     <!-- Hero -->
     <section class="hero">
@@ -2633,5 +2638,6 @@ const canvas = document.getElementById('particles-canvas');
 })();
 </script>
 
+</main>
 </body>
 </html>

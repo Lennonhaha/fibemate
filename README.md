@@ -574,6 +574,10 @@ All dashboards live at **[fibemate.net/docs/](https://fibemate.net/docs/)** — 
 
 GNU General Public License v3.0 — see [LICENSE](./LICENSE)
 
+## Documentation License
+
+Documentation and non-code content are licensed under [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/).
+
 The ML-KEM-768 and SLH-DSA implementations are based on NIST FIPS 203/205. The SM2/SM3/SM4 implementations reference Chinese national standards GB/T 32918/32905/32907.
 
 ---
