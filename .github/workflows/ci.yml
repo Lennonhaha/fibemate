@@ -147,3 +147,6 @@ jobs:
 
       - name: Scan tracked text files for encoding corruption (U+FFFD / GBK / NUL)
         run: node scripts/check-encoding.cjs
+
+      - name: Verify experimental code isolation (P0-01)
+        run: node scripts/check-experimental-isolation.cjs

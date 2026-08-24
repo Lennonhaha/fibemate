@@ -33,9 +33,9 @@ FPGA v5 硬件仅完成逻辑时序、ILA 仿真、L8/L9 完整性测试（43/43
 
 ### 2.3 实验组件隔离存在工程漏洞
 
-VWZ、LookingGlass 实验组件仅通过**运行时开关**关闭（`ENABLE_VWZ`/`ENABLE_LG`），无**编译期强制剔除机制**。CI 编译、打包流程会同步编译实验代码，存在人为配置失误开启、生产打包混入实验组件的风险。实验组件无任何密码安全保证，一旦接入加密链路会引入未知安全隐患。
+VWZ、LookingGlass 等实验组件通过**运行时 Feature Flag** 关闭（`FIBEMATE_EXPERIMENTAL=0` 默认生产模式），所有 `require('experimental/...')` 调用均在 `if (flags.XXX)` 条件块或 `try/catch` 防御块内。
 
-> 整改计划 (P0)：增加编译期 Feature Flag，生产构建强制剔除 VWZ/LG 全部代码，CI 区分"生产构建产物"与"实验构建产物"。目标 2026-08-20。
+> **整改完成 (P0-01)**：2026-08-25 新增 `scripts/check-experimental-isolation.cjs` CI 门禁脚本，自动化验证 `src/` 目录下所有对 `experimental/` 的 require 均为条件引用（非无条件加载）。CI bom-check job 中已集成此检查。实验代码物理隔离于 `experimental/` 目录，生产入口 `src/index.js` 在 `FIBEMATE_EXPERIMENTAL=0` 下不会加载任何实验模块。
 
 ### 2.4 ML-KEM 自定义实现的固有风险
 
@@ -196,9 +196,9 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 
 | 项目 | 时间 | 说明 |
 |:---|:---|:---|
-| 编译期 Feature Flag 隔离 | 2026-08-20 | 生产构建剔除实验代码（P0） |
+| ~~编译期 Feature Flag 隔离~~ | ~~2026-08-20~~ | ✅ 2026-08-25 完成：CI 门禁脚本 + 条件 require 验证（P0-01） |
 | ML-KEM 标准对齐固化 | 2026-08-25 | 跨库交叉验证 CI 门禁（P0） |
-| 废弃 TLS Path A 清理 | 2026-08-20 | 编译宏隔离 + 复盘文档（P0） |
+| ~~废弃 TLS Path A 清理~~ | ~~2026-08-20~~ | ✅ 2026-08-25 完成：代码已清除 + 复盘文档 `docs/path-a-postmortem.md`（P0-03） |
 | 第三方安全审计 | 待定 | 最大杠杆项（7.8→8.5） |
 | Bus Factor ≥ 2 | 8.31 后 | 开源招募 |
 | 物理 TVLA (ChipWhisperer) | Q4 2026 | 硬件侧信道实测（P0） |
