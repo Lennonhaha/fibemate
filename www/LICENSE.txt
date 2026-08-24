@@ -715,7 +715,7 @@ Public License instead of this License.  But first, please read
 项目网站：
 ----------
   https://fibemate.net
-  http://8.156.77.68
+  http://fibemate.net
 
 联系：
 ----------

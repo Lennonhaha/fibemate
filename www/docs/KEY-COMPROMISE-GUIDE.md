@@ -66,7 +66,7 @@
 | `/etc/letsencrypt/live/fibemate.net/` | TLS 私钥 | High | ✅ 受保护 |
 | `/etc/letsencrypt/live/fibemate.link/` | TLS 私钥 | High | ✅ 受保护 |
 | `~/.ssh/fibemate_final.pem` | SSH 私钥 | High | ✅ 仅本地 |
-| `/etc/letsencrypt/aliyun.ini` | AccessKey | Medium | ⚠️ 10 月到期需替换 |
+| `/etc/letsencrypt/<provider>.ini` | API Key | Medium | 定期轮换 |
 | `~/.gitconfig` (credential) | GitHub Token | Medium | ⚠️ 可能已过期 |
 | `D:\FIBEMATE\` | 本地备份 | Medium | ✅ 本地 |
 | GitHub Secrets | CI/CD Token | Medium | ✅ 平台管理 |

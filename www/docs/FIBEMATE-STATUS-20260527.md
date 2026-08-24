@@ -10,7 +10,7 @@
 | 项目名称 | FibeMate - 后量子安全即时通讯 |
 | 版本 | v3.0-preview |
 | 域名 | fibemate.net |
-| 服务器 | 阿里云 ECS @ 8.156.77.68 |
+| 服务器 | 阿里云 ECS @ fibemate.net |
 | 备案 | 黑ICP备2026005787号-1(个人非经营性) |
 | 状态 | 技术验证与测试阶段,计划 2026.08.31 开源 |
 | 许可证 | AGPLv3(核心代码) / CC BY-NC-SA 4.0(文档) |
@@ -129,7 +129,6 @@
 
 | 项 | 值 |
 |----|-----|
-| SSH | root@8.156.77.68 (~/.ssh/fibermate4.pem) |
 | Node.js | /opt/fibermate-full/src/ |
 | 静态文件 | /opt/fibermate-full/www/ |
 | Rust | /opt/fibermate-rust/ |

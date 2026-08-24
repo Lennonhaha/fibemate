@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 package-lock.json
 
@@ -523,3 +523,23 @@ _deepseek_data/
 *gho_*.txt
 *git-cred*.txt
 *_REDACTED_*.log
+
+# --- Pre-open-source cleanup (2026-08-25) ---
+# MEMORY.md contains operational info (IPs, SSH commands) — never track
+MEMORY.md
+# Session/scratch artifacts with credentials
+alice_*.json
+_msgcheck.sqlite
+cl0w/
+# Workspace task notes (internal, not for public repo)
+*-audit_20260825*.md
+*-closure_20260825*.md
+*-push_20260825*.md
+*-cron-check_20260825*.md
+*-fix-and-status-md_20260825*.md
+*-dr-aead-diagnosis_20260825*.md
+*-dr-arch_20260825*.md
+*-dr-industrial_20260825*.md
+*-and-sm2-100k_20260825*.md
+fibemate-external-audit_20260825*.md
+p0-01-p0-03-closure_20260825*.md

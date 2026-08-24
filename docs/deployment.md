@@ -192,4 +192,4 @@ docker run -d -p 3080:3080 -p 3081:3081 fibemate-reg
 
 ---
 
-> 当前生产环境: Alibaba Cloud ECS (8.156.77.68) | Ubuntu 22.04 | Nginx 1.24
+> 当前生产环境: Alibaba Cloud ECS (fibemate.net) | Ubuntu 22.04 | Nginx 1.24
