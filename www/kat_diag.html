@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<title>KAT 测试诊断</title>
+<title>KAT 娴嬭瘯璇婃柇</title>
 <style>
 body { font-family: system-ui; max-width: 700px; margin: 40px auto; background: #0a0a0f; color: #e8e8ed; }
 div { margin: 8px 0; padding: 10px; border-radius: 6px; font-family: monospace; font-size: 13px; }
@@ -16,16 +16,15 @@ button { padding: 12px 28px; border-radius: 100px; font-size: 14px; cursor: poin
 </style>
 </head>
 <body>
-<h2>🔬 KAT 1000 轮测试诊断</h2>
-<p class="info" id="status">等待执行...</p>
-<button class="btn-run" id="btn1" onclick="testSingle()">测试单轮 API</button>
-<button class="btn-run" id="btn2" onclick="testBatch()">测试 10 轮并发</button>
-<button class="btn-run" id="btn3" onclick="runFull()" disabled>运行 1000 轮</button>
+<h2>馃敩 KAT 1000 杞祴璇曡瘖鏂?/h2>
+<p class="info" id="status">绛夊緟鎵ц...</p>
+<button class="btn-run" id="btn1" onclick="testSingle()">娴嬭瘯鍗曡疆 API</button>
+<button class="btn-run" id="btn2" onclick="testBatch()">娴嬭瘯 10 杞苟鍙?/button>
+<button class="btn-run" id="btn3" onclick="runFull()" disabled>杩愯 1000 杞?/button>
 <div id="log"></div>
 
 <script>
 const API = '/api/mlkem/test';
-// Also try: http://8.156.77.68/api/mlkem/test
 const APIS = ['/api/mlkem/test'];
 
 function log(cls, msg) {
@@ -37,8 +36,8 @@ function log(cls, msg) {
 
 async function testSingle() {
   document.getElementById('log').innerHTML = '';
-  document.getElementById('status').textContent = '测试中...';
-  log('info', '=== 单轮测试 ===');
+  document.getElementById('status').textContent = '娴嬭瘯涓?..';
+  log('info', '=== 鍗曡疆娴嬭瘯 ===');
   
   for (var api of APIS) {
     try {
@@ -46,19 +45,19 @@ async function testSingle() {
       var resp = await fetch(api);
       var data = await resp.json();
       var ms = (performance.now() - t0).toFixed(1);
-      log('ok', api + ' → ' + ms + 'ms, roundTrip=' + data.roundTrip + ', status=' + data.status);
+      log('ok', api + ' 鈫?' + ms + 'ms, roundTrip=' + data.roundTrip + ', status=' + data.status);
     } catch(e) {
-      log('err', api + ' → FAILED: ' + e.message);
+      log('err', api + ' 鈫?FAILED: ' + e.message);
     }
   }
   
-  document.getElementById('status').textContent = '单轮测试完成';
+  document.getElementById('status').textContent = '鍗曡疆娴嬭瘯瀹屾垚';
 }
 
 async function testBatch() {
   document.getElementById('log').innerHTML = '';
-  document.getElementById('status').textContent = '10轮并发测试中...';
-  log('info', '=== 10 轮并发测试 ===');
+  document.getElementById('status').textContent = '10杞苟鍙戞祴璇曚腑...';
+  log('info', '=== 10 杞苟鍙戞祴璇?===');
   
   var api = APIS[0];
   var t0 = performance.now();
@@ -73,16 +72,16 @@ async function testBatch() {
   }
   
   var ms = (performance.now() - t0).toFixed(0);
-  log(ok === 10 ? 'ok' : 'err', '10轮完成: ' + ok + ' pass / ' + fail + ' fail, 总耗时 ' + ms + 'ms');
+  log(ok === 10 ? 'ok' : 'err', '10杞畬鎴? ' + ok + ' pass / ' + fail + ' fail, 鎬昏€楁椂 ' + ms + 'ms');
   
-  document.getElementById('status').textContent = '10轮测试: ' + ok + '/' + 10 + ' 通过';
+  document.getElementById('status').textContent = '10杞祴璇? ' + ok + '/' + 10 + ' 閫氳繃';
   if (ok === 10) document.getElementById('btn3').disabled = false;
 }
 
 async function runFull() {
   document.getElementById('log').innerHTML = '';
-  document.getElementById('status').textContent = '1000轮测试运行中...';
-  log('info', '=== 1000 轮全量测试 ===');
+  document.getElementById('status').textContent = '1000杞祴璇曡繍琛屼腑...';
+  log('info', '=== 1000 杞叏閲忔祴璇?===');
   
   var TOTAL = 1000, BATCH = 20;
   var passed = 0, failed = 0, latencies = [];
@@ -110,14 +109,14 @@ async function runFull() {
     }
     
     remaining -= n;
-    document.getElementById('status').textContent = passed + '/' + TOTAL + ' (剩余 ' + remaining + ')';
+    document.getElementById('status').textContent = passed + '/' + TOTAL + ' (鍓╀綑 ' + remaining + ')';
     await new Promise(r => setTimeout(r, 10));
   }
   
   var totalTime = ((performance.now() - start) / 1000).toFixed(1);
   var avg = (latencies.reduce((a,b)=>a+b,0) / latencies.length).toFixed(1);
-  log(passed === TOTAL ? 'ok' : 'err', '✅ 完成! ' + passed + '/' + TOTAL + ' 通过, 平均 ' + avg + 'ms, 总耗时 ' + totalTime + 's');
-  document.getElementById('status').textContent = passed + '/' + TOTAL + ' 通过, 平均 ' + avg + 'ms/轮';
+  log(passed === TOTAL ? 'ok' : 'err', '鉁?瀹屾垚! ' + passed + '/' + TOTAL + ' 閫氳繃, 骞冲潎 ' + avg + 'ms, 鎬昏€楁椂 ' + totalTime + 's');
+  document.getElementById('status').textContent = passed + '/' + TOTAL + ' 閫氳繃, 骞冲潎 ' + avg + 'ms/杞?;
 }
 </script>
 </body>
