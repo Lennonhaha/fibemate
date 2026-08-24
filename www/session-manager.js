@@ -122,6 +122,131 @@ const SessionManager = (() => {
     });
   }
 
+  // ---- 身份密钥持久化（device-bound，静默无弹窗）----
+  // 方案乙：身份私钥 AES-256-GCM 加密存 IndexedDB，密钥 = device-key（随机 256-bit，首次启动生成）。
+  // 握手路径全程静默读写，不弹密码框；密码导出/备份另行（见 www/js/key-manager.js，本文件不依赖）。
+  // 威胁模型对齐 Signal：设备被盗 = 身份被盗（可接受）。
+  const ID_DB_NAME = 'fibemate_identity';
+  const ID_STORE_NAME = 'keys';
+  const ID_VERSION = 1;
+  let _idDb = null;
+  let _idDbReady = false;
+  let _idDbInitPromise = null;
+  // 内存 fallback：IndexedDB 不可用时（隐私模式/降级环境）至少保证同页面内身份密钥稳定
+  let _memIdentityKey = null;
+
+  function _initIdDB() {
+    if (_idDbReady) return Promise.resolve(_idDb);
+    if (_idDbInitPromise) return _idDbInitPromise;
+    _idDbInitPromise = new Promise((resolve) => {
+      try {
+        const req = indexedDB.open(ID_DB_NAME, ID_VERSION);
+        req.onerror = () => { _idDb = null; _idDbReady = false; resolve(null); };
+        req.onsuccess = () => { _idDb = req.result; _idDbReady = true; resolve(_idDb); };
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(ID_STORE_NAME)) {
+            db.createObjectStore(ID_STORE_NAME, { keyPath: 'name' });
+          }
+        };
+      } catch (e) {
+        _idDb = null; _idDbReady = false; resolve(null);
+      }
+    });
+    return _idDbInitPromise;
+  }
+
+  async function _idGet(name) {
+    await _initIdDB();
+    if (!_idDbReady) return null;
+    return new Promise((resolve, reject) => {
+      const tx = _idDb.transaction(ID_STORE_NAME, 'readonly');
+      const req = tx.objectStore(ID_STORE_NAME).get(name);
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => resolve(req.result || null);
+    });
+  }
+
+  async function _idPut(record) {
+    await _initIdDB();
+    if (!_idDbReady) return;
+    return new Promise((resolve, reject) => {
+      const tx = _idDb.transaction(ID_STORE_NAME, 'readwrite');
+      const req = tx.objectStore(ID_STORE_NAME).put(record);
+      req.onerror = () => reject(req.error);
+      req.onsuccess = () => resolve();
+    });
+  }
+
+  // AES-256-GCM 加/解密（device-key 派生）
+  async function _aesEncrypt(keyBytes, plaintext) {
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['encrypt']);
+    const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, plaintext);
+    return { iv: Array.from(iv), ciphertext: Array.from(new Uint8Array(ct)) };
+  }
+
+  async function _aesDecrypt(keyBytes, ivArr, ciphertextArr) {
+    const key = await crypto.subtle.importKey('raw', keyBytes, { name: 'AES-GCM' }, false, ['decrypt']);
+    const pt = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: new Uint8Array(ivArr) },
+      key,
+      new Uint8Array(ciphertextArr)
+    );
+    return new Uint8Array(pt);
+  }
+
+  async function _getOrCreateDeviceKey() {
+    const rec = await _idGet('device_key');
+    if (rec && rec.raw && rec.raw.length === 32) {
+      return new Uint8Array(rec.raw);
+    }
+    const raw = crypto.getRandomValues(new Uint8Array(32));
+    await _idPut({ name: 'device_key', raw: Array.from(raw), createdAt: Date.now() });
+    return raw;
+  }
+
+  /**
+   * 获取或创建持久化身份密钥（device-bound）。
+   * 首次调用生成并加密落盘；后续调用解密恢复同一 CryptoKeyPair，保证身份密钥跨握手稳定。
+   * @returns {Promise<CryptoKeyPair>} ECDH P-256 身份密钥对（{ privateKey, publicKey }）
+   */
+  async function getOrCreateIdentityKey() {
+    const DR = requireDoubleRatchet();
+    const deviceKey = await _getOrCreateDeviceKey();
+    const rec = await _idGet('identity_key');
+    if (rec && rec.privateKeyEnc && rec.publicKeyRaw) {
+      try {
+        const pkcs8 = await _aesDecrypt(deviceKey, rec.privateKeyEnc.iv, rec.privateKeyEnc.ciphertext);
+        const privKey = await crypto.subtle.importKey(
+          'pkcs8', pkcs8, { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveBits']
+        );
+        const pubKey = await DR.importPublicKey(new Uint8Array(rec.publicKeyRaw));
+        _memIdentityKey = { privateKey: privKey, publicKey: pubKey };
+        return _memIdentityKey;
+      } catch (e) {
+        console.warn('[SessionManager] Failed to restore identity key, regenerating:', e.message);
+      }
+    }
+    // 内存 fallback：IndexedDB 不可用但已有内存身份密钥，直接复用（单页面内稳定）
+    if (_memIdentityKey) {
+      return _memIdentityKey;
+    }
+    // 首次：生成并加密持久化
+    const keyPair = await DR.generateDH();
+    const pkcs8 = new Uint8Array(await crypto.subtle.exportKey('pkcs8', keyPair.privateKey));
+    const pubRaw = await DR.exportPublicKey(keyPair);
+    const privateKeyEnc = await _aesEncrypt(deviceKey, pkcs8);
+    await _idPut({
+      name: 'identity_key',
+      privateKeyEnc,
+      publicKeyRaw: Array.from(pubRaw),
+      createdAt: Date.now(),
+    });
+    _memIdentityKey = keyPair;
+    return keyPair;
+  }
+
   // ---- 会话映射（内存缓存）+ 持久化 Session 状态 ----
   // _sessions: peerId -> { drState, meta, createdAt }
   const _sessions = new Map();
@@ -135,8 +260,8 @@ const SessionManager = (() => {
     const DR = requireDoubleRatchet();
     const mlkem = getMLKEM();
 
-    // Generate DH identity key
-    const identityKey = await DR.generateDH();
+    // 生成/复用持久化身份密钥 + 临时密钥
+    const identityKey = await getOrCreateIdentityKey();
     const ephemeralKey = await DR.generateDH();
 
     let pqPk = null;
@@ -177,7 +302,8 @@ const SessionManager = (() => {
     const DR = requireDoubleRatchet();
     const mlkem = getMLKEM();
 
-    const identityKey = await DR.generateDH();
+    // 生成/复用持久化身份密钥；signedPreKey 每次生成（SPK 轮换留 P2）
+    const identityKey = await getOrCreateIdentityKey();
     const signedPreKey = await DR.generateDH();
 
     const aliceIdPub = await DR.importPublicKey(new Uint8Array(aliceIdentityPublic));
@@ -386,8 +512,8 @@ const SessionManager = (() => {
     console.log(`[SessionManager] async X3DH for ${peerId}:`,
       `online=${bundle.isOnline}, opk=${!!bundle.oneTimePreKey}`);
 
-    // 2. Generate fresh identity + ephemeral keys (same as real-time X3DH)
-    const identityKey = await DR.generateDH();
+    // 2. 生成/复用持久化身份密钥 + 临时密钥（同实时 X3DH）
+    const identityKey = await getOrCreateIdentityKey();
     const ephemeralKey = await DR.generateDH();
 
     // 3. Parse peer's signedPrekey (accept hex or raw array)
@@ -663,6 +789,7 @@ const SessionManager = (() => {
     clearPending,
     listSessions,
     on,
+    getOrCreateIdentityKey,
     _installCompatBridge,
   };
 })();
@@ -674,5 +801,4 @@ if (typeof window !== 'undefined') {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = SessionManager;
 }
-console.log("[SM-DIAG] SessionManager keys:", Object.keys(window.SessionManager).join(", "));
 console.log("[SM-DIAG] SessionManager keys:", Object.keys(window.SessionManager).join(", "));
