@@ -11,11 +11,14 @@
 | P0-3 | 硬编码生产IP（8.156.77.68:3001）全站清理 | `d72fcfe9b` |
 | P0-Reg | express5回归：`app.get('*')`→`app.use()`，`sm2ECDH`模块检测修复 | `a07c82277` |
 
-**当前 HEAD**：`db6cc9f0b`（main=origin=local 三端一致）
+**当前 HEAD**：`9db551da4`（main=origin=local 三端一致）
+- `9db551da4` fix(ci): 修复 kat_diag.html BOM+PUA 乱码导致 CI 红
+- `8c76c7546` docs: MEMORY.md 更新
 - `db6cc9f0b` 空提交，触发 Dependabot 重新扫描
 - `f5d5de137` MEMORY.md 重建（无凭证）
 - `a07c82277` 回归修复（express5 + sm2ECDH）
 - 本地 `npm audit --omit=dev` 确认 **0 漏洞**
+- 本地全 CI 脚本跑通（sm2/sm3/sm4/mlkem KAT + keccak/fibemate test + lint + bom/encoding check）
 
 ### 回归修复详情（a07c82277）
 
@@ -40,6 +43,13 @@
 ### GitHub 推送通道（已验证）
 - `$env:GIT_SSH_COMMAND="ssh -p 22 -o StrictHostKeyChecking=no"; git push git@github.com:Lennonhaha/fibemate.git <ref>:refs/heads/main`
 - Port 22 SSH 实测通，443/HTTPS 被 QMTAP 阻断
+
+### ⚠️ CI 失败根因（2026-08-24 09:xx）
+- **现象**：CI 红，bom-check + encoding-check job FAIL
+- **根因**：commit `6c85ffa1b`（remove kat_diag.html test IP comment）用 PowerShell `>`/Set-Content 方式重存文件，导致 `www/kat_diag.html` 被加了 **UTF-8 BOM (EF BB BF)** + 中文二次损坏成 **PUA 乱码 (U+E1BD 等)**
+- **修复**：`git checkout d72fcfe9b -- www/kat_diag.html` 还原父版本干净字节 → Node `fs.writeFileSync` 删掉硬编码 IP 注释行 → 无 BOM 写回 → check-bom/check-encoding 通过
+- **教训**：改中文文件绝不用 PowerShell `>`/Set-Content；用 `node -e "fs.writeFileSync(p, s, 'utf8')"`，'utf8' 不写 BOM
+- **P2 残留**：kat_diag.html 中文 `娴嬭瘯璇婃柇` 是 initial commit 就有的 pre-existing double-encoding mojibake（合法 CJK，check-encoding 不报），开源前建议手动修正为正确中文（如「测试诊断」）。非 CI 阻塞项。
 
 ### 根目录未跟踪文件清理（待做）
 - 大量日期戳临时文档（~180个未跟踪文件），需移入 archives/ 或 .gitignore
