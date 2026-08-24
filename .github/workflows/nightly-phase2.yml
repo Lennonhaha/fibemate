@@ -1,11 +1,11 @@
 # FIBEMATE Nightly - Phase 2: Full Validation (pre 8-31)
 #
-# Trigger: Daily at 06:00 UTC (14:00 CST)
+# Trigger: Daily at 06:00 UTC (14:00 CST) — runs before Phase 1 (06:30 UTC)
 # Phase 2 Goal: Complete coverage before open source
 #   - Full KAT 10,000 rounds
 #   - TVLA summary validation
 #   - STM32 cross-compilation
-#   - liboqs cross-validation
+#   - liboqs cross-validation (from source)
 #   - Performance regression check
 #
 # Phase 3 (post 8-31): OSS-Fuzz, SLSA, Sigstore
@@ -17,6 +17,10 @@ on:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
+
+concurrency:
+  group: nightly-phase2
+  cancel-in-progress: false
 
 env:
   NODE_VERSION: '22'
@@ -75,19 +79,26 @@ jobs:
         run: make
         # FAIL on error — strict mode
 
-  # === liboqs cross-validation ===
+  # === liboqs cross-validation (build from source — liboqs-dev not in apt) ===
   liboqs-cross:
     runs-on: ubuntu-latest
-    continue-on-error: true  # liboqs-dev not in apt; best-effort
+    continue-on-error: true  # best-effort: liboqs build may vary across releases
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
       - run: npm install
-      - run: |
+      - name: Build liboqs from source
+        run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq liboqs-dev
+          sudo apt-get install -y -qq build-essential cmake ninja-build libssl-dev
+          git clone --depth 1 -b main https://github.com/open-quantum-safe/liboqs.git /tmp/liboqs
+          cd /tmp/liboqs && mkdir build && cd build
+          cmake -GNinja -DBUILD_SHARED_LIBS=ON -DOQS_BUILD_ONLY_LIB=ON ..
+          ninja && sudo ninja install && sudo ldconfig
+      - name: Build oqs_gen helper
+        run: |
           gcc -O2 -o scripts/oqs_gen scripts/oqs_gen.c -l oqs -lcrypto
       - name: 10,000-round cross-validation
         run: node scripts/liboqs-10000.cjs
