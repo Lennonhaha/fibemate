@@ -221,7 +221,7 @@ app.get('/', (req, res) => {
 // VWZ Research API — moved to experimental/vwz-lg branch (2026-07-22)
 const a2aCore = require('../api/a2a/a2a-core');
 app.use('/a2a', a2aCore.router);
-app.get('*', (req, res, next) => {
+app.use((req, res, next) => {
   if (req.path.startsWith('/api') || req.path.startsWith('/voice') || req.path.startsWith('/research') || req.path === '/health') return next();
   if (req.path === '/app' || req.path === '/index') {
     return res.sendFile(path.join(frontendPath, 'index.html'));

@@ -138,13 +138,68 @@
    * @returns {Uint8Array} — 32B 共享密钥
    */
   function sm2ECDH(privateKey, peerPublicKey) {
-    // 获取 SM2 曲线对象
-    const utils = (typeof SM2 !== 'undefined' && SM2._utils) || SM2;
-    if (!utils || !utils.getGlobalCurve) {
-      throw new Error('SM2 utils not available');
+    // 获取 SM2 曲线和 BigInteger
+    // 优先：浏览器 bundled 版本（window.SM2Browser，暴露 getGlobalCurve + _BigInteger）
+    // 其次：Node.js sm-crypto + node_modules/jsbn
+    // 抛出：缺少必要依赖
+    let curve, BigInteger;
+
+    if (typeof window !== 'undefined' && window.SM2Browser && window.SM2Browser.getGlobalCurve) {
+      // 浏览器
+      curve = window.SM2Browser.getGlobalCurve();
+      if (window.SM2Browser._BigInteger) {
+        BigInteger = window.SM2Browser._BigInteger();
+      } else if (window.jsbn) {
+        BigInteger = window.jsbn.BigInteger;
+      }
     }
-    const curve = utils.getGlobalCurve();
-    const {BigInteger} = require('jsbn');
+
+    if (!curve || !BigInteger) {
+      // Node.js: sm-crypto 提供曲线但无 _utils，jsbn 在 node_modules
+      const sm2 = require('sm-crypto').sm2;
+      // 从 sm-crypto 内部获取曲线（sm2 的曲线与标准 SM2 一致）
+      // 通过 sm2.generateKeyPairHex 的实现路径间接访问，或直接用 jsbn
+      let jsbnPath = require.resolve('jsbn');
+      const { BigInteger: BI } = require(jsbnPath);
+      // sm-crypto 内部用 jsbn 的 SM2 曲线参数，硬编码
+      const p = new BI('FFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFFFFFFFFFF', 16);
+      const a = new BI('FFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00000000FFFFFFFFFFFFFFFC', 16);
+      const b = new BI('28E9FA9E9D9F5E344D5A9E4BCF6509A7F39789F515AB8F92DDBCBD414D940E93', 16);
+      const Gx = new BI('32C4AE2C1F1981195F9904466A39C9948FE30BBFF2660BE1715A4589334C74C7', 16);
+      const Gy = new BI('BC3736A2F4F6779C59BDCEE36B692153D0A9877CC62A474002DF32E52139F0A0', 16);
+      const n = new BI('FFFFFFFEFFFFFFFFFFFFFFFFFFFFFFFF7203DF6B21C6052B53BBF40939D54123', 16);
+      BigInteger = BI;
+
+      // 从 sm-crypto 源码路径获取曲线构造函数（避免重复实现）
+      let curveModule;
+      try {
+        // sm-crypto/src/sm2/utils.js 导出 getGlobalCurve
+        const smCryptoPath = require.resolve('sm-crypto');
+        const cryptoDir = path.dirname(smCryptoPath);
+        const utilsPath = path.join(cryptoDir, 'sm2/utils.js');
+        try { curveModule = require(utilsPath); } catch (_) {}
+      } catch (_) {}
+
+      if (curveModule && curveModule.getGlobalCurve) {
+        curve = curveModule.getGlobalCurve();
+      } else {
+        // 最后兜底：从 jsbn 构造标准 SM2 曲线
+        const { ECPointFp, ECCurveFp } = require('jsbn');
+        const sm2Curve = new ECCurveFp(p, a, b);
+        const G = new ECPointFp(sm2Curve, Gx, Gy);
+        curve = { decodePointHex(hex) {
+          if (hex.length === 130 && hex.startsWith('04')) {
+            const px = new BI(hex.slice(2, 66), 16);
+            const py = new BI(hex.slice(66), 16);
+            return new ECPointFp(sm2Curve, px, py);
+          }
+          return null;
+        }};
+      }
+    }
+
+    if (!curve || !curve.decodePointHex) throw new Error('SM2 curve not available');
+    if (!BigInteger) throw new Error('BigInteger not available');
 
     // 转换私钥为 BigInteger
     const privHex = bytesToHex(privateKey);
@@ -153,20 +208,15 @@
     // 解码对方公钥为椭圆曲线点
     const pubHex = bytesToHex(peerPublicKey);
     const pubPoint = curve.decodePointHex(pubHex);
-    if (!pubPoint) {
-      throw new Error('Invalid peer public key');
-    }
+    if (!pubPoint) throw new Error('Invalid peer public key');
 
-    // 计算 K = privateKey * peerPublicKey（点乘）
+    // 计算 K = privateKey * peerPublicKey（椭圆曲线点乘）
     const K = pubPoint.multiply(privBig);
 
-    // 取 x 坐标作为共享秘密（大端序，32 字节）
+    // 取 x 坐标前 32 字节作为共享秘密
     const xBig = K.getX().toBigInteger();
-    const xHex = utils.leftPad(xBig.toString(16), 64);
+    const xHex = xBig.toString(16).padStart(64, '0');
     const xBytes = hexToBytes(xHex);
-
-    // SM2 密钥派生（KDF = SM3 派生）
-    // 直接使用 x 的前 32 字节作为共享密钥（简化版本）
     return xBytes.slice(0, 32);
   }
 
