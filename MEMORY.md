@@ -11,7 +11,11 @@
 | P0-3 | 硬编码生产IP（8.156.77.68:3001）全站清理 | `d72fcfe9b` |
 | P0-Reg | express5回归：`app.get('*')`→`app.use()`，`sm2ECDH`模块检测修复 | `a07c82277` |
 
-**当前 HEAD**：`a07c82277`（main=origin=local 三端一致）
+**当前 HEAD**：`db6cc9f0b`（main=origin=local 三端一致）
+- `db6cc9f0b` 空提交，触发 Dependabot 重新扫描
+- `f5d5de137` MEMORY.md 重建（无凭证）
+- `a07c82277` 回归修复（express5 + sm2ECDH）
+- 本地 `npm audit --omit=dev` 确认 **0 漏洞**
 
 ### 回归修复详情（a07c82277）
 
