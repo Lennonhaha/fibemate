@@ -31,6 +31,26 @@
 
 **注意**：sm-crypto 0.5.6 无 `doExchange` API，sm2ECDH 共享密钥 = 裸 x 坐标前32字节（与旧实现一致，未改 KDF）
 
+### ✅ P1 互操作验收（2026-08-24 实测闭环）
+此前担心的 3 个 P1 观察点，全部实测排除：
+
+**P1-1 SM2 KDF 两端一致性 ✅ 已闭环**
+- 服务端 `src/pqc-hybrid-server.js`：`require('../sm2-bigint-ec.js')`，`sm2EcdhCompute` 返回 `shared.x`（64 hex = 32B 裸 x）
+- 前端 `www/crypto/hybrid-kem-client.js` `sm2ECDH`：返回 `x.slice(0,32)`（裸 x）
+- **跨实现对拍（同一对密钥）**：服务端 BigInt 实现 vs 前端 bundle `getGlobalCurve`+`_BigInteger`，ECDH 共享 x **完全一致**（`b38b9b18...3bdc`）。
+- 结论：两端都是裸 x ECDH，HKDF（`mixSessionKey`，salt=TLS session id, info=`FIBEMATE_SM2_MLKEM_HYBRID_v1`）在两端相同 → session key 必然一致，「消息互通」前提成立。
+
+**P1-2 Node 兜底分支（jsbn）✅ 死代码，不触发**
+- `require('jsbn')` 仅导出 `['default','BigInteger','SecureRandom']`，**无** `ECPointFp`/`ECCurveFp` → 该兜底分支若走到必崩。
+- 但 `hybrid-kem-client.js` 先尝试 `require.resolve('sm-crypto')` → `node_modules/sm-crypto/src/sm2/utils.js`，`getGlobalCurve` 为 `function` → **走 sm-crypto 自带曲线，jsbn 兜底永不触发**。Node 路径实测不崩。
+
+**P1-3 HTML 加载路径 ✅ 加载的是 bundle**
+- `gm-chat.html` L276：`'/crypto/sm2-browser.bundle.js'`
+- `gm-test.html` L50：`{ src: '/crypto/sm2-browser.bundle.js', check: () => typeof SM2Browser !== 'undefined' }`
+- 页面加载 **bundle**（设 `window.SM2Browser` 含 `getGlobalCurve`/`_BigInteger`），非 plain `sm2-browser.js`（仅 6 方法）。浏览器端 `sm2ECDH` 分支可用。
+
+**结论**：P0（漏洞安全 + 启动不崩）+ P1（SM2 ECDH 两端互通）均闭环，可开源。剩余唯一非阻塞项：kat_diag.html pre-existing 中文乱码（P2）。
+
 ### MEMORY.md 安全删除
 - `f1c81b58e` 已将 MEMORY.md 从仓库删除（内含 SSH 指纹/server IP，公开仓库不能放）
 - 本地 MEMORY.md 同步删除重建，仅保留关键上下文，不含任何凭证
@@ -54,3 +74,7 @@
 ### 根目录未跟踪文件清理（待做）
 - 大量日期戳临时文档（~180个未跟踪文件），需移入 archives/ 或 .gitignore
 - 本次未处理，不影响 main 分支安全状态
+
+### 跨实现 ECDH 对拍脚本（临时，已移出仓库）
+- `scripts/archive/cross-sm2-ecdh-test.cjs` 本次验证用，已移至 `%TEMP%/cross-sm2-ecdh-test.cjs.bak`
+- 如需回归测试，可重新放置到 `scripts/` 并加入 CI 矩阵（建议项，非必须）
