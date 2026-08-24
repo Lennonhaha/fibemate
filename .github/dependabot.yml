@@ -27,6 +27,9 @@ updates:
         # Production dependency for reg-server WebSocket.
         # DoS vulnerability has low impact for a post-quantum crypto validation platform.
         # Will upgrade post 8/31 launch.
+      - dependency-name: "eslint"
+        # ESLint 10 is a major version with breaking rule changes.
+        # Pre-8/31 launch stability: defer to post-launch review.
 
   # GitHub Actions
 
