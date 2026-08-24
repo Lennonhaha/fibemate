@@ -295,6 +295,56 @@ function mulG(k) {
     return pointMul(k, G, getGTable());
 }
 
+// ============ ECDH (doExchange) ============
+/**
+ * SM2 ECDH 密钥交换。
+ * 给定己方私钥 d 和对方公钥 P（65B 未压缩格式 0x04||x||y），
+ * 计算共享点的 x 坐标，按 GB/T 3297.5-2017 / ISO/IEC 11770-3 定义。
+ * 与 sm-crypto sm2.doExchange(privateKey, publicKey, 1) 字节级兼容。
+ * @param {Uint8Array|string} privateKey  - 己方私钥（Uint8Array 或 hex 字符串）
+ * @param {Uint8Array|string} peerPublicKey - 对方公钥（65B Uint8Array 或 hex 字符串）
+ * @returns {string} 共享 x 坐标的 hex 字符串（64 字符，即 32 字节 big-endian）
+ */
+function doExchange(privateKey, peerPublicKey) {
+    // 1. 标准化 privateKey → BigInt
+    let d;
+    if (typeof privateKey === 'bigint') {
+        d = privateKey;
+    } else if (typeof privateKey === 'string') {
+        d = hex2bi(privateKey.replace(/^0x/i, ''));
+    } else {
+        // Uint8Array / ArrayBuffer / ArrayLike → hex → BigInt
+        const hex = Buffer.from(privateKey).toString('hex');
+        d = hex2bi(hex);
+    }
+
+    // 2. 标准化 peerPublicKey → hex string
+    let hexPk;
+    if (typeof peerPublicKey === 'string') {
+        hexPk = peerPublicKey.replace(/^0x/i, '');
+    } else if (peerPublicKey && typeof peerPublicKey.x === 'bigint') {
+        // sm2-bigint-ec 的 {x: BigInt, y: BigInt} 格式 → hex
+        hexPk = '04' + bi2hex256(peerPublicKey.x) + bi2hex256(peerPublicKey.y);
+    } else {
+        // Uint8Array / ArrayBuffer / ArrayLike → hex
+        hexPk = Buffer.from(peerPublicKey).toString('hex');
+    }
+
+    // 3. 解析对方公钥（65B 未压缩: 0x04 || x[32B] || y[32B]）
+    const peerX = hex2bi(hexPk.slice(2, 66));
+    const peerY = hex2bi(hexPk.slice(66, 130));
+    const PB = makePt(peerX, peerY);
+
+    // 4. EC 乘法: S = d * PB
+    const S = pointMul(d, PB);
+
+    // 5. 结果是无穷远点 → 返回全零
+    if (isInf(S)) return '0'.repeat(64);
+
+    // 6. 取 x 坐标，零填充到 64 字符（256-bit）
+    return bi2hex256(S.x);
+}
+
 // ============ Key Management ============
 function generateKeyPair() {
     let d;
@@ -446,6 +496,7 @@ module.exports = {
     pointMultiply: pointMul,
     multiplyG: mulG,
     generateKeyPair,
+    doExchange,
     publicKeyFromPrivate,
     sign,
     verify,

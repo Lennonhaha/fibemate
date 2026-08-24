@@ -29,7 +29,7 @@
 
   // ---- 从全局获取依赖 ----
   const SM2 = (typeof window !== 'undefined' && window.SM2Browser)
-    || (typeof module !== 'undefined' && module.exports && require('./sm2-browser'));
+    || (typeof module !== 'undefined' && module.exports && require('../sm2-bigint-ec'));
 
   const MLKEM = (typeof window !== 'undefined' && window.MLKEM768)
     || (typeof module !== 'undefined' && module.exports && require('./ml-kem-768'));
@@ -108,11 +108,11 @@
    * @returns {{ publicKey: Uint8Array(65B), privateKey: Uint8Array(32B) }}
    */
   function sm2GenerateKeypair() {
-    const kp = SM2.generateKeypair();
-    // sm2-browser 返回 { publicKey: hex, privateKey: hex }
+    const kp = SM2.generateKeyPair();
+    // sm2-bigint-ec: { privateKey: BigInt, publicKey: {x, y} }
     return {
-      publicKey: hexToBytes(kp.publicKey),
-      privateKey: hexToBytes(kp.privateKey)
+      publicKey: hexToBytes(SM2.publicKeyToHex(kp.publicKey)),  // 65B: 0x04||x||y
+      privateKey: hexToBytes(SM2.privateKeyToHex(kp.privateKey)) // 32B hex
     };
   }
 
@@ -132,7 +132,7 @@
     // 参数: 己方私钥(hex), 对方公钥(hex), 模式(1=标准SM2)
     const localPrivHex = bytesToHex(new Uint8Array(privateKey));
     const peerPubHex = bytesToHex(new Uint8Array(peerPublicKey));
-    const sharedHex = SM2.computeDHKey(localPrivHex, peerPubHex, 1);
+    const sharedHex = SM2.doExchange(localPrivHex, peerPubHex);
     return hexToBytes(sharedHex);
   }
 
