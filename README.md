@@ -8,7 +8,7 @@
 >
 > - **Engineering-verified components** (ML-KEM-768, SLH-DSA, SM2/SM3/SM4) have passed functional verification, KAT, and software TVLA side-channel testing, but **have not undergone third-party security audit**.
 > - **Experimental components** (VWZ, LookingGlass) **provide no cryptographic security guarantees**, are default-off, require manual activation.
-> - VWZ / LookingGlass 实验组件已于 2026-07-24 迁移至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支。主分支保留文档引用，源代码不再维护于 main。
+> - VWZ / LookingGlass 实验组件已归档至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支（孤立分支，仅含研究源码，无生产代码）。
 > - **Tauri 桌面应用（同名社交软件）是独立项目**，不在本仓库内，其安全状态（双棘轮、端到端加密）与本平台无关联。本仓库不包含任何可即时使用的通信产品。The Tauri-based chat application is a **separate project** not covered by this repository's security model.
 > - **VWZ 签名方案**基于全新硬度假设 VMQ-SPARSE，**无标准归约证明**，ePrint 投稿已被退回，不可用于任何生产场景。No security reduction to standard lattice assumptions; ePrint submission returned.
 > - **LookingGlass** 是代数群表示二进制混淆实验工具，**不是密码学安全原语**，不增强 LWE 硬度，仅供教学/硬件自测。Not a cryptographic security primitive.
@@ -208,7 +208,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| **VWZ Signature** | Vandermonde-Wronskian-Zariski tensor scheme (k=16, NIST-1 128-bit) | 148/148 ✅ (experimental/vwz-lg branch) · ⚠️ VMQ-SPARSE assumption · No standard reduction · ePrint returned |
+| **VWZ Signature** | Vandermonde-Wronskian-Zariski tensor scheme (k=16, NIST-1 128-bit) | 148/148 ✅ ([experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) branch) · ⚠️ VMQ-SPARSE assumption · No standard reduction · ePrint returned |
 | **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 · ⚠️ Not a security primitive |
 
 ---
@@ -359,7 +359,7 @@ All claims in Core Features are backed by runnable test scripts in `scripts/`:
 | [`ci-gm-sm3.cjs`](scripts/ci-gm-sm3.cjs) | SM3 hash CI | 30 |
 | [`ci-gm-sm4.cjs`](scripts/ci-gm-sm4.cjs) | SM4-GCM AEAD CI | 30 |
 | [`ci-mlkem-kat.cjs`](scripts/ci-mlkem-kat.cjs) | ML-KEM-768 roundtrip CI | 100 |
-| [`vwz-148-test.js`](../../tree/experimental/vwz-lg/scripts/vwz-148-test.js) | VWZ 148 extended functional tests (in experimental/vwz-lg branch) | 15 groups, 148 tests |
+| [`vwz-148-test.js`](https://github.com/Lennonhaha/fibemate/blob/experimental/vwz-lg/scripts/vwz-148-test.js) | VWZ 148 extended functional tests (in experimental/vwz-lg branch) | 15 groups, 148 tests |
 | [`fpga-l8l9-43-test.js`](scripts/fpga-l8l9-43-test.js) | FPGA L8+L9 cross-validation behavioral model | 43/43 PASS |
 | [`kat-quick.js`](scripts/kat-quick.js) | ML-KEM-768 KAT quick sampling (supports --samples 10000) | 100/10,000 encap/decap roundtrips |
 | [`kat-bench.js`](scripts/kat-bench.js) | KAT performance benchmark | Throughput & latency |
