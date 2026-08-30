@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.4 — 主动防御状态机 · 3D</title>
+<style>
+  :root { --glass: rgba(16,14,8,.62); --line: rgba(255,207,92,.22); --acc: #ffcf5c; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #070a08; color: #efe7d2; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #scene { position: fixed; inset: 0; }
+  #scene canvas { display: block; }
+  .hud { position: fixed; z-index: 10; background: var(--glass); border: 1px solid var(--line); border-radius: 12px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 8px 40px rgba(0,0,0,.45); }
+  #titlebar { top: 16px; left: 50%; transform: translateX(-50%); padding: 10px 22px; display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+  #titlebar h1 { font-size: 15px; margin: 0; letter-spacing: 1px; color: #ffdf8a; }
+  #titlebar .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px #3ddc84; }
+  #titlebar .dot.busy { background: #ffb454; box-shadow: 0 0 10px #ffb454; }
+  #titlebar .sub { font-size: 11px; color: #b3a176; }
+  #panel { left: 16px; bottom: 16px; width: 330px; padding: 16px; }
+  #panel h2 { font-size: 12px; margin: 0 0 12px; letter-spacing: 2px; color: #ffd76e; font-weight: 600; }
+  .levels { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+  .lvl { border: 1px solid rgba(255,207,92,.3); background: rgba(10,8,4,.55); border-radius: 10px; padding: 10px 6px; cursor: pointer; text-align: center; transition: all .18s; }
+  .lvl:hover { border-color: rgba(255,207,92,.6); }
+  .lvl.on { border-color: #ffd700; background: linear-gradient(180deg, rgba(255,207,92,.2), rgba(10,8,4,.55)); box-shadow: 0 0 16px rgba(255,215,0,.35); }
+  .lvl .n { font-size: 16px; color: #ffdf8a; font-weight: 700; }
+  .lvl .t { font-size: 10px; color: #ffe9b0; margin-top: 2px; }
+  .btnrow { display: flex; gap: 8px; }
+  .btn { flex: 1; border: 1px solid rgba(255,207,92,.5); background: linear-gradient(180deg, rgba(255,207,92,.22), rgba(255,207,92,.06)); color: #ffe9b0; border-radius: 8px; padding: 8px 0; font-family: inherit; font-size: 12px; cursor: pointer; letter-spacing: 1px; transition: all .18s; }
+  .btn:hover { background: linear-gradient(180deg, rgba(255,207,92,.4), rgba(255,207,92,.14)); box-shadow: 0 0 18px rgba(255,207,92,.4); }
+  .btn.primary { background: linear-gradient(180deg, #ffc43d, #e89a0a); border-color: #ffd76e; color: #2a1d00; font-weight: 700; }
+  .btn.primary:hover { box-shadow: 0 0 26px rgba(255,196,61,.6); }
+  .btn.danger { border-color: rgba(255,110,80,.6); color: #ffb0a0; background: linear-gradient(180deg, rgba(255,110,80,.2), rgba(255,110,80,.05)); }
+  .btn.danger:hover { box-shadow: 0 0 18px rgba(255,110,80,.5); }
+  .hint { font-size: 10px; color: #8f7f57; line-height: 1.6; margin-top: 10px; }
+  .hint b { color: #ffcf5c; }
+  #stats { right: 16px; bottom: 16px; width: 300px; padding: 16px; }
+  #stats h2 { font-size: 12px; margin: 0 0 12px; letter-spacing: 2px; color: #ffd76e; font-weight: 600; }
+  .srow { display: flex; justify-content: space-between; font-size: 11px; color: #b3a176; padding: 4px 0; border-bottom: 1px dashed rgba(255,207,92,.12); }
+  .srow .v { color: #fff3d6; }
+  .srow .v b { color: #ffd76e; }
+  .pill { display: inline-block; padding: 1px 9px; border-radius: 12px; font-size: 10px; font-weight: 700; letter-spacing: 1px; }
+  .pill.normal { background: rgba(61,220,132,.16); color: #3ddc84; border: 1px solid rgba(61,220,132,.4); }
+  .pill.poison { background: rgba(255,120,90,.16); color: #ff8a6a; border: 1px solid rgba(255,120,90,.45); animation: pulse 1s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(255,120,90,.5); } 50% { box-shadow: 0 0 12px 3px rgba(255,120,90,.55); } }
+  .otick { font-size: 10px; color: #8f7f57; line-height: 1.9; }
+  .otick b { color: #3ddc84; }
+  .hexline { font-size: 10px; color: #c9b98c; word-break: break-all; line-height: 1.6; margin-top: 6px; }
+  .hexline b { color: #ffe9b0; }
+  #legend { position: fixed; z-index: 10; right: 16px; top: 16px; padding: 10px 14px; }
+  #legend .row2 { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #c9b98c; }
+  #legend .sw { width: 12px; height: 12px; border-radius: 50%; }
+  @media (max-width: 1100px) { #stats { display: none; } }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div id="titlebar" class="hud"><div class="dot" id="dot"></div><h1>LG v2.4 · 主动防御状态机 · 3D</h1><div class="sub" id="wasmState">WASM 加载中…</div></div>
+
+<div id="legend" class="hud">
+  <div class="row2"><span class="sw" style="background:#3ddc84;box-shadow:0 0 8px #3ddc84"></span>NORMAL · 基线正常</div>
+  <div class="row2"><span class="sw" style="background:#ff5d6e;box-shadow:0 0 8px #ff5d6e"></span>POISONING · 投毒响应</div>
+  <div class="row2"><span class="sw" style="background:#ffd700;box-shadow:0 0 8px #ffd700"></span>防护罩 · 防御等级</div>
+</div>
+
+<div id="panel" class="hud">
+  <h2>防御等级 / DEFENSE LEVEL</h2>
+  <div class="levels">
+    <div class="lvl" data-l="0"><div class="n">L0</div><div class="t">旁路</div></div>
+    <div class="lvl" data-l="1"><div class="n">L1</div><div class="t">轻量</div></div>
+    <div class="lvl" data-l="2"><div class="n">L2</div><div class="t">标准</div></div>
+    <div class="lvl" data-l="3"><div class="n">L3</div><div class="t">全量</div></div>
+  </div>
+  <div class="btnrow" style="margin-bottom:8px"><button class="btn primary" id="apply">应用配置</button><button class="btn" id="reset">恢复 L0</button></div>
+  <div class="btnrow"><button class="btn danger" id="inject">模拟持续异常</button><button class="btn" id="heal">模拟恢复</button></div>
+  <div class="hint">应用等级调用 <b>lgv3_defense_configure</b> 并读取真实 <b>lgv3_defense_status</b>。「模拟」按钮仅驱动 3D 视觉叙事：持续异常令引擎由 NORMAL 转向 POISONING（红色风暴），红色粒子流即投毒链路。</div>
+</div>
+
+<div id="stats" class="hud">
+  <h2>引擎状态 / ENGINE STATUS</h2>
+  <div class="srow"><span>Level</span><span class="v" id="sLevel">-</span></div>
+  <div class="srow"><span>Mode（真实引擎）</span><span class="v"><span class="pill" id="sMode">-</span></div>
+  <div class="srow"><span>异常计数</span><span class="v" id="sAnomaly">-</span></div>
+  <div class="srow"><span>基线样本</span><span class="v" id="sBaseline">-</span></div>
+  <div class="srow"><span>演示模式</span><span class="v" id="sSim">正常</span></div>
+  <div class="otick" style="margin-top:8px">谓词族：<b id="fam">-</b></div>
+  <div class="otick">恒真求值：<b id="opqLine">-</b> <span id="opqRes">-</span></div>
+  <div class="hexline">VM 谓词配置：<b id="cfgLine">-</b></div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js" } }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from './vendor/three/examples/jsm/controls/OrbitControls.js';
+  import init, { lgv3_defense_configure, lgv3_defense_status, lgv3_opaque_families, lgv3_opaque_check, lgv3_opaque_program_cfg } from './lgv2_3.js';
+
+  const $ = id => document.getElementById(id);
+  const LEVELS = ['旁路', '轻量', '标准', '全量'];
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x070a08, 0.005);
+  scene.background = new THREE.Color(0x070a08);
+
+  const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 2000);
+  camera.position.set(0, 22, 52);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
+  $('scene').appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.minDistance = 14;
+  controls.maxDistance = 220;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 0.7;
+  controls.target.set(0, 2, 0);
+
+  scene.add(new THREE.AmbientLight(0xffe8c0, 0.45));
+  const dir = new THREE.DirectionalLight(0xfff0d0, 0.9);
+  dir.position.set(30, 50, 30);
+  scene.add(dir);
+  const pt = new THREE.PointLight(0xffc76a, 2.0, 240);
+  pt.position.set(0, 12, 6);
+  scene.add(pt);
+
+  const grid = new THREE.GridHelper(120, 60, 0x8a6d1f, 0x3a2f12);
+  grid.position.y = -0.4;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.4;
+  scene.add(grid);
+
+  function makeDotTexture() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.35, 'rgba(255,255,255,.55)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+  const dotTex = makeDotTexture();
+
+  function makeLabelTex(text, color) {
+    const c = document.createElement('canvas');
+    c.width = 256; c.height = 64;
+    const g = c.getContext('2d');
+    g.clearRect(0, 0, 256, 64);
+    g.font = '700 26px ui-monospace, monospace';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = color;
+    g.fillText(text, 128, 32);
+    const t = new THREE.CanvasTexture(c);
+    t.minFilter = THREE.LinearFilter;
+    return t;
+  }
+
+  const starGeom = new THREE.BufferGeometry();
+  const starN = 2500;
+  const spArr = new Float32Array(starN * 3);
+  for (let i = 0; i < starN; i++) {
+    spArr[i*3] = (Math.random() - 0.5) * 360;
+    spArr[i*3+1] = Math.random() * 160 - 20;
+    spArr[i*3+2] = (Math.random() - 0.5) * 360;
+  }
+  starGeom.setAttribute('position', new THREE.BufferAttribute(spArr, 3));
+  const starMat = new THREE.PointsMaterial({ size: 1.4, map: dotTex, transparent: true, opacity: 0.7, depthWrite: false, color: 0xffd27a });
+  scene.add(new THREE.Points(starGeom, starMat));
+
+  const normalBall = new THREE.Mesh(
+    new THREE.SphereGeometry(3.2, 48, 48),
+    new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x0a5f47, emissiveIntensity: 1.6, roughness: 0.3, metalness: 0.25 })
+  );
+  normalBall.position.set(-9, 3.2, 0);
+  scene.add(normalBall);
+  const poisonBall = new THREE.Mesh(
+    new THREE.SphereGeometry(3.2, 48, 48),
+    new THREE.MeshStandardMaterial({ color: 0xff5d6e, emissive: 0x7a1418, emissiveIntensity: 0.5, roughness: 0.35, metalness: 0.2 })
+  );
+  poisonBall.position.set(9, 3.2, 0);
+  scene.add(poisonBall);
+
+  const lblN = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLabelTex('NORMAL · 基线正常', '#3ddc84'), transparent: true, depthWrite: false }));
+  lblN.position.set(-9, 9.2, 0);
+  lblN.scale.set(9, 2.2, 1);
+  scene.add(lblN);
+  const lblP = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLabelTex('POISONING · 投毒响应', '#ff8a6a'), transparent: true, depthWrite: false }));
+  lblP.position.set(9, 9.2, 0);
+  lblP.scale.set(10, 2.2, 1);
+  scene.add(lblP);
+
+  const arcCount = 220;
+  const arcPos = new Float32Array(arcCount * 3);
+  const arcCol = new Float32Array(arcCount * 3);
+  const arcU = new Float32Array(arcCount);
+  const arcGeom = new THREE.BufferGeometry();
+  arcGeom.setAttribute('position', new THREE.BufferAttribute(arcPos, 3));
+  arcGeom.setAttribute('color', new THREE.BufferAttribute(arcCol, 3));
+  const arcMat = new THREE.PointsMaterial({ size: 1.15, map: dotTex, vertexColors: true, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+  const arc = new THREE.Points(arcGeom, arcMat);
+  scene.add(arc);
+
+  function bezier(u) {
+    const p0 = new THREE.Vector3(-9, 3.2, 0);
+    const p1 = new THREE.Vector3(0, 13, 0);
+    const p2 = new THREE.Vector3(9, 3.2, 0);
+    const a = 1 - u;
+    return new THREE.Vector3(
+      a*a*p0.x + 2*a*u*p1.x + u*u*p2.x,
+      a*a*p0.y + 2*a*u*p1.y + u*u*p2.y,
+      a*a*p0.z + 2*a*u*p1.z + u*u*p2.z
+    );
+  }
+  const green = new THREE.Color(0x3ddc84);
+  const red = new THREE.Color(0xff5d6e);
+  const dimGreen = new THREE.Color(0x1a5c42);
+
+  const shields = [];
+  const shieldDefs = [20, 25, 30];
+  for (let i = 0; i < 3; i++) {
+    const s = new THREE.Mesh(
+      new THREE.SphereGeometry(shieldDefs[i], 24, 24),
+      new THREE.MeshBasicMaterial({ color: 0xffd700, wireframe: true, transparent: true, opacity: 0.16, depthWrite: false })
+    );
+    s.position.y = 4;
+    s.visible = false;
+    scene.add(s);
+    shields.push(s);
+  }
+
+  const torus = new THREE.Mesh(
+    new THREE.TorusGeometry(2.0, 0.32, 16, 48),
+    new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0x8a5a00, emissiveIntensity: 1.6, roughness: 0.3, metalness: 0.5 })
+  );
+  torus.position.set(0, 7.5, 0);
+  scene.add(torus);
+  const orbCount = 90;
+  const orbPos = new Float32Array(orbCount * 3);
+  const orbGeom = new THREE.BufferGeometry();
+  orbGeom.setAttribute('position', new THREE.BufferAttribute(orbPos, 3));
+  const orbMat = new THREE.PointsMaterial({ size: 0.8, map: dotTex, color: 0xffdf8a, transparent: true, opacity: 0.9, blending: THREE.AdditiveBlending, depthWrite: false });
+  const orbs = new THREE.Points(orbGeom, orbMat);
+  scene.add(orbs);
+  const lblShield = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLabelTex('数学盾牌 · 恒真不透明谓词', '#ffd76e'), transparent: true, depthWrite: false }));
+  lblShield.position.set(0, 12.2, 0);
+  lblShield.scale.set(12, 2.2, 1);
+  scene.add(lblShield);
+
+  const sim = { mode: 0, anomaly: 0, injecting: false, target: 0 };
+
+  function updateArc(dt) {
+    const poisoned = sim.mode === 1;
+    const speed = (poisoned ? 3.4 : 1.6) * dt;
+    for (let i = 0; i < arcCount; i++) {
+      arcU[i] = (arcU[i] + speed + (i % 5) * 0.0001) % 1;
+      const p = bezier(arcU[i]);
+      arcPos[i*3] = p.x;
+      arcPos[i*3+1] = p.y;
+      arcPos[i*3+2] = p.z;
+      const c = poisoned ? red : (arcU[i] > 0.82 ? red : green);
+      arcCol[i*3] = c.r; arcCol[i*3+1] = c.g; arcCol[i*3+2] = c.b;
+    }
+    arcGeom.attributes.position.needsUpdate = true;
+    arcGeom.attributes.color.needsUpdate = true;
+  }
+
+  function updateOrbs() {
+    const t = performance.now() * 0.0008;
+    for (let i = 0; i < orbCount; i++) {
+      const a = (i / orbCount) * Math.PI * 2 + t;
+      orbPos[i*3] = Math.cos(a) * 2.6;
+      orbPos[i*3+1] = 7.5 + Math.sin(a) * 0.9;
+      orbPos[i*3+2] = Math.sin(a) * 2.6;
+    }
+    orbGeom.attributes.position.needsUpdate = true;
+  }
+
+  function applyLevelVisual(level) {
+    for (let i = 0; i < 3; i++) shields[i].visible = i < level;
+    document.querySelectorAll('.lvl').forEach(el => el.classList.toggle('on', +el.dataset.l === level));
+    $('sLevel').innerHTML = 'L' + level + ' <b>· ' + LEVELS[level] + '</b>';
+  }
+
+  function setSimMode(mode) {
+    sim.mode = mode;
+    sim.injecting = mode === 1;
+    const pill = $('sMode');
+    if (mode === 1) {
+      normalBall.material.emissive.setHex(0x0a3a2c);
+      normalBall.material.emissiveIntensity = 0.4;
+      poisonBall.material.emissive.setHex(0x7a1418);
+      poisonBall.material.emissiveIntensity = 2.0;
+      lblN.material.opacity = 0.35;
+      lblP.material.opacity = 1;
+      $('sSim').textContent = '投毒风暴（演示）';
+      $('sSim').style.color = '#ff8a6a';
+    } else {
+      normalBall.material.emissive.setHex(0x0a5f47);
+      normalBall.material.emissiveIntensity = 1.6;
+      poisonBall.material.emissive.setHex(0x7a1418);
+      poisonBall.material.emissiveIntensity = 0.5;
+      lblN.material.opacity = 1;
+      lblP.material.opacity = 0.5;
+      $('sSim').textContent = '正常';
+      $('sSim').style.color = '#3ddc84';
+    }
+  }
+
+  function refreshStatus() {
+    const st = JSON.parse(lgv3_defense_status());
+    $('sLevel').innerHTML = 'L' + st.level + ' <b>· ' + LEVELS[st.level] + '</b>';
+    const pill = $('sMode');
+    pill.className = 'pill ' + (st.mode === 1 ? 'poison' : 'normal');
+    pill.textContent = st.mode === 1 ? 'POISONING' : 'NORMAL';
+    $('sAnomaly').textContent = st.anomaly_count;
+    $('sBaseline').textContent = st.baseline_samples;
+    applyLevelVisual(st.level);
+  }
+
+  let activeLevel = 0;
+  function applyReal(level) {
+    activeLevel = level;
+    lgv3_defense_configure(level, 0);
+    refreshStatus();
+  }
+
+  $('apply').addEventListener('click', () => applyReal(activeLevel));
+  $('reset').addEventListener('click', () => { applyReal(0); setSimMode(0); });
+  document.querySelectorAll('.lvl').forEach(el => {
+    el.addEventListener('click', () => applyReal(+el.dataset.l));
+  });
+  $('inject').addEventListener('click', () => setSimMode(1));
+  $('heal').addEventListener('click', () => setSimMode(0));
+
+  let fams = [];
+  function tickOpaque() {
+    const f0 = fams[Math.floor(Math.random() * fams.length)] || '';
+    const id = fams.indexOf(f0);
+    const x = (Math.random() * 0x1fffffff) | 0;
+    const ok = id >= 0 && lgv3_opaque_check(id, BigInt(x));
+    $('opqLine').textContent = f0 + '(x=0x' + x.toString(16) + ')';
+    const res = $('opqRes');
+    res.textContent = ok ? '→ TRUE ✓' : '→ FALSE ✗';
+    res.style.color = ok ? '#3ddc84' : '#ff8a6a';
+    setTimeout(tickOpaque, 900);
+  }
+
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  const clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = clock.getDelta();
+    controls.update();
+    const t = performance.now() * 0.001;
+
+    normalBall.material.emissiveIntensity += Math.sin(t * 2.2) * dt * 0.5;
+    poisonBall.material.emissiveIntensity += Math.sin(t * 3.1) * dt * 0.6;
+    torus.rotation.x += dt * 0.8;
+    torus.rotation.y += dt * 0.5;
+    torus.scale.setScalar(1 + Math.sin(t * 2.4) * 0.03);
+    shields.forEach((s, i) => {
+      s.rotation.y += dt * (0.15 + i * 0.08);
+      s.material.opacity = 0.1 + 0.06 * Math.sin(t * 1.4 + i);
+    });
+    updateOrbs();
+    updateArc(dt);
+    renderer.render(scene, camera);
+  }
+
+  async function main() {
+    await init();
+    $('wasmState').textContent = 'WASM 就绪 · defense 已激活';
+    $('dot').className = 'dot';
+    fams = (lgv3_opaque_families() || '').split(',').filter(Boolean);
+    $('fam').textContent = fams.join(' · ');
+    tickOpaque();
+    $('cfgLine').textContent = lgv3_opaque_program_cfg(0xcafen, 0x1234n, 7);
+    refreshStatus();
+    setSimMode(0);
+    animate();
+  }
+  main().catch(e => { $('wasmState').textContent = '加载失败'; alert('错误：' + e.message); });
+</script>
+</body>
+</html>

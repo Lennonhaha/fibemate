@@ -1,0 +1,165 @@
+//! VWZ WASM Browser Benchmark — E2E Timing
+//!
+//! Single HTML page that loads vwz-sign WASM and reports:
+//!   - keygen(k=8,16) time
+//!   - sign(k=8,16) time  
+//!   - verify(k=8,16) time
+//!   - WASM bundle load time
+//!
+//! Open fibemate.net/crypto/vwz/bench.html after deployment
+//! Or test locally: python3 -m http.server --directory www 8080
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>VWZ WASM Benchmark</title>
+<style>
+  body { font-family: system-ui,monospace; max-width:720px; margin:40px auto; padding:0 16px; color:#e0e0e0; background:#1a1a2e; }
+  h1 { font-size:1.4em; margin-bottom:0; }
+  .sub { color:#888; font-size:0.85em; margin-bottom:20px; }
+  table { width:100%; border-collapse:collapse; margin:12px 0; }
+  th, td { padding:8px 12px; text-align:right; border-bottom:1px solid #333; }
+  td:first-child, th:first-child { text-align:left; }
+  th { color:#888; font-weight:normal; font-size:0.85em; }
+  .pass { color:#4ade80; }
+  .warn { color:#facc15; }
+  .info { color:#60a5fa; }
+  .err  { color:#f87171; }
+  button { padding:8px 20px; background:#3b82f6; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:1em; }
+  button:disabled { opacity:0.4; cursor:default; }
+  button:hover:not(:disabled) { background:#2563eb; }
+  #status { margin:8px 0; font-size:0.9em; }
+  pre { background:#111; padding:12px; border-radius:6px; overflow-x:auto; font-size:0.8em; }
+</style>
+</head>
+<body>
+<h1>⚡ VWZ WASM Benchmark</h1>
+<div class="sub">Rust → WASM (wasm-pack). k=8,16; 5 warmup + 20 timed rounds.</div>
+
+<div id="status" class="info">Loading WASM module...</div>
+<button id="runBtn" disabled onclick="runBench()">▶ Run Benchmark</button>
+
+<table id="results" style="display:none">
+<thead>
+<tr><th>Operation</th><th>k</th><th>min (ms)</th><th>median (ms)</th><th>p95 (ms)</th><th>max (ms)</th><th>status</th></tr>
+</thead>
+<tbody id="tbody"></tbody>
+</table>
+
+<pre id="log" style="display:none"></pre>
+
+<script type="module">
+import init, { keygen, sign, verify, estimate_sizes } from '/crypto/vwz/vwz_signature.js';
+
+// ─── Warmup & timing helpers ───
+function measure(fn, rounds = 20) {
+    // Warmup: 5 rounds (not counted)
+    for (let i = 0; i < 5; i++) fn();
+    const times = [];
+    for (let i = 0; i < rounds; i++) {
+        const t0 = performance.now();
+        fn();
+        times.push(performance.now() - t0);
+    }
+    times.sort((a, b) => a - b);
+    return {
+        min: times[0],
+        median: times[Math.floor(times.length / 2)],
+        p95: times[Math.floor(times.length * 0.95)],
+        max: times[times.length - 1],
+        raw: times,
+    };
+}
+
+// ─── Benchmark runner ───
+window.runBench = async function () {
+    const btn = document.getElementById('runBtn');
+    btn.disabled = true;
+    const status = document.getElementById('status');
+    const tbody = document.getElementById('tbody');
+    const tbl = document.getElementById('results');
+    const logEl = document.getElementById('log');
+    tbody.innerHTML = '';
+    logEl.style.display = 'none';
+    tbl.style.display = 'table';
+    status.className = 'info';
+    status.textContent = 'Running benchmarks...';
+
+    const rows = [];
+    const logLines = [];
+    const msg32 = new TextEncoder().encode('Fibemate VWZ bench 2026-06-30');
+
+    for (const k of [8, 16]) {
+        status.textContent = `Benchmarking k=${k}... (keygen)`;
+
+        // ─── keygen ───
+        let kp;
+        const keygenTimes = measure(() => { kp = keygen(k); }, 20);
+        const sizes = JSON.parse(estimate_sizes(k));
+        rows.push([
+            'keygen', k,
+            keygenTimes.min.toFixed(1),
+            keygenTimes.median.toFixed(1),
+            keygenTimes.p95.toFixed(1),
+            keygenTimes.max.toFixed(1),
+            ...Object.values(sizes),
+        ]);
+
+        // ─── sign ───
+        status.textContent = `Benchmarking k=${k}... (sign)`;
+        const pk = kp.public_key();
+        const sk = kp.secret_key();
+        let sig;
+        const signTimes = measure(() => { sig = sign(sk, msg32); }, 20);
+        rows.push([
+            'sign', k,
+            signTimes.min.toFixed(1),
+            signTimes.median.toFixed(1),
+            signTimes.p95.toFixed(1),
+            signTimes.max.toFixed(1),
+            '✅',
+        ]);
+
+        // ─── verify ───
+        status.textContent = `Benchmarking k=${k}... (verify)`;
+        const verifyTimes = measure(() => { verify(pk, msg32, sig); }, 20);
+        rows.push([
+            'verify', k,
+            verifyTimes.min.toFixed(1),
+            verifyTimes.median.toFixed(1),
+            verifyTimes.p95.toFixed(1),
+            verifyTimes.max.toFixed(1),
+            '✅',
+        ]);
+
+        logLines.push(`k=${k}: pk=${sizes.pk_bytes}B, sig=${sizes.sig_bytes}B, pk_rank1=${sizes.pk_bytes_rank1_compressed}B`);
+        logLines.push(`k=${k}: keygen p50=${keygenTimes.median.toFixed(1)}ms, sign p50=${signTimes.median.toFixed(1)}ms, verify p50=${verifyTimes.median.toFixed(1)}ms`);
+    }
+
+    // ─── Render ───
+    for (const r of rows) {
+        const tr = document.createElement('tr');
+        for (let i = 0; i < r.length; i++) {
+            const td = document.createElement('td');
+            td.textContent = r[i];
+            tr.appendChild(td);
+        }
+        tbody.appendChild(tr);
+    }
+
+    logEl.textContent = logLines.join('\n');
+    logEl.style.display = 'block';
+    status.className = 'pass';
+    status.textContent = '✅ Benchmark complete';
+    btn.disabled = false;
+};
+
+// ─── Init ───
+const loadStart = performance.now();
+await init();
+const loadTime = (performance.now() - loadStart).toFixed(0);
+document.getElementById('status').textContent = `WASM loaded in ${loadTime}ms. Ready.`;
+document.getElementById('runBtn').disabled = false;
+</script>
+</body>
+</html>

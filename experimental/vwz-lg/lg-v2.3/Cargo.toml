@@ -1,0 +1,18 @@
+[package]
+name = "lgv2_3"
+version = "2.3.0-alpha"
+edition = "2021"
+description = "LG v2.3 — 置换群递归混淆引擎 (baseline: v2.2.2 + 模块化重构)"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+getrandom = { version = "0.2", features = ["js"] }
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1

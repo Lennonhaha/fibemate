@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.4 — 动态路径轨迹 · 3D</title>
+<style>
+  :root { --glass: rgba(16,14,8,.62); --line: rgba(255,207,92,.22); --acc: #ffcf5c; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #070a08; color: #efe7d2; font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  #scene { position: fixed; inset: 0; }
+  #scene canvas { display: block; }
+  .hud { position: fixed; z-index: 10; background: var(--glass); border: 1px solid var(--line); border-radius: 12px; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); box-shadow: 0 8px 40px rgba(0,0,0,.45); }
+  #titlebar { top: 16px; left: 50%; transform: translateX(-50%); padding: 10px 22px; display: flex; align-items: center; gap: 14px; white-space: nowrap; }
+  #titlebar h1 { font-size: 15px; margin: 0; letter-spacing: 1px; color: #ffdf8a; }
+  #titlebar .dot { width: 8px; height: 8px; border-radius: 50%; background: #3ddc84; box-shadow: 0 0 10px #3ddc84; }
+  #titlebar .dot.busy { background: #ffb454; box-shadow: 0 0 10px #ffb454; }
+  #titlebar .sub { font-size: 11px; color: #b3a176; }
+  #panel { left: 16px; bottom: 16px; width: 330px; padding: 16px; }
+  #panel h2 { font-size: 12px; margin: 0 0 12px; letter-spacing: 2px; color: #ffd76e; font-weight: 600; }
+  .row { display: flex; align-items: center; gap: 8px; margin-bottom: 9px; }
+  .row label { flex: 0 0 128px; font-size: 11px; color: #c9b98c; }
+  .row input, .row select { flex: 1; background: rgba(10,8,4,.75); color: #fff3d6; border: 1px solid #6b5a2e; border-radius: 6px; padding: 6px 9px; font-family: inherit; font-size: 12px; outline: none; }
+  .row input:focus, .row select:focus { border-color: var(--acc); box-shadow: 0 0 0 2px rgba(255,207,92,.2); }
+  .btn { border: 1px solid rgba(255,207,92,.5); background: linear-gradient(180deg, rgba(255,207,92,.22), rgba(255,207,92,.06)); color: #ffe9b0; border-radius: 8px; padding: 8px 16px; font-family: inherit; font-size: 12px; cursor: pointer; letter-spacing: 1px; transition: all .18s; }
+  .btn:hover { background: linear-gradient(180deg, rgba(255,207,92,.4), rgba(255,207,92,.14)); box-shadow: 0 0 18px rgba(255,207,92,.4); }
+  .btn.primary { background: linear-gradient(180deg, #ffc43d, #e89a0a); border-color: #ffd76e; color: #2a1d00; font-weight: 700; }
+  .btn.primary:hover { box-shadow: 0 0 26px rgba(255,196,61,.6); }
+  .btnsmall { background: rgba(255,207,92,.14); border: 1px solid rgba(255,207,92,.35); color: #ffe9b0; border-radius: 6px; padding: 6px 12px; font-family: inherit; font-size: 11px; cursor: pointer; }
+  .btnsmall:hover { background: rgba(255,207,92,.3); }
+  .btnrow { display: flex; gap: 8px; margin-bottom: 9px; }
+  .hint { font-size: 10px; color: #8f7f57; line-height: 1.6; margin-top: 4px; }
+  .hint b { color: #ffcf5c; }
+  #stats { right: 16px; bottom: 16px; width: 310px; padding: 16px; }
+  #stats h2 { font-size: 12px; margin: 0 0 12px; letter-spacing: 2px; color: #ffd76e; font-weight: 600; }
+  .srow { display: flex; justify-content: space-between; font-size: 11px; color: #b3a176; padding: 4px 0; border-bottom: 1px dashed rgba(255,207,92,.12); }
+  .srow .v { color: #fff3d6; }
+  .srow .v b { color: #ffd76e; }
+  .srow .v.ok { color: #3ddc84; }
+  .srow .v.bad { color: #ff8a6a; }
+  .fp { font-size: 22px; letter-spacing: 5px; font-weight: 700; color: #ffdf8a; }
+  .bar { height: 7px; border-radius: 4px; background: rgba(255,255,255,.08); overflow: hidden; margin-top: 6px; }
+  .bar i { display: block; height: 100%; border-radius: 4px; background: linear-gradient(90deg, #3a3fd0, #10b981, #ff9e2c, #ffd700); transition: width .5s; }
+  .hex { font-size: 10px; color: #c9b98c; word-break: break-all; line-height: 1.7; margin-top: 4px; }
+  .hex b { color: #ffe9b0; }
+  #legend { position: fixed; z-index: 10; right: 16px; top: 16px; padding: 10px 14px; }
+  #legend .row2 { display: flex; align-items: center; gap: 10px; font-size: 11px; color: #c9b98c; }
+  #legend .sw { width: 12px; height: 12px; border-radius: 3px; }
+  @media (max-width: 1100px) { #stats { display: none; } }
+</style>
+</head>
+<body>
+<div id="scene"></div>
+
+<div id="titlebar" class="hud"><div class="dot" id="dot"></div><h1>LG v2.4 · 动态路径轨迹 · 3D</h1><div class="sub" id="wasmState">WASM 加载中…</div></div>
+
+<div id="legend" class="hud">
+  <div class="row2"><span class="sw" style="background:#10b981;box-shadow:0 0 8px #10b981"></span>S · 恒等层</div>
+  <div class="row2"><span class="sw" style="background:#ff9e2c;box-shadow:0 0 8px #ff9e2c"></span>T · 真实变换</div>
+  <div class="row2"><span class="sw" style="background:#fff;box-shadow:0 0 8px #fff"></span>差异层</div>
+</div>
+
+<div id="panel" class="hud">
+  <h2>控制台 / CONSOLE</h2>
+  <div class="row"><label>session A (hex)</label><input id="skA" value="1234" spellcheck="false"></div>
+  <div class="row"><label>session B (hex)</label><input id="skB" value="abcd" spellcheck="false"></div>
+  <div class="row"><label>seed (hex)</label><input id="seed" value="cafe" spellcheck="false"></div>
+  <div class="row"><label>数据</label>
+    <select id="dlen">
+      <option value="16">16 B</option>
+      <option value="64">64 B</option>
+      <option value="256">256 B</option>
+    </select>
+  </div>
+  <div class="btnrow"><button class="btn primary" id="run">生成轨迹</button><button class="btnsmall" id="rnd">随机化</button></div>
+  <div class="btnrow"><button class="btn" id="viewBtn">重置视角</button><button class="btn" id="spinBtn">自动旋转:开</button></div>
+  <div class="hint">左键旋转 · 滚轮缩放 · 金色数据包在两条 3D 管道中逐层流动，<b>白色脉冲</b>标记 A/B 路径分歧的层。</div>
+</div>
+
+<div id="stats" class="hud">
+  <h2>路径指纹 / FINGERPRINT</h2>
+  <div class="srow"><span>Session A</span><span class="v fp" id="fpA">-</span></div>
+  <div class="srow"><span>Session B</span><span class="v fp" id="fpB">-</span></div>
+  <div class="srow"><span>路径差异层</span><span class="v" id="diffLayers">-</span></div>
+  <div class="srow"><span>输出分歧比例</span><span class="v" id="ratio">-</span><span class="bar" style="position:absolute;left:16px;right:16px;margin-top:26px"><i id="ratioBar"></i></span></div>
+  <div class="srow"><span>动态管道可逆性</span><span class="v" id="rev">-</span></div>
+  <div class="hex">输入 <b id="inHex">-</b></div>
+  <div class="hex">输出 <b id="outHex">-</b></div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js" } }
+</script>
+
+<script type="module">
+  import * as THREE from 'three';
+  import { OrbitControls } from './vendor/three/examples/jsm/controls/OrbitControls.js';
+  import init, { lgv3_dynamic_path_profile, lgv3_session_diff_ratio, lgv3_pipeline_obfuscate_dynamic, lgv3_pipeline_deobfuscate_dynamic } from './lgv2_3.js';
+
+  const $ = id => document.getElementById(id);
+  const N = 7;
+  const SP = 5;
+  const scene = new THREE.Scene();
+  scene.fog = new THREE.FogExp2(0x070a08, 0.009);
+  scene.background = new THREE.Color(0x070a08);
+
+  const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.1, 2000);
+  camera.position.set(17, 24, 46);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.3;
+  $('scene').appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.06;
+  controls.minDistance = 12;
+  controls.maxDistance = 200;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = 1.0;
+  controls.target.set(17, 1, 0);
+
+  scene.add(new THREE.AmbientLight(0xffe8c0, 0.45));
+  const dir = new THREE.DirectionalLight(0xfff0d0, 1.0);
+  dir.position.set(40, 60, 30);
+  scene.add(dir);
+  const pt = new THREE.PointLight(0xffc76a, 2.0, 260);
+  pt.position.set(17, 14, 0);
+  scene.add(pt);
+
+  const grid = new THREE.GridHelper(120, 60, 0x8a6d1f, 0x3a2f12);
+  grid.position.y = -0.4;
+  grid.material.transparent = true;
+  grid.material.opacity = 0.4;
+  scene.add(grid);
+
+  function makeDotTexture() {
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    grad.addColorStop(0, 'rgba(255,255,255,1)');
+    grad.addColorStop(0.35, 'rgba(255,255,255,.55)');
+    grad.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    return new THREE.CanvasTexture(c);
+  }
+  const dotTex = makeDotTexture();
+
+  function makeLabelTex(text, color) {
+    const c = document.createElement('canvas');
+    c.width = 128; c.height = 48;
+    const g = c.getContext('2d');
+    g.clearRect(0, 0, 128, 48);
+    g.font = '700 22px ui-monospace, monospace';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillStyle = color;
+    g.fillText(text, 64, 26);
+    const t = new THREE.CanvasTexture(c);
+    t.minFilter = THREE.LinearFilter;
+    return t;
+  }
+
+  const starGeom = new THREE.BufferGeometry();
+  const starN = 2500;
+  const spArr = new Float32Array(starN * 3);
+  for (let i = 0; i < starN; i++) {
+    spArr[i*3] = (Math.random() - 0.5) * 300;
+    spArr[i*3+1] = Math.random() * 120 - 10;
+    spArr[i*3+2] = (Math.random() - 0.5) * 300;
+  }
+  starGeom.setAttribute('position', new THREE.BufferAttribute(spArr, 3));
+  const starMat = new THREE.PointsMaterial({ size: 1.4, map: dotTex, transparent: true, opacity: 0.7, depthWrite: false, color: 0xffd27a });
+  scene.add(new THREE.Points(starGeom, starMat));
+
+  const state = {
+    fpA: '', fpB: '', nodes: { A: [], B: [] }, trails: {}, packets: {}, data: null, out: null
+  };
+
+  const nodeGeo = {
+    S: new THREE.OctahedronGeometry(1.25),
+    T: new THREE.CylinderGeometry(1.05, 1.05, 2.3, 6)
+  };
+  const nodeMat = {
+    S: new THREE.MeshStandardMaterial({ color: 0x10b981, emissive: 0x0a5f47, emissiveIntensity: 1.0, roughness: 0.35, metalness: 0.25 }),
+    T: new THREE.MeshStandardMaterial({ color: 0xff9e2c, emissive: 0x8a4f08, emissiveIntensity: 1.0, roughness: 0.3, metalness: 0.4 })
+  };
+
+  function buildChannel(z, tag) {
+    const group = new THREE.Group();
+    const nodes = [];
+    group.position.z = z;
+    for (let i = 0; i < N; i++) {
+      const mesh = new THREE.Mesh(nodeGeo.T, nodeMat.T);
+      mesh.position.set(i * SP, 0, 0);
+      nodes.push(mesh);
+      group.add(mesh);
+      const label = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLabelTex('L' + (i + 1), '#c9b98c'), transparent: true, depthWrite: false }));
+      label.position.set(i * SP, 3.4, 0);
+      label.scale.set(2.4, 0.9, 1);
+      group.add(label);
+      const halo = new THREE.Mesh(new THREE.RingGeometry(1.8, 2.0, 48), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, side: THREE.DoubleSide, blending: THREE.AdditiveBlending, depthWrite: false }));
+      halo.rotation.x = -Math.PI / 2;
+      halo.position.set(i * SP, 0.02, 0);
+      group.add(halo);
+    }
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-2.2, 0, 0), ...Array.from({ length: N }, (_, i) => new THREE.Vector3(i * SP, 0, 0)), new THREE.Vector3((N - 1) * SP + 2.2, 0, 0)]),
+      new THREE.LineBasicMaterial({ color: 0x8a6d1f, transparent: true, opacity: 0.5 })
+    );
+    group.add(line);
+
+    const pGeo = new THREE.SphereGeometry(0.55, 16, 16);
+    const pMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffa500, emissiveIntensity: 2.2, roughness: 0.2 });
+    const packet = new THREE.Mesh(pGeo, pMat);
+    packet.position.set(-4, 0, 0);
+    group.add(packet);
+    const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: dotTex, color: 0xffd700, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
+    glow.scale.set(4, 4, 1);
+    glow.position.copy(packet.position);
+    group.add(glow);
+
+    scene.add(group);
+    return { group, nodes, halos: group.children.filter(c => c.isMesh && c.geometry.type === 'RingGeometry'), packet, glow };
+  }
+
+  const chA = buildChannel(-3.6, 'A');
+  const chB = buildChannel(3.6, 'B');
+
+  const lblA = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLabelTex('Session A', '#3ddc84'), transparent: true, depthWrite: false }));
+  lblA.position.set(-2.5, 5.2, -3.6);
+  lblA.scale.set(5, 1.6, 1);
+  scene.add(lblA);
+  const lblB = new THREE.Sprite(new THREE.SpriteMaterial({ map: makeLabelTex('Session B', '#ffb454'), transparent: true, depthWrite: false }));
+  lblB.position.set(-2.5, 5.2, 3.6);
+  lblB.scale.set(5, 1.6, 1);
+  scene.add(lblB);
+
+  const haloPulse = { A: [], B: [] };
+
+  function mulberry32(a) {
+    return function () {
+      a |= 0; a = (a + 0x6D2B79F5) | 0;
+      let t = Math.imul(a ^ (a >>> 15), 1 | a);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+
+  function rndHex32() {
+    return Math.floor(Math.random() * 0x100000000).toString(16).padStart(8, '0');
+  }
+
+  function parseHex(input, label) {
+    const s = input.value.trim().replace(/^0x/i, '');
+    if (s.length > 16) throw new Error(label + ' 超过 16 位 hex');
+    if (!/^[0-9a-fA-F]*$/.test(s)) throw new Error(label + ' 非法 hex');
+    return BigInt('0x' + (s || '0').padStart(16, '0'));
+  }
+
+  function hex(u8) {
+    const m = Math.min(u8.length, 64);
+    const parts = [];
+    for (let i = 0; i < m; i += 16) parts.push([...u8.subarray(i, i + 16)].map(b => b.toString(16).padStart(2, '0')).join(' '));
+    return parts.join('  ') + (u8.length > m ? '  …' : '');
+  }
+
+  function applyFp(ch, fp) {
+    const nodes = ch.nodes;
+    for (let i = 0; i < N; i++) {
+      const isS = fp[i] === 'S';
+      nodes[i].geometry = isS ? nodeGeo.S : nodeGeo.T;
+      nodes[i].material = isS ? nodeMat.S : nodeMat.T;
+    }
+  }
+
+  function buildPipe() {
+    applyFp(chA, state.fpA);
+    applyFp(chB, state.fpB);
+    haloPulse.A.length = 0;
+    haloPulse.B.length = 0;
+    for (let i = 0; i < N; i++) {
+      if (state.fpA[i] !== state.fpB[i]) {
+        haloPulse.A.push(chA.halos[i]);
+        haloPulse.B.push(chB.halos[i]);
+      }
+    }
+  }
+
+  function run() {
+    $('dot').className = 'dot busy';
+    try {
+      const skA = parseHex($('skA'), 'session A');
+      const skB = parseHex($('skB'), 'session B');
+      const seed = parseHex($('seed'), 'seed');
+      const dlen = parseInt($('dlen').value, 10);
+      state.fpA = lgv3_dynamic_path_profile(skA);
+      state.fpB = lgv3_dynamic_path_profile(skB);
+      const data = new Uint8Array(dlen);
+      const rng = mulberry32(0xCAFEBABE);
+      for (let i = 0; i < dlen; i++) data[i] = (rng() * 256) | 0;
+      state.data = data;
+      const out = lgv3_pipeline_obfuscate_dynamic(data, seed, skA, N);
+      state.out = out;
+      const back = lgv3_pipeline_deobfuscate_dynamic(out, seed, skA, N);
+      const reversible = back.length === dlen && back.every((v, i) => v === data[i]);
+      const ratio = lgv3_session_diff_ratio(data, seed, skA, skB, N);
+
+      $('fpA').textContent = state.fpA;
+      $('fpB').textContent = state.fpB;
+      const dl = [...state.fpA].filter((c, i) => c !== state.fpB[i]).length;
+      $('diffLayers').textContent = dl + ' / ' + N;
+      $('ratio').innerHTML = '<b>' + (ratio * 100).toFixed(1) + '%</b>';
+      $('ratioBar').style.width = (ratio * 100).toFixed(0) + '%';
+      const rev = $('rev');
+      rev.className = 'v ' + (reversible ? 'ok' : 'bad');
+      rev.textContent = reversible ? '还原一致' : '还原失败';
+      $('inHex').textContent = hex(data);
+      $('outHex').textContent = hex(out);
+      buildPipe();
+      $('dot').className = 'dot';
+    } catch (e) {
+      $('dot').className = 'dot';
+      alert('错误：' + e.message);
+    }
+  }
+
+  $('run').addEventListener('click', run);
+  $('rnd').addEventListener('click', () => {
+    let a = rndHex32(), b = rndHex32();
+    while (a === b) b = rndHex32();
+    $('skA').value = a;
+    $('skB').value = b;
+    run();
+  });
+  $('viewBtn').addEventListener('click', () => {
+    controls.target.set(17, 1, 0);
+    camera.position.set(17, 24, 46);
+  });
+  $('spinBtn').addEventListener('click', () => {
+    controls.autoRotate = !controls.autoRotate;
+    $('spinBtn').textContent = '自动旋转:' + (controls.autoRotate ? '开' : '关');
+  });
+  addEventListener('resize', () => {
+    camera.aspect = innerWidth / innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(innerWidth, innerHeight);
+  });
+
+  const clock = new THREE.Clock();
+  function animate() {
+    requestAnimationFrame(animate);
+    const dt = clock.getDelta();
+    controls.update();
+    const t = performance.now() * 0.001;
+
+    [chA, chB].forEach(ch => {
+      const p = ch.packet;
+      const x = -4 + ((t * 5.6) % ((N - 1) * SP + 8));
+      p.position.x = x;
+      p.position.y = Math.sin((x + 4) / ((N - 1) * SP + 8) * Math.PI) * 1.1;
+      ch.glow.position.copy(p.position);
+      ch.packet.rotation.y += dt * 3;
+    });
+
+    nodeMat.S.emissiveIntensity = 1.0 + Math.sin(t * 2.1) * 0.35;
+    nodeMat.T.emissiveIntensity = 1.0 + Math.sin(t * 2.6 + 1) * 0.35;
+
+    [chA, chB].forEach(ch => {
+      ch.halos.forEach((h, i) => {
+        if (haloPulse.A.includes(h) || haloPulse.B.includes(h)) {
+          const ph = Math.sin(t * 6 + i * 0.8);
+          h.material.opacity = Math.max(0, ph) * 0.85;
+        } else {
+          h.material.opacity = 0;
+        }
+      });
+    });
+
+    renderer.render(scene, camera);
+  }
+
+  async function main() {
+    await init();
+    $('wasmState').textContent = 'WASM 就绪 · diff 已激活';
+    $('dot').className = 'dot';
+    run();
+    animate();
+  }
+  main().catch(e => { $('wasmState').textContent = '加载失败'; alert('错误：' + e.message); });
+</script>
+</body>
+</html>

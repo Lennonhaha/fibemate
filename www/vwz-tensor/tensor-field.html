@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VWZ · Vandermonde 张量场</title>
+<style>
+  :root {
+    --bg: #08080d; --card: #0f0f18; --surf: #141424;
+    --text: #d0d0d0; --muted: rgba(255,255,255,.35);
+    --accent: #10b981; --accent2: #6366f1; --warn: #ef4444;
+    --anim: #f59e0b;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  /* Top bar */
+  #topBar {
+    padding: 10px 16px; background: var(--card);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; z-index: 20;
+  }
+  #topBar h1 { font-size: 1rem; color: var(--accent); white-space: nowrap; }
+  #topBar .sep { width: 1px; height: 18px; background: rgba(255,255,255,.1); }
+  #topBar label { font-size: 0.72rem; color: var(--muted); }
+  #topBar select, #topBar button {
+    background: var(--surf); color: var(--text);
+    border: 1px solid rgba(255,255,255,.1); border-radius: 4px;
+    padding: 4px 10px; font-size: 0.75rem; cursor: pointer;
+  }
+  #topBar button:hover { border-color: var(--accent); }
+  #topBar button.active { background: var(--accent); color: #000; font-weight: 600; border-color: var(--accent); }
+  #topBar button.playing { background: var(--anim); color: #000; font-weight: 600; }
+
+  /* Main grid */
+  #main {
+    flex: 1; display: grid;
+    grid-template-columns: 60fr 40fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 1px; background: rgba(255,255,255,.03); overflow: hidden;
+  }
+  .panel {
+    background: var(--bg); position: relative; overflow: hidden;
+    min-width: 0; min-height: 0;
+  }
+  .panel-label {
+    position: absolute; top: 8px; left: 12px; z-index: 5;
+    font-size: 0.7rem; color: var(--muted); pointer-events: none;
+  }
+
+  /* Panel A: heatmap + 3D */
+  #panelA { grid-row: 1 / -1; }
+  #panelA canvas { display: block; }
+
+  /* Panel B: distinctness matrix */
+  #panelB canvas { display: block; }
+
+  /* Legend boxes */
+  .legend-box {
+    position: absolute; right: 12px; top: 8px; z-index: 6;
+    background: rgba(15,15,24,.9); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 6px; padding: 8px 10px; font-size: 0.68rem; color: var(--muted);
+    pointer-events: none;
+  }
+  .legend-box .title { color: var(--accent); font-weight: 600; margin-bottom: 4px; }
+  .legend-box .bar { height: 6px; border-radius: 2px; margin: 3px 0; }
+  .legend-box .row { display: flex; align-items: center; gap: 6px; margin: 2px 0; }
+  .legend-box .dot { width: 8px; height: 8px; border-radius: 2px; }
+  .legend-box .val { font-family: monospace; color: var(--text); }
+
+  /* Color bar gradient */
+  .cbar { width: 120px; height: 8px; border-radius: 2px;
+    background: linear-gradient(90deg, rgb(0,100,255) 0%, rgb(100,200,100) 25%, rgb(255,200,0) 50%, rgb(255,100,0) 75%, rgb(200,0,100) 100%);
+  }
+
+  /* Panel C: tensor product tree */
+  #panelC canvas { display: block; }
+
+  /* Animation bar */
+  #animBar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 16px; background: var(--card);
+    border-top: 1px solid rgba(255,255,255,.06); z-index: 20;
+  }
+  #animBar button {
+    background: var(--surf); color: var(--text);
+    border: 1px solid rgba(255,255,255,.1); border-radius: 4px;
+    padding: 3px 10px; font-size: 0.73rem; cursor: pointer;
+  }
+  #animBar button:hover { border-color: var(--accent); }
+  #animBar input[type=range] { width: 80px; accent-color: var(--accent); }
+  #animBar .aProgress { font-size: 0.7rem; color: var(--muted); min-width: 70px; font-variant-numeric: tabular-nums; }
+  #animBar select { background: var(--surf); color: var(--text); border: 1px solid rgba(255,255,255,.1); border-radius: 4px; padding: 3px 8px; font-size: 0.73rem; }
+
+  #status {
+    padding: 3px 16px; font-size: 0.65rem; color: var(--muted);
+    border-top: 1px solid rgba(255,255,255,.04);
+    display: flex; gap: 16px;
+  }
+
+  @media (max-width: 800px) {
+    #main { grid-template-columns: 1fr; grid-template-rows: 60fr 20fr 20fr; }
+    #panelA { grid-row: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topBar">
+  <h1>🧮 VWZ Vandermonde 张量场</h1>
+  <span class="sep"></span>
+  <label>k =</label>
+  <select id="kSel" onchange="rebuild()">
+    <option value="4">4 (N=9)</option>
+    <option value="8" selected>8 (N=17)</option>
+    <option value="16">16 (N=33)</option>
+  </select>
+  <label>λ-set</label>
+  <select id="setSel" onchange="setCurrent()">
+    <option value="0">Set 1</option>
+    <option value="1">Set 2</option>
+    <option value="2">Set 3</option>
+  </select>
+  <span class="sep"></span>
+  <button id="btnMode2D" class="active" onclick="switchMode('2d')">2D 热力图</button>
+  <button id="btnMode3D" onclick="switchMode('3d')">3D 张量场</button>
+</div>
+
+<div id="main">
+  <div class="panel" id="panelA">
+    <span class="panel-label">模块 A: Vandermonde 矩阵热力图 — V[i][j] = λᵢʲ mod 3329</span>
+    <div class="legend-box">
+      <div class="title">数值映射 (mod 3329)</div>
+      <div class="cbar"></div>
+      <div class="row"><span class="val">0</span><span style="flex:1"></span><span class="val">1664</span><span style="flex:1"></span><span class="val">3328</span></div>
+      <div style="margin-top:6px;color:var(--accent2)">蓝→绿→黄→红</div>
+      <div style="font-size:0.6rem;color:var(--muted)">V[i][j] = λᵢʲ mod Q</div>
+    </div>
+    <canvas id="cA2D" style="display:block"></canvas>
+    <canvas id="cA3D" style="display:none"></canvas>
+  </div>
+  <div class="panel" id="panelB">
+    <span class="panel-label">模块 B: λ-set 互异约束矩阵</span>
+    <div class="legend-box" style="top:auto;bottom:8px;">
+      <div class="title">互异检查</div>
+      <div class="row"><span class="dot" style="background:rgba(16,185,129,.3)"></span><span class="val">对角: 同值 (i=j)</span></div>
+      <div class="row"><span class="dot" style="background:rgba(16,185,129,.06)"></span><span class="val">非对角=0: 互异 ✅</span></div>
+      <div class="row"><span class="dot" style="background:rgba(239,68,68,.8)"></span><span class="val">非对角=1: 冲突 ❌</span></div>
+    </div>
+    <canvas id="cB"></canvas>
+  </div>
+  <div class="panel" id="panelC">
+    <span class="panel-label">模块 C: 张量积层级结构</span>
+    <canvas id="cC"></canvas>
+  </div>
+</div>
+
+<div id="animBar">
+  <button id="btnPlay" onclick="toggleAnim()" title="播放/暂停 构造动画">▶ 播放</button>
+  <button onclick="stepAnim(-1)" title="上一步">◀</button>
+  <button onclick="stepAnim(1)" title="下一步">▶</button>
+  <button onclick="resetAnim()">↺ 重置</button>
+  <span class="aProgress" id="animProgress">0 / 0</span>
+  <span class="sep" style="width:1px;height:14px;background:rgba(255,255,255,.1)"></span>
+  <label style="font-size:0.7rem;color:var(--muted)">速度</label>
+  <select id="speedSel" onchange="setSpeed()">
+    <option value="0.5">0.5×</option>
+    <option value="1" selected>1×</option>
+    <option value="2">2×</option>
+    <option value="4">4×</option>
+  </select>
+</div>
+
+<div id="status">
+  <span id="stK">k=8, N=17</span>
+  <span id="stQ">Q=3329</span>
+  <span id="stFrame">DENSE: 100%</span>
+</div>
+
+<!-- Three.js via importmap (self-hosted on server) -->
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ——————————————————————————————————————————————
+//  State
+// ——————————————————————————————————————————————
+let Q = 3329, k = 8, N;
+let currentSet = 0, viewMode = '2d';
+let lambdaSets = [], matrices = [];
+
+// Animation
+let animStep = 0, animMax = 0, animTimer = null, animPlaying = false;
+let animSpeed = 1;
+
+// Three.js for panel A (3D mode)
+let tScene, tCam, tRend, tCtrl, tGroup;
+
+// ——————————————————————————————————————————————
+//  RNG
+// ——————————————————————————————————————————————
+function splitmix64(seed) {
+  let s = BigInt(seed);
+  return () => {
+    s += 0x9E3779B97F4A7C15n;
+    let z = s;
+    z = (z ^ (z >> 30n)) * 0xBF58476D1CE4E5B9n;
+    z = (z ^ (z >> 27n)) * 0x94D049BB133111EBn;
+    return Number((z ^ (z >> 31n)) & 0xFFFFFFFFn);
+  };
+}
+
+// ——————————————————————————————————————————————
+//  Data generation
+// ——————————————————————————————————————————————
+function generateData() {
+  k = parseInt(document.getElementById('kSel').value);
+  currentSet = parseInt(document.getElementById('setSel').value);
+  N = 2 * k + 1;
+
+  lambdaSets = [];
+  for (let s = 0; s < 3; s++) {
+    const rng = splitmix64(0x564D5A2020202020n + BigInt(s * 0x1000));
+    const used = new Set();
+    const lam = [];
+    while (lam.length < N) {
+      const v = (rng() % (Q - 1)) + 1;
+      if (!used.has(v) && v !== 1) { used.add(v); lam.push(v); }
+    }
+    lambdaSets.push(lam);
+  }
+
+  matrices = lambdaSets.map(lam => {
+    const M = Array.from({length: N}, () => new Uint32Array(N));
+    for (let i = 0; i < N; i++) {
+      let acc = 1;
+      for (let j = 0; j < N; j++) {
+        M[i][j] = acc;
+        acc = (acc * lam[i]) % Q;
+      }
+    }
+    return M;
+  });
+
+  animStep = 0;
+  animMax = N * N; // total cells to reveal
+  document.getElementById('stK').textContent = `k=${k}, N=${N}`;
+  document.getElementById('stFrame').textContent = `DENSE: 100% (${N*N} 元素)`;
+  updateAnimProgress();
+  if (animPlaying) stopAnim();
+  drawAll();
+}
+
+// ——————————————————————————————————————————————
+//  Color: value → rgb
+// ——————————————————————————————————————————————
+function vColor(v) {
+  const t = v / Q;
+  const r = t < 0.5 ? Math.floor(255 * t * 2) : 255;
+  const g = t < 0.5 ? Math.floor(100 + 155 * t * 2) : Math.floor(255 * (2 - t * 2));
+  const b = t < 0.5 ? Math.floor(255 * (1 - t * 2)) : 0;
+  return `rgb(${r},${g},${b})`;
+}
+
+// ——————————————————————————————————————————————
+//  Panel A: Vandermonde Heatmap (2D)
+// ——————————————————————————————————————————————
+function drawHeatmap2D() {
+  const c = document.getElementById('cA2D');
+  const panel = document.getElementById('panelA');
+  const r = panel.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  c.width = r.width * dpr; c.height = r.height * dpr;
+  c.style.width = r.width + 'px'; c.style.height = r.height + 'px';
+  const ctx = c.getContext('2d');
+  const M = matrices[currentSet];
+  const w = r.width, h = r.height;
+  const margin = 18;
+  const cw = w - margin * 2, ch = h - margin * 2;
+  const cellW = cw / N, cellH = ch / N;
+
+  ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.save(); ctx.scale(dpr, dpr);
+
+  // Background: complete matrix at 15% opacity
+  if (animStep < animMax) {
+    for (let row = 0; row < N; row++) {
+      for (let col = 0; col < N; col++) {
+        ctx.fillStyle = vColor(M[row][col]);
+        ctx.globalAlpha = 0.12;
+        ctx.fillRect(margin + col * cellW, margin + row * cellH, Math.ceil(cellW), Math.ceil(cellH));
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // Revealed cells
+  const revealed = animStep > 0 ? animStep : animMax;
+  for (let idx = 0; idx < revealed; idx++) {
+    const row = Math.floor(idx / N);
+    const col = idx % N;
+    if (row >= N) break;
+    ctx.fillStyle = vColor(M[row][col]);
+    ctx.fillRect(margin + col * cellW, margin + row * cellH, Math.ceil(cellW), Math.ceil(cellH));
+  }
+
+  // Grid lines (every 4 cells for large N)
+  ctx.strokeStyle = 'rgba(255,255,255,.03)'; ctx.lineWidth = 0.5;
+  const step = N > 16 ? 4 : 1;
+  for (let i = 0; i <= N; i += step) {
+    ctx.beginPath(); ctx.moveTo(margin + i * cellW, margin); ctx.lineTo(margin + i * cellW, margin + ch); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(margin, margin + i * cellH); ctx.lineTo(margin + cw, margin + i * cellH); ctx.stroke();
+  }
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.font = `${Math.min(9, cellW * 0.7)}px monospace`;
+  for (let i = 0; i <= N; i += Math.max(1, Math.floor(N / 6))) {
+    ctx.fillText(i, margin + i * cellW + 1, margin - 4);
+    ctx.fillText(i, margin - (i.toString().length * 5 + 2), margin + i * cellH + cellH * 0.6);
+  }
+
+  // Highlight active row during animation
+  if (animStep < animMax && animStep > 0) {
+    const curRow = Math.floor((animStep - 1) / N);
+    ctx.strokeStyle = 'rgba(245,158,11,.5)'; ctx.lineWidth = 1.5;
+    ctx.strokeRect(margin, margin + curRow * cellH, cw, cellH);
+  }
+
+  ctx.restore();
+}
+
+// ——————————————————————————————————————————————
+//  Panel A: 3D (deferred — reuse existing 3D code)
+// ——————————————————————————————————————————————
+function initThree() {
+  if (tScene) return;
+  const c = document.getElementById('cA3D');
+  tScene = new THREE.Scene(); tScene.background = new THREE.Color(0x08080d);
+  tCam = new THREE.PerspectiveCamera(45, 1, 1, 150);
+  tCam.position.set(N, N * 0.7, N * 1.3); tCam.lookAt(N/2, 3, N/2);
+  tRend = new THREE.WebGLRenderer({ canvas: c, antialias: true });
+  tRend.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+  tCtrl = new OrbitControls(tCam, c);
+  tCtrl.enableDamping = true;
+  tScene.add(new THREE.AmbientLight(0x222244, 0.6));
+  const d = new THREE.DirectionalLight(0xffffff, 1); d.position.set(20, 30, 20); tScene.add(d);
+}
+
+function draw3DField() {
+  initThree();
+  const c = document.getElementById('cA3D'), panel = document.getElementById('panelA');
+  const r2 = panel.getBoundingClientRect();
+  tRend.setSize(r2.width, r2.height);
+  tCam.aspect = r2.width / r2.height;
+  tCam.updateProjectionMatrix();
+  tCtrl.target.set(N/2, 4, N/2); tCtrl.update();
+
+  if (tGroup) tScene.remove(tGroup);
+  tGroup = new THREE.Group();
+
+  const spacing = 3;
+  const revealed = animStep > 0 ? animStep : animMax;
+
+  for (let s = 0; s < 3; s++) {
+    const M = matrices[s];
+    for (let idx = 0; idx < revealed; idx++) {
+      const row = Math.floor(idx / N), col = idx % N;
+      if (row >= N) break;
+      const v = M[row][col], t = v / Q;
+      const h = 0.3 + t * 6;
+      const geo = new THREE.BoxGeometry(0.35, h, 0.35);
+      const mat = new THREE.MeshStandardMaterial({
+        color: new THREE.Color().setHSL(0.5 + t * 0.2, 0.8, 0.3 + t * 0.6),
+        roughness: 0.5, metalness: 0.1, transparent: true, opacity: 0.8
+      });
+      const mesh = new THREE.Mesh(geo, mat);
+      mesh.position.set(row, s * spacing + h / 2, col);
+      tGroup.add(mesh);
+    }
+    const pg = new THREE.PlaneGeometry(N + 1, N + 1);
+    const pm = new THREE.MeshBasicMaterial({ color: 0x10b981, side: 2, transparent: true, opacity: 0.04, depthWrite: false });
+    const plane = new THREE.Mesh(pg, pm);
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.set(N/2, s * spacing - 0.2, N/2);
+    tGroup.add(plane);
+  }
+  tScene.add(tGroup);
+}
+
+// ——————————————————————————————————————————————
+//  Panel B: λ-set Distinctness Matrix
+// ——————————————————————————————————————————————
+function drawDistinctness() {
+  const c = document.getElementById('cB');
+  const panel = c.parentElement;
+  const r = panel.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  c.width = r.width * dpr; c.height = r.height * dpr;
+  c.style.width = r.width + 'px'; c.style.height = r.height + 'px';
+
+  const ctx = c.getContext('2d');
+  const w = r.width, h = r.height;
+  const lam = lambdaSets[currentSet];
+  const margin = 24;
+  const matSize = Math.min(w, h) - margin * 2;
+  const cell = matSize / N;
+
+  ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.save(); ctx.scale(dpr, dpr);
+
+  // Compare matrix: C[i][j] = λᵢ == λⱼ ? 1 : 0
+  // Diagonal = 1 (same), off-diagonal should all be 0 (互异)
+  let violations = 0;
+  for (let i = 0; i < N; i++) {
+    for (let j = 0; j < N; j++) {
+      const same = lam[i] === lam[j];
+      if (i !== j && same) violations++;
+      ctx.fillStyle = same ? (i === j ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.8)') : 'rgba(16,185,129,.06)';
+      ctx.fillRect(margin + j * cell, margin + i * cell, Math.ceil(cell), Math.ceil(cell));
+    }
+  }
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,.04)'; ctx.lineWidth = 0.3;
+  for (let i = 0; i <= N; i++) {
+    ctx.beginPath();
+    ctx.moveTo(margin + i * cell, margin);
+    ctx.lineTo(margin + i * cell, margin + matSize);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(margin, margin + i * cell);
+    ctx.lineTo(margin + matSize, margin + i * cell);
+    ctx.stroke();
+  }
+
+  // Label
+  ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.font = '10px system-ui';
+  ctx.fillText(`λ-set ${currentSet+1}: 互异 = ${violations === 0 ? '✅' : '❌ ' + violations + ' 冲突'}`, margin, margin - 6);
+  ctx.fillStyle = 'rgba(255,255,255,.2)'; ctx.font = '8px monospace';
+  ctx.fillText(`N=${N} 个互异值`, margin, margin - 14);
+
+  ctx.restore();
+}
+
+// ——————————————————————————————————————————————
+//  Panel C: Tensor Product Hierarchy (Tree)
+// ——————————————————————————————————————————————
+function drawTensorTree() {
+  const c = document.getElementById('cC');
+  const panel = c.parentElement;
+  const r = panel.getBoundingClientRect();
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  c.width = r.width * dpr; c.height = r.height * dpr;
+  c.style.width = r.width + 'px'; c.style.height = r.height + 'px';
+
+  const ctx = c.getContext('2d');
+  const w = r.width, h = r.height;
+
+  ctx.fillStyle = '#08080d'; ctx.fillRect(0, 0, c.width, c.height);
+  ctx.save(); ctx.scale(dpr, dpr);
+
+  // Factorize N into prime factors for tree display
+  const factors = factorize(N);
+  const rootX = w / 2, rootY = 30;
+  const layerH = Math.min(50, (h - 60) / (factors.length + 1));
+
+  // Root: Vandermonde Tensor
+  ctx.fillStyle = 'rgba(16,185,129,.15)'; ctx.strokeStyle = '#10b981'; ctx.lineWidth = 1.5;
+  roundRect(ctx, rootX - 100, rootY - 12, 200, 28, 6);
+  ctx.stroke(); ctx.fill();
+  ctx.fillStyle = '#10b981'; ctx.font = 'bold 11px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText(`Vandermonde 张量 (N=${N})`, rootX, rootY + 6);
+
+  // Layers: V[i][j] = λᵢʲ
+  const layerColors = ['#6366f1', '#8b5cf6', '#a78bfa', '#c084fc', '#e879f9', '#f472b6', '#fb923c'];
+
+  let prevNodes = [{x: rootX, y: rootY + 16, label: 'V'}];
+
+  // Show the Vandermonde structure as:
+  //   Vandermonde(N)
+  //   ├── row 0: (λ₀⁰, λ₀¹, ..., λ₀^{N-1})
+  //   ├── row 1: (λ₁⁰, λ₁¹, ..., λ₁^{N-1})
+  //   └── ...
+  //   λ-set: {λ₀, λ₁, ..., λ_{N-1}} ⊂ F_q
+
+  const maxRows = Math.min(N, 7);
+  for (let i = 0; i < maxRows; i++) {
+    const y = rootY + 40 + i * layerH;
+    const x = rootX - (maxRows/2 - i) * 30 - (i % 2) * 15;
+
+    // Line
+    ctx.strokeStyle = `rgba(${i < 3 ? '99,102,241' : '16,185,129'},.3)`; ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(rootX, rootY + 16); ctx.lineTo(x, y); ctx.stroke();
+
+    // Node
+    ctx.fillStyle = `rgba(${i < 3 ? '99,102,241' : '16,185,129'},.12)`;
+    ctx.strokeStyle = i < 3 ? '#6366f1' : '#10b981'; ctx.lineWidth = 1;
+    roundRect(ctx, x - 60, y - 10, 120, 22, 4);
+    ctx.stroke(); ctx.fill();
+
+    ctx.fillStyle = '#d0d0d0'; ctx.font = '9px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(`λ[${i}]^{0..${N-1}}`, x, y + 4);
+
+    if (i < 3) {
+      ctx.fillStyle = 'rgba(255,255,255,.3)'; ctx.font = '8px monospace';
+      ctx.fillText(`λ=${lambdaSets[currentSet][i]}`, x, y + 16);
+    }
+  }
+
+  // λ-set label at bottom
+  const botY = rootY + 40 + maxRows * layerH + 15;
+  ctx.fillStyle = 'rgba(16,185,129,.12)'; ctx.strokeStyle = '#10b981'; ctx.lineWidth = 1;
+  roundRect(ctx, rootX - 90, botY - 12, 180, 24, 5);
+  ctx.stroke(); ctx.fill();
+  ctx.fillStyle = '#10b981'; ctx.font = '10px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText(`λ-set ⊂ F₃₃₂₉  (${N} 个互异值)`, rootX, botY + 4);
+
+  ctx.restore();
+}
+
+function factorize(n) {
+  const f = []; let x = n;
+  for (let p = 2; p * p <= x; p++) { while (x % p === 0) { f.push(p); x /= p; } }
+  if (x > 1) f.push(x);
+  return f;
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ——————————————————————————————————————————————
+//  Animation
+// ——————————————————————————————————————————————
+function updateAnimProgress() {
+  document.getElementById('animProgress').textContent = `${animStep} / ${animMax}`;
+}
+
+function toggleAnim() {
+  if (animPlaying) { stopAnim(); return; }
+  animPlaying = true;
+  const btn = document.getElementById('btnPlay');
+  btn.textContent = '⏸ 暂停'; btn.classList.add('playing');
+  runAnimStep();
+}
+
+function stopAnim() {
+  animPlaying = false;
+  const btn = document.getElementById('btnPlay');
+  btn.textContent = '▶ 播放'; btn.classList.remove('playing');
+  if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+  updateAnimProgress();
+}
+
+function setSpeed() {
+  animSpeed = parseFloat(document.getElementById('speedSel').value);
+}
+
+function stepAnim(dir) {
+  if (animPlaying) stopAnim();
+  animStep = Math.max(0, Math.min(animMax, animStep + dir * Math.max(1, Math.floor(N / 4))));
+  updateAnimProgress();
+  drawAll();
+}
+
+function resetAnim() {
+  if (animPlaying) stopAnim();
+  animStep = 0;
+  updateAnimProgress();
+  drawAll();
+}
+
+function runAnimStep() {
+  if (!animPlaying) return;
+  if (animStep >= animMax) { stopAnim(); return; }
+  animStep += Math.max(1, Math.floor(N / 4));
+  if (animStep > animMax) animStep = animMax;
+  updateAnimProgress();
+  drawAll();
+  animTimer = setTimeout(runAnimStep, Math.round(80 / animSpeed));
+}
+
+// ——————————————————————————————————————————————
+//  Render all panels
+// ——————————————————————————————————————————————
+function drawAll() {
+  const c2d = document.getElementById('cA2D');
+  const c3d = document.getElementById('cA3D');
+  if (viewMode === '2d') {
+    c2d.style.display = 'block';
+    c3d.style.display = 'none';
+    drawHeatmap2D();
+  } else {
+    c2d.style.display = 'none';
+    c3d.style.display = 'block';
+    draw3DField();
+  }
+  drawDistinctness();
+  drawTensorTree();
+}
+
+// ——————————————————————————————————————————————
+//  View switches
+// ——————————————————————————————————————————————
+window.switchMode = (m) => {
+  viewMode = m;
+  document.getElementById('btnMode2D').classList.toggle('active', m === '2d');
+  document.getElementById('btnMode3D').classList.toggle('active', m === '3d');
+  drawAll();
+};
+
+window.setCurrent = () => {
+  currentSet = parseInt(document.getElementById('setSel').value);
+  drawAll();
+};
+
+window.rebuild = generateData;
+
+// ——————————————————————————————————————————————
+//  Animation controls (global)
+// ——————————————————————————————————————————————
+window.toggleAnim = toggleAnim;
+window.stepAnim = stepAnim;
+window.resetAnim = resetAnim;
+window.setSpeed = setSpeed;
+
+// ——————————————————————————————————————————————
+//  3D animation loop
+// ——————————————————————————————————————————————
+function threeLoop() {
+  requestAnimationFrame(threeLoop);
+  if (tCtrl && viewMode === '3d') {
+    tCtrl.update();
+    tRend.render(tScene, tCam);
+  }
+}
+threeLoop();
+
+// ——————————————————————————————————————————————
+//  Resize
+// ——————————————————————————————————————————————
+window.addEventListener('resize', () => {
+  drawAll();
+});
+
+// ——————————————————————————————————————————————
+//  Init
+// ——————————————————————————————————————————————
+generateData();
+
+console.log('🧮 VWZ Vandermonde 张量场 — 三模块 + 构造动画');
+console.log('  A: 热力图 (2D/3D)  |  B: λ-set 互异约束  |  C: 张量积层级');
+console.log('  Animation: ', animMax, 'cells total');
+</script>
+<div id="fibemate-footer" style="position:fixed;bottom:0;left:0;right:0;height:22px;background:rgba(8,8,13,.92);border-top:1px solid rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;gap:16px;font-size:10px;color:rgba(255,255,255,.35);z-index:9999;font-family:system-ui,sans-serif;backdrop-filter:blur(4px);"><span style="color:#ef4444;font-weight:600;">⚠ 实验性研究组件 · 不用于生产环境</span><span>·</span><span>FIBEMATE v3.3.0</span><span>·</span><span>2026-08-12</span></div>
+</body>
+</html>

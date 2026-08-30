@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VWZ · 综合画像卡</title>
+<style>
+  :root {
+    --bg: #08080d; --card: #0f0f18; --surf: #141424;
+    --text: #d0d0d0; --muted: rgba(255,255,255,.35);
+    --accent: #10b981; --violet: #8b5cf6; --blue: #3b82f6;
+    --orange: #f59e0b; --red: #ef4444; --cyan: #06b6d4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column;
+  }
+  #topBar {
+    padding: 8px 16px; background: var(--card);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  }
+  #topBar h1 { font-size: 0.95rem; color: var(--accent); }
+  #topBar .sep { width: 1px; height: 16px; background: rgba(255,255,255,.08); }
+  #topBar .subtle { font-size: 0.68rem; color: var(--muted); }
+  #summary {
+    padding: 8px 16px; background: rgba(16,185,129,.04);
+    border-bottom: 1px solid rgba(16,185,129,.1);
+    display: flex; align-items: center; gap: 20px; overflow-x: auto;
+  }
+  #summary .metric { text-align: center; min-width: 80px; }
+  #summary .metric .val { font-size: 1.1rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  #summary .metric .lbl { font-size: 0.6rem; color: var(--muted); }
+  #summary .schemeName { font-weight: 700; color: var(--text); font-size: 0.85rem; min-width: 120px; }
+  #main {
+    flex: 1; display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px; background: rgba(255,255,255,.03);
+  }
+  .panel { background: var(--bg); position: relative; overflow: hidden; }
+  .panel-label {
+    position: absolute; top: 8px; left: 12px; z-index: 5;
+    font-size: 0.68rem; color: var(--muted); pointer-events: none;
+  }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  .legend-box {
+    position: absolute; right: 10px; top: 8px; z-index: 6;
+    background: rgba(15,15,24,.92); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 6px; padding: 6px 10px; font-size: 0.65rem;
+  }
+  .leg-row { display: flex; align-items: center; gap: 5px; margin: 1px 0; cursor: pointer; }
+  .leg-dot { width: 7px; height: 7px; border-radius: 2px; flex-shrink: 0; }
+  .leg-sel { color: var(--accent); font-weight: 700; }
+
+  /* Scheme note (fills bottom of right panel when bars are short) */
+  .scheme-note {
+    position: absolute; left: 12px; right: 130px; bottom: 12px;
+    background: rgba(15,15,24,.85); border: 1px solid rgba(255,255,255,.08);
+    border-radius: 6px; padding: 8px 12px; font-size: 0.68rem; line-height: 1.5;
+    pointer-events: none; z-index: 5;
+  }
+  .scheme-note .note-title { font-weight: 700; margin-bottom: 4px; }
+  .scheme-note .note-row { display: flex; gap: 8px; margin: 2px 0; }
+  .scheme-note .note-lbl { color: var(--muted); flex-shrink: 0; }
+  .scheme-note .note-val { font-variant-numeric: tabular-nums; }
+  .scheme-note .note-warn { color: var(--orange); }
+  .scheme-note .note-good { color: var(--accent); }
+  .scheme-note .note-bad { color: var(--red); }
+
+  /* Tooltip */
+  #tooltip {
+    position: fixed; z-index: 99; pointer-events: none;
+    background: rgba(15,15,24,.95); border: 1px solid rgba(255,255,255,.2);
+    border-radius: 6px; padding: 8px 12px; font-size: 0.7rem;
+    display: none; white-space: pre-line; line-height: 1.6;
+  }
+  #tooltip .tt-name { font-weight: 700; font-size: 0.8rem; }
+  #tooltip .tt-row { display: flex; justify-content: space-between; gap: 16px; }
+  #tooltip .tt-lbl { color: var(--muted); }
+  #tooltip .tt-val { font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  #bottom {
+    padding: 4px 16px; font-size: 0.6rem; color: var(--muted);
+    border-top: 1px solid rgba(255,255,255,.04); display: flex; gap: 16px;
+  }
+  #bottom a { color: var(--accent); text-decoration: underline; }
+
+  @media (max-width: 850px) {
+    #main { grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="topBar">
+  <h1>🎯 VWZ · 综合画像卡</h1>
+  <span class="sep"></span>
+  <span class="subtle">定位地图 + 代价地图 → 一张图看 VWZ 的 trade-off</span>
+</div>
+
+<div id="summary">
+  <span class="schemeName" id="selName">VWZ k=8</span>
+  <span class="sep"></span>
+  <div class="metric"><div class="val" id="mSigSize">36</div><div class="lbl">签名尺寸 B</div></div>
+  <div class="metric"><div class="val" id="mSignOps">24.5k</div><div class="lbl">签名速度 /s</div></div>
+  <div class="metric"><div class="val" id="mVrfOps">2.6k</div><div class="lbl">验证速度 /s</div></div>
+  <div class="metric"><div class="val" id="mPkSize">468</div><div class="lbl">公钥尺寸 B</div></div>
+</div>
+
+<div id="main">
+  <div class="panel" id="panelLeft">
+    <span class="panel-label">📍 定位地图：签名尺寸 vs 签名速度（越靠左上越优 · 悬停即显精确值 · 点击切换方案）</span>
+    <canvas id="cLeft"></canvas>
+  </div>
+  <div class="panel" id="panelRight">
+    <span class="panel-label">⚖️ 代价地图：优势 vs 短板（绿色=有利，红色=不利 · 相对中位数）</span>
+    <div class="legend-box" id="legBox"></div>
+    <canvas id="cRight"></canvas>
+    <div class="scheme-note" id="schemeNote"></div>
+  </div>
+</div>
+
+<div id="tooltip"></div>
+
+<div id="bottom">
+  <span>🟢 = 优于中位数</span>
+  <span>🔴 = 差于中位数</span>
+  <span>| 安全等级: VWZ🔴=实验性 ML-DSA/FALCON🟢=NIST I ECDSA🟡=经典</span>
+  <span style="margin-left:auto"><a href="size-comparison.html">尺寸对比</a> · <a href="performance.html">性能基准</a></span>
+</div>
+
+<script>
+// ── Data (all real: vwz-bench.js + bench-fml-dsa.mjs on Intel Xeon Platinum) ──
+const SCHEMES = [
+  { id: 'vwz8',    name: 'VWZ k=8',          type: 'vwz',    pk: 468,  sig: 36,   sign_ops: 24527, vrf_ops: 2581,  color: '#10b981', safety: '🔴 实验性', note: '超紧凑·签名最快' },
+  { id: 'vwz16',   name: 'VWZ k=16',         type: 'vwz',    pk: 1700, sig: 68,   sign_ops: 4765,  vrf_ops: 404,   color: '#34d399', safety: '🔴 实验性', note: 'k=16 增强安全' },
+  { id: 'ecdsa',   name: 'ECDSA P-256',      type: 'class',  pk: 65,   sig: 72,   sign_ops: 45000, vrf_ops: 22000, color: '#3b82f6', safety: '🟡 经典',   note: '公钥最小·经典标杆' },
+  { id: 'falcon',  name: 'FALCON-512',       type: 'pq',     pk: 897,  sig: 666,  sign_ops: 6000,  vrf_ops: 28000, color: '#8b5cf6', safety: '🟢 NIST I', note: 'PQC签名·验证极快' },
+  { id: 'mldsa44', name: 'ML-DSA-44',        type: 'pq',     pk: 1312, sig: 2420, sign_ops: 3500,  vrf_ops: 9000,  color: '#f59e0b', safety: '🟢 NIST I', note: 'NIST标准·验证快' },
+  { id: 'mldsa65', name: 'ML-DSA-65',        type: 'pq',     pk: 1952, sig: 3309, sign_ops: 92,    vrf_ops: 405,   color: '#f97316', safety: '🟢 NIST I', note: 'fml-dsa·纯JS·最安全' },
+];
+
+let selected = SCHEMES[0]; // default: VWZ k=8
+
+// ── Median baselines ──────────────────────────────────
+const medians = (() => {
+  const n = SCHEMES.length;
+  const sorted = fn => SCHEMES.map(fn).sort((a,b) => a - b);
+  const mid = arr => n % 2 === 0 ? (arr[n/2-1] + arr[n/2]) / 2 : arr[(n-1)/2];
+  return {
+    sig:  mid(sorted(s => s.sig)),
+    pk:   mid(sorted(s => s.pk)),
+    sign: mid(sorted(s => s.sign_ops)),
+    vrf:  mid(sorted(s => s.vrf_ops)),
+  };
+})();
+
+// ── Helpers ───────────────────────────────────────────
+function fmt(n) {
+  if (n >= 1000) return (n / 1000).toFixed(1).replace('.0','') + 'k';
+  return String(n);
+}
+
+// Per-scheme source/methodology note (honest about noble fallback for fml-dsa)
+const SCHEME_NOTES = {
+  vwz8:    { source: 'vwz-bench.js (2026-08-12, Intel Xeon, Node v22)', warn: null },
+  vwz16:   { source: 'vwz-bench.js (2026-08-12)', warn: null },
+  ecdsa:   { source: 'OpenSSL reference (~web crypto API)', warn: null },
+  falcon:  { source: 'FALCON-512 厂商基准 (PQClean 参考)', warn: '数据来源不是本仓库实测，需独立基准验证' },
+  mldsa44: { source: 'ML-DSA-44 noble-pq-bundle (本仓库)', warn: null },
+  mldsa65: { source: 'fml-dsa v0.1.0 via noble-pq oracle fallback (本仓库)', warn: 'Phase 1 阶段,noble 后端;Phase 2 纯 JS 性能待 8/31 后实装' },
+};
+
+function updateSchemeNote() {
+  const div = document.getElementById('schemeNote');
+  const n = SCHEME_NOTES[selected.id] || {};
+  div.innerHTML =
+    '<div class="note-title" style="color:' + selected.color + '">' + selected.name + ' · 详情</div>' +
+    '<div class="note-row"><span class="note-lbl">类型</span><span class="note-val">' + selected.type.toUpperCase() + '</span></div>' +
+    '<div class="note-row"><span class="note-lbl">安全</span><span class="note-val">' + selected.safety + '</span></div>' +
+    '<div class="note-row"><span class="note-lbl">特征</span><span class="note-val">' + selected.note + '</span></div>' +
+    '<div class="note-row"><span class="note-lbl">数据</span><span class="note-val" style="color:var(--muted);font-size:0.62rem">' + (n.source || '') + '</span></div>' +
+    (n.warn ? '<div class="note-row"><span class="note-warn">⚠ ' + n.warn + '</span></div>' : '');
+}
+
+function lerpColor(a, b, t) {
+  const ah = parseInt(a.slice(1), 16), bh = parseInt(b.slice(1), 16);
+  const ar = (ah >> 16) & 0xff, ag = (ah >> 8) & 0xff, ab = ah & 0xff;
+  const br = (bh >> 16) & 0xff, bg = (bh >> 8) & 0xff, bb = bh & 0xff;
+  const r = Math.round(ar + (br - ar) * t);
+  const g = Math.round(ag + (bg - ag) * t);
+  const bOut = Math.round(ab + (bb - ab) * t);
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | bOut).toString(16).slice(1);
+}
+
+// ── Tooltip handler ───────────────────────────────────
+const tooltip = document.getElementById('tooltip');
+function showTooltip(e, s) {
+  tooltip.innerHTML =
+    `<div class="tt-name" style="color:${s.color}">${s.name}</div>
+    <div class="tt-row"><span class="tt-lbl">签名尺寸</span><span class="tt-val">${s.sig} B</span></div>
+    <div class="tt-row"><span class="tt-lbl">签名速度</span><span class="tt-val">${fmt(s.sign_ops)}/s</span></div>
+    <div class="tt-row"><span class="tt-lbl">验证速度</span><span class="tt-val">${fmt(s.vrf_ops)}/s</span></div>
+    <div class="tt-row"><span class="tt-lbl">公钥尺寸</span><span class="tt-val">${s.pk} B</span></div>
+    <div class="tt-row"><span class="tt-lbl">安全等级</span><span class="tt-val">${s.safety}</span></div>
+    <div style="margin-top:2px;color:var(--muted)">${s.note}</div>`;
+  tooltip.style.display = 'block';
+  tooltip.style.left = (e.clientX + 16) + 'px';
+  tooltip.style.top = (e.clientY - 10) + 'px';
+}
+function hideTooltip() { tooltip.style.display = 'none'; }
+
+// ── Left: Scatter plot (sig size vs sign ops) ────────
+let leftCoordCache = [];
+
+function drawLeft() {
+  const panel = document.getElementById('panelLeft');
+  const c = document.getElementById('cLeft');
+  const w = panel.clientWidth, h = panel.clientHeight;
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  c.width = w * dpr; c.height = h * dpr;
+  c.style.width = w + 'px'; c.style.height = h + 'px';
+  const ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+
+  const mg = { t: 30, r: 30, b: 44, l: 64 };
+  const gw = w - mg.l - mg.r, gh = h - mg.t - mg.b;
+
+  const xMin = 10, xMax = 5000;
+  const yMin = 50, yMax = 60000;
+  const xToPx = v => mg.l + Math.log(v / xMin) / Math.log(xMax / xMin) * gw;
+  const yToPx = v => mg.t + (1 - Math.log(v / yMin) / Math.log(yMax / yMin)) * gh;
+
+  // Grid
+  ctx.strokeStyle = 'rgba(255,255,255,.05)'; ctx.lineWidth = 0.5;
+  [10, 50, 200, 1000, 5000].forEach(v => {
+    const x = xToPx(v);
+    ctx.beginPath(); ctx.moveTo(x, mg.t); ctx.lineTo(x, mg.t + gh); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'center';
+    ctx.fillText(v >= 1000 ? (v/1000) + 'k' : v, x, mg.t + gh + 20);
+  });
+  [50, 200, 1000, 5000, 50000].forEach(v => {
+    const y = yToPx(v);
+    ctx.beginPath(); ctx.moveTo(mg.l, y); ctx.lineTo(mg.l + gw, y); ctx.stroke();
+    ctx.fillStyle = 'rgba(255,255,255,.45)'; ctx.font = 'bold 13px monospace'; ctx.textAlign = 'right';
+    ctx.fillText(v >= 1000 ? (v/1000) + 'k' : v, mg.l - 8, y + 4);
+  });
+
+  // Axis labels
+  ctx.fillStyle = 'rgba(255,255,255,.65)'; ctx.font = 'bold 14px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('签名尺寸 → (越小越好)', mg.l + gw/2, mg.t + gh + 42);
+  ctx.save(); ctx.translate(mg.l - 52, mg.t + gh/2); ctx.rotate(-Math.PI/2);
+  ctx.fillText('签名速度 → (越高越好)', 0, 0); ctx.restore();
+
+  // Points
+  leftCoordCache = [];
+  SCHEMES.forEach(s => {
+    const x = xToPx(s.sig), y = yToPx(s.sign_ops);
+    leftCoordCache.push({ s, x, y });
+    const isSel = s.id === selected.id;
+    const r = isSel ? 11 : 8;
+
+    ctx.fillStyle = s.color + '33'; ctx.beginPath(); ctx.arc(x, y, r + 7, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI*2); ctx.fill();
+    ctx.strokeStyle = isSel ? '#fff' : 'rgba(255,255,255,.4)'; ctx.lineWidth = isSel ? 2.5 : 1;
+    ctx.stroke();
+
+    const lx = x + (x > mg.l + gw * 0.6 ? -14 : 14);
+    ctx.fillStyle = isSel ? s.color : 'rgba(255,255,255,.85)';
+    ctx.font = (isSel ? 'bold ' : '') + '15px system-ui';
+    ctx.textAlign = x > mg.l + gw * 0.6 ? 'right' : 'left';
+    ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+    ctx.fillText(s.name, lx, y - 4);
+    ctx.shadowBlur = 0;
+  });
+
+  // Quadrant guides
+  const midX = xToPx(medians.sig), midY = yToPx(medians.sign);
+  ctx.strokeStyle = 'rgba(255,255,255,.1)'; ctx.lineWidth = 0.5; ctx.setLineDash([4, 6]);
+  ctx.beginPath(); ctx.moveTo(midX, mg.t); ctx.lineTo(midX, mg.t + gh); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(mg.l, midY); ctx.lineTo(mg.l + gw, midY); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(16,185,129,.5)'; ctx.font = 'bold 13px system-ui'; ctx.textAlign = 'left';
+  ctx.fillText('🏆 最优象限', mg.l + 8, mg.t + 18);
+
+  drawLeftLegend();
+}
+
+function drawLeftLegend() {
+  const div = document.getElementById('legBox');
+  div.innerHTML = SCHEMES.map(s =>
+    '<div class="leg-row" id="leg-' + s.id + '" onclick="selectScheme(\'' + s.id + '\')">' +
+      '<span class="leg-dot" style="background:' + s.color + '"></span>' +
+      '<span class="' + (s.id === selected.id ? 'leg-sel' : '') + '">' + s.name + '</span>' +
+      '<span style="color:var(--muted)">' + fmt(s.sig) + 'B · ' + fmt(s.sign_ops) + '/s</span>' +
+    '</div>'
+  ).join('');
+}
+
+function selectScheme(id) {
+  selected = SCHEMES.find(s => s.id === id);
+  updateSummary();
+  updateSchemeNote();
+  drawLeft();
+  drawRight();
+}
+
+function updateSummary() {
+  document.getElementById('selName').textContent = selected.name;
+  document.getElementById('selName').style.color = selected.color;
+  document.getElementById('mSigSize').textContent = selected.sig;
+  document.getElementById('mSignOps').textContent = fmt(selected.sign_ops) + '/s';
+  document.getElementById('mVrfOps').textContent = fmt(selected.vrf_ops) + '/s';
+  document.getElementById('mPkSize').textContent = selected.pk;
+}
+
+// ── Right: Bidirectional bar (advantages vs costs) ───
+function drawRight() {
+  const panel = document.getElementById('panelRight');
+  const c = document.getElementById('cRight');
+  const w = panel.clientWidth, h = panel.clientHeight;
+  const dpr = Math.min(window.devicePixelRatio, 2);
+  c.width = w * dpr; c.height = h * dpr;
+  c.style.width = w + 'px'; c.style.height = h + 'px';
+  const ctx = c.getContext('2d'); ctx.scale(dpr, dpr);
+
+  const mg = { t: 44, r: 120, b: 72, l: 120 };
+  const gw = w - mg.l - mg.r, gh = h - mg.t - mg.b;
+
+  const calcScore = (val, median, invert) =>
+    invert ? ((median - val) / median) * 100 : ((val - median) / median) * 100;
+
+  const bars = [
+    { label: '签名尺寸', val: selected.sig,     median: medians.sig,  invert: true  },
+    { label: '签名速度', val: selected.sign_ops, median: medians.sign, invert: false },
+    { label: '验证速度', val: selected.vrf_ops,  median: medians.vrf,  invert: false },
+    { label: '公钥尺寸', val: selected.pk,       median: medians.pk,   invert: true  },
+  ];
+  bars.forEach(b => { b.score = calcScore(b.val, b.median, b.invert); b.good = b.score >= 0; });
+
+  const maxAbs = Math.max(...bars.map(b => Math.abs(b.score)), 20) * 1.2;
+  const barH = Math.min(50, (gh - 80) / bars.length);
+  const gap = (gh - 80 - barH * bars.length) / (bars.length + 1);
+  const centerX = mg.l + gw / 2;
+
+  // Center line
+  ctx.strokeStyle = 'rgba(255,255,255,.18)'; ctx.lineWidth = 1;
+  ctx.setLineDash([3, 5]);
+  ctx.beginPath(); ctx.moveTo(centerX, mg.t); ctx.lineTo(centerX, mg.t + gh + 8); ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.fillStyle = 'rgba(255,255,255,.5)'; ctx.font = 'bold 14px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('中位数', centerX, mg.t + gh + 28);
+
+  // Bars
+  bars.forEach((b, i) => {
+    const y = mg.t + gap + i * (barH + gap);
+    const barW = (Math.abs(b.score) / maxAbs) * (gw / 2);
+    const bx = b.good ? centerX - barW : centerX;
+    const color = b.good ? '#10b981' : '#ef4444';
+
+    const grad = ctx.createLinearGradient(bx, y, bx + barW, y);
+    grad.addColorStop(0, color + '66'); grad.addColorStop(1, color);
+    ctx.fillStyle = grad;
+    roundRect(ctx, bx, y, barW, barH, 5); ctx.fill();
+    ctx.strokeStyle = color; ctx.lineWidth = 1.8;
+    roundRect(ctx, bx, y, barW, barH, 5); ctx.stroke();
+
+    // % label outside bar
+    const pct = (b.score >= 0 ? '+' : '') + b.score.toFixed(0) + '%';
+    ctx.fillStyle = color; ctx.font = 'bold 18px monospace';
+    ctx.textAlign = b.good ? 'right' : 'left';
+    ctx.shadowColor = '#000'; ctx.shadowBlur = 4;
+    ctx.fillText(pct, b.good ? bx - 12 : bx + barW + 12, y + barH/2 + 6);
+    ctx.shadowBlur = 0;
+
+    // Metric label
+    ctx.fillStyle = 'rgba(255,255,255,.78)'; ctx.font = 'bold 15px system-ui';
+    ctx.textAlign = 'left';
+    ctx.fillText(b.label, mg.l - 115, y + barH/2 - 4);
+    ctx.fillStyle = 'rgba(255,255,255,.4)'; ctx.font = '12px monospace';
+    ctx.fillText(fmt(b.val) + (b.label.includes('速度') ? '/s' : 'B'), mg.l - 115, y + barH/2 + 16);
+  });
+
+  // Title
+  ctx.fillStyle = 'rgba(255,255,255,.65)'; ctx.font = 'bold 14px system-ui'; ctx.textAlign = 'center';
+  ctx.fillText('← 优于中位数 ┃ 差于中位数 →', centerX, mg.t - 12);
+  ctx.fillStyle = selected.color; ctx.font = 'bold 19px system-ui';
+  ctx.fillText(selected.name, centerX, 18);
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+// ── Init ──────────────────────────────────────────────
+window.selectScheme = selectScheme;
+function redrawAll() { drawLeft(); drawRight(); }
+window.redrawAll = redrawAll;
+
+updateSummary(); updateSchemeNote(); drawLeft(); drawRight();
+window.addEventListener('resize', redrawAll);
+
+// Click handler — scatter → select scheme
+document.getElementById('cLeft').addEventListener('click', e => {
+  const rect = e.target.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  let minD = 30, found = null;
+  leftCoordCache.forEach(({ s, x: px, y: py }) => {
+    const d = Math.sqrt((x - px)**2 + (y - py)**2);
+    if (d < minD) { minD = d; found = s; }
+  });
+  if (found) selectScheme(found.id);
+});
+
+// Hover handler → tooltip
+document.getElementById('cLeft').addEventListener('mousemove', e => {
+  const rect = e.target.getBoundingClientRect();
+  const x = e.clientX - rect.left, y = e.clientY - rect.top;
+  let minD = 24, found = null;
+  leftCoordCache.forEach(({ s, x: px, y: py }) => {
+    const d = Math.sqrt((x - px)**2 + (y - py)**2);
+    if (d < minD) { minD = d; found = s; }
+  });
+  if (found) showTooltip(e, found); else hideTooltip();
+});
+document.getElementById('cLeft').addEventListener('mouseleave', hideTooltip);
+</script>
+<div id="fibemate-footer" style="position:fixed;bottom:0;left:0;right:0;height:22px;background:rgba(8,8,13,.92);border-top:1px solid rgba(239,68,68,.15);display:flex;align-items:center;justify-content:center;gap:16px;font-size:10px;color:rgba(255,255,255,.35);z-index:9999;font-family:system-ui,sans-serif;backdrop-filter:blur(4px);"><span style="color:#ef4444;font-weight:600;">⚠ 实验性研究组件 · 不用于生产环境</span><span>·</span><span>FIBEMATE v3.3.0</span><span>·</span><span>2026-08-12</span></div>
+</body>
+</html>

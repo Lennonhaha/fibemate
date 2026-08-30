@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>confuse ⇄ deconfuse 对称 3D · LG v2.3 可逆输运沙漏</title>
+<style>
+  :root { --bg:#060c16; --text:#c9d6e8; --dim:#6b7f99; --gold:#d4af37; --cyan:#00d4d4; --pass:#2ecc71; --fail:#e74c3c; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; padding:20px; line-height:1.6; overflow-x:hidden; }
+  h1 { font-size:1.4rem; color:#eaf2ff; }
+  h1 .tag { font-size:0.68rem; background:#1a2c44; color:var(--gold); padding:2px 8px; border-radius:12px; margin-left:8px; vertical-align:middle; }
+  .subtitle { color:var(--dim); font-size:0.83rem; margin-top:4px; }
+  .disclaimer { background:#0d1a2c; border:1px solid #1c2f4a; border-radius:8px; padding:10px 14px; margin:12px 0; font-size:0.78rem; color:#a8b8cc; }
+  .disclaimer strong { color:var(--gold); }
+  #container { position:relative; width:100%; height:560px; background:#080f1c; border:1px solid #1c2f4a; border-radius:10px; overflow:hidden; }
+  #hud { position:absolute; top:12px; left:12px; background:rgba(6,12,22,0.85); border:1px solid #1c2f4a; border-radius:8px; padding:10px 14px; font-size:0.75rem; pointer-events:none; }
+  #hud .v { color:var(--cyan); font-weight:600; }
+  .controls { display:flex; gap:16px; align-items:center; margin:12px 0; flex-wrap:wrap; }
+  .controls label { font-size:0.8rem; color:var(--dim); }
+  input[type=range] { width:180px; }
+  .controls .val { color:var(--cyan); font-weight:600; min-width:32px; }
+  .legend { display:flex; gap:18px; flex-wrap:wrap; font-size:0.76rem; color:var(--dim); margin-top:10px; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .foot { color:var(--dim); font-size:0.72rem; margin-top:14px; }
+</style>
+</head>
+<body>
+  <h1>confuse ⇄ deconfuse 对称 3D <span class="tag">experimental / default-off</span></h1>
+  <p class="subtitle">LG v2.3 可逆变换 · 三维沙漏结构 · 支流 ⇄ 三角洲（河流网络哲学类比）</p>
+
+  <div class="disclaimer">
+    ⚠️ <strong>诚实声明</strong>：本页面是<strong>哲学类比的可视化隐喻</strong>，非技术方案、不构成任何安全声称。
+    「支流 ⇄ 三角洲」借自河流网络（Hack 定律 / 最优输运）的镜像对称，此处仅作为<strong>可视化隐喻</strong>——
+    将 confuse（混淆，明文 → 收缩到核心）与 deconfuse（解混淆，核心 → 还原明文）呈现为镜像对称的「沙漏」。
+    LG 的 confuse/deconfuse 对应 <code>experimental/vwz-lg/lg-v2.3/src/pipeline.rs</code> 的
+    <code>obfuscate</code>/<code>deobfuscate</code>。演示用确定性置换模拟，<strong>非</strong>真实 WASM 调用。
+    本页面<strong>不</strong>主张河流网络与 LG 混淆结构存在数学等价关系。
+  </div>
+
+  <div class="controls">
+    <label>depth 层数</label>
+    <input type="range" id="depth" min="1" max="7" value="7">
+    <span class="val" id="depthVal">7</span>
+    <label>字节数 N</label>
+    <input type="range" id="nbytes" min="8" max="48" value="24">
+    <span class="val" id="nbytesVal">24</span>
+  </div>
+
+  <div id="container">
+    <div id="hud">
+      拖拽旋转 · 滚轮缩放<br>
+      <span class="v" id="roundtripInfo">—</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--pass)"></span>输入（明文，顶部）</span>
+    <span><span class="dot" style="background:var(--cyan)"></span>输出（还原，底部，镜像）</span>
+    <span><span class="dot" style="background:var(--gold)"></span>Wreath 核心（中间旋转环）</span>
+    <span><span class="dot" style="background:#5577aa"></span>映射路径（输运线）</span>
+  </div>
+
+  <div class="foot">
+    哲学类比：河流网络「支流 ⇄ 三角洲」镜像对称 → confuse/deconfuse 可逆变换。
+    演示用确定性置换模拟（非真实 WASM）。非技术方案，不构成安全声称。LG 是混淆引擎，不提供密码学安全保证。
+  </div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from './vendor/three/examples/jsm/controls/OrbitControls.js';
+
+(function () {
+  // XorShift64（确定性演示）
+  function xorshift64(seed) {
+    let s = BigInt(seed) || 1n;
+    return function () {
+      s ^= s << 13n; s &= 0xFFFFFFFFFFFFFFFFn;
+      s ^= s >> 7n;
+      s ^= s << 17n; s &= 0xFFFFFFFFFFFFFFFFn;
+      return s;
+    };
+  }
+  let seed = 0x11A7E0F05EED11A7n;
+
+  function confuse(bytes, depth) {
+    const rng = xorshift64(seed);
+    const out = bytes.slice();
+    for (let d = 0; d < depth; d++) {
+      for (let i = out.length - 1; i >= 1; i--) {
+        const j = Number(rng() % BigInt(i + 1));
+        [out[i], out[j]] = [out[j], out[i]];
+      }
+      for (let i = 0; i < out.length; i++) out[i] = (out[i] ^ Number(rng() & 0xFFn)) & 0xFF;
+    }
+    return out;
+  }
+  function deconfuse(bytes, depth) {
+    const rng = xorshift64(seed);
+    const swaps = [], masks = [];
+    for (let d = 0; d < depth; d++) {
+      const sw = [];
+      for (let i = bytes.length - 1; i >= 1; i--) sw.push([i, Number(rng() % BigInt(i + 1))]);
+      swaps.push(sw);
+      const ms = [];
+      for (let i = 0; i < bytes.length; i++) ms.push(Number(rng() & 0xFFn));
+      masks.push(ms);
+    }
+    let out = bytes.slice();
+    for (let d = depth - 1; d >= 0; d--) {
+      for (let i = 0; i < out.length; i++) out[i] = (out[i] ^ masks[d][i]) & 0xFF;
+      for (let k = swaps[d].length - 1; k >= 0; k--) {
+        const [i, j] = swaps[d][k];
+        [out[i], out[j]] = [out[j], out[i]];
+      }
+    }
+    return out;
+  }
+
+  const container = document.getElementById("container");
+  const W = container.clientWidth, H = container.clientHeight;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060c16);
+  scene.fog = new THREE.Fog(0x060c16, 20, 60);
+
+  const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 200);
+  camera.position.set(0, 4, 20);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 0);
+  controls.enableDamping = true;
+
+  scene.add(new THREE.AmbientLight(0x334455, 1.5));
+  const d1 = new THREE.DirectionalLight(0xffffff, 1.6); d1.position.set(5, 15, 8); scene.add(d1);
+  const d2 = new THREE.DirectionalLight(0x4488cc, 0.9); d2.position.set(-6, -4, -8); scene.add(d2);
+
+  let sceneGroup = new THREE.Group();
+  scene.add(sceneGroup);
+
+  function build() {
+    // 清除旧
+    scene.remove(sceneGroup);
+    sceneGroup = new THREE.Group();
+    scene.add(sceneGroup);
+
+    const depth = parseInt(document.getElementById("depth").value, 10);
+    const n = parseInt(document.getElementById("nbytes").value, 10);
+    document.getElementById("depthVal").textContent = depth;
+    document.getElementById("nbytesVal").textContent = n;
+
+    const plain = Array.from({ length: n }, (_, i) => (i * 37 + 11) & 0xFF);
+    const confused = confuse(plain, depth);
+    const recovered = deconfuse(confused, depth);
+    const ok = plain.every((v, i) => v === recovered[i]);
+    document.getElementById("roundtripInfo").textContent = ok
+      ? `✓ roundtrip 100% 还原（depth=${depth}, N=${n}）`
+      : `✗ roundtrip 失败`;
+
+    const topY = 7, botY = -7, coreY = 0;
+    const topR = 4.5, botR = 4.5, coreR = 1.2;
+
+    // 输入点云（顶部，绿色，圆环分布）
+    const inGeo = new THREE.BufferGeometry();
+    const inPos = [];
+    plain.forEach((v, i) => {
+      const ang = (i / n) * Math.PI * 2;
+      inPos.push(Math.cos(ang) * topR, topY, Math.sin(ang) * topR);
+    });
+    inGeo.setAttribute("position", new THREE.Float32BufferAttribute(inPos, 3));
+    const inPoints = new THREE.Points(inGeo, new THREE.PointsMaterial({ color: 0x2ecc71, size: 0.35 }));
+    sceneGroup.add(inPoints);
+
+    // 输出点云（底部，青色，镜像）
+    const outGeo = new THREE.BufferGeometry();
+    const outPos = [];
+    recovered.forEach((v, i) => {
+      const ang = (i / n) * Math.PI * 2;
+      outPos.push(Math.cos(ang) * botR, botY, Math.sin(ang) * botR);
+    });
+    outGeo.setAttribute("position", new THREE.Float32BufferAttribute(outPos, 3));
+    const outPoints = new THREE.Points(outGeo, new THREE.PointsMaterial({ color: 0x00d4d4, size: 0.35 }));
+    sceneGroup.add(outPoints);
+
+    // Wreath 核心（中间旋转环 × depth 层）
+    for (let d = 0; d < depth; d++) {
+      const r = coreR + d * 0.35;
+      const ring = new THREE.Mesh(
+        new THREE.TorusGeometry(r, 0.07, 8, 48),
+        new THREE.MeshStandardMaterial({ color: 0xd4af37, roughness: 0.3, metalness: 0.6, emissive: 0xd4af37, emissiveIntensity: 0.35 })
+      );
+      ring.position.y = coreY + (d - (depth - 1) / 2) * 0.6;
+      ring.rotation.x = Math.PI / 2;
+      ring.userData = { rotSpeed: 0.002 + d * 0.0005, dir: d % 2 === 0 ? 1 : -1 };
+      sceneGroup.add(ring);
+    }
+
+    // 映射路径（输运线：输入 → 核心 → 输出）
+    const lineMat = new THREE.LineBasicMaterial({ color: 0x5577aa, transparent: true, opacity: 0.35 });
+    plain.forEach((v, i) => {
+      const ang = (i / n) * Math.PI * 2;
+      const sx = Math.cos(ang) * topR, sz = Math.sin(ang) * topR;
+      // 混淆后位置（确定性映射到核心附近）
+      const cang = ((i * 7 + 3) % n) / n * Math.PI * 2;
+      const cx = Math.cos(cang) * (coreR + depth * 0.35), cz = Math.sin(cang) * (coreR + depth * 0.35);
+      const pts = [
+        new THREE.Vector3(sx, topY, sz),
+        new THREE.Vector3(cx, coreY, cz),
+        new THREE.Vector3(sx, botY, sz) // 还原回原位（可逆性）
+      ];
+      const curve = new THREE.CatmullRomCurve3(pts);
+      const geo = new THREE.BufferGeometry().setFromPoints(curve.getPoints(30));
+      sceneGroup.add(new THREE.Line(geo, lineMat));
+    });
+
+    // 沙漏外壳（两个圆锥，透明）
+    const coneGeo = new THREE.ConeGeometry(topR, 5, 32, 1, true);
+    const topCone = new THREE.Mesh(coneGeo, new THREE.MeshBasicMaterial({ color: 0x2ecc71, transparent: true, opacity: 0.06, side: THREE.DoubleSide }));
+    topCone.position.y = topY - 2.5;
+    topCone.rotation.x = Math.PI; // 尖端朝下
+    sceneGroup.add(topCone);
+    const botCone = new THREE.Mesh(coneGeo.clone(), new THREE.MeshBasicMaterial({ color: 0x00d4d4, transparent: true, opacity: 0.06, side: THREE.DoubleSide }));
+    botCone.position.y = botY + 2.5;
+    botCone.rotation.x = 0; // 尖端朝上
+    sceneGroup.add(botCone);
+
+    // 标签
+    function makeLabel(text, color, y) {
+      const canvas = document.createElement("canvas");
+      canvas.width = 256; canvas.height = 64;
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#" + color.toString(16).padStart(6, "0");
+      ctx.font = "bold 26px sans-serif";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(text, 128, 32);
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), depthTest: false }));
+      sp.scale.set(4.5, 1.1, 1);
+      sp.position.set(0, y, 0);
+      return sp;
+    }
+    sceneGroup.add(makeLabel("输入 (plain)", 0x2ecc71, topY + 1.8));
+    sceneGroup.add(makeLabel("Wreath 核心", 0xd4af37, coreY));
+    sceneGroup.add(makeLabel("输出 (deconfuse)", 0x00d4d4, botY - 1.8));
+  }
+
+  // 星空
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = [];
+  for (let i = 0; i < 400; i++) starPos.push((Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60, (Math.random() - 0.5) * 60);
+  starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starPos, 3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0x88aacc, size: 0.07, transparent: true, opacity: 0.5 })));
+
+  build();
+  document.getElementById("depth").addEventListener("input", build);
+  document.getElementById("nbytes").addEventListener("input", build);
+
+  function render() {
+    // 旋转 Wreath 环
+    sceneGroup.children.forEach(c => {
+      if (c.userData && c.userData.rotSpeed) c.rotation.z += c.userData.rotSpeed * c.userData.dir;
+    });
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(render);
+  }
+  render();
+
+  window.addEventListener("resize", () => {
+    const w = container.clientWidth, h = container.clientHeight;
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+</script>
+</body>
+</html>

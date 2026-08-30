@@ -1,0 +1,14 @@
+{
+  "date": "2026-07-10",
+  "tsr": "lg-060",
+  "description": "VWZ security reduction proof complete (OW-VWZ <= VMQ-SPARSE + EUF-CMA via FDH) + FPGA HW closure + site restore v3.3-preview",
+  "files": [
+    "docs/vwz_security_reduction.tex",
+    "docs/paper_vwz_experiments.tex",
+    "docs/paper_main.pdf",
+    "scripts/vwz_reduction_verify.py",
+    "www/index.html",
+    "www/docs/fpga-report.html",
+    "README.md"
+  ]
+}

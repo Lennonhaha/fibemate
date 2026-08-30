@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TVLA「圆度」仪表盘 3D · SM2 侧信道泄露能量景观</title>
+<style>
+  :root { --bg:#060c16; --text:#c9d6e8; --dim:#6b7f99; --gold:#d4af37; --cyan:#00d4d4; --pass:#2ecc71; --fail:#e74c3c; --warn:#f39c12; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; padding:20px; line-height:1.6; overflow-x:hidden; }
+  h1 { font-size:1.4rem; color:#eaf2ff; }
+  h1 .tag { font-size:0.68rem; background:#1a2c44; color:var(--gold); padding:2px 8px; border-radius:12px; margin-left:8px; vertical-align:middle; }
+  .subtitle { color:var(--dim); font-size:0.83rem; margin-top:4px; }
+  .disclaimer { background:#0d1a2c; border:1px solid #1c2f4a; border-radius:8px; padding:10px 14px; margin:12px 0; font-size:0.78rem; color:#a8b8cc; }
+  .disclaimer strong { color:var(--gold); }
+  #container { position:relative; width:100%; height:520px; background:#080f1c; border:1px solid #1c2f4a; border-radius:10px; overflow:hidden; }
+  #hud { position:absolute; top:12px; left:12px; background:rgba(6,12,22,0.85); border:1px solid #1c2f4a; border-radius:8px; padding:10px 14px; font-size:0.75rem; color:var(--text); pointer-events:none; }
+  #hud .v { color:var(--cyan); font-weight:600; }
+  .legend { display:flex; gap:18px; flex-wrap:wrap; font-size:0.76rem; color:var(--dim); margin-top:10px; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .foot { color:var(--dim); font-size:0.72rem; margin-top:14px; }
+  table { width:100%; border-collapse:collapse; font-size:0.78rem; margin-top:14px; }
+  th,td { text-align:left; padding:6px 9px; border-bottom:1px solid #1c2f4a; }
+  th { color:var(--dim); font-weight:500; }
+  .pass { color:var(--pass); font-weight:600; } .fail { color:var(--fail); font-weight:600; } .warn { color:var(--warn); font-weight:600; }
+</style>
+</head>
+<body>
+  <h1>TVLA「圆度」仪表盘 · 3D <span class="tag">experimental / default-off</span></h1>
+  <p class="subtitle">SM2 侧信道泄露能量景观 · t-statistic 偏离阈值圆的程度 · Loewner「圆度」哲学类比</p>
+
+  <div class="disclaimer">
+    ⚠️ <strong>诚实声明</strong>：本页面是<strong>哲学类比的可视化隐喻</strong>，非技术方案、不构成任何安全声称。
+    「圆度」借自 Loewner 能量（曲线偏离标准圆的连续能量），此处仅作为<strong>可视化隐喻</strong>——
+    将 TVLA t-statistic 偏离阈值（|t|=4.5）的程度，类比为「曲线偏离标准圆的能量」。
+    数据来自 FIBEMATE SM2 实测 TVLA（<code>docs/SM2_TVLA_STATUS.md</code>）：v1.2 Scalar Masking 仍 |t|&gt;4.5（FAIL），
+    v1.3 Montgomery Ladder 后 |t|&lt;1（PASS，回归「圆」）。本页面<strong>不</strong>主张 Loewner 能量与 t-statistic 存在数学等价。
+  </div>
+
+  <div id="container">
+    <div id="hud">
+      拖拽旋转 · 滚轮缩放 · 悬停查看数值<br>
+      <span class="v" id="hoverInfo">—</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <span><span class="dot" style="background:var(--fail)"></span>v1.2 修复前（|t|&gt;4.5 FAIL）</span>
+    <span><span class="dot" style="background:var(--pass)"></span>v1.3 修复后（|t|&lt;1 PASS）</span>
+    <span><span class="dot" style="background:#e74c3c;border-radius:0"></span>阈值面 |t|=4.5</span>
+  </div>
+
+  <div class="card">
+    <table>
+      <thead><tr><th>阶段</th><th>verify |t|</th><th>decrypt |t|</th><th>结论</th></tr></thead>
+      <tbody>
+        <tr><td>v3 裸实现</td><td>7.42</td><td>8.22</td><td class="fail">FAIL</td></tr>
+        <tr><td>v1.2 Scalar Masking</td><td>1.19</td><td>2.06</td><td class="warn">部分（仍 &gt;4.5）</td></tr>
+        <tr><td>v1.3 Montgomery Ladder</td><td>0.10</td><td>0.16</td><td class="pass">PASS</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="foot">
+    数据源：<code>docs/SM2_TVLA_STATUS.md</code>（SM2 BigInt，N=5000，阈值 |t|=4.5）。
+    哲学类比：Loewner 能量（圆度）→ t-statistic 偏离阈值圆的程度。非技术方案，不构成安全声称。
+    Three.js 经 importmap 加载（ES module），实验分支演示用。
+  </div>
+
+<script type="importmap">
+{ "imports": { "three": "./vendor/three/three.module.js" } }
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from './vendor/three/examples/jsm/controls/OrbitControls.js';
+
+(function () {
+  // 真实 SM2 TVLA 数据（演进：裸 → v1.2 → v1.3）
+  // 每阶段按采样点展开的 t-statistic 序列（用真实稳态值 + 合理过渡模拟）
+  const THRESHOLD = 4.5;
+  const versions = [
+    { label: "v3 裸实现",    v: 7.42, d: 8.22, color: 0xe74c3c },
+    { label: "v1.2 Scalar Masking", v: 1.19, d: 2.06, color: 0xf39c12 },
+    { label: "v1.3 Montgomery Ladder", v: 0.10, d: 0.16, color: 0x2ecc71 }
+  ];
+
+  const container = document.getElementById("container");
+  const W = container.clientWidth, H = container.clientHeight;
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x060c16);
+  scene.fog = new THREE.Fog(0x060c16, 30, 90);
+
+  const camera = new THREE.PerspectiveCamera(50, W / H, 0.1, 200);
+  camera.position.set(14, 10, 18);
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  container.appendChild(renderer.domElement);
+
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 0);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+
+  // 光照
+  scene.add(new THREE.AmbientLight(0x334455, 1.6));
+  const d1 = new THREE.DirectionalLight(0xfff2cc, 1.8); d1.position.set(10, 20, 10); scene.add(d1);
+  const d2 = new THREE.DirectionalLight(0x4488cc, 1.0); d2.position.set(-10, -5, -10); scene.add(d2);
+
+  // 阈值圆环（|t|=4.5 平面，透明）
+  const thresholdRing = new THREE.Mesh(
+    new THREE.TorusGeometry(THRESHOLD, 0.06, 16, 96),
+    new THREE.MeshBasicMaterial({ color: 0xe74c3c, transparent: true, opacity: 0.7 })
+  );
+  thresholdRing.rotation.x = Math.PI / 2;
+  scene.add(thresholdRing);
+
+  // 阈值柱面（示意 FAIL 区）
+  const threshCyl = new THREE.Mesh(
+    new THREE.CylinderGeometry(THRESHOLD, THRESHOLD, 0.05, 64, 1, true),
+    new THREE.MeshBasicMaterial({ color: 0xe74c3c, transparent: true, opacity: 0.12, side: THREE.DoubleSide })
+  );
+  threshCyl.rotation.x = Math.PI / 2;
+  scene.add(threshCyl);
+
+  // 轴
+  function axis(from, to, color) {
+    const g = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(...from), new THREE.Vector3(...to)]);
+    return new THREE.Line(g, new THREE.LineBasicMaterial({ color }));
+  }
+  scene.add(axis([0, 0, 0], [9, 0, 0], 0x555577)); // x
+  scene.add(axis([0, 0, 0], [0, 9, 0], 0x555577)); // y (t)
+  scene.add(axis([0, 0, 0], [0, 0, 4], 0x555577)); // z (版本)
+
+  // 三阶段柱状图 + 能量景观面
+  const samples = 40;
+  const zStep = 3.2;
+  const bars = []; // 用于 hover
+  const raycaster = new THREE.Raycaster();
+  const mouse = new THREE.Vector2();
+
+  versions.forEach((ver, vi) => {
+    const z = (vi - 1) * zStep; // v1.2 在中间
+    // 柱状图（沿 x 采样点，y 为 t-statistic 模拟序列）
+    const points = [];
+    for (let s = 0; s < samples; s++) {
+      const x = (s / (samples - 1) - 0.5) * 8;
+      // 前段震荡后收敛到稳态值
+      const noise = Math.sin(s * 0.7 + vi) * 1.2 * Math.exp(-s / 8);
+      const t = ver.v + noise;
+      const y = Math.max(t, 0);
+      const h = y * 0.9;
+      const bar = new THREE.Mesh(
+        new THREE.BoxGeometry(0.16, h, 0.14),
+        new THREE.MeshStandardMaterial({ color: ver.color, roughness: 0.4, metalness: 0.2, emissive: ver.color, emissiveIntensity: 0.25 })
+      );
+      bar.position.set(x, h / 2, z);
+      bar.userData = { ver: ver.label, s, t: t.toFixed(2) };
+      bars.push(bar);
+      scene.add(bar);
+      points.push(new THREE.Vector3(x, y * 0.9, z));
+    }
+    // 能量景观面（连接采样点）
+    const line = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints(points),
+      new THREE.LineBasicMaterial({ color: ver.color, transparent: true, opacity: 0.6 })
+    );
+    scene.add(line);
+  });
+
+  // 阈值"能量面"：跨越三版本的水平透明面
+  const threshPlane = new THREE.Mesh(
+    new THREE.PlaneGeometry(9, 6.5),
+    new THREE.MeshBasicMaterial({ color: 0xe74c3c, transparent: true, opacity: 0.08, side: THREE.DoubleSide })
+  );
+  threshPlane.rotation.x = Math.PI / 2;
+  threshPlane.position.y = THRESHOLD * 0.9;
+  scene.add(threshPlane);
+
+  // 版本标签（用 sprite）
+  function makeLabel(text, color) {
+    const canvas = document.createElement("canvas");
+    canvas.width = 256; canvas.height = 64;
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "#" + color.toString(16).padStart(6, "0");
+    ctx.font = "bold 28px sans-serif";
+    ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.fillText(text, 128, 32);
+    const tex = new THREE.CanvasTexture(canvas);
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
+    sp.scale.set(4, 1, 1);
+    return sp;
+  }
+  versions.forEach((ver, vi) => {
+    const sp = makeLabel(ver.label, ver.color);
+    sp.position.set(0, 9.2, (vi - 1) * zStep);
+    scene.add(sp);
+  });
+
+  // 星空背景（程序化点）
+  const starGeo = new THREE.BufferGeometry();
+  const starPos = [];
+  for (let i = 0; i < 500; i++) {
+    starPos.push((Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 80);
+  }
+  starGeo.setAttribute("position", new THREE.Float32BufferAttribute(starPos, 3));
+  const stars = new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0x88aacc, size: 0.08, transparent: true, opacity: 0.6 }));
+  scene.add(stars);
+
+  // hover
+  const hoverInfo = document.getElementById("hoverInfo");
+  container.addEventListener("mousemove", (e) => {
+    const rect = container.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  });
+
+  function render() {
+    raycaster.setFromCamera(mouse, camera);
+    const hits = raycaster.intersectObjects(bars);
+    if (hits.length) {
+      const u = hits[0].object.userData;
+      hoverInfo.textContent = `${u.ver} · 采样点 ${u.s} · |t|=${u.t}`;
+    } else {
+      hoverInfo.textContent = "—";
+    }
+    controls.update();
+    renderer.render(scene, camera);
+    requestAnimationFrame(render);
+  }
+  render();
+
+  window.addEventListener("resize", () => {
+    const w = container.clientWidth, h = container.clientHeight;
+    camera.aspect = w / h; camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+})();
+</script>
+</body>
+</html>

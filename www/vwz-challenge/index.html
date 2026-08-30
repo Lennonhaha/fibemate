@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VWZ Cryptanalysis Challenge — FIBEMATE</title>
+<style>
+  :root { --bg: #0a0a0f; --card: #13131a; --border: #1e1e2e; --text: #cdd6f4;
+          --dim: #6c7086; --accent: #89b4fa; --green: #a6e3a1; --red: #f38ba8;
+          --gold: #f9e2af; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font:16px/1.6 'Segoe UI',system-ui,sans-serif; }
+  .wrap { max-width:960px; margin:0 auto; padding:60px 20px; }
+
+  h1 { font-size:2.2rem; margin-bottom:4px; background:linear-gradient(135deg, var(--accent), var(--green));
+       -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .subtitle { color:var(--dim); font-size:1.05rem; margin-bottom:32px; }
+
+  pre { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:12px 16px;
+        overflow-x:auto; font-size:.85rem; margin:8px 0; }
+
+  section { background:var(--card); border:1px solid var(--border); border-radius:10px;
+            padding:24px 28px; margin-bottom:24px; }
+  h2 { color:var(--accent); font-size:1.25rem; margin-bottom:12px; border-bottom:1px solid var(--border);
+       padding-bottom:8px; }
+  h3 { color:#f5c2e7; font-size:1rem; margin:16px 0 6px; }
+
+  .params { display:grid; grid-template-columns:repeat(auto-fit, minmax(180px,1fr)); gap:12px; }
+  .parambox { background:#0f0f18; border:1px solid var(--border); border-radius:8px;
+              padding:14px; text-align:center; }
+  .parambox .label { font-size:.75rem; color:var(--dim); text-transform:uppercase; letter-spacing:.06em; }
+  .parambox .val { font-size:1.5rem; font-weight:700; margin-top:2px; }
+  .parambox .unit { font-size:.8rem; color:var(--dim); }
+
+  table { width:100%; border-collapse:collapse; margin:12px 0; font-size:.9rem; }
+  th { text-align:left; color:var(--dim); font-weight:600; padding:6px 10px;
+       border-bottom:2px solid var(--border); }
+  td { padding:6px 10px; border-bottom:1px solid #1a1a25; }
+  .highlight { color:var(--green); font-weight:600; }
+
+  .badge { display:inline-block; padding:3px 10px; border-radius:4px; font-size:.78rem; font-weight:600; }
+  .badge-ok { background:#1a3a1a; color:#a6e3a1; }
+  .badge-warn { background:#3a2a0a; color:#f9e2af; }
+  .badge-red { background:#3a1a1a; color:#f38ba8; }
+
+  .step { display:flex; align-items:flex-start; gap:16px; padding:10px 0; }
+  .step-num { background:var(--accent); color:var(--bg); min-width:32px; height:32px;
+              border-radius:50%; display:flex; align-items:center; justify-content:center;
+              font-weight:700; font-size:.9rem; flex-shrink:0; }
+  .step-title { font-weight:700; margin-bottom:2px; }
+
+  .quote { border-left:3px solid var(--accent); padding:8px 16px; margin:12px 0;
+           color:var(--dim); font-style:italic; font-size:.93rem; }
+
+  .status-bar { display:flex; gap:20px; flex-wrap:wrap; margin-top:8px; }
+  .status-item { display:flex; align-items:center; gap:6px; font-size:.85rem; }
+  .dot { width:8px; height:8px; border-radius:50%; }
+  .dot-green { background:var(--green); }
+  .dot-gold { background:var(--gold); }
+
+  a { color:var(--accent); text-decoration:none; }
+  a:hover { text-decoration:underline; }
+
+  @media(max-width:640px) { .wrap{padding:30px 14px;} h1{font-size:1.6rem;} }
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>VWZ Cryptanalysis Challenge</h1>
+<p class="subtitle">Public bounty for breaking the Vandermonde-Wronskian-Zariski tensor trapdoor</p>
+
+<section>
+  <h2>What is VWZ?</h2>
+  <p>VWZ is a post-quantum signature scheme (ePrint 2025/624, Narayanan / SandboxAQ) based on a novel
+  hardness assumption: the pseudorandomness of <strong>Vandermonde exponential-product tensors</strong> under
+  basis twist. Unlike lattice-based (ML-DSA) or hash-based (SLH-DSA) signatures, VWZ derives its security
+  from the difficulty of distinguishing specially structured tensors from truly random ones.</p>
+
+  <div class="status-bar" style="margin-top:14px;">
+    <div class="status-item"><span class="dot dot-green"></span> C implementation: 43/43 tests PASS</div>
+    <div class="status-item"><span class="dot dot-green"></span> Cross-verified: Python ↔ C</div>
+    <div class="status-item"><span class="dot dot-green"></span> KeyGen: 7.1 µs | Sign: 2.3 µs | Verify: 0.6 µs</div>
+  </div>
+</section>
+
+<section>
+  <h2>Parameters Under Challenge</h2>
+  <div class="params">
+    <div class="parambox">
+      <div class="label">Level 1 — Small</div>
+      <div class="val">k=4</div>
+      <div class="unit">q=65537 | 40B sig | 900B pk</div>
+    </div>
+    <div class="parambox">
+      <div class="label">Level 2 — Medium</div>
+      <div class="val">k=8</div>
+      <div class="unit">q=65537 | 72B sig | 5.8KB pk</div>
+    </div>
+    <div class="parambox">
+      <div class="label">Level 3 — Large</div>
+      <div class="val">k=16</div>
+      <div class="unit">q=65537 | 136B sig | 44KB pk</div>
+    </div>
+    <div class="parambox">
+      <div class="label">Level 4 — Production</div>
+      <div class="val">k=4</div>
+      <div class="unit">q≈2⁶⁴ | 160B sig | 3.5KB pk</div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Attack Targets</h2>
+  <table>
+    <tr>
+      <th>#</th><th>Target</th><th>Prize Tier</th><th>Status</th>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td><strong>Key Recovery</strong> — Recover φ or X from T<sub>pub</sub> only</td>
+      <td>🏆 Tier 1</td>
+      <td><span class="badge badge-warn">OPEN</span></td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td><strong>Universal Forgery</strong> — Sign arbitrary messages given T<sub>pub</sub></td>
+      <td>🏆 Tier 1</td>
+      <td><span class="badge badge-warn">OPEN</span></td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td><strong>Existential Forgery</strong> — Produce one valid (m, σ) pair not in training set</td>
+      <td>🥈 Tier 2</td>
+      <td><span class="badge badge-warn">OPEN</span></td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td><strong>Algebraic Attack</strong> — Solve f<sub>T</sub>(w₂,w₃)=t for specific (T, t)</td>
+      <td>🥈 Tier 2</td>
+      <td><span class="badge badge-warn">OPEN</span></td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td><strong>Distinguisher</strong> — Distinguish VWZ orbit from random tensor (advantage > 2⁻³⁰)</td>
+      <td>🥉 Tier 3</td>
+      <td><span class="badge badge-warn">OPEN</span></td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>How to Participate</h2>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div>
+      <div class="step-title">Download Challenge Dataset</div>
+      <p>Each dataset contains: a public key T<sub>pub</sub> (JSON), 100 valid (message, signature) pairs for training,
+      and verification scripts (Python + C).</p>
+      <pre><a href="/vwz-challenge/datasets/vwz-challenge-k4.zip">vwz-challenge-k4.zip</a> (k=4, q=65537) — 60 KB</pre>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div>
+      <div class="step-title">Develop Your Attack</div>
+      <p>Use any technique: linear algebra, Gröbner bases, lattice reduction, SAT solvers, ML, or novel methods.
+      All approaches are welcome.</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div>
+      <div class="step-title">Submit via GitHub or Email</div>
+      <p>Send your solution (code + writeup) as a <a href="https://github.com/Lennonhaha/fibemate/pulls">GitHub PR</a>
+      or email to <a href="mailto:research@fibemate.net">research@fibemate.net</a> with subject "VWZ Challenge Submission".</p>
+    </div>
+  </div>
+  <div class="step">
+    <div class="step-num">4</div>
+    <div>
+      <div class="step-title">Verification</div>
+      <p>All submissions are verified automatically against the reference C implementation.
+      Successful attacks are reviewed manually and posted to the leaderboard within 48 hours.</p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Leaderboard</h2>
+  <table>
+    <tr><th>Rank</th><th>Researcher / Team</th><th>Target</th><th>Parameters</th><th>Method</th><th>Date</th></tr>
+    <tr><td colspan="6" style="text-align:center; color:var(--dim); padding:20px;">
+      No successful attacks reported yet. Be the first.</td></tr>
+  </table>
+</section>
+
+<section>
+  <h2>Known Attack Analysis</h2>
+  <p>We have pre-analyzed the following attack frameworks against VWZ. Successful challenges
+  should either implement one of these more efficiently than estimated, or introduce a novel approach.</p>
+
+  <table>
+    <tr><th>Attack</th><th>Complexity</th><th>Status</th><th>Reference</th></tr>
+    <tr>
+      <td>Hull Slice-Rank</td>
+      <td>Õ(q<sup>k/2</sup>) — k=4→2³², k=8→2⁶⁴</td>
+      <td><span class="badge badge-warn">Rank-1 exposed; recovery still expensive</span></td>
+      <td>ePrint 2025/596</td>
+    </tr>
+    <tr>
+      <td>Triangular TI</td>
+      <td>~1/q per trial → infeasible for q≥2⁶⁴</td>
+      <td><span class="badge badge-ok">Not a threat</span></td>
+      <td>ePrint 2024/1396</td>
+    </tr>
+    <tr>
+      <td>Gröbner Basis (F4)</td>
+      <td>k=3: seconds / k=4: >7h (did not finish)</td>
+      <td><span class="badge badge-warn">Approaches viability at k=4</span></td>
+      <td>SageMath 10.4 experiment</td>
+    </tr>
+    <tr>
+      <td>Existential Forgery</td>
+      <td>P ≈ C(2k+1,k+1)/q<sup>k</sup> → 2<sup>57</sup> for k=4,q=65537</td>
+      <td><span class="badge badge-ok">~57 bits; infeasible for q≥2⁶⁴</span></td>
+      <td>Hamming sphere bound</td>
+    </tr>
+  </table>
+</section>
+
+<section>
+  <h2>Resources</h2>
+  <ul style="list-style:none;display:flex;flex-wrap:wrap;gap:12px;">
+    <li><a href="https://eprint.iacr.org/2025/624">📄 ePrint 2025/624</a> — Original VWZ paper (Narayanan)</li>
+    <li><a href="https://github.com/Lennonhaha/fibemate/tree/main/research/vwz-lock">💻 Source Code</a> — C + Python reference implementation</li>
+    <li><a href="https://eprint.iacr.org/2025/596">🔬 ePrint 2025/596</a> — Hull attack (Couvreur & Levrat)</li>
+    <li><a href="https://eprint.iacr.org/2024/1396">🔬 ePrint 2024/1396</a> — Triangular attack (Ran & Samardjiska)</li>
+  </ul>
+</section>
+
+<p style="text-align:center;color:var(--dim);margin-top:40px;font-size:.85rem;">
+  FIBEMATE Research Lab · <a href="https://fibemate.net">fibemate.net</a> · Challenge launched 2026-07-17
+</p>
+</div>
+</body>
+</html>

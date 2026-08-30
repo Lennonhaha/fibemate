@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LG v2.2 · 3D 张量场 — 7 层 Kronecker 矩阵可视化</title>
+<style>
+  :root { --bg:#0a0a14; --text:#c8d6e5; --accent:#ff6b6b; --active:#ff9f43; --identity:#48dbfb; --panel:#12122a; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--text); font-family:system-ui,sans-serif; overflow:hidden; height:100vh; }
+  canvas { display:block; }
+  #panel {
+    position:fixed; top:16px; left:16px; background:var(--panel); border-radius:12px;
+    padding:16px 20px; z-index:10; max-width:300px; min-width:260px; box-shadow:0 4px 24px rgba(0,0,0,.5);
+    border:1px solid rgba(255,255,255,.08);
+  }
+  #panel h1 { font-size:17px; margin-bottom:2px; color:var(--accent); }
+  #panel .sub { font-size:11px; color:rgba(255,255,255,.4); margin-bottom:10px; line-height:1.4; }
+  .stat { display:flex; justify-content:space-between; font-size:12px; margin:3px 0; }
+  .stat .lbl { color:rgba(255,255,255,.5); }
+  .stat .val { color:var(--active); font-weight:600; font-variant-numeric:tabular-nums; }
+  hr { border-color:rgba(255,255,255,.06); margin:10px 0; }
+  .sec-label { font-size:10px; color:rgba(255,255,255,.35); margin-bottom:4px; text-transform:uppercase; letter-spacing:1px; }
+  .layer-btn { 
+    display:block; width:100%; padding:6px 10px; margin:2px 0; border:none; border-radius:6px;
+    background:rgba(255,255,255,.04); color:var(--text); font-size:11px; cursor:pointer;
+    text-align:left; transition:all .2s;
+  }
+  .layer-btn:hover { background:rgba(255,255,255,.1); }
+  .layer-btn.on { background:var(--active); color:#000; font-weight:600; }
+  .layer-btn.dim { opacity:.25; }
+
+  /* Animation controls */
+  #animBar { 
+    display:flex; gap:6px; align-items:center; margin-top:10px;
+    background:rgba(255,255,255,.03); border-radius:8px; padding:8px 10px;
+  }
+  #animBar button {
+    width:30px; height:30px; border:none; border-radius:6px; cursor:pointer;
+    font-size:14px; line-height:1; transition:all .15s;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .btn-play { background:var(--active); color:#000; }
+  .btn-play:hover { filter:brightness(1.2); }
+  .btn-step { background:rgba(255,255,255,.08); color:var(--text); }
+  .btn-step:hover { background:rgba(255,255,255,.2); }
+  .btn-reset { background:rgba(255,255,255,.05); color:rgba(255,255,255,.6); }
+  .btn-reset:hover { background:rgba(255,255,255,.12); }
+  #stepLabel { font-size:11px; color:var(--active); font-weight:600; min-width:50px; text-align:center; }
+  #progressBar { flex:1; height:4px; background:rgba(255,255,255,.08); border-radius:2px; overflow:hidden; }
+  #progressFill { height:100%; background:var(--active); border-radius:2px; transition:width .3s; }
+
+  #legend { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); display:flex;
+    gap:16px; background:var(--panel); padding:8px 16px; border-radius:8px; font-size:11px; z-index:10; }
+  .leg-dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:6px; vertical-align:middle; }
+
+  /* Math explainer card */
+  #mathCard {
+    position:fixed; bottom:70px; right:16px; background:var(--panel); border-radius:10px;
+    padding:12px 16px; z-index:10; max-width:240px; font-size:11px; line-height:1.5;
+    border:1px solid rgba(255,255,255,.06); color:rgba(255,255,255,.5);
+  }
+  #mathCard strong { color:var(--active); }
+</style>
+</head>
+<body>
+<div id="panel">
+  <h1>🔮 LG v2.2 张量场</h1>
+  <div class="sub">7 层 Kronecker 矩阵变换 · 群表示投影<br>模数 <strong style="color:var(--active)">Q=3329</strong> · 有限域 Z<sub>Q</sub></div>
+
+  <div class="stat"><span class="lbl">矩阵规模</span><span class="val">256 × 256 × 7</span></div>
+  <div class="stat"><span class="lbl">非零元素</span><span class="val" id="nzCount">—</span></div>
+  <div class="stat"><span class="lbl">密度</span><span class="val">0.56%</span></div>
+  <div class="stat"><span class="lbl">活跃子空间</span><span class="val">48 × 48</span></div>
+  <div class="stat"><span class="lbl">连接线</span><span class="val" id="connCount">—</span></div>
+
+  <hr>
+  <div class="sec-label">图层 · 群表示</div>
+  <div id="layerBtns"></div>
+
+  <div id="animBar">
+    <button class="btn-play" id="btnPlay" title="自动播放">▶</button>
+    <button class="btn-step" id="btnPrev" title="上一步">◀</button>
+    <span id="stepLabel">第 0 层</span>
+    <button class="btn-step" id="btnNext" title="下一步">▶</button>
+    <button class="btn-reset" id="btnReset" title="重置">⟳</button>
+    <div id="progressBar"><div id="progressFill" style="width:0%"></div></div>
+  </div>
+</div>
+
+<div id="mathCard">
+  <strong>🧠 数学结构</strong><br>
+  矩阵的 48×48 活跃子空间 = 7 个不可约表示的 <strong>Kronecker 积</strong><br>
+  S₂⊗C₅⊗S₃⊗D₄⊗A₄⊗D₆⊗C_Q<br>
+  1×1×2×2×3×2×2 = <strong>48 维</strong><br>
+  其余 <strong>208 维身份透传</strong>（identity padding）<br>
+  7 层 <strong>互不等价群</strong>，无全局交换矩阵（Schur 引理）
+</div>
+
+<div id="legend">
+  <div><span class="leg-dot" style="background:var(--active)"></span>活跃区 (0–47)</div>
+  <div><span class="leg-dot" style="background:var(--identity)"></span>身份填充 (48–255)</div>
+  <div><span class="leg-dot" style="background:#a29bfe;opacity:.5"></span>连线</div>
+  <div style="color:rgba(255,255,255,.35)">拖拽=旋转 · 滚轮=缩放 · Shift+拖拽=平移</div>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "./lib/three.module.js", "three/addons/": "./lib/" } }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js?v=2';
+
+// ═══════════════════════════════════════════
+//  Scene Setup
+// ═══════════════════════════════════════════
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x0a0a14);
+const camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 10, 2000);
+camera.position.set(300, 200, 400);
+camera.lookAt(128, 128, 3);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(128, 128, 3);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.update();
+
+// Lighting
+scene.add(new THREE.AmbientLight(0x222244, 1.5));
+const d1 = new THREE.DirectionalLight(0xff9f43, 2);
+d1.position.set(300, 400, 200);
+scene.add(d1);
+const d2 = new THREE.DirectionalLight(0x48dbfb, 2);
+d2.position.set(-200, -100, 300);
+scene.add(d2);
+
+// Grid
+const grid = new THREE.GridHelper(300, 30, 0x222244, 0x111122);
+grid.position.set(128, -20, 3);
+scene.add(grid);
+
+// Bounding box
+const boxGeo = new THREE.BoxGeometry(256, 256, 7);
+const boxEdges = new THREE.EdgesGeometry(boxGeo);
+const boxLine = new THREE.LineSegments(boxEdges, new THREE.LineBasicMaterial({
+  color: 0x334466, transparent: true, opacity: 0.25,
+}));
+boxLine.position.set(128, 128, 3);
+scene.add(boxLine);
+
+// Active region highlight
+const activeGeo = new THREE.BoxGeometry(48, 48, 7);
+const activeEdges = new THREE.EdgesGeometry(activeGeo);
+const activeBox = new THREE.LineSegments(activeEdges, new THREE.LineBasicMaterial({
+  color: 0xff9f43, transparent: true, opacity: 0.45,
+}));
+activeBox.position.set(24, 24, 3);
+scene.add(activeBox);
+
+// Axes labels
+function axisLabel(text, pos, color) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 128; canvas.height = 32;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = color; ctx.font = '14px system-ui';
+  ctx.fillText(text, 10, 22);
+  const tex = new THREE.CanvasTexture(canvas);
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true }));
+  sprite.position.copy(pos);
+  sprite.scale.set(48, 12, 1);
+  scene.add(sprite);
+}
+axisLabel('行 (i)', new THREE.Vector3(280, -5, 0), '#ff9f43');
+axisLabel('列 (j)', new THREE.Vector3(-5, 280, 0), '#48dbfb');
+axisLabel('层',    new THREE.Vector3(-5, -5, 8), '#a29bfe');
+
+// ═══════════════════════════════════════════
+//  Data & State
+// ═══════════════════════════════════════════
+const sphereGeom = new THREE.SphereGeometry(1.2, 8, 6);
+const activeMat = new THREE.MeshStandardMaterial({ color: 0xff9f43, roughness: 0.3, metalness: 0.1 });
+const identityMat = new THREE.MeshStandardMaterial({ color: 0x48dbfb, roughness: 0.3, metalness: 0.1 });
+
+let allLayers = [];
+let layerGroups = [];
+let connectionLineGroup = new THREE.Group();
+scene.add(connectionLineGroup);
+
+// Animation state
+let currentStep = 7;  // 0=none, 1..7=show layers 1..step
+let isPlaying = false;
+let playTimer = null;
+let playInterval = 2000; // ms per step
+
+// Particle state
+let particleGroup = new THREE.Group();
+scene.add(particleGroup);
+let particleData = [];  // { from:vec3, to:vec3, t:0, speed:0 }
+const PARTICLE_COUNT = 150;
+
+// ═══════════════════════════════════════════
+//  Chinese layer names
+// ═══════════════════════════════════════════
+const LAYER_NAMES_CN = {
+  'S₂': '对称群 S₂ (1维置换)',
+  'C₅': '循环群 C₅ (1维旋转)',
+  'S₃': '对称群 S₃ (2维置换)',
+  'D₄': '二面体群 D₄ (2维翻转)',
+  'A₄': '交错群 A₄ (3维偶置换)',
+  'D₆': '二面体群 D₆ (2维翻转)',
+  'C_Q': '循环群 C_Q (2维旋转)',
+};
+
+// ═══════════════════════════════════════════
+//  Connection Lines Builder
+// ═══════════════════════════════════════════
+function buildConnections(layers) {
+  // Clear old
+  while (connectionLineGroup.children.length) connectionLineGroup.remove(connectionLineGroup.children[0]);
+
+  const lineMat = new THREE.LineBasicMaterial({
+    color: 0xa29bfe, transparent: true, opacity: 0.25, linewidth: 1,
+  });
+
+  let totalConns = 0;
+
+  for (let l = 0; l < layers.length - 1; l++) {
+    const cur = layers[l];
+    const nxt = layers[l + 1];
+
+    // Build position set for active elements in next layer
+    const nxtActive = new Set();
+    nxt.elements.forEach(([i, j, v, inActive]) => {
+      if (inActive) nxtActive.add(`${i},${j}`);
+    });
+
+    // Connect from current active → matching position in next
+    const points = [];
+    cur.elements.forEach(([i, j, v, inActive]) => {
+      if (!inActive || !nxtActive.has(`${i},${j}`)) return;
+      points.push(new THREE.Vector3(j, i, l + 1));
+      points.push(new THREE.Vector3(j, i, l + 2));
+    });
+
+    if (points.length > 0) {
+      const geo = new THREE.BufferGeometry().setFromPoints(points);
+      const lines = new THREE.LineSegments(geo, lineMat);
+      connectionLineGroup.add(lines);
+      totalConns += points.length / 2;
+    }
+  }
+
+  document.getElementById('connCount').textContent = totalConns + ' 条';
+  return totalConns;
+}
+
+// ═══════════════════════════════════════════
+//  Particle System
+// ═══════════════════════════════════════════
+function buildParticles(layers) {
+  // Gather all connection segments (layer L active pos → layer L+1 same pos)
+  const segments = [];
+  for (let l = 0; l < layers.length - 1; l++) {
+    const cur = layers[l];
+    const nxtSet = new Set();
+    layers[l + 1].elements.forEach(([i, j, v, inActive]) => {
+      if (inActive) nxtSet.add(`${i},${j}`);
+    });
+    cur.elements.forEach(([i, j, v, inActive]) => {
+      if (!inActive || !nxtSet.has(`${i},${j}`)) return;
+      segments.push({
+        from: new THREE.Vector3(j, i, l + 1),
+        to: new THREE.Vector3(j, i, l + 2),
+      });
+    });
+  }
+
+  if (segments.length === 0) return;
+
+  particleData = [];
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const seg = segments[Math.floor(Math.random() * segments.length)];
+    particleData.push({
+      from: seg.from.clone(),
+      to: seg.to.clone(),
+      t: Math.random(),
+      speed: 0.15 + Math.random() * 0.35,  // cycles per second, varied
+    });
+  }
+
+  // Create dot geometry
+  const dotGeo = new THREE.BufferGeometry();
+  const positions = new Float32Array(PARTICLE_COUNT * 3);
+  const colors = new Float32Array(PARTICLE_COUNT * 3);
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    positions[i * 3] = particleData[i].from.x;
+    positions[i * 3 + 1] = particleData[i].from.y;
+    positions[i * 3 + 2] = particleData[i].from.z;
+    // Warm glow: mix orange → pink
+    colors[i * 3] = 1.0;
+    colors[i * 3 + 1] = 0.35 + Math.random() * 0.3;
+    colors[i * 3 + 2] = 0.5 + Math.random() * 0.3;
+  }
+  dotGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  dotGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  const dotMat = new THREE.PointsMaterial({
+    size: 2.5,
+    vertexColors: true,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false,
+    transparent: true,
+    opacity: 0.8,
+  });
+
+  const dots = new THREE.Points(dotGeo, dotMat);
+  particleGroup.add(dots);
+}
+
+function updateParticles(dt) {
+  if (particleData.length === 0 || particleGroup.children.length === 0) return;
+  const dots = particleGroup.children[0];
+  const pos = dots.geometry.attributes.position.array;
+
+  // Check if current step reveals these layers
+  const minLayer = Math.min(...particleData.map(p => p.from.z));
+  const visible = currentStep >= minLayer + 1;
+
+  dots.visible = visible;
+
+  if (!visible) return;
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const pd = particleData[i];
+    pd.t += pd.speed * dt;
+    if (pd.t > 1.0) pd.t -= 1.0;
+    // Smooth ping-pong
+    const tt = pd.t < 0.5 ? pd.t * 2 : (1 - pd.t) * 2;
+    pos[i * 3]     = pd.from.x + (pd.to.x - pd.from.x) * tt;
+    pos[i * 3 + 1] = pd.from.y + (pd.to.y - pd.from.y) * tt;
+    pos[i * 3 + 2] = pd.from.z + (pd.to.z - pd.from.z) * tt;
+  }
+  dots.geometry.attributes.position.needsUpdate = true;
+}
+
+// ═══════════════════════════════════════════
+//  Step Animation Controller
+// ═══════════════════════════════════════════
+function setStep(step) {
+  currentStep = Math.max(0, Math.min(7, step));
+  layerGroups.forEach((group, idx) => {
+    group.visible = (idx < currentStep);
+  });
+  connectionLineGroup.children.forEach((lines, idx) => {
+    lines.visible = (idx < currentStep - 1);
+  });
+
+  // Update layer buttons
+  const btns = document.querySelectorAll('.layer-btn');
+  btns.forEach((btn, idx) => {
+    btn.classList.toggle('on', idx < currentStep);
+    btn.classList.toggle('dim', idx >= currentStep);
+  });
+
+  // Update labels & progress
+  const stepNames = ['初始状态','S₂','C₅','S₃','D₄','A₄','D₆','C_Q'];
+  document.getElementById('stepLabel').textContent = 
+    currentStep === 0 ? '初始状态' : `第 ${currentStep} 层 · ${stepNames[currentStep]}`;
+  document.getElementById('progressFill').style.width = (currentStep / 7 * 100) + '%';
+}
+
+function nextStep() {
+  setStep(currentStep >= 7 ? 0 : currentStep + 1);
+}
+function prevStep() {
+  setStep(currentStep <= 0 ? 7 : currentStep - 1);
+}
+
+function startPlay() {
+  if (isPlaying) return;
+  isPlaying = true;
+  document.getElementById('btnPlay').textContent = '⏸';
+  document.getElementById('btnPlay').style.background = '#ff6b6b';
+  const tick = () => {
+    if (!isPlaying) return;
+    nextStep();
+    playTimer = setTimeout(tick, playInterval);
+  };
+  playTimer = setTimeout(tick, 200);
+}
+
+function stopPlay() {
+  isPlaying = false;
+  if (playTimer) clearTimeout(playTimer);
+  document.getElementById('btnPlay').textContent = '▶';
+  document.getElementById('btnPlay').style.background = 'var(--active)';
+}
+
+document.getElementById('btnPlay').onclick = () => isPlaying ? stopPlay() : startPlay();
+document.getElementById('btnPrev').onclick = prevStep;
+document.getElementById('btnNext').onclick = nextStep;
+document.getElementById('btnReset').onclick = () => { stopPlay(); setStep(7); };
+
+// Keyboard navigation
+window.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); nextStep(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prevStep(); }
+  if (e.key === 'Enter') { e.preventDefault(); isPlaying ? stopPlay() : startPlay(); }
+  if (e.key === 'r' || e.key === 'R') { stopPlay(); setStep(7); }
+});
+
+// ═══════════════════════════════════════════
+//  Data Loading
+// ═══════════════════════════════════════════
+const layerColors = ['#ff6b6b','#ff9f43','#feca57','#54a0ff','#5f27cd','#01a3a4','#f368e0'];
+
+async function loadData() {
+  const res = await fetch('lg-matrix-data.json');
+  const data = await res.json();
+
+  document.getElementById('nzCount').textContent = data.meta.total_nonzero + ' 个';
+
+  allLayers = data.layers;
+  const btnContainer = document.getElementById('layerBtns');
+
+  allLayers.forEach((layer, idx) => {
+    const group = new THREE.Group();
+    const mat = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(layerColors[idx]), roughness: 0.3, metalness: 0.1,
+    });
+
+    layer.elements.forEach(([i, j, v, inActive]) => {
+      const sphere = new THREE.Mesh(sphereGeom, inActive ? mat : identityMat);
+      sphere.position.set(j, i, idx + 1);
+      const s = Math.max(0.5, Math.log2(Math.abs(v) + 1) * 0.4);
+      sphere.scale.setScalar(s);
+      sphere.userData = { i, j, v, inActive, layer: idx + 1 };
+      group.add(sphere);
+    });
+
+    scene.add(group);
+    layerGroups.push(group);
+
+    const cnName = LAYER_NAMES_CN[layer.name] || layer.name;
+    const btn = document.createElement('button');
+    btn.className = 'layer-btn on';
+    btn.innerHTML = `<span style="color:${layerColors[idx]};margin-right:6px;">●</span>${cnName} <span style="color:rgba(255,255,255,.25);font-size:10px">${layer.nonzero}nz</span>`;
+    btn.style.borderLeft = `3px solid ${layerColors[idx]}`;
+    btn.onclick = (e) => {
+      e.stopPropagation();
+      group.visible = !group.visible;
+      btn.classList.toggle('on');
+      btn.classList.toggle('dim', !group.visible);
+      // Sync with animation step
+      const visibleCount = layerGroups.filter(g => g.visible).length;
+      if (visibleCount === 7) setStep(7);
+      else if (visibleCount === 0) setStep(0);
+    };
+    btnContainer.appendChild(btn);
+  });
+
+  // Build connections & particles
+  const conns = buildConnections(allLayers);
+  buildParticles(allLayers);
+
+  // Default: all layers visible
+  setStep(7);
+
+  console.log('[tensor-field] 已加载 %d 层, %d 个非零元素, %d 条连接线',
+    allLayers.length, data.meta.total_nonzero, conns);
+}
+
+loadData();
+
+// ═══════════════════════════════════════════
+//  Hover Tooltip (Chinese)
+// ═══════════════════════════════════════════
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const tooltip = document.createElement('div');
+tooltip.style.cssText = 'position:fixed;pointer-events:none;background:rgba(0,0,0,.88);color:#fff;padding:6px 10px;border-radius:6px;font-size:11px;display:none;z-index:20;font-family:system-ui;';
+document.body.appendChild(tooltip);
+
+window.addEventListener('mousemove', (e) => {
+  mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+  raycaster.setFromCamera(mouse, camera);
+  const spheres = [];
+  layerGroups.forEach(g => { if (g.visible) g.children.forEach(c => spheres.push(c)); });
+  const hits = raycaster.intersectObjects(spheres);
+
+  if (hits.length > 0) {
+    const { i, j, v, inActive, layer } = hits[0].object.userData;
+    tooltip.style.display = 'block';
+    tooltip.style.left = (e.clientX + 16) + 'px';
+    tooltip.style.top = (e.clientY - 10) + 'px';
+    const region = inActive ? '活跃区 (0–47)' : '身份填充 (48–255)';
+    tooltip.innerHTML = `M<sub>${layer}</sub>[${i},${j}] = <strong>${v}</strong><br><span style="color:#888;font-size:10px">第 ${layer} 层 · ${region}</span>`;
+  } else {
+    tooltip.style.display = 'none';
+  }
+});
+
+// ═══════════════════════════════════════════
+//  Render Loop
+// ═══════════════════════════════════════════
+let lastTime = performance.now();
+
+function animate(now) {
+  requestAnimationFrame(animate);
+
+  const dt = Math.min((now - lastTime) / 1000, 0.1);  // cap at 100ms
+  lastTime = now;
+
+  updateParticles(dt);
+
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate(performance.now());
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
