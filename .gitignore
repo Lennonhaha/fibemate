@@ -543,3 +543,16 @@ cl0w/
 *-and-sm2-100k_20260825*.md
 fibemate-external-audit_20260825*.md
 p0-01-p0-03-closure_20260825*.md
+
+# --- 2026-08-30 开源发布对齐时确认（磁盘先行部署残留，不应进 main） ---
+# Rust wasm 编译产物（源码在 experimental/vwz-lg 分支）
+rust/
+# 符号链接（指向仓库外 /opt/fibemate-full/，提交会破坏跨机部署）
+www/papers
+www/docs/docs
+# 分支切换损坏备份
+.branch-switch-backup/
+# 放错位置（GitHub 只认 .github/FUNDING.yml）
+www/FUNDING.yml
+# CBOM 符号链接（build-cbom.js 输出到 tools/，且路径写死 Windows 本地）
+www/docs/cbom-cyclonedx.json

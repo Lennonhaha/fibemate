@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>开源发布公告 - FIBEMATE</title>
+<style>
+:root {
+  --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9;
+  --muted:#8b949e; --accent:#00E5C3; --green:#22c55e; --amber:#f59e0b;
+  --red:#f87171; --blue:#58a6ff; --purple:#bc8cff;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.75; padding:0 1rem 4rem; }
+.container { max-width:960px; margin:0 auto; }
+header { padding:3rem 0 2rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+header h1 { font-size:2rem; color:#f0f6fc; }
+header h1 .gradient { background:linear-gradient(135deg,var(--accent),var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+header .meta { color:var(--muted); font-size:0.9rem; margin-top:0.5rem; }
+h2 { font-size:1.3rem; color:#f0f6fc; margin:2.5rem 0 1rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border); }
+h3 { font-size:1.08rem; color:#e6edf3; margin:1.8rem 0 0.8rem; }
+p { margin:0.8rem 0; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.2rem 1.5rem; margin:1rem 0; }
+.card h3 { margin-top:0; }
+.green { color:var(--green); }
+.amber { color:var(--amber); }
+.red { color:var(--red); }
+.blue { color:var(--blue); }
+.accent { color:var(--accent); }
+.muted { color:var(--muted); }
+code { background:rgba(110,118,129,0.2); padding:0.15em 0.4em; border-radius:4px; font-size:0.9em; font-family:"SF Mono",Consolas,monospace; }
+pre { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:1rem 1.2rem; overflow-x:auto; margin:1rem 0; font-size:0.85rem; line-height:1.6; }
+pre code { background:none; padding:0; }
+table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.9rem; }
+th, td { padding:0.55rem 0.8rem; text-align:left; border:1px solid var(--border); }
+th { background:var(--card); color:#f0f6fc; }
+a { color:var(--blue); text-decoration:none; }
+a:hover { text-decoration:underline; }
+blockquote { border-left:3px solid var(--accent); padding-left:1rem; margin:1.5rem 0; color:var(--muted); }
+ul, ol { margin:0.8rem 0 0.8rem 1.5rem; }
+li { margin:0.3rem 0; }
+.hero { text-align:center; padding:2rem 0; }
+.hero .badge { display:inline-block; background:var(--green); color:#0d1117; font-weight:700; padding:0.3em 1em; border-radius:20px; font-size:0.85rem; margin-bottom:1rem; }
+footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="hero">
+    <span class="badge">OPEN SOURCE</span>
+    <h1><span class="gradient">FIBEMATE v3.3</span> — 开源发布公告</h1>
+    <p class="meta">2026-08-31 · GPL-3.0 · <a href="https://github.com/Lennonhaha/fibemate">GitHub</a></p>
+  </div>
+</header>
+
+<blockquote>
+  <strong>FIBEMATE is now open source.</strong> 🎉<br>
+  What does it take to ship post-quantum cryptography end-to-end — from browser to FPGA, from NIST standards to Chinese national algorithms, from KAT vectors to TLA+ formal proofs?<br><br>
+  Two years. One person. 100 timestamped evidence records. Here's what we found.
+</blockquote>
+
+<h2>What FIBEMATE Is</h2>
+<p><em>A post-quantum cryptography executable textbook. Not a security product — an engineering proof that the full chain works.</em></p>
+<table>
+  <tr><th>Track</th><th>Coverage</th><th>Status</th></tr>
+  <tr><td><strong>Standard PQC</strong></td><td>ML-KEM-768 (FIPS 203), NTT domain, C Native addon (15-31× speedup), WASM</td><td><span class="green">✅ Verified</span></td></tr>
+  <tr><td><strong>National Crypto Hybrid</strong></td><td>SM2/SM3/SM4-GCM + ML-KEM-768, IANA #4590, double-ratchet PQ mix-net</td><td><span class="green">✅ Verified</span></td></tr>
+  <tr><td><strong>Hardware (FPGA)</strong></td><td>NTT pipeline on Artix-7 35T, UART physical debug passed, 256×256 roundtrip</td><td><span class="green">✅ Live</span></td></tr>
+  <tr><td><strong>Protocol Verification</strong></td><td>TLA+ Path C-2 model, 7 invariants, 101,467 states, K3 strong key independence</td><td><span class="green">✅ Formal</span></td></tr>
+  <tr><td><strong>Research (default-off)</strong></td><td>VWZ tensor signatures, LookingGlass v2 — isolated branch, zero security claims</td><td><span class="amber">⚠️ Lab</span></td></tr>
+</table>
+
+<h2>Why This Exists</h2>
+<p>The post-quantum migration is an <strong>engineering problem</strong>, not a paper problem.</p>
+<p>FIPS 203 exists. liboqs exists. But stitching them together — WebCrypto ↔ FPGA BRAM, SM2 legacy ↔ ML-KEM hybrids, unit tests ↔ TLA+ models — that's where the real work lives.</p>
+<p>FIBEMATE answers: <em>Can one person build, verify, and timestamp-evidence the entire stack?</em> Yes. With honest caveats.</p>
+
+<h2>What Works (verified with evidence)</h2>
+
+<h3>Core Cryptography</h3>
+<ul>
+  <li><strong>ML-KEM-768</strong>: NTT domain (FIPS 203 aligned) · noble 10K/10K ✅ · liboqs 10K/10K ✅</li>
+  <li><strong>C Native Addon</strong>: keygen 103µs (15.8× JS), encaps 92µs (31.5×), decaps 184µs (14.1×)</li>
+  <li><strong>SM2</strong>: GB/T 32918 · constant-time Barrett reduction (14×) · scalar masking · software TVLA N=10K PASS</li>
+  <li><strong>SM3/SM4-GCM</strong>: KAT vectors · pure JS benchmarks (SM3 21K ops/s, SM4-GCM ~230KB/s)</li>
+  <li><strong>Hybrid KEX</strong>: SM2 + ML-KEM-768 · IANA #4590 registration</li>
+  <li><strong>Double Ratchet PQ</strong>: ML-KEM-768 + P-256 hybrid handshake → multi-round message encryption ✅</li>
+</ul>
+
+<h3>Protocol Verification</h3>
+<ul>
+  <li><strong>TLA+ Path C-2</strong>: 7 invariants all pass, TLC EXIT 0, 101,467 states</li>
+  <li><strong>K3 strong key independence</strong>: formally proven ∀ i≠j: key[i]≠key[j]</li>
+</ul>
+
+<h3>FPGA (Artix-7 35T)</h3>
+<ul>
+  <li>NTT 256×256 roundtrip verified on physical hardware</li>
+  <li>UART debug channel operational (CH340 external adapter)</li>
+  <li>Timing: WNS 9.869ns, WHS 0.131ns — plenty of slack</li>
+</ul>
+
+<h3>Reproducibility</h3>
+<ul>
+  <li><strong>100 RFC 3161 TSR records</strong> (lg-001~lg-100) — DigiCert + FreeTSA dual authority</li>
+  <li>Every KAT, cross-validated, and release milestone timestamped</li>
+  <li>TSR manifest: v4, 131 total entries, SHA256 inventory</li>
+  <li>CI: Nightly ✅ | node-test ✅ | cross-lang ✅ | KAT smoke ✅</li>
+</ul>
+
+<h2>What's NOT Claimed (read this)</h2>
+<table>
+  <tr><th>Claim</th><th>Reality</th></tr>
+  <tr><td>Security product</td><td><span class="red">❌</span> Engineering demonstration platform</td></tr>
+  <tr><td>Third-party audit</td><td><span class="red">❌</span> Self-tested, cross-validated, not externally reviewed</td></tr>
+  <tr><td>Novel cryptography</td><td><span class="red">❌</span> VWZ/LG are default-off research, zero security guarantees</td></tr>
+  <tr><td>Hardware security</td><td><span class="red">❌</span> No secure element, physical TVLA pending Q4 2026</td></tr>
+  <tr><td>ML-KEM formal proof</td><td><span class="red">❌</span> TLA+ covers handshake protocol, not lattice math</td></tr>
+</table>
+
+<h2>Quick Start (30 seconds)</h2>
+<pre><code>git clone https://github.com/Lennonhaha/fibemate.git &amp;&amp; cd fibemate &amp;&amp; npm ci
+node -e "
+  const { generateKeypair, encapsulate, decapsulate } = require('./packages/pqc-kem');
+  const kp = generateKeypair();
+  const { ciphertext, sharedSecret } = encapsulate(kp.publicKey);
+  const ss = decapsulate(kp.secretKey, ciphertext);
+  console.log(ss.equals(sharedSecret) ? 'ML-KEM-768: PASS' : 'FAIL');
+"</code></pre>
+<p>Live demo: <a href="https://fibemate.net/demo/">fibemate.net/demo</a></p>
+
+<h2>Who This Is For</h2>
+<ul>
+  <li><strong>Crypto engineers</strong> → wire format, cross-validation, side-channel mitigations</li>
+  <li><strong>Security researchers</strong> → TLA+ model, Path C-2 hybrid design, failure modes</li>
+  <li><strong>FPGA developers</strong> → NTT pipeline, BRAM layout, behavioral model</li>
+  <li><strong>Students &amp; learners</strong> → architecture docs cover every layer, browser to silicon</li>
+</ul>
+
+<h2>The Numbers</h2>
+<table>
+  <tr><th>Metric</th><th></th></tr>
+  <tr><td>ML-KEM-768 Native keygen</td><td>103 µs</td></tr>
+  <tr><td>ML-KEM cross-validation</td><td>20,000/20,000 (noble + liboqs)</td></tr>
+  <tr><td>NTT Barrett reduction speedup</td><td>14×</td></tr>
+  <tr><td>SM2 software TVLA</td><td>36/36 PASS (N=10,000)</td></tr>
+  <tr><td>ML-KEM-768 TVLA</td><td>corrected (V8 JIT artifact, no exploitable leak)</td></tr>
+  <tr><td>ML-KEM-1024 TVLA</td><td>3/3 PASS (Noble, N=10,000)</td></tr>
+  <tr><td>TLA+ verified states</td><td>101,467</td></tr>
+  <tr><td>TSR evidence records</td><td>131 total (lg-001~lg-100)</td></tr>
+  <tr><td>CI badges</td><td><span class="green">✅ all green</span></td></tr>
+  <tr><td>Project score</td><td>9.3/10</td></tr>
+</table>
+
+<h2>Deep-Dive Series (coming weekly after launch)</h2>
+<table>
+  <tr><th>Week</th><th>Topic</th></tr>
+  <tr><td>1</td><td><strong>Double Ratchet PQ</strong> — ML-KEM + P-256 hybrid handshake design</td></tr>
+  <tr><td>2</td><td><strong>FPGA NTT Pipeline</strong> — from behavioral model to UART debug</td></tr>
+  <tr><td>3</td><td><strong>SM2 Repair Log</strong> — _fastModP dead loop, wNAF timing leak, 0.2% edge case</td></tr>
+  <tr><td>4</td><td><strong>TSR Evidence Chain</strong> — 100 RFC 3161 timestamps, why they matter</td></tr>
+  <tr><td>5</td><td><strong>TLA+ Path C-2</strong> — formal verification of hybrid key exchange</td></tr>
+</table>
+
+<h2>How to Contribute</h2>
+<p>Solo project opening up. Here's how:</p>
+<ul>
+  <li><strong>First issues</strong> → <a href="https://github.com/Lennonhaha/fibemate/issues?q=is%3Aissue+is%3Aopen+label%3Agood-first-issue">good-first-issues</a></li>
+  <li><strong>Cross-platform testing</strong> → Windows/macOS/Firefox/Safari matrix incomplete</li>
+  <li><strong>Security review</strong> → found a bug? <a href="/SECURITY.md">SECURITY.md</a></li>
+  <li><strong>Hardware</strong> → got a ChipWhisperer? FPGA needs physical TVLA</li>
+</ul>
+
+<blockquote>
+  <em>"The post-quantum transition is not about swapping algorithms. It's about proving the chain holds."</em><br>
+  — FIBEMATE, v3.3, 2026-08-31
+</blockquote>
+
+<footer>
+  <p>最后更新：2026-08-31 &middot; <a href="/">返回首页</a></p>
+  <p>FIBEMATE &mdash; Post-Quantum Cryptography Full-Stack Verification Platform</p>
+</footer>
+
+</div>
+</body>
+</html>
