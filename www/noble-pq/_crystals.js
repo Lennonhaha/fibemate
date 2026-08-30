@@ -1,4 +1,7 @@
-// SPDX-License-Identifier: GPL-3.0-only
+﻿// SPDX-License-Identifier: MIT AND GPL-3.0-only
+// Copyright (c) 2024 Paul Miller (https://paulmillr.com)
+// Derived from @noble/post-quantum and @noble/hashes (MIT License).
+// Relicensed under GPL-3.0-only as part of FIBEMATE.
 /**
  * Internal methods for lattice-based ML-KEM and ML-DSA.
  * @module
@@ -30,12 +33,12 @@ export const genCrystals = (opts) => {
     // isKyber: true means Kyber, false means Dilithium
     const { newPoly, N, Q, F, ROOT_OF_UNITY, brvBits, isKyber } = opts;
     // Normalize JS `%` into the canonical Z_m representative `[0, modulo-1]` expected by
-    // FIPS 203 §2.3 / FIPS 204 §2.3 before downstream mod-q arithmetic.
+    // FIPS 203 搂2.3 / FIPS 204 搂2.3 before downstream mod-q arithmetic.
     const mod = (a, modulo = Q) => {
         const result = a % modulo | 0;
         return (result >= 0 ? result | 0 : (modulo + result) | 0) | 0;
     };
-    // FIPS 204 §7.4 uses the centered `mod ±` representative for low bits, keeping the
+    // FIPS 204 搂7.4 uses the centered `mod 卤` representative for low bits, keeping the
     // positive midpoint when `modulo` is even.
     // Center to `[-floor((modulo-1)/2), floor(modulo/2)]`.
     const smod = (a, modulo = Q) => {
@@ -43,7 +46,7 @@ export const genCrystals = (opts) => {
         return (r > modulo >> 1 ? (r - modulo) | 0 : r) | 0;
     };
     // Kyber uses the FIPS 203 Appendix A `BitRev_7` table here via the first 128 entries, while
-    // Dilithium uses the FIPS 204 §7.5 / Appendix B `BitRev_8` zetas table over all 256 entries.
+    // Dilithium uses the FIPS 204 搂7.5 / Appendix B `BitRev_8` zetas table over all 256 entries.
     function getZettas() {
         const out = newPoly(N);
         for (let i = 0; i < N; i++) {

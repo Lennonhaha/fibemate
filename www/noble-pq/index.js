@@ -1,4 +1,7 @@
-// SPDX-License-Identifier: GPL-3.0-only
+﻿// SPDX-License-Identifier: MIT AND GPL-3.0-only
+// Copyright (c) 2024 Paul Miller (https://paulmillr.com)
+// Derived from @noble/post-quantum and @noble/hashes (MIT License).
+// Relicensed under GPL-3.0-only as part of FIBEMATE.
 /**
  * Audited & minimal JS implementation of hash functions, MACs, and KDFs.
  * Check out individual modules.

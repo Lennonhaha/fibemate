@@ -1,4 +1,7 @@
-// SPDX-License-Identifier: GPL-3.0-only
+﻿// SPDX-License-Identifier: MIT AND GPL-3.0-only
+// Copyright (c) 2024 Paul Miller (https://paulmillr.com)
+// Derived from @noble/post-quantum and @noble/hashes (MIT License).
+// Relicensed under GPL-3.0-only as part of FIBEMATE.
 /**
  * SLH-DSA: StateLess Hash-based Digital Signature Standard from
  * [FIPS-205](https://csrc.nist.gov/pubs/fips/205/ipd). A.k.a. Sphincs+ v3.1.
@@ -175,8 +178,8 @@ function gen(opts, hashOpts_) {
         const W1 = base2b(WOTS_LEN1, WOTS_LOGW)(msg);
         let csum = 0;
         for (let i = 0; i < W1.length; i++)
-            csum += W - 1 - W1[i]; // ▷ Compute checksum
-        // csum ← csum ≪ ((8 − ((len2 · lg(w)) mod 8)) mod 8
+            csum += W - 1 - W1[i]; // 鈻?Compute checksum
+        // csum 鈫?csum 鈮?((8 鈭?((len2 路 lg(w)) mod 8)) mod 8
         csum <<= (8 - ((WOTS_LEN2 * WOTS_LOGW) % 8)) % 8;
         // Checksum to base(LOG_W)
         const W2 = chainCoder(numberToBytesBE(csum, Math.ceil((WOTS_LEN2 * WOTS_LOGW) / 8)));
@@ -194,7 +197,7 @@ function gen(opts, hashOpts_) {
     // mask away any spare high bits so `idx_tree` / `idx_leaf` match the spec's final mod-2^k steps.
     const hashMessage = (R, pkSeed, msg, context) => {
         const rawContext = context;
-        // digest ← Hmsg(R, PK.seed, PK.root, M)
+        // digest 鈫?Hmsg(R, PK.seed, PK.root, M)
         const digest = rawContext.Hmsg(R, pkSeed, msg, hashMsgCoder.bytesLen);
         const [md, tmpIdxTree, tmpIdxLeaf] = hashMsgCoder.decode(digest);
         const tree = bytesToNumberBE(tmpIdxTree) & getMaskBig(TREE_BITS);
@@ -342,10 +345,10 @@ function gen(opts, hashOpts_) {
             // Set SK.seed, SK.prf, and PK.seed to random n-byte
             const [secretSeed, secretPRF, publicSeed] = seedCoder.decode(seed);
             const context = getContext(publicSeed, secretSeed);
-            // ADRS.setLayerAddress(d − 1)
+            // ADRS.setLayerAddress(d 鈭?1)
             const topTreeAddr = setAddr({ layer: D - 1 });
             const wotsAddr = setAddr({ layer: D - 1 });
-            //PK.root ←_xmss node(SK.seed, 0, h′, PK.seed, ADRS)
+            //PK.root 鈫恄xmss node(SK.seed, 0, h鈥? PK.seed, ADRS)
             const { root } = merkleSign(context, wotsAddr, topTreeAddr, ~0 >>> 0);
             const publicKey = publicCoder.encode([publicSeed, root]);
             const secretKey = secretCoder.encode([secretSeed, secretPRF, publicKey]);
@@ -375,7 +378,7 @@ function gen(opts, hashOpts_) {
             abytes(random, N);
             const context = getContext(pkSeed, skSeed);
             // Generate randomizer
-            const R = context.PRFmsg(skPRF, random, msg); // R ← PRFmsg(SK.prf, opt_rand, M)
+            const R = context.PRFmsg(skPRF, random, msg); // R 鈫?PRFmsg(SK.prf, opt_rand, M)
             let { tree, leafIdx, md } = hashMessage(R, pk, msg, context);
             // Create FORS signatures
             const wotsAddr = setAddr({
@@ -525,12 +528,12 @@ function gen(opts, hashOpts_) {
         },
     });
 }
-// FIPS 205 §11.1 SHAKE instantiation: this path hashes the full uncompressed address bytes,
-// unlike the compressed 22-byte SHA2 path in §11.2.
+// FIPS 205 搂11.1 SHAKE instantiation: this path hashes the full uncompressed address bytes,
+// unlike the compressed 22-byte SHA2 path in 搂11.2.
 const genShake = () => (opts) => (pubSeed, skSeed) => {
     const { N } = opts;
     const stats = { prf: 0, thash: 0, hmsg: 0, gen_message_random: 0 };
-    // §11.1 prefixes PRF/F/H/T_l with `PK.seed`, so cache that absorbed prefix once and clone it
+    // 搂11.1 prefixes PRF/F/H/T_l with `PK.seed`, so cache that absorbed prefix once and clone it
     // for each address-bound call instead of reabsorbing the same seed every time.
     const h0 = shake256.create({}).update(pubSeed);
     const h0tmp = h0.clone();
@@ -610,7 +613,7 @@ export const slh_dsa_shake_256f = /* @__PURE__ */ (() => gen(PARAMS['256f'], SHA
  * Also exposes `.prehash(...)`.
  */
 export const slh_dsa_shake_256s = /* @__PURE__ */ (() => gen(PARAMS['256s'], SHAKE_SIMPLE))();
-// FIPS 205 §11.2 SHA2 instantiation. The `h0` / `h1` split is intentional:
+// FIPS 205 搂11.2 SHA2 instantiation. The `h0` / `h1` split is intentional:
 // category-1 keeps everything on SHA-256, while category-3/5 keep `PRFaddr` / `thash1`
 // on SHA-256 but switch `PRFmsg`, `Hmsg`, and multi-block `thashN` to SHA-512.
 const genSha = (h0, h1) => (opts) => (pub_seed, sk_seed) => {
@@ -624,7 +627,7 @@ const genSha = (h0, h1) => (opts) => (pub_seed, sk_seed) => {
     const stats = { prf: 0, thash: 0, hmsg: 0, gen_message_random: 0, mgf1: 0 };
     const counterB = new Uint8Array(4);
     const counterV = createView(counterB);
-    // §11.2 prefixes SHA2 PRF/F/H/T_l with `PK.seed || toByte(0, blockLen-N)`, so cache the
+    // 搂11.2 prefixes SHA2 PRF/F/H/T_l with `PK.seed || toByte(0, blockLen-N)`, so cache the
     // zero-padded seed block once for the SHA-256 lane and once for the SHA-512 lane.
     const h0ps = h0
         .create()

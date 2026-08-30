@@ -1,4 +1,7 @@
-// SPDX-License-Identifier: GPL-3.0-only
+﻿// SPDX-License-Identifier: MIT AND GPL-3.0-only
+// Copyright (c) 2024 Paul Miller (https://paulmillr.com)
+// Derived from @noble/post-quantum and @noble/hashes (MIT License).
+// Relicensed under GPL-3.0-only as part of FIBEMATE.
 /**
  * ML-DSA: Module Lattice-based Digital Signature Algorithm from
  * [FIPS-204](https://csrc.nist.gov/pubs/fips/204/ipd). A.k.a. CRYSTALS-Dilithium.
@@ -21,16 +24,16 @@ function validateInternalOpts(opts) {
 // Constants
 // FIPS 204 fixes ML-DSA over R = Z[X]/(X^256 + 1), so every polynomial has 256 coefficients.
 const N = 256;
-// 2**23 − 2**13 + 1, 23 bits: multiply will be 46. We have enough precision in JS to avoid bigints
+// 2**23 鈭?2**13 + 1, 23 bits: multiply will be 46. We have enough precision in JS to avoid bigints
 const Q = 8380417;
-// FIPS 204 §2.5 / Table 1 fixes zeta = 1753 as the 512th root of unity used by ML-DSA's NTT.
+// FIPS 204 搂2.5 / Table 1 fixes zeta = 1753 as the 512th root of unity used by ML-DSA's NTT.
 const ROOT_OF_UNITY = 1753;
-// f = 256**−1 mod q, pow(256, -1, q) = 8347681 (python3)
+// f = 256**鈭? mod q, pow(256, -1, q) = 8347681 (python3)
 const F = 8347681;
-// FIPS 204 Table 1 / §7.4 fixes d = 13 dropped low bits for Power2Round on t.
+// FIPS 204 Table 1 / 搂7.4 fixes d = 13 dropped low bits for Power2Round on t.
 const D = 13;
 // FIPS 204 Table 1 fixes gamma2 to (q-1)/88 for ML-DSA-44 and (q-1)/32 for ML-DSA-65/87;
-// §7.4 then uses alpha = 2*gamma2 for Decompose / MakeHint / UseHint.
+// 搂7.4 then uses alpha = 2*gamma2 for Decompose / MakeHint / UseHint.
 // Dilithium is kinda parametrized over GAMMA2, but everything will break with any other value.
 const GAMMA2_1 = Math.floor((Q - 1) / 88) | 0;
 const GAMMA2_2 = Math.floor((Q - 1) / 32) | 0;
@@ -119,7 +122,7 @@ const MultiplyNTTs = (a_, b_) => {
 // Return poly in NTT representation
 function RejNTTPoly(xof_) {
     const xof = xof_;
-    // Samples a polynomial ∈ Tq. xof() must return byte lengths divisible by 3.
+    // Samples a polynomial 鈭?Tq. xof() must return byte lengths divisible by 3.
     const r = newPoly(N);
     // NOTE: we can represent 3xu24 as 4xu32, but it doesn't improve perf :(
     for (let j = 0; j < N;) {
@@ -149,7 +152,7 @@ function getDilithium(opts_) {
         throw new Error('Wrong GAMMA2');
     const BETA = TAU * ETA;
     const decompose = (r) => {
-        // Decomposes r into (r1, r0) such that r ≡ r1(2γ2) + r0 mod q.
+        // Decomposes r into (r1, r0) such that r 鈮?r1(2纬2) + r0 mod q.
         const rPlus = crystals.mod(r);
         const r0 = crystals.smod(rPlus, 2 * GAMMA2) | 0;
         // FIPS 204 Algorithm 36 folds the top bucket `q-1` back to `(r1, r0) = (0, r0-1)`.
@@ -162,7 +165,7 @@ function getDilithium(opts_) {
     const LowBits = (r) => decompose(r).r0;
     const MakeHint = (z, r) => {
         // Compute hint bit indicating whether adding z to r alters the high bits of r.
-        // FIPS 204 §6.2 also permits the Section 5.1 alternative from [6], which uses the
+        // FIPS 204 搂6.2 also permits the Section 5.1 alternative from [6], which uses the
         // transformed low-bits/high-bits state at this call site instead of Algorithm 39 literally.
         // This optimized predicate only applies to those transformed Section 5.1 inputs; it is
         // not a drop-in replacement for Algorithm 39 on arbitrary `(z, r)` pairs.
@@ -185,13 +188,13 @@ function getDilithium(opts_) {
         const m = Math.floor((Q - 1) / (2 * GAMMA2));
         const { r1, r0 } = decompose(r);
         // 3: if h = 1 and r0 > 0 return (r1 + 1) mod m
-        // 4: if h = 1 and r0 ≤ 0 return (r1 − 1) mod m
+        // 4: if h = 1 and r0 鈮?0 return (r1 鈭?1) mod m
         if (h === 1)
             return r0 > 0 ? crystals.mod(r1 + 1, m) | 0 : crystals.mod(r1 - 1, m) | 0;
         return r1 | 0;
     };
     const Power2Round = (r) => {
-        // Decomposes r into (r1, r0) such that r ≡ r1*(2**d) + r0 mod q.
+        // Decomposes r into (r1, r0) such that r 鈮?r1*(2**d) + r0 mod q.
         const rPlus = crystals.mod(r);
         const r0 = crystals.smod(rPlus, 2 ** D) | 0;
         return { r1: Math.floor((rPlus - r0) / 2 ** D) | 0, r0 };
@@ -255,7 +258,7 @@ function getDilithium(opts_) {
     // `NTT.encode()` later when needed.
     function RejBoundedPoly(xof_) {
         const xof = xof_;
-        // Samples an element a ∈ Rq with coeffcients in [−η, η] computed via rejection sampling from ρ.
+        // Samples an element a 鈭?Rq with coeffcients in [鈭捨? 畏] computed via rejection sampling from 蟻.
         const r = newPoly(N);
         for (let j = 0; j < N;) {
             const b = xof();
@@ -272,7 +275,7 @@ function getDilithium(opts_) {
         return r;
     }
     const SampleInBall = (seed) => {
-        // Samples a polynomial c ∈ Rq with coeffcients from {−1, 0, 1} and Hamming weight τ
+        // Samples a polynomial c 鈭?Rq with coeffcients from {鈭?, 0, 1} and Hamming weight 蟿
         const pre = newPoly(N);
         const s = shake256.create({}).update(seed);
         const buf = new Uint8Array(shake256.blockLen);
@@ -343,7 +346,7 @@ function getDilithium(opts_) {
             signRand: signRandBytes,
         }),
         keygen: (seed) => {
-            // H(𝜉||IntegerToBytes(𝑘, 1)||IntegerToBytes(ℓ, 1), 128) 2: ▷ expand seed
+            // H(饾湁||IntegerToBytes(饾憳, 1)||IntegerToBytes(鈩? 1), 128) 2: 鈻?expand seed
             const seedDst = new Uint8Array(32 + 2);
             const randSeed = seed === undefined;
             if (randSeed)
@@ -368,20 +371,20 @@ function getDilithium(opts_) {
             const xof = XOF128(rho);
             const t = newPoly(N);
             for (let i = 0; i < K; i++) {
-                // t ← NTT−1(A*NTT(s1)) + s2
+                // t 鈫?NTT鈭?(A*NTT(s1)) + s2
                 cleanBytes(t); // don't-reallocate
                 for (let j = 0; j < L; j++) {
                     const aij = RejNTTPoly(xof.get(j, i)); // super slow!
                     polyAdd(t, MultiplyNTTs(aij, s1Hat[j]));
                 }
                 crystals.NTT.decode(t);
-                const { r0, r1 } = polyPowerRound(polyAdd(t, s2[i])); // (t1, t0) ← Power2Round(t, d)
+                const { r0, r1 } = polyPowerRound(polyAdd(t, s2[i])); // (t1, t0) 鈫?Power2Round(t, d)
                 t0.push(r0);
                 t1.push(r1);
             }
-            const publicKey = publicCoder.encode([rho, t1]); // pk ← pkEncode(ρ, t1)
-            const tr = shake256(publicKey, { dkLen: TR_BYTES }); // tr ← H(BytesToBits(pk), 512)
-            // sk ← skEncode(ρ, K,tr, s1, s2, t0)
+            const publicKey = publicCoder.encode([rho, t1]); // pk 鈫?pkEncode(蟻, t1)
+            const tr = shake256(publicKey, { dkLen: TR_BYTES }); // tr 鈫?H(BytesToBits(pk), 512)
+            // sk 鈫?skEncode(蟻, K,tr, s1, s2, t0)
             const secretKey = secretCoder.encode([rho, K_, tr, s1, s2, t0]);
             xof.clean();
             xofPrime.clean();
@@ -397,7 +400,7 @@ function getDilithium(opts_) {
             };
         },
         getPublicKey: (secretKey) => {
-            // (ρ, K,tr, s1, s2, t0) ← skDecode(sk)
+            // (蟻, K,tr, s1, s2, t0) 鈫?skDecode(sk)
             const [rho, _K, _tr, s1, s2, _t0] = secretCoder.decode(secretKey);
             const xof = XOF128(rho);
             const s1Hat = s1.map((p) => crystals.NTT.encode(p.slice()));
@@ -409,9 +412,8 @@ function getDilithium(opts_) {
                     const aij = RejNTTPoly(xof.get(j, i)); // A_ij in NTT
                     polyAdd(tmp, MultiplyNTTs(aij, s1Hat[j])); // += A_ij * s1_j
                 }
-                crystals.NTT.decode(tmp); // NTT⁻¹
-                polyAdd(tmp, s2[i]); // t_i = A·s1 + s2
-                const { r1 } = polyPowerRound(tmp); // r1 = t1, r0 ≈ t0
+                crystals.NTT.decode(tmp); // NTT鈦宦?                polyAdd(tmp, s2[i]); // t_i = A路s1 + s2
+                const { r1 } = polyPowerRound(tmp); // r1 = t1, r0 鈮?t0
                 t1.push(r1);
             }
             xof.clean();
@@ -425,10 +427,10 @@ function getDilithium(opts_) {
             let { extraEntropy: random, externalMu = false } = opts;
             // This part can be pre-cached per secretKey, but there is only minor performance improvement,
             // since we re-use a lot of variables to computation.
-            // (ρ, K,tr, s1, s2, t0) ← skDecode(sk)
+            // (蟻, K,tr, s1, s2, t0) 鈫?skDecode(sk)
             const [rho, _K, tr, s1, s2, t0] = secretCoder.decode(secretKey);
             // Cache matrix to avoid re-compute later
-            const A = []; // A ← ExpandA(ρ)
+            const A = []; // A 鈫?ExpandA(蟻)
             const xof = XOF128(rho);
             for (let i = 0; i < K; i++) {
                 const pv = [];
@@ -438,16 +440,16 @@ function getDilithium(opts_) {
             }
             xof.clean();
             for (let i = 0; i < L; i++)
-                crystals.NTT.encode(s1[i]); // sˆ1 ← NTT(s1)
+                crystals.NTT.encode(s1[i]); // s藛1 鈫?NTT(s1)
             for (let i = 0; i < K; i++) {
-                crystals.NTT.encode(s2[i]); // sˆ2 ← NTT(s2)
-                crystals.NTT.encode(t0[i]); // tˆ0 ← NTT(t0)
+                crystals.NTT.encode(s2[i]); // s藛2 鈫?NTT(s2)
+                crystals.NTT.encode(t0[i]); // t藛0 鈫?NTT(t0)
             }
             // This part is per msg
             const mu = externalMu
                 ? msg
-                : // 6: µ ← H(tr||M, 512)
-                    //    ▷ Compute message representative µ
+                : // 6: 碌 鈫?H(tr||M, 512)
+                    //    鈻?Compute message representative 碌
                     shake256.create({ dkLen: CRH_BYTES }).update(tr).update(msg).digest();
             // Compute private random seed
             const rnd = random === false
@@ -461,63 +463,63 @@ function getDilithium(opts_) {
                 .update(_K)
                 .update(rnd)
                 .update(mu)
-                .digest(); // ρ′← H(K||rnd||µ, 512)
+                .digest(); // 蟻鈥测啇 H(K||rnd||碌, 512)
             abytes(rhoprime, CRH_BYTES);
             const x256 = XOF256(rhoprime, ZCoder.bytesLen);
             //  Rejection sampling loop
             main_loop: for (let kappa = 0;;) {
                 const y = [];
-                // y ← ExpandMask(ρ , κ)
+                // y 鈫?ExpandMask(蟻 , 魏)
                 for (let i = 0; i < L; i++, kappa++)
                     y.push(ZCoder.decode(x256.get(kappa & 0xff, kappa >> 8)()));
                 const z = y.map((i) => crystals.NTT.encode(i.slice()));
                 const w = [];
                 for (let i = 0; i < K; i++) {
-                    // w ← NTT−1(A ◦ NTT(y))
+                    // w 鈫?NTT鈭?(A 鈼?NTT(y))
                     const wi = newPoly(N);
                     for (let j = 0; j < L; j++)
                         polyAdd(wi, MultiplyNTTs(A[i][j], z[j]));
                     crystals.NTT.decode(wi);
                     w.push(wi);
                 }
-                const w1 = w.map((j) => j.map(HighBits)); // w1 ← HighBits(w)
-                // Commitment hash: c˜ ∈{0, 1 2λ } ← H(µ||w1Encode(w1), 2λ)
+                const w1 = w.map((j) => j.map(HighBits)); // w1 鈫?HighBits(w)
+                // Commitment hash: c藴 鈭坽0, 1 2位 } 鈫?H(碌||w1Encode(w1), 2位)
                 const cTilde = shake256
                     .create({ dkLen: C_TILDE_BYTES })
                     .update(mu)
                     .update(W1Vec.encode(w1))
                     .digest();
-                // Verifer’s challenge
-                // c ← SampleInBall(c˜1); cˆ ← NTT(c)
+                // Verifer鈥檚 challenge
+                // c 鈫?SampleInBall(c藴1); c藛 鈫?NTT(c)
                 const cHat = crystals.NTT.encode(SampleInBall(cTilde));
-                // ⟨⟨cs1⟩⟩ ← NTT−1(cˆ◦ sˆ1)
+                // 鉄ㄢ煥cs1鉄┾煩 鈫?NTT鈭?(c藛鈼?s藛1)
                 const cs1 = s1.map((i) => MultiplyNTTs(i, cHat));
                 for (let i = 0; i < L; i++) {
-                    polyAdd(crystals.NTT.decode(cs1[i]), y[i]); // z ← y + ⟨⟨cs1⟩⟩
+                    polyAdd(crystals.NTT.decode(cs1[i]), y[i]); // z 鈫?y + 鉄ㄢ煥cs1鉄┾煩
                     if (polyChknorm(cs1[i], GAMMA1 - BETA))
-                        continue main_loop; // ||z||∞ ≥ γ1 − β
+                        continue main_loop; // ||z||鈭?鈮?纬1 鈭?尾
                 }
-                // cs1 is now z (▷ Signer’s response)
+                // cs1 is now z (鈻?Signer鈥檚 response)
                 let cnt = 0;
                 const h = [];
                 for (let i = 0; i < K; i++) {
-                    const cs2 = crystals.NTT.decode(MultiplyNTTs(s2[i], cHat)); // ⟨⟨cs2⟩⟩ ← NTT−1(cˆ◦ sˆ2)
-                    const r0 = polySub(w[i], cs2).map(LowBits); // r0 ← LowBits(w − ⟨⟨cs2⟩⟩)
+                    const cs2 = crystals.NTT.decode(MultiplyNTTs(s2[i], cHat)); // 鉄ㄢ煥cs2鉄┾煩 鈫?NTT鈭?(c藛鈼?s藛2)
+                    const r0 = polySub(w[i], cs2).map(LowBits); // r0 鈫?LowBits(w 鈭?鉄ㄢ煥cs2鉄┾煩)
                     if (polyChknorm(r0, GAMMA2 - BETA))
-                        continue main_loop; // ||r0||∞ ≥ γ2 − β
-                    const ct0 = crystals.NTT.decode(MultiplyNTTs(t0[i], cHat)); // ⟨⟨ct0⟩⟩ ← NTT−1(cˆ◦ tˆ0)
+                        continue main_loop; // ||r0||鈭?鈮?纬2 鈭?尾
+                    const ct0 = crystals.NTT.decode(MultiplyNTTs(t0[i], cHat)); // 鉄ㄢ煥ct0鉄┾煩 鈫?NTT鈭?(c藛鈼?t藛0)
                     if (polyChknorm(ct0, GAMMA2))
                         continue main_loop;
                     polyAdd(r0, ct0);
-                    // ▷ Signer’s hint
-                    const hint = polyMakeHint(r0, w1[i]); // h ← MakeHint(−⟨⟨ct0⟩⟩, w− ⟨⟨cs2⟩⟩ + ⟨⟨ct0⟩⟩)
+                    // 鈻?Signer鈥檚 hint
+                    const hint = polyMakeHint(r0, w1[i]); // h 鈫?MakeHint(鈭掆煥鉄╟t0鉄┾煩, w鈭?鉄ㄢ煥cs2鉄┾煩 + 鉄ㄢ煥ct0鉄┾煩)
                     h.push(hint.v);
                     cnt += hint.cnt;
                 }
                 if (cnt > OMEGA)
-                    continue; // the number of 1’s in h is greater than ω
+                    continue; // the number of 1鈥檚 in h is greater than 蠅
                 x256.clean();
-                const res = sigCoder.encode([cTilde, cs1, h]); // σ ← sigEncode(c˜, z mod±q, h)
+                const res = sigCoder.encode([cTilde, cs1, h]); // 蟽 鈫?sigEncode(c藴, z mod卤q, h)
                 // rho, _K, tr is subarray of secretKey, cannot clean.
                 cleanBytes(cTilde, cs1, h, cHat, w1, w, z, y, rhoprime, s1, s2, t0, ...A);
                 // `externalMu` hands ownership of `mu` to the caller,
@@ -533,25 +535,25 @@ function getDilithium(opts_) {
         verify: (sig, msg, publicKey, opts = {}) => {
             validateInternalOpts(opts);
             const { externalMu = false } = opts;
-            // ML-DSA.Verify(pk, M, σ): Verifes a signature σ for a message M.
-            const [rho, t1] = publicCoder.decode(publicKey); // (ρ, t1) ← pkDecode(pk)
-            const tr = shake256(publicKey, { dkLen: TR_BYTES }); // 6: tr ← H(BytesToBits(pk), 512)
+            // ML-DSA.Verify(pk, M, 蟽): Verifes a signature 蟽 for a message M.
+            const [rho, t1] = publicCoder.decode(publicKey); // (蟻, t1) 鈫?pkDecode(pk)
+            const tr = shake256(publicKey, { dkLen: TR_BYTES }); // 6: tr 鈫?H(BytesToBits(pk), 512)
             if (sig.length !== sigCoder.bytesLen)
                 return false; // return false instead of exception
-            // (c˜, z, h) ← sigDecode(σ)
-            // ▷ Signer’s commitment hash c ˜, response z and hint
+            // (c藴, z, h) 鈫?sigDecode(蟽)
+            // 鈻?Signer鈥檚 commitment hash c 藴, response z and hint
             const [cTilde, z, h] = sigCoder.decode(sig);
             if (h === false)
-                return false; // if h = ⊥ then return false
+                return false; // if h = 鈯?then return false
             for (let i = 0; i < L; i++)
                 if (polyChknorm(z[i], GAMMA1 - BETA))
                     return false;
             const mu = externalMu
                 ? msg
-                : // 7: µ ← H(tr||M, 512)
+                : // 7: 碌 鈫?H(tr||M, 512)
                     shake256.create({ dkLen: CRH_BYTES }).update(tr).update(msg).digest();
-            // Compute verifer’s challenge from c˜
-            const c = crystals.NTT.encode(SampleInBall(cTilde)); // c ← SampleInBall(c˜1)
+            // Compute verifer鈥檚 challenge from c藴
+            const c = crystals.NTT.encode(SampleInBall(cTilde)); // c 鈫?SampleInBall(c藴1)
             const zNtt = z.map((i) => i.slice()); // zNtt = NTT(z)
             for (let i = 0; i < L; i++)
                 crystals.NTT.encode(zNtt[i]);
@@ -566,18 +568,18 @@ function getDilithium(opts_) {
                 }
                 // wApprox = A*z - c*t1 * (2**d)
                 const wApprox = crystals.NTT.decode(polySub(Az, ct12d));
-                // Reconstruction of signer’s commitment
-                wTick1.push(polyUseHint(wApprox, h[i])); // w ′ ← UseHint(h, w'approx )
+                // Reconstruction of signer鈥檚 commitment
+                wTick1.push(polyUseHint(wApprox, h[i])); // w 鈥?鈫?UseHint(h, w'approx )
             }
             xof.clean();
-            // c˜′← H (µ||w1Encode(w′1), 2λ),  Hash it; this should match c˜
+            // c藴鈥测啇 H (碌||w1Encode(w鈥?), 2位),  Hash it; this should match c藴
             const c2 = shake256
                 .create({ dkLen: C_TILDE_BYTES })
                 .update(mu)
                 .update(W1Vec.encode(wTick1))
                 .digest();
             // Additional checks in FIPS-204:
-            // [[ ||z||∞ < γ1 − β ]] and [[c ˜ = c˜′]] and [[number of 1’s in h is ≤ ω]]
+            // [[ ||z||鈭?< 纬1 鈭?尾 ]] and [[c 藴 = c藴鈥瞉] and [[number of 1鈥檚 in h is 鈮?蠅]]
             for (const t of h) {
                 const sum = t.reduce((acc, i) => acc + i, 0);
                 if (!(sum <= OMEGA))
