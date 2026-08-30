@@ -17,6 +17,7 @@
 
 // Debug beacon — confirms this module executed
 window.__APP_MODULE_LOADED__ = true;
+import './replay-request-id.js';
 import { WSHandler } from './core/ws-handler.js';
 import { MessageController } from './core/message-controller.js';
 import { ChatUI } from './ui/chat-ui.js';
