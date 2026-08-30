@@ -104,7 +104,7 @@ async function forwardToNextHop(nextHop, packet, originalRes) {
   const allowedHosts = new Set(PEERS.map((p) => String(p).split(':')[0]));
   const hopMatch = /^([A-Za-z0-9._-]+):(\d{1,5})$/.exec(String(nextHop));
   if (!hopMatch || !allowedHosts.has(hopMatch[1])) {
-    console.error(`[Node ${PORT}] Rejected forward to non-whitelisted nextHop: ${nextHop}`);
+    console.error(`[Node ${PORT}] Rejected forward to non-whitelisted nextHop (value redacted)`);
     return originalRes.status(403).json({ status: 'error', error: 'Invalid nextHop: not in peer whitelist' });
   }
 
