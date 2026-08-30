@@ -166,8 +166,39 @@ const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（两档共用）
 const authRateLimitMiddleware = makeRateLimiter(30, RATE_LIMIT_WINDOW);      // 登录/注册防爆破
 const globalRateLimitMiddleware = makeRateLimiter(600, RATE_LIMIT_WINDOW);   // 全局 API 防滥用
 
+// ========================
+// 重放保护（phase 2，校验式）— REMINDER §4 / THREAT_MODEL.md
+// 客户端每条请求带唯一 X-Request-Id（UUID）；服务端在 TTL 窗口内记录已见 ID，
+// 重复即返回 425 REPLAY_DETECTED。无该头的请求放行（前端未接入时不影响现有调用）。
+// 内存 LRU 近似：Map(id -> ts)，惰性过期 + FIFO 上限，避免无限增长。
+// ========================
+const REPLAY_TTL = 5 * 60_000;       // 已见 ID 保留窗口 5 分钟
+const REPLAY_MAX = 100_000;          // 内存上限（超出 FIFO 淘汰最旧）
+const seenRequestIds = new Map();    // id -> timestamp(ms)
+function replayGuardMiddleware(req, res, next) {
+  const id = req.get('X-Request-Id');
+  if (!id) return next();            // 无头 -> 不保护（优雅放行）
+  const now = Date.now();
+  if (seenRequestIds.has(id)) {
+    return res.status(425).json({ error: 'REPLAY_DETECTED', message: '重复的 X-Request-Id，疑似重放攻击' });
+  }
+  seenRequestIds.set(id, now);
+  if (seenRequestIds.size > REPLAY_MAX) {
+    seenRequestIds.delete(seenRequestIds.keys().next().value); // 淘汰最旧（插入序）
+  }
+  if (seenRequestIds.size > REPLAY_MAX * 0.8) { // 惰性过期：仅超阈值时整表扫一遍
+    for (const [k, ts] of seenRequestIds) {
+      if (now - ts > REPLAY_TTL) seenRequestIds.delete(k);
+    }
+  }
+  next();
+}
+
 // 全局 API 限流（挂载在所有 /api 路由之前生效）
 app.use('/api', globalRateLimitMiddleware);
+
+// 重放保护（校验式）：挂载在全局限流之后，对所有 /api 请求生效
+app.use('/api', replayGuardMiddleware);
 
 // ========================
 // 工具
