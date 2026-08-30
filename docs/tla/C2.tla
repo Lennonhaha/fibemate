@@ -261,4 +261,24 @@ K5_ServerActiveRequiresClientFinish ==
   \A i \in 1..MaxSessions:
     sState[i] = "active" => MsgInNetwork("ClientKeyFinish", "S", i)
 
+\* =====================================================================
+\* Liveness  (handshake completion)
+\* ---------------------------------------------------------------------
+\* Under Spec == Init /\ [][Next]_vars /\ WF_vars(Next):
+\*   - Network delivery is non-consuming: MsgInNetwork is existential and
+\*     messages are only ever Append-ed to `network`, never removed. Once a
+\*     message is in network it stays visible, so every receiving action
+\*     becomes and stays enabled.
+\*   - WF_vars(Next) (weak fairness) guarantees every enabled Next-action is
+\*     eventually taken. Hence any session that leaves "init" eventually
+\*     reaches "active" on BOTH client and server.
+\* Intended liveness property (promote to the model's PROPERTY line AFTER TLC
+\* confirms it holds). tlc is NOT available in this environment (java present
+\* but tla2tools.jar fetch is blocked on 443), and CI does not run TLC, so
+\* this is machine-UNVERIFIED by inspection only. Do not claim verified.
+L_Handshake ==
+  \A i \in 1..MaxSessions:
+    (cState[i] # "init") ~> (cState[i] = "active" /\ sState[i] = "active")
+\* =====================================================================
+
 ================================================================================
