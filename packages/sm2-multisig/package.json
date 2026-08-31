@@ -1,0 +1,23 @@
+{
+  "name": "@fibemate/sm2-multisig",
+  "version": "3.3.0",
+  "description": "SM2 broadcasting multi-signature — teaching package based on Ning et al. (CSI 2024)",
+  "main": "src/sm2-multisig.js",
+  "scripts": {
+    "test": "node test/sm2-multisig.test.js"
+  },
+  "keywords": [
+    "sm2",
+    "multisignature",
+    "multi-signature",
+    "aggregate-signature",
+    "gm",
+    "chinese-crypto",
+    "teaching"
+  ],
+  "license": "GPL-3.0-only",
+  "private": false,
+  "engines": {
+    "node": ">=18"
+  }
+}

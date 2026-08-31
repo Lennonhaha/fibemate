@@ -8,10 +8,7 @@
 >
 > - **Engineering-verified components** (ML-KEM-768, SLH-DSA, SM2/SM3/SM4) have passed functional verification, KAT, and software TVLA side-channel testing, but **have not undergone third-party security audit**.
 > - **Experimental components** (VWZ, LookingGlass) **provide no cryptographic security guarantees**, are default-off, require manual activation.
-> - VWZ / LookingGlass 实验组件已归档至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支（孤立分支，仅含研究源码，无生产代码）。
-> - **Tauri 桌面应用（同名社交软件）是独立项目**，不在本仓库内，其安全状态（双棘轮、端到端加密）与本平台无关联。本仓库不包含任何可即时使用的通信产品。The Tauri-based chat application is a **separate project** not covered by this repository's security model.
-> - **VWZ 签名方案**基于全新硬度假设 VMQ-SPARSE，**无标准归约证明**，ePrint 投稿已被退回，不可用于任何生产场景。No security reduction to standard lattice assumptions; ePrint submission returned.
-> - **LookingGlass** 是代数群表示二进制混淆实验工具，**不是密码学安全原语**，不增强 LWE 硬度，仅供教学/硬件自测。Not a cryptographic security primitive.
+> - VWZ / LookingGlass 实验组件已于 2026-07-24 迁移至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支。主分支保留文档引用，源代码不再维护于 main。
 > - Full security assessment: see [Security Model](#security-model) and [Known Limitations](#known-limitations).
 
 ---
@@ -26,7 +23,7 @@
 >
 > You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
 >
-> **30+ interactive visualizations** · 12 algorithms · 11 security governance docs · 261 timestamped evidence records (lg-001~108) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
+> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 261 timestamped evidence records (lg-001~108) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
@@ -200,16 +197,11 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 ## 🔬 Experimental Research Components (Default-Off · No Security Guarantees)
 
 > ⚠️ These components **provide no cryptographic security guarantees** and are **never in the production encryption path**. They must be manually enabled.
->
-> **Strong Risk Warning:**
-> - **VWZ** relies on VMQ-SPARSE, a novel tensor-based hardness assumption with **no security reduction to standard lattice problems (LWE/SIS)**. The ePrint submission was **returned after editorial review**. Do not use VWZ in any production cryptographic system.
-> - **LookingGlass v2** is a binary obfuscation experiment, **not a cryptographic primitive**. It does not enhance LWE hardness and provides zero security guarantees.
-> - **Tauri chat app** (same-name project) is a **separate codebase** not covered by this repository's security model, CI, or audit scope. Do not conflate the two.
 
 | Module | Description | Status |
 |--------|-------------|--------|
-| **VWZ Signature** | Vandermonde-Wronskian-Zariski tensor scheme (k=16, NIST-1 128-bit) | 148/148 ✅ ([experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) branch) · ⚠️ VMQ-SPARSE assumption · No standard reduction · ePrint returned |
-| **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 · ⚠️ Not a security primitive |
+| **VWZ Signature** | Vandermonde-Wronskian-Zariski tensor scheme (k=16, NIST-1 128-bit) | 148/148 ✅ (experimental/vwz-lg branch) | VMQ-SPARSE hardness assumption · No reduction to standard LWE · Pending peer review |
+| **LookingGlass v2** | Algebraic group representation binary obfuscation tool 🔬 | v2.1 WASM 77/77 · No security claims |
 
 ---
 
@@ -231,11 +223,9 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
   Tianhe Liu. IACR Cryptology ePrint Archive, Report 2026/110618, 2026 *(submission returned after editorial review)*.
   NIST Security Level 1 parameters: signature 80 bytes, public key 1.76 KB.
   43 cross-validation tests passed (paper implementation); 148 extended functional tests passed (external suite).
-  [PDF](papers/vwz-eprint-2026.pdf) · ePrint 2026/110618 *(submission returned after editorial review; link withdrawn)* · [VWZ Challenge](https://fibemate.net/vwz-challenge) · [Hardness: VMQ-SPARSE](docs/research/route-c-lvwz-phase1-math.md) · [Cryptanalysis simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate) · [148-Test Report](docs/vwz-148-test-report.md)
+  [PDF](papers/vwz-eprint-2026.pdf) · [ePrint](https://eprint.iacr.org/2026/110618) *(submission returned after editorial review)* · [VWZ Challenge](https://fibemate.net/vwz-challenge) · [Hardness: VMQ-SPARSE](docs/research/route-c-lvwz-phase1-math.md) · [Cryptanalysis simulation](docs/research/phase2_lvwz_simulation.py) · [Code](https://github.com/Lennonhaha/fibemate) · [148-Test Report](docs/vwz-148-test-report.md)
 
   Underlying assumption: VMQ-SPARSE (Vandermonde Multivariate Quadratic tensor orbit pseudorandomness), a novel tensor-based hardness assumption distinct from lattice assumptions such as LWE. The paper does not contain a security reduction to any standard well-studied problem.
-
-  > ⚠️ **The ePrint submission was returned after editorial review. VWZ is not peer-reviewed and must not be used in production.**
 
 > TSR vwz-076 — FreeTSA RFC 3161 timestamp (2026-07-17 11:30:15 GMT, serial 0x06497CB4): [vwz-076-main-20260717.tsr](papers/vwz-076-main-20260717.tsr)
 
@@ -359,7 +349,7 @@ All claims in Core Features are backed by runnable test scripts in `scripts/`:
 | [`ci-gm-sm3.cjs`](scripts/ci-gm-sm3.cjs) | SM3 hash CI | 30 |
 | [`ci-gm-sm4.cjs`](scripts/ci-gm-sm4.cjs) | SM4-GCM AEAD CI | 30 |
 | [`ci-mlkem-kat.cjs`](scripts/ci-mlkem-kat.cjs) | ML-KEM-768 roundtrip CI | 100 |
-| [`vwz-148-test.js`](https://github.com/Lennonhaha/fibemate/blob/experimental/vwz-lg/scripts/vwz-148-test.js) | VWZ 148 extended functional tests (in experimental/vwz-lg branch) | 15 groups, 148 tests |
+| [`vwz-148-test.js`](../../tree/experimental/vwz-lg/scripts/vwz-148-test.js) | VWZ 148 extended functional tests (in experimental/vwz-lg branch) | 15 groups, 148 tests |
 | [`fpga-l8l9-43-test.js`](scripts/fpga-l8l9-43-test.js) | FPGA L8+L9 cross-validation behavioral model | 43/43 PASS |
 | [`kat-quick.js`](scripts/kat-quick.js) | ML-KEM-768 KAT quick sampling (supports --samples 10000) | 100/10,000 encap/decap roundtrips |
 | [`kat-bench.js`](scripts/kat-bench.js) | KAT performance benchmark | Throughput & latency |
@@ -467,7 +457,7 @@ rop: ≈2^143.8, red: ≈2^143.8, δ: 1.003941, β: 406, d: 998, tag: usvp
 
 **Key Insight:** BKZ-β=406 represents a computation far beyond any known classical or quantum capability (Core-SVP cost: 2^143.8 classical, 2^131.0 quantum). The gap between our experimental β≤20 and the required β≥406 demonstrates **exactly why LWE is hard** — not as an abstract claim, but as a measurable, reproducible fact.
 
-> 📄 Full analysis: [ML-KEM Security Estimate](www/docs/ml-kem-security-estimate.md)
+> 📄 Full analysis: [docs/ml-kem-security-estimate.md](www/docs/ml-kem-security-estimate.md)
 
 
 ### Known Limitations
@@ -484,10 +474,9 @@ rop: ≈2^143.8, red: ≈2^143.8, δ: 1.003941, β: 406, d: 998, tag: usvp
 ### Known Constraints & Boundaries
 
 - **Security Audits:** This project has not undergone a formal, third-party security audit. It is an engineering demonstration.
-- **Cryptographic Reductions:** Research components (VWZ) are experimental and lack a formal reduction to standard lattice assumptions. ePrint submission returned.
+- **Cryptographic Reductions:** Research components (VWZ) are experimental and lack a formal reduction to standard lattice assumptions.
 - **Physical Side-Channel:** Hardware TVLA (ChipWhisperer) is pending due to a level shifter issue (Q4 2026 target).
 - **Hardware Provisioning:** The FPGA source code (`rtl/`) is available upon request due to the specific toolchain requirements (Vivado).
-- **Project Scope:** This repository covers PQC engineering verification only. The FIBEMATE Tauri chat application is a **separate project** with its own security model, codebase, and audit scope. Security claims in this repo do not extend to the Tauri app.
 
 ### Future Roadmap
 
@@ -590,6 +579,17 @@ GNU General Public License v3.0 — see [LICENSE](./LICENSE)
 Documentation and non-code content are licensed under [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/).
 
 The ML-KEM-768 and SLH-DSA implementations are based on NIST FIPS 203/205. The SM2/SM3/SM4 implementations reference Chinese national standards GB/T 32918/32905/32907.
+
+---
+
+## Related Research
+
+- **Jianting Ning et al.** — *Pine: Enabling Privacy-Preserving Deep Packet Inspection on TLS with Rule-Hiding and Fast Connection Establishment.* ESORICS 2020 (**Best Paper Award**). Directly relevant to FIBEMATE's traffic-obfuscation strategies (StaticPad / PerPhase / BudgetPooling) — see [traffic-obfuscation-analysis](docs/traffic-obfuscation-vs-privdpi.md).
+- **Jianting Ning et al.** — *LEAP: Leakage-Abuse Attack on Efficiently Deployable, Efficiently Searchable Encryption with Partially Known Dataset.* ACM CCS 2021. Framework for evaluating leakage tolerance if FIBEMATE ever extends to server-side encrypted search.
+- **Jianting Ning et al.** — *PrivDPI: Privacy-Preserving Encrypted Traffic Inspection with Reusable Obfuscated Rules.* ACM CCS 2019.
+- **Yuchen Xiao, Lei Zhang, Yafang Yang, Wei Wu, Jianting Ning, Xinyi Huang** — *Provably Secure Multi-Signature Scheme Based on the Standard SM2 Signature Scheme.* Computer Standards & Interfaces 89 (2024). Basis of the [sm2-multisig](packages/sm2-multisig/) teaching package.
+- **Jianting Ning et al.** — *Anonymous Authentication and Key Agreement, Revisited.* IACR ePrint 2025/1986. Security-model reference for FIBEMATE's X3DH handshake — see [x3dh-anonymity-review](docs/x3dh-anonymity-review.md).
+- **Xuelian Cao, Zheng Yang, Daniël Reijsbergen, Jianting Ning, et al.** — *HHGS: Forward-secure Dynamic Group Signatures from Symmetric Primitives.* IACR ePrint 2025/2270. Reference for future group-chat extension of the double ratchet.
 
 ---
 
