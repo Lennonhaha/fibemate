@@ -1,6 +1,6 @@
 # FIBEMATE 安全限制与诚实声明
 
-> 版本: v3.3 | 最后更新: 2026-07-22
+> 版本: v3.3.0 | 最后更新: 2026-08-31
 
 ## 本文目的
 
@@ -69,6 +69,31 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 - **仅 C-2 应用层混合 KEX 可用** — 协议适配场景单一（IANA #4590），通用性受限
 - **无标准化跨平台适配规范** — 多端（Web/Node/FPGA/STM32）接口存在隐性差异
 
+### 4.1 X3DH 握手匿名性审查
+
+基于宁建廷等（2025）匿名认证框架对 FIBEMATE X3DH + SPK 独立化握手的审查结论：
+
+> Jianting Ning et al., *Anonymous Authentication and Key Agreement, Revisited*. ePrint 2025/1986.
+
+- **匿名性**：握手为**认证型**（IK 明文传输），非匿名握手——设计取舍而非缺陷；未来需匿名场景走 HHGS 群签名路线
+- **密钥确认**：隐式确认（Double Ratchet AEAD），建议首次解密失败时提示重新握手
+- **DoS 面**：bundle 获取端点需 rate-limit（与 login 一致）；shared_secrets 需 TTL + 容量上限
+- **PQC 对齐**：签名层 ML-DSA-65 ✅；DH 层仍经典 X25519（应用层 SM2+ML-KEM-768 混合 KEX 补充）
+
+详见：[x3dh-anonymity-review.md](./x3dh-anonymity-review.md)
+
+### 4.2 流量混淆对抗评估
+
+基于 PrivDPI（CCS'19）/ Pine（ESORICS'20 最佳论文）对照评估 FIBEMATE 三策略（StaticPad / PerPhase / BudgetPool）：
+
+> Jianting Ning et al., *PrivDPI*, CCS 2019; *Pine*, ESORICS 2020 Best Paper.
+
+- BudgetPool(J=3000) 压至 53.3%≈随机 ✅
+- 已知缺口：① BudgetPool 耗尽态回退泄漏 ② 填充规则无轮换 ③ 发包时序未混淆
+- 改进建议已列入 P1/P2（详见评估文档）
+
+详见：[traffic-obfuscation-vs-privdpi.md](./traffic-obfuscation-vs-privdpi.md)
+
 ---
 
 ## 5. 部署与运维安全局限
@@ -111,6 +136,14 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 | BigInt 实现，非恒定时间 | 存在时序侧信道泄漏 |
 | k-masking (k' = k + r·N) 缓解了 SPA，但未消除 | 需要硬件 TVLA 验证 |
 | JS 平台限制 ⚠️ | 详见 SM2 TVLA 分析 |
+
+### 7.1 SM2 多签名教学包
+
+`packages/sm2-multisig/` 实现了基于宁建廷等（2024）方案的广播多签名教学示例——共享 nonce + 线性响应聚合 + 聚合公钥验证。
+
+> Yuchen Xiao, Lei Zhang, Yafang Yang, Wei Wu, **Jianting Ning**, Xinyi Huang. *Provably Secure Multi-Signature Scheme Based on the Standard SM2 Signature Scheme*. CSI 89:103819, 2024.
+
+**边界声明**：教学版演示聚合原理；完整可证明安全构造含 `(1+d)⁻¹` 因子（EUF-CMA / bijective ROM / ECDLP），请参照论文。测试覆盖：SM3 KAT、3 方聚合、n=1 退化、2 方 ID 绑定、篡改拒绝。
 
 ---
 
