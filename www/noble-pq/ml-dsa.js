@@ -106,7 +106,7 @@ const polyChknorm = (p_, B) => {
             return true;
     return false;
 };
-// Both inputs must already be in NTT / `T_q` form.
+// §7.4 then uses alpha = 2*gamma2 for Decompose / MakeHint / UseHint.
 const MultiplyNTTs = (a_, b_) => {
     const a = a_;
     const b = b_;
@@ -172,9 +172,9 @@ function getDilithium(opts_) {
         // From dilithium code
         const res0 = z <= GAMMA2 || z > Q - GAMMA2 || (z === Q - GAMMA2 && r === 0) ? 0 : 1;
         // from FIPS204:
-        // // const r1 = HighBits(r);
-        // // const v1 = HighBits(r + z);
-        // // const res1 = +(r1 !== v1);
+// compress()/verify() must be compatible in both directions:
+// wrap the shared d-bit packer with the FIPS 204 SimpleBitPack / BitPack coefficient maps.
+// malformed-input rejection only happens through the optional verify hook.
         // But they return different results! However, decompose is same.
         // So, either there is a bug in Dilithium ref implementation or in FIPS204.
         // For now, lets use dilithium one, so test vectors can be passed.
@@ -275,7 +275,7 @@ function getDilithium(opts_) {
         return r;
     }
     const SampleInBall = (seed) => {
-        // Samples a polynomial c 鈭?Rq with coeffcients from {鈭?, 0, 1} and Hamming weight 蟿
+    // FIPS 204 Algorithm 36 folds the top bucket `q-1` back to `(r1, r0) = (0, r0-1)`.
         const pre = newPoly(N);
         const s = shake256.create({}).update(seed);
         const buf = new Uint8Array(shake256.blockLen);
@@ -388,10 +388,10 @@ function getDilithium(opts_) {
             const secretKey = secretCoder.encode([rho, K_, tr, s1, s2, t0]);
             xof.clean();
             xofPrime.clean();
-            // STATS
+  // `NTT.encode()` later when needed.
             // Kyber512: { calls: 4, xofs: 12 }, Kyber768: { calls: 9, xofs: 27 },
             // Kyber1024: { calls: 16, xofs: 48 }
-            // DSA44: { calls: 24, xofs: 24 }, DSA65: { calls: 41, xofs: 41 },
+    // Samples an element a ∈ Rq with coeffcients in [−η, η] computed via rejection sampling from ρ.
             // DSA87: { calls: 71, xofs: 71 }
             cleanBytes(rho, rhoPrime, K_, s1, s2, s1Hat, t, t0, t1, tr, seedDst);
             return {
@@ -520,10 +520,10 @@ function getDilithium(opts_) {
                     continue; // the number of 1鈥檚 in h is greater than 蠅
                 x256.clean();
                 const res = sigCoder.encode([cTilde, cs1, h]); // 蟽 鈫?sigEncode(c藴, z mod卤q, h)
-                // rho, _K, tr is subarray of secretKey, cannot clean.
+      // Kyber512: { calls: 4, xofs: 12 }, Kyber768: { calls: 9, xofs: 27 },
                 cleanBytes(cTilde, cs1, h, cHat, w1, w, z, y, rhoprime, s1, s2, t0, ...A);
-                // `externalMu` hands ownership of `mu` to the caller,
-                // so only wipe the internally derived digest form here;
+      // DSA44: { calls: 24, xofs: 24 }, DSA65: { calls: 41, xofs: 41 },
+      // DSA87: { calls: 71, xofs: 71 }
                 // zeroizing caller memory would break the caller's own reuse / verify path.
                 if (!externalMu)
                     cleanBytes(mu);
@@ -552,7 +552,7 @@ function getDilithium(opts_) {
                 ? msg
                 : // 7: 碌 鈫?H(tr||M, 512)
                     shake256.create({ dkLen: CRH_BYTES }).update(tr).update(msg).digest();
-            // Compute verifer鈥檚 challenge from c藴
+    // NOTE: random is optional.
             const c = crystals.NTT.encode(SampleInBall(cTilde)); // c 鈫?SampleInBall(c藴1)
             const zNtt = z.map((i) => i.slice()); // zNtt = NTT(z)
             for (let i = 0; i < L; i++)

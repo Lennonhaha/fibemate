@@ -53,9 +53,9 @@ export const PARAMS = /* @__PURE__ */ (() => Object.freeze({
     '256f': Object.freeze({ W: 16, N: 32, H: 68, D: 17, K: 35, A: 9, securityLevel: 256 }),
     '256s': Object.freeze({ W: 16, N: 32, H: 64, D: 8, K: 22, A: 14, securityLevel: 256 }),
 }))();
-// FIPS 205 `ADRS.setTypeAndClear(...)` selectors. Local names shorten the spec labels
-// (`WOTS_HASH` -> `WOTS`, `TREE` -> `HASHTREE`, `FORS_ROOTS` -> `FORSPK`), and `setAddr({ type })`
-// below only writes the type word; callers still need to preserve or overwrite the trailing words.
+// Keys the internal SLH-DSA surface accepts. `context` is deliberately absent: the public
+// wrappers consume it when they format M' and must not forward it, because a key that is
+// accepted and then never read is the same silent downgrade this validation exists to prevent.
 const AddressType = {
     WOTS: 0,
     WOTSPK: 1,
@@ -348,7 +348,7 @@ function gen(opts, hashOpts_) {
             // ADRS.setLayerAddress(d 鈭?1)
             const topTreeAddr = setAddr({ layer: D - 1 });
             const wotsAddr = setAddr({ layer: D - 1 });
-            //PK.root 鈫恄xmss node(SK.seed, 0, h鈥? PK.seed, ADRS)
+  // mask away any spare high bits so `idx_tree` / `idx_leaf` match the spec's final mod-2^k steps.
             const { root } = merkleSign(context, wotsAddr, topTreeAddr, ~0 >>> 0);
             const publicKey = publicCoder.encode([publicSeed, root]);
             const secretKey = secretCoder.encode([secretSeed, secretPRF, publicKey]);

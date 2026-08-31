@@ -136,10 +136,10 @@ export const genCrystals = (opts) => {
 const createXofShake = (shake) => (seed, blockLen) => {
     if (!blockLen)
         blockLen = shake.blockLen;
-    // Optimizations that won't mater:
+  // Explained: https://electricdusk.com/ntt.html
     // - cached seed update (two .update(), on start and on the end)
-    // - another cache which cloned into working copy
-    // Faster than multiple updates, since seed less than blockLen
+  // Kyber has slightly different params, since there is no 512th primitive root of unity mod q,
+  // only 256th primitive root of unity mod. Which also complicates MultiplyNTT.
     const _seed = new Uint8Array(seed.length + 2);
     _seed.set(seed);
     const seedLen = seed.length;
