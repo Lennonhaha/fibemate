@@ -1476,9 +1476,18 @@ app.get('/api/mlkem/test', (req, res) => {
   }
 });
 
+// Auth guard for CPU-intensive batch test endpoints
+const batchTestAuth = (req, res, next) => {
+  const token = req.query.token;
+  if (!token || token !== process.env.BATCH_TEST_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
 // Batch KAT test endpoint — processes multiple rounds server-side
 // Avoids client-side concurrency overload and Nginx rate limiting
-app.get('/api/mlkem/test-batch', (req, res) => {
+app.get('/api/mlkem/test-batch', batchTestAuth, (req, res) => {
   try {
     const count = Math.min(parseInt(req.query.count) || 20, 50000);
     const results = [];
@@ -1501,7 +1510,7 @@ app.get('/api/mlkem/test-batch', (req, res) => {
   }
 });
 // Pure JS (ml-kem-768.js) test-batch endpoint — same logic, no C addon dependency
-app.get('/api/mlkem/test-batch-purejs', (req, res) => {
+app.get('/api/mlkem/test-batch-purejs', batchTestAuth, (req, res) => {
   try {
     const count = Math.min(parseInt(req.query.count) || 100, 50000);
     const results = [];
