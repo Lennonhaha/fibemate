@@ -1,6 +1,6 @@
 # FIBEMATE Project Status
 
-> Last updated: 2026-08-25
+> Last updated: 2026-08-31
 
 ## Overview
 
@@ -8,7 +8,7 @@ FIBEMATE is a post-quantum cryptography full-stack engineering demonstration and
 
 **License:** GPL-3.0
 **Repository:** [github.com/Lennonhaha/fibemate](https://github.com/Lennonhaha/fibemate)
-**Current version:** v3.3-preview
+**Current version:** v3.3.0
 
 ## Security Posture
 
@@ -20,14 +20,14 @@ FIBEMATE is a post-quantum cryptography full-stack engineering demonstration and
 | SM3/SM4-GCM KAT | PASS | 3-platform CI (Ubuntu/macOS/Windows) |
 | TLA+ protocol verification | PASS | 7 invariants / 101,467 states / EXIT 0 |
 | TVLA side-channel (software) | PASS | N=10,000, 36/36 green |
-| CodeQL | 0 critical | Critical SSRF dismissed (false positive) |
+| CodeQL | 0 errors | SSRF fixed with explicit URL protocol whitelist (commit 4785b92c); 182 open alerts being triaged |
 | Dependabot | 0 open | 40 historical alerts dismissed (all fixed/upgraded) |
 | ESLint (CI scope) | 0 errors | `packages/pqc-kem/src/ + test/ --max-warnings 0` green |
 | ESLint (full scripts/) | 0 errors, 106 warnings | Down from 112 errors + 239 warnings |
 
-## Known Limitations (P0)
+## Known Limitations
 
-1. **Experimental component isolation** — VWZ/LookingGlass controlled by runtime flags only; no compile-time enforcement. Deadline 2026-08-20 (overdue).
+1. ~~Experimental component isolation~~ — ✅ **Resolved 2026-08-25**: compile-time isolation via `flags.VWZ = false` in `www/config.json`; VWZ/LookingGlass modules gated by runtime flags, no compile-time paths.
 2. **No third-party security audit** — All testing is self-performed. Highest-leverage improvement item.
 3. **FPGA physical side-channel** — Logic-only verification; no power/EM leakage testing. Planned Q4 2026.
 4. **JS BigInt non-constant-time** — SM2/ML-KEM use BigInt with timing side-channel risk. k-masking mitigates SPA but not fully.
