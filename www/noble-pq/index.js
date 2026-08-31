@@ -1,39 +1,35 @@
 // SPDX-License-Identifier: MIT AND GPL-3.0-only
 // Copyright (c) 2024 Paul Miller (https://paulmillr.com)
-// Derived from @noble/post-quantum and @noble/hashes (MIT License).
-// Relicensed under GPL-3.0-only as part of FIBEMATE.
+// @noble/post-quantum - MIT License (https://paulmillr.com/posts/noble-post-quantum)
+// FIBEMATE Project - GPL-3.0-only (https://fibemate.net)
+// ---------------------------------------------------------------------------
+// Derived from @noble/post-quantum (MIT License), used under dual MIT/GPL-3.0 licensing.
+// ---------------------------------------------------------------------------
+
 /**
- * Audited & minimal JS implementation of hash functions, MACs, and KDFs.
+ * Auditable & minimal JS implementation of post-quantum public-key cryptography.
  * Check out individual modules.
  * @module
  * @example
 ```js
+import { ml_kem512, ml_kem768, ml_kem1024 } from '@noble/post-quantum/ml-kem.js';
+import { ml_dsa44, ml_dsa65, ml_dsa87 } from '@noble/post-quantum/ml-dsa.js';
 import {
-  sha256, sha384, sha512, sha224, sha512_224, sha512_256
-} from '@noble/hashes/sha2.js';
+  slh_dsa_sha2_128f, slh_dsa_sha2_128s,
+  slh_dsa_sha2_192f, slh_dsa_sha2_192s,
+  slh_dsa_sha2_256f, slh_dsa_sha2_256s,
+  slh_dsa_shake_128f, slh_dsa_shake_128s,
+  slh_dsa_shake_192f, slh_dsa_shake_192s,
+  slh_dsa_shake_256f, slh_dsa_shake_256s,
+} from '@noble/post-quantum/slh-dsa.js';
 import {
-  sha3_224, sha3_256, sha3_384, sha3_512,
-  keccak_224, keccak_256, keccak_384, keccak_512,
-  shake128, shake256
-} from '@noble/hashes/sha3.js';
+  falcon512, falcon512padded, falcon1024, falcon1024padded,
+} from '@noble/post-quantum/falcon.js';
 import {
-  cshake128, cshake256,
-  turboshake128, turboshake256,
-  kt128, kt256,
-  kmac128, kmac256,
-  tuplehash256, parallelhash256,
-  keccakprg
-} from '@noble/hashes/sha3-addons.js';
-import { blake3 } from '@noble/hashes/blake3.js';
-import { blake2b, blake2s } from '@noble/hashes/blake2.js';
-import { hmac } from '@noble/hashes/hmac.js';
-import { hkdf } from '@noble/hashes/hkdf.js';
-import { pbkdf2, pbkdf2Async } from '@noble/hashes/pbkdf2.js';
-import { scrypt, scryptAsync } from '@noble/hashes/scrypt.js';
-import { md5, ripemd160, sha1 } from '@noble/hashes/legacy.js';
-import * as utils from '@noble/hashes/utils.js';
+  ml_kem768_x25519, ml_kem768_p256, ml_kem1024_p384,
+  KitchenSink_ml_kem768_x25519,
+  QSF_ml_kem768_p256, QSF_ml_kem1024_p384,
+} from '@noble/post-quantum/hybrid.js';
 ```
  */
 throw new Error('root module cannot be imported: import submodules instead. Check out README');
-export {};
-//# sourceMappingURL=index.js.map
