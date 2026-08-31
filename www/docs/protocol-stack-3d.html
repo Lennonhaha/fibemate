@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE 协议层次结构 · 3D 教学动画</title>
+<style>
+  :root { --bg:#060c16; --text:#c9d6e8; --dim:#6b7f99; --gold:#d4af37; --cyan:#00d4d4; --pass:#2ecc71; --accent:#7aa2ff; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; padding:20px; line-height:1.6; }
+  h1 { font-size:1.35rem; color:#eaf2ff; }
+  h1 .tag { font-size:0.66rem; background:#1a2c44; color:var(--gold); padding:2px 8px; border-radius:12px; margin-left:8px; vertical-align:middle; }
+  .subtitle { color:var(--dim); font-size:0.82rem; margin-top:2px; }
+  .note { background:#0d1a2c; border:1px solid #1c2f4a; border-radius:8px; padding:8px 12px; margin:10px 0; font-size:0.74rem; color:#a8b8cc; }
+  #wrap { display:grid; grid-template-columns: 1fr 300px; gap:12px; }
+  @media (max-width:760px) { #wrap { grid-template-columns:1fr; } }
+  #container { position:relative; height:560px; background:#080f1c; border:1px solid #1c2f4a; border-radius:10px; overflow:hidden; }
+  #stage { width:100%; height:100%; }
+  #detail { background:#0d1a2c; border:1px solid #1c2f4a; border-radius:10px; padding:14px; }
+  #detail h3 { color:var(--gold); font-size:0.95rem; margin-bottom:8px; }
+  #detail ul { list-style:none; font-size:0.78rem; }
+  #detail li { padding:5px 8px; border-bottom:1px solid #16273d; color:var(--text); }
+  #detail li b { color:var(--cyan); }
+  #detail .pq { color:var(--gold); }
+  #detail .empty { color:var(--dim); font-size:0.75rem; }
+  #controls { display:flex; gap:8px; margin-top:10px; flex-wrap:wrap; }
+  button { background:#12233b; color:var(--text); border:1px solid #24406b; border-radius:6px; padding:6px 14px; font-size:0.78rem; cursor:pointer; }
+  button:hover { background:#1a3150; }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:0.72rem; color:var(--dim); margin-top:10px; }
+  .legend span { display:inline-flex; align-items:center; gap:5px; }
+  .sw { width:10px; height:10px; border-radius:50%; display:inline-block; }
+  .foot { color:var(--dim); font-size:0.7rem; margin-top:12px; }
+</style>
+</head>
+<body>
+  <h1>FIBEMATE 协议层次结构 · 3D 教学动画 <span class="tag">PQC + 国密混合</span></h1>
+  <div class="subtitle">传输层 → 密钥交换 → 双棘轮 → 消息加密 → 应用层（点击各层查看组件）</div>
+  <div class="note">金色 = 后量子组件（ML-KEM-768 / ML-DSA-65 / SLH-DSA）· 青色 = 国密组件（SM2/SM3/SM4）· 拖动旋转、滚轮缩放。</div>
+
+  <div id="wrap">
+    <div id="container"><div id="stage"></div></div>
+    <div id="detail">
+      <h3 id="dTitle">点击协议层查看组件</h3>
+      <ul id="dList"><li class="empty">选择一个 3D 协议层…</li></ul>
+    </div>
+  </div>
+
+  <div id="controls">
+    <button id="btnExplode">↕ 展开层次</button>
+    <button id="btnReset">↺ 复位视角</button>
+  </div>
+  <div class="legend">
+    <span><i class="sw" style="background:#d4af37"></i>PQC 组件</span>
+    <span><i class="sw" style="background:#00d4d4"></i>国密组件</span>
+    <span><i class="sw" style="background:#7aa2ff"></i>经典/混合组件</span>
+  </div>
+  <div class="foot">FIBEMATE · 协议栈教学可视化 · 对应 docs/architecture.md / deep-dive-01-double-ratchet-pq.md</div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "../../crypto/lgv2/vendor/three/three.module.js",
+  "three/addons/": "../../crypto/lgv2/vendor/three/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const container = document.getElementById('stage');
+const W = container.clientWidth, H = container.clientHeight;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x080f1c);
+const camera = new THREE.PerspectiveCamera(45, W/H, 0.1, 200);
+camera.position.set(6, 5, 9);
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setSize(W, H); renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+container.appendChild(renderer.domElement);
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.target.set(0, 1.2, 0);
+
+scene.add(new THREE.AmbientLight(0x445577, 1.1));
+const dl = new THREE.DirectionalLight(0xffffff, 1.5); dl.position.set(5, 9, 4); scene.add(dl);
+scene.add(new THREE.PointLight(0x7aa2ff, 0.5, 30).translateY(2));
+
+// ── 协议层定义（自底向上：0 传输 → 4 应用）──
+const LAYERS = [
+  { name:'① 传输层 · Transport', color:0x7aa2ff,
+    items:[['WebSocket (wss://fibemate.net)', 'cls'],['TLS 1.3 + 混合证书', 'cls'],['流量混淆（StaticPad / PerPhase / BudgetPool）', 'cls'],['WS 填充 ws-padding', 'cls']] },
+  { name:'② 密钥交换 · X3DH + PQC', color:0xd4af37,
+    items:[['X3DH（IK / SPK / EK 三方 DH）', 'cls'],['独立 Signed Pre-Key（X25519）', 'cls'],['SPK 签名 · ML-DSA-65', 'pq'],['混合 KEX · SM2 + ML-KEM-768（IANA #4590）', 'pq'],['会话密钥 HKDF 派生', 'cls']] },
+  { name:'③ 双棘轮 · Double Ratchet', color:0xd4af37,
+    items:[['根密钥 / 链密钥 KDF_RK + KDF_CK', 'cls'],['跳钥池（乱序 + 跨链保留）', 'cls'],['前向安全（DH 轮换）', 'cls'],['重放防护（静默丢弃）', 'cls']] },
+  { name:'④ 消息加密 · 国密层', color:0x00d4d4,
+    items:[['SM4-GM（GB/T 32907）消息体', 'gm'],['AES-256-GCM 会话密钥封装', 'cls'],['SM3（GB/T 32905）哈希', 'gm'],['HMAC-SM3 完整性', 'gm']] },
+  { name:'⑤ 应用层 · 证据与合规', color:0x00d4d4,
+    items:[['端到端加密消息', 'cls'],['TSR 可信时间戳证据链（256 份）', 'cls'],['安全数字（safety number）', 'cls'],['SM2 签名（GB/T 32918）', 'gm']] },
+];
+
+// ── 3D 层 ──
+const groups = [];
+const LAYER_H = 1.02, GAP = 0.34;
+const BASE_Y = 0;
+const layerW = 5.6, layerD = 2.6;
+const explodeOffsets = [0, 0.5, 1.0, 1.5, 2.0]; // 爆炸模式额外间距
+let exploded = false;
+
+const raycaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+const pointerObj = new THREE.Vector2();
+
+function label3d(text, color, size=1.15) {
+  const c = document.createElement('canvas'); c.width = 640; c.height = 96;
+  const ctx = c.getContext('2d');
+  ctx.font = 'bold 44px "Segoe UI","Microsoft YaHei"'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillStyle = color; ctx.fillText(text, 320, 48);
+  const tex = new THREE.CanvasTexture(c);
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map:tex, transparent:true, depthTest:false }));
+  sp.scale.set(size*3.4, size*0.52, 1);
+  return sp;
+}
+
+function buildLayer(idx, layer) {
+  const g = new THREE.Group();
+  const mat = new THREE.MeshStandardMaterial({
+    color: layer.color, emissive: layer.color, emissiveIntensity: 0.14,
+    transparent: true, opacity: 0.88, roughness: 0.4, metalness: 0.25
+  });
+  const box = new THREE.Mesh(new THREE.BoxGeometry(layerW, LAYER_H, layerD), mat);
+  box.castShadow = true;
+  g.add(box);
+  // 边框（高亮用）
+  const edge = new THREE.LineSegments(
+    new THREE.EdgesGeometry(new THREE.BoxGeometry(layerW+0.02, LAYER_H+0.02, layerD+0.02)),
+    new THREE.LineBasicMaterial({ color: 0xffffff, transparent:true, opacity:0.12 })
+  );
+  g.add(edge);
+  // 层标题
+  const lbl = label3d(layer.name, '#eaf2ff', 1.0);
+  lbl.position.set(0, LAYER_H/2 + 0.5, 0);
+  g.add(lbl);
+  // 组件小节点（横排 2x2）
+  const n = layer.items.length;
+  layer.items.forEach((it, i) => {
+    const col = it[1]==='pq' ? 0xd4af37 : (it[1]==='gm' ? 0x00d4d4 : 0x7aa2ff);
+    const m = new THREE.Mesh(new THREE.SphereGeometry(0.22, 20, 20),
+      new THREE.MeshStandardMaterial({ color: col, emissive: col, emissiveIntensity: it[1]==='pq'?0.9:0.45 }));
+    const row = Math.floor(i/2), coln = i%2;
+    m.position.set((coln-0.5)*1.6, -0.1, (row-0.25)*0.9 + 0.2);
+    m.userData = { layer:idx, item:it };
+    g.add(m);
+    // 组件小字
+    const tl = label3d(it[0], it[1]==='pq' ? '#d4af37' : (it[1]==='gm' ? '#00d4d4' : '#9db4d8'), 0.52);
+    tl.position.set((coln-0.5)*1.6, 0.42, (row-0.25)*0.9 + 0.2);
+    tl.scale.set(2.2, 0.34, 1);
+    g.add(tl);
+  });
+  g.position.set(0, BASE_Y + idx*(LAYER_H+GAP), 0);
+  g.userData = { idx, layer, baseY: g.position.y, mat, edge };
+  scene.add(g);
+  groups.push(g);
+  return g;
+}
+LAYERS.forEach((l, i) => buildLayer(i, l));
+
+// ── 交互：点击层 → 详情面板；悬停高亮 ──
+const detailTitle = document.getElementById('dTitle');
+const detailList = document.getElementById('dList');
+function showDetail(idx) {
+  const layer = LAYERS[idx];
+  detailTitle.textContent = layer.name;
+  detailList.innerHTML = layer.items.map(([name, kind]) => {
+    const cls = kind==='pq' ? 'pq' : '';
+    const tag = kind==='pq' ? ' [PQC]' : (kind==='gm' ? ' [国密]' : '');
+    return `<li class="${cls}"><b>▸</b> ${name}${tag}</li>`;
+  }).join('');
+}
+let hovered = -1;
+function highlight(idx) {
+  groups.forEach((g, i) => {
+    const on = i===idx;
+    g.userData.mat.emissiveIntensity = on ? 0.42 : 0.14;
+    g.userData.edge.material.opacity = on ? 0.9 : 0.12;
+  });
+}
+renderer.domElement.addEventListener('pointermove', (e) => {
+  const rect = renderer.domElement.getBoundingClientRect();
+  mouse.x = ((e.clientX-rect.left)/rect.width)*2-1;
+  mouse.y = -((e.clientY-rect.top)/rect.height)*2+1;
+});
+renderer.domElement.addEventListener('click', () => {
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(groups.flatMap(g => g.children), false);
+  if (hits.length) {
+    const node = hits[0].object;
+    const idx = (node.userData.layer ?? node.parent.userData?.idx);
+    if (idx !== undefined) { showDetail(idx); highlight(idx); }
+  }
+});
+
+// 悬停检测（每帧）
+function pick() {
+  raycaster.setFromCamera(mouse, camera);
+  const hits = raycaster.intersectObjects(groups.flatMap(g => g.children), false);
+  const idx = hits.length ? (hits[0].object.userData.layer ?? hits[0].object.parent.userData?.idx ?? -1) : -1;
+  if (idx !== hovered) { hovered = idx; highlight(idx); renderer.domElement.style.cursor = idx>=0 ? 'pointer' : 'default'; }
+}
+
+// ── 控制 ──
+document.getElementById('btnExplode').onclick = () => {
+  exploded = !exploded;
+  document.getElementById('btnExplode').textContent = exploded ? '⇉ 收起层次' : '↕ 展开层次';
+};
+document.getElementById('btnReset').onclick = () => {
+  camera.position.set(6,5,9); controls.target.set(0,1.2,0); controls.update();
+};
+
+function animate() {
+  requestAnimationFrame(animate);
+  // 爆炸/收起动画
+  groups.forEach((g) => {
+    const targetY = g.userData.baseY + (exploded ? explodeOffsets[g.userData.idx]*0.9 : 0);
+    g.position.y += (targetY - g.position.y) * 0.08;
+    g.rotation.y += 0.0015;
+    // 组件节点呼吸
+    g.children.forEach((c) => {
+      if (c.isMesh && c.geometry.type === 'SphereGeometry') {
+        const s = 1 + Math.sin(Date.now()/600 + c.position.x*2)*0.08;
+        c.scale.set(s,s,s);
+      }
+    });
+  });
+  pick();
+  controls.update();
+  renderer.render(scene, camera);
+}
+animate();
+window.addEventListener('resize', () => {
+  const w = container.clientWidth, h = container.clientHeight;
+  camera.aspect = w/h; camera.updateProjectionMatrix(); renderer.setSize(w, h);
+});
+// 默认选中第 ② 层
+showDetail(1); highlight(1);
+</script>
+</body>
+</html>

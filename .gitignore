@@ -225,6 +225,7 @@ vwz-commit.sh
 vwz*.js
 vwz*.py
 vwz*.html
+!www/docs/vwz-signature-3d.html
 vwz*.md
 quick_check.sh
 web-health.sh
