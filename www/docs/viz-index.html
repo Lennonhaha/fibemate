@@ -56,10 +56,10 @@ footer a { color: var(--accent); text-decoration: none; }
 <div class="container">
 
 <h1>FIBEMATE 可视化仪表盘</h1>
-<p class="subtitle">23 个交互式 3D 可视化 — 从数学到代码到硬件，一站式探索后量子密码学</p>
+<p class="subtitle">26 个交互式 3D 可视化 — 从数学到代码到硬件，一站式探索后量子密码学</p>
 
 <div class="stats">
-  <div class="stat"><div class="stat-num">23</div><div class="stat-label">可视化页面</div></div>
+  <div class="stat"><div class="stat-num">26</div><div class="stat-label">可视化页面</div></div>
   <div class="stat"><div class="stat-num">12</div><div class="stat-label">密码算法</div></div>
   <div class="stat"><div class="stat-num">77.30</div><div class="stat-label">CARS 评分</div></div>
   <div class="stat"><div class="stat-num">63.70</div><div class="stat-label">IBM 七维</div></div>
@@ -107,6 +107,9 @@ var pages = [
   { cat:'trend', title:'项目演进螺旋', desc:'25 里程碑 · 4 阶段 · 进度动画', href:'project-timeline.html' },
   { cat:'overview', title:'3D 算法族谱树', desc:'18 节点 · 6 分支 · 径向布局 · 可拖拽旋转', href:'algo-family-tree.html' },
   { cat:'overview', title:'PQC 安全等级对比', desc:'10 算法 · 4 可切换指标 · FIPS 203/204/205 参考', href:'pqc-security-levels.html' },
+  { cat:'overview', title:'VWZ 签名流程 8 步 3D', desc:'Vandermonde 稀疏签名完整流程 · 参数→陷门→张量→预图像→签名→验证→批量→LWE 归约', href:'../viz/vwz-sign-flow-3d.html' },
+  { cat:'analysis', title:'VWZ 盲签名 3D 教学动画', desc:'Σ-协议 / Fischlin 变换 · 双角色数据流 · 8 步盲签名流程', href:'vwz-signature-3d.html' },
+  { cat:'overview', title:'协议栈 5 层 3D 拆解', desc:'传输→X3DH+PQC→双棘轮→SM4-GM→应用 · 点击展开 · 金色=PQC 青色=GM', href:'protocol-stack-3d.html' },
 ];
 
 function render(filterCat) {
