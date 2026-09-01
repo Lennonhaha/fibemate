@@ -217,6 +217,26 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 ---
 
+## 🌐 生态对标：与 Signal Triple Ratchet 的关系
+
+2026 年 8 月，Signal 发布了 **SPQR → Triple Ratchet**（Signal Post-Quantum Ratchet），将棘轮层核心升级为 **ML-KEM-768** 后量子密钥封装。这是全球主流 IM 产品中第一个完成端到端加密全链路后量子化的里程碑。
+
+**FIBEMATE 与 Signal 是"教学参考 vs 产品"两个赛道，互不构成竞争，但在技术路线上高度对标：**
+
+| 维度 | FIBEMATE | Signal Triple Ratchet | 说明 |
+|------|----------|----------------------|------|
+| 棘轮层 | 双棘轮（DH 棘轮 + 对称棘轮）后量子化 | Triple Ratchet（追加第三层 PQC 棘轮） | **同一路线**：双棘轮家族后量子化是共识 |
+| KEM 算法 | ML-KEM-768 | ML-KEM-768 | 同一算法族，FIBEMATE 先行验证了 768 参数 |
+| 握手协议 | X3DH + **独立 X25519 SPK** + ML-DSA-65 签名（SPK 独立化，修复 DH2=DH3 退化） | PQXDH（含 PQ 预密钥） | FIBEMATE 的 SPK 独立化在开源教学中先行公开 |
+| 签名方案 | ML-DSA-65（FIPS 204） | 未公开细节 | FIBEMATE 全链路公开可审计 |
+| 国密混合 | ✅ SM2/SM3/SM4 混合（IANA #4590 同构路线） | ❌ 无国密 | FIBEMATE 独有差异化 |
+| 教学属性 | ✅ 全开源 + 教学文档 + 3D 协议动画 + SM2 多签名教学包 | ❌ 闭源协议实现 | FIBEMATE 定位核心 |
+| 开源 | ✅ 全开源（MIT/GPL-3.0 双许可） | 协议白皮书公开、实现闭源 | FIBEMATE 可独立审计 |
+
+**结论：** Signal 的 Triple Ratchet 是对"双棘轮 + ML-KEM 后量子化"路线的最强行业背书——FIBEMATE 早在 Signal 之前即完成 SPK 独立化与双棘轮 PQC 化的公开实现。二者的差异化是定位差异而非技术差异：Signal 证明这条路是对的，FIBEMATE 证明这条路是可以被完整教学与复现的。
+
+---
+
 ## 📄 Publications
 
 - **VWZ: A Vandermonde-Wronskian-Zariski Tensor Trapdoor for Compact Post-Quantum Signatures.**
