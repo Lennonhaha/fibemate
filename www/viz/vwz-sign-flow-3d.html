@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VWZ 签名流程 · 8 步 3D 动画</title>
+<style>
+  :root {
+    --bg: #08080d; --card: #0f0f18; --surf: #141424;
+    --text: #d0d0d0; --muted: rgba(255,255,255,.35);
+    --accent: #10b981; --accent2: #6366f1; --warn: #ef4444;
+    --anim: #f59e0b; --cyan: #06b6d4; --violet: #8b5cf6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    height: 100vh; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  #topBar {
+    padding: 10px 16px; background: var(--card);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; z-index: 20;
+  }
+  #topBar h1 { font-size: 1rem; color: var(--accent); white-space: nowrap; }
+  #topBar .sep { width: 1px; height: 18px; background: rgba(255,255,255,.1); }
+  #topBar .subtle { font-size: 0.7rem; color: var(--muted); }
+  #topBar button {
+    background: var(--surf); color: var(--text);
+    border: 1px solid rgba(255,255,255,.1); border-radius: 4px;
+    padding: 5px 14px; font-size: 0.75rem; cursor: pointer;
+    transition: all .2s;
+  }
+  #topBar button:hover { border-color: var(--accent); }
+  #topBar button.active { background: var(--accent); color: #000; font-weight: 600; }
+  #topBar button.playing { background: var(--anim); color: #000; font-weight: 600; }
+
+  #main {
+    flex: 1; display: grid;
+    grid-template-columns: 1fr 360px;
+    overflow: hidden;
+  }
+
+  /* 3D canvas area */
+  #canvasWrap {
+    position: relative; overflow: hidden; background: var(--bg);
+  }
+  #threeCanvas { display: block; width: 100%; height: 100%; }
+
+  /* Step indicator overlay */
+  #stepIndicator {
+    position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 6px; z-index: 10;
+  }
+  #stepIndicator .dot {
+    width: 28px; height: 4px; border-radius: 2px;
+    background: rgba(255,255,255,.12); transition: all .3s;
+  }
+  #stepIndicator .dot.done { background: var(--accent); opacity: .4; }
+  #stepIndicator .dot.current { background: var(--anim); opacity: 1; width: 40px; }
+
+  /* Step controls */
+  #stepControls {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 10;
+  }
+  #stepControls button {
+    background: var(--card); color: var(--text);
+    border: 1px solid rgba(255,255,255,.1); border-radius: 6px;
+    padding: 6px 16px; font-size: 0.78rem; cursor: pointer;
+    transition: all .2s;
+  }
+  #stepControls button:hover { border-color: var(--accent); background: var(--surf); }
+  #stepControls button:disabled { opacity: .3; cursor: not-allowed; }
+  #stepControls .stepNum { color: var(--accent); font-weight: 600; }
+
+  /* Side panel */
+  #sidePanel {
+    background: var(--card); border-left: 1px solid rgba(255,255,255,.06);
+    overflow-y: auto; padding: 20px;
+  }
+  #sidePanel h2 {
+    font-size: 0.9rem; color: var(--accent); margin-bottom: 4px;
+  }
+  #sidePanel .stepTitle {
+    font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 12px;
+  }
+  #sidePanel .stepDesc {
+    font-size: 0.82rem; line-height: 1.7; color: var(--text); margin-bottom: 14px;
+  }
+  #sidePanel .formula {
+    background: var(--surf); border: 1px solid rgba(255,255,255,.06);
+    border-radius: 6px; padding: 10px 14px; margin: 10px 0;
+    font-family: 'Cascadia Code', 'Consolas', monospace;
+    font-size: 0.78rem; color: var(--cyan); white-space: pre-wrap;
+  }
+  #sidePanel .meta {
+    font-size: 0.7rem; color: var(--muted); margin-top: 16px;
+    padding-top: 12px; border-top: 1px solid rgba(255,255,255,.06);
+  }
+  #sidePanel .tag {
+    display: inline-block; font-size: 0.65rem; padding: 2px 8px;
+    border-radius: 3px; margin-right: 4px; margin-bottom: 4px;
+  }
+  #sidePanel .tag.math { background: rgba(99,102,241,.15); color: var(--accent2); }
+  #sidePanel .tag.crypto { background: rgba(16,185,129,.15); color: var(--accent); }
+  #sidePanel .tag.impl { background: rgba(245,158,11,.15); color: var(--anim); }
+
+  /* Loading */
+  #loading {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: var(--bg); z-index: 100; transition: opacity .5s;
+  }
+  #loading.hidden { opacity: 0; pointer-events: none; }
+  #loading .spinner {
+    width: 40px; height: 40px; border: 3px solid rgba(16,185,129,.2);
+    border-top-color: var(--accent); border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    #main { grid-template-columns: 1fr; grid-template-rows: 60% 40%; }
+    #sidePanel { border-left: none; border-top: 1px solid rgba(255,255,255,.06); }
+  }
+</style>
+</head>
+<body>
+
+<div id="topBar">
+  <h1>VWZ 签名流程 · 8 步 3D 动画</h1>
+  <div class="sep"></div>
+  <span class="subtle">Vandermonde 稀疏签名 · IACR 2025/624</span>
+  <div class="sep"></div>
+  <button id="btnPlay" title="自动播放">▶ 自动播放</button>
+  <button id="btnReset" title="重置">↺ 重置</button>
+  <span class="subtle" id="fpsLabel"></span>
+</div>
+
+<div id="main">
+  <div id="canvasWrap">
+    <div id="loading"><div class="spinner"></div></div>
+    <div id="stepIndicator"></div>
+    <canvas id="threeCanvas"></canvas>
+    <div id="stepControls">
+      <button id="btnPrev">◀ 上一步</button>
+      <span class="stepNum" id="stepNum">1 / 8</span>
+      <button id="btnNext">下一步 ▶</button>
+    </div>
+  </div>
+  <div id="sidePanel">
+    <h2 id="stepCategory">参数生成</h2>
+    <div class="stepTitle" id="stepTitle">Step 1: 安全参数与域参数</div>
+    <div class="stepDesc" id="stepDesc"></div>
+    <div class="formula" id="stepFormula"></div>
+    <div id="stepTags"></div>
+    <div class="meta" id="stepMeta"></div>
+  </div>
+</div>
+
+<script type="module">
+import * as THREE from '../crypto/lgv2/vendor/three/three.module.js';
+import { OrbitControls } from '../crypto/lgv2/vendor/three/examples/jsm/controls/OrbitControls.js';
+
+// ============================================================
+// 8 步定义
+// ============================================================
+const STEPS = [
+  {
+    category: '参数生成',
+    title: 'Step 1: 安全参数与域参数',
+    desc: '选择安全参数 k（决定张量维度），素域 F_q（q=3329，与 ML-KEM 共享域），以及边界格式 (2k+2)×(2k+1)×(2k+1)。λ 列表为 F_q 上两两不同的非零元素，构成 Vandermonde 矩阵基础。',
+    formula: 'q = 3329  (F_q 素域)\nk ∈ {4, 8, 16}  (安全等级)\n张量形状: (2k+2) × (2k+1) × (2k+1)\nλ = [λ₁, λ₂, ..., λₙ] ∈ F_q*  (两两不同)',
+    tags: ['math', 'crypto'],
+    meta: '源码: field.rs (F_q 算术) · constants.rs (参数定义)'
+  },
+  {
+    category: '密钥生成',
+    title: 'Step 2: 陷门生成 (Trapdoor)',
+    desc: '生成三组不同的 λ 列表 (λa, λb, λc) 和四个随机可逆基变换矩阵 X2a, X2b, X3a, X3b。陷门 = (λa, λb, λc, X2a, X2b, X3a, X3b, 逆矩阵, M2, M3, x1)。公钥是"扭曲张量"——攻击者看到的是混合后的张量，无法分离 rank-2 分量。',
+    formula: 'Trapdoor = (λa, λb, λc, X₂ᵃ, X₂ᵇ, X₃ᵃ, X₃ᵇ, X₂ᵃ⁻¹, X₃ᵃ⁻¹)\nM₂ = X₂ᵇ · X₂ᵃ⁻¹\nM₃ = X₃ᵇ · X₃ᵃ⁻¹\n\n公钥张量:\nΦ[i₁] = x₁[i₁]·((X₂ᵃ·uₐ)⊗(X₃ᵃ·vₐ)\n         + (X₂ᵇ·u_b)⊗(X₃ᵇ·v_b))',
+    tags: ['math', 'crypto'],
+    meta: '源码: trapdoor.rs · generate_trapdoor()'
+  },
+  {
+    category: '张量构造',
+    title: 'Step 3: 混合 Vandermonde 张量构造',
+    desc: '构造混合张量：每个切片是 rank-2 矩阵（击败 rank-1 分离攻击）。张量的每个元素通过 Vandermonde 结构确保可计算性，但基变换 X2/X3 使得公钥张量看起来是随机的。这是 VWZ 方案的核心创新——rank-2 混合使得已知攻击失效。',
+    formula: 'T[i₁][i₂][i₃] = Σ (X₂·u)(i₂) · (X₃·v)(i₃)\n\n每个切片 rank = 2  (非 rank-1)\nVandermonde 结构: V[i][j] = λᵢʲ',
+    tags: ['math'],
+    meta: '源码: tensor.rs · MixedTensor'
+  },
+  {
+    category: '预镜像计算',
+    title: 'Step 4: 预图像采样 (Preimage Sampling)',
+    desc: '给定目标向量 target，利用陷门信息求解 w₂, w₃ 使得张量求值等于目标。关键：只有持有陷门（X₂ᵃ⁻¹, X₃ᵃ⁻¹）的人才能高效求解——这正是"陷门单向函数"的核心。预图像分为 Za-split 和 Zb-split 两路独立采样。',
+    formula: '求 (w₂, w₃) 使得:\n  eval(pk, w₂, w₃) = target\n\n利用:\n  w₂ = X₂ᵃ⁻¹ · (target_a_component)\n  w₃ = X₃ᵃ⁻¹ · (target_b_component)\n\n复杂度: O(k³)  (矩阵求逆 + 线性系统)',
+    tags: ['math', 'crypto'],
+    meta: '源码: preimage.rs · solve_preimage_mixed()'
+  },
+  {
+    category: '签名生成',
+    title: 'Step 5: Hash-and-Sign 签名',
+    desc: '对消息 m：先用 SHAKE-256 哈希到稀疏目标向量 target（仅 k 个非零位置），然后调用预图像采样得到签名 σ = (w₂, w₃)。签名是张量空间中的预图像——验证者只需计算张量求值即可确认。',
+    formula: 'Sign(sk, m):\n  1. target = SHAKE-256(m) → sparse_expand(k)\n  2. (w₂, w₃) = solve_preimage(sk, target)\n  3. σ = (w₂, w₃)\n\n签名大小: 2 × (2k+1) × log₂(q) bits\n  k=8: ~2 × 17 × 12 = 408 bits',
+    tags: ['crypto', 'impl'],
+    meta: '源码: signature.rs · sign() · hash_target.rs'
+  },
+  {
+    category: '签名验证',
+    title: 'Step 6: 张量求值验证',
+    desc: '验证者计算 public_tensor_eval(pk, w₂, w₃)，检查结果等于从消息重新哈希得到的目标向量。无需陷门——任何人都能验证。验证复杂度 O(k³)，与签名生成同阶。',
+    formula: 'Verify(pk, m, σ):\n  1. target = SHAKE-256(m) → sparse_expand(k)\n  2. result = eval(pk, σ.w₂, σ.w₃)\n  3. Accept iff result == target\n\neval: T[i₁] · w₂ · w₃  (张量缩并)\n复杂度: O(k³)',
+    tags: ['crypto', 'impl'],
+    meta: '源码: signature.rs · verify() · tensor.rs · public_tensor_eval()'
+  },
+  {
+    category: '批量验证',
+    title: 'Step 7: 批量验证优化',
+    desc: '多条签名可批量验证：将多个 (w₂, w₃) 对堆叠后做一次张量求值，利用线性代数批处理减少重复计算。JS 层已实现 SHA-256 LRU 缓存（vwzDeserializePK max 8 + vwzDeserializeSig max 64），避免重复 WASM 反序列化。',
+    formula: 'Batch verify (σ₁, σ₂, ..., σₙ):\n  Σᵢ αᵢ · eval(pk, σᵢ.w₂, σᵢ.w₃)\n  = Σᵢ αᵢ · targetᵢ\n\n随机系数 αᵢ 防批处理伪造\n加速比: ~3-5× (n=10)',
+    tags: ['crypto', 'impl'],
+    meta: '源码: signature.rs · verify_batch()\n缓存: vwz-loader.js · SHA-256 LRU'
+  },
+  {
+    category: '安全归约',
+    title: 'Step 8: LWE 困难性归约与诚实缺口',
+    desc: 'VWZ 安全性基于 Module-LWE 困难假设。已知：ML-KEM-768 在 classical ~143-bit / quantum ~72-bit 下安全（β~700-750, BKZ 2.0, Cat 3）。VWZ 的 VMQ-SPARSE→LWE 归约尚未形式化证明（H-1 缺口），是 Phase 2 研究目标。张量 rank-2 结构使已知 rank-1 分离攻击失效。',
+    formula: '安全基础: Module-LWE 困难性\nBKZ 2.0 复杂度: 2^(0.292·β)\nML-KEM-768: classical ~143-bit, quantum ~72-bit\n\n⚠️ H-1: VMQ-SPARSE→LWE 归约未证明\n⚠️ H-2: 参数选择依赖启发式分析\n\nrank-2 混合 → rank-1 分离攻击失效',
+    tags: ['math', 'crypto'],
+    meta: '文档: vwz-security-analysis-framework.md §7-§10\nH-1/H-2 缺口诚实披露'
+  }
+];
+
+// ============================================================
+// Three.js 场景
+// ============================================================
+const canvas = document.getElementById('threeCanvas');
+const canvasWrap = document.getElementById('canvasWrap');
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x08080d);
+scene.fog = new THREE.Fog(0x08080d, 15, 60);
+
+const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+camera.position.set(10, 8, 14);
+
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+
+const controls = new OrbitControls(camera, canvas);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.4;
+controls.minDistance = 6;
+controls.maxDistance = 40;
+
+// Lighting
+const ambient = new THREE.AmbientLight(0x404060, 0.6);
+scene.add(ambient);
+const dirLight = new THREE.DirectionalLight(0x10b981, 0.8);
+dirLight.position.set(10, 15, 8);
+scene.add(dirLight);
+const dirLight2 = new THREE.DirectionalLight(0x6366f1, 0.4);
+dirLight2.position.set(-10, 10, -8);
+scene.add(dirLight2);
+const pointLight = new THREE.PointLight(0xf59e0b, 0.5, 30);
+pointLight.position.set(0, 8, 0);
+scene.add(pointLight);
+
+// Grid floor
+const gridHelper = new THREE.GridHelper(40, 20, 0x1a1a2e, 0x0f0f18);
+gridHelper.position.y = -4;
+scene.add(gridHelper);
+
+// ============================================================
+// 动画对象组（按步骤切换）
+// ============================================================
+const stepGroups = [];
+for (let i = 0; i < 8; i++) {
+  const g = new THREE.Group();
+  g.visible = false;
+  stepGroups.push(g);
+  scene.add(g);
+}
+
+// --- Helper: create glowing sphere ---
+function glowSphere(radius, color, opacity = 0.9) {
+  const geo = new THREE.SphereGeometry(radius, 32, 24);
+  const mat = new THREE.MeshStandardMaterial({
+    color, emissive: color, emissiveIntensity: 0.4,
+    transparent: true, opacity, roughness: 0.3, metalness: 0.6
+  });
+  return new THREE.Mesh(geo, mat);
+}
+
+// --- Helper: create line with arrow ---
+function arrowLine(from, to, color, opacity = 0.6) {
+  const dir = new THREE.Vector3().subVectors(to, from);
+  const len = dir.length();
+  const geo = new THREE.CylinderGeometry(0.02, 0.02, len, 8);
+  const mat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity });
+  const mesh = new THREE.Mesh(geo, mat);
+  mesh.position.copy(new THREE.Vector3().addVectors(from, to).multiplyScalar(0.5));
+  mesh.lookAt(to);
+  mesh.rotateX(Math.PI / 2);
+  return mesh;
+}
+
+// --- Helper: create text sprite ---
+function textSprite(text, color = '#10b981', scale = 1) {
+  const cv = document.createElement('canvas');
+  cv.width = 256; cv.height = 64;
+  const ctx = cv.getContext('2d');
+  ctx.fillStyle = 'rgba(8,8,13,0.85)';
+  ctx.fillRect(0, 0, 256, 64);
+  ctx.font = 'bold 22px Segoe UI, sans-serif';
+  ctx.fillStyle = color;
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, 128, 32);
+  const tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter;
+  const mat = new THREE.SpriteMaterial({ map: tex, transparent: true });
+  const spr = new THREE.Sprite(mat);
+  spr.scale.set(3 * scale, 0.75 * scale, 1);
+  return spr;
+}
+
+// --- Helper: create tensor slice (grid plane) ---
+function tensorSlice(yPos, color, opacity = 0.15) {
+  const size = 4;
+  const div = 8;
+  const group = new THREE.Group();
+  // Plane
+  const planeGeo = new THREE.PlaneGeometry(size, size);
+  const planeMat = new THREE.MeshBasicMaterial({ color, transparent: true, opacity, side: THREE.DoubleSide });
+  const plane = new THREE.Mesh(planeGeo, planeMat);
+  plane.rotation.x = -Math.PI / 2;
+  plane.position.y = yPos;
+  group.add(plane);
+  // Grid lines
+  for (let i = 0; i <= div; i++) {
+    const t = (i / div - 0.5) * size;
+    const geo1 = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(-size/2, yPos, t), new THREE.Vector3(size/2, yPos, t)
+    ]);
+    const geo2 = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(t, yPos, -size/2), new THREE.Vector3(t, yPos, size/2)
+    ]);
+    const mat = new THREE.LineBasicMaterial({ color, transparent: true, opacity: opacity * 2 });
+    group.add(new THREE.Line(geo1, mat));
+    group.add(new THREE.Line(geo2, mat));
+  }
+  return group;
+}
+
+// ============================================================
+// Step 1: 参数生成 — F_q 域 + λ 列表
+// ============================================================
+(function buildStep1() {
+  const g = stepGroups[0];
+  // Central sphere = F_q
+  const qSphere = glowSphere(1.2, 0x10b981, 0.3);
+  qSphere.position.set(0, 0, 0);
+  g.add(qSphere);
+  const qLabel = textSprite('F_q  (q=3329)', '#10b981', 1.2);
+  qLabel.position.set(0, 2, 0);
+  g.add(qLabel);
+  // λ orbiting elements
+  const lamCount = 8;
+  for (let i = 0; i < lamCount; i++) {
+    const angle = (i / lamCount) * Math.PI * 2;
+    const r = 4;
+    const sph = glowSphere(0.25, 0x6366f1, 0.7);
+    sph.position.set(Math.cos(angle) * r, Math.sin(i * 0.5) * 0.5, Math.sin(angle) * r);
+    g.add(sph);
+    const lbl = textSprite(`λ${i+1}`, '#6366f1', 0.7);
+    lbl.position.copy(sph.position).add(new THREE.Vector3(0, 0.6, 0));
+    g.add(lbl);
+  }
+  // k parameter
+  const kLabel = textSprite('k ∈ {4, 8, 16}', '#f59e0b', 1);
+  kLabel.position.set(0, -2.5, 0);
+  g.add(kLabel);
+})();
+
+// ============================================================
+// Step 2: 陷门生成 — 4 个基变换矩阵 + 3 组 λ
+// ============================================================
+(function buildStep2() {
+  const g = stepGroups[1];
+  const matrices = [
+    { name: 'X₂ᵃ', color: 0x10b981, pos: [-4, 1, 0] },
+    { name: 'X₂ᵇ', color: 0x10b981, pos: [-4, -1.5, 0] },
+    { name: 'X₃ᵃ', color: 0x6366f1, pos: [4, 1, 0] },
+    { name: 'X₃ᵇ', color: 0x6366f1, pos: [4, -1.5, 0] },
+  ];
+  matrices.forEach(m => {
+    // Matrix as wireframe box
+    const box = new THREE.BoxGeometry(2, 1.2, 0.3);
+    const edges = new THREE.EdgesGeometry(box);
+    const mat = new THREE.LineBasicMaterial({ color: m.color, transparent: true, opacity: 0.8 });
+    const wire = new THREE.LineSegments(edges, mat);
+    wire.position.set(...m.pos);
+    g.add(wire);
+    // Fill
+    const fillMat = new THREE.MeshBasicMaterial({ color: m.color, transparent: true, opacity: 0.1 });
+    const fill = new THREE.Mesh(box, fillMat);
+    fill.position.set(...m.pos);
+    g.add(fill);
+    // Label
+    const lbl = textSprite(m.name, `#${m.color.toString(16).padStart(6,'0')}`, 0.8);
+    lbl.position.set(m.pos[0], m.pos[1] + 1, m.pos[2]);
+    g.add(lbl);
+  });
+  // Trapdoor center
+  const td = glowSphere(0.8, 0xef4444, 0.5);
+  td.position.set(0, 0, 0);
+  g.add(td);
+  const tdLabel = textSprite('Trapdoor', '#ef4444', 1);
+  tdLabel.position.set(0, 2, 0);
+  g.add(tdLabel);
+  // Connecting lines
+  matrices.forEach(m => {
+    g.add(arrowLine(new THREE.Vector3(0, 0, 0), new THREE.Vector3(...m.pos), m.color, 0.3));
+  });
+})();
+
+// ============================================================
+// Step 3: 张量构造 — 层叠切片
+// ============================================================
+(function buildStep3() {
+  const g = stepGroups[2];
+  const sliceCount = 5;
+  for (let i = 0; i < sliceCount; i++) {
+    const y = (i - sliceCount/2) * 1.2;
+    const color = i < 2 ? 0x10b981 : (i < 4 ? 0x6366f1 : 0xf59e0b);
+    const slice = tensorSlice(y, color, 0.12);
+    g.add(slice);
+    // rank indicator
+    const lbl = textSprite(`slice ${i+1}  rank=2`, `#${color.toString(16).padStart(6,'0')}`, 0.6);
+    lbl.position.set(3, y, 0);
+    g.add(lbl);
+  }
+  // Tensor label
+  const tLabel = textSprite('Φ[i₁] = mixed tensor', '#06b6d4', 1.1);
+  tLabel.position.set(0, 4.5, 0);
+  g.add(tLabel);
+  // Rank-2 indicator (two vectors per slice)
+  for (let i = 0; i < 2; i++) {
+    const y = (i - 0.5) * 0.8;
+    const arrow = arrowLine(
+      new THREE.Vector3(-1.5, y, -1.5),
+      new THREE.Vector3(1.5, y, 1.5),
+      0x10b981, 0.5
+    );
+    g.add(arrow);
+  }
+})();
+
+// ============================================================
+// Step 4: 预图像采样 — target → (w₂, w₃)
+// ============================================================
+(function buildStep4() {
+  const g = stepGroups[3];
+  // Target vector (top)
+  const target = glowSphere(0.6, 0xf59e0b, 0.6);
+  target.position.set(0, 3, 0);
+  g.add(target);
+  const tLabel = textSprite('target = SHAKE-256(m)', '#f59e0b', 0.9);
+  tLabel.position.set(0, 4.5, 0);
+  g.add(tLabel);
+  // Trapdoor (middle)
+  const td = glowSphere(0.8, 0xef4444, 0.4);
+  td.position.set(0, 0, 0);
+  g.add(td);
+  const tdLabel = textSprite('Trapdoor (X⁻¹)', '#ef4444', 0.8);
+  tdLabel.position.set(0, -1.5, 0);
+  g.add(tdLabel);
+  // w₂, w₃ outputs (bottom)
+  const w2 = glowSphere(0.5, 0x10b981, 0.7);
+  w2.position.set(-3, -3, 0);
+  g.add(w2);
+  const w2Label = textSprite('w₂', '#10b981', 0.9);
+  w2Label.position.set(-3, -4.2, 0);
+  g.add(w2Label);
+  const w3 = glowSphere(0.5, 0x6366f1, 0.7);
+  w3.position.set(3, -3, 0);
+  g.add(w3);
+  const w3Label = textSprite('w₃', '#6366f1', 0.9);
+  w3Label.position.set(3, -4.2, 0);
+  g.add(w3Label);
+  // Flow arrows
+  g.add(arrowLine(new THREE.Vector3(0, 3, 0), new THREE.Vector3(0, 0.8, 0), 0xf59e0b, 0.5));
+  g.add(arrowLine(new THREE.Vector3(0, -0.8, 0), new THREE.Vector3(-3, -3, 0), 0x10b981, 0.5));
+  g.add(arrowLine(new THREE.Vector3(0, -0.8, 0), new THREE.Vector3(3, -3, 0), 0x6366f1, 0.5));
+})();
+
+// ============================================================
+// Step 5: 签名生成 — m → hash → preimage → σ
+// ============================================================
+(function buildStep5() {
+  const g = stepGroups[4];
+  const steps = [
+    { label: 'Message m', color: 0xd0d0d0, pos: [0, 3.5, 0], size: 0.5 },
+    { label: 'SHAKE-256', color: 0xf59e0b, pos: [0, 1.5, 0], size: 0.7 },
+    { label: 'sparse target', color: 0xf59e0b, pos: [0, 0, 0], size: 0.6 },
+    { label: 'solve_preimage', color: 0xef4444, pos: [0, -1.5, 0], size: 0.8 },
+    { label: 'σ = (w₂, w₃)', color: 0x10b981, pos: [0, -3.5, 0], size: 0.7 },
+  ];
+  steps.forEach((s, i) => {
+    const sph = glowSphere(s.size, s.color, 0.6);
+    sph.position.set(...s.pos);
+    g.add(sph);
+    const lbl = textSprite(s.label, `#${s.color.toString(16).padStart(6,'0')}`, 0.85);
+    lbl.position.set(s.pos[0] + 2.5, s.pos[1], s.pos[2]);
+    g.add(lbl);
+    if (i < steps.length - 1) {
+      const next = steps[i+1];
+      g.add(arrowLine(
+        new THREE.Vector3(...s.pos),
+        new THREE.Vector3(next.pos[0], next.pos[1] - next.size + 0.1, next.pos[2]),
+        s.color, 0.4
+      ));
+    }
+  });
+})();
+
+// ============================================================
+// Step 6: 验证 — pk + σ → eval → compare
+// ============================================================
+(function buildStep6() {
+  const g = stepGroups[5];
+  // pk tensor (left)
+  const pk = glowSphere(0.8, 0x6366f1, 0.4);
+  pk.position.set(-4, 0, 0);
+  g.add(pk);
+  const pkLabel = textSprite('Public Key (pk)', '#6366f1', 0.85);
+  pkLabel.position.set(-4, 1.8, 0);
+  g.add(pkLabel);
+  // sigma (right)
+  const sig = glowSphere(0.6, 0x10b981, 0.6);
+  sig.position.set(4, 0, 0);
+  g.add(sig);
+  const sigLabel = textSprite('σ = (w₂, w₃)', '#10b981', 0.85);
+  sigLabel.position.set(4, 1.8, 0);
+  g.add(sigLabel);
+  // eval (center)
+  const evalSph = glowSphere(1.0, 0x06b6d4, 0.4);
+  evalSph.position.set(0, 0, 0);
+  g.add(evalSph);
+  const evalLabel = textSprite('eval(pk, w₂, w₃)', '#06b6d4', 0.9);
+  evalLabel.position.set(0, 2, 0);
+  g.add(evalLabel);
+  // result comparison
+  const result = textSprite('result == target ?', '#f59e0b', 1);
+  result.position.set(0, -2.5, 0);
+  g.add(result);
+  // Arrows
+  g.add(arrowLine(new THREE.Vector3(-4, 0, 0), new THREE.Vector3(-1, 0, 0), 0x6366f1, 0.4));
+  g.add(arrowLine(new THREE.Vector3(4, 0, 0), new THREE.Vector3(1, 0, 0), 0x10b981, 0.4));
+  g.add(arrowLine(new THREE.Vector3(0, -1, 0), new THREE.Vector3(0, -2, 0), 0xf59e0b, 0.4));
+})();
+
+// ============================================================
+// Step 7: 批量验证 — 多 σ 堆叠
+// ============================================================
+(function buildStep7() {
+  const g = stepGroups[6];
+  const batchN = 5;
+  for (let i = 0; i < batchN; i++) {
+    const angle = (i / batchN) * Math.PI * 2;
+    const r = 3;
+    const sph = glowSphere(0.4, 0x10b981, 0.5);
+    sph.position.set(Math.cos(angle) * r, Math.sin(i * 0.8) * 1.5, Math.sin(angle) * r);
+    g.add(sph);
+    const lbl = textSprite(`σ${i+1}`, '#10b981', 0.6);
+    lbl.position.copy(sph.position).add(new THREE.Vector3(0, 0.7, 0));
+    g.add(lbl);
+    g.add(arrowLine(new THREE.Vector3(0, 0, 0), sph.position, 0x10b981, 0.2));
+  }
+  // Central batch evaluator
+  const batch = glowSphere(1.2, 0x06b6d4, 0.3);
+  batch.position.set(0, 0, 0);
+  g.add(batch);
+  const batchLabel = textSprite('Batch Verify\nΣ αᵢ · eval(pk, σᵢ)', '#06b6d4', 1);
+  batchLabel.position.set(0, 3, 0);
+  g.add(batchLabel);
+  // Speed indicator
+  const speedLabel = textSprite('3-5× speedup (n=10)', '#f59e0b', 0.8);
+  speedLabel.position.set(0, -3, 0);
+  g.add(speedLabel);
+})();
+
+// ============================================================
+// Step 8: 安全归约 — LWE + BKZ + H-1 缺口
+// ============================================================
+(function buildStep8() {
+  const g = stepGroups[7];
+  // LWE lattice (central)
+  const latticePoints = 6;
+  for (let i = 0; i < latticePoints; i++) {
+    for (let j = 0; j < latticePoints; j++) {
+      const sph = glowSphere(0.12, 0x6366f1, 0.4);
+      sph.position.set(
+        (i - latticePoints/2) * 1.2,
+        0,
+        (j - latticePoints/2) * 1.2
+      );
+      g.add(sph);
+    }
+  }
+  // BKZ attack arrow
+  const bkz = textSprite('BKZ 2.0  β~700-750', '#ef4444', 0.9);
+  bkz.position.set(0, 3, 3);
+  g.add(bkz);
+  const attackArrow = arrowLine(
+    new THREE.Vector3(0, 2.5, 3),
+    new THREE.Vector3(0, 0.5, 0),
+    0xef4444, 0.5
+  );
+  g.add(attackArrow);
+  // Security levels
+  const levels = textSprite('Classical ~143-bit\nQuantum ~72-bit\nCat 3 (NIST)', '#10b981', 1);
+  levels.position.set(0, 3, -3);
+  g.add(levels);
+  // H-1 gap warning
+  const h1 = textSprite('⚠️ H-1: VMQ-SPARSE→LWE\n归约未证明', '#f59e0b', 1);
+  h1.position.set(-4, 1, 0);
+  g.add(h1);
+  // rank-2 shield
+  const shield = textSprite('rank-2 混合\n→ rank-1 攻击失效', '#06b6d4', 0.9);
+  shield.position.set(4, 1, 0);
+  g.add(shield);
+})();
+
+// ============================================================
+// 步骤切换逻辑
+// ============================================================
+let currentStep = 0;
+let isPlaying = false;
+let playTimer = null;
+
+function showStep(idx) {
+  stepGroups.forEach((g, i) => { g.visible = (i === idx); });
+  currentStep = idx;
+
+  // Update side panel
+  const s = STEPS[idx];
+  document.getElementById('stepCategory').textContent = s.category;
+  document.getElementById('stepTitle').textContent = s.title;
+  document.getElementById('stepDesc').textContent = s.desc;
+  document.getElementById('stepFormula').textContent = s.formula;
+  document.getElementById('stepMeta').textContent = s.meta;
+
+  const tagsEl = document.getElementById('stepTags');
+  tagsEl.innerHTML = '';
+  s.tags.forEach(t => {
+    const el = document.createElement('span');
+    el.className = `tag ${t}`;
+    el.textContent = t === 'math' ? '数学' : (t === 'crypto' ? '密码学' : '实现');
+    tagsEl.appendChild(el);
+  });
+
+  // Update step number
+  document.getElementById('stepNum').textContent = `${idx + 1} / 8`;
+
+  // Update dots
+  const dots = document.querySelectorAll('#stepIndicator .dot');
+  dots.forEach((d, i) => {
+    d.className = 'dot' + (i < idx ? ' done' : (i === idx ? ' current' : ''));
+  });
+
+  // Update buttons
+  document.getElementById('btnPrev').disabled = (idx === 0);
+  document.getElementById('btnNext').disabled = (idx === 7);
+}
+
+// Build step indicator dots
+const indicatorEl = document.getElementById('stepIndicator');
+for (let i = 0; i < 8; i++) {
+  const dot = document.createElement('div');
+  dot.className = 'dot' + (i === 0 ? ' current' : '');
+  indicatorEl.appendChild(dot);
+}
+
+// Button events
+document.getElementById('btnPrev').addEventListener('click', () => {
+  if (currentStep > 0) showStep(currentStep - 1);
+});
+document.getElementById('btnNext').addEventListener('click', () => {
+  if (currentStep < 7) showStep(currentStep + 1);
+});
+document.getElementById('btnReset').addEventListener('click', () => {
+  if (playTimer) { clearInterval(playTimer); playTimer = null; }
+  isPlaying = false;
+  document.getElementById('btnPlay').textContent = '▶ 自动播放';
+  document.getElementById('btnPlay').classList.remove('playing');
+  showStep(0);
+});
+document.getElementById('btnPlay').addEventListener('click', (e) => {
+  isPlaying = !isPlaying;
+  if (isPlaying) {
+    e.target.textContent = '⏸ 暂停';
+    e.target.classList.add('playing');
+    playTimer = setInterval(() => {
+      const next = (currentStep + 1) % 8;
+      showStep(next);
+    }, 5000);
+  } else {
+    e.target.textContent = '▶ 自动播放';
+    e.target.classList.remove('playing');
+    if (playTimer) { clearInterval(playTimer); playTimer = null; }
+  }
+});
+
+// Keyboard navigation
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft' && currentStep > 0) showStep(currentStep - 1);
+  if (e.key === 'ArrowRight' && currentStep < 7) showStep(currentStep + 1);
+  if (e.key === ' ') {
+    e.preventDefault();
+    document.getElementById('btnPlay').click();
+  }
+});
+
+// ============================================================
+// 渲染循环
+// ============================================================
+function resize() {
+  const w = canvasWrap.clientWidth;
+  const h = canvasWrap.clientHeight;
+  camera.aspect = w / h;
+  camera.updateProjectionMatrix();
+  renderer.setSize(w, h, false);
+}
+window.addEventListener('resize', resize);
+resize();
+
+let frameCount = 0;
+let lastFpsTime = performance.now();
+const fpsLabel = document.getElementById('fpsLabel');
+
+function animate() {
+  requestAnimationFrame(animate);
+  controls.update();
+
+  // Animate current step group
+  const g = stepGroups[currentStep];
+  if (g) {
+    g.children.forEach((child, i) => {
+      if (child.material && child.material.emissiveIntensity !== undefined) {
+        child.material.emissiveIntensity = 0.3 + Math.sin(performance.now() * 0.001 + i * 0.5) * 0.15;
+      }
+    });
+    // Gentle rotation
+    g.rotation.y += 0.002;
+  }
+
+  renderer.render(scene, camera);
+
+  // FPS
+  frameCount++;
+  const now = performance.now();
+  if (now - lastFpsTime > 2000) {
+    const fps = Math.round((frameCount * 1000) / (now - lastFpsTime));
+    fpsLabel.textContent = `${fps} FPS`;
+    frameCount = 0;
+    lastFpsTime = now;
+  }
+}
+
+// Start
+showStep(0);
+animate();
+
+// Hide loading
+setTimeout(() => {
+  document.getElementById('loading').classList.add('hidden');
+}, 500);
+</script>
+</body>
+</html>
