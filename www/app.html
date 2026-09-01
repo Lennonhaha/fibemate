@@ -929,7 +929,7 @@
     });
 
     // Init: redirect if already logged in
-    if (sessionStorage.getItem('fk_token') || localStorage.getItem('fk_guest')) {
+    if (localStorage.getItem('fk_token') || sessionStorage.getItem('fk_token') || localStorage.getItem('fk_guest')) {
       setTimeout(() => window.location.href = 'main-tiled.html', 100);
     }
   </script>
