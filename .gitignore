@@ -227,6 +227,7 @@ vwz*.py
 vwz*.html
 !www/docs/vwz-signature-3d.html
 vwz*.md
+!www/docs/vwz-lwe-reduction-gaps.md
 quick_check.sh
 web-health.sh
 gen-readme.sh

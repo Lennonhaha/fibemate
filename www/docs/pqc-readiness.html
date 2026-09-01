@@ -241,7 +241,7 @@
     <li>Bergmann, F. et al. "Security of Hybrid KEMs in the QROM." <em>ePrint 2025</em>.</li>
     <li>IETF <a href="https://datatracker.ietf.org/doc/draft-ietf-tls-hybrid-design/" style="color:var(--accent);">draft-ietf-tls-hybrid-design-10</a> — TLS 1.3 Hybrid Key Exchange Design.</li>
     <li>RFC 8446 — TLS 1.3 Protocol.</li>
-    <li>FIBEMATE <a href="/docs/tls-hybrid-deployment.html" style="color:var(--accent);">TLS 1.3 混合握手部署文档</a> — Path A 完整部署指南与性能基准。</li>
+    <li>FIBEMATE <a href="/docs/tls-hybrid-deployment.md" style="color:var(--accent);">TLS 1.3 混合握手部署文档</a> — Path A 完整部署指南与性能基准。</li>
   </ul>
 </div>
 
@@ -341,7 +341,6 @@
   <li><a href="/docs/sm2-optimization.html">⚡ SM2 五级性能优化</a> — wNAF 窗口标量乘完整优化历程</li>
   <li><a href="/docs/sm2-tvla-analysis.html">🛡️ SM2 TVLA 侧信道检测</a> — 5,000 组样本全项通过，高阶防护达标</li>
   <li><a href="/kat-purejs-10000.html">🧪 ML-KEM-768 KAT 测试报告</a> — 万轮测试原始数据</li>
-  <li><a href="/diagnose-pq.html">🩺 后量子兼容性检测工具</a> — 检测终端浏览器对 PQC 握手的支持情况</li>
 </ul>
 
 <!-- ====== Section 7: LookingGlass + VWZ — 探索性代数实验 ====== -->
@@ -478,7 +477,7 @@
 
 <p style="margin:0.3rem 0 0;font-size:0.85rem;">七层配置：1×1×2×2×3×2×2 = 48D</p>
 
-<div class="note"><strong>舒尔引理：</strong>不同维度/不等价不可约表示之间不存在非平凡公共交换矩阵。1 维空间（L1/L2）与 3 维空间（L5）无法共用同一对易算子 → 全局合并在代数上<strong>彻底无解</strong>。此结论可由第三方独立验证：运行 <code>commuting_matrix_test.py</code> → 零空间 = 0。 <a href="/docs/lg-v2-formal-proofs.html" style="color:#00d4aa;">→ 形式化证明文档 (LG-PF-001~008) ↗</a></div>
+<div class="note"><strong>舒尔引理：</strong>不同维度/不等价不可约表示之间不存在非平凡公共交换矩阵。1 维空间（L1/L2）与 3 维空间（L5）无法共用同一对易算子 → 全局合并在代数上<strong>彻底无解</strong>。此结论可由第三方独立验证：运行 <code>commuting_matrix_test.py</code> → 零空间 = 0。 → 形式化证明文档 (LG-PF-001~008) ↗</div>
 
 <h4>验证清单</h4>
 <table>
