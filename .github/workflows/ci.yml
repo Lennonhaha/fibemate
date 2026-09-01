@@ -93,6 +93,23 @@ jobs:
           node test/test-keccak.js
           node test/test-fibemate.js
 
+  # ─── PQC 性能基准（single platform，回归检测）────────────
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+
+      - name: Run PQC benchmark
+        run: node scripts/bench-pqc.js
+
   # ─── ESLint 静态分析 (single platform, lint only) ────
   lint:
     runs-on: ubuntu-latest

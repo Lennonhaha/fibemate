@@ -53,3 +53,4 @@ body:
         - label: CI pipeline 全绿
         - label: 代码不含硬编码密钥/路径
         - label: 测试已更新/新增
+        - label: 若为性能改动，已附 before/after 基准数据（scripts/bench-pqc.js）

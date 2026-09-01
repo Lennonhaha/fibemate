@@ -39,6 +39,31 @@ Use [Discussions → Ideas](https://github.com/Lennonhaha/fibemate/discussions/c
 - Your proposed approach
 - How it fits into FIBEMATE's scope (PQC primitives, hybrid KEM, FPGA, Chinese crypto, research modules)
 
+### Issue Labels
+
+We use a small, curated label set to triage issues and PRs. Pick the most
+specific label — not every possible one.
+
+| Label | Meaning | When to use |
+|-------|---------|-------------|
+| `good first issue` | Low barrier, well-scoped task | Your first contribution; docs, tests, small fixes |
+| `good second issue` | Moderate follow-up | A step up: needs familiarity with one module |
+| `help wanted` | Needs a contributor | Any issue the maintainer can't take on alone |
+| `bug` | Something is broken | Confirmed defect with reproduction |
+| `enhancement` | New capability | Feature request that fits project scope |
+| `documentation` | Docs-only | Typos, missing examples, translations |
+| `perf` | Performance | Benchmarks, SIMD/NTT optimization, latency work |
+| `security` | Security-sensitive | Side-channels, KAT, timing, key handling |
+| `crypto` | Primitive internals | ML-KEM/ML-DSA/SM2/SM3/SM4 core code |
+| `ci` | Build/tooling | Workflows, scripts, checks |
+| `dependencies` | Dependency bumps | Dependabot / manual version updates |
+
+**Performance changes** (`perf`) must include before/after benchmark numbers — see
+`scripts/bench-pqc.js` for the canonical baseline (`node scripts/bench-pqc.js --full`).
+
+**Security-sensitive changes** (`security`) follow the mandatory 24-hour cool-down
+and require a security reasoning section in the PR (see [Code Review](#code-review)).
+
 ### Pull Requests
 
 1. **Fork** the repository
