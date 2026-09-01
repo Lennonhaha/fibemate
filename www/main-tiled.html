@@ -4,9 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FIBEMATE - 隐私增强即时通讯</title>
-  <link rel="stylesheet" href="animations.css">
-  <script src="message-crypto.js" defer></script>
-  <!-- 科技感背景动画 -->
+  <!-- 科技感背景动画（CSS 已内联于下方 <style>，无需外部引用） -->
   <style>
     /* 矩阵雪花背景 */
     .matrix-bg {
@@ -16,6 +14,7 @@
       pointer-events: none;
       overflow: hidden;
       background: var(--bg-primary);
+      display: none; /* 2026-09-01 用户要求去除登录后日文 matrix 背景动画 */
     }
     .matrix-column {
       position: absolute;
@@ -27,7 +26,7 @@
       text-shadow: 0 0 8px rgba(0, 229, 195, 0.2);
       animation: matrix-fall linear infinite;
       white-space: nowrap;
-      user-select: none;
+      -webkit-user-select: none; user-select: none;
     }
     @keyframes matrix-fall {
       0% { transform: translateY(0); opacity: 0; }
@@ -48,6 +47,7 @@
         rgba(0, 229, 195, 0.015) 2px,
         rgba(0, 229, 195, 0.015) 4px
       );
+      display: none; /* 2026-09-01 用户要求去除扫描线动画 */
     }
     /* 粒子效果 */
     .particle {
@@ -84,7 +84,8 @@
     
     .tile {
       background: rgba(19, 19, 26, 0.85);
-      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(0, 229, 195, 0.1);
       border-radius: 12px;
       overflow: hidden;
@@ -140,7 +141,8 @@
       justify-content: space-between;
       padding: 0 20px;
       background: rgba(19, 19, 26, 0.9);
-      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: -webkit-backdrop-filter: blur(10px);
       border: 1px solid rgba(0, 229, 195, 0.1);
       border-radius: 12px;
     }
@@ -375,7 +377,90 @@
         min-height: 300px;
       }
     }
-  </style>
+  
+/* ── Chat overrides for tiled layout ── */
+.tile { background: var(--bg-card); }
+.tile-header { background: var(--bg-tertiary); }
+.tile-content { background: var(--bg-primary); }
+
+/* Sidebar: tab navigation */
+.sidebar-tabs { display: flex; border-bottom: 1px solid var(--border-subtle); padding: 0 8px; }
+.sidebar-tab { flex: 1; padding: 8px 4px; border: none; background: transparent; color: var(--text-muted); font-size: 0.75rem; font-weight: 600; cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; text-align: center; }
+.sidebar-tab:hover { color: var(--text-primary); }
+.sidebar-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.sidebar-tab-panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+.sidebar-tab-panel.active { display: flex; }
+.search-bar { padding: 8px; border-bottom: 1px solid var(--border-subtle); }
+.search-bar input { width: 100%; padding: 7px 10px 7px 30px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: var(--text-primary); font-size: 0.82rem; outline: none; }
+.search-bar input:focus { border-color: var(--accent); }
+.search-bar { position: relative; }
+.search-bar .si { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); width: 14px; height: 14px; pointer-events: none; }
+#btnNewChat { border: none; background: transparent; color: var(--accent); cursor: pointer; padding: 4px; border-radius: 4px; }
+#btnNewChat:hover { background: var(--accent-dim); }
+
+/* Messages tile */
+#chatArea { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+#chatHeader { display: flex; align-items: center; padding: 10px 16px; border-bottom: 1px solid var(--border-subtle); background: var(--bg-secondary); gap: 12px; }
+#chatPeerAvatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; flex-shrink: 0; }
+.chat-peer-info { flex: 1; min-width: 0; }
+#chatPeerName { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#chatPeerStatus { font-size: 0.72rem; color: var(--text-muted); margin-top: 1px; }
+.e2ee-badge { font-size: 0.68rem; color: var(--accent); background: var(--accent-dim); padding: 2px 7px; border-radius: 10px; white-space: nowrap; }
+#chatHeaderActions { display: flex; gap: 6px; }
+.hdr-btn { padding: 5px 10px; border: 1px solid var(--border-subtle); border-radius: 6px; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.75rem; }
+.hdr-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+/* Messages scrollable area */
+#messagesList { flex: 1; overflow-y: auto; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px; scroll-behavior: smooth; }
+#messagesList::-webkit-scrollbar { width: 4px; }
+#messagesList::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+.chat-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); min-height: 200px; }
+.chat-empty-state svg { width: 48px; height: 48px; margin-bottom: 12px; opacity: 0.5; }
+
+/* Input area */
+.chat-input-bar { display: flex; align-items: center; gap: 8px; padding: 10px 16px; border-top: 1px solid var(--border-subtle); background: var(--bg-secondary); }
+.chat-input-bar input { flex: 1; padding: 9px 14px; border-radius: 20px; border: 1px solid var(--border-subtle); background: var(--bg-input); color: var(--text-primary); font-size: 0.88rem; outline: none; font-family: inherit; }
+.chat-input-bar input:focus { border-color: var(--accent); }
+.chat-input-bar input::placeholder { color: var(--text-muted); }
+.icon-btn { border: none; background: transparent; cursor: pointer; color: var(--text-muted); padding: 4px; border-radius: 6px; display: flex; align-items: center; }
+.icon-btn:hover { color: var(--text-primary); background: var(--bg-tertiary); }
+#btnSend { width: 38px; height: 38px; border-radius: 50%; border: none; background: var(--accent); color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: transform 0.1s; flex-shrink: 0; }
+#btnSend:hover { transform: scale(1.08); opacity: 0.9; }
+#btnSend:active { transform: scale(0.95); }
+
+/* List items */
+.conv-item, .contact-item { display: flex; align-items: center; padding: 10px 12px; gap: 10px; cursor: pointer; border-bottom: 1px solid var(--border-subtle); transition: background 0.1s; }
+.conv-item:hover, .contact-item:hover { background: var(--bg-tertiary); }
+.conv-item.active { background: var(--accent-dim); border-left: 3px solid var(--accent); }
+.list-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; flex-shrink: 0; position: relative; }
+.online-dot { position: absolute; bottom: 0; right: 0; width: 9px; height: 9px; background: #10b981; border-radius: 50%; border: 2px solid var(--bg-card); }
+.list-info { flex: 1; min-width: 0; }
+.list-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 5px; }
+.list-preview { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.list-time { font-size: 0.68rem; color: var(--text-muted); flex-shrink: 0; }
+.list-empty { text-align: center; padding: 30px 16px; color: var(--text-muted); font-size: 0.82rem; }
+
+/* User bar at bottom of sidebar */
+.sidebar-user-bar { padding: 10px 12px; border-top: 1px solid var(--border-subtle); display: flex; align-items: center; gap: 8px; background: var(--bg-tertiary); }
+.sidebar-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.75rem; }
+.sidebar-username { flex: 1; font-size: 0.8rem; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-actions { display: flex; gap: 4px; }
+.sb-btn { padding: 3px 6px; border: 1px solid var(--border-subtle); border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.7rem; }
+.sb-btn:hover { color: var(--text-primary); }
+.sb-btn.danger { color: var(--accent-red); border-color: rgba(255,107,107,0.3); }
+.sb-btn.danger:hover { background: rgba(255,107,107,0.1); }
+.theme-btn { padding: 3px 6px; border: 1px solid var(--border-subtle); border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.7rem; }
+.theme-btn.active, .theme-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Right tile: hide or repurpose as settings info */
+.sidebar-tile:last-child { grid-column: 3; }
+
+/* Right panel content */
+.key-card { background: var(--bg-tertiary); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+.key-card-title { font-size: 0.75rem; font-weight: 600; color: var(--accent); margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+.key-card-value { font-size: 0.7rem; color: var(--text-muted); font-family: monospace; word-break: break-all; }
+
+</style>
 </head>
 <body>
   <!-- 科技感背景 -->
@@ -401,96 +486,134 @@
             </div>
           </div>
           <div class="status-avatar" id="userAvatar">U</div>
-          <button class="btn-exit" onclick="if(confirm('退出登录？')){localStorage.clear();window.location.href='index.html';}">退出</button>
+          <button class="btn-exit" id="btnLogoutOld" onclick="if(confirm('退出登录？')){localStorage.clear();window.location.href='app.html';}">退出</button>
         </div>
       </div>
       
       <!-- 联系人面板 -->
       <div class="tile sidebar-tile">
-        <div class="tile-header">
-          <div class="tile-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        <!-- 消息面板（堆叠，对齐 Tauri）-->
+        <div class="tile-header" style="padding: 8px 12px; flex-shrink: 0;">
+          <div class="tile-title" style="font-size: 13px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
-            Contacts
+            消息
           </div>
-          <button class="icon-btn" title="Add contact">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 5v14M5 12h14"/>
-            </svg>
+          <button id="btnNewChat" title="新会话" style="border:none;background:transparent;color:var(--accent);cursor:pointer;padding:4px;border-radius:4px;display:flex;align-items:center;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 5v14M5 12h14"/></svg>
           </button>
         </div>
-        <div class="tile-content">
-          <div class="search-bar" style="margin-bottom: 8px;">
-            <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
-            </svg>
-            <input type="text" placeholder="Search contacts...">
+        <div class="search-bar" style="padding:6px 10px;">
+          <svg class="si" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+          <input type="text" id="searchConversations" placeholder="搜索会话..." autocomplete="off">
+        </div>
+        <div class="tile-content" style="flex:1; min-height: 0;">
+          <div class="panel-list" id="conversationList" style="overflow-y:auto; max-height: 100%;">
+            <div class="list-empty">暂无会话</div>
           </div>
-          <div id="contactList">
-            <div class="empty-state">
-              <svg viewBox="0 0 64 64" fill="none">
-                <circle cx="32" cy="24" r="10" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                <path d="M16 52c0-9 7-16 16-16s16 7 16 16" stroke="currentColor" stroke-width="1.5" fill="none"/>
-              </svg>
-              <p>No contacts yet</p>
-            </div>
+        </div>
+
+        <!-- 联系人面板（堆叠，对齐 Tauri 联系人 tab）-->
+        <div class="tile-header" style="padding: 10px 12px 6px; flex-shrink: 0; border-top: 1px solid var(--border-subtle); margin-top: 6px;">
+          <div class="tile-title" style="font-size: 13px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+              <circle cx="9" cy="7" r="4"/>
+              <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+              <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+            联系人
+          </div>
+        </div>
+        <div class="tile-content" id="contactList" style="overflow-y:auto; max-height:240px; flex-shrink: 0;">
+          <div class="list-empty">暂无联系人</div>
+        </div>
+
+        <!-- Keys 面板（堆叠在消息下方，对齐 Tauri）-->
+        <div class="tile-header keys-panel-header" style="padding: 10px 12px 6px; flex-shrink: 0; border-top: 1px solid var(--border-subtle); margin-top: 6px;">
+          <div class="tile-title" style="font-size: 13px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+            </svg>
+            Keys
+          </div>
+        </div>
+        <div class="keys-panel-content" id="keyCards" style="padding: 4px 12px 12px; overflow-y: auto; flex-shrink: 0; max-height: 50%;">
+          <div class="key-card" id="keyCard-identity">
+            <div class="key-card-title">Identity Key</div>
+            <div class="key-card-value" id="identityKeyFingerprint">加载中...</div>
+          </div>
+          <div class="key-card" id="keyCard-spk">
+            <div class="key-card-title">Signed PreKey</div>
+            <div class="key-card-value" id="signedPreKeyFingerprint">加载中...</div>
+          </div>
+          <div class="key-actions">
+            <button class="key-btn" id="btnRotateSpk">Rotate</button>
+            <button class="key-btn" id="btnExportIdentity">Export</button>
+          </div>
+          <div class="key-stats" id="keyStats" style="font-size:0.7rem;color:var(--text-muted);margin-top:8px;line-height:1.6;"></div>
+        </div>
+
+        <!-- 底部用户栏 -->
+        <div class="sidebar-user-bar">
+          <div class="sidebar-avatar" id="userAvatar2">U</div>
+          <div class="sidebar-username" id="userName2">—</div>
+          <div class="sidebar-actions">
+            <button class="theme-btn active" data-theme="dark">暗</button>
+            <button class="theme-btn" data-theme="light">亮</button>
+            <button class="sb-btn danger" id="btnLogout" title="退出登录">退出</button>
           </div>
         </div>
       </div>
       
       <!-- 消息面板 -->
       <div class="tile messages-tile">
-        <div class="tile-header">
-          <div class="tile-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        <div id="chatArea">
+          <!-- Empty state (shown when no conversation selected) -->
+          <div class="chat-empty-state" id="chatEmpty" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;">
+            <svg viewBox="0 0 64 72" fill="none" style="width:56px;height:56px;opacity:0.3;margin-bottom:16px;">
+              <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z" stroke="currentColor" stroke-width="1.5" fill="none"/>
             </svg>
-            Messages
-          </div>
-          <div style="display: flex; gap: 8px;">
-            <button class="icon-btn" title="Voice call">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-              </svg>
-            </button>
-            <button class="icon-btn" title="New chat">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 5v14M5 12h14"/>
-              </svg>
+            <div style="font-size:1.05rem;font-weight:600;color:var(--text-secondary);margin-bottom:6px;">端到端加密对话</div>
+            <div style="font-size:0.82rem;color:var(--text-muted);text-align:center;margin-bottom:24px;line-height:1.6;">选择左侧会话发起对话<br>ML-KEM-768 · Double Ratchet · 国密 SM2/SM4</div>
+            <button id="btnStartChatEmpty" style="padding:10px 24px;border-radius:10px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-size:0.9rem;font-weight:500;display:flex;align-items:center;gap:8px;">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M12 5v14M5 12h14"/></svg>
+              新建会话
             </button>
           </div>
-        </div>
-        <div class="tile-content" id="messagesList">
-          <div class="chat-empty" style="height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-            <div class="hex-glow">
-              <svg viewBox="0 0 64 72" fill="none">
-                <path d="M32 4L58 14V36C58 50 48 60 32 66C16 60 6 50 6 36V14L32 4Z"
-                      stroke="currentColor" stroke-width="1.5" fill="none"/>
-              </svg>
+          <!-- Chat header (hidden until conversation selected) -->
+          <div id="chatHeader" style="display:none; flex-shrink:0;">
+            <div id="chatPeerAvatar">?</div>
+            <div class="chat-peer-info">
+              <div id="chatPeerName">—</div>
+              <div id="chatPeerStatus">—</div>
             </div>
-            <h3 style="margin-top: 20px; color: var(--text-secondary);">Select a conversation</h3>
-            <p style="color: var(--text-muted); font-size: 13px;">Choose from your contacts or start a new one</p>
+            <div class="e2ee-badge">🔐 E2EE</div>
+            <div id="chatHeaderActions">
+              <button class="hdr-btn" id="btnVerify" title="安全号验证">安全号</button>
+            </div>
           </div>
+        <div class="tile-content" id="messagesList" style="display:none; flex-direction:column; flex:1; overflow:hidden;">
         </div>
-        <div class="chat-input-bar" style="border-top: 1px solid rgba(0, 229, 195, 0.08); padding: 12px;">
-          <button class="icon-btn" title="Attach file">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <div class="chat-input-bar" id="inputBar" style="display:none; flex-shrink:0;">
+          <button class="icon-btn btn-attach" title="附件">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18">
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
             </svg>
           </button>
-          <input type="text" placeholder="Type a message..." style="flex: 1; margin: 0 8px;">
-          <button class="icon-btn send-btn" title="Send">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <input type="text" id="messageInput" placeholder="输入消息..." autocomplete="off" style="flex:1;padding:9px 14px;border-radius:20px;border:1px solid var(--border-subtle);background:var(--bg-input);color:var(--text-primary);font-size:0.88rem;outline:none;font-family:inherit;">
+          <button id="btnSend" title="发送">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
               <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z"/>
             </svg>
           </button>
         </div>
+        </div><!-- /chatArea -->
       </div>
       
-      <!-- 保险库面板 -->
-      <div class="tile sidebar-tile">
+      <!-- 保险库面板 (暂时隐藏, 功能未实现) -->
+      <div class="tile sidebar-tile" style="display: none;">
         <div class="tile-header">
           <div class="tile-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -516,8 +639,8 @@
         </div>
       </div>
       
-      <!-- 密钥面板 -->
-      <div class="tile sidebar-tile" style="grid-column: 1; grid-row: 3;">
+      <!-- 密钥面板 (底部副本, 已隐藏避免重复显示) -->
+      <div class="tile sidebar-tile" style="display: none;">
         <div class="tile-header">
           <div class="tile-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -545,7 +668,7 @@
       </div>
       
       <!-- 设置面板 -->
-      <div class="tile sidebar-tile" style="grid-column: 3; grid-row: 3;">
+      <div class="tile settings-tile" style="grid-column: 3; grid-row: 2;">
         <div class="tile-header">
           <div class="tile-title">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -731,7 +854,7 @@
                     <div class="settings-item-desc">选择界面配色</div>
                   </div>
                   <div class="settings-item-control">
-                    <select class="settings-select">
+                    <select title="选择颜色主题" class="settings-select" id="selectThemeColor">
                       <option>深色</option>
                       <option>浅色</option>
                       <option>跟随系统</option>
@@ -744,7 +867,7 @@
                     <div class="settings-item-desc">界面高亮颜色</div>
                   </div>
                   <div class="settings-item-control">
-                    <select class="settings-select">
+     <select title="选择强调色" class="settings-select" id="selectAccentColor">ctAccentColor">
                       <option>青色</option>
                       <option>蓝色</option>
                       <option>紫色</option>
@@ -789,8 +912,7 @@
                     <div class="settings-item-title">默认摄像头</div>
                     <div class="settings-item-desc">视频通话使用的设备</div>
                   </div>
-                  <div class="settings-item-control">
-                    <select class="settings-select">
+                  <div class="settings-item-c<select title="选择默认摄像头" class="settings-select" id="selectDefaultCamera">ct" id="selectDefaultCamera">
                       <option>系统默认</option>
                     </select>
                   </div>
@@ -800,8 +922,7 @@
                     <div class="settings-item-title">默认麦克风</div>
                     <div class="settings-item-desc">语音通话使用的设备</div>
                   </div>
-                  <div class="settings-item-control">
-                    <select class="settings-select">
+                  <div class=<select title="选择默认麦克风" class="settings-select" id="selectDefaultMic">lass="settings-select" id="selectDefaultMic">
                       <option>系统默认</option>
                     </select>
                   </div>
@@ -977,5 +1098,946 @@
       if (usernameEl) usernameEl.textContent = username;
     })();
   </script>
-</body>
-</html>
+
+<script>
+// Sidebar tab switching
+document.addEventListener('click', function(e) {
+  var tab = e.target.closest('.sidebar-tab');
+  if (!tab) return;
+  var tabName = tab.dataset.tab;
+  document.querySelectorAll('.sidebar-tab').forEach(function(t){ t.classList.remove('active'); });
+  document.querySelectorAll('.sidebar-tab-panel').forEach(function(p){ p.classList.remove('active'); });
+  tab.classList.add('active');
+  var panel = document.getElementById('panel' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+  if (panel) panel.classList.add('active');
+});
+
+</script>
+
+<script>
+// ============================================================
+// main-tiled.js — FIBEMATE Web Chat (完整版)
+// 参照 Tauri main.html(main.html) 结构与配色
+// 后端: /opt/fibemate-full/src/index.js (WebSocket + REST)
+// ============================================================
+
+(function() {
+'use strict';
+
+// ─── Config ───────────────────────────────────────────────
+const API = window.location.origin + '/api';
+const WS  = (window.location.protocol === 'https:' ? 'wss' : 'ws') + '://' + window.location.host + '/ws';
+
+// ─── Theme (Tauri settings.js 配色) ───────────────────────
+const THEME = {
+  dark: {
+    bgPrimary:   '#0f1419',
+    bgSecondary: '#1c2333',
+    bgTertiary:  '#162032',
+    bgCard:      '#1c2333',
+    bgInput:     '#162032',
+    textPrimary: '#e8eaed',
+    textSecondary:'#8b949e',
+    textMuted:   '#484f58',
+    border:      '#30363d',
+    accent:      '#00d4aa',
+    accentDim:   'rgba(0,212,170,0.15)',
+    accentRed:   '#ff6b6b',
+    accentOrange:'#ffa657',
+    msgSelf:     '#1b4332',
+    msgOther:    '#162032',
+    msgSelfText: '#00d4aa',
+    msgOtherText:'#e8eaed',
+  },
+  light: {
+    bgPrimary:   '#ffffff',
+    bgSecondary: '#f5f5f5',
+    bgTertiary:  '#eeeeee',
+    bgCard:      '#ffffff',
+    bgInput:     '#f0f0f0',
+    textPrimary: '#1a1a1a',
+    textSecondary:'#666666',
+    textMuted:   '#999999',
+    border:      '#e0e0e0',
+    accent:      '#00c49a',
+    accentDim:   'rgba(0,212,170,0.15)',
+    accentRed:   '#e53e3e',
+    accentOrange:'#dd6b20',
+    msgSelf:     '#d1fae5',
+    msgOther:    '#f3f4f6',
+    msgSelfText: '#065f46',
+    msgOtherText:'#1a1a1a',
+  }
+};
+
+// ─── State ────────────────────────────────────────────────
+let ws = null;
+let token = null;
+let userId = null;
+let conversations = [];
+let currentConv = null;
+let messagesMap = {};
+let contacts = [];
+let theme = localStorage.getItem('fk_theme') || 'dark';
+let reconnectTimer = null;
+let heartbeatTimer = null;
+let pendingQueue = [];
+
+// ─── DOM refs ─────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+// ─── Apply Theme ──────────────────────────────────────────
+function applyTheme(t) {
+  const c = THEME[t] || THEME.dark;
+  const r = document.documentElement;
+  r.style.setProperty('--bg-primary',    c.bgPrimary);
+  r.style.setProperty('--bg-secondary',  c.bgSecondary);
+  r.style.setProperty('--bg-tertiary',   c.bgTertiary);
+  r.style.setProperty('--bg-card',       c.bgCard);
+  r.style.setProperty('--bg-input',      c.bgInput);
+  r.style.setProperty('--text-primary',  c.textPrimary);
+  r.style.setProperty('--text-secondary',c.textSecondary);
+  r.style.setProperty('--text-muted',    c.textMuted);
+  r.style.setProperty('--border-color',  c.border);
+  r.style.setProperty('--accent',        c.accent);
+  r.style.setProperty('--accent-dim',    c.accentDim);
+  r.style.setProperty('--accent-red',    c.accentRed);
+  r.style.setProperty('--accent-orange', c.accentOrange);
+  r.style.setProperty('--msg-self-bg',   c.msgSelf);
+  r.style.setProperty('--msg-self-text', c.msgSelfText);
+  r.style.setProperty('--msg-other-bg',  c.msgOther);
+  r.style.setProperty('--msg-other-text',c.msgOtherText);
+  localStorage.setItem('fk_theme', t);
+  theme = t;
+  // toggle sidebar theme button
+  document.querySelectorAll('.theme-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.theme === t);
+  });
+}
+
+// ─── HTTP helpers ─────────────────────────────────────────
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['Authorization'] = 'Bearer ' + token;
+  const res = await fetch(API + path, { ...opts, headers: { ...headers, ...(opts.headers||{}) } });
+  if (res.status === 401 || res.status === 403) {
+    showToast('会话过期，请重新登录', 'error');
+    setTimeout(() => { localStorage.clear(); window.location.href = 'app.html'; }, 1500);
+    throw new Error('AUTH');
+  }
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.error || 'API error');
+  return json;
+}
+
+// ─── Render helpers ───────────────────────────────────────
+function htmlEsc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function timeAgo(ts) {
+  if (!ts) return '';
+  const d = new Date(ts);
+  const now = Date.now();
+  const diff = now - d.getTime();
+  if (diff < 60000) return '刚刚';
+  if (diff < 3600000) return Math.floor(diff/60000)+'分钟前';
+  if (diff < 86400000) return Math.floor(diff/3600000)+'小时前';
+  return d.toLocaleDateString('zh-CN', {month:'short',day:'numeric'});
+}
+
+// ─── Init ─────────────────────────────────────────────────
+
+async function loadMyKeys() {
+  try {
+    const data = await api(`/users/${userId}/keys`);
+    // data: { identityKey, signedPrekey, signedPrekeySignature, oneTimePreKey, gmPublicKey, gmKeyFingerprint, isOnline }
+    const idEl = $('identityKeyFingerprint');
+    const spkEl = $('signedPreKeyFingerprint');
+    const statsEl = $('keyStats');
+    if (idEl) {
+      const idFp = shortFp(data.identityKey || '');
+      idEl.innerHTML = `P-256 · <span style="color:var(--accent)">Active</span><br><span style="font-family:monospace;font-size:0.7rem;opacity:0.7">${idFp}</span>`;
+    }
+    if (spkEl) {
+      const spkFp = shortFp(data.signedPrekey || '');
+      spkEl.innerHTML = `P-256 · <span style="color:var(--accent)">Active</span><br><span style="font-family:monospace;font-size:0.7rem;opacity:0.7">${spkFp}</span>`;
+    }
+    if (statsEl) {
+      const otpCount = (data.oneTimePreKey && data.oneTimePreKey.length) || 0;
+      const gmFp = data.gmKeyFingerprint || '-';
+      statsEl.innerHTML = `One-Time PreKeys: <b style="color:var(--accent)">${otpCount}</b><br>GM 指纹: <b style="font-family:monospace">${gmFp.substring(0,16)}...</b>`;
+    }
+  } catch(e) {
+    const idEl = $('identityKeyFingerprint');
+    if (idEl) idEl.textContent = '加载失败';
+    throw e;
+  }
+}
+
+function shortFp(s) {
+  if (!s || typeof s !== 'string') return '—';
+  // 取前 16 字符作为指纹展示
+  return s.length > 32 ? s.substring(0, 16) + '...' + s.substring(s.length - 8) : s;
+}
+
+function bindKeyActions() {
+  const btnR = $('btnRotateSpk');
+  const btnE = $('btnExportIdentity');
+  if (btnR) btnR.onclick = async () => {
+    if (!confirm('Rotate Signed PreKey 将生成新的 ECDH P-256 密钥对并提交到服务器。\n\n⚠️ Web 端使用 P-256 简化方案；完整 X25519 + ML-DSA-65 rotate 在 Tauri 桌面端。\n\n确认继续？')) return;
+    btnR.disabled = true; btnR.textContent = '旋转中...';
+    try {
+      // 1. Web Crypto 生成 ECDH P-256 keypair (Web Crypto 不支持 X25519，P-256 是最稳的替代)
+      const kp = await crypto.subtle.generateKey(
+        { name: 'ECDH', namedCurve: 'P-256' },
+        true,
+        ['deriveBits', 'deriveKey']
+      );
+      // 2. 导出公钥 raw form (65 bytes uncompressed)
+      const rawPub = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey));
+      const pubB64 = btoa(String.fromCharCode.apply(null, rawPub));
+      // 3. POST /api/auth/update-keys (signedPrekey 同公钥，web 简化版无独立 SPK)
+      const result = await api('/auth/update-keys', {
+        method: 'POST',
+        body: JSON.stringify({
+          publicKey: pubB64,
+          signedPrekey: pubB64,
+          oneTimePreKey: ''  // 空字符串后端忽略
+        })
+      });
+      // 4. 刷新显示
+      await loadMyKeys();
+      showToast('SPK 已旋转: ' + (result.updated?.join(', ') || 'OK'), 'success');
+    } catch (e) {
+      console.error('rotate failed', e);
+      showToast('旋转失败: ' + (e.message || e), 'error');
+    } finally {
+      btnR.disabled = false; btnR.textContent = 'Rotate';
+    }
+  };
+  if (btnE) btnE.onclick = () => {
+    const id = $('identityKeyFingerprint')?.textContent || '';
+    const blob = new Blob([
+      'FIBEMATE Identity\n',
+      'User: ' + (userId || '-') + '\n',
+      'Generated: ' + new Date().toISOString() + '\n',
+      'Identifier: ' + id + '\n',
+      '\n⚠️ 这是简化导出，完整身份库 (X25519 + ML-DSA-65) 在 IndexedDB 加密存储。'
+    ], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'fibemate-identity.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('身份标识已导出', 'success');
+  };
+}
+
+async function init() {
+  token = localStorage.getItem('fk_token');
+  userId = localStorage.getItem('fk_uid');
+  if (!token || !userId) {
+    window.location.href = 'app.html';
+    return;
+  }
+  // verify token still valid
+  try {
+    await api('/auth/verify');
+  } catch(e) {
+    window.location.href = 'app.html';
+    return;
+  }
+
+  applyTheme(theme);
+  await Promise.allSettled([loadConversations(), loadContacts()]);
+  try { await loadMyKeys(); } catch (e) { console.warn('loadMyKeys failed', e); }
+  try { bindKeyActions(); } catch (e) { console.warn('bindKeyActions failed', e); }
+  connectWS();
+  bindEvents();
+  showChatEmpty();
+  // 自动打开对话框（如果 URL 带 ?open=username）
+  setTimeout(() => {
+    if (_autoOpened) return;
+    const params = new URLSearchParams(window.location.search);
+    const target = params.get('open');
+    if (target) {
+      _autoOpened = true;
+      console.log('[auto-open] opening chat with', target);
+      showNewChatModal();
+      const inp = $('modalUsername');
+      if (inp) {
+        inp.value = target;
+        const cf = $('modalConfirm');
+        if (cf) cf.click();
+      }
+    }
+  }, 1500);
+}
+
+function showChatEmpty() {
+  const chatArea = $('chatArea');
+  if (!chatArea) return;
+  // Don't replace innerHTML — it wipes out chatHeader/messagesList/chatEmpty!
+  // Just toggle visibility via chatEmpty overlay
+  const chatEmptyEl = $('chatEmpty');
+  if (chatEmptyEl) {
+    chatEmptyEl.style.display = 'flex';
+    chatEmptyEl.style.flexDirection = 'column';
+    chatEmptyEl.style.alignItems = 'center';
+    chatEmptyEl.style.justifyContent = 'center';
+  }
+  const chatHeader = $('chatHeader');
+  if (chatHeader) chatHeader.style.display = 'none';
+  const messagesList = $('messagesList');
+  if (messagesList) messagesList.style.display = 'none';
+}
+
+function showToast(msg, type) {
+  type = type || 'info';
+  let toast = $('toastContainer');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'toastContainer';
+    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:8px;pointer-events:none;';
+    document.body.appendChild(toast);
+  }
+  const colors = { error:'#ff6b6b', success:'#10b981', info:'#00d4aa', warn:'#ffa657' };
+  const el = document.createElement('div');
+  el.style.cssText = `background:${colors[type]||colors.info};color:#fff;padding:10px 18px;border-radius:8px;font-size:0.85rem;font-weight:500;box-shadow:0 4px 12px rgba(0,0,0,0.3);pointer-events:auto;animation:fadeIn 0.2s ease;`;
+  el.textContent = msg;
+  toast.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='opacity 0.3s'; setTimeout(()=>el.remove(), 300); }, 3000);
+}
+
+// ─── Load data ────────────────────────────────────────────
+async function loadConversations() {
+  try {
+    const data = await api('/conversations');
+    conversations = Array.isArray(data) ? data : (data.conversations||[]);
+    renderConversationList();
+  } catch(e) {
+    if (e.message !== 'AUTH') console.error('loadConversations:', e.message);
+  }
+}
+
+async function loadContacts() {
+  try {
+    const data = await api('/contacts');
+    contacts = Array.isArray(data) ? data : (data.contacts||[]);
+    renderContactList();
+  } catch(e) {
+    if (e.message !== 'AUTH') console.error('loadContacts:', e.message);
+  }
+}
+
+async function loadMessages(convId) {
+  try {
+    const data = await api('/conversations/' + convId + '/messages');
+    messagesMap[convId] = Array.isArray(data) ? data : (data.messages||[]);
+    renderMessages(convId);
+  } catch(e) {
+    if (e.message !== 'AUTH') console.error('loadMessages:', e.message);
+  }
+}
+
+// ─── Render ───────────────────────────────────────────────
+function renderConversationList() {
+  const el = $('conversationList');
+  if (!el) return;
+  if (!conversations.length) {
+    el.innerHTML = '<div class="list-empty">暂无会话 · 点击右上角 + 新建</div>';
+    return;
+  }
+  el.innerHTML = conversations.map(c => {
+    const peer = c.otherUser || c; // 后端用 otherUser 包装对方用户
+    // 后端返回 conversationId 字段或 id，统一兼容
+    const convId = c.id || c.conversationId;
+    const sel = currentConv && (currentConv.id === c.id || currentConv.id === c.conversationId) ? ' active' : '';
+    // 后端最后消息是对象: {text, ciphertext, type, ...}
+    const lm = c.lastMessage;
+    let lastMsg = (lm && typeof lm === 'object') ? (lm.ciphertext || lm.text || lm.content || '') : (lm || '');
+    // Backend stores encrypted envelope as JSON string; detect & show placeholder
+    if (typeof lastMsg === 'string' && lastMsg.startsWith('{') && lastMsg.includes('"version"')) {
+      lastMsg = '[已加密消息]';
+    }
+    const lastTime = timeAgo(c.lastMessageAt || c.updatedAt || lm && lm.createdAt);
+    const online = (peer.isOnline || c.isOnline) ? '<span class="online-dot"></span>' : '';
+    const avatar = ((peer.displayName||peer.username||c.displayName||c.username||'?'))[0].toUpperCase();
+    const unread = c.unreadCount || 0;
+    const unreadBadge = unread > 0 ? `<span class="unread-badge">${unread}</span>` : '';
+    return `<div class="conv-item${sel}" data-id="${c.id}" data-username="${htmlEsc(peer.username||'')}">
+      <div class="conv-avatar">${avatar}</div>
+      <div class="conv-info">
+        <div class="conv-name">${htmlEsc(peer.displayName||peer.username||'?')}${online}</div>
+        <div class="conv-preview">${htmlEsc(lastMsg.substring(0,30))}</div>
+      </div>
+      <div class="conv-right">
+        <div class="conv-time">${lastTime}</div>
+        ${unreadBadge}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderContactList() {
+  const el = $('contactList');
+  if (!el) return;
+  if (!contacts.length) {
+    el.innerHTML = '<div class="list-empty">暂无联系人 · 通过会话自动添加</div>';
+    return;
+  }
+  el.innerHTML = contacts.map(c => {
+    const online = c.isOnline ? '<span class="online-dot"></span>' : '';
+    const avatar = (c.displayName||c.username||'?')[0].toUpperCase();
+    return `<div class="contact-item" data-id="${c.id}" data-username="${htmlEsc(c.username)}">
+      <div class="conv-avatar">${avatar}</div>
+      <div class="conv-info">
+        <div class="conv-name">${htmlEsc(c.displayName||c.username)}${online}</div>
+        <div class="conv-preview" style="font-size:0.75rem;color:var(--text-muted)">@${htmlEsc(c.username)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderMessages(convId) {
+  const msgs = messagesMap[convId] || [];
+  const el = $('messagesList');
+  if (!el) return;
+  if (!msgs.length) {
+    el.innerHTML = '<div class="msg-empty">暂无消息 · 发送第一条消息开始对话</div>';
+    el.scrollTop = 0;
+    return;
+  }
+  el.innerHTML = msgs.map(m => {
+    const senderId = m.senderUserId || m.senderId;
+    const isSelf = String(senderId) === String(userId);
+    const cls = isSelf ? 'msg-self' : 'msg-other';
+    const bubble = isSelf ? 'msg-bubble-self' : 'msg-bubble-other';
+    const time = timeAgo(m.createdAt || m.timestamp);
+    const rawCipher = m.ciphertext || m.content || m.text || m.body || '';
+    const isDrCipher = typeof rawCipher === 'string' && rawCipher.length > 10 && rawCipher.charAt(0) === '{' && (
+      rawCipher.indexOf('"protocol":"double-ratchet') !== -1 ||
+      rawCipher.indexOf('"version":3') !== -1 ||
+      (rawCipher.indexOf('"ciphertext"') !== -1 && rawCipher.indexOf('"message_num"') !== -1) ||
+      rawCipher.indexOf('"messageNum"') !== -1
+    );
+    const text = isDrCipher
+      ? '<span style="display:inline-flex;align-items:center;gap:6px;opacity:0.75;font-style:italic;">🔒 加密消息 · 请在桌面端查看</span>'
+      : htmlEsc(rawCipher);
+    const status = isSelf ? (m.status === 'read' ? '✓✓' : m.status === 'delivered' ? '✓✓' : '✓') : '';
+    return `<div class="msg-row ${cls}" style="display:flex;${isSelf?'justify-content:flex-end':'justify-content:flex-start'};margin-bottom:8px;">
+      <div class="msg-bubble ${bubble}" style="max-width:70%;padding:8px 12px;border-radius:16px;line-height:1.5;font-size:0.9rem;">
+        <div>${text}</div>
+        <div style="font-size:0.7rem;opacity:0.6;margin-top:4px;display:flex;gap:6px;justify-content:flex-end;">
+          <span>${time}</span>${status&&isSelf?'<span style="opacity:0.8">'+status+'</span>':''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderChatHeader(conv) {
+  const header = $('chatPeerName');
+  const status = $('chatPeerStatus');
+  const peer = conv.otherUser || conv;
+  if (header) header.textContent = peer.displayName || peer.username || '会话';
+  if (status) {
+    status.textContent = peer.isOnline ? '在线 · 端到端加密' : '离线 · 消息将在对方上线后送达';
+    status.style.color = peer.isOnline ? 'var(--accent)' : 'var(--text-muted)';
+  }
+}
+
+// ─── Event binding ────────────────────────────────────────
+function bindEvents() {
+  // Theme toggle
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.addEventListener('click', () => applyTheme(btn.dataset.theme));
+  });
+
+  // Conversation click
+  document.addEventListener('click', async e => {
+    const convEl = e.target.closest('.conv-item[data-id]');
+    if (convEl) {
+      console.log('[conv-click] clicked', convEl.dataset.id);
+      const id = convEl.dataset.id;
+      const conv = conversations.find(c => String(c.id) === String(id));
+      if (!conv) { console.warn('[conv-click] conv not found in list'); return; }
+      currentConv = conv;
+      renderConversationList();
+      renderChatHeader(conv);
+      showChatArea();
+      await loadMessages(id);
+      console.log('[conv-click] chat area shown, messages loading...');
+      return;
+    }
+
+    const contactEl = e.target.closest('.contact-item[data-id]');
+    if (contactEl) {
+      await startConversation(contactEl.dataset.username || contactEl.dataset.id);
+      return;
+    }
+  });
+
+  // Send message
+  const sendBtn = $('btnSend');
+  const inputEl = $('messageInput');
+  if (sendBtn && inputEl) {
+    sendBtn.addEventListener('click', () => sendMessage(inputEl));
+    inputEl.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(inputEl); }
+    });
+  }
+
+  // New conversation (modal)
+  const newChatBtn = $('btnNewChat');
+  if (newChatBtn) newChatBtn.addEventListener('click', () => showNewChatModal());
+  const startChatEmpty = $('btnStartChatEmpty');
+  if (startChatEmpty) startChatEmpty.addEventListener('click', () => showNewChatModal());
+
+  // Logout
+  const logoutBtn = $('btnLogout');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+      localStorage.clear();
+      sessionStorage.clear();
+      if (ws) { ws.onclose = null; ws.close(); }
+      window.location.href = 'app.html';
+    });
+  }
+}
+
+function showChatArea() {
+  const chatArea = $('chatArea');
+  const chatEmpty = $('chatEmpty');
+  const chatHeader = $('chatHeader');
+  const messagesList = $('messagesList');
+  const inputBar = $('inputBar');
+  const btnSend = $('btnSend');
+  if (chatArea) chatArea.style.display = '';
+  if (chatEmpty) chatEmpty.style.display = 'none';
+  if (chatHeader) chatHeader.style.display = '';
+  if (messagesList) messagesList.style.display = 'flex';
+  if (inputBar) inputBar.style.display = 'flex';
+  if (btnSend) btnSend.style.display = '';
+}
+
+// ─── Send message ─────────────────────────────────────────
+async function sendMessage(inputEl) {
+  const text = (inputEl.value||'').trim();
+  if (!text || !currentConv) return;
+  inputEl.value = '';
+  inputEl.focus();
+
+  const convId = currentConv.id;
+  // Optimistic UI
+  if (!messagesMap[convId]) messagesMap[convId] = [];
+  const optimisticMsg = {
+    senderUserId: userId,
+    senderId: userId, // 双字段，兼容
+    ciphertext: text,
+    content: text,
+    createdAt: Date.now(),
+    timestamp: Date.now(),
+    status: 'sending',
+    tempId: Date.now()
+  };
+  messagesMap[convId].push(optimisticMsg);
+  renderMessages(convId);
+
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'message',
+      conversationId: convId,
+      content: text,
+      token: token
+    }));
+  } else {
+    // Fallback REST
+    try {
+      const result = await api('/messages', {
+        method: 'POST',
+        body: JSON.stringify({ conversationId: convId, content: text })
+      });
+      const idx = messagesMap[convId].findIndex(m => m.tempId === optimisticMsg.tempId);
+      if (idx >= 0) messagesMap[convId][idx] = { ...result, status: 'sent' };
+      renderMessages(convId);
+    } catch(e) {
+      showToast('发送失败: ' + e.message, 'error');
+    }
+  }
+}
+
+// ─── Start conversation ───────────────────────────────────
+async function startConversation(username) {
+  showToast('正在发起会话…', 'info');
+  try {
+    // 1. 先通过 username 查找对方 userId
+    let targetUserId = null;
+    if (contacts && contacts.length) {
+      const m = contacts.find(c => (c.username||'') === username || (c.displayName||'') === username);
+      if (m) targetUserId = m.id || m.userId;
+    }
+    if (!targetUserId) {
+      const search = await api('/users/search?q=' + encodeURIComponent(username));
+      const users = (search && search.users) || [];
+      const match = users.find(u => u.username === username || u.displayName === username) || users[0];
+      if (!match) throw new Error('找不到用户: ' + username);
+      targetUserId = match.id;
+    }
+    // 2. 用 userId 调 find-or-create
+    const data = await api('/conversations/find-or-create', {
+      method: 'POST',
+      body: JSON.stringify({ userId: targetUserId })
+    });
+    // 后端返回 {conversationId, otherUser}
+    const conv = {
+      id: data.conversationId || data.id,
+      otherUser: data.otherUser,
+      ...data
+    };
+    if (!conversations.find(c => String(c.id) === String(conv.id))) {
+      conversations.unshift(conv);
+    }
+    currentConv = conv;
+    renderConversationList();
+    renderChatHeader(conv);
+    showChatArea();
+    await loadMessages(conv.id);
+  } catch(e) {
+    showToast('无法发起会话: ' + e.message, 'error');
+  }
+}
+
+// ─── New chat modal ───────────────────────────────────────
+let _autoOpened = false;
+function showNewChatModal() {
+  let modal = $('modalNewChat');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'modalNewChat';
+    modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+      <div style="background:var(--bg-secondary);border:1px solid var(--border-color);border-radius:12px;padding:24px;width:360px;max-width:90vw;">
+        <div style="font-size:1rem;font-weight:600;color:var(--text-primary);margin-bottom:16px;">发起新对话</div>
+        <input id="modalUsername" placeholder="对方用户名" autocomplete="off"
+          style="width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--border-color);background:var(--bg-input);color:var(--text-primary);font-size:0.9rem;box-sizing:border-box;margin-bottom:12px;">
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button id="modalCancel" style="padding:8px 16px;border-radius:8px;border:1px solid var(--border-color);background:transparent;color:var(--text-secondary);cursor:pointer;">取消</button>
+          <button id="modalConfirm" style="padding:8px 16px;border-radius:8px;border:none;background:var(--accent);color:#fff;cursor:pointer;font-weight:500;">开始对话</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+    $('modalCancel').onclick = () => modal.style.display = 'none';
+    $('modalConfirm').onclick = async () => {
+      const u = $('modalUsername').value.trim();
+      if (u) { modal.style.display = 'none'; await startConversation(u); }
+    };
+    $('modalUsername').addEventListener('keydown', e => { if (e.key === 'Enter') $('modalConfirm').click(); });
+    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+  }
+  const mdl = $('modalNewChat');
+  if (mdl) mdl.style.display = 'flex';
+  const inp = $('modalUsername');
+  if (inp) { inp.value = ''; inp.focus(); }
+  }
+
+// ────────────────────────────────────────────
+function connectWS() {
+  if (ws) { ws.onclose = null; ws.close(); }
+  ws = new WebSocket(WS);
+
+  ws.onopen = () => {
+    ws.send(JSON.stringify({ type: 'auth', token }));
+    // Start heartbeat
+    clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(() => {
+      if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping' }));
+    }, 25000);
+  };
+
+  ws.onmessage = async evt => {
+    let data;
+    try { data = JSON.parse(evt.data); } catch { return; }
+    switch (data.type) {
+      case 'auth_ok':
+        showToast('实时连接已建立 🔐', 'success');
+        // resend pending
+        while (pendingQueue.length) ws.send(pendingQueue.shift());
+        break;
+      case 'auth_failed':
+        showToast('实时连接认证失败', 'error');
+        break;
+      case 'new_message':
+      case 'message': {
+        // 后端字段: data.ciphertext + data.createdAt + data.conversationId + data.senderUserId
+        const msgText = data.ciphertext || data.content || data.text || '';
+        if (currentConv && String(data.conversationId) === String(currentConv.id)) {
+          if (!messagesMap[currentConv.id]) messagesMap[currentConv.id] = [];
+          const normMsg = {
+              id: data.id || data.messageId,
+              conversationId: data.conversationId,
+              senderUserId: data.senderUserId,
+              ciphertext: msgText,
+              createdAt: data.createdAt || data.timestamp,
+              messageType: data.messageType || 'text'
+            };
+          if (!messagesMap[currentConv.id].find(m => m.id === normMsg.id)) {
+            messagesMap[currentConv.id].push(normMsg);
+            renderMessages(currentConv.id);
+          }
+        }
+        // update conversation list preview — 后端字段 lastMessageAt
+        const conv = conversations.find(c => String(c.id) === String(data.conversationId));
+        if (conv) {
+          conv.lastMessage = { ciphertext: msgText, createdAt: data.createdAt || data.timestamp };
+          conv.lastMessageAt = data.createdAt || data.timestamp;
+          if (conv.otherUser) conv.otherUser.isOnline = true;
+          renderConversationList();
+        }
+        showToast('新消息: ' + String(msgText).substring(0,30), 'info');
+        break;
+      }
+      case 'message_sent':
+        // confirm sent
+        if (currentConv) {
+          const msgs = messagesMap[currentConv.id] || [];
+          const last = msgs[msgs.length-1];
+          if (last && last.status === 'sending') {
+            last.status = 'delivered';
+            last.id = data.messageId;
+            renderMessages(currentConv.id);
+          }
+        }
+        break;
+      case 'recipient_offline':
+        showToast('对方离线，消息将在上线后送达', 'warn');
+        break;
+      case 'pong':
+        break;
+      case 'contact_online':
+      case 'contact_offline':
+        const c2 = conversations.find(c => String(c.id) === String(data.userId));
+        if (c2) { c2.isOnline = data.type === 'contact_online'; renderConversationList(); renderChatHeader(currentConv); }
+        break;
+      case 'error':
+        if (data.code === 'AUTH_REQUIRED') { ws.close(); reconnectWS(); }
+        break;
+    }
+  };
+
+  ws.onerror = () => { console.error('[WS] error'); };
+
+  ws.onclose = () => {
+    clearInterval(heartbeatTimer);
+    reconnectWS();
+  };
+}
+
+function reconnectWS() {
+  clearTimeout(reconnectTimer);
+  reconnectTimer = setTimeout(connectWS, 5000);
+}
+
+// ─── CSS vars + animations (injected once) ───────────────
+function injectStyles() {
+  if (document.getElementById('web-chat-styles')) return;
+  const s = document.createElement('style');
+  s.id = 'web-chat-styles';
+  s.textContent = `
+:root {
+  --bg-primary:    #0f1419;
+  --bg-secondary:  #1c2333;
+  --bg-tertiary:   #162032;
+  --bg-card:       #1c2333;
+  --bg-input:      #162032;
+  --text-primary:  #e8eaed;
+  --text-secondary:#8b949e;
+  --text-muted:    #484f58;
+  --border-color:  #30363d;
+  --accent:        #00d4aa;
+  --accent-dim:    rgba(0,212,170,0.15);
+  --accent-red:    #ff6b6b;
+  --accent-orange: #ffa657;
+  --msg-self-bg:   #1b4332;
+  --msg-self-text: #00d4aa;
+  --msg-other-bg:  #162032;
+  --msg-other-text:#e8eaed;
+}
+[data-theme=light] {
+  --bg-primary:    #ffffff;
+  --bg-secondary:  #f5f5f5;
+  --bg-tertiary:   #eeeeee;
+  --bg-card:       #ffffff;
+  --bg-input:      #f0f0f0;
+  --text-primary:  #1a1a1a;
+  --text-secondary:#666666;
+  --text-muted:    #999999;
+  --border-color:  #e0e0e0;
+  --accent:        #00c49a;
+  --accent-dim:    rgba(0,212,170,0.15);
+  --accent-red:    #e53e3e;
+  --accent-orange: #dd6b20;
+  --msg-self-bg:   #d1fae5;
+  --msg-self-text: #065f46;
+  --msg-other-bg:  #f3f4f6;
+  --msg-other-text:#1a1a1a;
+}
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg-primary); color: var(--text-primary); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+
+/* Layout */
+.app-layout { display: flex; height: 100vh; overflow: hidden; }
+
+/* Sidebar */
+.sidebar { width: 280px; flex-shrink: 0; background: var(--bg-secondary); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; overflow: hidden; }
+.sidebar-header { padding: 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+.sidebar-title { font-size: 1.1rem; font-weight: 700; color: var(--accent); letter-spacing: 0.5px; }
+.sidebar-version { font-size: 0.7rem; color: var(--text-muted); }
+.sidebar-nav { display: flex; gap: 4px; padding: 8px 12px; border-bottom: 1px solid var(--border-color); }
+.nav-btn { flex: 1; padding: 6px; border: none; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 500; background: transparent; color: var(--text-secondary); transition: all 0.15s; }
+.nav-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+.nav-btn.active { background: var(--accent-dim); color: var(--accent); }
+
+/* Panels */
+.tab-panel { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+.tab-panel.active { display: flex; }
+
+/* List */
+.panel-list { flex: 1; overflow-y: auto; }
+.panel-list::-webkit-scrollbar { width: 4px; }
+.panel-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+.list-empty { padding: 24px; text-align: center; color: var(--text-muted); font-size: 0.85rem; }
+
+/* Conversation / Contact item */
+.conv-item, .contact-item { display: flex; align-items: center; padding: 12px 16px; gap: 12px; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: background 0.1s; }
+.conv-item:hover, .contact-item:hover { background: var(--bg-tertiary); }
+.conv-item.active { background: var(--accent-dim); border-left: 3px solid var(--accent); }
+.conv-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1rem; flex-shrink: 0; position: relative; }
+.online-dot { position: absolute; bottom: 0; right: 0; width: 10px; height: 10px; background: #10b981; border-radius: 50%; border: 2px solid var(--bg-secondary); }
+.conv-info { flex: 1; min-width: 0; }
+.conv-name { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; gap: 6px; }
+.conv-preview { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+.conv-time { font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0; }
+.conv-right { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+.unread-badge { background: var(--accent, #00e5c3); color: var(--bg-primary, #0f1419); font-size: 0.7rem; font-weight: 700; padding: 2px 7px; border-radius: 10px; line-height: 1; min-width: 18px; text-align: center; }
+.online-dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: #10b981; margin-left: 6px; vertical-align: middle; box-shadow: 0 0 6px rgba(16,185,129,0.6); }
+
+/* Chat Area */
+.chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; background: var(--bg-primary); }
+.chat-area.hidden { display: none; }
+.chat-header { padding: 12px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; background: var(--bg-secondary); }
+.chat-peer-name { font-size: 1rem; font-weight: 600; color: var(--text-primary); }
+.chat-peer-status { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+.e2ee-badge-small { font-size: 0.7rem; color: var(--accent); background: var(--accent-dim); padding: 2px 8px; border-radius: 12px; margin-left: 8px; }
+.header-actions { display: flex; gap: 8px; }
+.header-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; }
+.header-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
+
+/* Messages */
+.messages-list { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 4px; }
+.messages-list::-webkit-scrollbar { width: 4px; }
+.messages-list::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 2px; }
+.msg-empty { text-align: center; color: var(--text-muted); font-size: 0.85rem; padding: 40px 0; }
+.chat-empty-state { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted); }
+
+/* Message bubbles */
+.msg-bubble-self { background: var(--msg-self-bg) !important; color: var(--msg-self-text) !important; border-radius: 16px 16px 4px 16px; }
+.msg-bubble-other { background: var(--msg-other-bg) !important; color: var(--msg-other-text) !important; border-radius: 16px 16px 16px 4px; }
+
+/* Input area */
+.input-area { padding: 12px 20px; border-top: 1px solid var(--border-color); background: var(--bg-secondary); display: flex; gap: 8px; align-items: flex-end; }
+.input-wrapper { flex: 1; display: flex; gap: 8px; background: var(--bg-input); border: 1px solid var(--border-color); border-radius: 20px; padding: 6px 16px; align-items: center; }
+#messageInput { flex: 1; border: none; background: transparent; color: var(--text-primary); font-size: 0.9rem; outline: none; resize: none; min-height: 24px; max-height: 120px; line-height: 1.5; font-family: inherit; }
+#messageInput::placeholder { color: var(--text-muted); }
+.btn-attach { background: transparent; border: none; cursor: pointer; font-size: 1.2rem; color: var(--text-muted); padding: 4px; }
+.btn-attach:hover { color: var(--text-primary); }
+#btnSend { width: 44px; height: 44px; border-radius: 50%; border: none; background: var(--accent); color: #fff; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: transform 0.1s, opacity 0.1s; }
+#btnSend:hover { transform: scale(1.05); opacity: 0.9; }
+#btnSend:active { transform: scale(0.95); }
+
+/* User bar */
+.user-bar { padding: 12px 16px; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; background: var(--bg-tertiary); }
+.user-avatar-sm { width: 32px; height: 32px; border-radius: 50%; background: var(--accent-dim); color: var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.8rem; }
+.user-name-sm { flex: 1; font-size: 0.85rem; font-weight: 500; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.theme-btn { padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 0.75rem; }
+.theme-btn.active { border-color: var(--accent); color: var(--accent); }
+#btnLogout { padding: 4px 8px; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--accent-red); cursor: pointer; font-size: 0.75rem; }
+#btnLogout:hover { background: rgba(255,107,107,0.1); }
+
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+`;
+  document.head.appendChild(s);
+}
+
+// ─── Bootstrap ────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  injectStyles();
+  init();
+});
+})();
+
+</script>
+</body
+      <!-- Vault + Settings 右列（对齐 Tauri）-->
+      <div class="tile settings-tile" style="display: none;">
+        <!-- Vault 面板 -->
+        <div class="tile-header" style="padding: 10px 12px; flex-shrink: 0;">
+          <div class="tile-title" style="font-size: 13px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+            </svg>
+            Vault
+          </div>
+        </div>
+        <div class="vault-content" style="padding: 10px 14px; color: var(--text-muted); font-size: 0.82rem;">
+          <div style="padding: 20px 0; text-align: center;">🔐 端到端加密保管箱<br><span style="font-size:0.72rem;">桌面端 Tauri 版本独享</span></div>
+        </div>
+
+        <!-- Settings 面板 -->
+        <div class="tile-header" style="padding: 10px 12px; flex-shrink: 0; border-top: 1px solid var(--border-subtle); margin-top: 6px;">
+          <div class="tile-title" style="font-size: 13px;">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+              <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+            </svg>
+            Settings
+          </div>
+        </div>
+        <div class="settings-nav-list" style="overflow-y: auto; flex: 1; min-height: 0;">
+          <div class="settings-nav-item" data-setting="account">👤 账号与安全</div>
+          <div class="settings-nav-item" data-setting="privacy">🔒 隐私</div>
+          <div class="settings-nav-item" data-setting="notifications">🔔 通知</div>
+          <div class="settings-nav-item" data-setting="appearance">☀️ 外观</div>
+          <div class="settings-nav-item" data-setting="chat">💬 聊天</div>
+          <div class="settings-nav-item active" data-setting="media">🎙️ 语音和视频</div>
+          <div class="settings-nav-item" data-setting="storage">💾 存储</div>
+          <div class="settings-nav-item" data-setting="help">❓ 帮助</div>
+          <div class="settings-nav-item" data-setting="about">ℹ️ 关于</div>
+        </div>
+
+        <!-- About 子面板 -->
+        <div class="settings-content" data-panel="about" style="padding: 14px; border-top: 1px solid var(--border-subtle);">
+          <div class="settings-section-title">关于 FIBEMATE</div>
+          <div class="settings-row">
+            <div class="settings-row-label">版本<div class="settings-row-desc">当前版本号</div></div>
+            <div class="settings-row-value">2.0.0</div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">构建时间<div class="settings-row-desc">版本编译日期</div></div>
+            <div class="settings-row-value">2026-04-29</div>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">使用条款<div class="settings-row-desc">MIT License</div></div>
+            <button class="key-btn" onclick="window.open('https://github.com/Lennonhaha/fibemate/blob/main/LICENSE','_blank')">查看</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">使用文档<div class="settings-row-desc">查看功能使用说明</div></div>
+            <button class="key-btn" onclick="window.open('https://fibemate.net/docs/','_blank')">打开</button>
+          </div>
+          <div class="settings-row">
+            <div class="settings-row-label">反馈问题<div class="settings-row-desc">向我们报告 bug 或建议</div></div>
+            <button class="key-btn" onclick="window.open('https://github.com/Lennonhaha/fibemate/issues','_blank')">反馈</button>
+          </div>
+        </div>
+      </div>>

@@ -160,6 +160,16 @@
   </div>
 </div>
 
+<!-- Import map: 让 OrbitControls 内部 'three' 引用能解析到正确路径 -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "../crypto/lgv2/vendor/three/three.module.js",
+    "three/addons/": "../crypto/lgv2/vendor/three/examples/jsm/"
+  }
+}
+</script>
+
 <script type="module">
 import * as THREE from '../crypto/lgv2/vendor/three/three.module.js';
 import { OrbitControls } from '../crypto/lgv2/vendor/three/examples/jsm/controls/OrbitControls.js';
