@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FIBEMATE · 安全限制声明</title>
+<meta name="description" content="FIBEMATE v3.3.0 安全限制、边界与未解决问题诚实披露">
+<style>
+:root { --bg:#0a0a1a; --card:#111128; --border:#1e1e3f; --text:#e0e0f0; --muted:#8888aa; --accent:#f59e0b; --accent2:#10b981; --warn:#ef4444; }
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); line-height:1.7; padding:2rem 1.5rem; max-width:900px; margin:0 auto; }
+h1 { font-size:2rem; margin-bottom:0.5rem; color:var(--accent); border-bottom:2px solid var(--accent); padding-bottom:0.5rem; }
+h2 { font-size:1.4rem; margin:2rem 0 0.8rem; color:var(--accent2); border-left:4px solid var(--accent2); padding-left:0.8rem; }
+h3 { font-size:1.1rem; margin:1.2rem 0 0.5rem; color:var(--text); }
+p { margin:0.5rem 0; }
+li { margin:0.3rem 0 0.3rem 1.5rem; }
+blockquote { border-left:4px solid var(--accent); background:rgba(245,158,11,0.06); padding:0.6rem 1rem; margin:1rem 0; color:var(--muted); font-style:italic; }
+code { background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-family:'Courier New',monospace; font-size:0.9em; color:var(--accent2); }
+pre { background:#000; border:1px solid var(--border); border-radius:8px; padding:1rem; overflow-x:auto; margin:1rem 0; }
+pre code { background:transparent; padding:0; color:#d0d0d0; }
+a { color:var(--accent2); text-decoration:underline; }
+hr { border:0; border-top:1px solid var(--border); margin:2rem 0; }
+footer { text-align:center; color:var(--muted); font-size:0.85rem; margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); }
+footer a { color:var(--accent2); }
+.banner { background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.3); border-radius:8px; padding:1rem; margin:1rem 0; }
+.banner strong { color:var(--accent); }
+</style>
+</head>
+<body>
+<h1>&#x26A0; FIBEMATE 安全限制声明</h1>
+<div class="banner">
+<strong>诚实原则</strong>：本文档详尽列出 FIBEMATE v3.3.0 的安全限制、未解决问题与适用边界。
+<br>阅读这些限制比阅读能力声明更重要。FIBEMATE 是<strong>工程验证平台</strong>，不是生产加密产品。
+<br>开源不替代独立第三方审计。商用密码产品需通过商用密码认证。
+</div>
+
+<h1>FIBEMATE 安全限制与诚实声明</h1>
+
+<blockquote>版本: v3.3.0 | 最后更新: 2026-08-31</blockquote>
+
+<h2 id='本文目的'>本文目的</h2>
+
+<p>本文档明确陈述 FIBEMATE 的安全边界、已知限制和不适用范围。<strong>诚实的工程必须声明自己做不到什么</strong>，而不是靠模糊措辞暗示安全增益。</p>
+
+<p>---</p>
+
+<h2 id='1.-平台定位'>1. 平台定位</h2>
+
+<p>FIBEMATE 是一个 <strong>后量子密码全栈工程演示与验证平台</strong>，不是安全产品。</p>
+
+<p>| 是 | 不是 |</p>
+<p>|:---|:---|</p>
+<p>| 密码工程参考实现 | 生产就绪的安全库 |</p>
+<p>| 多算法互操作性验证 | 商用密码产品 |</p>
+<p>| 侧信道缓解技术演示 | 通过认证的安全模块 |</p>
+<p>| 开源社区项目 | 企业级安全解决方案 |</p>
+
+<p>---</p>
+
+<h2 id='2.-核心安全短板（P0-高危）'>2. 核心安全短板（P0 高危）</h2>
+
+<p>### 2.1 密码理论安全证明缺失</p>
+
+<p>项目自研 VWZ 签名方案基于全新 VMQ-SPARSE 张量困难假设，无标准 LWE 格问题安全归约证明，未经过学术界广泛密码分析验证，安全性未形成共识。该组件仅为实验研究用途，默认关闭，严禁用于安全可信场景。</p>
+
+<p>### 2.2 硬件物理安全验证不完整</p>
+
+<p>FPGA v5 硬件仅完成逻辑时序、ILA 仿真、L8/L9 完整性测试（43/43 PASS），无真实芯片功耗、电磁泄漏侧信道实测数据。当前硬件安全层级仅为<strong>逻辑安全</strong>，不具备物理抗攻击能力，L9 硬件防护安全模型论证存在断层。阻塞原因为 CH340G 电平不匹配，待更换 CP2102/FT232 设备后补全测试（计划 Q4 2026）。</p>
+
+<p>### 2.3 实验组件隔离存在工程漏洞</p>
+
+<p>VWZ、LookingGlass 等实验组件通过<strong>运行时 Feature Flag</strong> 关闭（<code>FIBEMATE_EXPERIMENTAL=0</code> 默认生产模式），所有 <code>require('experimental/...')</code> 调用均在 <code>if (flags.XXX)</code> 条件块或 <code>try/catch</code> 防御块内。</p>
+
+<blockquote>**整改完成 (P0-01)**：2026-08-25 新增 `scripts/check-experimental-isolation.cjs` CI 门禁脚本，自动化验证 `src/` 目录下所有对 `experimental/` 的 require 均为条件引用（非无条件加载）。CI bom-check job 中已集成此检查。实验代码物理隔离于 `experimental/` 目录，生产入口 `src/index.js` 在 `FIBEMATE_EXPERIMENTAL=0` 下不会加载任何实验模块。</blockquote>
+
+<p>### 2.4 ML-KEM 自定义实现的固有风险</p>
+
+<p>项目早期采用时域多项式实现 ML-KEM-768，与 NIST 标准 NTT 域格式不原生互通，虽已完成全量交叉验证修复历史漏洞（nonce 截断、A 矩阵退化、decapsulate 参数顺序），但自定义实现脱离标准范式，相比原生 liboqs 实现存在更高的隐蔽性实现漏洞风险。内部自测无法完全覆盖标准兼容类缺陷，依赖外部交叉验证兜底。</p>
+
+<blockquote>当前状态：2026-07-21 已重写为 NTT 域实现（FIPS 203 §4.3），noble + liboqs 双向 10,000 轮全量通过。长期风险已降低但未消除。</blockquote>
+
+<p>---</p>
+
+<h2 id='3.-工程安全局限（P1-中高风险）'>3. 工程安全局限（P1 中高风险）</h2>
+
+<p>### 3.1 形式化验证覆盖范围有限</p>
+
+<p>TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不变式，101,467 状态，EXIT 0），未覆盖 ML-KEM 底层运算、SM2 签名加密、Double Ratchet 密钥更新等核心算法模块。无法从数学层面证明算法逻辑绝对安全，仅能依靠黑盒测试验证功能正确性。</p>
+
+<p>### 3.2 软硬件安全防护不统一</p>
+
+<p>软件层 SM2、ML-KEM 已完成掩码随机化、常量时间运算、TVLA 侧信道防护（N=10,000，36/36 全绿），但 FPGA 硬件 NTT、椭圆运算模块未同步实现同等防护逻辑，硬件层存在独立侧信道攻击面，软硬件安全防护体系不一致。</p>
+
+<blockquote>当前硬件仅完成逻辑时序验证（WNS=+9.755ns），物理侧信道测试（ChipWhisperer）待 Q4 2026 补齐。</blockquote>
+
+<p>### 3.3 无第三方权威安全审计</p>
+
+<p>所有生产组件仅完成自研自测、TVLA 测试、KAT 合规、形式化协议验证，未通过外部第三方密码安全审计、渗透测试、代码审计，无法规避单人开发的思维盲区与实现漏洞。这是项目评分 7.8→8.5 的最大杠杆项。</p>
+
+<p>---</p>
+
+<h2 id='4.-协议与生态局限（P2-低风险）'>4. 协议与生态局限（P2 低风险）</h2>
+
+<li>**TLS Path A（X25519MLKEM768）永久搁置** — 因浏览器/Nginx 生态兼容问题无法用于标准 TLS 层后量子迁移，仅保留代码归档</li>
+<li>**仅 C-2 应用层混合 KEX 可用** — 协议适配场景单一（IANA #4590），通用性受限</li>
+<li>**无标准化跨平台适配规范** — 多端（Web/Node/FPGA/STM32）接口存在隐性差异</li>
+
+<p>### 4.1 X3DH 握手匿名性审查</p>
+
+<p>基于宁建廷等（2025）匿名认证框架对 FIBEMATE X3DH + SPK 独立化握手的审查结论：</p>
+
+<blockquote>Jianting Ning et al., *Anonymous Authentication and Key Agreement, Revisited*. ePrint 2025/1986.</blockquote>
+
+<li>**匿名性**：握手为**认证型**（IK 明文传输），非匿名握手——设计取舍而非缺陷；未来需匿名场景走 HHGS 群签名路线</li>
+<li>**密钥确认**：隐式确认（Double Ratchet AEAD），建议首次解密失败时提示重新握手</li>
+<li>**DoS 面**：bundle 获取端点需 rate-limit（与 login 一致）；shared_secrets 需 TTL + 容量上限</li>
+<li>**PQC 对齐**：签名层 ML-DSA-65 ✅；DH 层仍经典 X25519（应用层 SM2+ML-KEM-768 混合 KEX 补充）</li>
+
+<p>详见：<a href='./x3dh-anonymity-review.md'>x3dh-anonymity-review.md</a></p>
+
+<p>### 4.2 流量混淆对抗评估</p>
+
+<p>基于 PrivDPI（CCS'19）/ Pine（ESORICS'20 最佳论文）对照评估 FIBEMATE 三策略（StaticPad / PerPhase / BudgetPool）：</p>
+
+<blockquote>Jianting Ning et al., *PrivDPI*, CCS 2019; *Pine*, ESORICS 2020 Best Paper.</blockquote>
+
+<li>BudgetPool(J=3000) 压至 53.3%≈随机 ✅</li>
+<li>已知缺口：① BudgetPool 耗尽态回退泄漏 ② 填充规则无轮换 ③ 发包时序未混淆</li>
+<li>改进建议已列入 P1/P2（详见评估文档）</li>
+
+<p>详见：<a href='./traffic-obfuscation-vs-privdpi.md'>traffic-obfuscation-vs-privdpi.md</a></p>
+
+<p>---</p>
+
+<h2 id='5.-部署与运维安全局限'>5. 部署与运维安全局限</h2>
+
+<p>| 局限 | 影响 |</p>
+<p>|:---|:---|</p>
+<p>| 默认依赖 Nginx 反向代理暴露 | 无内置 mTLS 双向认证、自动证书签发 |</p>
+<p>| PM2 部署模板未加固 | 无日志脱敏、崩溃转储、内存溢出防护 |</p>
+<p>| Mixnet 仿真模块无强隔离 | 存在误加载风险 |</p>
+
+<p>---</p>
+
+<h2 id='6.-ML-KEM-768-安全边界'>6. ML-KEM-768 安全边界</h2>
+
+<p>### ✅ 已实现</p>
+
+<li>FIPS 203 标准 NTT 域完整实现</li>
+<li>Barrett reduction (K=24, MU=20159) — 比 BigInt 快 14×</li>
+<li>CCS 安全 (继承 ML-KEM-768 安全归约)</li>
+<li>noble + liboqs 双向 10,000 轮交叉验证通过</li>
+<li>KAT 向量逐字节验证通过</li>
+<li>`byteEncode`/`byteDecode`/`compress`/`decompress` 自环验证通过</li>
+
+<p>### ❌ 已知限制</p>
+
+<p>| 限制 | 影响 | 计划 |</p>
+<p>|:---|:---|:---|</p>
+<p>| <strong>纯 JavaScript</strong> — 无原生 ASAN/UBSAN 覆盖 | 内存安全问题无法自动检测 | liboqs C 交叉验证作为补偿 |</p>
+<p>| <strong>非恒定时间</strong> — BigInt/展开循环可能有分支 | 存在时序侧信道泄漏风险 | Barrett reduction 已减少风险; C 端口远期 |</p>
+<p>| <strong>JS 引擎 GC</strong> — 密钥可能残留在堆中 | 冷启动攻击面较大 | v4 探索 WebAssembly GC 或手动擦除 |</p>
+<p>| <strong>无硬件 TVLA</strong> | 无法物理验证侧信道 | Q4 2026 ChipWhisperer 计划 |</p>
+<p>| <strong>无形式化证明</strong> | ML-KEM 本身未经形式化验证 | TLA+ 模型覆盖 Path C-2 K3 强密钥独立性 |</p>
+
+<p>---</p>
+
+<h2 id='7.-SM2-安全边界'>7. SM2 安全边界</h2>
+
+<p>| 限制 | 影响 |</p>
+<p>|:---|:---|</p>
+<p>| BigInt 实现，非恒定时间 | 存在时序侧信道泄漏 |</p>
+<p>| k-masking (k' = k + r·N) 缓解了 SPA，但未消除 | 需要硬件 TVLA 验证 |</p>
+<p>| JS 平台限制 ⚠️ | 详见 SM2 TVLA 分析 |</p>
+
+<p>### 7.1 SM2 多签名教学包</p>
+
+<p><code>packages/sm2-multisig/</code> 实现了基于宁建廷等（2024）方案的广播多签名教学示例——共享 nonce + 线性响应聚合 + 聚合公钥验证。</p>
+
+<blockquote>Yuchen Xiao, Lei Zhang, Yafang Yang, Wei Wu, **Jianting Ning**, Xinyi Huang. *Provably Secure Multi-Signature Scheme Based on the Standard SM2 Signature Scheme*. CSI 89:103819, 2024.</blockquote>
+
+<p><strong>边界声明</strong>：教学版演示聚合原理；完整可证明安全构造含 <code>(1+d)⁻¹</code> 因子（EUF-CMA / bijective ROM / ECDLP），请参照论文。测试覆盖：SM3 KAT、3 方聚合、n=1 退化、2 方 ID 绑定、篡改拒绝。</p>
+
+<p>---</p>
+
+<h2 id='8.-实验模块:-不构成安全声明'>8. 实验模块: 不构成安全声明</h2>
+
+<p>| 模块 | 状态 | 安全声明 |</p>
+<p>|:---|:---|:---|</p>
+<p>| <strong>LookingGlass v2</strong> (Rust/WASM) | 默认关闭 | ⚠️ 仅逆向工程难度屏障，不提升 LWE 安全强度 |</p>
+<p>| <strong>VWZ 签名</strong> (Rust/WASM) | 默认关闭 | ⚠️ 仅代数构造原型，未经过密码分析社区审查 |</p>
+<p>| <strong>DMTH</strong> (已归档) | 纯研究 | ⚠️ 方向性错误 (d>3 可被全局合并)，已修正为 v2 等变 LWE |</p>
+<p>| <strong>Cheshire Cat</strong> (已归档) | 纯研究 | ⚠️ 理论原型，无工程实现 |</p>
+
+<p><strong>默认关闭策略</strong> (2026-06-28 四层理由):</p>
+<p>1. 安全隔离 — 实验模块不应污染 ML-KEM+SLH-DSA 通信链路</p>
+<p>2. 工程稳定 — WASM 体积/多层张量延迟未穷尽</p>
+<p>3. 文档自洽 — 官网始终只展示默认启用的 FIPS 标准链路</p>
+<p>4. 兼容性兜底 — 老旧浏览器/防火墙可能不适应复杂张量运算</p>
+
+<p>---</p>
+
+<h2 id='9.-依赖-&-供应链'>9. 依赖 & 供应链</h2>
+
+<p>| 依赖 | 用途 | 风险 |</p>
+<p>|:---|:---|:---|</p>
+<p>| <code>@noble/hashes</code> | SHA3/SHAKE fallback | 文档完备 · PG/OCB |</p>
+<p>| <code>crypto.subtle</code> (browser) | WebCrypto SHA3 | 浏览器原生 |</p>
+<p>| <code>crypto</code> (Node.js) | Node 内置 SHA3 | 标准 Node API |</p>
+
+<p>所有依赖均可通过 <code>keccak</code> 内联实现兜底，无外部强制依赖链。</p>
+
+<p>---</p>
+
+<h2 id='10.-代码安全与运行稳定性优先级声明'>10. 代码安全与运行稳定性优先级声明</h2>
+
+<p>对于 FIBEMATE 这类后量子密码全栈工程平台，<strong>代码安全与运行稳定性属于最高优先级核心约束</strong>，优先级高于新功能迭代、研究模块拓展。</p>
+
+<p>### 10.1 量化对比</p>
+
+<p>普通业务软件中安全与稳定性占比约 10-25%；在 FIBEMATE 中，<strong>代码安全 + 稳定性占据项目可信度的 65%</strong>。其余 35% 为架构设计、文档体系、硬件原型等非代码资产。</p>
+
+<blockquote>即使架构思路先进、文档完善、硬件原型亮眼，底层代码安全与稳定性存在硬伤，项目直接丧失可信基础。</blockquote>
+
+<p>### 10.2 稳定性与代码安全的区别</p>
+
+<p>| 维度 | 稳定性 | 代码安全 |</p>
+<p>|:---|:---|:---|</p>
+<p>| <strong>定义</strong> | 合法输入下持续正确运行，无随机崩溃、无偶发失败、跨平台一致 | 抵御恶意输入，无漏洞泄漏密钥，无密码逻辑缺陷 |</p>
+<p>| <strong>典型事故</strong> | 偶发 KEM 往返失败、WASM Safari 随机报错 | 畸形密文触发越界读取、时序侧信道泄漏、nonce 截断 |</p>
+<p>| <strong>检测方式</strong> | KAT、多环境回归、压力测试 | fuzz、ASAN/UBSAN、TVLA、交叉验证 |</p>
+<p>| <strong>失败后果</strong> | 通信中断（良性）或加密失效（恶性） | 加密被破解、密钥泄漏（多为静默发生） |</p>
+<p>| <strong>权重</strong> | 0.6 | 0.4 |</p>
+
+<p>### 10.3 风险传导</p>
+
+<p>密码库的安全缺陷具备<strong>强传染性</strong>：任何人基于 FIBEMATE 搭建上层系统，<strong>自动继承底层全部缺陷</strong>。即使明确声明"仅工程演示"，公开代码必然被复用。</p>
+
+<p>历史案例:</p>
+<li>ML-KEM nonce 截断 (旧时域版本): 自测往返正常，但密码安全性完全破坏——**静默高危逻辑漏洞**，仅靠外部交叉验证发现</li>
+<li>`decapsulate` 参数顺序错误: 自测试全部通过，但 liboqs 交叉验证全 fail</li>
+
+<p>### 10.4 工程推论</p>
+
+<p>1. <strong>KAT 测试不充分</strong> — 只能证明"合法输入下正常运行"，无法验证恶意输入和边界条件</p>
+<p>2. <strong>实验代码严格隔离</strong> — Feature flag 控制，不让 VWZ/LookingGlass 污染可信密码路径</p>
+<p>3. <strong>所有修改必须全量回归</strong> — 一行 <code>modMul</code> 或压缩函数修改可能引入静默逻辑缺陷</p>
+<p>4. <strong>跨库交叉验证为强制门禁</strong> — 任何密码核心逻辑变更必须通过 noble + liboqs 双端交叉验证</p>
+<p>5. <strong>稳定性优先于安全性</strong> — 当二者冲突时，优先保证稳定性（权重 0.6），安全性次之（0.4）</p>
+
+<p>---</p>
+
+<h2 id='11.-强制使用约束（必读）'>11. 强制使用约束（必读）</h2>
+
+<p>任何使用者必须遵守以下约束，违规使用产生的安全风险由使用者自行承担：</p>
+
+<p>1. <strong>禁止将本项目用于涉密、金融、政务、核心基础设施等安全关键场景</strong></p>
+<p>2. <strong>禁止手动开启 VWZ、LookingGlass 实验组件用于正式加密通信</strong></p>
+<p>3. <strong>禁止直接基于自定义 ML-KEM 实现搭建商用系统</strong></p>
+<p>4. <strong>所有测试数据、安全结论仅适用于当前 v3.3-preview 版本</strong>，后续迭代未核验前不做复用</p>
+
+<p>---</p>
+
+<h2 id='12.-未来改进路线图'>12. 未来改进路线图</h2>
+
+<p>| 项目 | 时间 | 说明 |</p>
+<p>|:---|:---|:---|</p>
+<p>| ~~编译期 Feature Flag 隔离~~ | ~~2026-08-20~~ | ✅ 2026-08-25 完成：CI 门禁脚本 + 条件 require 验证（P0-01） |</p>
+<p>| ML-KEM 标准对齐固化 | 2026-08-25 | 跨库交叉验证 CI 门禁（P0） |</p>
+<p>| ~~废弃 TLS Path A 清理~~ | ~~2026-08-20~~ | ✅ 2026-08-25 完成：代码已清除 + 复盘文档 <code>docs/path-a-postmortem.md</code>（P0-03） |</p>
+<p>| 第三方安全审计 | 待定 | 最大杠杆项（7.8→8.5） |</p>
+<p>| Bus Factor ≥ 2 | 8.31 后 | 开源招募 |</p>
+<p>| 物理 TVLA (ChipWhisperer) | Q4 2026 | 硬件侧信道实测（P0） |</p>
+<p>| 恒定时间实现 | Q1 2027 | 可能 C/Rust 重写核心 |</p>
+<p>| HSM 集成 | 远期 | PKCS#11 / TPM 支持 |</p>
+
+<p>---</p>
+
+<blockquote>**核心原则**: 诚实陈述安全边界。不夸大、不暗示、不隐藏。</blockquote>
+<blockquote>配套文件: [风险分级整改清单](./risk-rectification.md) · [THREAT_MODEL.md](./THREAT_MODEL.md) · [design-decisions.md](./design-decisions.md)</blockquote>
+
+
+<hr>
+<footer>
+<p>FIBEMATE v3.3.0 · GPL-3.0-only · <a href="https://fibemate.net">fibemate.net</a> · <a href="https://github.com/Lennonhaha/fibemate">GitHub</a></p>
+<p>文档最后更新: 2026-08-31 · <a href="/docs/security-limitations.md">查看 Markdown 源</a> · <a href="/docs/index.html">返回文档中心</a></p>
+</footer>
+</body>
+</html>
