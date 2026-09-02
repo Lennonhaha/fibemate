@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: GPL-3.0-only -->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ML-KEM-768 快速入门 · FIBEMATE</title>
+<style>
+  :root { --bg:#08080d; --panel:#101018; --accent:#10b981; --text:#e5e7eb; --muted:#9ca3af; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:system-ui,-apple-system,"Segoe UI",sans-serif; line-height:1.6; padding:24px; }
+  h1 { font-size:1.4rem; margin:0 0 4px; }
+  .sub { color:var(--muted); font-size:0.85rem; margin-bottom:20px; }
+  .card { background:var(--panel); border:1px solid #1f1f2e; border-radius:12px; padding:16px 20px; margin-bottom:16px; }
+  .card h2 { font-size:0.95rem; margin:0 0 8px; color:var(--accent); }
+  pre { background:#0a0a12; border:1px solid #1f1f2e; border-radius:8px; padding:12px; font-size:0.75rem; overflow-x:auto; word-break:break-all; white-space:pre-wrap; }
+  .hex { font-family:"Consolas","Courier New",monospace; }
+  button { background:var(--accent); color:#04120c; border:none; border-radius:8px; padding:10px 18px; font-size:0.9rem; font-weight:600; cursor:pointer; }
+  button:hover { filter:brightness(1.1); }
+  .ok { color:#34d399; } .step { color:var(--accent); font-weight:600; }
+</style>
+</head>
+<body>
+<h1>ML-KEM-768 快速入门</h1>
+<div class="sub">FIPS 203 后量子密钥封装 · 单文件零构建 · 基于 FIBEMATE 纯 JS 实现</div>
+
+<div class="card">
+  <h2>步骤 1 — 密钥生成（接收方）</h2>
+  <p>Bob 生成 (公钥, 私钥) 对，公钥公开，私钥自己保存。</p>
+  <pre id="step1">待运行…</pre>
+</div>
+
+<div class="card">
+  <h2>步骤 2 — 封装（发送方）</h2>
+  <p>Alice 用 Bob 的公钥封装出「密文」和「共享密钥」，把密文发给 Bob。</p>
+  <pre id="step2">待运行…</pre>
+</div>
+
+<div class="card">
+  <h2>步骤 3 — 解封装（接收方）</h2>
+  <p>Bob 用私钥 + 密文解出同一个共享密钥。</p>
+  <pre id="step3">待运行…</pre>
+</div>
+
+<div class="card">
+  <h2>验证 — 双方共享密钥一致</h2>
+  <pre id="verify">待运行…</pre>
+</div>
+
+<p><button id="runBtn">▶ 运行完整演示</button></p>
+
+<script src="./crypto/ml-kem-768.js"></script>
+<script>
+(function () {
+  const kem = window.MLKEM768; // 纯 JS 实现（module.exports 导出为全局 MLKEM768）
+  const hex = (u8) => Array.from(u8).map(b => b.toString(16).padStart(2,'0')).join('');
+  const short = (s, n) => s.length > n*2 ? s.slice(0,n) + '…' + s.slice(-n) : s;
+
+  document.getElementById('runBtn').addEventListener('click', run);
+  run();
+
+  function run() {
+    // 步骤 1：密钥生成
+    const kp = kem.generateKeypair();
+    document.getElementById('step1').textContent =
+      'publicKey (' + kp.publicKey.length + ' bytes):\n' + short(hex(kp.publicKey), 24) +
+      '\nsecretKey (' + kp.secretKey.length + ' bytes):\n' + short(hex(kp.secretKey), 24);
+
+    // 步骤 2：封装（发送方用公钥）
+    const enc = kem.encapsulate(kp.publicKey);
+    document.getElementById('step2').textContent =
+      'ciphertext (' + enc.ciphertext.length + ' bytes):\n' + short(hex(enc.ciphertext), 24) +
+      '\nsharedSecret (发送方, ' + enc.sharedSecret.length + ' bytes):\n' + hex(enc.sharedSecret);
+
+    // 步骤 3：解封装（接收方用私钥）
+    const ss = kem.decapsulate(kp.secretKey, enc.ciphertext);
+    document.getElementById('step3').textContent =
+      'sharedSecret (接收方, ' + ss.length + ' bytes):\n' + hex(ss);
+
+    // 验证
+    const match = hex(enc.sharedSecret) === hex(ss);
+    document.getElementById('verify').innerHTML =
+      '<span class="step">' + (match ? '✅ 一致！双方得到同一个共享密钥' : '❌ 不一致！') + '</span>' +
+      '\n封装方密钥: ' + hex(enc.sharedSecret) +
+      '\n解封方密钥: ' + hex(ss);
+  }
+})();
+</script>
+</body>
+</html>
