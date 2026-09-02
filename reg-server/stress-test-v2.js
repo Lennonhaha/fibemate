@@ -15,16 +15,17 @@ const REG = 'http://127.0.0.1:3080';
 const RESULTS = [];
 
 // ===================== Utility =====================
-function fetch(url, timeout = 30000) {
+function fetch(url, timeout = 30000, headers = {}) {
   return new Promise((resolve, reject) => {
     const t0 = Date.now();
-    const req = http.get(url, {timeout}, res => {
+    const req = http.request(url, {timeout, headers}, res => {
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => resolve({status: res.statusCode, ms: Date.now() - t0, body: data}));
     });
     req.on('error', reject);
     req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    req.end();
   });
 }
 
@@ -88,14 +89,17 @@ async function sectionBasic() {
   const mlkemRes = await parallel(BASE + '/api/mlkem/test', 50, 'B2: ML-KEM single');
   
   console.log('\n--- B3: ML-KEM 批量原生 (100轮) ---');
-  const b3 = await fetch(BASE + '/api/mlkem/test-batch?count=100');
+  // 2026-09-02: batch-test token via header (query-string token removed for security)
+  const BATCH_TOKEN = process.env.BATCH_TEST_TOKEN || '';
+  const batchHeaders = BATCH_TOKEN ? { 'x-batch-test-token': BATCH_TOKEN } : {};
+  const b3 = await fetch(BASE + '/api/mlkem/test-batch?count=100', 30000, batchHeaders);
   if (b3.status === 200) {
     const j = JSON.parse(b3.body);
     log('B3: ML-KEM native batch 100', {count: j.count, totalMs: j.totalMs, avgMsPerRound: (j.totalMs/j.count).toFixed(2), wallMs: b3.ms, throughput: Math.round(j.count/j.totalMs*1000) + ' rps'});
   }
   
   console.log('\n--- B4: ML-KEM PureJS 批量 (100轮) ---');
-  const b4 = await fetch(BASE + '/api/mlkem/test-batch-purejs?count=100');
+  const b4 = await fetch(BASE + '/api/mlkem/test-batch-purejs?count=100', 30000, batchHeaders);
   if (b4.status === 200) {
     const j = JSON.parse(b4.body);
     log('B4: ML-KEM purejs batch 100', {count: j.count, totalMs: j.totalMs, avgMsPerRound: (j.totalMs/j.count).toFixed(2), wallMs: b4.ms, throughput: Math.round(j.count/j.totalMs*1000) + ' rps'});

@@ -399,6 +399,9 @@ footer { text-align:center; color:var(--text-muted); font-size:12px; padding:24p
 const TOTAL = 10000;
 const BATCH_SIZE = 500;
 const API = '/api/mlkem/test-batch-purejs';
+// 2026-09-02: batch-test token moved from query string to header (security)
+const BATCH_TOKEN = new URLSearchParams(location.search).get('token') || '';
+const BATCH_HEADERS = BATCH_TOKEN ? { 'x-batch-test-token': BATCH_TOKEN } : {};
 
 let running = false;
 let paused = false;
@@ -422,7 +425,7 @@ function log(cls, text) {
 async function runBatch(n, offset) {
   const t0 = performance.now();
   try {
-    const resp = await fetch(API + '?count=' + n + '&offset=' + (offset || 0));
+    const resp = await fetch(API + '?count=' + n + '&offset=' + (offset || 0), { headers: BATCH_HEADERS });
     const data = await resp.json();
     const elapsed = (performance.now() - t0).toFixed(1);
     if (data.status !== 'ok') throw new Error(data.error || 'API error');

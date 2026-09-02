@@ -27,9 +27,32 @@ const crypto = require('crypto');
 const uuidv4 = crypto.randomUUID;
 const path = require('path');
 const fs = require('fs');
-// ML-KEM-768 native addon (FIPS 203 verified)
+// ML-KEM-768 dual backend (FIPS 203): C native addon preferred -> bridged JS fallback
+// Fix 2026-09-02: previously required the JS source file (which exports MLKEM768 and has
+// NO keygen/encaps/decaps) as the "C addon", causing "mlkem.keygen is not a function".
+// Now loads native/build/Release/mlkem.node and falls back through packages/pqc-kem (bridged API).
 let mlkem;
-try { mlkem = require('../packages/pqc-kem/src/ml-kem-768.js'); } catch (_) { mlkem = null; console.warn('[mlkem] C addon unavailable, using JS fallback'); }
+try {
+  mlkem = require('../packages/pqc-kem/native/build/Release/mlkem.node');
+  mlkem.keygen(); // self-test: verify the addon actually works
+} catch (_) {
+  mlkem = null;
+}
+if (!mlkem || typeof mlkem.keygen !== 'function') {
+  const PQC = require('../packages/pqc-kem'); // bridged API: generateKeypair/encapsulate/decapsulate
+  mlkem = {
+    keygen: () => {
+      const { publicKey, secretKey } = PQC.generateKeypair();
+      return [Buffer.from(publicKey), Buffer.from(secretKey)];
+    },
+    encaps: (pk) => {
+      const { ciphertext, sharedSecret } = PQC.encapsulate(pk);
+      return [Buffer.from(ciphertext), Buffer.from(sharedSecret)];
+    },
+    decaps: (ct, sk) => Buffer.from(PQC.decapsulate(sk, ct)),
+  };
+  console.warn('[mlkem] C addon unavailable, using bridged JS fallback');
+}
 const mlkemPureJS = require('../packages/pqc-kem/src/ml-kem-768.js');
 const PQRatchet = require('../double-ratchet-pq');
 const pqSessions = new Map();
@@ -1477,8 +1500,12 @@ app.get('/api/mlkem/test', (req, res) => {
 });
 
 // Auth guard for CPU-intensive batch test endpoints
+// Fix 2026-09-02: token moved from query string to header — query tokens leak into
+// access logs / referrers. Accepts `x-batch-test-token` or `Authorization: Bearer <token>`.
 const batchTestAuth = (req, res, next) => {
-  const token = req.query.token;
+  const token = req.headers['x-batch-test-token'] ||
+    (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7).trim() : null);
   if (!token || token !== process.env.BATCH_TEST_TOKEN) {
     return res.status(401).json({ error: 'Unauthorized' });
   }

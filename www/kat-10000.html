@@ -433,6 +433,9 @@ footer a:hover { text-decoration:underline; }
 const TOTAL = 10000;
 const BATCH_SIZE = 10000;  // Single API call = 10,000 rounds (~3s server time)
 const API = '/api/mlkem/test-batch';
+// 2026-09-02: batch-test token moved from query string to header (security)
+const BATCH_TOKEN = new URLSearchParams(location.search).get('token') || '';
+const BATCH_HEADERS = BATCH_TOKEN ? { 'x-batch-test-token': BATCH_TOKEN } : {};
 
 let running = false;
 let paused = false;
@@ -464,7 +467,7 @@ function log(cls, text) {
 
 async function runOne() {
   const t0 = performance.now();
-  const resp = await fetch(API);
+  const resp = await fetch(API, { headers: BATCH_HEADERS });
   const data = await resp.json();
   const ms = (performance.now() - t0).toFixed(1);
   latencies.push(parseFloat(ms)); totalLatency += parseFloat(ms);

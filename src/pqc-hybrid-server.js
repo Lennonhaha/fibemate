@@ -20,14 +20,28 @@ const SM2 = require('../sm2-bigint-ec.js');
 console.log('[pqc-hybrid] SM2 BigInt 已加载');
 
 // ============ ML-KEM-768 ============
+// Fix 2026-09-02: JS fallback previously required the raw JS source (no keygen/encaps/decaps),
+// causing "mlkem.keygen is not a function". Now bridges through packages/pqc-kem.
 let mlkem;
 try {
-  mlkem = require('../addon/build/Release/mlkem.node');
+  mlkem = require('../packages/pqc-kem/native/build/Release/mlkem.node');
+  mlkem.keygen(); // self-test
   console.log('[pqc-hybrid] ✅ C Native ML-KEM-768');
 } catch (_) {
   try {
-    mlkem = require('../packages/pqc-kem/src/ml-kem-768.js');
-    console.log('[pqc-hybrid] JS ML-KEM-768');
+    const PQC = require('../packages/pqc-kem'); // bridged API
+    mlkem = {
+      keygen: () => {
+        const { publicKey, secretKey } = PQC.generateKeypair();
+        return [Buffer.from(publicKey), Buffer.from(secretKey)];
+      },
+      encaps: (pk) => {
+        const { ciphertext, sharedSecret } = PQC.encapsulate(pk);
+        return [Buffer.from(ciphertext), Buffer.from(sharedSecret)];
+      },
+      decaps: (ct, sk) => Buffer.from(PQC.decapsulate(sk, ct)),
+    };
+    console.log('[pqc-hybrid] JS ML-KEM-768 (bridged)');
   } catch (__) {
     mlkem = null;
     console.error('[pqc-hybrid] ❌ ML-KEM unavailable');

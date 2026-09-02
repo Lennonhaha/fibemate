@@ -7,16 +7,17 @@ const BASE = 'http://127.0.0.1:3001';
 const REG = 'http://127.0.0.1:3082';
 const RESULTS = [];
 
-function fetch(url, timeout = 30000) {
+function fetch(url, timeout = 30000, headers = {}) {
   return new Promise((resolve, reject) => {
     const t0 = Date.now();
-    const req = http.get(url, {timeout}, res => {
+    const req = http.request(url, {timeout, headers}, res => {
       let data = '';
       res.on('data', c => data += c);
       res.on('end', () => resolve({status: res.statusCode, ms: Date.now() - t0, body: data}));
     });
     req.on('error', reject);
     req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+    req.end();
   });
 }
 
@@ -54,8 +55,11 @@ async function main() {
 
   // 3. ML-KEM 批量（服务器内部 100 轮）
   console.log('\n--- 3/5 ML-KEM 批量（100轮/请求） ---');
+  // 2026-09-02: batch-test token via header (query-string token removed for security)
+  const BATCH_TOKEN = process.env.BATCH_TEST_TOKEN || '';
+  const batchHeaders = BATCH_TOKEN ? { 'x-batch-test-token': BATCH_TOKEN } : {};
   const batchStart = Date.now();
-  const batchResult = await fetch(BASE + '/api/mlkem/test-batch?count=100');
+  const batchResult = await fetch(BASE + '/api/mlkem/test-batch?count=100', 30000, batchHeaders);
   const batchMs = Date.now() - batchStart;
   if (batchResult.status === 200) {
     const j = JSON.parse(batchResult.body);
@@ -66,7 +70,7 @@ async function main() {
   // 4. 批量 PureJS
   console.log('\n--- 4/5 ML-KEM PureJS 批量（100轮/请求） ---');
   const pjsStart = Date.now();
-  const pjsResult = await fetch(BASE + '/api/mlkem/test-batch-purejs?count=100');
+  const pjsResult = await fetch(BASE + '/api/mlkem/test-batch-purejs?count=100', 30000, batchHeaders);
   const pjsMs = Date.now() - pjsStart;
   if (pjsResult.status === 200) {
     const j = JSON.parse(pjsResult.body);
