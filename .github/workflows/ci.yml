@@ -110,6 +110,24 @@ jobs:
       - name: Run PQC benchmark
         run: node scripts/bench-pqc.js
 
+  # ─── SBOM 生成校验（确保 sbom.cdx.json 与 lock 同步）────
+  sbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+
+      - name: Generate SBOM
+        run: node scripts/gen-sbom.js /tmp/sbom.cdx.json
+
+      - name: Verify SBOM is committed and up-to-date
+        run: |
+          node -e "const a=require('/tmp/sbom.cdx.json'),b=require('./sbom.cdx.json');if(a.components.length!==b.components.length){console.error('SBOM out of date: regenerated '+a.components.length+' vs committed '+b.components.length);process.exit(1)}console.log('SBOM up-to-date:',b.components.length,'components')"
+
   # ─── ESLint 静态分析 (single platform, lint only) ────
   lint:
     runs-on: ubuntu-latest
