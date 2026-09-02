@@ -6,12 +6,11 @@
 #   - 注册服务   : reg-server/server.js           -> 3080(WS)/3081(health)
 #   - 主 API     : src/index.js (noir-backend)     -> 3001  (见下方已知约束)
 #
-# 已知约束（重要）：
-#   主 API (3001) 依赖原生 ML-KEM 插件 addon/build/Release/mlkem.node。
-#   该原生插件源码当前【未纳入本仓库】，故默认镜像中 3001 不会启动；
-#   src/index.js 引入的纯 JS 回退 (www/crypto/ml-kem-768.js) 仅作常量，
-#   require 原生插件失败会令进程退出。如需 3001，请在 ADDON_DIR 提供源码
-#   并在构建期执行 addon 构建（见下方注释）。
+# 已知约束（已修复，2026-09-02）：
+#   主 API (3001) 优先加载原生 ML-KEM 插件 addon/build/Release/mlkem.node；
+#   若插件未编译，自动回退到纯 JS 实现（packages/pqc-kem 桥接 API：
+#   generateKeypair/encapsulate/decapsulate），进程不再退出。
+#   如需更高性能，可在 ADDON_DIR 提供源码并在构建期执行 addon 构建。
 # =============================================================================
 FROM node:20.18.1-bookworm AS build
 
