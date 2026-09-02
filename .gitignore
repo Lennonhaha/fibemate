@@ -558,3 +558,8 @@ www/docs/docs
 www/FUNDING.yml
 # CBOM 符号链接（build-cbom.js 输出到 tools/，且路径写死 Windows 本地）
 www/docs/cbom-cyclonedx.json
+
+# --- 研究线/调试页面（服务器本地研究产物，勿提交混入生产线） ---
+www/debug-test.html
+www/diag.html
+www/test-login.html
