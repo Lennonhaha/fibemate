@@ -1,0 +1,716 @@
+openapi: 3.0.3
+info:
+  title: FIBEMATE API
+  version: 3.3.0
+  description: |
+    FIBEMATE 后量子加密即时通讯平台后端 API。
+    生产环境: https://fibemate.net（nginx 443 → 127.0.0.1:3001）。
+    鉴权: 除 /api/auth/register、/api/auth/login、/api/auth/refresh、/health、
+    /api/mlkem/test、/api/mlkem/test-batch 外，所有 /api 端点需要
+    `Authorization: Bearer <JWT>` 请求头。
+  license:
+    name: GPL-3.0-only
+  contact:
+    name: FIBEMATE Maintainer
+    url: https://github.com/Lennonhaha/fibemate
+servers:
+  - url: https://fibemate.net
+    description: 生产环境
+  - url: http://localhost:3001
+    description: 本地开发
+
+tags:
+  - name: auth
+    description: 认证与密钥管理
+  - name: users
+    description: 用户与联系人
+  - name: conversations
+    description: 会话与消息
+  - name: mlkem
+    description: ML-KEM-768 后量子密钥封装
+  - name: privacy
+    description: 隐私与安全设置
+  - name: system
+    description: 健康检查与统计
+
+paths:
+  # ==================== AUTH ====================
+  /api/auth/register:
+    post:
+      tags: [auth]
+      summary: 注册新用户
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, publicKey]
+              properties:
+                username: { type: string, description: 用户名 }
+                password: { type: string, minLength: 8, description: 密码（至少 8 位） }
+                displayName: { type: string, description: 显示名，缺省用用户名 }
+                publicKey: { type: string, description: 身份公钥（X25519/ECDH） }
+                signedPrekey: { type: string, description: 签名预密钥，缺省用 publicKey }
+                prekeySignature: { type: string, description: 预密钥签名 }
+                inviteCode: { type: string, description: 保留用户名必需 }
+      responses:
+        '201':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId: { type: string, format: uuid }
+                  deviceId: { type: string, format: uuid }
+                  token: { type: string, description: JWT access token }
+                  refreshToken: { type: string }
+                  message: { type: string }
+        '400': { description: 缺少必填字段 / 密码不足 8 位 }
+        '403': { description: 人数达上限 / 保留用户名需邀请码 }
+        '409': { description: 用户名已存在 }
+
+  /api/auth/login:
+    post:
+      tags: [auth]
+      summary: 登录
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+                deviceId: { type: string }
+                devicePublicKey: { type: string }
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId: { type: string, format: uuid }
+                  username: { type: string }
+                  displayName: { type: string }
+                  publicKey: { type: string }
+                  deviceId: { type: string }
+                  token: { type: string }
+                  refreshToken: { type: string }
+                  securityScore: { type: integer }
+                  privacySettings:
+                    type: object
+                    properties:
+                      hideOnlineStatus: { type: boolean }
+                      hideReadReceipts: { type: boolean }
+                      screenshotAlert: { type: boolean }
+                      burnAfterRead: { type: boolean }
+        '400': { description: 缺少用户名或密码 }
+        '401': { description: 用户名或密码错误 }
+        '429': { description: 账户锁定（含 lockoutRemaining 秒） }
+
+  /api/auth/refresh:
+    post:
+      tags: [auth]
+      summary: 刷新 token（旋转）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refreshToken]
+              properties:
+                refreshToken: { type: string }
+      responses:
+        '200':
+          description: 新 token 对
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token: { type: string }
+                  refreshToken: { type: string }
+                  userId: { type: string }
+                  username: { type: string }
+        '400': { description: 缺少 refresh token }
+        '401': { description: 无效或过期 refresh token }
+
+  /api/auth/verify:
+    get:
+      tags: [auth]
+      summary: 校验 token（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: token 有效
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  userId: { type: string }
+                  username: { type: string }
+        '401': { description: 未授权 / token 无效 }
+
+  /api/auth/update-keys:
+    post:
+      tags: [auth]
+      summary: 更新公钥 / 预密钥（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [publicKey]
+              properties:
+                publicKey: { type: string }
+                signedPrekey: { type: string }
+                prekeySignature: { type: string }
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '400': { description: 缺少 publicKey }
+
+  # ==================== USERS ====================
+  /api/users/count:
+    get:
+      tags: [users]
+      summary: 用户计数（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: 计数信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalUsers: { type: integer }
+                  testUsers: { type: integer }
+                  maxUsers: { type: integer }
+                  remainingSlots: { type: integer }
+                  isFull: { type: boolean }
+
+  /api/users/search:
+    get:
+      tags: [users]
+      summary: 搜索用户（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string, minLength: 2 }
+          description: 搜索词（至少 2 字符）
+      responses:
+        '200':
+          description: 匹配用户列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, format: uuid }
+                        username: { type: string }
+                        displayName: { type: string }
+                        isAnonymous: { type: boolean }
+                        isOnline: { type: boolean }
+        '400': { description: 搜索词少于 2 字符 }
+
+  /api/users/{userId}:
+    get:
+      tags: [users]
+      summary: 获取用户信息（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: 用户信息
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id: { type: string }
+                  username: { type: string }
+                  displayName: { type: string }
+                  publicKey: { type: string }
+                  isOnline: { type: boolean }
+                  lastSeen: { type: integer, nullable: true }
+        '404': { description: 用户不存在 }
+
+  /api/users/{userId}/keys:
+    get:
+      tags: [users]
+      summary: 获取 X3DH 预密钥 bundle（需 Bearer，会消耗一个 OPK）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: 密钥 bundle
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId: { type: string }
+                  username: { type: string }
+                  displayName: { type: string }
+                  identityKey: { type: string }
+                  signedPrekey: { type: string }
+                  signedPrekeySignature: { type: string }
+                  oneTimePreKey:
+                    type: object
+                    nullable: true
+                    properties:
+                      keyId: { type: string }
+                      publicKey: { type: string }
+                  isOnline: { type: boolean }
+        '404': { description: 用户不存在 }
+
+  /api/contacts:
+    get:
+      tags: [users]
+      summary: 联系人列表（含 pending，需 Bearer）
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: 联系人列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  contacts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        username: { type: string }
+                        displayName: { type: string }
+                        isOnline: { type: boolean }
+                        contactStatus: { type: string, enum: [pending, accepted, rejected] }
+    post:
+      tags: [users]
+      summary: 添加联系人（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string }
+      responses:
+        '200':
+          description: 请求已发送
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  status: { type: string, enum: [pending] }
+        '400': { description: 无效 ID / 不能添加自己 }
+        '404': { description: 用户不存在 }
+        '409': { description: 已是联系人 }
+
+  /api/contacts/{userId}:
+    put:
+      tags: [users]
+      summary: 接受/拒绝联系人请求（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [accepted, rejected] }
+      responses:
+        '200':
+          description: 状态已更新
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  status: { type: string }
+        '400': { description: 无效状态 / 非 pending }
+        '404': { description: 联系人请求不存在 }
+
+  # ==================== CONVERSATIONS ====================
+  /api/conversations:
+    get:
+      tags: [conversations]
+      summary: 会话列表（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: 会话列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversations:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        otherUser:
+                          type: object
+                          properties:
+                            id: { type: string }
+                            username: { type: string }
+                            displayName: { type: string }
+                            isOnline: { type: boolean }
+                        lastMessage:
+                          type: object
+                          nullable: true
+                          properties:
+                            id: { type: string }
+                            ciphertext: { type: string }
+                            type: { type: string }
+                            createdAt: { type: integer }
+                            burnAfterRead: { type: boolean }
+                        lastMessageAt: { type: integer }
+                        unreadCount: { type: integer }
+                        createdAt: { type: integer }
+
+  /api/conversations/find-or-create:
+    post:
+      tags: [conversations]
+      summary: 获取或创建会话（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId]
+              properties:
+                userId: { type: string, description: 对方用户 ID }
+      responses:
+        '200':
+          description: 会话
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  conversationId: { type: string }
+                  otherUser:
+                    type: object
+                    properties:
+                      id: { type: string }
+                      username: { type: string }
+                      displayName: { type: string }
+                      isOnline: { type: boolean }
+        '400': { description: 缺少 userId / 不能和自己聊天 }
+        '404': { description: 用户不存在 }
+
+  /api/conversations/{conversationId}/messages:
+    get:
+      tags: [conversations]
+      summary: 消息历史（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema: { type: string }
+        - name: before
+          in: query
+          required: false
+          schema: { type: integer }
+          description: 只返回此时间戳之前的消息
+        - name: limit
+          in: query
+          required: false
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: 消息列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string }
+                        senderUserId: { type: string }
+                        ciphertext: { type: string }
+                        messageType: { type: string }
+                        createdAt: { type: integer }
+                        isBurnAfterRead: { type: boolean }
+        '403': { description: 无权访问 }
+
+  /api/messages:
+    post:
+      tags: [conversations]
+      summary: 发送消息（REST 备选，需 Bearer）
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [conversationId]
+              properties:
+                conversationId: { type: string }
+                ciphertext: { type: string, description: 密文 }
+                content: { type: string, description: 明文（ciphertext 兜底） }
+                messageType: { type: string, default: text }
+                burnAfterRead: { type: boolean }
+      responses:
+        '200':
+          description: 发送成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  messageId: { type: string }
+                  createdAt: { type: integer }
+        '403': { description: 无权访问 }
+
+  # ==================== ML-KEM ====================
+  /api/mlkem/keygen:
+    post:
+      tags: [mlkem]
+      summary: 生成 ML-KEM-768 密钥对（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: 密钥对（hex）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  publicKey: { type: string, description: hex，1184 字节 }
+                  secretKey: { type: string, description: hex，2400 字节 }
+        '500': { description: keygen 失败 }
+
+  /api/mlkem/encaps:
+    post:
+      tags: [mlkem]
+      summary: 封装（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [publicKey]
+              properties:
+                publicKey: { type: string, description: hex }
+      responses:
+        '200':
+          description: 密文 + 共享密钥
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ciphertext: { type: string, description: hex，1088 字节 }
+                  sharedSecret: { type: string, description: hex，32 字节 }
+        '400': { description: 缺少 publicKey }
+
+  /api/mlkem/decaps:
+    post:
+      tags: [mlkem]
+      summary: 解封装（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [ciphertext, secretKey]
+              properties:
+                ciphertext: { type: string, description: hex }
+                secretKey: { type: string, description: hex }
+      responses:
+        '200':
+          description: 共享密钥
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sharedSecret: { type: string, description: hex，32 字节 }
+        '400': { description: 缺少参数 }
+
+  # ==================== PRIVACY ====================
+  /api/privacy:
+    get:
+      tags: [privacy]
+      summary: 获取隐私设置（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: 隐私设置
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hideOnlineStatus: { type: boolean }
+                  hideReadReceipts: { type: boolean }
+                  screenshotAlert: { type: boolean }
+                  burnAfterRead: { type: boolean }
+                  securityScore: { type: integer }
+    put:
+      tags: [privacy]
+      summary: 更新隐私设置（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                hideOnlineStatus: { type: boolean }
+                hideReadReceipts: { type: boolean }
+                screenshotAlert: { type: boolean }
+                burnAfterRead: { type: boolean }
+      responses:
+        '200':
+          description: 更新成功（含新 securityScore）
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  securityScore: { type: integer }
+
+  /api/security/dashboard:
+    get:
+      tags: [privacy]
+      summary: 安全仪表盘（需 Bearer）
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: 安全状态
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  securityScore: { type: integer }
+                  scoreItems:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        label: { type: string }
+                        value: { type: string }
+                        status: { type: string }
+                  activeSessions: { type: integer }
+                  deviceCount: { type: integer }
+                  recentActivity:
+                    type: array
+                    items:
+                      type: object
+
+  /api/account:
+    delete:
+      tags: [privacy]
+      summary: 删除账户（永久，需 Bearer）
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { type: string }
+      responses:
+        '200':
+          description: 已永久删除
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  message: { type: string }
+        '401': { description: 密码错误 }
+
+  # ==================== SYSTEM ====================
+  /health:
+    get:
+      tags: [system]
+      summary: 健康检查（公开）
+      responses:
+        '200': { description: 服务健康 }
+
+  /api/health:
+    get:
+      tags: [system]
+      summary: API 健康检查（公开）
+      responses:
+        '200': { description: API 健康 }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
