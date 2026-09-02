@@ -157,6 +157,8 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1',
   'http://fibemate.net',
   'https://fibemate.net',
+  'https://localhost',   // Capacitor Android WebView origin
+  'https://localhost:',
 ];
 app.use(cors({
   origin: (origin, callback) => {
@@ -172,6 +174,14 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
+// SM2 公钥短指纹（与前端 _fingerprintOf 算法一致，用于客户端缓存主动失效）
+function simpleFingerprint(pk) {
+  if (typeof pk !== 'string' || pk.length < 8) return null;
+  let h = 5381;
+  for (let i = 0; i < pk.length; i++) h = ((h << 5) + h + pk.charCodeAt(i)) | 0;
+  return ('00000000' + (h >>> 0).toString(16)).slice(-8);
+}
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -429,19 +439,44 @@ function broadcastPresence(userId, online) {
   }));
 }
 
-function sendToUser(userId, payload) {
-    console.log('[SEND] sendToUser() called: userId=' + userId + ' online=' + onlineUsers.has(userId));
-const sockets = onlineUsers.get(userId);
-  console.log('[SEND] sendToUser -> userId=' + userId + ' sockets=' + (sockets ? sockets.size : 'null'));
-  if (!sockets) { console.log('[SEND] no sockets, returning false'); return false; }
+// 根据 wsMeta（WebSocket->{userId,deviceId}）找到指定用户的指定设备 socket
+function _findUserWs(userId, deviceId, excludeWs) {
+  let found = null;
+  for (const [ws, meta] of wsMeta.entries()) {
+    if (ws === excludeWs) continue; // 避免回环：发给其他人时不发回自己
+    if (meta.userId === userId && (!deviceId || meta.deviceId === deviceId)) {
+      if (ws.readyState === 1) { found = ws; break; }
+    }
+  }
+  return found;
+}
+
+function sendToUser(userId, payload, senderWs) {
+  const sockets = onlineUsers.get(userId);
   const data = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  const type = JSON.parse(data).type;
+
+  if (!sockets || sockets.size === 0) {
+    // 收方 WebSocket 已断开——通知发送方不要重试（会浪费 X3DH 握手）
+    if (senderWs && senderWs.readyState === 1) {
+      const fromId = wsMeta.get(senderWs)?.userId;
+      console.log('[ROUTE] OFFLINE ' + fromId + ' -> ' + userId + ' (type=' + type + ', recipient WebSocket disconnected)');
+      senderWs.send(JSON.stringify({ type: 'recipient_offline', userId: userId, timestamp: Date.now() }));
+    }
+    return false;
+  }
+
+  // 用 wsMeta 精确路由：找到该用户的 WebSocket，发给那个具体 socket
+  const targetWs = _findUserWs(userId, null, senderWs || null);
+  if (targetWs) {
+    targetWs.send(data);
+    return true;
+  }
+  // 降级：发给该用户的所有 socket
   let ok = false;
-  let i = 0;
   sockets.forEach(ws => {
-    console.log('[SEND]   socket[' + (i++) + '] readyState=' + ws.readyState);
-    if (ws.readyState === 1) { ws.send(data); ok = true; }
+    if (ws !== senderWs && ws.readyState === 1) { ws.send(data); ok = true; }
   });
-  console.log('[SEND] returning ok=' + ok);
   return ok;
 }
 // 初始化 Mixnet
@@ -549,8 +584,9 @@ try {
           break;
 
         case 'message': {
-          const { to, ciphertext, messageType, burnAfterRead, messageId, voiceDuration } = msg;
-          if (!to || !ciphertext) { ws.send(JSON.stringify({ type: 'error', code: 'INVALID' })); return; }
+          const { to, ciphertext, envelope, messageType, burnAfterRead, messageId, voiceDuration } = msg;
+          const effectiveCiphertext = ciphertext || envelope;
+          if (!to || !effectiveCiphertext) { ws.send(JSON.stringify({ type: 'error', code: 'INVALID' })); return; }
 
           const conv = db.getOrCreateConversation(userId, to);
           const msgId = messageId || uuidv4();
@@ -564,6 +600,7 @@ try {
             senderDeviceId: deviceId,
             recipientUserId: to,
             ciphertext: effectiveCiphertext,
+            envelope: envelope || null,
             messageType: messageType || 'text',
             voiceDuration: voiceDuration || null,
             isBurnAfterRead: !!burnAfterRead,
@@ -573,15 +610,8 @@ try {
             createdAt: now
           };
 
-          conv.messages = conv.messages || [];
-          conv.messages.push(msgObj);
-          conv.lastMessageAt = now;
-          conv.updatedAt = now;
-
-          if (conv.userAId === to) conv.unreadCountA = (conv.unreadCountA || 0) + 1;
-          else conv.unreadCountB = (conv.unreadCountB || 0) + 1;
-
-          db.save();
+          // 真正落库到 messages 表（之前只用内存 push + 空 save，消息丢失）
+          db.createMessage(msgObj);
 
           // 通过 Mixnet 传输层发送（带延迟、填充、假消息）
           const outgoingMsg = {
@@ -590,7 +620,8 @@ try {
             conversationId: conv.id,
             from: userId,
             fromDevice: deviceId,
-            ciphertext,
+            ciphertext: effectiveCiphertext,
+            envelope: envelope || null,
             messageType: messageType || 'text',
             voiceDuration: voiceDuration || null,
             burnAfterRead,
@@ -600,10 +631,18 @@ try {
           // Mixnet 处理：填充、延迟、生成假消息
           console.log('[MSG-FLOW] Calling phase4Transport.sendMessage to=' + to + ' msgType=' + (outgoingMsg ? outgoingMsg.type : 'undefined'));
 
+          let forwarded = false;
           if (phase4Transport) {
             phase4Transport.sendMessage(to, outgoingMsg, true);
+            forwarded = true;
           } else if (mixnetTransport) {
             mixnetTransport.sendMessage(to, outgoingMsg, false);
+            forwarded = true;
+          }
+          // 兜底：生产环境 phase4/mixnet 均关闭（EXPERIMENTAL=OFF），必须直接 sendToUser 转发，
+          // 否则消息只落库不转发，在线接收方实时收不到。
+          if (!forwarded) {
+            sendToUser(to, outgoingMsg, ws);
           }
           const delivered = onlineUsers.has(to); // 假设最终会送达
 
@@ -1027,13 +1066,21 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
 
 // 更新公钥（登录后客户端生成密钥对并上传）
 app.post('/api/auth/update-keys', authMiddleware, (req, res) => {
-  const { publicKey, signedPrekey, prekeySignature } = req.body;
-  if (!publicKey) return res.status(400).json({ error: '缺少 publicKey' });
-  db.updateUser(req.user.userId, {
-    publicKey,
-    signedPrekey: signedPrekey || publicKey,
-    prekeySignature: prekeySignature || ''
-  });
+  const { publicKey, signedPrekey, signedPreKey, prekeySignature, signedPreKeySignature, identitySigningKey, gmPublicKey } = req.body;
+  const updates = {};
+  if (publicKey) {
+    updates.publicKey = publicKey;
+    const spk = signedPreKey || signedPrekey;
+    updates.signedPrekey = spk || publicKey;
+    updates.prekeySignature = prekeySignature || signedPreKeySignature || '';
+  }
+  if (identitySigningKey) updates.identitySigningKey = identitySigningKey;
+  if (signedPreKeySignature) updates.signedPreKeySignature = signedPreKeySignature;
+  if (gmPublicKey) updates.gmPublicKey = gmPublicKey;
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: '缺少公钥字段（publicKey 或 gmPublicKey）' });
+  }
+  db.updateUser(req.user.userId, updates);
   // 同步更新设备公钥
   if (req.user.deviceId && db.data.devices[req.user.userId]) {
     const dev = db.data.devices[req.user.userId][req.user.deviceId];
@@ -1110,9 +1157,13 @@ app.get('/api/users/:userId/keys', authMiddleware, (req, res) => {
     username: user.username,
     displayName: user.displayName,
     identityKey: user.publicKey,
+    identitySigningKey: user.identitySigningKey || null,
     signedPrekey: user.signedPrekey,
     signedPrekeySignature: user.prekeySignature,
+    signedPreKeySignature: user.signedPreKeySignature || user.prekeySignature || null,
     oneTimePreKey,          //  { keyId, publicKey } 或 null
+    gmPublicKey: user.gmPublicKey || null,
+    gmKeyFingerprint: user.gmPublicKey ? simpleFingerprint(user.gmPublicKey) : null,
     isOnline: !!user.isOnline
   });
 });
@@ -1214,12 +1265,12 @@ app.post('/api/upload/voice', authMiddleware, (req, res) => {
 
 // 发送消息 (REST备选)
 app.post('/api/messages', authMiddleware, (req, res) => {
-  const { conversationId, ciphertext, content, messageType, burnAfterRead } = req.body;
+  const { conversationId, ciphertext, content, envelope, messageType, burnAfterRead } = req.body;
   const conv = Object.values(db.data.conversations || {}).find(c => c.id === conversationId);
   if (!conv || (conv.userAId !== req.user.userId && conv.userBId !== req.user.userId)) {
     return res.status(403).json({ error: '无权访问' });
   }
-  const effectiveCiphertext = ciphertext || content;
+  const effectiveCiphertext = ciphertext || content || envelope;
   const toUserId = conv.userAId === req.user.userId ? conv.userBId : conv.userAId;
   const msgId = uuidv4();
   const now = Date.now();
@@ -1230,6 +1281,7 @@ app.post('/api/messages', authMiddleware, (req, res) => {
     senderDeviceId: req.user.deviceId,
     recipientUserId: toUserId,
     ciphertext: effectiveCiphertext,
+    envelope: envelope || null,
     messageType: messageType || 'text',
     isBurnAfterRead: !!burnAfterRead,
     expiresAt: burnAfterRead ? now + 30_000 : null,
@@ -1237,11 +1289,8 @@ app.post('/api/messages', authMiddleware, (req, res) => {
     readBy: [],
     createdAt: now
   };
-  conv.messages = conv.messages || [];
-  conv.messages.push(msgObj);
-  conv.lastMessageAt = now;
-  conv.updatedAt = now;
-  db.save();
+  // 真正落库到 messages 表
+  db.createMessage(msgObj);
 
   sendToUser(toUserId, {
     type: 'new_message',
@@ -1249,10 +1298,11 @@ app.post('/api/messages', authMiddleware, (req, res) => {
     conversationId,
     from: req.user.userId,
     ciphertext: effectiveCiphertext,
+    envelope: envelope || null,
     messageType: messageType || 'text',
     burnAfterRead,
     createdAt: now
-  });
+  }, null);
 
   res.status(201).json({ messageId: msgId, createdAt: now });
 });
@@ -1319,16 +1369,9 @@ app.delete('/api/account', authMiddleware, async (req, res) => {
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ error: '密码错误' });
   }
-  delete db.data.users[req.user.userId];
-  delete db.data.devices[req.user.userId];
-  // 删除会话和消息
-  Object.keys(db.data.conversations || {}).forEach(k => {
-    const c = db.data.conversations[k];
-    if (c.userAId === req.user.userId || c.userBId === req.user.userId) {
-      delete db.data.conversations[k];
-    }
-  });
-  db.save();
+  // SQLite 真实删除 + 内存缓存同步清理（修复历史 bug：此前只删内存缓存，
+  // 未执行 SQLite DELETE，导致用户「删不掉」重新登录又读回）
+  db.deleteUser(req.user.userId);
   logSecurity('account_delete', req.user.userId, { permanent: true });
   res.json({ success: true, message: '所有数据已永久删除' });
 });

@@ -251,6 +251,12 @@ class SqliteDB {
 
   /** 插入或替换一行 */
   _upsert(table, id, obj) {
+    if (table === 'messages') {
+      // messages 表有独立的 conversationId NOT NULL 列
+      this._db.prepare(`INSERT OR REPLACE INTO messages (id, conversationId, raw_json) VALUES (?, ?, ?)`)
+        .run(id, obj.conversationId || null, JSON.stringify(obj));
+      return;
+    }
     this._db.prepare(`INSERT OR REPLACE INTO ${table} (id, raw_json) VALUES (?, ?)`)
       .run(id, JSON.stringify(obj));
   }
@@ -313,6 +319,88 @@ class SqliteDB {
     if (!user) return;
     const merged = { ...user, ...updates, id };
     this.createUser(merged);
+  }
+
+  deleteUser(id) {
+    // 防御原型污染（与 getUserById 对齐）
+    if (typeof id !== 'string' || id === '__proto__' || id === 'constructor' || id === 'prototype') return;
+
+    const tx = this._db.transaction(() => {
+      // 1. 收集该用户参与的 conversation id（用于删对应 messages）
+      const convIds = this._db.prepare(
+        "SELECT id FROM conversations WHERE json_extract(raw_json, '$.userAId') = ? OR json_extract(raw_json, '$.userBId') = ?"
+      ).all(id, id).map(r => r.id);
+
+      // 2. 删除这些会话下的消息
+      for (const cid of convIds) {
+        this._db.prepare('DELETE FROM messages WHERE conversationId = ?').run(cid);
+      }
+
+      // 3. 删除会话
+      this._db.prepare(
+        "DELETE FROM conversations WHERE json_extract(raw_json, '$.userAId') = ? OR json_extract(raw_json, '$.userBId') = ?"
+      ).run(id, id);
+
+      // 4. 删除设备
+      this._db.prepare('DELETE FROM devices WHERE userId = ?').run(id);
+
+      // 5. 删除联系人关系
+      this._db.prepare(
+        "DELETE FROM contacts WHERE json_extract(raw_json, '$.userId') = ? OR json_extract(raw_json, '$.contactUserId') = ?"
+      ).run(id, id);
+
+      // 6. 删除在线状态
+      this._db.prepare('DELETE FROM presence WHERE id = ?').run(id);
+
+      // 7. 删除待处理密钥交换
+      this._db.prepare(
+        "DELETE FROM pending_keys WHERE json_extract(raw_json, '$.fromUserId') = ? OR json_extract(raw_json, '$.toUserId') = ?"
+      ).run(id, id);
+
+      // 8. 删除一次性预密钥
+      this._db.prepare('DELETE FROM one_time_prekeys WHERE userId = ?').run(id);
+
+      // 9. 删除截图告警
+      this._db.prepare(
+        "DELETE FROM screenshot_alerts WHERE json_extract(raw_json, '$.fromUserId') = ? OR json_extract(raw_json, '$.toUserId') = ?"
+      ).run(id, id);
+
+      // 10. 最后删除用户本体（保证前面引用还能查到）
+      this._db.prepare('DELETE FROM users WHERE id = ?').run(id);
+    });
+    tx();
+
+    // 同步清理内存缓存 this.data（保持缓存与 SQLite 一致）
+    if (this.data) {
+      if (this.data.users) delete this.data.users[id];
+      if (this.data.devices) delete this.data.devices[id];
+      if (this.data.presence) delete this.data.presence[id];
+
+      if (this.data.conversations) {
+        for (const k of Object.keys(this.data.conversations)) {
+          const c = this.data.conversations[k];
+          if (c.userAId === id || c.userBId === id) delete this.data.conversations[k];
+        }
+      }
+      if (this.data.contacts) {
+        for (const k of Object.keys(this.data.contacts)) {
+          const c = this.data.contacts[k];
+          if (c.userId === id || c.contactUserId === id) delete this.data.contacts[k];
+        }
+      }
+      if (this.data.pendingKeys) {
+        for (const k of Object.keys(this.data.pendingKeys)) {
+          const p = this.data.pendingKeys[k];
+          if (p.fromUserId === id || p.toUserId === id) delete this.data.pendingKeys[k];
+        }
+      }
+      if (this.data.screenshotAlerts) {
+        for (const k of Object.keys(this.data.screenshotAlerts)) {
+          const a = this.data.screenshotAlerts[k];
+          if (a.fromUserId === id || a.toUserId === id) delete this.data.screenshotAlerts[k];
+        }
+      }
+    }
   }
 
   // ── Devices ────────────────────────────────────────────
@@ -397,9 +485,17 @@ class SqliteDB {
 
     this._upsert('messages', id, m);
 
-    // 更新 conversation lastMessageAt
+    // 更新 conversation lastMessageAt + 未读数
     conv.lastMessageAt = now;
     conv.updatedAt = now;
+    // 未读数：发给谁就累加谁那侧
+    if (msg.recipientUserId) {
+      if (conv.userAId === msg.recipientUserId) {
+        conv.unreadCountA = (conv.unreadCountA || 0) + 1;
+      } else if (conv.userBId === msg.recipientUserId) {
+        conv.unreadCountB = (conv.unreadCountB || 0) + 1;
+      }
+    }
     this._upsert('conversations', msg.conversationId, conv);
 
     // 更新缓存
