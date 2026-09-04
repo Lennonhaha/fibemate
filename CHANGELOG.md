@@ -43,7 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `packages/key-lifecycle/` — Key Lifecycle Manager engine (6 mechanisms: rotation, versioning, revocation, emergency, audit, export/import)
 - `packages/key-lifecycle/double-ratchet-integration.js` — KLSession: KL engine integration with PQ Double Ratchet
 - `packages/pqc-kem/src/params.js` — Runtime parameter set switching for ML-KEM-768/1024
-- `api/a2a/a2a-params.js` — Runtime parameter resolver for Agent-to-Agent protocol
 - `www/crypto/algorithm-resolver.js` — Browser-compatible algorithm parameter resolver
 
 #### Tools
@@ -61,7 +60,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/ANNOUNCEMENT.md` — Open-source announcement v2 (14 viz pages, scores, tech stack)
 - `docs/SM2_TVLA_STATUS.md` — SM2 TVLA side-channel test status declaration
 - `docs/OPEN_SOURCE_COUNTDOWN.md` — 28-day countdown checklist to Aug 31 open-source
-- `docs/PQC_MIGRATION_PLAN.md`, `docs/INCIDENT_RESPONSE_PLAN.md`, `docs/RECOVERY_PLAN.md`, `docs/GOVERNANCE.md` — Security governance documents (from earlier)
+- `docs/THREAT_MODEL.md` — Adversary model & trust boundaries
+- `docs/INCIDENT-RESPONSE-FLOW.md` — Security incident response runbook
 
 #### CI/CD
 
