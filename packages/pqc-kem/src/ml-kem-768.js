@@ -21,20 +21,20 @@
 
 // Runtime parameter set (AA: algorithm agility — switchable without recompile)
 const { getParams, listParamSets, MLKEM_PARAMS } = require('./params');
-let KYBER_N, KYBER_Q, KYBER_K, _KYBER_ETA1, _KYBER_ETA2, KYBER_DU, KYBER_DV,
-    KYBER_PUBLICKEYBYTES, KYBER_SECRETKEYBYTES, KYBER_CIPHERTEXTBYTES, KYBER_SSBYTES, KYBER_QHALF;
+let _KYBER_N, _KYBER_Q, KYBER_K, _KYBER_ETA1, _KYBER_ETA2, KYBER_DU, KYBER_DV,
+    KYBER_PUBLICKEYBYTES, KYBER_SECRETKEYBYTES, KYBER_CIPHERTEXTBYTES, KYBER_SSBYTES, _KYBER_QHALF;
 let _currentParamSet = 'ML-KEM-768';
 
 function loadParams(paramSet) {
     const p = getParams(paramSet);
-    KYBER_N = p.N; KYBER_Q = p.Q; KYBER_K = p.k;
+    _KYBER_N = p.N; _KYBER_Q = p.Q; KYBER_K = p.k;
     _KYBER_ETA1 = p.eta1; _KYBER_ETA2 = p.eta2;
     KYBER_DU = p.du; KYBER_DV = p.dv;
     KYBER_PUBLICKEYBYTES = p.ekBytes;
     KYBER_SECRETKEYBYTES = p.dkBytes;
     KYBER_CIPHERTEXTBYTES = p.ctBytes;
     KYBER_SSBYTES = p.ssBytes;
-    KYBER_QHALF = p.qHalf;
+    _KYBER_QHALF = p.qHalf;
     _currentParamSet = paramSet;
 }
 loadParams(_currentParamSet);  // default: ML-KEM-768
@@ -96,7 +96,7 @@ function zeroizePolyVec(v) { for (let i = 0; i < v.length; i++) zeroizeI16(v[i])
 // ============================================================================
 // Modular arithmetic (Barrett reduction — safe for negative inputs)
 // ============================================================================
-const BAR_K = 24, BAR_MU = 5039;
+const _BAR_K = 24, BAR_MU = 5039;
 function modMulBarrett(a, b) {
     const p = a * b;                         // exact in f64: p < 11,082,241 < 2^24
     const q = Math.floor(p * BAR_MU / 16777216);
@@ -161,10 +161,10 @@ function KeccakF1600(st){const C=new BigInt64Array(5),B=new BigInt64Array(25);fo
 function load64(b,i){let r=0n;for(let j=0;j<8;j++)r|=BigInt(b[i+j])<<BigInt(8*j);return r}
 function store64(v){const b=new Uint8Array(8);let v2=v;for(let j=0;j<8;j++){b[j]=Number(v2&0xffn);v2>>=8n}return b}
 function keccak(data,rate,outLen,suffix){const st=new BigInt64Array(25);const bs=rate>>3;const pl=Math.ceil((data.length+2)/bs)*bs;const p=new Uint8Array(pl);p.set(data);p[data.length]=suffix;p[pl-1]|=0x80;for(let o=0;o<pl;o+=bs){for(let j=0;j<bs;j+=8)st[j>>3]^=load64(p,o+j);KeccakF1600(st)}const out=new Uint8Array(outLen);let o=0;while(o<outLen){const t=Math.min(bs,outLen-o);for(let j=0;j<t;j+=8){const bytes=store64(st[j>>3]);for(let k=0;k<8&&o+k<outLen;k++)out[o+k]=bytes[k]}o+=t;if(o<outLen)KeccakF1600(st)}return out}
-function sha3_256(d){try{return require("crypto").createHash("sha3-256").update(new Uint8Array(d)).digest()}catch(e){}try{return require("@noble/hashes/sha3").sha3_256(d)}catch(e){}return keccak(d,1088,32,0x06)}
-function sha3_512(d){try{return require("crypto").createHash("sha3-512").update(new Uint8Array(d)).digest()}catch(e){}try{return require("@noble/hashes/sha3").sha3_512(d)}catch(e){}return keccak(d,576,64,0x06)}
-function shake128(d,len){try{return require("crypto").createHash("shake128",{outputLength:len}).update(new Uint8Array(d)).digest()}catch(e){}try{return require("@noble/hashes/sha3").shake128(d,len)}catch(e){}return keccak(d,1344,len,0x1f)}
-function shake256(d,len){try{return require("crypto").createHash("shake256",{outputLength:len}).update(new Uint8Array(d)).digest()}catch(e){}try{return require("@noble/hashes/sha3").shake256(d,len)}catch(e){}return keccak(d,1088,len,0x1f)}
+function sha3_256(d){try{return require("crypto").createHash("sha3-256").update(new Uint8Array(d)).digest()}catch(_e){}try{return require("@noble/hashes/sha3").sha3_256(d)}catch(_e){}return keccak(d,1088,32,0x06)}
+function sha3_512(d){try{return require("crypto").createHash("sha3-512").update(new Uint8Array(d)).digest()}catch(_e){}try{return require("@noble/hashes/sha3").sha3_512(d)}catch(_e){}return keccak(d,576,64,0x06)}
+function shake128(d,len){try{return require("crypto").createHash("shake128",{outputLength:len}).update(new Uint8Array(d)).digest()}catch(_e){}try{return require("@noble/hashes/sha3").shake128(d,len)}catch(_e){}return keccak(d,1344,len,0x1f)}
+function shake256(d,len){try{return require("crypto").createHash("shake256",{outputLength:len}).update(new Uint8Array(d)).digest()}catch(_e){}try{return require("@noble/hashes/sha3").shake256(d,len)}catch(_e){}return keccak(d,1088,len,0x1f)}
 
 // ============================================================================
 // byteEncode/Decode, compress/decompress, CBD, sampleNTT, poly ops
@@ -328,8 +328,8 @@ function encapsulate(publicKey){
     for(let i=0;i<K;i++){ct.set(byteEncode(compress(u[i],KYBER_DU),KYBER_DU),off);off+=duBytes;}
     ct.set(byteEncode(compress(v,KYBER_DV),KYBER_DV),off);
 
-    // ss = SHA3-256(K_bar || H(ct)) — FIPS 203 §7.2 step 14
-    const ss=sha3_256(new Uint8Array([...K_bar,...sha3_256(ct)]));
+    // ss (hashed) is available for self-use; we return raw K_bar for Noble compat
+    const _ss=sha3_256(new Uint8Array([...K_bar,...sha3_256(ct)]));
     return {ciphertext:ct,sharedSecret:K_bar};  // return raw K_bar for noble compat
 }
 
@@ -345,7 +345,7 @@ function decapsulate(secretKey,ciphertext){
     let off=0;
     for(let i=0;i<K;i++){s[i]=byteDecode(secretKey.slice(off,off+384),12);off+=384;}
     const pk=secretKey.slice(off,off+KYBER_PUBLICKEYBYTES);off+=KYBER_PUBLICKEYBYTES;
-    const h=secretKey.slice(off,off+32);off+=32;
+    const _h=secretKey.slice(off,off+32);off+=32;  // H(pk) — implicit-rejection check field
     const z=secretKey.slice(off,off+32);
 
     // ct = … || compress_du(u) || compress_dv(v)
