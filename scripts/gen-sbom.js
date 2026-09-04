@@ -48,7 +48,7 @@ for (const [k, v] of Object.entries(pkgs)) {
     'bom-ref': name + '@' + version,
     name,
     version,
-    purl: 'pkg:npm/' + name.replace('/', '%2F') + '@' + version,
+    purl: 'pkg:npm/' + name.replace(/\//g, '%2F') + '@' + version,
   };
   if (v.license) {
     const licenses = Array.isArray(v.license) ? v.license : [v.license];

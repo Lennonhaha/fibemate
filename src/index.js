@@ -278,6 +278,22 @@ const pqcHybrid = require("./pqc-hybrid-server");
 // ========================
 // 工具
 // ========================
+
+/**
+ * Sanitize a value before embedding it into a console/log line.
+ * User-controlled ids (usernames, device ids, message ids) may carry
+ * newlines or control characters that would let a caller forge log
+ * entries (log injection). Replace control chars with a visible escape.
+ */
+function sanitizeLog(value) {
+  if (value === undefined || value === null) return String(value);
+  return String(value).replace(/[\x00-\x1f\x7f]/g, (ch) => {
+    if (ch === '\n') return '\\n';
+    if (ch === '\r') return '\\r';
+    const code = ch.codePointAt(0).toString(16).padStart(2, '0');
+    return `\\x${code}`;
+  });
+}
 const logSecurity = (event, userId, details = {}, req = null) => {
   db.addSecurityLog({
     event,
@@ -460,7 +476,7 @@ function sendToUser(userId, payload, senderWs) {
     // 收方 WebSocket 已断开——通知发送方不要重试（会浪费 X3DH 握手）
     if (senderWs && senderWs.readyState === 1) {
       const fromId = wsMeta.get(senderWs)?.userId;
-      console.log('[ROUTE] OFFLINE ' + fromId + ' -> ' + userId + ' (type=' + type + ', recipient WebSocket disconnected)');
+      console.log('[ROUTE] OFFLINE ' + sanitizeLog(fromId) + ' -> ' + sanitizeLog(userId) + ' (type=' + sanitizeLog(type) + ', recipient WebSocket disconnected)');
       senderWs.send(JSON.stringify({ type: 'recipient_offline', userId: userId, timestamp: Date.now() }));
     }
     return false;
@@ -569,7 +585,7 @@ try {
           }
 
           logSecurity('ws_connect', userId, { deviceId });
-          console.log(`[WS] 用户 ${userId} 认证成功`);
+          console.log(`[WS] 用户 ${sanitizeLog(userId)} 认证成功`);
         } catch {
           ws.send(JSON.stringify({ type: 'auth_failed' }));
           ws.close();
@@ -820,7 +836,7 @@ try {
       }
       wsMeta.delete(ws);
       logSecurity('ws_disconnect', userId);
-      console.log(`[WS] 用户 ${userId} 断开`);
+      console.log(`[WS] 用户 ${sanitizeLog(userId)} 断开`);
     }
   });
 });
@@ -1065,7 +1081,7 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
 });
 
 // 更新公钥（登录后客户端生成密钥对并上传）
-app.post('/api/auth/update-keys', authMiddleware, (req, res) => {
+app.post('/api/auth/update-keys', authMiddleware, rateLimitMiddleware, (req, res) => {
   const { publicKey, signedPrekey, signedPreKey, prekeySignature, signedPreKeySignature, identitySigningKey, gmPublicKey } = req.body;
   const updates = {};
   if (publicKey) {
@@ -1264,7 +1280,7 @@ app.post('/api/upload/voice', authMiddleware, (req, res) => {
 });
 
 // 发送消息 (REST备选)
-app.post('/api/messages', authMiddleware, (req, res) => {
+app.post('/api/messages', authMiddleware, rateLimitMiddleware, (req, res) => {
   const { conversationId, ciphertext, content, envelope, messageType, burnAfterRead } = req.body;
   const conv = Object.values(db.data.conversations || {}).find(c => c.id === conversationId);
   if (!conv || (conv.userAId !== req.user.userId && conv.userBId !== req.user.userId)) {
