@@ -1,6 +1,6 @@
 > **本仓库是 FIBEMATE PQC 密码学工程验证平台。** 同名社交软件（Rust · 端到端加密 · 独立项目）→ [fibemate.net](https://fibemate.net)
 >
-> **This repo is the FIBEMATE PQC cryptography engineering verification platform.** The chat app of the same name (Rust · E2E encrypted · separate project) lives elsewhere. This platform covers ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa native + Noble cross-validation), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, application-layer hybrid KEX, TLA+ formal verification, and 100 TSR evidence records.
+> **This repo is the FIBEMATE PQC cryptography engineering verification platform.** The chat app of the same name (Rust · E2E encrypted · separate project) lives elsewhere. This platform covers ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa native + Noble cross-validation), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, application-layer hybrid KEX, TLA+ formal verification, and 256 TSR evidence records.
 
 > ⚠️ **安全声明 / Security Notice**
 >
@@ -23,7 +23,7 @@
 >
 > You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
 >
-> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 261 timestamped evidence records (lg-001~108) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
+> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 256 timestamped evidence records (lg-001~108) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
@@ -34,7 +34,7 @@
 
 > ⚠️ **OpenSSF passing certifies engineering hygiene (CI, docs, license), not cryptographic correctness or security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
 
-**v3.3.0** · 2026-08-03 · TSR: lg-001~108 (261 .tsr records, some IDs skipped; see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3.0** · 2026-08-03 · TSR: lg-001~108 (256 .tsr records, some IDs skipped; see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
