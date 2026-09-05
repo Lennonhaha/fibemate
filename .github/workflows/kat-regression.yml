@@ -1,0 +1,104 @@
+# FIBEMATE KAT Regression — deep known-answer regression on demand + nightly
+#
+# Purpose: systematic regression against committed KAT vectors and
+# cross-implementation oracles. Runs DEEPER than ci.yml (which is fast-path)
+# without the full Nightly-Full load.
+#
+# Trigger:
+#   - workflow_dispatch (manual, on demand — e.g. before a release)
+#   - schedule daily 22:30 UTC (offset from Nightly 06:00/06:30 UTC)
+#
+# What it validates:
+#   - ML-KEM-768: 10,000-round roundtrip + key uniqueness (kat-quick full)
+#   - ML-KEM-768: FIPS 203 KAT .rsp header + vector presence (ci-mlkem-kat)
+#   - fml-dsa (ML-DSA FIPS 204): KeyGen KAT 75/75 vs noble oracle (kat-verify)
+#   - SM2/SM3/SM4 national-standard CI (100+30+30)
+#   - Keccak/SHA-3/SHAKE vectors (test-keccak)
+#   - Integrity baseline (test-fibemate Track 3b, FIPS 140-3 §11.9)
+
+name: KAT-Regression
+
+permissions:
+  contents: read
+
+on:
+  schedule:
+    - cron: '30 22 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: kat-regression
+  cancel-in-progress: false
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+
+  mlkem-kat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: ML-KEM-768 full KAT — 10,000 rounds roundtrip + uniqueness
+        run: node scripts/kat-quick.js --samples 10000
+      - name: FIPS 203 KAT .rsp header + vector presence
+        run: node scripts/ci-mlkem-kat.cjs
+
+  fml-dsa-kat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        working-directory: ./packages/fml-dsa
+        run: npm install --ignore-scripts
+      - name: ML-DSA KeyGen KAT — 75 vectors vs noble oracle
+        working-directory: ./packages/fml-dsa
+        run: node test/kat-verify.mjs
+      - name: fml-dsa unit suites
+        working-directory: ./packages/fml-dsa
+        run: |
+          node test/ntt.test.js
+          node test/shakestream.test.js
+          node test/fml-dsa.test.js
+
+  gm-standards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: SM2 sign/verify + encrypt/decrypt (100+100)
+        run: node scripts/ci-gm-sm2.cjs
+      - name: SM3 hash (30)
+        run: node scripts/ci-gm-sm3.cjs
+      - name: SM4-GCM AEAD (30)
+        run: node scripts/ci-gm-sm4.cjs
+
+  integrity-and-keccak:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Install dependencies
+        run: npm install --ignore-scripts
+      - name: Keccak/SHA-3/SHAKE vectors
+        run: node test/test-keccak.js
+      - name: FIPS 140-3 §11.9 integrity baseline + harness
+        run: node test/test-fibemate.js
