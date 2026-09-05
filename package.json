@@ -21,7 +21,7 @@
     "@alicloud/dysmsapi20170525": "4.6.0",
     "@alicloud/openapi-client": "0.4.15",
     "@noble/curves": "2.2.0",
-    "@noble/post-quantum": "0.7.0",
+    "@noble/post-quantum": "0.7.1",
     "bcryptjs": "3.0.3",
     "better-sqlite3": "13.0.3",
     "cors": "2.8.6",
