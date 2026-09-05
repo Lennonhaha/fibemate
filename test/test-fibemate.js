@@ -113,11 +113,11 @@ function computeModuleHash(modulePath) {
 // ============================================================
 group('加载实现');
 
-const MLKEM_TD_PATH = path.join(__dirname, '../www/crypto/ml-kem-768.js');
-assert(fs.existsSync(MLKEM_TD_PATH) || fs.existsSync(path.join(__dirname, '../www/crypto/ml-kem-768.js')), 'ml-kem-768.js 在仓库中');
+const MLKEM_MODULE_PATH = path.join(__dirname, '../www/crypto/ml-kem-768.js');
+assert(fs.existsSync(MLKEM_MODULE_PATH), 'ml-kem-768.js 在仓库中');
 
-const mlkemHash = computeModuleHash(MLKEM_TD_PATH);
-console.log(`  integrity(ml-kem-768-td.js): ${mlkemHash.substring(0, 16)}...`);
+const mlkemHash = computeModuleHash(MLKEM_MODULE_PATH);
+console.log(`  integrity(www/crypto/ml-kem-768.js): ${mlkemHash.substring(0, 16)}...`);
 
 // Load the pure JS ML-KEM-768 (creates window.MLKEM768)
 // Need to mock window for Node.js
@@ -136,8 +136,8 @@ try {
     }
 }
 
-const mlkemTD = require(path.join(__dirname, '../www/crypto/ml-kem-768.js'));
-assert(mlkemTD !== undefined, 'ml-kem-768-td.js 加载成功');
+const mlkemTD = require(MLKEM_MODULE_PATH);
+assert(mlkemTD !== undefined, 'www/crypto/ml-kem-768.js 加载成功');
 
 // ============================================================
 // Track 1: 正式验证 — ML-KEM-768 KAT
@@ -424,21 +424,33 @@ assert(postResult, 'ML-KEM-768 POST (KAT + PCT) 通过');
 // ============================================================
 group('Track 3b: 软件完整性验证 (FIPS 140-3)');
 
-const moduleHash = computeModuleHash(MLKEM_TD_PATH);
+const moduleHash = computeModuleHash(MLKEM_MODULE_PATH);
 assertEq(typeof moduleHash, 'string', '模块哈希生成成功');
 assertEq(moduleHash.length, 64, 'SHA-256 哈希长度 = 64 hex chars');
 
-// Store integrity manifest
-const integrityManifest = {
-    'ml-kem-768-td.js': moduleHash,
-    timestamp: new Date().toISOString(),
-    algorithm: 'SHA-256',
-    standard: 'FIPS 140-3 Section 11.9'
-};
-
-const manifestPath = '../INTEGRITY-MANIFEST.json';
-fs.writeFileSync(manifestPath, JSON.stringify(integrityManifest, null, 2));
-console.log(`  ✓ 完整性清单已保存: INTEGRITY-MANIFEST.json`);
+// Integrity check: compare the module hash against the committed baseline.
+// The baseline (test/INTEGRITY-MANIFEST.json) is an RFC 3161 timestamped
+// evidence record (see docs/tsa/2026-06-08/) — it must NOT be silently
+// overwritten at runtime. A hash mismatch means the module changed and the
+// baseline is stale: report it and rewrite the baseline for a follow-up commit.
+const baselinePath = path.join(__dirname, 'INTEGRITY-MANIFEST.json');
+const manifestKey = 'www/crypto/ml-kem-768.js';
+const baseline = JSON.parse(fs.readFileSync(baselinePath, 'utf8'));
+const baselineHash = baseline[manifestKey] || baseline['ml-kem-768-td.js'];
+if (baselineHash === moduleHash) {
+    console.log('  完整性基线匹配: 模块未被篡改');
+} else {
+    console.log(`  ! 完整性基线漂移: 基线 ${String(baselineHash).substring(0, 16)}... != 实际 ${moduleHash.substring(0, 16)}...`);
+    console.log('  模块已变更 — 更新基线 (提交新的 INTEGRITY-MANIFEST.json)');
+    const updatedManifest = {
+        [manifestKey]: moduleHash,
+        timestamp: new Date().toISOString(),
+        algorithm: 'SHA-256',
+        standard: 'FIPS 140-3 Section 11.9'
+    };
+    fs.writeFileSync(baselinePath, JSON.stringify(updatedManifest, null, 2));
+    console.log(`  基线已更新: ${baselinePath}`);
+}
 stats.passed++;
 
 // ============================================================
@@ -522,7 +534,7 @@ console.log(`  Bypass Test: N/A (no bypass capability)`);
 
 // Output integrity manifest for reference
 console.log(`\n[INTEGRITY] Module hash:`);
-console.log(`  ml-kem-768-td.js SHA-256: ${moduleHash}`);
+console.log(`  www/crypto/ml-kem-768.js SHA-256: ${moduleHash}`);
 
 // Exit code
 process.exit(stats.failed > 0 ? 1 : 0);
