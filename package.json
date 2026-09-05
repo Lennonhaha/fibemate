@@ -6,9 +6,13 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
+    "test": "node test/test-all.js",
     "test:keccak": "node test/test-keccak.js",
+    "test:integrity": "node test/test-fibemate.js",
     "lint": "eslint packages/pqc-kem/src/ test/ --max-warnings 0",
     "lint:quiet": "eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 0",
+    "spdx:check": "node tools/add-spdx-headers.cjs check --root .",
+    "spdx:add": "node tools/add-spdx-headers.cjs add --root .",
     "audit": "node scripts/daily-audit.js",
     "audit:fix": "node scripts/daily-audit.js --fix",
     "audit:json": "node scripts/daily-audit.js --json"

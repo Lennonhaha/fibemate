@@ -212,7 +212,9 @@ pip install pre-commit && pre-commit install
 ### 快速自检
 
 ```bash
-npm test                           # 所有单元测试
+npm test                           # 聚合套件 (test/test-all.js: Keccak + integrity + smoke + ML-KEM CI)
+npm run lint                       # ESLint
+npm run spdx:check                 # SPDX 头完整性 (tools/add-spdx-headers.cjs)
 node test/smoke-crypto.js          # pre-commit 冒烟
 ```
 
