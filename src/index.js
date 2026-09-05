@@ -1082,7 +1082,7 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
 
 // 更新公钥（登录后客户端生成密钥对并上传）
 app.post('/api/auth/update-keys', authMiddleware, rateLimitMiddleware, (req, res) => {
-  const { publicKey, signedPrekey, signedPreKey, prekeySignature, signedPreKeySignature, identitySigningKey, gmPublicKey } = req.body;
+  const { publicKey, signedPrekey, signedPreKey, prekeySignature, signedPreKeySignature, identitySigningKey, gmPublicKey, hybridKeyId, hybridBundleHex, hybridMode } = req.body;
   const updates = {};
   if (publicKey) {
     updates.publicKey = publicKey;
@@ -1093,6 +1093,10 @@ app.post('/api/auth/update-keys', authMiddleware, rateLimitMiddleware, (req, res
   if (identitySigningKey) updates.identitySigningKey = identitySigningKey;
   if (signedPreKeySignature) updates.signedPreKeySignature = signedPreKeySignature;
   if (gmPublicKey) updates.gmPublicKey = gmPublicKey;
+  // Hybrid PQ advertisement (X25519 + ML-KEM-768 responder bundle) — additive
+  if (hybridKeyId) updates.hybridKeyId = hybridKeyId;
+  if (hybridBundleHex) updates.hybridBundleHex = hybridBundleHex;
+  if (hybridMode) updates.hybridMode = hybridMode;
   if (Object.keys(updates).length === 0) {
     return res.status(400).json({ error: '缺少公钥字段（publicKey 或 gmPublicKey）' });
   }
@@ -1180,6 +1184,10 @@ app.get('/api/users/:userId/keys', authMiddleware, (req, res) => {
     oneTimePreKey,          //  { keyId, publicKey } 或 null
     gmPublicKey: user.gmPublicKey || null,
     gmKeyFingerprint: user.gmPublicKey ? simpleFingerprint(user.gmPublicKey) : null,
+    // Hybrid PQ advertisement (if responder uploaded one)
+    hybridKeyId: user.hybridKeyId || null,
+    hybridBundleHex: user.hybridBundleHex || null,
+    hybridMode: user.hybridMode || null,
     isOnline: !!user.isOnline
   });
 });
