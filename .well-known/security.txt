@@ -1,0 +1,20 @@
+# security.txt — RFC 9116
+# FIBEMATE PQC engineering verification platform
+
+# Preferred channels for vulnerability reports (see SECURITY.md):
+Contact: mailto:security@fibemate.net
+Contact: https://github.com/Lennonhaha/fibemate/security/advisories
+
+# Coordinated disclosure; do NOT open a public issue for security bugs.
+Policy: https://github.com/Lennonhaha/fibemate/blob/main/SECURITY.md
+
+# Canonical location of this file:
+Canonical: https://fibemate.net/.well-known/security.txt
+Canonical: https://github.com/Lennonhaha/fibemate/blob/main/.well-known/security.txt
+
+# Educational/research project — not production software:
+# https://github.com/Lennonhaha/fibemate/blob/main/SECURITY.md#known-limitations-non-exhaustive
+Expires: 2027-09-05T00:00:00.000Z
+
+# Preferred languages: en, zh
+Preferred-Languages: en, zh
