@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // FIBEMATE 文档索引生成器 — 扫描 www/docs/（真实部署的文档）按角色分类生成 documentation.html
 // 设计文档: docs/product-designs/04-pqc-migrate-docs.md §6.1

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-only
 # scan-corrupted.sh — full-repo encoding corruption scanner (bash)
 #
 # Fast bash scanner for U+FFFD replacement chars across tracked text files.

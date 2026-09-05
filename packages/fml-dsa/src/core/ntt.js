@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // packages/fml-dsa/src/core/ntt.js
 // Noble-aligned NTT — delegates directly to @noble/post-quantum genCrystals
 // This guarantees 100% bit-identical output with Noble's NTT.encode/NTT.decode

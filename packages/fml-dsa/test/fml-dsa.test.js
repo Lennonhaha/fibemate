@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/test/fml-dsa.test.js — Comprehensive test suite
 // Phase 1: noble-backed API → KAT verification + oracle cross-verification
 // 2026-07-29: KeyGen KAT 75/75 + Sign/Verify oracle + API surface test

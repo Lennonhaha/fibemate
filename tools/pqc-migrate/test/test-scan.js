@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // pqc-migrate 单元测试（零依赖，用 assert）
 const assert = require('assert');

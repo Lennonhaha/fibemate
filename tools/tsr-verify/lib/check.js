@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // 批量验证 + 序列连续性 + manifest 验证
 const fs = require('fs');

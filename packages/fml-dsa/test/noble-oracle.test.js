@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // packages/fml-dsa/test/noble-oracle.test.js
 // Cross-verify fml-dsa NTT against @noble/post-quantum (via bundled IIFE)
 // Strategy: load bundle → compare fml NTT output vs noble internal NTT on same inputs

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // 常量时间 buffer 比较（侧信道安全）
 function bufEq(a, b) {

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * SM2 P0 验收测试：100,000 轮签名 + 加密 + 解密
  * 用法: node scripts/sm2-100k-real.cjs

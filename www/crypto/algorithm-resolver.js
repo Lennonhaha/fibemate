@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // ============================================================
 // algorithm-resolver.js — Browser-compatible algorithm parameter resolver
 // ============================================================

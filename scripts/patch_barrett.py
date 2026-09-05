@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Apply Barrett reduction to modMul in ml-kem-768.js"""
 import re
 

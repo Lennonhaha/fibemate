@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # deploy-check.sh — verify online version matches git HEAD
 # Run after: git push → server pull → this script
 

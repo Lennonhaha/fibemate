@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/polyvec.js
 // Polynomial and vector arithmetic — FIPS 204 §5.1
 // Poly: 256-coefficient polynomial in Z_q[x]/(x^256+1), stored as Int32Array

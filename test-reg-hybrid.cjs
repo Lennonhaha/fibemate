@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Test reg-server/hybrid-kem-client.js with the new sm2-bigint-ec dependency
 const SM2 = require('./sm2-bigint-ec');
 

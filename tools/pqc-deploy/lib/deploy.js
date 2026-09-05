@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // PQC 部署验证 CLI 核心 — 复用 server/pqc-detector.js 的探测引擎
 // 设计文档: docs/product-designs/11-pqc-deployment-verification.md

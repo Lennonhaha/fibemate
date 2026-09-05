@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // NTT 基准核心 — 平台探测 + 计时 + 报告生成
 // 设计文档: docs/product-designs/10-ntt-benchmark.md §8

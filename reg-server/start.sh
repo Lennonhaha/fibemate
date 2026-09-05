@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-only
 cd /opt/fibemate-full/reg-server
 fuser -k 3080/tcp 3081/tcp 2>/dev/null || true
 sleep 1

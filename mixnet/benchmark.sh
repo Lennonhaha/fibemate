@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # benchmark-fixed-v3.sh - FibeMate Mixnet 性能基准测试（修复 curl 格式）
 # 修复：curl -w 使用 %{time_total}，awk 做浮点计算
 # 创建时间: 2026-05-26 04:08

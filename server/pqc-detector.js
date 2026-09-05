@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * PQC Deployment Detector — Phase 1: TLS Endpoint Probe (pure Node.js)
  * 

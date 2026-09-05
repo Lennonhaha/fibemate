@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // FIBEMATE PQC Desktop — Electron 主进程
 // 设计文档: docs/product-designs/09-pqc-desktop.md §6.1/6.3
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');

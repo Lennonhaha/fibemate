@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 // tools/upgrade-cbom-graph.js
 // 自动升级 cbom-graph.html 的动画质量
 // P0: autoRotate + 节点 lerp + 粒子流速 + 性能

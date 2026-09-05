@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # Audit part 2: security deep-dive
 
 echo "=== AUDIT PART 2 ==="

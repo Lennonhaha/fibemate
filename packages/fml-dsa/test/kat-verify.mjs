@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // kat-verify.mjs — Verify ML-DSA KeyGen KAT against @noble/post-quantum
 // 2026-07-29: 75 ACVP KAT vectors → noble keygen → byte-level comparison
 

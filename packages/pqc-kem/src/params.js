@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // packages/pqc-kem/src/params.js
 // FIPS 203 (ML-KEM) runtime parameter sets
 // Pattern: match fml-dsa/src/core/params.js — runtime-switchable, not compile-time constants

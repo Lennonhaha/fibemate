@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * Batch encoding scan — Node.js version (no PowerShell object issues)
  * Scans all text files for UTF-8 corruption (U+FFFD, NUL, invalid UTF-8, BOM)

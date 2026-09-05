@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # ═══════════════════════════════════════════════════════════════════════════
 # check-encoding-cron.sh — server-side every-3-hour encoding scan
 #

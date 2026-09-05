@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # Audit part 3: live server + demo copy deep dive
 
 echo "=== AUDIT PART 3 ==="

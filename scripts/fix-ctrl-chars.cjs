@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 // fix-ctrl-chars.cjs — repair first-letter control-char substitution in BUILD.md / MEMORY.md
 //
 // Root cause (2026-08 corruption class): literal `\a` `\b` `\f` escape sequences

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const { readFileSync, readdirSync, writeFileSync, existsSync, statSync } = require('fs');
 const { resolve, join, dirname } = require('path');
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * fml-dsa vs Noble ML-DSA Benchmark
  *

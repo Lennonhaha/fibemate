@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE 可视化设计系统 — Canvas 2D 辅助库
  * 零外部依赖，纯 Canvas 2D，可被所有 2D 可视化页面复用

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /* eslint-disable no-useless-escape -- embedded HTML string uses \" escapes that are harmless in single-quoted JS strings */
 var fs=require('fs'),p='utf8';
 

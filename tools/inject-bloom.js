@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const { readFileSync, writeFileSync } = require('fs');
 
 // Read the full data

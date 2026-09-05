@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // FIBEMATE PQC Attack — 本地攻防沙盒 API 服务器（仅供本地研究）
 // 设计文档: docs/product-designs/08-pqc-docker.md §3
 'use strict';

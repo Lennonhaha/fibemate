@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/sign.js
 // FIPS 204 §4.2: ML-DSA.Sign(sk, M, ctx) — Deterministic (hedged) nonce
 // 2026-07-29

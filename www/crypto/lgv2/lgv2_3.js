@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /* @ts-self-types="./lgv2_3.d.ts" */
 
 /**

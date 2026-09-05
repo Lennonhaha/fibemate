@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/test/edge.test.js — ML-DSA boundary tests (FIPS 204 Phase 2)
 // 2026-07-29: P0 edge cases — empty msg, invalid keys, tampered sigs
 // Runs against noble oracle; Phase 2 re-runs against fml-dsa native

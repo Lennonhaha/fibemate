@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * PQC Probe API Server — lightweight Node.js HTTP bridge
  *

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """SM3 Python reference + KAT generator + JS cross-validation companion"""
 from gmssl import sm3
 import json

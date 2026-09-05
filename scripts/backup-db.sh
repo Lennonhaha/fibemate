@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # FIBEMATE 数据库每日备份
 # 运行: 每天凌晨3点 via cron
 set -e

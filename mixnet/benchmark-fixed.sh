@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # benchmark-fixed.sh - FibeMate Mixnet 性能基准测试（修复版）
 # 适配直接部署 (非 Docker)
 # 创建时间: 2026-05-26 04:05

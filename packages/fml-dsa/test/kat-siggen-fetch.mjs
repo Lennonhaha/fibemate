@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // kat-siggen-fetch.mjs v2 — Fetch SigGen KAT correctly
 // Prompt: { tcId, message, sk, context }
 // Expected: { tcId, signature }

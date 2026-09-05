@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * FIBEMATE — HMAC-SM3 KAT verification
  * 

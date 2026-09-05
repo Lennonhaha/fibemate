@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/test/tvla-timing.test.js — TVLA v3: proper methodology
 // Fix: BOTH groups use random inputs to avoid JIT constant-folding artifacts
 // Group A: input[i] fixed (but realistic) — simulates fixed-key scenario

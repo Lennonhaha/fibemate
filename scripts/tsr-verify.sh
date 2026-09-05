@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # TSR batch verification & backup
 # Run: daily via cron
 set -e

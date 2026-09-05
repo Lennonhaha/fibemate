@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/reduce.js
 // FIPS 204 §5.1: modular reduction and decomposition helpers
 // Power2Round, Decompose, HighBits, LowBits, MakeHint, UseHint

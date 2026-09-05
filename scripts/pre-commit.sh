@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # ═══════════════════════════════════════════════════════════════════════════
 # FIBEMATE pre-commit guard (combined)
 # 1) Encoding check  — block U+FFFD / GBK mojibake / control chars / BOM / NUL

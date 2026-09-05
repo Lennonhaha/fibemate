@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # TSR signing for docs/pqc-readiness.md (lg-093) + docs/security-limitations.md (lg-094)
 set -e
 cd /opt/fibemate-repo

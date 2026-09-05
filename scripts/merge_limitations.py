@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Append pqc-readiness disclosed limitations to security-limitations.md"""
 
 path = "/opt/fibemate-repo/docs/security-limitations.md"

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/keygen.js
 // FIPS 204 §4.1: ML-DSA.KeyGen()
 // Generates (pk, sk) for ML-DSA-44, ML-DSA-65, ML-DSA-87

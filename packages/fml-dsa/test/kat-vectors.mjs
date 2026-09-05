@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // packages/fml-dsa/test/kat-vectors.mjs
 // Download NIST ACVP ML-DSA KeyGen KAT vectors
 // Uses GitHub blob API for large files

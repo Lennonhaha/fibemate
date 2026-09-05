@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-only
 # =============================================================================
 # FIBEMATE 性能补丁接入 — 软硬件同步保全检查
 # 用法: bash scripts/sync-safety-check.sh

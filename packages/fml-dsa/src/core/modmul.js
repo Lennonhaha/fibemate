@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/modmul.js — Barrett reduction, v5
 // 2026-07-29: split t at 2^24 to keep Barrett intermediates below 2^53
 // ctAdd/ctSub restored to original "Q &" pattern (JS & exploits 32-bit wrapping)

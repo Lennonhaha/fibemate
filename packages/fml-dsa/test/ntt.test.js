@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // packages/fml-dsa/test/ntt.test.js
 // NTT roundtrip + sanity — 100/100 verified (2026-07-29)
 

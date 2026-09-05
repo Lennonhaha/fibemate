@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # FIBEMATE File Integrity Monitor
 BASELINE="/opt/fibemate-full/logs/integrity-baseline.sha256"
 ALERT_LOG="/opt/fibemate-full/logs/integrity-alerts.log"

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // packages/key-lifecycle/test-key-lifecycle.js
 'use strict';
 

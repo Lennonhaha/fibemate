@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 const fml = require('./src/fml-dsa.js');
 const kp = fml.keygen(65); // ML-DSA-65
 const N = 50;

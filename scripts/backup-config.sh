@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # FIBEMATE 配置备份 (nginx + certbot)
 # 运行: 每天凌晨3点 via cron
 set -e

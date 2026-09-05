@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/test/shakestream.test.js — SHAKE-128/256 wrapper tests
 // Validated against FIPS 202 known-answer test vectors and Node.js crypto
 // 2026-07-29

@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 set -e
 
 echo "=== FIBEMATE SSL 自动部署 (fibemate.net) ==="

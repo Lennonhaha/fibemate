@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # SM2 TVLA Stress-Gradient Scanner
 # Runs masked TVLA at progressive N, analyzes |t| vs sample-size trend
 set -euo pipefail

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/test/input-validation.test.js — Input validation tests
 // P0: Malformed/null/boundary/type-coercion inputs must be rejected cleanly
 // 2026-07-29

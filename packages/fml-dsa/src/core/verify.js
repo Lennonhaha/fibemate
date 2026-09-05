@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/verify.js
 // FIPS 204 §4.3: ML-DSA.Verify(pk, M, σ)
 // Reconstructs challenge c̃ from signature, checks z bounds, hint validity, and hash match.

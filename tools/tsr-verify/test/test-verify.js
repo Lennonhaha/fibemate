@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // tsr-verify 单元测试（纯逻辑，不依赖 openssl）
 const assert = require('assert');

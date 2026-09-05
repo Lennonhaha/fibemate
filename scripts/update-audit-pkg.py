@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 with open('/opt/fibemate-repo/docs/audit-package-2026-07-22.md', 'r') as f:
     content = f.read()
 

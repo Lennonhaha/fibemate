@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 import * as vscode from 'vscode';
 import { RULES, findRule } from './rules';
 

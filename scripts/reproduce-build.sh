@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-only
 # =============================================================================
 # scripts/reproduce-build.sh
 # 复现性前置校验：

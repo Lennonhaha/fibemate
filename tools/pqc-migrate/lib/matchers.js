@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // 检测规则表 —— 密码算法 → 量子安全位 / 迁移建议 / 紧急度
 // 数据来源：NIST PQC 迁移指南 + FIBEMATE pqc-dashboard-data.json
 const RULES = {

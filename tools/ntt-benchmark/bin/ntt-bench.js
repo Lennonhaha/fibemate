@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // NTT 基准 CLI — run/compare/web
 // 设计文档: docs/product-designs/10-ntt-benchmark.md §8.1

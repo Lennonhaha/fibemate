@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // 报告渲染：table / json / html
 const SEVERITY_ICON = { HIGH: '🔴', MEDIUM: '🟡', LOW: '🔵', OK: '🟢' };
 const SEVERITY_LABEL = { HIGH: 'HIGH', MEDIUM: 'MEDIUM', LOW: 'LOW', OK: 'OK' };

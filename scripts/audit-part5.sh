@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # Audit Part 5: Code integrity + doc completeness
 set -e
 cd /opt/fibemate-repo

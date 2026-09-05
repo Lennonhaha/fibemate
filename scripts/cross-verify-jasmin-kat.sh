@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # FIBEMATE ML-KEM-768 × Jasmin (libjade) KAT 交叉验证
 # 验证 FIBEMATE 的 keygen/encap/decap 输出与 Jasmin 形式化验证实现一致
 

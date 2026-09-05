@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # LG v2.4 看门狗 TSR 存证脚本 v2（2026-08-17）
 # 重新编号 lg-105 ~ lg-108（lg-101 已被 phase0 txt 占用，跳过）
 set -u

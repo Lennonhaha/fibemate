@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Cross-Noble interoperability test — fml-dsa core <-> Noble
 // Validates that our verify accepts Noble's signatures and vice versa.
 // FIPS 204 §4 step 7 domain separator fix.

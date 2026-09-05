@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/encode.js
 // FIPS 204 §5.2: bit-packing — pk/sk/sig encoding/decoding
 // All parameter sets (ML-DSA-44/65/87) use the same encoding scheme;

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * generate-dashboard-data.js
  * Generates www/docs/pqc-dashboard-data.json from @fibemate/algorithm-registry

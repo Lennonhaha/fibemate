@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # ═══════════════════════════════════════════════════════════════════════════
 # FIBEMATE CI guard — verify no build artifacts / deps are tracked
 # 等价于 pre-commit 钩子的 CI 层防护（2026-08-05 git add -A 事故后建立）

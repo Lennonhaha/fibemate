@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 echo "=== FIBEMATE SSL 自动部署 ==="
 echo "[1/5] 安装 Certbot..."
 apt-get update

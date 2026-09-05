@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-only
 import os, re, io, json
 ROOT='/opt/fibemate-repo'
 with io.open(os.path.join(ROOT,'VERSION.json'),encoding='utf-8') as f:

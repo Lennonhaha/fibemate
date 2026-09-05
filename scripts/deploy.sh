@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # FIBEMATE 四件套部署脚本 — 服务器恢复后执行
 set -e
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // 输出渲染：表格 / JSON / info
 function renderSummaryTable(summary, color = true) {

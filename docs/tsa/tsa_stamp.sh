@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # Usage: tsa_stamp.sh <display_name> <sha256_hex> <size_bytes>
 
 DIR="/opt/fibemate-full/docs/tsa/2026-06-08"

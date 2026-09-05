@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // kat-verify CLI
 const { KatVerifier } = require('../lib/kat-verifier');

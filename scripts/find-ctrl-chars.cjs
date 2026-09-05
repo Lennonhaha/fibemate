@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 // find-ctrl-chars.cjs — scan tracked text files for ASCII control chars (except \t \n \r)
 // Control chars (0x00-0x08, 0x0B, 0x0C, 0x0E-0x1F) are classic GBK-misdecode / corruption markers.
 const { execSync } = require('child_process');

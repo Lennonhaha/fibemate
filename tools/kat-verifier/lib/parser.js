@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // KAT 向量解析器 — 支持多种格式
 // 1. JSON 数组（fml-dsa 的 ACVP 导出）：[{tcId, seed, pk, sk, ...}]

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/sampling.js
 // FIPS 204 §5.1: XOF-based sampling functions
 // ExpandA (§4, Algorithm 4) — generate matrix A of k×l polynomials from ρ

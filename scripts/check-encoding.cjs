@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 // check-encoding.cjs — UTF-8 / GBK corruption detector (Node.js, cross-platform)
 //
 // Detects the exact class of corruption that hit the repo on 2026-08-14:

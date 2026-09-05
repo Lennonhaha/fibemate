@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // 核心 TSR 验证（复用 FIBEMATE scripts/verify-tsr.js 的解析逻辑）
 const { execFileSync } = require('child_process');

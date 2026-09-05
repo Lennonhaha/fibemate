@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // PQC 检测规则表 — 与 pqc-migrate CLI 共享（01-pqc-migrate-cli.md §5）
 export interface PqcRule {
   algorithm: string;

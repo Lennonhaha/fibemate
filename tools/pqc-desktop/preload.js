@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // FIBEMATE PQC Desktop — Preload 安全桥
 // 设计文档: docs/product-designs/09-pqc-desktop.md §6.2
 const { contextBridge, ipcRenderer } = require('electron');

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // KatVerifier 主类 — 可复用 KAT 验证框架
 const fs = require('fs');

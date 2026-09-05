@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // Test: Algorithm Resolver unit tests
 const assert = require('assert');
 const resolver = require('./algorithm-resolver.js');

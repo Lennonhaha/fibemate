@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 """Insert countdown banner into www/index.html, after <body> tag."""
 import re, datetime
 

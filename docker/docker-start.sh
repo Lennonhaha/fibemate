@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# SPDX-License-Identifier: GPL-3.0-only
 # =============================================================================
 # docker-start.sh — FIBEMATE 容器内服务启动
 # 启动 nginx（前台，保持容器存活）+ 各 Node 服务（后台）。

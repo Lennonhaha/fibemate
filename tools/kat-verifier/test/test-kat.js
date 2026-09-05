@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // kat-verifier 单元测试
 const assert = require('assert');

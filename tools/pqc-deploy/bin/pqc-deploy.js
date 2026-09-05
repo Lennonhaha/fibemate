@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // PQC 部署验证 CLI — 批量探测端点 PQC 就绪度
 // 设计文档: docs/product-designs/11-pqc-deployment-verification.md

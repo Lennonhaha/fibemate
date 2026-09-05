@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // packages/fml-dsa/src/core/params.js
 // FIPS 204 (ML-DSA) core parameters — verified 2026-07-29
 

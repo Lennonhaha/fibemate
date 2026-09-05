@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# SPDX-License-Identifier: GPL-3.0-only
 # -*- coding: utf-8 -*-
 """
 FIBEMATE AlgorithmRegistry - 中国TSA可信时间戳申请脚本

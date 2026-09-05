@@ -1,3 +1,4 @@
+# SPDX-License-Identifier: GPL-3.0-only
 """Apply hot-path optimizations to ml-kem-768.js"""
 import sys
 

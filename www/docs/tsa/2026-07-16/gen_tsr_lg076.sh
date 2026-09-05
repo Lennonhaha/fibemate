@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # lg-076 TSR 生成脚本（服务器端执行）
 # 用法: ssh ubuntu@8.156.77.68 'bash -s' < gen_tsr_lg076.sh
 

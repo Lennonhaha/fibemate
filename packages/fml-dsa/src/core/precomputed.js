@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // packages/fml-dsa/src/core/precomputed.js
 // Precomputed tables: zetas, invZetas, bitRev — self-verified
 // ZETA = 1753 (FIPS 204 §B.1 — 512-th primitive root in Z_q[x]/(x^256+1))

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /**
  * CBOM 力导向图数据生成器
  * 输出算法依赖图节点+边，供 3D 力导向图渲染

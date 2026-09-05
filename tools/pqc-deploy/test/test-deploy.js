@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 'use strict';
 // pqc-deploy 单元测试（纯逻辑，不发起真实网络探测）
 const assert = require('assert');

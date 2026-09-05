@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
 // check-bom.cjs — UTF-8 BOM detector (Node.js, fast)
 // Exits 1 if any tracked text file contains UTF-8 BOM (EF BB BF)
 //

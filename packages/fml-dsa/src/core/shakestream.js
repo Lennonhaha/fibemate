@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/shakestream.js
 // SHAKE-128/256/256 + SHA3-256 — @noble/hashes backend
 // Byte-identical to @noble/post-quantum's internal SHAKE engine

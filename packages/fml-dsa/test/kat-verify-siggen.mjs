@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 // kat-verify-siggen.mjs v2 — Verify SigGen KAT using sk + message + expected sig
 // 2026-07-29: 270 SigGen vectors → noble sign/verify byte-level KAT
 

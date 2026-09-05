@@ -1,4 +1,5 @@
 #!/bin/bash
+# SPDX-License-Identifier: GPL-3.0-only
 # ═══════════════════════════════════════════════════════════════════════════
 # FIBEMATE pre-commit guard
 # 防止 git add -A 误暂存编译产物/依赖目录（2026-08-05 事故后建立）
