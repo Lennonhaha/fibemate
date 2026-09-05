@@ -388,6 +388,8 @@ node scripts/kat-diag.js         # KAT diagnostic
 node test/test-cross-lang.js     # Cross-language verification
 ```
 
+> **Software/Firmware Integrity** (FIPS 140-3 §11.9): `test/test-fibemate.js` Track 3b compares the ML-KEM-768 module SHA-256 against the committed baseline in [`test/INTEGRITY-MANIFEST.json`](./test/INTEGRITY-MANIFEST.json) — see [docs/INTEGRITY-MANIFEST.md](./docs/INTEGRITY-MANIFEST.md) for the evidence chain and update procedure.
+
 ---
 
 ## Project Structure
