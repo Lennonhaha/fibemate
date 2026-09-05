@@ -131,13 +131,13 @@ node ci-smoke.mjs   # verify baseline
 
 ## Developer Certificate of Origin (DCO)
 
-By contributing to this project, you certify that:
+By contributing to this project, you certify the terms of the [Developer Certificate of Origin](./.github/DCO) (v1.1):
 
 - (a) The contribution was created in whole or in part by you and you have the right to submit it under the open source license indicated in the file; or
 - (b) The contribution is based upon previous work that, to the best of your knowledge, is covered under an appropriate open source license and you have the right under that license to submit that work with modifications; or
 - (c) The contribution was provided directly to you by some other person who certified (a), (b) or (c) and you have not modified it.
 
-**All commits must be signed (`git commit -s`).** PRs without DCO sign-off will be rejected by CI.
+**All commits must be signed (`git commit -s`).** PRs without DCO sign-off are rejected by the [`dco.yml`](./.github/workflows/dco.yml) CI check, which verifies every commit in the PR range carries a `Signed-off-by` trailer.
 
 ## License
 

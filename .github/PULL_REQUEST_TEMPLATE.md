@@ -51,6 +51,7 @@ body:
       label: 提交前检查
       options:
         - label: CI pipeline 全绿
+        - label: 所有 commit 已 `git commit -s`（Signed-off-by / DCO）
         - label: 代码不含硬编码密钥/路径
         - label: 测试已更新/新增
         - label: 若为性能改动，已附 before/after 基准数据（scripts/bench-pqc.js）
