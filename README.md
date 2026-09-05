@@ -594,6 +594,26 @@ All dashboards live at **[fibemate.net/docs/](https://fibemate.net/docs/)** — 
 
 GNU General Public License v3.0 — see [LICENSE](./LICENSE)
 
+### SPDX Policy
+
+All tracked source files (JS/CJS/MJS/TS/C/H/PY/SH) carry an SPDX-License-Identifier header:
+
+```
+// SPDX-License-Identifier: GPL-3.0-only
+```
+
+- **Default license**: `GPL-3.0-only` (consistent with `LICENSE` and `package.json`)
+- **Enforcement**: CI runs `node tools/add-spdx-headers.cjs check --root .` in the `lint` job — a missing header fails the build
+- **Tooling**: `tools/add-spdx-headers.cjs` adds headers idempotently (`add`) or verifies (`check`)
+- **Exempt files** (third-party / public-domain / generated, never re-licensed):
+  - `packages/pqc-kem/native/` — pq-crystals Kyber reference implementation (public domain)
+  - `fips205/` — NIST SPHINCS+ reference implementation (public domain)
+  - `**/vendor/` — Three.js and other MIT upstream code
+  - `www/noble-pq-bundle/` — bundled noble code
+  - `*.wasm.d.ts`, `*.min.js`, `sm2-browser.bundle.js` — generated/bundled artifacts
+  - `archives/`, `c-stm32/`, `wasm-sm2/` — historical/experimental with separate licensing
+- **When to maintain manually**: new source files added without a header will fail CI; run `node tools/add-spdx-headers.cjs add --root .` before committing
+
 ## Documentation License
 
 Documentation and non-code content are licensed under [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/).
