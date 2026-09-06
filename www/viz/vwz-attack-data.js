@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 window.VWZ_ATTACK_DATA = {
  "_comment": "Real attack data extracted from security-assessment/evidence (2026-09-06). rank-1 VWZ k=2.",
  "k": 2,
