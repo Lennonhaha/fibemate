@@ -223,9 +223,11 @@ ssl-*.ps1
 push-*.sh
 vwz-commit.sh
 vwz*.js
+!www/viz/vwz-*.js
 vwz*.py
 vwz*.html
 !www/docs/vwz-signature-3d.html
+!www/viz/vwz-*.html
 vwz*.md
 !www/docs/vwz-lwe-reduction-gaps.md
 quick_check.sh
