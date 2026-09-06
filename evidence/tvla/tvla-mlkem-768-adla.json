@@ -1,0 +1,62 @@
+{
+  "timestamp": "2026-09-06T15:54:41.555Z",
+  "algorithm": "ML-KEM-768",
+  "implementation": "@noble/post-quantum",
+  "method": "interleaved fixed/random A-B, single measurement pass",
+  "statistics": {
+    "tvla": {
+      "stat": "Welch's t",
+      "threshold": 4.5,
+      "note": "mean difference"
+    },
+    "adla": {
+      "stat": "two-sample Anderson-Darling A^2",
+      "threshold": 11.99,
+      "note": "full CDF difference (arXiv:2603.18647)"
+    }
+  },
+  "N_SAMPLES": 10000,
+  "WARMUP": 2000,
+  "elapsed_s": 53.9,
+  "results": [
+    {
+      "name": "keygen (seedA vs seedB)",
+      "tStat": 0.027,
+      "tvlaPass": true,
+      "adStat": 0.357,
+      "adlaPass": true,
+      "mA_us": 566.77,
+      "mB_us": 566.7
+    },
+    {
+      "name": "encapsulate (same pk)",
+      "tStat": 0.405,
+      "tvlaPass": true,
+      "adStat": 0.525,
+      "adlaPass": true,
+      "mA_us": 761.19,
+      "mB_us": 759.29
+    },
+    {
+      "name": "decapsulate (ct1 vs ct2)",
+      "tStat": 0.142,
+      "tvlaPass": true,
+      "adStat": 0.178,
+      "adlaPass": true,
+      "mA_us": 944.66,
+      "mB_us": 945.16
+    }
+  ],
+  "summary": {
+    "tvla": {
+      "pass": 3,
+      "fail": 0,
+      "total": 3
+    },
+    "adla": {
+      "pass": 3,
+      "fail": 0,
+      "total": 3
+    }
+  }
+}
