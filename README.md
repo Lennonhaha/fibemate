@@ -9,6 +9,23 @@
 
 > ⚠️ **本分支为孤立研究线**：未经安全审计，**不应与主分支生产代码混合**。所有实验模块默认关闭，需显式启用。
 
+---
+
+> # 🔴 SECURITY ADVISORY — 2026-09-06
+>
+> **第三方独立验证（workbuddy）已复现对本分支公开 WASM 的完整伪造攻击（27/27 样本 100% 成功）。**
+> 本维护者已第一手核验确认（二进制实测 `estimate_sizes`），报告属实。
+>
+> - 公开分发的 `www/crypto/vwz/vwz_signature_bg.wasm` 是 **rank-1 旧版**（实测 k=4 → N=9, M=5），
+>   源码 `rust/vwz-sign-wasm/src/` 的 rank-2 加固（`n=2k+2, m=2k+1`）**未编译进该 WASM**。
+> - 后果：任何使用该 WASM 的签名体系可被**多项式时间伪造**，应视为完全失效。
+> - **生产路径不受影响**：fibemate 生产（main 分支 + Tauri）使用 ML-KEM-768 + X25519 + AES-256-GCM，
+>   VWZ 不在主聊天链路。
+> - 处置：不删除分支（保持透明）；重编译 rank-2 WASM 推迟至**第三方密码学审计后**。
+>   详见下方「⚠️ 声明」。
+
+---
+
 ## 内容
 
 - **VWZ 签名**: `rust/vwz-sign-wasm/` + `scripts/vwz-148-test.js`
