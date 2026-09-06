@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-3.0-only
 /* tslint:disable */
 /* eslint-disable */
 
@@ -59,9 +58,9 @@ export function init(): void;
 
 /**
  * Generate a new keypair with parameter k.
- * k=8 → PK ~2.8KB (rank-1 压缩后 ~468B), Sig ~36B, security ~73 bits (tensor OWF lower bound)
- * k=16 → PK ~19KB (rank-1 压缩后 ~1.7KB), Sig ~68B
- * k=32 → PK ~142KB (rank-1 压缩后 ~6.5KB), Sig ~132B
+ * k=8 → PK ~468B, Sig ~36B, security ~73 bits (tensor OWF lower bound)
+ * k=16 → PK ~1.7KB, Sig ~68B
+ * k=32 → PK ~6.3KB, Sig ~132B
  */
 export function keygen(k: number): Keypair;
 
@@ -76,7 +75,7 @@ export function keygen_seeded(k: number, seed: bigint): Keypair;
 export function serialize_public_key(pk: PublicKey): Uint8Array;
 
 /**
- * Serialize signature to bytes. Format: 1-byte k + 2(k+1)·2-byte LE.
+ * Serialize signature to bytes. Format: 1-byte k + 2(2k+1)·2-byte LE.
  */
 export function serialize_signature(sig: VwzSignature): Uint8Array;
 
@@ -89,6 +88,20 @@ export function sign(sk: SecretKey, msg: Uint8Array): VwzSignature;
  * Verify a signature.
  */
 export function verify(pk: PublicKey, msg: Uint8Array, sig: VwzSignature): boolean;
+
+/**
+ * Batch-verify many signatures against a single public key.
+ *
+ * Inputs (parallel JS arrays, same length):
+ *   - `msgs`: array of `Uint8Array` (the messages)
+ *   - `sigs`: array of `Uint8Array` (signatures serialized via `serialize_signature`)
+ * Output: a JS array of booleans, one per item, in input order.
+ *
+ * The public key tensor is cloned **once** and reused for every signature,
+ * whereas calling `verify` N times clones the tensor N times. For large k
+ * (e.g. k=16, PK ~19KB) this removes the dominant per-call allocation cost.
+ */
+export function verify_batch(pk: PublicKey, msgs: Array<any>, sigs: Array<any>): Array<any>;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
@@ -110,6 +123,7 @@ export interface InitOutput {
     readonly serialize_signature: (a: number, b: number) => void;
     readonly sign: (a: number, b: number, c: number) => number;
     readonly verify: (a: number, b: number, c: number, d: number) => number;
+    readonly verify_batch: (a: number, b: number, c: number) => number;
     readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
     readonly __wbindgen_export: (a: number, b: number) => number;
     readonly __wbindgen_export2: (a: number, b: number, c: number) => void;

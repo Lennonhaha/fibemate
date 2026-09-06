@@ -20,6 +20,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { pathToFileURL } = require('url');
 
 // ——— CLI args ———
 const args = process.argv.slice(2);
@@ -44,7 +45,7 @@ async function main() {
   const { initSync, keygen, keygen_seeded, sign, verify,
           serialize_public_key, serialize_signature,
           deserialize_public_key, deserialize_signature,
-          estimate_sizes } = await import(wasmDir + '/vwz_signature.js');
+          estimate_sizes } = await import(pathToFileURL(path.join(wasmDir, 'vwz_signature.js')).href);
 
   initSync(fs.readFileSync(wasmDir + '/vwz_signature_bg.wasm'));
 

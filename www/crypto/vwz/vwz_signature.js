@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: GPL-3.0-only
 /* @ts-self-types="./vwz_signature.d.ts" */
 
 /**
@@ -169,9 +168,9 @@ export function init() {
 
 /**
  * Generate a new keypair with parameter k.
- * k=8 → PK ~2.8KB (rank-1 压缩后 ~468B), Sig ~36B, security ~73 bits (tensor OWF lower bound)
- * k=16 → PK ~19KB (rank-1 压缩后 ~1.7KB), Sig ~68B
- * k=32 → PK ~142KB (rank-1 压缩后 ~6.5KB), Sig ~132B
+ * k=8 → PK ~468B, Sig ~36B, security ~73 bits (tensor OWF lower bound)
+ * k=16 → PK ~1.7KB, Sig ~68B
+ * k=32 → PK ~6.3KB, Sig ~132B
  * @param {number} k
  * @returns {Keypair}
  */
@@ -212,7 +211,7 @@ export function serialize_public_key(pk) {
 }
 
 /**
- * Serialize signature to bytes. Format: 1-byte k + 2(k+1)·2-byte LE.
+ * Serialize signature to bytes. Format: 1-byte k + 2(2k+1)·2-byte LE.
  * @param {VwzSignature} sig
  * @returns {Uint8Array}
  */
@@ -260,11 +259,60 @@ export function verify(pk, msg, sig) {
     const ret = wasm.verify(pk.__wbg_ptr, ptr0, len0, sig.__wbg_ptr);
     return ret !== 0;
 }
+
+/**
+ * Batch-verify many signatures against a single public key.
+ *
+ * Inputs (parallel JS arrays, same length):
+ *   - `msgs`: array of `Uint8Array` (the messages)
+ *   - `sigs`: array of `Uint8Array` (signatures serialized via `serialize_signature`)
+ * Output: a JS array of booleans, one per item, in input order.
+ *
+ * The public key tensor is cloned **once** and reused for every signature,
+ * whereas calling `verify` N times clones the tensor N times. For large k
+ * (e.g. k=16, PK ~19KB) this removes the dominant per-call allocation cost.
+ * @param {PublicKey} pk
+ * @param {Array<any>} msgs
+ * @param {Array<any>} sigs
+ * @returns {Array<any>}
+ */
+export function verify_batch(pk, msgs, sigs) {
+    _assertClass(pk, PublicKey);
+    const ret = wasm.verify_batch(pk.__wbg_ptr, addHeapObject(msgs), addHeapObject(sigs));
+    return takeObject(ret);
+}
 function __wbg_get_imports() {
     const import0 = {
         __proto__: null,
         __wbg___wbindgen_throw_344f42d3211c4765: function(arg0, arg1) {
             throw new Error(getStringFromWasm0(arg0, arg1));
+        },
+        __wbg_get_507a50627bffa49b: function(arg0, arg1) {
+            const ret = getObject(arg0)[arg1 >>> 0];
+            return addHeapObject(ret);
+        },
+        __wbg_length_1f0964f4a5e2c6d8: function(arg0) {
+            const ret = getObject(arg0).length;
+            return ret;
+        },
+        __wbg_length_370319915dc99107: function(arg0) {
+            const ret = getObject(arg0).length;
+            return ret;
+        },
+        __wbg_new_32b398fb48b6d94a: function() {
+            const ret = new Array();
+            return addHeapObject(ret);
+        },
+        __wbg_new_cd45aabdf6073e84: function(arg0) {
+            const ret = new Uint8Array(getObject(arg0));
+            return addHeapObject(ret);
+        },
+        __wbg_prototypesetcall_4770620bbe4688a0: function(arg0, arg1, arg2) {
+            Uint8Array.prototype.set.call(getArrayU8FromWasm0(arg0, arg1), getObject(arg2));
+        },
+        __wbg_push_d2ae3af0c1217ae6: function(arg0, arg1) {
+            const ret = getObject(arg0).push(getObject(arg1));
+            return ret;
         },
         __wbg_random_039a7d5d06e0d333: function() {
             const ret = Math.random();
@@ -274,6 +322,9 @@ function __wbg_get_imports() {
             // Cast intrinsic for `Ref(String) -> Externref`.
             const ret = getStringFromWasm0(arg0, arg1);
             return addHeapObject(ret);
+        },
+        __wbindgen_object_drop_ref: function(arg0) {
+            takeObject(arg0);
         },
     };
     return {
