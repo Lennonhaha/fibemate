@@ -97,17 +97,23 @@ fn build_public(td: &Trapdoor) -> Vec<Vec<Vec<u16>>> {
 /// Generate a full mixed-tensor trapdoor keypair.
 pub fn generate_trapdoor(k: usize, seed: Option<u64>) -> (Vec<Vec<Vec<u16>>>, Trapdoor) {
     let actual_seed = seed.unwrap_or_else(|| {
-        #[cfg(target_arch = "wasm32")]
-        {
-            (js_sys::Math::random() * u64::MAX as f64) as u64
-        }
-        #[cfg(not(target_arch = "wasm32"))]
-        {
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)
-                .unwrap()
-                .as_nanos() as u64
-        }
+        // CSPRNG seed (P0 #1 fix). Single code path: `getrandom` picks the
+        // platform-correct CSPRNG automatically:
+        //   - WASM   : `js` feature → WebCrypto `crypto.getRandomValues`
+        //              (entropy: AES-CTR_DRBG per W3C WebCrypto spec)
+        //   - Native: OS CSPRNG
+        //              - Linux:   getrandom(2)            /dev/urandom
+        //              - macOS:   SecRandomCopyBytes        kern CSPRNG
+        //              - Windows: BCryptGenRandom (CNG)    ProcessPrng
+        // Replaces the previous use of `js_sys::Math::random()` (Xorshift128+
+        // — state recoverable from a few consecutive outputs) on WASM and
+        // `SystemTime::now()` (wall clock — attacker can brute-force over
+        // ±few seconds) on native, both of which would have allowed full
+        // trapdoor recovery from a known signing timestamp.
+        let mut bytes = [0u8; 8];
+        getrandom::getrandom(&mut bytes)
+            .expect("CSPRNG failure is unrecoverable during key generation");
+        u64::from_le_bytes(bytes)
     });
     let mut rng = SeedRng::new(actual_seed);
     let n = 2 * k + 2;
@@ -246,5 +252,84 @@ mod tests {
                 );
             }
         }
+    }
+
+    // ───── P0 #1 regression tests ──────────────────────────────────────
+    //
+    // These tests guard against re-introducing a deterministic or low-entropy
+    // source for keygen seeds (e.g. `Math.random()` Xorshift128+ on WASM or
+    // `SystemTime::now()` on native). Both vulnerabilities allow full trapdoor
+    // recovery from a small number of observed seeds / approximate timestamps.
+    //
+    // The tests verify that generate_trapdoor with `seed=None`:
+    //   1. uses CSPRNG-quality randomness (128 sequential keygens yield 128
+    //      distinct 64-bit seeds — probability of any collision with 64 bits
+    //      of true CSPRNG entropy is ~7e-16).
+    //   2. does NOT collapse to a constant seed in pathological runs
+    //      (would fail with even 2 distinct samples).
+    //   3. the derived x1[0] spans a meaningful range (catches a hardcoded
+    //      seed without forcing an x1[0]-uniqueness check, which would be
+    //      subject to birthday-paradox collision after ~76 samples).
+    //
+    // NOT verified by these tests: the distinction between a true CSPRNG and a
+    // wall-clock-based seed. Both produce unique values over short timescales;
+    // that level of audit would require statistical bit-distribution analysis.
+
+    #[test]
+    fn test_keygen_csprng_uniqueness() {
+        // P0 #1: generate_trapdoor must source its seed from a CSPRNG.
+        //
+        // We check the 64-bit seed only — NOT derived values such as x1[0]
+        // (which is sampled from F_q with |F_q|=3329, so birthday-paradox
+        // collisions become likely at ~76 samples; see the report).
+        let mut seeds = std::collections::HashSet::new();
+        for i in 0..128 {
+            let (_, td) = generate_trapdoor(2, None);
+            assert!(
+                seeds.insert(td.seed),
+                "iter {i}: duplicate seed {:#018x} returned by generate_trapdoor — RNG is not random",
+                td.seed
+            );
+        }
+        assert_eq!(seeds.len(), 128, "expected 128 unique seeds");
+    }
+
+    #[test]
+    fn test_keygen_derived_x1_takes_many_values() {
+        // Sanity: x1[0] (first element of the derived diagonal) must NOT be
+        // constant — a regression here would indicate the post-seed RNG
+        // streaming has been broken. We only check the value is not constant,
+        // and that it spans at least 8 distinct values across 64 keygens
+        // (domain = F_3329 minus zero; birthday-bound collision expected at
+        // ~76 samples; 64 chosen so the test passes deterministically while
+        // still triggering any constant-seed regression).
+        let mut x1_firsts = std::collections::HashSet::new();
+        for _ in 0..64 {
+            let (_, td) = generate_trapdoor(2, None);
+            x1_firsts.insert(td.x1[0]);
+        }
+        assert!(
+            x1_firsts.len() >= 8,
+            "x1[0] took only {} distinct values across 64 keygens \
+             (expected ≥ 8) — likely constant seed regression",
+            x1_firsts.len()
+        );
+    }
+
+    #[test]
+    fn test_keygen_explicit_seed_is_deterministic() {
+        // Regression: passing an explicit seed must remain deterministic.
+        // (No CSPRNG should be consulted in this path.)
+        let (psi1, td1) = generate_trapdoor(2, Some(0xDEADBEEFu64));
+        let (psi2, td2) = generate_trapdoor(2, Some(0xDEADBEEFu64));
+        assert_eq!(
+            psi1, psi2,
+            "same explicit seed must produce identical psi"
+        );
+        assert_eq!(
+            td1.seed, td2.seed,
+            "trapdoor.seed must round-trip the explicit seed value"
+        );
+        assert_eq!(td1.seed, 0xDEADBEEF, "explicit seed must be unchanged");
     }
 }

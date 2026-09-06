@@ -556,6 +556,63 @@ mod tests {
         }
     }
 
+    // ----------------------------------------------------------
+    // Cross-language conformance: Rust vs Python reference
+    // ----------------------------------------------------------
+
+    /// Normative cross-check against `vwz_reference.py` — an independent
+    /// Python rendering of `fibemate-vwz-specification_20260906.md`.
+    ///
+    /// Both implementations must produce byte-identical serializations for the
+    /// same `(k, seed, msg)`. A failure here means one of the two has drifted
+    /// from the specification; do NOT "fix" by editing the expected values
+    /// without determining which side is non-conformant.
+    ///
+    /// Digests are the first 16 bytes of SHA3-256 (hex) of the serialized
+    /// outputs defined in §8.
+    #[test]
+    fn test_conformance_vs_python_reference() {
+        use sha3::Digest;
+
+        fn hex16(bytes: &[u8]) -> String {
+            let h = sha3::Sha3_256::digest(bytes);
+            h.iter().take(16).map(|b| format!("{b:02x}")).collect()
+        }
+
+        let cases: &[(usize, u64, &str, &str, &str)] = &[
+            (2, 42,   "Fibemate VWZ test k=2",
+             "12af48a13545bb02615071ff077a235e", "07b32e88d9b8c09db5cd4adaeefe13a3"),
+            (2, 2026, "Fibemate VWZ test k=2",
+             "f79d750fc0a4f5be0a0684be6854073a", "c2cdceaeed52b608f02f9a1083c6e947"),
+            (4, 42,   "Fibemate VWZ test k=4",
+             "28e09b1d7e5b92ba803a8d063953cedf", "a34bfd493cafa0e92a4dff350e882de2"),
+            (4, 2026, "Fibemate VWZ test k=4",
+             "83d38369f66644e0f5e64337c4300fb4", "7e7498fd932708e64bbab41afdb4e981"),
+            (8, 42,   "Fibemate VWZ test k=8",
+             "2e8499c7a1764f2102b1d781b3bcd37d", "fb8deab03cd9cb8d1af7381455d75e8a"),
+            (8, 2026, "Fibemate VWZ test k=8",
+             "5c9e5f96ffa87a224a5a6752c3a09d79", "62cc5b9b0f4b8e86ddb7dfb370a35852"),
+        ];
+
+        for &(k, seed, msg, want_pk, want_sig) in cases {
+            let kp = keygen_seeded(k, seed);
+            let pk_bytes = serialize_public_key(kp.public_key_ref());
+            assert_eq!(
+                hex16(&pk_bytes), want_pk,
+                "k={k} seed={seed}: PUBLIC KEY diverges from Python reference \
+                 (spec §3/§8.1) — one of the two implementations is non-conformant"
+            );
+            let sig = sign(kp.secret_key_ref(), msg.as_bytes());
+            let sig_bytes = serialize_signature(&sig);
+            assert_eq!(
+                hex16(&sig_bytes), want_sig,
+                "k={k} seed={seed}: SIGNATURE diverges from Python reference \
+                 (spec §6/§8.2) — one of the two implementations is non-conformant"
+            );
+            assert!(verify(kp.public_key_ref(), msg.as_bytes(), &sig));
+        }
+    }
+
     #[test]
     fn test_slices_are_rank2() {
         // Sanity: no public-key slice may factor as a single outer product.
