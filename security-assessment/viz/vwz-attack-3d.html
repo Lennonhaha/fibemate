@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VWZ rank-1 伪造攻击 3D 演示 — 漏洞机理与修复对照 | FIBEMATE Research</title>
+<style>
+  :root{
+    --bg:#08080d; --panel:#101018; --panel2:#15151f; --line:#23233a;
+    --dim:#8a8aa8; --txt:#e8e8f2; --accent:#6c8cff;
+    --red:#ff5d6c; --green:#3ddc97; --amber:#ffc94d; --purple:#b07cff;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:"Segoe UI","Microsoft YaHei",system-ui,sans-serif;overflow:hidden;height:100vh}
+  #app{display:flex;flex-direction:column;height:100vh}
+  header{display:flex;align-items:center;gap:14px;padding:10px 18px;background:var(--panel);border-bottom:1px solid var(--line);z-index:5}
+  header .logo{font-size:13px;font-weight:700;letter-spacing:1px;color:var(--accent)}
+  header .sep{width:1px;height:20px;background:var(--line)}
+  header h1{font-size:15px;font-weight:600}
+  header .tag{margin-left:auto;font-size:11px;padding:3px 10px;border-radius:20px;border:1px solid var(--line);color:var(--dim)}
+  header .tag.red{color:var(--red);border-color:rgba(255,93,108,.4);background:rgba(255,93,108,.08)}
+  header .tag.green{color:var(--green);border-color:rgba(61,220,151,.4);background:rgba(61,220,151,.08)}
+  main{flex:1;display:flex;min-height:0}
+  #canvas-wrap{flex:1;position:relative;min-width:0}
+  canvas{display:block;width:100%;height:100%}
+  #hud{position:absolute;top:14px;left:14px;font-size:12px;color:var(--dim);background:rgba(10,10,18,.72);padding:8px 12px;border-radius:8px;border:1px solid var(--line);backdrop-filter:blur(4px);pointer-events:none;line-height:1.7}
+  #hud b{color:var(--txt)}
+  #hud .good{color:var(--green)} #hud .bad{color:var(--red)} #hud .hl{color:var(--amber)}
+  aside{width:340px;background:var(--panel);border-left:1px solid var(--line);display:flex;flex-direction:column;z-index:5}
+  #stage-title{padding:16px 18px 8px;font-size:16px;font-weight:700;color:var(--txt)}
+  #stage-title .stepnum{color:var(--accent);font-size:12px;display:block;margin-bottom:4px;letter-spacing:2px}
+  #stage-desc{padding:0 18px;font-size:13px;color:var(--dim);line-height:1.8;flex:1;overflow-y:auto}
+  #stage-desc .formula{display:block;background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;margin:8px 0;font-family:Consolas,monospace;font-size:12px;color:var(--amber);white-space:pre-wrap}
+  #stage-desc .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:4px;margin:2px 2px}
+  #controls{padding:12px 18px 16px;border-top:1px solid var(--line);display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  #controls button{background:var(--panel2);color:var(--txt);border:1px solid var(--line);border-radius:6px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .15s;font-family:inherit}
+  #controls button:hover{border-color:var(--accent);color:var(--accent)}
+  #controls button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+  #controls button.primary:hover{filter:brightness(1.15);color:#fff}
+  #controls .dots{margin-left:auto;display:flex;gap:5px}
+  #controls .dots .dot{width:9px;height:9px;border-radius:50%;background:#2c2c44;cursor:pointer;transition:all .2s}
+  #controls .dots .dot.on{background:var(--accent);transform:scale(1.2)}
+  #controls .dots .dot.done{background:var(--green)}
+  #progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--line)}
+  #progress i{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--accent),var(--purple));transition:width .4s}
+  .legend{position:absolute;right:14px;top:14px;font-size:11px;color:var(--dim);background:rgba(10,10,18,.72);padding:8px 12px;border-radius:8px;border:1px solid var(--line);line-height:2;backdrop-filter:blur(4px)}
+  .legend .sw{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+  .vs-wrap{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;gap:10px;z-index:4}
+  .vs{font-size:11px;padding:5px 12px;border-radius:6px;border:1px solid var(--line);background:rgba(10,10,18,.8);backdrop-filter:blur(3px)}
+  .vs.old{border-color:rgba(255,93,108,.5);color:var(--red)}
+  .vs.new{border-color:rgba(61,220,151,.5);color:var(--green)}
+  .vs.old .st{color:var(--dim)} .vs.new .st{color:var(--dim)}
+  @media (max-width:900px){ aside{width:270px} }
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="logo">FIBEMATE · RESEARCH</span>
+    <span class="sep"></span>
+    <h1>VWZ 签名伪造攻击 — rank-1 漏洞机理 3D 演示</h1>
+    <span class="tag red" id="tag-old">rank-1 旧版 · 已被攻破</span>
+    <span class="tag green" id="tag-new">rank-2 修复版 · 攻击失效</span>
+  </header>
+  <main>
+    <div id="canvas-wrap">
+      <canvas id="c3d"></canvas>
+      <div id="hud"></div>
+      <div class="legend">
+        <div><span class="sw" style="background:linear-gradient(#14142a,#6c8cff)"></span>切片值 ψ[i₁][i₂][i₃] (mod 3329)</div>
+        <div><span class="sw" style="background:var(--red)"></span>target 零位 Z (k 个)</div>
+        <div><span class="sw" style="background:var(--amber)"></span>target 非零位 S (k+1 个)</div>
+        <div><span class="sw" style="background:var(--purple)"></span>伪造签名 w2 / w3</div>
+      </div>
+      <div class="vs-wrap">
+        <div class="vs old">rank-1 <span class="st">n=2k+1 · m=k+1 · ψ=u⊗v</span> &nbsp;→&nbsp; <b>✗ 伪造成功</b></div>
+        <div class="vs new">rank-2 <span class="st">n=2k+2 · m=2k+1 · ψ=uₐ⊗vₐ+u_b⊗v_b</span> &nbsp;→&nbsp; <b>✓ 攻击失效</b></div>
+      </div>
+      <div id="progress"><i id="progress-bar"></i></div>
+    </div>
+    <aside>
+      <div id="stage-title"><span class="stepnum" id="stepnum">STEP 0 / 6</span><span id="stage-name"></span></div>
+      <div id="stage-desc"></div>
+      <div id="controls">
+        <button id="btn-prev">‹ 上一步</button>
+        <button id="btn-play" class="primary">▶ 播放</button>
+        <button id="btn-next">下一步 ›</button>
+        <div class="dots" id="dots"></div>
+      </div>
+    </aside>
+  </main>
+</div>
+
+<script type="importmap">
+{ "imports": { "three": "../../www/vwz-tensor/lib/three.module.js", "three/addons/": "../../www/vwz-tensor/lib/" } }
+</script>
+<script src="_vwz-attack-data.js"></script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const D = window.VWZ_ATTACK_DATA;
+const Q = 3329;
+const K = D.k, N = D.n, M = D.m;
+
+/* ---------------- scene ---------------- */
+const wrap = document.getElementById('canvas-wrap');
+const canvas = document.getElementById('c3d');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias:true, alpha:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x08080d);
+const cam = new THREE.PerspectiveCamera(45,1,0.1,400);
+cam.position.set(20,13,24);
+const ctrl = new OrbitControls(cam, canvas);
+ctrl.enableDamping = true; ctrl.dampingFactor=.08; ctrl.target.set(0,2,0); ctrl.minDistance=6; ctrl.maxDistance=60;
+
+scene.add(new THREE.AmbientLight(0xffffff,.55));
+const dL = new THREE.DirectionalLight(0xffffff,.9); dL.position.set(10,20,8); scene.add(dL);
+const dL2 = new THREE.DirectionalLight(0x6c8cff,.35); dL2.position.set(-12,6,-8); scene.add(dL2);
+
+/* faint grid ground */
+const grid = new THREE.GridHelper(30,20,0x23233a,0x15151f); grid.position.y=-2.5; scene.add(grid);
+
+/* ---------------- helpers ---------------- */
+const valColor = v => {
+  const t = v/Q;
+  // deep blue -> cyan -> violet
+  const c = new THREE.Color().setHSL(0.62 - t*0.35, .8, .16 + t*.55);
+  return c;
+};
+function bar(x,y,z,w,h,d,color,op=1){ const g=new THREE.BoxGeometry(w,h,d); const m=new THREE.MeshStandardMaterial({color,transparent:op<1,opacity:op}); const mesh=new THREE.Mesh(g,m); mesh.position.set(x,y,z); return mesh; }
+function labelSprite(txt,color='#e8e8f2',size=1){ const cv=document.createElement('canvas'); cv.width=512;cv.height=128; const ctx=cv.getContext('2d'); ctx.font='bold 52px "Segoe UI","Microsoft YaHei"'; ctx.fillStyle=color; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(txt,256,64); const tx=new THREE.CanvasTexture(cv); const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:tx,transparent:true,depthWrite:false})); sp.scale.set(size*4,size,1); return sp; }
+
+/* ---------------- build tensor group ---------------- */
+const tensGroup = new THREE.Group(); scene.add(tensGroup);
+const sliceSpacing = 3.2, cell = .86, gap = .16;
+const sliceObjs = [];   // per slice: group of cell meshes
+const cellObjs = [];    // [i1][i2][i3] mesh
+const uVecObjs = [], vVecObjs = [], w2VecObjs = [], w3VecObjs = [];
+const axisLabels = [];
+
+function buildTensor(mode){
+  // clear previous
+  while(tensGroup.children.length) tensGroup.remove(tensGroup.children[0]);
+  sliceObjs.length=0; cellObjs.length=0; uVecObjs.length=0; vVecObjs.length=0; w2VecObjs.length=0; w3VecObjs.length=0;
+  for(const o of axisLabels) scene.remove(o); axisLabels.length=0;
+
+  const zOff = -(N-1)*sliceSpacing/2;
+  const span = (M-1)*(cell+gap);
+  for(let i1=0;i1<N;i1++){
+    const sg = new THREE.Group();
+    const sliceCells=[];
+    for(let i2=0;i2<M;i2++) for(let i3=0;i3<M;i3++){
+      let val;
+      if(mode==='rank1') val = D.pk[i1][i2][i3];
+      else { // rank-2 synthetic (demo): two separable components -> visually non-separable entries
+        const ua=1,vb=1;
+        const pa = (i2+1)*(i3+1);            // component A pattern
+        const pb = ((i2*2+i3)%5+1)*((i3*3+1)%5+1); // component B pattern
+        val = ( (i1+1)*(pa*ua + pb*vb) ) % Q;
+      }
+      const h = .4 + (val/Q)*4.2;
+      const mesh = bar((i2-span/2)* (cell+gap), h/2 - .1, (i3-span/2)*(cell+gap)+zOff+i1*sliceSpacing, cell, h, cell, valColor(val));
+      mesh.userData = { i1,i2,i3,val };
+      sg.add(mesh); sliceCells.push(mesh);
+      if(!cellObjs[i1]) cellObjs[i1]=[]; if(!cellObjs[i1][i2]) cellObjs[i1][i2]=[];
+      cellObjs[i1][i2][i3]=mesh;
+    }
+    // slice axis label i1
+    const lb = labelSprite(`ψ[${i1}]`, '#6c8cff', .9);
+    lb.position.set(-span/2 -1.6, 1.2, zOff + i1*sliceSpacing);
+    scene.add(lb); axisLabels.push(lb);
+    tensGroup.add(sg); sliceObjs.push(sg);
+  }
+  // axis hints
+  const ax2 = labelSprite('i₂ →','#8a8aa8',.7); ax2.position.set(0,-1.4,zOff-2); scene.add(ax2); axisLabels.push(ax2);
+  const ax3 = labelSprite('i₃ →','#8a8aa8',.7); ax3.position.set(-span/2-2,0,zOff-2); scene.add(ax3); axisLabels.push(ax3);
+}
+buildTensor('rank1');
+
+/* target vector bar + forged bar at side */
+const tgtGroup = new THREE.Group(); tgtGroup.position.x = 6; scene.add(tgtGroup);
+const forgedGroup = new THREE.Group(); forgedGroup.position.x = 10.6; scene.add(forgedGroup);
+const tgtBars=[], forgedBars=[], forgedValLbs=[];
+const lbT = labelSprite('target t[i₁]','#ffc94d',.8); lbT.position.set(6,8.6,0); scene.add(lbT); axisLabels.push(lbT);
+const lbF = labelSprite('伪造求值 E(w2,w3)','#b07cff',.8); lbF.position.set(10.6,8.6,0); scene.add(lbF); axisLabels.push(lbF);
+for(let i1=0;i1<N;i1++){
+  const v = D.target[i1];
+  const fv = D.forgedEval[i1];
+  const col = v===0 ? new THREE.Color(0xff5d6c) : new THREE.Color(0xffc94d);
+  const h = .4 + (v/Q)*5;
+  const b = bar(0, h/2-.1, (i1-(N-1)/2)*1.15, 1.1, h, 1.1, col);
+  tgtGroup.add(b); tgtBars.push(b);
+  // forged bars pre-built at their true height (hidden, revealed in forge stage)
+  const fh = .4 + (fv/Q)*5;
+  const b2 = bar(0, fh/2-.1, (i1-(N-1)/2)*1.15, 1.1, fh, 1.1, 0x333355);
+  b2.material.transparent = true; b2.material.opacity = .35; b2.visible = false;
+  forgedGroup.add(b2); forgedBars.push(b2);
+  const fvl = labelSprite(String(fv),'#b07cff',.42); fvl.position.set(0, fh+.8, (i1-(N-1)/2)*1.15); forgedGroup.add(fvl); forgedValLbs.push(fvl); fvl.visible=false;
+  // zero-zone marker on target
+  if(v===0){ const ring = new THREE.Mesh(new THREE.TorusGeometry(1.0,.05,8,24), new THREE.MeshBasicMaterial({color:0xff5d6c,transparent:true,opacity:.7})); ring.rotation.x=Math.PI/2; ring.position.set(0,-1.6,(i1-(N-1)/2)*1.15); tgtGroup.add(ring);}
+}
+
+/* w2 / w3 vector display groups */
+const wGroup = new THREE.Group(); wGroup.position.set(0, -1.0, 0); scene.add(wGroup);
+
+/* ---------------- state ---------------- */
+const STAGES = [
+  { name:'公钥张量：rank-1 结构', key:'intro' },
+  { name:'攻击 ①：rank-1 因子提取 ψ = u ⊗ v', key:'factor' },
+  { name:'攻击 ②：零位系统求解 w2（Z 齐次）', key:'w2' },
+  { name:'攻击 ③：非零位仿射系统求解 w3（S）', key:'w3' },
+  { name:'伪造签名验证：通过官方 verify()', key:'forge' },
+  { name:'对照：rank-2 修复版 — 攻击失效', key:'fix' },
+];
+let stage = -1, playing=false, playTimer=null;
+const hud=document.getElementById('hud'), sName=document.getElementById('stage-name'),
+      sDesc=document.getElementById('stage-desc'), sNum=document.getElementById('stepnum'),
+      barP=document.getElementById('progress-bar');
+const btnPrev=document.getElementById('btn-prev'),btnNext=document.getElementById('btn-next'),btnPlay=document.getElementById('btn-play');
+
+/* build dots */
+const dotsEl=document.getElementById('dots');
+STAGES.forEach((_,i)=>{ const d=document.createElement('div'); d.className='dot'; d.onclick=()=>go(i); dotsEl.appendChild(d);});
+const dots=[...dotsEl.children];
+
+const DESC = {
+ intro:()=>`<p>这是 <b>VWZ（Vandermonde 稀疏签名）</b> 的<b>公钥张量</b> ψ ∈ (𝔽<sub>q</sub><sup>m×m</sup>)<sup>n</sup>，真实数据 k=2（q=3329，n=${N}，m=${M}，来自 security-assessment/evidence）。</p>
+  <p>每个切片 ψ[i₁] 是一个 m×m 矩阵，柱高 = 系数值。右侧黄色条是签名目标 <b>target t</b>：恰 ${K} 个零位（红圈 Z）与 ${K+1} 个非零位（黄 S）。</p>
+  <span class="formula">t[i₁] = (u[i₁]·w2)·(v[i₁]·w3)　— 验签方程（可分离双线性）</span>
+  <p><span class="badge" style="background:rgba(255,93,108,.15);color:var(--red)">漏洞核心</span>旧版每个切片都是 <b>rank-1</b>（可写成单个外积 u⊗v），这是被攻破的结构根源。</p>`,
+ factor:()=>`<p><b>攻击第一步</b>：攻击者<u>不需要任何私钥/trapdoor</u>，仅凭公钥即可分解每个切片。</p>
+  <span class="formula">对每个 i₁：ψ[i₁] = u[i₁] ⊗ v[i₁]<br>u[i₁][j] = ψ[i₁][j][l₀]　（取首个非零列）<br>v[i₁][l] = ψ[i₁][j₀][l] / u[i₁][j₀]</span>
+  <p>因为 rank-1，取任意非零列 l₀ 得 u，归一化得 v —— <b>精确重建</b>（本演示数据重建误差 = 0，逐元素一致）。</p>
+  <p>可视化：每个切片收缩为「u 向量（紫）+ v 向量（青）」两条边。</p>`,
+ w2:()=>`<p><b>攻击第二步</b>：利用 target 的稀疏结构。零位集合 Z（红圈，${K} 个）上要求 t=0：</p>
+  <span class="formula">u[i₁]·w2 = 0　∀ i₁ ∈ Z　→ 齐次系统<br>${K} 个方程 × m=${M} 个未知数 → 非零解空间 ≥1 维</span>
+  <p>取 w2 使 Z 上为零、S 上非零（200 次随机尝试内必得）。</p>
+  <p>可视化：w2 向量在零位切片上「穿透为零」（红切片变暗），非零位保持。</p>`,
+ w3:()=>`<p><b>攻击第三步</b>：在非零位集合 S（黄，${K+1} 个）上解仿射系统：</p>
+  <span class="formula">v[i₁]·w3 = t[i₁] / (u[i₁]·w2)　∀ i₁ ∈ S<br>${K+1} 个方程 × ${M} 个未知数 → 唯一解 w3</span>
+  <p>两步总复杂度 <b>O(k³)</b>（高斯消元），毫秒级完成。</p>
+  <p>可视化：w3 向量点亮黄色 target 条对应的紫色签名分量。</p>`,
+ forge:()=>`<p><b>结果</b>：伪造的 (w2, w3) 代入公钥求值：</p>
+  <span class="formula">E[i₁] = Σ_{i₂,i₃} ψ[i₁][i₂][i₃]·w2[i₂]·w3[i₃]</span>
+  <p>紫色条 = 伪造求值 E，与右侧黄色 target <b>逐位一致</b>（本演示数据完全匹配）。</p>
+  <p><span class="badge" style="background:rgba(255,93,108,.15);color:var(--red)">✗ 攻击成功</span>第三方复现 27/27 全伪造通过；官方 WASM verify() 接受伪造签名。此漏洞对 rank-1 版是<b>完全破坏</b>（total break）。</p>`,
+ fix:()=>`<p><b>修复方案</b>（2026-08-16，security-assessment/fix/vwz-fix-mixed-tensor.md）：</p>
+  <span class="formula">ψ[i₁] = uₐ[i₁]⊗vₐ[i₁] + u_b[i₁]⊗v_b[i₁]　（rank-2，两项外积之和）<br>且参数修正：m = 2k+1，n = 2k+2（n &gt; m）</span>
+  <p><b>攻击为何失效</b>：</p>
+  <p>① 切片 rank-2 → rank-1 因子提取不可能（无单一 u,v 可重建，误差 ~4×10⁵）；</p>
+  <p>② 验签方程不可分离 → 固定 w2 解 w3 的线性系统变为 <b>n×m 超定</b>（n=2k+2 &gt; m=2k+1），无解概率极高；</p>
+  <p>③ 实测：rank-1 提取 0 伪造、固定-w2 攻击 0 伪造、切片全 rank-2（Rust 32/32 + WASM 313/313 验证通过）。</p>
+  <p><span class="badge" style="background:rgba(61,220,151,.15);color:var(--green)">✓ 攻击失效</span>⚠️ 仍为实验性修复，未完成形式化安全论证 — 不用于生产。</p>`,
+};
+
+/* ---------------- stage render fns ---------------- */
+function clearHighlights(){
+  for(const s of sliceObjs) for(const m of s.children) if(m.isMesh){ m.material.emissive.setHex(0x000000); m.material.opacity=1; m.material.transparent=false; m.visible=true; }
+  for(const o of uVecObjs){ wGroup.remove(o); } uVecObjs.length=0;
+  for(const o of vVecObjs){ wGroup.remove(o); } vVecObjs.length=0;
+  for(const o of w2VecObjs){ wGroup.remove(o); } w2VecObjs.length=0;
+  for(const o of w3VecObjs){ wGroup.remove(o); } w3VecObjs.length=0;
+  for(const b of forgedBars){ b.visible=false; b.material.color.setHex(0x333355); b.material.transparent=true; b.material.opacity=.35; }
+  for(const l of forgedValLbs){ l.visible=false; }
+}
+function vecBar(i1, vals, group, color, label, emphasize=false){
+  // show vector as bars; i1>=0 -> near slice i1; i1<0 -> standalone spot in front
+  const span=(M-1)*1.2;
+  const zpos = i1<0 ? 7 : (i1-(N-1)/2)*sliceSpacing;
+  const g=new THREE.Group(); g.position.set(0,0,zpos);
+  for(let i=0;i<vals.length;i++){
+    const v=vals[i], h=.5+(v/Q)*3.4;
+    const m=bar((i-span/2)*1.2, h/2+.2, 0, .7, h, .7, color, emphasize?1:.8);
+    g.add(m);
+  }
+  const lb=labelSprite(label, color==='#b07cff'?'#b07cff':color, .75); lb.position.set(0,4.4,0); g.add(lb);
+  wGroup.add(g);
+  return g;
+}
+function setSliceHighlight(i1, colorHex, emissiveIntensity=0, dim=false){
+  const mats=sliceObjs[i1].children.filter(c=>c.isMesh);
+  for(const m of mats){ m.material.emissive.setHex(colorHex); m.material.emissiveIntensity=emissiveIntensity; if(dim){ m.material.transparent=true; m.material.opacity=.25; } }
+}
+function setCellGlow(i1,i2,i3,colorHex,inten=1){
+  const m=cellObjs[i1][i2][i3]; if(m){ m.material.emissive.setHex(colorHex); m.material.emissiveIntensity=inten; }
+}
+
+function renderStage(s){
+  clearHighlights();
+  const key=STAGES[s].key;
+  if(key==='intro'){
+    // emphasize rank-1 separability: alternate slice tint
+    for(let i1=0;i1<N;i1++) setSliceHighlight(i1, i1%2? 0x6c8cff:0x2a2a5a, .12);
+  }
+  if(key==='factor'){
+    for(let i1=0;i1<N;i1++){
+      const uu=D.uFactors[i1], vv=D.vFactors[i1];
+      const ug=vecBar(i1,uu,wGroup,0xb07cff,`u[${i1}]`,true);
+      const vg=vecBar(i1,vv,wGroup,0x3ddc97,`v[${i1}]`,true);
+      ug.position.x=-2.6; vg.position.x=-2.6; vg.position.y=-2.2;
+      uVecObjs.push(ug); vVecObjs.push(vg);
+      setSliceHighlight(i1,0xb07cff,.06);
+    }
+  }
+  if(key==='w2'){
+    // highlight Z slices (zero target) -> dim, solve w2 highlight on S
+    const S=D.target.map((v,i)=>v!==0?i:-1).filter(i=>i>=0);
+    for(let i1=0;i1<N;i1++){
+      if(D.target[i1]===0){ setSliceHighlight(i1,0xff5d6c,.18,true); }
+      else { setSliceHighlight(i1,0xffc94d,.10); }
+    }
+    // show w2 vector (recovered from evidence forge_k2)
+    const w2g=vecBar(-1, D.w2, wGroup, 0xb07cff, 'w2 (伪造)', true);
+    w2g.position.x=-2; w2VecObjs.push(w2g);
+  }
+  if(key==='w3'){
+    for(let i1=0;i1<N;i1++){
+      if(D.target[i1]!==0){ setSliceHighlight(i1,0xffc94d,.22); }
+    }
+    const w3g=vecBar(-1, D.w3, wGroup, 0xb07cff, 'w3 (伪造)', true);
+    w3g.position.x=2.6;
+    w3VecObjs.push(w3g);
+  }
+  if(key==='forge'){
+    for(let i1=0;i1<N;i1++){ setSliceHighlight(i1,0xb07cff,.10); }
+    // light up forged bars: reveal E values matching target
+    for(let i1=0;i1<N;i1++){
+      const v=D.target[i1];
+      const fv=D.forgedEval[i1];
+      const match = fv===v;
+      const col = v===0 ? new THREE.Color(0x3ddc97) : new THREE.Color(0xb07cff);
+      forgedBars[i1].visible = true;
+      forgedBars[i1].material.color.copy(col);
+      forgedBars[i1].material.opacity = match ? 1 : .4;
+      forgedBars[i1].material.transparent = !match;
+      forgedValLbs[i1].visible = true;
+    }
+  }
+  if(key==='fix'){
+    // dim old, switch tensor to rank-2 synthetic + show attack fail
+    for(let i1=0;i1<N;i1++) setSliceHighlight(i1,0x3ddc97,.05);
+    for(const b of forgedBars){ b.visible=false; }
+    for(const l of forgedValLbs){ l.visible=false; }
+    // label overlay
+    const okLb=labelSprite('rank-2: 不可分解 → 攻击 0/27 成功','#3ddc97',1.1); okLb.position.set(-4,9,4); scene.add(okLb); axisLabels.push(okLb);
+  }
+}
+
+function go(i,autoplayNext=false){
+  i=Math.max(0,Math.min(STAGES.length-1,i));
+  stage=i;
+  sNum.textContent=`STEP ${i+1} / ${STAGES.length}`;
+  sName.textContent=STAGES[i].name;
+  sDesc.innerHTML=DESC[STAGES[i].key]();
+  barP.style.width=((i+1)/STAGES.length*100)+'%';
+  dots.forEach((d,j)=>{ d.className='dot'+(j===i?' on':(j<i?' done':'')); });
+  renderStage(i);
+  if(autoplayNext && i<STAGES.length-1) setTimeout(()=>go(i+1),2600);
+}
+btnPrev.onclick=()=>{ stopPlay(); go(stage-1); };
+btnNext.onclick=()=>{ stopPlay(); go(stage+1); };
+btnPlay.onclick=()=>{ if(playing){stopPlay();} else { playing=true; btnPlay.textContent='⏸ 暂停'; autoAdvance();} };
+function stopPlay(){ playing=false; btnPlay.textContent='▶ 播放'; if(playTimer){clearTimeout(playTimer); playTimer=null;} }
+function autoAdvance(){ if(!playing) return; if(stage>=STAGES.length-1){ stopPlay(); return;} go(stage+1,false); playTimer=setTimeout(autoAdvance,3000); }
+window.addEventListener('keydown',e=>{ if(e.key==='ArrowRight'){stopPlay();go(stage+1);} if(e.key==='ArrowLeft'){stopPlay();go(stage-1);} });
+
+/* ---------------- hud ---------------- */
+function hudUpdate(){ hud.innerHTML=`<b>k=${K}</b> · n=${N} · m=${M} · q=${Q}<br>切片 ψ[i₁] ∈ 𝔽<sub>${Q}</sub><sup>${M}×${M}</sup> · 共 ${N} 片<br>target: ${K} 零位 + ${K+1} 非零位 · 拖动旋转 / 滚轮缩放`; }
+hudUpdate();
+go(0);
+
+/* ---------------- resize ---------------- */
+function resize(){ const r=wrap.getBoundingClientRect(); renderer.setSize(r.width,r.height,false); cam.aspect=r.width/r.height; cam.updateProjectionMatrix(); }
+new ResizeObserver(resize).observe(wrap); resize();
+
+(function animate(){ requestAnimationFrame(animate); ctrl.update(); renderer.render(scene,cam); })();
+</script>
+</body>
+</html>
