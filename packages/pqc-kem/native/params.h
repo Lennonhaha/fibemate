@@ -1,4 +1,4 @@
-﻿#define KYBER_K 3
+#define KYBER_K 3
 #define KYBER_NAMESPACE(s) pqcrystals_kyber768_ref_##s
 
 #define KYBER_N 256
