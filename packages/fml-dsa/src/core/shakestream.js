@@ -36,9 +36,6 @@ export function sha3_256(data) {
   return _nobleSha3_256(data);
 }
 
-// Re-export raw Noble SHAKE-256 for streaming access (sampleInBall needs .create + .xofInto)
-export const nobleShake256 = _nobleShake256;
-
 // ── XofShake: stream-correct SHAKE XOF (used by sampling.js for SampleInBall) ──
 // Noble's shake256.create() supports one-shot digest() only, so we pre-squeeze
 // a large buffer on absorb() and serve from it for all subsequent squeeze() calls.

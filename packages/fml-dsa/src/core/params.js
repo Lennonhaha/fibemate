@@ -4,9 +4,8 @@
 
 export const Q = 8380417;        // prime modulus
 export const N = 256;            // ring dimension (x^256 + 1)
-export const SEED_LENGTH = 32;
 export const ZETA = 1753;        // 512-th primitive root of unity (ζ^256 ≡ -1 mod Q)
-export const INV_N = 8347681;    // N⁻¹ mod Q (verified: 256 × 8347681 ≡ 1 mod Q)
+export const INV_N = 8347681;    // N⁻¹ mod Q (verified: 256 × 8347681 ≡ 1 mod Q); used by ntt.test.js
 
 // ML-DSA parameter sets (FIPS 204 §4, Table 1)
 // cTildeBytes = λ/8 where λ = security level (128/192/256 bits)

@@ -80,19 +80,6 @@ export function keygen(paramSet = 'ML-DSA-65') {
 }
 
 // ══════════════════════════════════════════════
-// Convenience: keygen + encode
-// ══════════════════════════════════════════════
-export function keygenEncoded(paramSet = 'ML-DSA-65') {
-  const { pk, sk } = keygen(paramSet);
-  return {
-    pkBytes: encodePK(pk, paramSet),
-    skBytes: encodeSK(sk, paramSet),
-    pk,
-    sk,
-  };
-}
-
-// ══════════════════════════════════════════════
 // Self-tests
 // ══════════════════════════════════════════════
 (function selfTest() {

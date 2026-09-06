@@ -173,11 +173,6 @@ function encodeW1(w1, gamma2) {
   return buf;
 }
 
-export function signEncoded(sk, msg, ctx, paramSet) {
-  const sig = sign(sk, msg, ctx, paramSet);
-  return encodeSig(sig, paramSet);
-}
-
 // ══════ Self-tests ══════
 (function selfTest() {
   let ok = true;

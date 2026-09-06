@@ -13,8 +13,8 @@ for (let i = 0; i < N; i++) {
   bitRev[i] = rev;
 }
 
-// --- zeta table: zetas[i] = ζ^(bitRev[i]) mod Q ---
-export const zetas = new Int32Array(N);
+// --- zeta table: zetas[i] = ζ^(bitRev[i]) mod Q (internal, see invNtt) ---
+const zetas = new Int32Array(N);
 for (let i = 0; i < N; i++) {
   let z = 1;
   for (let j = 0; j < bitRev[i]; j++) z = (z * ZETA) % Q;

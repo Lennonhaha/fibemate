@@ -73,36 +73,6 @@ export function expandA(rho, paramSet) {
 }
 
 // ══════════════════════════════════════════════
-// Legacy entry point — kept for self-test naming
-// ══════════════════════════════════════════════
-export function expandA_original(rho, paramSet) {
-  const { k, l } = MLDSA_PARAMS[paramSet];
-  const A = Array.from({ length: k }, () => Array.from({ length: l }));
-
-  for (let i = 0; i < k; i++) {
-    for (let j = 0; j < l; j++) {
-      const seed = new Uint8Array(2 + rho.length);
-      seed[0] = j & 0xFF;
-      seed[1] = i & 0xFF;
-      seed.set(rho, 2);
-
-      const squeezeBuf = shake128(seed, 840 * 2);
-      let squeezeOff = 0;
-      const xof_local = (n) => {
-        const slice = squeezeBuf.subarray(squeezeOff, squeezeOff + n);
-        squeezeOff += n;
-        return slice;
-      };
-
-      const poly = new Int32Array(N);
-      rejSample(xof_local, poly);
-      A[i][j] = poly;
-    }
-  }
-  return A;
-}
-
-// ══════════════════════════════════════════════
 // ExpandS: (s1, s2) = SHAKE-256(σ) → l+k polys, each coeff in [-η, η]
 // FIPS 204 Algorithm 5
 // For η=2 (ML-DSA-44): read 3 bits → 0..7 → reject ≥ 5, map {0,1,2,3,4} → {-2,-1,0,1,2}
