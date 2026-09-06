@@ -163,6 +163,14 @@ Client Server
 > - 路径C-2：应用层 SM2+ML-KEM-768，依托TLS Exporter + HTTP POST；900/900全绿，p95=78.5ms
 > 下文七步路线为**历史评估记录**，不作为当前主线实施计划。
 
+> 🔄 2026-09-06 状态更新（工具链就绪，等待系统级升级）
+> 「Nginx原生混合组不可行」判定**已过时**：OpenSSL 3.5+ 原生含 ML-KEM（RFC 9598 混合组 X25519MLKEM768
+> 为 IETF 标准 codepoint 0x11EC），Nginx 1.25.4+ 直接 `ssl_ecdh_curve X25519MLKEM768` 即可启用，
+> 无需自定义回调。当初判定基于旧 OpenSSL（3.0 无 ML-KEM 组）。
+> 当前实际阻塞 = **服务器 nginx 链接的 OpenSSL 3.0.13（< 3.5）**，系统级依赖，见下方 §3.3 阻塞项。
+> 迁移工具链已入库（deploy/pqc-nginx-hybrid.conf.example + deploy/pqc-deploy.sh 带版本门禁，
+> tools/scan-crypto-assets.cjs 运行态扫描 + tools/check-crypto-policy.cjs 策略门禁）。
+
 ### 3.2 历史评估路线（归档留存）
 1. 兼容性评估：核验OpenSSL/Nginx对自定义命名组#4590支持，必要源码修补
 2. ClientHello扩展开发：supported_groups字段写入4590，携带1184字节ML-KEM公钥
@@ -181,6 +189,25 @@ Client Server
 |混合运算拉高握手耗时|HTTPS访问变慢|WASM预编译加速；硬件NTT流水线长期优化|
 
 > 核心结论：ML-KEM加解密仅消耗1–2ms；当前瓶颈不在密码运算，在于底层TLS协议栈生态适配与网络中间设备兼容，整体工程风险可控。
+
+### 3.3.1 阻塞项跟踪：平台层混合 TLS（路径 A 原生）
+
+| 项 | 状态 | 说明 |
+|---|---|---|
+| OpenSSL ≥ 3.5 升级 | ⬜ 待排期 | 系统级依赖，支持 X25519MLKEM768 NamedGroup；当前 nginx 链接 3.0.13（无 ML-KEM） |
+| nginx `ssl_ecdh_curve` 启用 | ⬜ 待 OpenSSL 升级 | 模板已备：`deploy/pqc-nginx-hybrid.conf.example`（`?X25519MLKEM768` 安全前缀防拒启） |
+| 部署门禁验证 | ✅ 已实现 | `deploy/pqc-deploy.sh --check`：< 3.5 自动拒绝动生产（2026-09-06 实测 exit 3 正确拦截） |
+| 运行态资产清单 | ✅ 已实现 | `tools/scan-crypto-assets.cjs`：2026-09-06 服务器实测 4 endpoints / 3 pm2 / 2 证书 |
+| 策略门禁 CI | ✅ 已实现 | `tools/check-crypto-policy.cjs` + `.github/workflows/pqc-migration-verify.yml` |
+| 升级验证 | ⬜ 待执行 | `openssl s_client -groups X25519MLKEM768` 确认协商到混合组（模板头注释有命令） |
+
+**升级路径建议**（系统级变更，需单独排期，staging 先行）：
+1. staging 环境验证 OpenSSL 3.5+ 与现有 nginx 1.30.1 兼容（nginx -t + 全量回归）
+2. 生产备份 nginx 配置（`cp sites-enabled/* sites-available/*.bak-*`）
+3. 升级后立即 `bash deploy/pqc-deploy.sh --check` → 通过后 `--apply`
+4. 用 `openssl s_client -groups X25519MLKEM768` 实测协商结果；异常即回滚（--rollback）
+
+> 注：升级前平台层 PQ 由**应用层混合 KEX（路径 C-2，IANA #4590）**提供，现役不受影响。
 
 ## 4. 排期预估（面向PQC-Active目标）
 |阶段|工作内容|预估周期|前置依赖|
