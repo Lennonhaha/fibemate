@@ -874,6 +874,7 @@
             <li><a href="#features">特性</a></li>
             <li><a href="#privacy">技术栈</a></li>
             <li><a href="#visualizations">可视化</a></li>
+            <li><a href="/calculator.html">算力计算器</a></li>
             <li><a href="#tech">技术</a></li>
             <li><a href="app.html">登录</a></li>
         </ul>
@@ -1430,6 +1431,40 @@
           <a href="/docs/fibemate-architecture-shield.html" class="proof-link"
              style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #00d4d4; text-decoration: underline;"
              >打开三层护盾模型（英文） &#8594;</a>
+        </div>
+
+        <div class="feature-card" style="grid-column: 1 / -1; border-top: 3px solid #00E5C3; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: center;">
+          <div>
+            <div class="feature-icon">💰</div>
+            <div class="feature-title">PQC 算力成本计算器</div>
+            <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">
+              <strong>CPU vs FPGA · 每毫秒与每美元的代价</strong><br>
+              ML-KEM / ML-DSA 实测延迟 · 吞吐 · 功耗<br>
+              3 年折旧摊销 · 年电费 / 年总成本对比<br>
+              liboqs v0.16.0 实测 + Artix-7 综合
+            </div>
+            <a href="/calculator.html" class="proof-link"
+               style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #00E5C3; text-decoration: underline;"
+               >打开计算器 &#8594;</a>
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.8rem;">
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.8rem;">
+              <div style="font-size: 0.7rem; color: var(--text-muted);">ML-KEM-768 封装</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">379.74 µs</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.8rem;">
+              <div style="font-size: 0.7rem; color: var(--text-muted);">ML-DSA-65 签名</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">1048.22 µs</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.8rem;">
+              <div style="font-size: 0.7rem; color: var(--text-muted);">ML-KEM-768 吞吐</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">2.90 kops/s</div>
+            </div>
+            <div style="background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 8px; padding: 0.8rem;">
+              <div style="font-size: 0.7rem; color: var(--text-muted);">FPGA NTT 资源</div>
+              <div style="font-size: 1.1rem; font-weight: 700; color: var(--text-primary);">235 LUT / 191 FF</div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
