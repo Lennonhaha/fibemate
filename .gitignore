@@ -568,3 +568,6 @@ www/test-login.html
 # 历史 .bak 调试残留后缀（2026-09-02 清理后补防规则）
 www/*-bak
 www/*.webapp
+
+# Web calculator generated screenshots
+www/_calculator-preview.png
