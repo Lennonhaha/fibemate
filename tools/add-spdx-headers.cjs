@@ -93,7 +93,6 @@ function addHeader(abs, style, license, dryRun) {
   const header = headerFor(style, license);
 
   // 保持文件原换行风格 (LF 优先, 仓库统一 LF)
-  const newline = orig.includes('\r\n') ? '\r\n' : '\n';
 
   if (orig.startsWith('#!')) {
     const idx = orig.indexOf('\n');

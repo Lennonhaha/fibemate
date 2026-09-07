@@ -13,7 +13,6 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
 const crypto = require('crypto');
 
 const outFile = process.argv[2] || 'sbom.cdx.json';

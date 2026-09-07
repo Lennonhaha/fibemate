@@ -34,7 +34,6 @@
 //
 // Run: node scripts/tvla-mlkem-adla.mjs  (from repo root)
 
-import { randomBytes } from 'crypto';
 import { writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';

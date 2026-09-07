@@ -284,9 +284,6 @@ function setSliceHighlight(i1, colorHex, emissiveIntensity=0, dim=false){
   const mats=sliceObjs[i1].children.filter(c=>c.isMesh);
   for(const m of mats){ m.material.emissive.setHex(colorHex); m.material.emissiveIntensity=emissiveIntensity; if(dim){ m.material.transparent=true; m.material.opacity=.25; } }
 }
-function setCellGlow(i1,i2,i3,colorHex,inten=1){
-  const m=cellObjs[i1][i2][i3]; if(m){ m.material.emissive.setHex(colorHex); m.material.emissiveIntensity=inten; }
-}
 
 function renderStage(s){
   clearHighlights();
@@ -307,7 +304,6 @@ function renderStage(s){
   }
   if(key==='w2'){
     // highlight Z slices (zero target) -> dim, solve w2 highlight on S
-    const S=D.target.map((v,i)=>v!==0?i:-1).filter(i=>i>=0);
     for(let i1=0;i1<N;i1++){
       if(D.target[i1]===0){ setSliceHighlight(i1,0xff5d6c,.18,true); }
       else { setSliceHighlight(i1,0xffc94d,.10); }

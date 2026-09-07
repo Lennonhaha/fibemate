@@ -38,21 +38,6 @@ function rejectionSamplePoly(xofRead) {
 }
 
 // ══════════════════════════════════════════════
-// (legacy) rejSample — kept for self-test reference only
-// ══════════════════════════════════════════════
-function rejSample(xof, dest) {
-  let idx = 0;
-  const batch = 840; // read 840 bytes = 280 attempts per batch
-  while (idx < N) {
-    const buf = xof(batch);
-    for (let i = 0; i < batch - 2 && idx < N; i += 3) {
-      const v = (buf[i] | (buf[i + 1] << 8) | (buf[i + 2] << 16)) & 0x7FFFFF;
-      if (v < Q) dest[idx++] = v;
-    }
-  }
-}
-
-// ══════════════════════════════════════════════
 // ExpandA: A = SHAKE-128(j‖i‖ρ) → k×l polys
 // FIPS 204 Algorithm 4 — Noble-compatible: uses Noble's XOF128 engine
 // so A matrix is byte-identical to @noble/post-quantum

@@ -9,6 +9,9 @@
 #           此处验证探测逻辑输出而非实际协商)
 name: pqc-migration-verify
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
