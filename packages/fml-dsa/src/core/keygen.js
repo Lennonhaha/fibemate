@@ -132,7 +132,9 @@ export function keygen(paramSet = 'ML-DSA-65') {
   console.log(`  ${ok ? 'PASS' : 'FAIL'} keygen all param sets`);
 
   // 4. Encode/decode roundtrip
-  const { pkBytes, skBytes } = keygenEncoded('ML-DSA-65');
+  const kEnc = keygen('ML-DSA-65');
+  const pkBytes = encodePK(kEnc.pk, 'ML-DSA-65');
+  const skBytes = encodeSK(kEnc.sk, 'ML-DSA-65');
   ok = ok && pkBytes.length > 0 && skBytes.length > 0;
   console.log(`  ${ok ? 'PASS' : 'FAIL'} encode roundtrip (pk=${pkBytes.length}B, sk=${skBytes.length}B)`);
 

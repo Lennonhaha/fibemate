@@ -5,8 +5,8 @@
 
 import { ml_dsa44, ml_dsa65, ml_dsa87 } from '../src/index.js';
 import { keygen as coreKeygen, verify as coreVerify } from '../src/core/all.js';
-import { signEncoded } from '../src/core/sign.js';
-import { encodePK } from '../src/core/encode.js';
+import { sign } from '../src/core/sign.js';
+import { encodePK, encodeSig } from '../src/core/encode.js';
 
 const variants = { 'ML-DSA-44': ml_dsa44, 'ML-DSA-65': ml_dsa65, 'ML-DSA-87': ml_dsa87 };
 const paramSets = ['ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87'];
@@ -29,7 +29,7 @@ function testVariant(paramSet) {
   // 2. We sign, Noble verify accepts
   const { pk: ourPkObj, sk: ourSk } = coreKeygen(paramSet);
   const ourPk = encodePK(ourPkObj, paramSet);
-  const ourSig = signEncoded(ourSk, msg, new Uint8Array(0), paramSet);
+  const ourSig = encodeSig(sign(ourSk, msg, new Uint8Array(0), paramSet), paramSet);
   const nobleVerifyOnOurs = noble.verify(ourSig, msg, ourPk);
 
   // 3. Self-verify
