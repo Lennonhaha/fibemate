@@ -464,15 +464,13 @@ function compute(){
   const {alg, op, platform, calls, price, chip, years} = state;
   const days = 365, secs = days * 86400;
 
-  let latencyUs, powerW, note;
+  let latencyUs, powerW;
   if (platform === "cpu") {
     latencyUs = CPU[alg][op];
     powerW = 25;        // x86 主机整机功耗估算 (W, 待功率计实测)
-    note = "CPU 延迟为 liboqs 实测值";
   } else {
     latencyUs = CPU[alg][op] * FPGA.latencyFactor;  // 待实测的估算
     powerW = FPGA.powerW;
-    note = "FPGA 延迟/功耗为估算值 (待板级实测)";
   }
 
   const throughput = (1e6 / latencyUs); // ops/s

@@ -455,12 +455,12 @@ function broadcastPresence(userId, online) {
   }));
 }
 
-// 根据 wsMeta（WebSocket->{userId,deviceId}）找到指定用户的指定设备 socket
-function _findUserWs(userId, deviceId, excludeWs) {
+// 根据 wsMeta（WebSocket->{userId,deviceId}）找到该用户的 WebSocket（按 userId 路由）
+function _findUserWs(userId, excludeWs) {
   let found = null;
   for (const [ws, meta] of wsMeta.entries()) {
     if (ws === excludeWs) continue; // 避免回环：发给其他人时不发回自己
-    if (meta.userId === userId && (!deviceId || meta.deviceId === deviceId)) {
+    if (meta.userId === userId) {
       if (ws.readyState === 1) { found = ws; break; }
     }
   }
@@ -483,7 +483,7 @@ function sendToUser(userId, payload, senderWs) {
   }
 
   // 用 wsMeta 精确路由：找到该用户的 WebSocket，发给那个具体 socket
-  const targetWs = _findUserWs(userId, null, senderWs || null);
+  const targetWs = _findUserWs(userId, senderWs || null);
   if (targetWs) {
     targetWs.send(data);
     return true;
