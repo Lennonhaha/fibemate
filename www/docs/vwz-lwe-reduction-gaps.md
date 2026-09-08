@@ -31,7 +31,7 @@ VWZ 方案使用 "Vandermonde Mixed Quotient Sparse" (VMQ-SPARSE) 问题作为�
 
 ### 当前安全论证（启发式）
 虽然没有形式化归约，但以下证据支持安全性：
-- **已知攻击失效**：rank-1 分离攻击对 rank-2 混合无效（已验证：`security-assessment/attack/lgv23_attack.py`）
+- **已知攻击失效**：rank-1 分离攻击对 rank-2 混合无效（已验证：`experimental/vwz-lg` 分支 `security-assessment/attack/attack_vwz.py`、`attack_bulk.py`；rank-1 公钥 36/36 伪造成功，rank-2 公钥 0/27）
 - **参数映射**：VWZ k=8 参数映射到 LWE 维度 n≈256，与 ML-KEM-768 同量级
 - **BKZ 复杂度**：β~700-750 对应 2^143 classical / 2^72 quantum（Cat 3）
 - **avalanche 测试通过**：输入翻转 1 bit → 输出平均翻转 ~50% bits（`vwz-avalanche-test.py`）
@@ -63,7 +63,7 @@ VWZ 参数（k, q, 张量形状, rank）的选择基于启发式安全分析而�
 | k | 4/8/16 | 对应 128/192/256-bit 安全级 |
 | 张量形状 | (2k+2)×(2k+1)×(2k+1) | 边界格式，确保 trapdoor 唯一性 |
 | rank | 2 | 击败 rank-1 分离攻击 |
-| 签名大小 | 2×(2k+1)×log₂(q) bits | k=8: 408 bits |
+| 签名大小 | 2×(2k+1)×2 bytes（序列化） | k=8: 68 bytes (544 bits) |
 
 ### 缺口
 1. **无精确安全退化分析**：k 从 8 增到 16 的安全增益是经验性的
