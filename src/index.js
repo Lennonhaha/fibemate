@@ -329,33 +329,30 @@ const genRefreshToken = (user) => jwt.sign(
 
 
 // ========================
-// 频率限制（内存计数器）— security 2026-08-13
+// 频率限制 — security 2026-08-13 / updated 2026-09-08 to express-rate-limit
+// 使用 express-rate-limit（CodeQL js/missing-rate-limiting 识别的规范化限流库）
 // 两档独立限流：
 //   1) 登录/注册/刷新 token：30 次 / 15 分钟（防爆破）
 //   2) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
+// 内存计数器（单实例部署足够；多实例需外接 store，如 Redis）。
+// 注：未设置 trust proxy，req.ip 取直连 socket 地址（与历史行为一致；nginx 反代下需配合 trust proxy 才能按真实客户端 IP 计数，后续可单独评估）。
 // ========================
-function makeRateLimiter(max, windowMs) {
-  const map = new Map(); // key: ip | value: { count, firstAt }
-  return (req, res, next) => {
-    const key = req.ip || req.socket.remoteAddress;
-    const now = Date.now();
-    const record = map.get(key);
-    if (!record || now - record.firstAt > windowMs) {
-      map.set(key, { count: 1, firstAt: now });
-      return next();
-    }
-    record.count++;
-    if (record.count > max) {
-      const retryAfter = Math.ceil((windowMs - (now - record.firstAt)) / 1000);
-      res.setHeader('Retry-After', String(retryAfter));
-      return res.status(429).json({ error: `请求过于频繁，请 ${retryAfter} 秒后再试` });
-    }
-    next();
-  };
-}
+const rateLimit = require('express-rate-limit');
 const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（两档共用）
-const rateLimitMiddleware = makeRateLimiter(30, RATE_LIMIT_WINDOW);        // 登录/注册防爆破
-const globalRateLimitMiddleware = makeRateLimiter(600, RATE_LIMIT_WINDOW);  // 全局 API 防滥用
+const rateLimitMiddleware = rateLimit({
+  windowMs: RATE_LIMIT_WINDOW,
+  max: 30,                                   // 登录/注册防爆破
+  standardHeaders: 'draft-7',               // 返回 RateLimit-* 头
+  legacyHeaders: false,                     // 不返回 X-RateLimit-*（已弃用）
+  message: { error: '请求过于频繁，请稍后再试' },
+});
+const globalRateLimitMiddleware = rateLimit({
+  windowMs: RATE_LIMIT_WINDOW,
+  max: 600,                                  // 全局 API 防滥用
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' },
+});
 
 // ========================
 // 重放保护（phase 2，校验式）— REMINDER §4 / THREAT_MODEL.md
