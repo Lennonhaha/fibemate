@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:6fa7f03f-b782-4dae-93b1-635ebffdf9da",
+  "serialNumber": "urn:uuid:9885d04f-a463-4028-9d7b-8a234f4a79cd",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-02T00:24:48.534Z",
+    "timestamp": "2026-09-08T15:19:50.521Z",
     "component": {
       "type": "application",
       "bom-ref": "fibemate@3.3.0",
@@ -520,10 +520,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "@noble/ciphers@2.3.0",
+      "bom-ref": "@noble/ciphers@2.4.0",
       "name": "@noble/ciphers",
-      "version": "2.3.0",
-      "purl": "pkg:npm/@noble%2Fciphers@2.3.0",
+      "version": "2.4.0",
+      "purl": "pkg:npm/@noble%2Fciphers@2.4.0",
       "licenses": [
         {
           "license": {
@@ -562,10 +562,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "@noble/post-quantum@0.7.0",
+      "bom-ref": "@noble/post-quantum@0.7.1",
       "name": "@noble/post-quantum",
-      "version": "0.7.0",
-      "purl": "pkg:npm/@noble%2Fpost-quantum@0.7.0",
+      "version": "0.7.1",
+      "purl": "pkg:npm/@noble%2Fpost-quantum@0.7.1",
       "licenses": [
         {
           "license": {
@@ -576,10 +576,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "@noble/post-quantum@2.3.0",
+      "bom-ref": "@noble/post-quantum@2.4.0",
       "name": "@noble/post-quantum",
-      "version": "2.3.0",
-      "purl": "pkg:npm/@noble%2Fpost-quantum@2.3.0",
+      "version": "2.4.0",
+      "purl": "pkg:npm/@noble%2Fpost-quantum@2.4.0",
       "licenses": [
         {
           "license": {
@@ -1392,6 +1392,20 @@
       "name": "express",
       "version": "5.1.0",
       "purl": "pkg:npm/express@5.1.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "express-rate-limit@8.7.0",
+      "name": "express-rate-limit",
+      "version": "8.7.0",
+      "purl": "pkg:npm/express-rate-limit@8.7.0",
       "licenses": [
         {
           "license": {
@@ -2746,10 +2760,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "qs@6.15.3",
+      "bom-ref": "qs@6.16.0",
       "name": "qs",
-      "version": "6.15.3",
-      "purl": "pkg:npm/qs@6.15.3",
+      "version": "6.16.0",
+      "purl": "pkg:npm/qs@6.16.0",
       "licenses": [
         {
           "license": {
