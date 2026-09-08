@@ -335,11 +335,22 @@ const genRefreshToken = (user) => jwt.sign(
 //   1) 登录/注册/刷新 token：30 次 / 15 分钟（防爆破）
 //   2) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
 // 内存计数器（单实例部署足够；多实例需外接 store，如 Redis）。
-// 注：未设置 trust proxy，req.ip 取直连 socket 地址（与历史行为一致；nginx 反代下需配合 trust proxy 才能按真实客户端 IP 计数，后续可单独评估）。
+// 注：限流按真实客户端 IP 计数。nginx 反代下 req.ip 恒为 127.0.0.1（共享桶），
+// 故 keyGenerator 取 nginx 注入的 X-Real-IP（$remote_addr，来自直连 peer，客户端不可伪造，
+// spoof-proof），而非 req.ip / X-Forwarded-For（XFF 由 nginx append，攻击者可控 → 可绕过）。
 // ========================
 const rateLimit = require('express-rate-limit');
 const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（两档共用）
+// 真实客户端 IP：取 nginx 设置的 X-Real-IP（$remote_addr，直连 peer，不可客户端伪造）。
+// 忽略 X-Forwarded-For（客户端可控，nginx 会 append，用作 key 可被伪造绕过）。
+// 若无 X-Real-IP（直连场景）回退到 socket 地址。
+function realClientKey(req) {
+  const xr = req.headers && req.headers['x-real-ip'];
+  if (xr) return Array.isArray(xr) ? xr[xr.length - 1] : xr;
+  return req.socket && req.socket.remoteAddress;
+}
 const rateLimitMiddleware = rateLimit({
+  keyGenerator: realClientKey,
   windowMs: RATE_LIMIT_WINDOW,
   max: 30,                                   // 登录/注册防爆破
   standardHeaders: 'draft-7',               // 返回 RateLimit-* 头
@@ -347,6 +358,7 @@ const rateLimitMiddleware = rateLimit({
   message: { error: '请求过于频繁，请稍后再试' },
 });
 const globalRateLimitMiddleware = rateLimit({
+  keyGenerator: realClientKey,
   windowMs: RATE_LIMIT_WINDOW,
   max: 600,                                  // 全局 API 防滥用
   standardHeaders: 'draft-7',
