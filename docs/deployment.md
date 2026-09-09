@@ -248,7 +248,58 @@ pm2 restart fibemate
 
 ---
 
+## 八、生产配置外置（ALLOWED_ORIGINS 等敏感配置）
+
+> 新增于 2026-09-09。根因：生产服务器 `/opt/fibemate-full`（历史债务目录）的 `src/index.js`
+> 曾硬编码生产公网 IP `8.156.77.68` 的三个 origin 变体，导致：① 服务器 `git pull` 会冲掉该配置；
+> ② 生产 IP 暴露在公开仓库。现通过环境变量外置解决。
+
+### 规则
+
+1. **生产专属 origin 必须走环境变量，禁止硬编码**
+   - 代码（`src/index.js`）只保留开发/通用 origin（localhost、tauri、fibemate.net 等）
+   - 生产 IP / 域名 / 端口通过 `ALLOWED_ORIGINS_EXTRA` 注入：
+     ```js
+     if (process.env.ALLOWED_ORIGINS_EXTRA) {
+       for (const o of process.env.ALLOWED_ORIGINS_EXTRA.split(',')) {
+         const t = o.trim();
+         if (t) ALLOWED_ORIGINS.push(t);
+       }
+     }
+     ```
+   - 部署侧 `.env`：`ALLOWED_ORIGINS_EXTRA=http://8.156.77.68,http://8.156.77.68:3001,https://8.156.77.68`
+   - `.env` 不进 Git，仅存于服务器并备份至 E 盘备份目录（见 AGENTS.md 备份纪律）
+
+2. **任何环境相关配置（端口、域名、生产 IP、密钥路径）一律外置为 `.env`**
+   - 判断标准：配置是否随代码逻辑变化？环境相关 → `.env`；逻辑相关 → 代码常量
+
+3. **`git reset --hard origin/main`（R2）的前置条件**
+   - 仅当**生产配置已外置**（本规则第 1 条）后，代码文件才能 `reset --hard` 与 main 对齐
+   - `.env` 不进 Git，不受 `reset --hard` 影响，配置零丢失
+   - 若仍有代码内硬编码的生产配置未外置，`reset --hard` 会冲掉它 → **必须先完成外置再 reset**
+
+4. **公开仓库禁止含生产敏感信息**
+   - 不得在代码中硬编码生产服务器 IP / 域名 / AccessKey / 数据库连接串
+   - 公开文档示例用占位符（如 `PRODUCTION_IP` / `example.com`）
+   - 发版前用 `git grep -n '8.156.77.68'` 扫描是否存在误提交的生产 IP
+
+### 迁移步骤（清历史脏树用，非日常）
+
+```bash
+# 1. 部署侧写 .env
+echo 'ALLOWED_ORIGINS_EXTRA=http://8.156.77.68,http://8.156.77.68:3001,https://8.156.77.68' >> /opt/fibemate-repo/.env
+# 2. 清代码内硬编码（git checkout 会用 main 的干净版本覆盖）
+cd /opt/fibemate-repo && git checkout -- src/index.js
+# 3. 拉取含 env 扩展能力的 main
+git fetch origin main && git reset --hard origin/main
+# 4. 重启（--update-env 让 .env 生效）
+pm2 restart fibemate --update-env
+```
+
+---
+
 ## 八、Tauri 桌面端 + 移动端（独立仓库）
+
 
 - Tauri 桌面端：独立仓库 `Lennonhaha/fibemate-tauri`（与 main 生产线**严格分离**）
 - 移动端（Capacitor Android）：独立仓库，P3 排期
