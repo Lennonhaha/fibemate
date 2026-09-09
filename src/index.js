@@ -160,7 +160,16 @@ const ALLOWED_ORIGINS = [
   'https://localhost',   // Capacitor Android WebView origin
   'https://localhost:',
 ];
+// 生产环境专属 origin 通过环境变量注入，避免将生产服务器 IP 硬编码进公开仓库
+// (制度 2: 生产配置外置。开发/通用 origin 保留在上方常量，生产 IP 由部署侧 .env 提供)
+if (process.env.ALLOWED_ORIGINS_EXTRA) {
+  for (const o of process.env.ALLOWED_ORIGINS_EXTRA.split(',')) {
+    const t = o.trim();
+    if (t) ALLOWED_ORIGINS.push(t);
+  }
+}
 app.use(cors({
+
   origin: (origin, callback) => {
     // Electron/Tauri 内嵌页面 origin 为 undefined，允许通过
     if (!origin || ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed))) {
