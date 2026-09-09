@@ -21,7 +21,11 @@ const crypto = require('crypto');
 const { generateKeypair, encapsulate, decapsulate } = require('../../packages/pqc-kem/src/ml-kem-768.js');
 
 // D4 format-coupling fix: runtime PK size resolution, not hardcoded
-const { mlkemPkLen, mlkemPkLenValid } = require('./a2a-params');
+// Inlined to remove runtime dependency on a gitignored helper (a2a-params.js),
+// which is never tracked and breaks `git clone` + a2a startup.
+// ML-KEM-768 pk = 1184 bytes; ML-KEM-1024 pk = 1568 bytes (FIPS 203).
+function mlkemPkLen() { return 1184; }
+function mlkemPkLenValid(len) { return len === 1184 || len === 1568; }
 
 // ---- Constants ----
 const A2A_VERSION = '1.0';
