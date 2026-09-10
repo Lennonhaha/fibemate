@@ -76,7 +76,7 @@ async function main() {
     if (!r.body) { rpt('fail', `${c.path} 无法获取内容`); continue; }
     const missing = c.mustContain.filter(kw => !r.body.includes(kw));
     // Garbled text markers (UTF-8 replacement character + common mojibake)
-    const hasGarbage = /锟斤拷|�{2,}|\\u[0-9a-f]{4}/.test(r.body);
+    const hasGarbage = /锟斤拷|\uFFFD{2,}|\\u[0-9a-f]{4}/.test(r.body);
     if (missing.length === 0 && !hasGarbage)
       rpt('pass', `${c.path} 内容完整 无乱码`);
     else {
