@@ -547,7 +547,7 @@ app.post('/api/conversations/find-or-create', authMiddleware, (req, res) => {
 // ===== 用户限制配置 =====
 const MAX_USERS = 100;
 const RESERVED_IDS = ['id88888888', 'id1111111', 'id66666666', 'id99999999', 'id00000001'];
-const ADMIN_INVITE_CODE = process.env.ADMIN_INVITE_CODE || 'CHANGE_ME_STRONG';  // P0 FIX 2026-05-29: read from .env
+const ADMIN_INVITE_CODE = process.env.ADMIN_INVITE_CODE || null;  // 无 env 时禁止保留ID注册（fail-closed）
 
 // 注册
 app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
@@ -565,6 +565,9 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 
     // 保留ID检查 - 需要邀请码
     if (RESERVED_IDS.includes(username)) {
+      if (!ADMIN_INVITE_CODE) {
+        return res.status(403).json({ error: '该用户名为保留ID，暂未开放注册' });
+      }
       const inviteCode = req.body.inviteCode;
       if (inviteCode !== ADMIN_INVITE_CODE) {
         return res.status(403).json({ error: '该用户名为保留ID，需要邀请码' });
@@ -683,6 +686,9 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
 
 // ZK 注册
 app.post('/api/auth/register-anonymous', authRateLimitMiddleware, async (req, res) => {
+  // SECURITY: proofOfKnowledge 尚未做密码学验证，匿名注册暂时禁用（fail-closed）。
+  // 重新启用前必须先实现真正的 Schnorr/离散对数证明校验，否则任何人可伪造匿名身份。
+  return res.status(501).json({ error: '匿名注册暂不可用（ZK 证明校验未实现）' });
   try {
     const { commitment, publicKey, proofOfKnowledge, displayName } = req.body;
     
@@ -788,6 +794,9 @@ app.post('/api/auth/register-anonymous', authRateLimitMiddleware, async (req, re
 
 // ZK 登录
 app.post('/api/auth/login-anonymous', authRateLimitMiddleware, async (req, res) => {
+  // SECURITY: 原实现仅按 zkCommitment 匹配用户、未对 proofOfKnowledge 做任何密码学验证，
+  // 任何人只要知道目标用户的 commitment 即可冒充其登录。在实现真 ZK 校验前禁用（fail-closed）。
+  return res.status(501).json({ error: '匿名登录暂不可用（ZK 证明校验未实现）' });
   try {
     const { commitment, proofOfKnowledge } = req.body;
     
