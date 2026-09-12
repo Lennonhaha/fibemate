@@ -270,7 +270,7 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 | 项 | 值 |
 |---|---|
 | 受影响包 | `image-size`（传递依赖） |
-| 引入路径 | `metro` → `image-size@^1.0.2`；`fibemate-mobile/package-lock.json` 实际锁定 `image-size@1.2.1` |
+| 引入路径 | `expo` / `react-native` / `@react-native/eslint-config` → `metro` → `image-size@^1.0.2`；`fibemate-mobile/package-lock.json` 实际锁定 `image-size@1.2.1` |
 | 漏洞区间 | `<= 2.0.2`（`1.2.1` 在范围内） |
 | 上游补丁 | **无**（`first_patched_version = null`）——所有 `<=2.0.2` 版本均受影响，无安全版本可 pin |
 | 严重度 | `high` |
@@ -298,3 +298,45 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 - **未做**：未改 `package-lock.json`、未 dismiss 任何告警、未编辑 `mobile-ci.yml`。
 
 > **交叉引用（闭环）**：dossier §7 已反向链接本节（双向追溯）——两文档互相引用，审计时可双向追踪。
+
+---
+
+## 14. 传递依赖告警总表（有补丁 · 等升级）
+
+> 诚实声明：本节记录 `fibemate-mobile` 与 `fibemate-react-native` 仓库中 Dependabot 告警涉及的**有上游补丁但受父包约束暂未升级**的传递依赖。与 §13（image-size · 无补丁 · 已 ignore）不同，这些包**不应 ignore**——待父包升级后 Dependabot 可自动修复。
+
+### 14.1 告警清单（2026-09-12 现场核验）
+
+| 包 | 仓库 | 当前版本 | 漏洞区间 | 补丁版本 | GHSA | 严重度 | 引入路径（父包） |
+|---|---|---|---|---|---|---|---|
+| `browserslist` | mobile / RN | 4.28.5 | `<= 4.28.6` | **4.28.7** | GHSA-7w3w-qxwf-2q4g | high | `expo` / `@react-native/eslint-config` / `react-native` |
+| `browserslist` | mobile / RN | 4.28.5 | `<= 4.28.6` | **4.28.7** | GHSA-83gq-rqgr-3j25 | high | 同上（不同漏洞，同补丁） |
+| `brace-expansion` | mobile / RN | 5.0.7 | `>= 4.0.0, < 5.0.8` | **5.0.9** | — | high | `@react-native/eslint-config` / `expo` |
+| `brace-expansion` | mobile / RN | 5.0.7 | `>= 4.0.0, < 5.0.9` | **5.0.9** | — | high | 同上（不同漏洞，需 5.0.9 非 5.0.8） |
+
+### 14.2 为什么还没修
+
+这些是**传递依赖**——它们的版本由父包（`expo`、`@react-native/eslint-config`、`react-native`）的 lockfile 间接决定。Dependabot 已在两仓激活（`fibemate-mobile` 于 2026-09-12 部署 dependabot.yml，`fibemate-react-native` 于同日更新 ignore 规则），但父包未升级时 Dependabot 可能无法独立 bump 传递依赖。
+
+### 14.3 处置方式
+
+- **不 ignore**：有补丁版本存在，ignore 会隐藏告警、阻碍后续自动修复。
+- **不手动 override**：`package.json` overrides 会破坏 lockfile 一致性、增加维护负担。
+- **等 Dependabot 自动升级**：已配置 `groups` + `automerge` 标签，待父包发布新版本或 Dependabot 解析传递依赖后自动开 PR。
+- **告警保持 open**：作为可见跟踪凭证，不 dismiss、不 close。
+- **定期复核**：每周检查 Dependabot 是否已开升级 PR；若 30 天内仍未自动修复，评估手动 `npm update <package>` 的可行性。
+
+### 14.4 与 §13 的区别
+
+| 维度 | §13（image-size） | §14（browserslist / brace-expansion） |
+|---|---|---|
+| 上游补丁 | **无**（first_patched=null） | **有**（4.28.7 / 5.0.9） |
+| 处置 | Dependabot ignore | 不 ignore，等自动升级 |
+| 告警 | 保持 open（无补丁铁证） | 保持 open（待升级跟踪） |
+| 风险 | 构建期 DoS，无缓解 | 构建期 DoS，升版本即修复 |
+
+### 14.5 交叉引用
+
+- 两仓 dependabot.yml 配置详见各自仓库 `.github/dependabot.yml`。
+- auto-merge workflow 详见各自仓库 `.github/workflows/dependabot-auto-merge.yml`。
+- dossier §7 lesson #8（`first_patched_version: null` 判定逻辑）适用于 §13，§14 为其反面（有补丁的场景）。
