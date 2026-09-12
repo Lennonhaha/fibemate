@@ -309,10 +309,10 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 
 | 包 | 仓库 | 当前版本 | 漏洞区间 | 补丁版本 | GHSA | 严重度 | 引入路径（父包） |
 |---|---|---|---|---|---|---|---|
-| `browserslist` | mobile / RN | 4.28.5 | `<= 4.28.6` | **4.28.7** | GHSA-7w3w-qxwf-2q4g | high | `expo` / `@react-native/eslint-config` / `react-native` |
-| `browserslist` | mobile / RN | 4.28.5 | `<= 4.28.6` | **4.28.7** | GHSA-83gq-rqgr-3j25 | high | 同上（不同漏洞，同补丁） |
-| `brace-expansion` | mobile / RN | 5.0.7 | `>= 4.0.0, < 5.0.8` | **5.0.9** | — | high | `@react-native/eslint-config` / `expo` |
-| `brace-expansion` | mobile / RN | 5.0.7 | `>= 4.0.0, < 5.0.9` | **5.0.9** | — | high | 同上（不同漏洞，需 5.0.9 非 5.0.8） |
+| `browserslist` | mobile / RN | 4.28.5 | `<= 4.28.6` | **4.28.7** | — *(alert API 未返回 GHSA)* | high | `expo` / `@react-native/eslint-config` / `react-native` |
+| `browserslist` | mobile / RN | 4.28.5 | `<= 4.28.6` | **4.28.7** | — *(alert API 未返回 GHSA)* | high | 同上（不同漏洞，同补丁） |
+| `brace-expansion` | mobile / RN | 5.0.7 | `>= 3.0.0, < 5.0.7` | **5.0.7** | — *(alert API 未返回 GHSA)* | high | `@react-native/eslint-config` / `expo` |
+| `brace-expansion` | mobile / RN | 5.0.7 | `< 1.1.16` | **1.1.16** | — *(alert API 未返回 GHSA)* | high | 同上（v1.x 系列，间接依赖；项目实际使用 v3-v4，第二条不触发） |
 
 ### 14.2 为什么还没修
 
@@ -330,7 +330,7 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 
 | 维度 | §13（image-size） | §14（browserslist / brace-expansion） |
 |---|---|---|
-| 上游补丁 | **无**（first_patched=null） | **有**（4.28.7 / 5.0.9） |
+| 上游补丁 | **无**（first_patched=null） | **有**（4.28.7 / 5.0.7 / 1.1.16） |
 | 处置 | Dependabot ignore | 不 ignore，等自动升级 |
 | 告警 | 保持 open（无补丁铁证） | 保持 open（待升级跟踪） |
 | 风险 | 构建期 DoS，无缓解 | 构建期 DoS，升版本即修复 |
