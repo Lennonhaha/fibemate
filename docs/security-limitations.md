@@ -258,3 +258,43 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 
 > **核心原则**: 诚实陈述安全边界。不夸大、不暗示、不隐藏。  
 > 配套文件: [风险分级整改清单](./risk-rectification.md) · [THREAT_MODEL.md](./THREAT_MODEL.md) · [design-decisions.md](./design-decisions.md)
+
+---
+
+## 13. 第三方依赖被动暴露（image-size · 无上游补丁）
+
+> 诚实声明：本节记录一个**已知、已记录、无上游补丁**的第三方依赖暴露。它不是 FIBEMATE 的密码学实现缺陷，而是构建链传递依赖的被动暴露。按「不静默绕过」纪律显式记录，不通过 override 隐藏。
+
+### 13.1 事实（2026-09 现场核验）
+
+| 项 | 值 |
+|---|---|
+| 受影响包 | `image-size`（传递依赖） |
+| 引入路径 | `metro` → `image-size@^1.0.2`；`fibemate-mobile/package-lock.json` 实际锁定 `image-size@1.2.1` |
+| 漏洞区间 | `<= 2.0.2`（`1.2.1` 在范围内） |
+| 上游补丁 | **无**（`first_patched_version = null`）——所有 `<=2.0.2` 版本均受影响，无安全版本可 pin |
+| 严重度 | `high` |
+| 漏洞类型 | 解析器无限循环 → 拒绝服务（DoS） |
+| 关联 GHSA | **GHSA-5p2g-fcmc-qvqq**（JXL / HEIF 解析器无限循环）、**GHSA-w3rx-r6r6-pgpr**（ICNS 解析器无限循环） |
+| 仓库位置 | `Lennonhaha/fibemate-mobile`（Expo/React Native 构建链） |
+
+### 13.2 对 FIBEMATE 的真实风险（诚实分级）
+
+- **攻击面**：`image-size` 由 `metro`（React Native 打包器）引入，属于**构建期 / 开发期依赖**，**不进入** FIBEMATE 的密码学运行时（ML-KEM / ML-DSA / SM2 / X3DH / Double Ratchet 路径完全不涉及该包）。
+- **可达性**：仅当攻击者能向 `metro` 打包流程投喂恶意构造的 ICNS/JXL/HEIF 文件时才触发无限循环 DoS——属**构建管道内部**风险，非面向用户的服务暴露。
+- **结论**：对 FIBEMATE「后量子密码工程演示与验证平台」的**产品级风险为低 / 间接**；但作为安全卫生问题，必须记录而非忽略（见 §13.3）。
+
+### 13.3 处理方式（不静默绕过）
+
+- **Dependabot 显式压制**：在 `fibemate-mobile/.github/dependabot.yml` 的 `ignore:` 中以 YAML 注释记录理由（不使用 `reason:` 字段——Dependabot v2 schema 不支持）。`image-size` 的 major bump 被忽略，避免 Dependabot 反复开无效 PR。
+- **不通过 override 隐藏**：`package.json` 的 `overrides` 无法把 `image-size` pin 到安全版本（安全版本不存在），故不采用 override。
+- **告警保留**：GitHub `image-size` 两个 Dependabot 告警保持 `open`，作为「已知、已记录、无补丁」的可见证据，不 dismiss、不 close。
+- **跟踪**：待上游发布 `>2.0.2` 补丁版本后，移除 `dependabot.yml` 中的 `image-size` ignore 规则，并升级 lockfile。
+
+### 13.4 交叉引用与闭环
+
+- 本暴露已在技术能力说明 dossier **§7（教训记录）** 登记（第 8 条：`first_patched_version: null` 实为「所有版本中招」，须查 lockfile 父链）。
+- 与本文档「诚实工程须声明做不到什么」原则一致：此处声明的是**依赖供应链的被动暴露**，而非掩盖。
+- **未做**：未改 `package-lock.json`、未 dismiss 任何告警、未编辑 `mobile-ci.yml`。
+
+> **交叉引用（闭环）**：dossier §7 已反向链接本节（双向追溯）——两文档互相引用，审计时可双向追踪。
