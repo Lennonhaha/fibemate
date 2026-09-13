@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI 密码代码盲点地图 · Blind-Spot Map</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:#0d1411;color:#cfe9e2;overflow-x:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+    line-height:1.7;font-size:15px}
+
+  /* Hero */
+  .hero{position:relative;min-height:78vh;display:flex;flex-direction:column;justify-content:center;
+    align-items:center;text-align:center;padding:0 24px;overflow:hidden}
+  #stage{position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.9}
+  .hero .en{position:relative;z-index:1;font-size:12px;letter-spacing:.34em;text-transform:uppercase;color:#8b5cf6;margin:0 0 26px}
+  .hero h1{position:relative;z-index:1;font-size:38px;font-weight:300;letter-spacing:.04em;color:#eafff9}
+  .hero h1 b{color:#8b5cf6;font-weight:600}
+  .hero .lead{position:relative;z-index:1;margin-top:22px;max-width:560px;font-size:15px;color:#9fc4bb;line-height:1.9}
+  .hero .badge{position:relative;z-index:1;margin-top:26px;padding:7px 18px;border:1px solid #1c3a33;border-radius:4px;
+    font-size:11px;color:#8b5cf6;letter-spacing:.08em}
+  .hero .src{position:relative;z-index:1;margin-top:14px;font-size:11px;color:#5a7a72;letter-spacing:.04em}
+
+  /* Content */
+  .content{position:relative;z-index:2;background:#0d1411;padding:70px 24px 120px}
+  .wrap{max-width:920px;margin:0 auto}
+  .tag{color:#8b5cf6;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+  h2{font-size:24px;font-weight:400;color:#eafff9;margin:8px 0 6px}
+  .sub{color:#9fc4bb;font-size:14px;margin-bottom:34px}
+
+  /* Matrix */
+  .panel{border:1px solid #1c3a33;border-radius:14px;padding:26px;background:#0f1a16;margin-top:8px}
+  #matrix{width:100%;border-collapse:separate;border-spacing:6px;font-size:13px}
+  #matrix th{font-weight:500;color:#7fb8ad;padding:6px 4px;font-size:12px}
+  #matrix th.rowh{text-align:right;color:#9fc4bb;font-weight:600;white-space:nowrap;padding-right:10px}
+  #matrix td{width:84px;height:62px;border-radius:9px;cursor:default;transition:transform .25s ease,box-shadow .25s ease;position:relative}
+  #matrix td:hover{transform:scale(1.08);box-shadow:0 0 18px rgba(0,229,195,.35);z-index:5}
+  .cell-clean{background:#13242e;border:1px solid #1c3a33}
+  .cell-major{background:#1a2a4a;border:1px solid #2e6f8f}
+  .cell-critical{background:#3a1e22;border:1px solid #d94f4f}
+  .cell-tip{position:absolute;left:50%;top:108%;transform:translateX(-50%);width:240px;background:#06110d;
+    border:1px solid #1c3a33;border-radius:8px;padding:10px 12px;font-size:11.5px;color:#bfe6dc;line-height:1.6;
+    opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:9;text-align:left}
+  .cell-tip b{color:#8b5cf6}
+  #matrix td:hover .cell-tip{opacity:1}
+  .legend{display:flex;gap:18px;margin-top:20px;flex-wrap:wrap;font-size:12px;color:#9fc4bb}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .sw{width:14px;height:14px;border-radius:4px;display:inline-block}
+  .sw-clean{background:#13242e;border:1px solid #1c3a33}
+  .sw-major{background:#1a2a4a;border:1px solid #2e6f8f}
+  .sw-critical{background:#3a1e22;border:1px solid #d94f4f}
+
+  /* Stats */
+  .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:26px}
+  .stat{border:1px solid #1c3a33;border-radius:12px;padding:18px;text-align:center;background:#0f1a16}
+  .stat .n{font-size:26px;font-weight:600;color:#8b5cf6}
+  .stat .l{font-size:11px;color:#7fb8ad;margin-top:4px;letter-spacing:.05em}
+
+  /* Note */
+  .note{border:1px solid #1c3a33;border-left:3px solid #f5d76e;border-radius:8px;padding:16px 18px;
+    background:#0f1a16;margin-top:26px;font-size:13px;color:#c7e2db;line-height:1.8}
+  .note b{color:#f5d76e;font-weight:600}
+  .foot{margin-top:40px;font-size:11px;color:#5a7a72;text-align:center}
+  .ctl{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
+  .btn{border:1px solid #1c3a33;border-radius:6px;background:#0f1a16;color:#8b5cf6;font-size:12px;
+    padding:7px 14px;cursor:pointer;transition:border-color .2s ease}
+  .btn:hover{border-color:#8b5cf6}
+  .status{font-size:11px;color:#5a7a72;margin-top:10px;min-height:16px}
+</style>
+</head>
+<body>
+<div class="hero">
+  <canvas id="stage"></canvas>
+  <div class="en">FIBEMATE · Blind-Spot Map</div>
+  <h1>AI 密码代码 <b>盲点地图</b></h1>
+  <p class="lead">让 AI 写密码学代码，它的系统性盲点落在哪？这是一份以康定斯基几何语言呈现的出错率星图——算法家族为行，幻觉类型为列。</p>
+  <div class="badge">Pilot A · Claude × 10 算法</div>
+  <div class="src" id="srcLine">数据来源：fibemate-tools/data/blind-spot-map/pilotA</div>
+</div>
+
+<div class="content">
+  <div class="wrap">
+    <div class="tag">热力矩阵</div>
+    <h2>10 算法 × 幻觉类型</h2>
+    <p class="sub">当前 Y 轴仅展示 Pilot A（Claude × 10）实际命中的 3 类（类 5 / 类 9 / 类 10）。其余 7 类幻觉待扩样本（更多算法、更多 AI 来源）后补充点亮。鼠标悬停查看判定说明。</p>
+
+    <div class="panel">
+      <table id="matrix"></table>
+      <div class="legend">
+        <span><i class="sw sw-clean"></i>clean（无确认缺陷）</span>
+        <span><i class="sw sw-major"></i>major（结果错 / 不可用）</span>
+        <span><i class="sw sw-critical"></i>critical（密钥泄露 / 认证绕过）</span>
+      </div>
+      <div class="ctl">
+        <div class="btn" id="reload">重新拉取远程数据</div>
+      </div>
+      <div class="status" id="status"></div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="note">
+      <b>范围与局限。</b> 本图全部 10 个样本均来自 Claude（claude-sonnet-4-20250929），是<b>本沙箱唯一可用的 AI 来源</b>（无 GPT/Gemini 密钥或出网）。
+      因此本图度量的是 <b>Claude 的系统性盲点分布</b>，<b>不代表跨 AI 普适性</b>。跨 AI 共识盲点待 `scripts/pilotB_run_gpt.py`（需密钥 + 出网）启用后补充。
+      数据 Apache-2.0 公开；标注为人工审查（class 10 数学错误仅人工标定，不自动检测）。
+    </div>
+
+    <div class="foot">FIBEMATE · Blind-Spot Map · 单文件零依赖 · 康定斯基构成主义视觉语言（公有领域）</div>
+  </div>
+</div>
+
+<script>
+/* 内联兜底数据：fetch 失败时使用，保证永不白屏（数据单源仍以 fibemate-tools 仓为准） */
+const EMBEDDED = [
+  {"algo":"AES-GCM","verdict":"confirmed","types":["class10","class9"],"severity":"critical","note":"tag=ghash(h,ct) 漏 AAD+长度块 = 认证绕过(class10); aesEncrypt/ghash 未定义 = 运行失败(class9)."},
+  {"algo":"ECDH","verdict":"confirmed","types":["class10"],"severity":"major","note":"x=x*x+9 重复 ≠ Montgomery ladder = 逻辑错(class10); ladder 体被注释省略."},
+  {"algo":"Ed25519","verdict":"confirmed","types":["class10","class9"],"severity":"major","note":"r=hash(sk后半+msg) 与 HRAM 标准偏差(class10); 标量乘法未归约(class9)."},
+  {"algo":"ML-DSA","verdict":"clean","types":[],"severity":null,"note":"expandA 结构合理(XOF→A 矩阵), 无显见逻辑错."},
+  {"algo":"ML-KEM","verdict":"confirmed","types":["class10","class5"],"severity":"major","note":"Math.pow 非模幂(class10); NTT 原根=17 非标准值(class5)."},
+  {"algo":"SHA3","verdict":"confirmed","types":["class9"],"severity":"major","note":"keccakF 内部占位未实现(class9), 逻辑都没给."},
+  {"algo":"SLH-DSA","verdict":"confirmed","types":["class10"],"severity":"major","note":"FORS 仅取 4 字节索引, 标准需更长(class10)."},
+  {"algo":"SM2","verdict":"confirmed","types":["class10"],"severity":"critical","note":"固定 nonce k=1(class10), 密钥直接泄露."},
+  {"algo":"SM4","verdict":"confirmed","types":["class9"],"severity":"major","note":"逻辑回合正确但引用未定义 SBOX(class9), 运行失败."},
+  {"algo":"X3DH","verdict":"confirmed","types":["class10","class9"],"severity":"major","note":"使用未定义 EK 变量(class9); DH 结果未做阈值检查(class10)."}
+];
+
+const ROWS = ["ML-KEM","ML-DSA","SLH-DSA","SM2","SM4","AES-GCM","X3DH","SHA3","ECDH","Ed25519"];
+const COLS = ["class5","class9","class10"];
+
+const SEV_RANK = {critical:3, major:2, clean:1, "":0};
+function cellClass(d){
+  if(d.verdict==="clean") return "cell-clean";
+  return d.severity==="critical" ? "cell-critical" : "cell-major";
+}
+function buildMatrix(rows){
+  const t = document.getElementById("matrix");
+  let html = "<tr><th></th>" + COLS.map(c=>`<th>${c}</th>`).join("") + "</tr>";
+  for(const algo of ROWS){
+    const d = rows.find(r=>r.algo===algo) || {verdict:"clean",types:[],severity:null,note:"（无数据）"};
+    const cls = cellClass(d);
+    const hit = (d.types||[]).filter(t=>COLS.includes(t)).map(t=>`<b>${t}</b>`).join(" ") || "—";
+    html += `<tr><th class="rowh">${algo}</th>`;
+    html += `<td class="${cls}"><div class="cell-tip"><b>${algo}</b> · ${d.verdict}<br>${hit}<br>${d.note||""}</div></td>`;
+    html += "</tr>";
+  }
+  t.innerHTML = html;
+  buildStats(rows);
+}
+function buildStats(rows){
+  const confirmed = rows.filter(r=>r.verdict==="confirmed").length;
+  const critical = rows.filter(r=>r.severity==="critical").length;
+  const major = rows.filter(r=>r.severity==="major").length;
+  const clean = rows.filter(r=>r.verdict==="clean").length;
+  document.getElementById("stats").innerHTML = [
+    ["样本",rows.length],["确认缺陷",confirmed],["critical",critical],["clean",clean]
+  ].map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
+}
+function setStatus(s){ document.getElementById("status").textContent = s; }
+
+async function loadRemote(){
+  setStatus("正在拉取 fibemate-tools 仓数据…");
+  try {
+    const base = "https://raw.githubusercontent.com/Lennonhaha/fibemate-tools/main/data/blind-spot-map/pilotA/";
+    const list = ["AES-GCM","ECDH","Ed25519","ML-DSA","ML-KEM","SHA3","SLH-DSA","SM2","SM4","X3DH"];
+    const out = [];
+    for(const a of list){
+      const r = await fetch(base + "claude-" + a + ".json", {cache:"no-store"});
+      if(!r.ok) throw new Error("HTTP "+r.status+" for "+a);
+      const j = await r.json();
+      const types = Array.isArray(j.hallucination_type) ? j.hallucination_type : (j.hallucination_type?[j.hallucination_type]:[]);
+      out.push({algo:j.algorithm, verdict:j.human_verdict, types, severity:j.severity, note:j.note});
+    }
+    buildMatrix(out);
+    setStatus("✓ 已从 GitHub 拉取 "+out.length+" 个样本（远程）。");
+  } catch(e){
+    buildMatrix(EMBEDDED);
+    setStatus("⚠ 远程拉取失败（"+(e.message||e)+"），已用内联兜底数据渲染。");
+  }
+}
+
+/* 康定斯基风格 hero：随机几何构成（深黑底 + 青绿/暖黄/朱红/深蓝） */
+(function(){
+  const c = document.getElementById("stage"), x = c.getContext("2d");
+  function resize(){ c.width = c.clientWidth*devicePixelRatio; c.height = c.clientHeight*devicePixelRatio; }
+  resize(); window.addEventListener("resize", resize);
+  const palette = ["#8b5cf6","#6366f1","#f5d76e","#d94f4f","#1a2a4a","#eafff9"];
+  let shapes = [];
+  function seed(){
+    shapes = [];
+    for(let i=0;i<14;i++){
+      shapes.push({
+        x:Math.random(), y:Math.random(),
+        r:0.02+Math.random()*0.14,
+        col:palette[(Math.random()*palette.length)|0],
+        kind:(Math.random()*3)|0,
+        rot:Math.random()*Math.PI,
+        sp:0.0002+Math.random()*0.0006,
+        dir:Math.random()<0.5?1:-1
+      });
+    }
+  }
+  seed();
+  function frame(){
+    const W=c.width, H=c.height;
+    x.clearRect(0,0,W,H);
+    x.globalAlpha=0.55;
+    for(const s of shapes){
+      s.rot += s.sp*s.dir;
+      const cx=s.x*W, cy=s.y*H, r=s.r*Math.min(W,H);
+      x.save(); x.translate(cx,cy); x.rotate(s.rot); x.fillStyle=s.col;
+      if(s.kind===0){ x.beginPath(); x.arc(0,0,r,0,Math.PI*2); x.fill(); }
+      else if(s.kind===1){ x.fillRect(-r,-r*0.34,r*2,r*0.68); }
+      else { x.beginPath(); x.moveTo(0,-r); x.lineTo(r,r); x.lineTo(-r,r); x.closePath(); x.fill(); }
+      x.restore();
+    }
+    x.globalAlpha=1;
+    requestAnimationFrame(frame);
+  }
+  frame();
+})();
+
+loadRemote();
+document.getElementById("reload").addEventListener("click", loadRemote);
+</script>
+</body>
+</html>
