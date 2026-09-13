@@ -24,6 +24,15 @@
     color:#3a4a6a;font-size:11px;letter-spacing:.2em;animation:fade 2.4s ease-in-out infinite}
   @keyframes fade{0%,100%{opacity:.25}50%{opacity:.7}}
 
+  /* Hero three stars -> hover reveals anomaly type */
+  .hstars{display:flex;gap:40px;margin-top:26px;justify-content:center;pointer-events:auto}
+  .hstar{position:relative;display:flex;flex-direction:column;align-items:center;cursor:default}
+  .hstar svg{width:30px;height:30px;transition:filter .35s ease,transform .35s ease}
+  .hstar:hover svg{filter:drop-shadow(0 0 9px #f5d76e);transform:translateY(-2px)}
+  .hstar em{position:absolute;top:40px;font-style:normal;font-size:11px;letter-spacing:.08em;color:#f5d76e;
+    opacity:0;transform:translateY(-4px);transition:opacity .35s ease,transform .35s ease;white-space:nowrap;pointer-events:none}
+  .hstar:hover em{opacity:1;transform:none}
+
   /* Content sections */
   .content{position:relative;z-index:3;background:#0a0e1a;margin-top:100vh}
   .wrap{max-width:880px;margin:0 auto;padding:0 24px}
@@ -84,6 +93,20 @@
   <p class="en">Crypto Hallucination Detector</p>
   <p class="lead">One scan — anomalies surface.<br>AI code looks correct — <b>but crypto can't run on looks.</b></p>
   <span class="badge">Signals, not verdicts &middot; implements no cryptographic algorithms</span>
+  <div class="hstars">
+    <span class="hstar">
+      <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="#f5d76e" stroke-width="0.6" opacity="0.4"/><circle cx="18" cy="18" r="8" fill="#f5d76e" opacity="0.22"/><circle cx="18" cy="18" r="4" fill="#f5d76e"/><circle cx="18" cy="18" r="2" fill="#f0f0e8"/></svg>
+      <em>Fabricated API</em>
+    </span>
+    <span class="hstar">
+      <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="#f5d76e" stroke-width="0.6" opacity="0.4"/><circle cx="18" cy="18" r="8" fill="#f5d76e" opacity="0.22"/><circle cx="18" cy="18" r="4" fill="#f5d76e"/><circle cx="18" cy="18" r="2" fill="#f0f0e8"/></svg>
+      <em>Non-constant-time</em>
+    </span>
+    <span class="hstar">
+      <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="14" fill="none" stroke="#f5d76e" stroke-width="0.6" opacity="0.4"/><circle cx="18" cy="18" r="8" fill="#f5d76e" opacity="0.22"/><circle cx="18" cy="18" r="4" fill="#f5d76e"/><circle cx="18" cy="18" r="2" fill="#f0f0e8"/></svg>
+      <em>Fake tests</em>
+    </span>
+  </div>
 </div>
 <div class="scroll-hint">SCROLL</div>
 
