@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crypto Time Machine</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:#0c0f16;color:#e8eef4;overflow-x:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;
+    line-height:1.7;font-size:16px}
+
+  /* Hero canvas */
+  #stage{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+  .hero-overlay{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;
+    align-items:center;pointer-events:none;text-align:center;z-index:2}
+  .hero-overlay .en{font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:#6f86a4;margin:0 0 32px}
+  .hero-overlay .lead{font-size:17px;color:#9fb2c8;max-width:480px;line-height:1.8}
+  .hero-overlay .lead b{color:#e8c87a;font-weight:600}
+  .hero-overlay .badge{margin-top:24px;padding:6px 16px;border:1px solid #1c2738;border-radius:4px;
+    font-size:12px;color:#6f86a4;letter-spacing:.06em}
+  .scroll-hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:2;
+    color:#3a4860;font-size:11px;letter-spacing:.2em;animation:fade 2.4s ease-in-out infinite}
+  @keyframes fade{0%,100%{opacity:.25}50%{opacity:.7}}
+
+  /* Content sections */
+  .content{position:relative;z-index:3;background:#0c0f16;margin-top:100vh}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px}
+  section.block{min-height:80vh;display:flex;flex-direction:column;justify-content:center;padding:80px 0}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .9s ease,transform .9s ease}
+  .reveal.in{opacity:1;transform:none}
+  .tag{color:#8fb4d4;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+  h2{font-size:26px;font-weight:600;margin:8px 0 0}
+
+  /* Three question types */
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+  .mono{border:1px solid #1c2738;border-radius:14px;padding:28px 20px;text-align:center;
+    background:linear-gradient(160deg,#10151f,#0c0f16);transition:transform .4s ease,border-color .4s ease}
+  .mono:hover{transform:translateY(-6px);border-color:#e8c87a}
+  .mono .ring{width:38px;height:38px;margin:0 auto 14px;display:block}
+  .mono .nm{font-size:17px;font-weight:600;color:#eef3f8}
+  .mono .desc{color:#9fb2c8;font-size:13px;margin-top:8px;min-height:54px}
+  .mono .why{color:#8fb4d4;font-size:12px;margin-top:10px;opacity:0;transition:opacity .4s ease}
+  .mono:hover .why{opacity:1}
+
+  /* Trace timeline */
+  .trace{margin-top:32px;border-left:2px solid #1c2738;padding-left:28px}
+  .node{position:relative;padding:0 0 34px}
+  .node:last-child{padding-bottom:0}
+  .node::before{content:"";position:absolute;left:-37px;top:4px;width:14px;height:14px;border-radius:50%;
+    background:#0c0f16;border:2px solid #8fb4d4;box-shadow:0 0 10px rgba(143,180,212,.5)}
+  .node .date{font-size:12px;color:#6f86a4;letter-spacing:.08em}
+  .node .hash{font-family:"SFMono-Regular",Consolas,monospace;font-size:13px;color:#e8c87a}
+  .node .act{font-size:16px;color:#eef3f8;margin:2px 0}
+  .node .meta{font-size:13px;color:#9fb2c8}
+
+  /* Result */
+  .inscr{border:1px solid #1c2738;border-radius:12px;padding:32px;background:#080b11;
+    font-family:"SFMono-Regular",Consolas,monospace;text-align:center}
+  .inscr .score{font-size:42px;font-weight:700;color:#e8c87a}
+  .inscr .verdict{color:#6f86a4;letter-spacing:.14em;margin:8px 0 22px}
+  .rule{height:1px;background:#1c2738;margin:18px 0}
+  .inscr .crack{text-align:left;font-size:14px;color:#e8eef4;display:flex;align-items:baseline;gap:10px}
+  .inscr .crack .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transform:translateY(2px);
+    background:#8fb4d4;box-shadow:0 0 8px #8fb4d4}
+  .inscr .crack .loc{color:#6f86a4;font-family:-apple-system,sans-serif}
+  .inscr .note{color:#6f86a4}
+  .inscr .note .dot{background:#e8c87a;box-shadow:0 0 8px #e8c87a}
+
+  footer{border-top:1px solid #1c2738;padding:28px 0 56px;color:#6f86a4;font-size:13px}
+  footer a{color:#8fb4d4;text-decoration:none}
+
+  @media(max-width:680px){.trio{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<canvas id="stage"></canvas>
+<div class="hero-overlay">
+  <p class="en">Crypto Time Machine</p>
+  <p class="lead">When did this crypto API enter your code? Git remembers.<br>The timeline <b>doesn't guess</b>.</p>
+  <span class="badge">Real git history &middot; git log -S / -G &middot; no memory</span>
+</div>
+<div class="scroll-hint">SCROLL</div>
+
+<div class="content">
+
+  <!-- Three questions -->
+  <section class="block reveal" data-reveal>
+    <div class="wrap">
+      <span class="tag">What it answers</span>
+      <h2>Three questions, one history</h2>
+      <div class="trio">
+        <div class="mono">
+          <svg class="ring" viewBox="0 0 38 38">
+            <circle cx="19" cy="19" r="15" fill="none" stroke="#8fb4d4" stroke-width="1" opacity="0.5"/>
+            <circle cx="19" cy="19" r="9" fill="none" stroke="#e8c87a" stroke-width="1" opacity="0.7"/>
+            <circle cx="19" cy="19" r="3" fill="#e8c87a"/>
+          </svg>
+          <div class="nm">When introduced?</div>
+          <div class="desc">Which commit first added the API call</div>
+          <div class="why">git log -S'mlkem.encaps' --reverse</div>
+        </div>
+        <div class="mono">
+          <svg class="ring" viewBox="0 0 38 38">
+            <circle cx="19" cy="19" r="15" fill="none" stroke="#8fb4d4" stroke-width="1" opacity="0.5"/>
+            <circle cx="19" cy="19" r="9" fill="none" stroke="#e8c87a" stroke-width="1" opacity="0.7"/>
+            <circle cx="19" cy="19" r="3" fill="#e8c87a"/>
+          </svg>
+          <div class="nm">When changed?</div>
+          <div class="desc">Every commit that touched its definition</div>
+          <div class="why">git log -G'keygen\('</div>
+        </div>
+        <div class="mono">
+          <svg class="ring" viewBox="0 0 38 38">
+            <circle cx="19" cy="19" r="15" fill="none" stroke="#8fb4d4" stroke-width="1" opacity="0.5"/>
+            <circle cx="19" cy="19" r="9" fill="none" stroke="#e8c87a" stroke-width="1" opacity="0.7"/>
+            <circle cx="19" cy="19" r="3" fill="#e8c87a"/>
+          </svg>
+          <div class="nm">What it touched?</div>
+          <div class="desc">Files and call sites affected, precisely</div>
+          <div class="why">no guesswork, no "I think"</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trace -->
+  <section class="block reveal" data-reveal>
+    <div class="wrap">
+      <span class="tag">Trace</span>
+      <h2>Trace</h2>
+      <p style="color:#9fb2c8;max-width:600px">A real <code style="color:#e8c87a">git log</code> walk, rendered as a timeline. Hashes below are illustrative.</p>
+      <div class="trace">
+        <div class="node">
+          <div class="date">2024-11-02</div>
+          <div class="hash">a1b2c3d</div>
+          <div class="act">introduced</div>
+          <div class="meta">mlkem keygen / encaps first appear in src/kem</div>
+        </div>
+        <div class="node">
+          <div class="date">2025-03-18</div>
+          <div class="hash">e4f5g6h</div>
+          <div class="act">changed</div>
+          <div class="meta">encaps signature shape revised &middot; 12 files touched</div>
+        </div>
+        <div class="node">
+          <div class="date">2026-01-09</div>
+          <div class="hash">i7j8k9l</div>
+          <div class="act">removed</div>
+          <div class="meta">legacy kem fallback dropped &middot; 4 call sites updated</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section class="block reveal" data-reveal>
+    <div class="wrap">
+      <span class="tag">Result</span>
+      <h2>Result</h2>
+      <div class="inscr">
+        <div class="score">3 / 3</div>
+        <div class="verdict">auditable &mdash; git is the source of truth</div>
+        <div class="rule"></div>
+        <div class="crack"><span class="dot"></span><div>a1b2c3d &middot; first appearance of mlkem.encaps<br><span class="loc">src/kem/mlkem.js</span></div></div>
+        <div class="rule"></div>
+        <div class="crack"><span class="dot"></span><div>e4f5g6h &middot; 12 files touched by signature change<br><span class="loc">grep -rl 'encaps(' across src</span></div></div>
+        <div class="rule"></div>
+        <div class="crack"><span class="dot"></span><div>i7j8k9l &middot; legacy path removed, 4 call sites updated<br><span class="loc">no dangling references remain</span></div></div>
+        <div class="rule"></div>
+        <div class="crack note"><span class="dot"></span><div>The tool reports commits, not opinions.</div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      Crypto Time Machine (prototype) &middot; <a href="https://github.com/Lennonhaha/fibemate-tools" target="_blank" rel="noopener">Lennonhaha/fibemate-tools</a><br>
+      <a href="/tools/">fibemate.net/tools/</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var cv=document.getElementById('stage'),ctx=cv.getContext('2d');
+  var W,H,cx,cy;
+  var COL={ bg:'#0c0f16', cool:'120,140,170', warm:'230,198,130', deep:'30,42,66' };
+  var blobs=[];
+
+  function resize(){
+    W=cv.width=innerWidth; H=cv.height=innerHeight; cx=W/2; cy=H/2;
+    blobs=[];
+    for(var i=0;i<16;i++){
+      var warmish=Math.random()<0.28;
+      blobs.push({
+        x:Math.random()*W, y:Math.random()*H,
+        r:Math.max(W,H)*(0.18+Math.random()*0.30),
+        dx:(Math.random()-0.5)*0.15, dy:(Math.random()-0.5)*0.08,
+        ph:Math.random()*6.283, sp:0.0006+Math.random()*0.0008,
+        a:0.05+Math.random()*0.10,
+        tint:warmish?COL.warm:COL.cool
+      });
+    }
+  }
+
+  function tick(){
+    ctx.globalCompositeOperation='source-over';
+    ctx.fillStyle='rgba(12,15,22,0.10)';
+    ctx.fillRect(0,0,W,H);
+    ctx.globalCompositeOperation='lighter';
+    for(var i=0;i<blobs.length;i++){
+      var b=blobs[i];
+      b.ph+=b.sp;
+      b.x+=b.dx+Math.cos(b.ph)*0.20;
+      b.y+=b.dy+Math.sin(b.ph*0.7)*0.12;
+      if(b.x<-b.r)b.x=W+b.r; if(b.x>W+b.r)b.x=-b.r;
+      if(b.y<-b.r)b.y=H+b.r; if(b.y>H+b.r)b.y=-b.r;
+      var g=ctx.createRadialGradient(b.x,b.y,0,b.x,b.y,b.r);
+      g.addColorStop(0,'rgba('+b.tint+','+b.a+')');
+      g.addColorStop(1,'rgba('+b.tint+',0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,6.283); ctx.fill();
+    }
+    var sx=W*0.74, sy=H*0.30, sr=Math.max(W,H)*0.5;
+    var pulse=0.05+Math.sin(Date.now()*0.0004)*0.02;
+    var sg=ctx.createRadialGradient(sx,sy,0,sx,sy,sr);
+    sg.addColorStop(0,'rgba('+COL.warm+','+pulse+')');
+    sg.addColorStop(1,'rgba('+COL.warm+',0)');
+    ctx.fillStyle=sg; ctx.beginPath(); ctx.arc(sx,sy,sr,0,6.283); ctx.fill();
+    ctx.globalCompositeOperation='source-over';
+    requestAnimationFrame(tick);
+  }
+
+  addEventListener('resize',resize);
+  resize(); tick();
+
+  var io=new IntersectionObserver(function(e){
+    e.forEach(function(x){ if(x.isIntersecting){ x.target.classList.add('in'); io.unobserve(x.target); }});
+  },{threshold:.15});
+  document.querySelectorAll('[data-reveal]').forEach(function(n){ io.observe(n); });
+})();
+</script>
+</body>
+</html>

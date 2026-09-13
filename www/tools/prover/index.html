@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Undecryptable Prover</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:#0b0907;color:#e9ddc2;overflow-x:hidden;
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC",sans-serif;
+    line-height:1.7;font-size:16px}
+
+  /* Hero canvas */
+  #stage{display:block;width:100vw;height:100vh;position:fixed;top:0;left:0;z-index:0}
+  .hero-overlay{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;
+    align-items:center;pointer-events:none;text-align:center;z-index:2}
+  .hero-overlay .en{font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:#9a814f;margin:0 0 32px}
+  .hero-overlay .lead{font-size:17px;color:#c9b78d;max-width:480px;line-height:1.8}
+  .hero-overlay .lead b{color:#e8c87a;font-weight:600}
+  .hero-overlay .badge{margin-top:24px;padding:6px 16px;border:1px solid #2a2114;border-radius:4px;
+    font-size:12px;color:#9a814f;letter-spacing:.06em}
+  .scroll-hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:2;
+    color:#5a4a2a;font-size:11px;letter-spacing:.2em;animation:fade 2.4s ease-in-out infinite}
+  @keyframes fade{0%,100%{opacity:.25}50%{opacity:.7}}
+
+  /* Content sections */
+  .content{position:relative;z-index:3;background:#0b0907;margin-top:100vh}
+  .wrap{max-width:880px;margin:0 auto;padding:0 24px}
+  section.block{min-height:80vh;display:flex;flex-direction:column;justify-content:center;padding:80px 0}
+  .reveal{opacity:0;transform:translateY(26px);transition:opacity .9s ease,transform .9s ease}
+  .reveal.in{opacity:1;transform:none}
+  .tag{color:#e8c87a;font-size:12px;letter-spacing:.2em;text-transform:uppercase}
+  h2{font-size:26px;font-weight:600;margin:8px 0 0}
+
+  /* Three layers */
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:44px}
+  .mono{border:1px solid #2a2114;border-radius:14px;padding:28px 20px;text-align:center;
+    background:linear-gradient(160deg,#14100a,#0b0907);transition:transform .4s ease,border-color .4s ease}
+  .mono:hover{transform:translateY(-6px);border-color:#e8c87a;box-shadow:0 0 24px rgba(232,200,122,.18)}
+  .mono .glyph{width:38px;height:38px;margin:0 auto 14px;display:block}
+  .mono .nm{font-size:17px;font-weight:600;color:#f0e6cc}
+  .mono .desc{color:#c9b78d;font-size:13px;margin-top:8px;min-height:54px}
+  .mono .why{color:#e8c87a;font-size:12px;margin-top:10px;opacity:0;transition:opacity .4s ease}
+  .mono:hover .why{opacity:1}
+
+  /* Burn sequence */
+  .burn{margin-top:32px;display:flex;flex-direction:column;gap:14px}
+  .pass{border:1px solid #2a2114;border-radius:12px;padding:18px 22px;background:#100c07;
+    display:flex;align-items:center;gap:18px;position:relative;overflow:hidden}
+  .pass .n{font-family:"SFMono-Regular",Consolas,monospace;font-size:13px;color:#9a814f;width:54px;flex-shrink:0}
+  .pass .bar{position:absolute;left:0;top:0;bottom:0;background:linear-gradient(90deg,rgba(232,200,122,.18),rgba(232,200,122,0));
+    width:0;transition:width .12s linear}
+  .pass .bar.on{width:100%}
+  .pass .txt{font-size:15px;color:#e9ddc2;z-index:1}
+  .pass .cnt{margin-left:auto;font-family:"SFMono-Regular",Consolas,monospace;font-size:13px;color:#e8c87a;z-index:1}
+
+  /* Result */
+  .inscr{border:1px solid #2a2114;border-radius:12px;padding:32px;background:#0a0705;
+    font-family:"SFMono-Regular",Consolas,monospace;text-align:center;box-shadow:0 0 30px rgba(232,200,122,.08)}
+  .inscr .score{font-size:42px;font-weight:700;color:#e8c87a}
+  .inscr .verdict{color:#9a814f;letter-spacing:.14em;margin:8px 0 22px}
+  .rule{height:1px;background:#2a2114;margin:18px 0}
+  .inscr .crack{text-align:left;font-size:14px;color:#e9ddc2;display:flex;align-items:baseline;gap:10px}
+  .inscr .crack .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;transform:translateY(2px);
+    background:#e8c87a;box-shadow:0 0 8px #e8c87a}
+  .inscr .crack .loc{color:#9a814f;font-family:-apple-system,sans-serif}
+  .inscr .note{color:#9a814f}
+  .inscr .note .dot{background:#c9b78d;box-shadow:0 0 8px #c9b78d}
+
+  footer{border-top:1px solid #2a2114;padding:28px 0 56px;color:#9a814f;font-size:13px}
+  footer a{color:#e8c87a;text-decoration:none}
+
+  @media(max-width:680px){.trio{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<canvas id="stage"></canvas>
+<div class="hero-overlay">
+  <p class="en">Undecryptable Prover</p>
+  <p class="lead">A key destroyed in one pass can be recovered.<br>We overwrite <b>many times</b>, and keep the receipts.</p>
+  <span class="badge">zeroize &middot; evidence chain &middot; not a proof of impossibility</span>
+</div>
+<div class="scroll-hint">SCROLL</div>
+
+<div class="content">
+
+  <!-- Three layers -->
+  <section class="block reveal" data-reveal>
+    <div class="wrap">
+      <span class="tag">How it earns trust</span>
+      <h2>Three layers of evidence</h2>
+      <div class="trio">
+        <div class="mono">
+          <svg class="glyph" viewBox="0 0 38 38">
+            <rect x="6" y="6" width="26" height="26" rx="3" fill="none" stroke="#e8c87a" stroke-width="1.2"/>
+            <path d="M6 19 H32 M19 6 V32" stroke="#e8c87a" stroke-width="0.5" opacity="0.5"/>
+          </svg>
+          <div class="nm">Multi-pass overwrite</div>
+          <div class="desc">Repeatedly clobber key material, not once</div>
+          <div class="why">one pass can leave residual traces</div>
+        </div>
+        <div class="mono">
+          <svg class="glyph" viewBox="0 0 38 38">
+            <circle cx="19" cy="19" r="15" fill="none" stroke="#e8c87a" stroke-width="1.2"/>
+            <circle cx="19" cy="19" r="9" fill="none" stroke="#e8c87a" stroke-width="0.6" opacity="0.6"/>
+            <circle cx="19" cy="19" r="3" fill="#e8c87a"/>
+          </svg>
+          <div class="nm">zeroize, not fill(0)</div>
+          <div class="desc">Use zeroize so the compiler can't optimize the write away</div>
+          <div class="why">fill(0) can be silently dropped</div>
+        </div>
+        <div class="mono">
+          <svg class="glyph" viewBox="0 0 38 38">
+            <path d="M19 4 L31 12 L31 26 L19 34 L7 26 L7 12 Z" fill="none" stroke="#e8c87a" stroke-width="1.2"/>
+            <path d="M19 10 L25 14 L25 24 L19 28 L13 24 L13 14 Z" fill="none" stroke="#e8c87a" stroke-width="0.6" opacity="0.6"/>
+          </svg>
+          <div class="nm">Receipts per pass</div>
+          <div class="desc">Each pass records nonzero byte count + fingerprint</div>
+          <div class="why">evidence chain, not a claim</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Burn sequence -->
+  <section class="block reveal" data-reveal>
+    <div class="wrap">
+      <span class="tag">Overwrite sequence</span>
+      <h2>Overwrite</h2>
+      <p style="color:#c9b78d;max-width:600px">Five passes. Each pass measures the remaining nonzero bytes before clobbering again.</p>
+      <div class="burn" id="burn">
+        <div class="pass"><div class="bar"></div><div class="n">pass 1</div><div class="txt">measure &amp; overwrite key bytes</div><div class="cnt">1024 → 0</div></div>
+        <div class="pass"><div class="bar"></div><div class="n">pass 2</div><div class="txt">measure &amp; overwrite again</div><div class="cnt">1024 → 0</div></div>
+        <div class="pass"><div class="bar"></div><div class="n">pass 3</div><div class="txt">measure &amp; overwrite again</div><div class="cnt">1024 → 0</div></div>
+        <div class="pass"><div class="bar"></div><div class="n">pass 4</div><div class="txt">measure &amp; overwrite again</div><div class="cnt">1024 → 0</div></div>
+        <div class="pass"><div class="bar"></div><div class="n">pass 5</div><div class="txt">final measure &amp; overwrite</div><div class="cnt">1024 → 0</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section class="block reveal" data-reveal>
+    <div class="wrap">
+      <span class="tag">Result</span>
+      <h2>Result</h2>
+      <div class="inscr">
+        <div class="score">5 / 5</div>
+        <div class="verdict">all passes recorded &mdash; evidence chain intact</div>
+        <div class="rule"></div>
+        <div class="crack"><span class="dot"></span><div>pass 1&ndash;5 &middot; each measured 1024 nonzero bytes, then overwrote to 0<br><span class="loc">sha256 of each pass recorded to ledger</span></div></div>
+        <div class="rule"></div>
+        <div class="crack"><span class="dot"></span><div>no pass left residual nonzero bytes<br><span class="loc">independent re-read after final pass confirms 0</span></div></div>
+        <div class="rule"></div>
+        <div class="crack note"><span class="dot"></span><div>Honest scope: this is an evidence chain, not a mathematical proof of "undecryptable".</div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      Undecryptable Prover (prototype) &middot; <a href="https://github.com/Lennonhaha/fibemate-tools" target="_blank" rel="noopener">Lennonhaha/fibemate-tools</a><br>
+      <a href="/tools/">fibemate.net/tools/</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  var cv=document.getElementById('stage'),ctx=cv.getContext('2d');
+  var W,H,cx,cy;
+  var COL={ bg:'#0b0907', gold:'232,200,122', dim:'154,129,79', spark:'245,235,210' };
+
+  // Klimt-style static mosaic background drawn once per resize
+  var tiles=[];
+  function resize(){
+    W=cv.width=innerWidth; H=cv.height=innerHeight; cx=W/2; cy=H/2;
+    tiles=[];
+    var step=Math.max(26, Math.min(W,H)/28);
+    for(var y=0;y<H;y+=step){
+      for(var x=0;x<W;x+=step){
+        var r=Math.random();
+        var col = r<0.16 ? COL.gold : (r<0.30 ? COL.spark : (r<0.55 ? COL.dim : null));
+        if(!col) continue;
+        tiles.push({x:x+Math.random()*step*0.4, y:y+Math.random()*step*0.4,
+          s:step*(0.5+Math.random()*0.4), a:0.04+Math.random()*0.10, col:col});
+      }
+    }
+  }
+
+  function drawTiles(){
+    ctx.clearRect(0,0,W,H);
+    for(var i=0;i<tiles.length;i++){
+      var t=tiles[i];
+      ctx.fillStyle='rgba('+t.col+','+t.a+')';
+      ctx.fillRect(t.x,t.y,t.s,t.s);
+    }
+  }
+
+  // drifting golden particles
+  var P=[];
+  function initParticles(){
+    P=[];
+    for(var i=0;i<70;i++){
+      P.push({x:Math.random()*W,y:Math.random()*H,r:0.6+Math.random()*1.8,
+        vx:(Math.random()-0.5)*0.25, vy:-0.1-Math.random()*0.3,
+        a:0.1+Math.random()*0.4, tw:Math.random()*6.283, ts:0.001+Math.random()*0.002});
+    }
+  }
+
+  function tick(){
+    drawTiles();
+    for(var i=0;i<P.length;i++){
+      var p=P[i];
+      p.x+=p.vx; p.y+=p.vy; p.tw+=p.ts;
+      if(p.y<-5){p.y=H+5;p.x=Math.random()*W;}
+      if(p.x<-5)p.x=W+5; if(p.x>W+5)p.x=-5;
+      var fl=0.6+Math.sin(p.tw)*0.4;
+      ctx.fillStyle='rgba('+COL.spark+','+(p.a*fl)+')';
+      ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,6.283);ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  addEventListener('resize',function(){resize();initParticles();});
+  resize(); initParticles(); tick();
+
+  // overwrite sequence animation
+  var passes=document.querySelectorAll('#burn .pass');
+  var io=new IntersectionObserver(function(e){
+    e.forEach(function(x){
+      if(x.isIntersecting){
+        if(x.target.id==='burn'){
+          passes.forEach(function(p,i){
+            var bar=p.querySelector('.bar');
+            setTimeout(function(){bar.classList.add('on');}, 150*i);
+          });
+        } else {
+          x.target.classList.add('in'); io.unobserve(x.target);
+        }
+      }
+    });
+  },{threshold:.15});
+  document.querySelectorAll('[data-reveal]').forEach(function(n){ io.observe(n); });
+  io.observe(document.getElementById('burn'));
+})();
+</script>
+</body>
+</html>
