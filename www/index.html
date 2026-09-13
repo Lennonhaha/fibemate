@@ -1223,6 +1223,51 @@
         </div>
     </section>
 
+        <!-- ═══════════ 辅助工具（直链展示页） ═══════════ -->
+    <section class="features" id="tools" style="padding:2rem 1rem;max-width:900px;margin:0 auto;">
+      <div class="section-badge" style="background:rgba(0,229,195,0.08);border:2px solid rgba(0,229,195,0.3);">🛠️ 辅助工具 · FIBEMATE Tools</div>
+      <h2 style="font-size:1.5rem;">三个独立仓库工具 · 一跳直达</h2>
+      <p class="section-subtitle" style="max-width:700px;margin:0 auto 1.5rem;font-size:0.9rem;color:#8b949e;">
+        独立仓库 <a href="https://github.com/Lennonhaha/fibemate-tools" style="color:#00d4aa;">Lennonhaha/fibemate-tools</a>（Apache-2.0，与主仓 GPL‑3.0 分离）。
+        不实现任何密码学算法，只把「看起来对」变成「可复核」——给的是信号，不是判决。
+      </p>
+
+      <div class="features-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+        <div class="feature-card" style="border-top: 3px solid #00E5C3;">
+          <div class="feature-icon">🛰️</div>
+          <div class="feature-title">密码幻觉检测器</div>
+          <div class="feature-desc" style="font-size:0.82rem;line-height:1.6;">
+            <strong>Node.js · 零依赖</strong><br>
+            扫描 JS/TS 代码里 AI 容易编出来的写法：声称常数时间却按秘密分支、用数组下标索引秘密、调用不存在的加密 API。<br>
+            <span style="color:#8b949e;">CI 13s · needs-human-review · 样本测试全过</span>
+          </div>
+          <a class="cta" href="/tools/detector/" style="display:inline-block;margin-top:12px;padding:8px 18px;border:2px solid #00E5C3;border-radius:4px;color:#00E5C3;font-weight:600;text-decoration:none;transition:background .3s, color .3s;">查看演示 →</a>
+        </div>
+
+        <div class="feature-card" style="border-top: 3px solid #6c8eef;">
+          <div class="feature-icon">⏳</div>
+          <div class="feature-title">密码时间机器</div>
+          <div class="feature-desc" style="font-size:0.82rem;line-height:1.6;">
+            <strong>Python · 仅标准库</strong><br>
+            把「某个密码学 API 在哪个 commit 引入、何时变更、影响了哪些文件」变成可查询的时间轴。<br>
+            <span style="color:#8b949e;">CI 7s · 基于 git log -S/-G 真实历史</span>
+          </div>
+          <a class="cta" href="/tools/" style="display:inline-block;margin-top:12px;padding:8px 18px;border:2px solid #6c8eef;border-radius:4px;color:#6c8eef;font-weight:600;text-decoration:none;transition:background .3s, color .3s;">查看索引 →</a>
+        </div>
+
+        <div class="feature-card" style="border-top: 3px solid #d4a574;">
+          <div class="feature-icon">🔥</div>
+          <div class="feature-title">无法解密证明器</div>
+          <div class="feature-desc" style="font-size:0.82rem;line-height:1.6;">
+            <strong>Rust + Lean4</strong><br>
+            多轮覆写销毁密钥材料，每轮记录覆写前后的非零字节计数与指纹，落盘成证据链供人工复核。<br>
+            <span style="color:#8b949e;">CI 22s · zeroize 防编译优化掉覆写</span>
+          </div>
+          <a class="cta" href="/tools/" style="display:inline-block;margin-top:12px;padding:8px 18px;border:2px solid #d4a574;border-radius:4px;color:#d4a574;font-weight:600;text-decoration:none;transition:background .3s, color .3s;">查看索引 →</a>
+        </div>
+      </div>
+    </section>
+
         <!-- ═══════════ SM2 侧信道安全验证 ═══════════ -->
     <section class="security-verification sm2-tvla-section" style="padding:2rem 1rem;max-width:900px;margin:0 auto;">
       <div class="section-badge" style="background:rgba(0,210,170,0.08);border:2px solid rgba(0,210,170,0.3);">&#x1F1E8;&#x1F1F3; 国密侧信道安全 v1.3</div>
