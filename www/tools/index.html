@@ -63,6 +63,7 @@
   <div class="tool">
     <h2>密码时间机器 <span class="ci">CI 7s</span></h2>
     <p class="meta">Python · 仅标准库 · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/crypto-time-machine">源码</a></p>
+    <a class="cta" href="/tools/time-machine/">查看演示 →</a>
     <p>把「某个密码学 API 在哪个 commit 引入、何时变更、影响了哪些文件」变成可查询的时间轴。</p>
     <p>基于 <code>git log -S/-G</code> 的真实历史，不靠记忆。CI 用自建临时仓库跑，零外部依赖。</p>
   </div>
@@ -70,6 +71,7 @@
   <div class="tool">
     <h2>无法解密证明器 <span class="ci">CI 22s</span></h2>
     <p class="meta">Rust + Lean4 · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/undecryptable-prover">源码</a></p>
+    <a class="cta" href="/tools/prover/">查看演示 →</a>
     <p>多轮覆写销毁密钥材料，每轮记录覆写前后的非零字节计数与指纹，落盘成证据链供人工复核。</p>
     <p>用 <code>zeroize</code> 而非 <code>fill(0)</code>（防止编译器把覆写优化掉）。Lean 模板是骨架，诚实标注「非完整证明」。</p>
   </div>
