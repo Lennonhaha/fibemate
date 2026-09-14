@@ -189,7 +189,6 @@ function buildStats(data){
   const confirmed = data.filter(r=>r.verdict==="confirmed").length;
   const critical = data.filter(r=>r.severity==="critical").length;
   const major = data.filter(r=>r.severity==="major").length;
-  const clean = data.filter(r=>r.verdict==="clean").length;
   document.getElementById("stats").innerHTML = [
     ["样本",data.length],["确认缺陷",confirmed],["critical",critical],["major",major]
   ].map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
