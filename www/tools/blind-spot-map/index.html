@@ -62,6 +62,8 @@
   .note{border:1px solid #1c3a33;border-left:3px solid #f5d76e;border-radius:8px;padding:16px 18px;
     background:#0f1a16;margin-top:26px;font-size:13px;color:#c7e2db;line-height:1.8}
   .note b{color:#f5d76e;font-weight:600}
+  .note.seed{border-left-color:#8b5cf6}
+  .note.seed b{color:#8b5cf6}
   .foot{margin-top:40px;font-size:11px;color:#5a7a72;text-align:center}
   .ctl{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}
   .btn{border:1px solid #1c3a33;border-radius:6px;background:#0f1a16;color:#8b5cf6;font-size:12px;
@@ -75,16 +77,16 @@
   <canvas id="stage"></canvas>
   <div class="en">FIBEMATE · Blind-Spot Map</div>
   <h1>AI 密码代码 <b>盲点地图</b></h1>
-  <p class="lead">让 AI 写密码学代码，它的系统性盲点落在哪？这是一份以康定斯基几何语言呈现的出错率星图——算法家族为行，幻觉类型为列。</p>
-  <div class="badge">Pilot A · Claude × 10 算法</div>
-  <div class="src" id="srcLine">数据来源：fibemate-tools/data/blind-spot-map/pilotA</div>
+  <p class="lead">让 AI 写密码学代码，它的系统性盲点落在哪？这是一份以康定斯基几何语言呈现的出错率星图——算法家族为行，提示词变体为列。</p>
+  <div class="badge">Pilot A + B · 10 算法 × 3 变体（合成种子语料）</div>
+  <div class="src" id="srcLine">数据来源：fibemate-tools/data/blind-spot-map/{pilotA,pilotB}（合成种子语料）</div>
 </div>
 
 <div class="content">
   <div class="wrap">
-    <div class="tag">热力矩阵</div>
-    <h2>10 算法 × 幻觉类型</h2>
-    <p class="sub">当前 Y 轴仅展示 Pilot A（Claude × 10）实际命中的 3 类（类 5 / 类 9 / 类 10）。其余 7 类幻觉待扩样本（更多算法、更多 AI 来源）后补充点亮。鼠标悬停查看判定说明。</p>
+    <div class="tag">变体稳定性矩阵</div>
+    <h2>10 算法 × 3 变体</h2>
+    <p class="sub">矩阵为 <b>10 算法 × 3 变体</b>（共 30 段合成样本）。每个单元格是该变体在「中性 prompt」下的判定；<b>同行三格同色</b>即代表「换写法不改盲点」（变体稳定性）。鼠标悬停查看幻觉类与说明。变异体分析测的是<b>检测器稳定性</b>，<b>不是</b>盲点扩展。</p>
 
     <div class="panel">
       <table id="matrix"></table>
@@ -101,10 +103,15 @@
 
     <div class="stats" id="stats"></div>
 
+    <div class="note seed">
+      <b>Seed corpus notice.</b> The 30 samples on this page are an <b>AI-generated seed corpus (synthetic)</b>, produced to exercise the detector pipeline and classification rubric. They are <b>not</b> an empirical measurement of any AI system's error distribution. A real measurement requires independently generated samples across multiple models.<br>
+      <b>种子语料声明。</b> 本页 30 个样本均为 <b>AI 生成的合成种子语料（synthetic）</b>，用于验证检测器流水线及分类准则，<b>并非</b>对任何 AI 系统错误分布的实证测量。真实测量需要跨多个模型独立生成样本。
+    </div>
+
     <div class="note">
-      <b>范围与局限。</b> 本图全部 10 个样本均来自 Claude（claude-sonnet-4-20250929），是<b>本沙箱唯一可用的 AI 来源</b>（无 GPT/Gemini 密钥或出网）。
-      因此本图度量的是 <b>Claude 的系统性盲点分布</b>，<b>不代表跨 AI 普适性</b>。跨 AI 共识盲点待 `scripts/pilotB_run_gpt.py`（需密钥 + 出网）启用后补充。
-      数据 Apache-2.0 公开；标注为人工审查（class 10 数学错误仅人工标定，不自动检测）。
+      <b>范围与局限。</b> 全部 30 个样本为合成种子语料，由<b>本沙箱唯一可用的 AI 来源</b>生成（无 GPT/Gemini 密钥或出网）。
+      因此本图度量的是 <b>该 AI 的系统性盲点分布</b>，<b>不代表跨 AI 普适性</b>。跨 AI 共识盲点待 `scripts/pilotB_run_gpt.py`（需密钥 + 出网）启用后补充。
+      数据 Apache-2.0 公开；标注为人工审查（class 10 数学错误仅人工标定，不自动检测）。变体（v1/v2/v3）为三个中性 prompt 措辞，用于检验「同算法换写法后缺陷是否稳定出现」。
     </div>
 
     <div class="foot">FIBEMATE · Blind-Spot Map · 单文件零依赖 · 康定斯基构成主义视觉语言（公有领域）</div>
@@ -112,75 +119,125 @@
 </div>
 
 <script>
-/* 内联兜底数据：fetch 失败时使用，保证永不白屏（数据单源仍以 fibemate-tools 仓为准） */
+/* 内联兜底数据：fetch 失败时使用，保证永不白屏（数据单源仍以 fibemate-tools 仓为准）。
+   30 段 = 10 算法 × 3 变体；所有变体在同一算法下类型/严重度一致（变体稳定性发现）。 */
 const EMBEDDED = [
-  {"algo":"AES-GCM","verdict":"confirmed","types":["class10","class9"],"severity":"critical","note":"tag=ghash(h,ct) 漏 AAD+长度块 = 认证绕过(class10); aesEncrypt/ghash 未定义 = 运行失败(class9)."},
-  {"algo":"ECDH","verdict":"confirmed","types":["class10"],"severity":"major","note":"x=x*x+9 重复 ≠ Montgomery ladder = 逻辑错(class10); ladder 体被注释省略."},
-  {"algo":"Ed25519","verdict":"confirmed","types":["class10","class9"],"severity":"major","note":"r=hash(sk后半+msg) 与 HRAM 标准偏差(class10); 标量乘法未归约(class9)."},
-  {"algo":"ML-DSA","verdict":"clean","types":[],"severity":null,"note":"expandA 结构合理(XOF→A 矩阵), 无显见逻辑错."},
-  {"algo":"ML-KEM","verdict":"confirmed","types":["class10","class5"],"severity":"major","note":"Math.pow 非模幂(class10); NTT 原根=17 非标准值(class5)."},
-  {"algo":"SHA3","verdict":"confirmed","types":["class9"],"severity":"major","note":"keccakF 内部占位未实现(class9), 逻辑都没给."},
-  {"algo":"SLH-DSA","verdict":"confirmed","types":["class10"],"severity":"major","note":"FORS 仅取 4 字节索引, 标准需更长(class10)."},
-  {"algo":"SM2","verdict":"confirmed","types":["class10"],"severity":"critical","note":"固定 nonce k=1(class10), 密钥直接泄露."},
-  {"algo":"SM4","verdict":"confirmed","types":["class9"],"severity":"major","note":"逻辑回合正确但引用未定义 SBOX(class9), 运行失败."},
-  {"algo":"X3DH","verdict":"confirmed","types":["class10","class9"],"severity":"major","note":"使用未定义 EK 变量(class9); DH 结果未做阈值检查(class10)."}
+  {algo:"ML-KEM-768",v:1,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"decaps 返回空/桩，非真实 KEM 解封装（不可用）；q/n/k 声明但未在任何密码运算中使用（参数未落实）。"},
+  {algo:"ML-KEM-768",v:2,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"decaps 返回随机值（不可用）；q/n/k 声明未用（参数未落实）。"},
+  {algo:"ML-KEM-768",v:3,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"decaps 返回空（不可用）；q/n/k 声明未用（参数未落实）。"},
+  {algo:"ML-DSA-65",v:1,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"sign() 仅把 msg 复制到 sig，无格签名逻辑（错）；q=8380417/n=256/k=6 声明未用。"},
+  {algo:"ML-DSA-65",v:2,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"sign() 仅 memcpy msg（错）；参数未用。"},
+  {algo:"ML-DSA-65",v:3,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"sign() 仅 set msg（错）；参数未用。"},
+  {algo:"SLH-DSA-SHA2-128f",v:1,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"sign() 仅 memcpy msg，无 FORS/SLH 逻辑（错）；n=16/h=66/d=22 声明未用。"},
+  {algo:"SLH-DSA-SHA2-128f",v:2,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"sign() 仅 memcpy msg（错）；参数未用。"},
+  {algo:"SLH-DSA-SHA2-128f",v:3,verdict:"confirmed",types:["class10","class9"],severity:"major",note:"sign() 仅 set msg（错）；参数未用。"},
+  {algo:"SM2",v:1,verdict:"confirmed",types:["class10"],severity:"critical",note:"签名 nonce k 固定为 1，可由两份签名恢复私钥（密钥泄露）。"},
+  {algo:"SM2",v:2,verdict:"confirmed",types:["class10"],severity:"critical",note:"签名使用常量 nonce k=1（密钥泄露）。"},
+  {algo:"SM2",v:3,verdict:"confirmed",types:["class10"],severity:"critical",note:"sign() 返回空体（不可用，等效密钥泄露风险）。"},
+  {algo:"SM4",v:1,verdict:"confirmed",types:["class9"],severity:"major",note:"SBOX 截断为 8 项且无轮函数，非真实分组密码（不可用）。"},
+  {algo:"SM4",v:2,verdict:"confirmed",types:["class9"],severity:"major",note:"SBOX 截断 + 无轮函数（不可用）。"},
+  {algo:"SM4",v:3,verdict:"confirmed",types:["class9"],severity:"major",note:"SBOX 截断 + 无轮函数（不可用）。"},
+  {algo:"AES-GCM",v:1,verdict:"confirmed",types:["class10","class9"],severity:"critical",note:"认证 tag 忽略 AAD 与长度（认证绕过）；加密为 key XOR，非 AES 轮/CTR（结构性错）。"},
+  {algo:"AES-GCM",v:2,verdict:"confirmed",types:["class10","class9"],severity:"critical",note:"tag 由 ghash(ct) 计算，漏 AAD+长度（认证绕过）；XOR 非 AES（结构性错）。"},
+  {algo:"AES-GCM",v:3,verdict:"confirmed",types:["class10","class9"],severity:"critical",note:"tag 全零（认证绕过）；XOR 非 AES（结构性错）。"},
+  {algo:"X3DH",v:1,verdict:"confirmed",types:["class10"],severity:"major",note:"共享密钥派生引用未定义 EK 变量（运行时崩溃，不可用）。"},
+  {algo:"X3DH",v:2,verdict:"confirmed",types:["class10"],severity:"major",note:"引用未定义 ek（运行时崩溃，不可用）。"},
+  {algo:"X3DH",v:3,verdict:"confirmed",types:["class10"],severity:"major",note:"填零伪共享密钥，无真实 DH（不可用）。"},
+  {algo:"SHA3-256",v:1,verdict:"confirmed",types:["class9"],severity:"major",note:"keccakF 置换为空占位；digest 仅截断 msg（非 SHA3，不可用）。"},
+  {algo:"SHA3-256",v:2,verdict:"confirmed",types:["class9"],severity:"major",note:"keccakF 空实现（不可用）。"},
+  {algo:"SHA3-256",v:3,verdict:"confirmed",types:["class9"],severity:"major",note:"keccakF 空实现（不可用）。"},
+  {algo:"ECDH",v:1,verdict:"confirmed",types:["class10"],severity:"major",note:"标量乘法被 x*x+9 替代，非真实 X25519 ladder（共享密钥错）。"},
+  {algo:"ECDH",v:2,verdict:"confirmed",types:["class10"],severity:"major",note:"x*x+9 非标量乘（共享密钥错）。"},
+  {algo:"ECDH",v:3,verdict:"confirmed",types:["class10"],severity:"major",note:"填零伪共享（共享密钥错）。"},
+  {algo:"Ed25519",v:1,verdict:"confirmed",types:["class10"],severity:"major",note:"签名用 r=hash(sk后半,msg) 而非 Schnorr/EdDSA HRAM 挑战；签名方程错。"},
+  {algo:"Ed25519",v:2,verdict:"confirmed",types:["class10"],severity:"major",note:"r=hmac(sk后半,msg) 非 HRAM（签名方程错）。"},
+  {algo:"Ed25519",v:3,verdict:"confirmed",types:["class10"],severity:"major",note:"r=H(sk后半,msg) 非 HRAM（签名方程错）。"}
 ];
 
-const ROWS = ["ML-KEM","ML-DSA","SLH-DSA","SM2","SM4","AES-GCM","X3DH","SHA3","ECDH","Ed25519"];
-const COLS = ["class5","class9","class10"];
+const ALGOS = ["ML-KEM-768","ML-DSA-65","SLH-DSA-SHA2-128f","SM2","SM4","AES-GCM","X3DH","SHA3-256","ECDH","Ed25519"];
+const VCOLS = [1,2,3];
+const SLUG = {
+  "ML-KEM-768":"ml-kem-768","ML-DSA-65":"ml-dsa-65","SLH-DSA-SHA2-128f":"slh-dsa-sha2-128f",
+  "SM2":"sm2","SM4":"sm4","AES-GCM":"aes-gcm","X3DH":"x3dh","SHA3-256":"sha3-256",
+  "ECDH":"ecdh","Ed25519":"ed25519"
+};
 
 const SEV_RANK = {critical:3, major:2, clean:1, "":0};
 function cellClass(d){
   if(d.verdict==="clean") return "cell-clean";
   return d.severity==="critical" ? "cell-critical" : "cell-major";
 }
-function buildMatrix(rows){
+function buildMatrix(data){
   const t = document.getElementById("matrix");
-  let html = "<tr><th></th>" + COLS.map(c=>`<th>${c}</th>`).join("") + "</tr>";
-  for(const algo of ROWS){
-    const d = rows.find(r=>r.algo===algo) || {verdict:"clean",types:[],severity:null,note:"（无数据）"};
-    const cls = cellClass(d);
-    const hit = (d.types||[]).filter(t=>COLS.includes(t)).map(t=>`<b>${t}</b>`).join(" ") || "—";
-    html += `<tr><th class="rowh">${algo}</th>`;
-    html += `<td class="${cls}"><div class="cell-tip"><b>${algo}</b> · ${d.verdict}<br>${hit}<br>${d.note||""}</div></td>`;
-    html += "</tr>";
+  let html = "<tr><th></th>" + VCOLS.map(v=>`<th>v${v}</th>`).join("") + "</tr>";
+  for(const algo of ALGOS){
+    const cells = VCOLS.map(v => data.find(d=>d.algo===algo && d.v===v)
+      || {verdict:"clean",types:[],severity:null,note:"（无数据）"});
+    let row = `<tr><th class="rowh">${algo}</th>`;
+    for(const d of cells){
+      const cls = cellClass(d);
+      const hit = (d.types||[]).map(ty=>`<b>${ty}</b>`).join(" ") || "—";
+      row += `<td class="${cls}"><div class="cell-tip"><b>${algo} · v${d.v}</b> · ${d.verdict}<br>${hit}<br>${d.note||""}</div></td>`;
+    }
+    row += "</tr>";
+    html += row;
   }
   t.innerHTML = html;
-  buildStats(rows);
+  buildStats(data);
 }
-function buildStats(rows){
-  const confirmed = rows.filter(r=>r.verdict==="confirmed").length;
-  const critical = rows.filter(r=>r.severity==="critical").length;
-  const major = rows.filter(r=>r.severity==="major").length;
-  const clean = rows.filter(r=>r.verdict==="clean").length;
+function buildStats(data){
+  const confirmed = data.filter(r=>r.verdict==="confirmed").length;
+  const critical = data.filter(r=>r.severity==="critical").length;
+  const major = data.filter(r=>r.severity==="major").length;
   document.getElementById("stats").innerHTML = [
-    ["样本",rows.length],["确认缺陷",confirmed],["critical",critical],["clean",clean]
+    ["样本",data.length],["确认缺陷",confirmed],["critical",critical],["major",major]
   ].map(([l,n])=>`<div class="stat"><div class="n">${n}</div><div class="l">${l}</div></div>`).join("");
 }
 function setStatus(s){ document.getElementById("status").textContent = s; }
 
 async function loadRemote(){
-  setStatus("正在拉取 fibemate-tools 仓数据…");
+  setStatus("正在拉取 fibemate-tools 仓数据（优先 pilotB）…");
   try {
-    const base = "https://raw.githubusercontent.com/Lennonhaha/fibemate-tools/main/data/blind-spot-map/pilotA/";
-    const list = ["AES-GCM","ECDH","Ed25519","ML-DSA","ML-KEM","SHA3","SLH-DSA","SM2","SM4","X3DH"];
+    const base = "https://raw.githubusercontent.com/Lennonhaha/fibemate-tools/main/data/blind-spot-map/";
     const out = [];
-    for(const a of list){
-      const r = await fetch(base + "claude-" + a + ".json", {cache:"no-store"});
-      if(!r.ok) throw new Error("HTTP "+r.status+" for "+a);
+    for(const algo of ALGOS){
+      const url = base + "pilotB/claude-" + SLUG[algo] + ".json";
+      const r = await fetch(url, {cache:"no-store"});
+      if(!r.ok) throw new Error("HTTP "+r.status+" for "+algo);
       const j = await r.json();
-      const types = Array.isArray(j.hallucination_type) ? j.hallucination_type : (j.hallucination_type?[j.hallucination_type]:[]);
-      out.push({algo:j.algorithm, verdict:j.human_verdict, types, severity:j.severity, note:j.note});
+      for(const v of (j.variants||[])){
+        const types = Array.isArray(v.hallucination_type) ? v.hallucination_type
+          : (v.hallucination_type?[v.hallucination_type]:[]);
+        out.push({algo:j.algorithm, v:v.variant, verdict:v.human_verdict, types, severity:v.severity, note:v.note});
+      }
     }
+    if(out.length===0) throw new Error("pilotB empty, fall back to pilotA");
     buildMatrix(out);
-    setStatus("✓ 已从 GitHub 拉取 "+out.length+" 个样本（远程）。");
-  } catch(e){
-    buildMatrix(EMBEDDED);
-    setStatus("⚠ 远程拉取失败（"+(e.message||e)+"），已用内联兜底数据渲染。");
+    setStatus("✓ 已从 GitHub 拉取 "+out.length+" 个样本（pilotB 远程）。");
+  } catch(e1){
+    try {
+      const base = "https://raw.githubusercontent.com/Lennonhaha/fibemate-tools/main/data/blind-spot-map/";
+      const out = [];
+      for(const algo of ALGOS){
+        const r = await fetch(base + "pilotA/claude-" + SLUG[algo] + ".json", {cache:"no-store"});
+        if(!r.ok) throw new Error("HTTP "+r.status+" for "+algo);
+        const j = await r.json();
+        const types = Array.isArray(j.hallucination_type) ? j.hallucination_type : (j.hallucination_type?[j.hallucination_type]:[]);
+        // pilotA 单样本 → 3 个相同变体格（矩阵兼容）
+        for(const v of VCOLS){
+          out.push({algo:j.algorithm, v, verdict:j.human_verdict, types, severity:j.severity, note:j.note});
+        }
+      }
+      buildMatrix(out);
+      setStatus("✓ 已从 GitHub 拉取 pilotA（"+out.length+" 格）。");
+    } catch(e2){
+      buildMatrix(EMBEDDED);
+      setStatus("⚠ 远程拉取失败（"+(e2.message||e2)+"），已用内联兜底数据（30 段合成）渲染。");
+    }
   }
 }
 
-/* 康定斯基风格 hero：随机几何构成（深黑底 + 青绿/暖黄/朱红/深蓝） */
+/* 康定斯基风格 hero：随机几何构成（深黑底 + 紫/靛/暖黄/朱红/深蓝） */
 (function(){
   const c = document.getElementById("stage"), x = c.getContext("2d");
   function resize(){ c.width = c.clientWidth*devicePixelRatio; c.height = c.clientHeight*devicePixelRatio; }
