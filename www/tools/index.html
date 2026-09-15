@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FIBEMATE Tools — 三个辅助工具</title>
+<title>FIBEMATE 工具集 — 4 个辅助工具</title>
 <style>
   :root {
     --ink: #1a1f1c;
@@ -43,7 +43,7 @@
 <div class="wrap">
   <header>
     <h1>FIBEMATE Tools</h1>
-    <p>三个辅助工具，独立仓库，Apache-2.0。</p>
+    <p>4 个辅助工具，跨 2 个仓库：3 个独立 Apache-2.0 + 1 个主仓内置（GPL-3.0）。</p>
     <p>它们不实现任何密码学算法，只做一件事：把「看起来对」变成「可复核」。</p>
   </header>
 
@@ -76,10 +76,19 @@
     <p>用 <code>zeroize</code> 而非 <code>fill(0)</code>（防止编译器把覆写优化掉）。Lean 模板是骨架，诚实标注「非完整证明」。</p>
   </div>
 
+  <div class="tool">
+    <h2>密码时间账本</h2>
+    <p class="meta">主仓 · GPL-3.0 · 零依赖 · <a href="https://github.com/Lennonhaha/fibemate/blob/main/www/tools/time-ledger/index.html">源码</a></p>
+    <a class="cta" href="/tools/time-ledger/">查看演示 →</a>
+    <p>把「某算法在某 commit 下被纳入账本」串成可复现的 RFC 3161 时间戳链（hash 用 RFC 8785 风格键排序）。</p>
+    <p>浏览器内 Web Crypto 重算 SHA-256，零外部依赖。3 个演示 block 来自测试 fixture，非生产测量。</p>
+  </div>
+
   <footer>
     仓库：<a href="https://github.com/Lennonhaha/fibemate-tools">Lennonhaha/fibemate-tools</a> ·
     许可：Apache-2.0 · 与主仓（GPL-3.0）分离，避免传染性。
     <br>这些工具是「证据生成器」，不是「保证器」。结论由人基于证据判定。
+    <br>时间账本属于主仓 fibemate（GPL-3.0），与独立 Apache-2.0 工具仓分离。
   </footer>
 </div>
 </body>
