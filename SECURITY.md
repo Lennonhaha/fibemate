@@ -44,6 +44,27 @@ Given the project's educational nature, we follow a **coordinated disclosure** a
 - Critical issues: Fixed before public disclosure
 - Low-severity issues: May be disclosed in regular development updates
 
+### Bug Bounty
+
+FIBEMATE is a single-maintainer educational/research project without funding. We **do not** operate a paid bounty program. However, we recognize and credit good-faith security research as follows:
+
+| Severity | Reward |
+|----------|--------|
+| Critical (private key recovery, plaintext disclosure, KEM/DR break) | Public acknowledgment + named in `Acknowledgments` |
+| High (authentication bypass, key confusion, downgrade) | Public acknowledgment + named in `Acknowledgments` |
+| Medium (timing leak, non-catastrophic protocol flaw) | Named in `Acknowledgments` |
+| Low (documentation error, hardening suggestion) | Noted in release notes where applicable |
+
+**Eligibility**:
+- Report via `security@fibemate.net` (not a public issue)
+- Provide a reproducible proof-of-concept or clear impact assessment
+- Do not exfiltrate data, disrupt services, or access data beyond what is needed to demonstrate the issue
+- First reporter of a distinct issue receives the acknowledgment
+
+**Non-eligibility**: issues in third-party dependencies (report upstream), social engineering, physical access, or denial-of-service without a cryptographic component.
+
+This is a **recognition-only** program. It may evolve into a paid program if the project later receives grant or sponsorship funding.
+
 ## Security-Related Documentation
 
 - [Security Limitations](docs/security-limitations.md)
