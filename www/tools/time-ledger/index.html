@@ -186,29 +186,41 @@
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
   // 远山：淡墨、多频段、不对称（asym 左右斜率）、顶部留白
+  function ridgeY(x,yBase,amp,freq,phase,asym){
+    const nx=x/W; const base=yBase + (nx-0.5)*asym;
+    return base - (fbm(x*freq+phase)*amp + fbm(x*freq*2.7+phase*1.7)*amp*0.35);
+  }
   function ridge(yBase, amp, freq, phase, color, alpha, asym){
     ctx.beginPath(); ctx.moveTo(0,H);
-    for(let x=0;x<=W;x+=5){
-      const nx=x/W;
-      const base=yBase + (nx-0.5)*asym;
-      const n=fbm(x*freq+phase)*amp + fbm(x*freq*2.7+phase*1.7)*amp*0.35;
-      ctx.lineTo(x, base - n);
-    }
+    for(let x=0;x<=W;x+=5){ ctx.lineTo(x, ridgeY(x,yBase,amp,freq,phase,asym)); }
     ctx.lineTo(W,H); ctx.closePath();
     ctx.globalAlpha=alpha; ctx.fillStyle=color; ctx.fill(); ctx.globalAlpha=1;
   }
   // 山脊飞白笔触（随机断笔 = 飞白）
   function brushEdge(yBase, amp, freq, phase, asym, color){
-    ctx.strokeStyle=color; ctx.lineWidth=1.3; ctx.globalAlpha=0.45;
+    ctx.strokeStyle=color; ctx.lineWidth=1.3; ctx.globalAlpha=1;
     let pen=false;
     for(let x=0;x<=W;x+=3){
-      const nx=x/W; const base=yBase+(nx-0.5)*asym;
-      const y=base - (fbm(x*freq+phase)*amp + fbm(x*freq*2.7+phase*1.7)*amp*0.35);
+      const y=ridgeY(x,yBase,amp,freq,phase,asym);
       if(hash(x*0.9+phase*3.1) > 0.10){
         if(!pen){ ctx.beginPath(); ctx.moveTo(x,y); pen=true; } else ctx.lineTo(x,y);
       } else if(pen){ ctx.stroke(); pen=false; }
     }
     if(pen) ctx.stroke(); ctx.globalAlpha=1;
+  }
+  // 主山山顶赭石点缀
+  function ochreCaps(t){
+    ctx.fillStyle='#a0522d'; ctx.globalAlpha=0.5;
+    const yB=H*0.78, amp=80, freq=0.0055, phase=t*1.1+4, asym=30;
+    for(let x=50;x<W-50;x+=64){ const y=ridgeY(x,yB,amp,freq,phase,asym); ctx.beginPath(); ctx.arc(x, y-3, 2.4, 0, Math.PI*2); ctx.fill(); }
+    ctx.globalAlpha=1;
+  }
+  // 近处青绿树木点缀
+  function greenTrees(){
+    ctx.strokeStyle='#3a6a5a'; ctx.fillStyle='#3a6a5a'; ctx.globalAlpha=0.55; ctx.lineWidth=2;
+    const baseY=H*0.90;
+    for(let x=70;x<W-50;x+=130){ ctx.beginPath(); ctx.moveTo(x,baseY); ctx.lineTo(x,baseY-16); ctx.stroke(); ctx.beginPath(); ctx.arc(x, baseY-19, 4.5, 0, Math.PI*2); ctx.fill(); }
+    ctx.globalAlpha=1;
   }
   const blooms=[]; let lastSpawn=0;
   function spawnBloom(){ blooms.push({x:W*(0.15+Math.random()*0.7), y:H*(0.20+Math.random()*0.45), r:1, max:46+Math.random()*64, a:0.12, seed:Math.random()*100}); }
@@ -229,13 +241,15 @@
     if(!running) return;
     t+=0.004;
     ctx.clearRect(0,0,W,H);
-    // 三层远山（淡墨、低透明、更多留白、相位/斜率各异 => 视差深度）
-    ridge(H*0.62, 26, 0.0035, t*0.5,   '#9aa39d', 0.10,  60);
-    ridge(H*0.74, 34, 0.0045, t*0.8+2, '#7c8580', 0.13, -40);
-    ridge(H*0.88, 42, 0.0055, t*1.1+4, '#5e6762', 0.16,  30);
-    brushEdge(H*0.62,26,0.0035,t*0.5,60,'rgba(10,15,13,.5)');
-    brushEdge(H*0.74,34,0.0045,t*0.8+2,-40,'rgba(10,15,13,.5)');
-    brushEdge(H*0.88,42,0.0055,t*1.1+4,30,'rgba(10,15,13,.5)');
+    // 远山三层：花青(远)/青绿灰(中)/淡墨(主)，山线抬高、幅加大 => 山为主体
+    ridge(H*0.45, 40, 0.0035, t*0.5,   '#3a4a6a', 0.12,  60);
+    ridge(H*0.62, 60, 0.0045, t*0.8+2, '#5a6a5a', 0.15, -40);
+    ridge(H*0.78, 80, 0.0055, t*1.1+4, '#4a5550', 0.18,  30);
+    brushEdge(H*0.45,40,0.0035,t*0.5,60,'rgba(58,74,106,0.6)');
+    brushEdge(H*0.62,60,0.0045,t*0.8+2,-40,'rgba(90,106,90,0.6)');
+    brushEdge(H*0.78,80,0.0055,t*1.1+4,30,'rgba(74,85,80,0.6)');
+    ochreCaps(t);   // 主山山顶赭石点缀
+    greenTrees();   // 近处青绿树木点缀
     // 雾带
     for(let i=0;i<3;i++){
       const my=H*(0.46+i*0.16)+Math.sin(t*0.7+i)*8;
@@ -264,9 +278,10 @@
   window.addEventListener('scroll',onScroll,{passive:true});
   resize();
   if(reduce){
-    ridge(H*0.62,26,0.0035,0,'#9aa39d',0.10,60);
-    ridge(H*0.74,34,0.0045,2,'#7c8580',0.13,-40);
-    ridge(H*0.88,42,0.0055,4,'#5e6762',0.16,30);
+    ridge(H*0.45,40,0.0035,0,'#3a4a6a',0.12,60);
+    ridge(H*0.62,60,0.0045,2,'#5a6a5a',0.15,-40);
+    ridge(H*0.78,80,0.0055,4,'#4a5550',0.18,30);
+    ochreCaps(0); greenTrees();
   } else { requestAnimationFrame(frame); }
 })();
 </script>
@@ -316,14 +331,15 @@ function drawScroll(){
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   svg.setAttribute('width',W);
   const tsList=CHAIN.map(b=>Date.parse(b.ts));
-  const tmin=Math.min(...tsList), tmax=Math.max(...tsList);
-  const xOf=(t)=> tmax===tmin ? padX+(W-2*padX)/2 : padX+(t-tmin)/(tmax-tmin)*(W-2*padX);
+  const n=CHAIN.length;
+  // 横轴按 index 均分，避免同秒时间戳（#0/#1 同为 09:37:16Z）墨点重叠
+  const xOf=(i)=> n===1 ? padX+(W-2*padX)/2 : padX + (i/(n-1))*(W-2*padX);
   const y=H/2;
   let svgParts='';
   // 轴线
   svgParts+=`<line class="ink-line${brokenFlag()?' broken':''}" x1="${padX}" y1="${y}" x2="${W-padX}" y2="${y}"/>`;
   CHAIN.forEach((b,i)=>{
-    const x=xOf(tsList[i]);
+    const x=xOf(i);
     const prevOk = i===0 ? (b.hash_prev==='genesis') : (b.hash_prev===CHAIN[i-1].hash_now);
     const col = prevOk ? 'var(--ink-deep)' : 'var(--vermilion)';
     svgParts+=`<g class="dot" data-i="${i}" tabindex="0" role="button" aria-label="Block #${i} 时间点">
