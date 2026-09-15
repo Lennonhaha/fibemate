@@ -167,7 +167,7 @@
   <div class="snap" id="snap"></div>
 
 <script>
-/* ===== 马蒂斯《舞蹈》封面动画（Canvas 2D，零外部依赖；5 人环舞 + 手拉手链 + 红/蓝/绿 + 未来链朱红虚线） ===== */
+/* ===== 赵孟頫水墨封面 v2（Canvas 2D，零外部依赖；fbm 不对称山形 + 分形墨洇 + 飞白笔触 + 远山三层视差 + 雾带 + 滚动透视） ===== */
 (function(){
   const cv=document.getElementById('inkbg');
   if(!cv) return;
@@ -175,58 +175,105 @@
   if(!ctx) return;
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let W=0,H=0,dpr=1;
-  const RED='#c8302a', REDGHOST='rgba(200,48,42,0.30)', BLUE_A='#163e6e', BLUE_B='#1f5a8a', GREEN_A='#1f5a3a', GREEN_B='#2f7a4a', INK='#0a0f0d', FUTURE='#d94f4f';
+  // 确定性 value noise + fbm（避免 SSR 依赖）
+  function hash(n){ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); }
+  function vnoise(x){ const i=Math.floor(x), f=x-i, u=f*f*(3-2*f); return hash(i)*(1-u)+hash(i+1)*u; }
+  function fbm(x){ let v=0,a=0.5,f=1; for(let o=0;o<4;o++){ v+=a*vnoise(x*f); f*=2.1; a*=0.5; } return v; }
   function resize(){
     dpr=Math.min(window.devicePixelRatio||1,2);
     W=cv.clientWidth; H=cv.clientHeight;
     cv.width=Math.max(1,W*dpr); cv.height=Math.max(1,H*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  // 背景：蓝/绿平涂渐变（马蒂斯式）
-  function drawBg(a){
-    const g=ctx.createLinearGradient(0,0,W,H);
-    g.addColorStop(0, BLUE_A); g.addColorStop(0.5, BLUE_B); g.addColorStop(1, GREEN_B);
-    ctx.globalAlpha=0.92+0.08*Math.sin(a*0.7); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    const gg=ctx.createLinearGradient(0,H*0.6,0,H);
-    gg.addColorStop(0,'rgba(31,90,58,0)'); gg.addColorStop(1, GREEN_A);
-    ctx.globalAlpha=0.5+0.1*Math.sin(a*0.5+1.5); ctx.fillStyle=gg; ctx.fillRect(0,H*0.6,W,H*0.4);
+  // 山脊基准 y 坐标（每层有不同斜率 = 左右不对称）
+  function ridgeY(x,yBase,amp,freq,phase,asym){
+    const nx=x/W, base=yBase+(nx-0.5)*asym;
+    return base-(fbm(x*freq+phase)*amp+fbm(x*freq*2.7+phase*1.7)*amp*0.35);
+  }
+  // 远山三层：山线抬高（占画面 1/2）+ 幅加大；花青(远)/青绿灰(中)/淡墨(主)
+  function ridge(yBase,amp,freq,phase,color,alpha,asym){
+    ctx.beginPath(); ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=5){ ctx.lineTo(x,ridgeY(x,yBase,amp,freq,phase,asym)); }
+    ctx.lineTo(W,H); ctx.closePath();
+    ctx.globalAlpha=alpha; ctx.fillStyle=color; ctx.fill(); ctx.globalAlpha=1;
+  }
+  // 飞白笔触：沿山脊走，hash>0.10 才画 => 不规则断笔
+  function brushEdge(yBase,amp,freq,phase,asym,color){
+    ctx.strokeStyle=color; ctx.lineWidth=1.3; ctx.globalAlpha=1;
+    let pen=false;
+    for(let x=0;x<=W;x+=3){
+      const y=ridgeY(x,yBase,amp,freq,phase,asym);
+      if(hash(x*0.9+phase*3.1)>0.10){
+        if(!pen){ ctx.beginPath(); ctx.moveTo(x,y); pen=true; } else ctx.lineTo(x,y);
+      } else if(pen){ ctx.stroke(); pen=false; }
+    }
+    if(pen) ctx.stroke(); ctx.globalAlpha=1;
+  }
+  // 主山山顶赭石点缀（点——马蒂斯原画里的岩块小色块）
+  function ochreCaps(t){
+    ctx.fillStyle='#a0522d'; ctx.globalAlpha=0.55;
+    const yB=H*0.78,amp=80,freq=0.0055,phase=t*1.1+4,asym=30;
+    for(let x=50;x<W-50;x+=64){
+      const y=ridgeY(x,yB,amp,freq,phase,asym);
+      ctx.beginPath(); ctx.arc(x,y-3,2.4,0,Math.PI*2); ctx.fill();
+    }
     ctx.globalAlpha=1;
   }
-  // 5 人围圈手拉手；idx<3 实心红=真 block，其余为「未来/潜在」ghost
-  function drawDancers(angle, t){
-    const cx=W*0.5, cy=H*0.52, R=Math.min(W,H)*0.27, N=5;
-    const pts=[];
-    for(let i=0;i<N;i++){
-      const a=angle + i/N*Math.PI*2;
-      const swing=Math.sin(t*1.1 + i*1.3)*0.06;
-      const rr=R*(1+swing);
-      pts.push({x:cx+Math.cos(a)*rr, y:cy+Math.sin(a)*rr, real:i<3});
+  // 近处青绿树木点缀
+  function greenTrees(){
+    ctx.strokeStyle='#3a6a5a'; ctx.fillStyle='#3a6a5a'; ctx.globalAlpha=0.55; ctx.lineWidth=2;
+    const baseY=H*0.90;
+    for(let x=70;x<W-50;x+=130){
+      ctx.beginPath(); ctx.moveTo(x,baseY); ctx.lineTo(x,baseY-16); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x,baseY-19,4.5,0,Math.PI*2); ctx.fill();
     }
-    // 手拉手：real-real 实线；含 ghost 的链为「未来/未锚定」=> 朱红虚线
-    ctx.lineWidth=3.2; ctx.lineCap='round';
-    for(let i=0;i<N;i++){
-      const p=pts[i], q=pts[(i+1)%N];
-      const future = !(p.real && q.real);
-      ctx.strokeStyle = future ? FUTURE : INK;
-      if(future){ ctx.setLineDash([6,7]); ctx.globalAlpha=0.9; } else { ctx.setLineDash([]); ctx.globalAlpha=1; }
-      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
-    }
-    ctx.setLineDash([]); ctx.globalAlpha=1;
-    // 人：圆头 + 身体椭圆
-    for(let i=0;i<N;i++){
-      const p=pts[i], bodyR=R*0.20;
-      ctx.fillStyle = p.real ? RED : REDGHOST;
-      ctx.beginPath(); ctx.arc(p.x, p.y-bodyR*0.55, bodyR*0.42, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(p.x, p.y+bodyR*0.45, bodyR*0.30, bodyR*0.62, 0, 0, Math.PI*2); ctx.fill();
-      if(p.real){ ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(p.x, p.y-bodyR*0.55, bodyR*0.42, 0, Math.PI*2); ctx.stroke(); }
+    ctx.globalAlpha=1;
+  }
+  // 分形墨洇：多层 radialGradient 错位叠加 => 不规则墨边
+  const blooms=[]; let lastSpawn=0;
+  function spawnBloom(){
+    blooms.push({x:W*(0.15+Math.random()*0.7),y:H*(0.20+Math.random()*0.45),r:1,max:46+Math.random()*64,a:0.12,seed:Math.random()*100});
+  }
+  function drawBloom(b){
+    for(let l=0;l<5;l++){
+      const ox=(fbm(b.seed+l*1.3)-0.5)*b.r*0.5;
+      const oy=(fbm(b.seed+l*2.7)-0.5)*b.r*0.5;
+      const rr=b.r*(0.45+l/5);
+      const rg=ctx.createRadialGradient(b.x+ox,b.y+oy,0,b.x+ox,b.y+oy,rr);
+      rg.addColorStop(0,'rgba(10,15,13,'+(b.a*0.55).toFixed(3)+')');
+      rg.addColorStop(1,'rgba(10,15,13,0)');
+      ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(b.x+ox,b.y+oy,rr,0,Math.PI*2); ctx.fill();
     }
   }
   let t=0, running=true;
   function frame(ts){
     if(!running) return;
-    t+=0.004; const angle=t*0.18;
+    t+=0.004;
     ctx.clearRect(0,0,W,H);
-    drawBg(t); drawDancers(angle, t);
+    // 远山三层（花青/青绿灰/淡墨，山占画面约 1/2）
+    ridge(H*0.45,40,0.0035,t*0.5,  '#3a4a6a',0.12, 60);
+    ridge(H*0.62,60,0.0045,t*0.8+2,'#5a6a5a',0.15,-40);
+    ridge(H*0.78,80,0.0055,t*1.1+4,'#4a5550',0.18, 30);
+    // 飞白笔触（色随层）
+    brushEdge(H*0.45,40,0.0035,t*0.5,60, 'rgba(58,74,106,0.6)');
+    brushEdge(H*0.62,60,0.0045,t*0.8+2,-40,'rgba(90,106,90,0.6)');
+    brushEdge(H*0.78,80,0.0055,t*1.1+4,30,'rgba(74,85,80,0.6)');
+    // 赭石点缀 + 青绿树
+    ochreCaps(t); greenTrees();
+    // 雾带（宣纸般淡暖色）
+    for(let i=0;i<3;i++){
+      const my=H*(0.46+i*0.16)+Math.sin(t*0.7+i)*8;
+      const g=ctx.createLinearGradient(0,my-26,0,my+26);
+      g.addColorStop(0,'rgba(233,228,216,0)'); g.addColorStop(0.5,'rgba(233,228,216,0.45)'); g.addColorStop(1,'rgba(233,228,216,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,my-26,W,52);
+    }
+    // 分形墨洇
+    if(!reduce && ts-lastSpawn>2400){ spawnBloom(); lastSpawn=ts; }
+    for(let i=blooms.length-1;i>=0;i--){
+      const b=blooms[i]; b.r+=0.45; b.a*=0.993;
+      if(b.r>b.max||b.a<0.008){ blooms.splice(i,1); continue; }
+      drawBloom(b);
+    }
     requestAnimationFrame(frame);
   }
   function onScroll(){
@@ -240,7 +287,12 @@
   window.addEventListener('resize',resize);
   window.addEventListener('scroll',onScroll,{passive:true});
   resize();
-  if(reduce){ drawBg(0); drawDancers(0,0); } else { requestAnimationFrame(frame); }
+  if(reduce){
+    ridge(H*0.45,40,0.0035,0,'#3a4a6a',0.12,60);
+    ridge(H*0.62,60,0.0045,2,'#5a6a5a',0.15,-40);
+    ridge(H*0.78,80,0.0055,4,'#4a5550',0.18,30);
+    ochreCaps(0); greenTrees();
+  } else { requestAnimationFrame(frame); }
 })();
 </script>
 
