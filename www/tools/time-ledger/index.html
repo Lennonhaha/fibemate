@@ -9,9 +9,9 @@
     --ink-deep:#0a0f0d;        /* 深墨 */
     --ink-mid:#4a5550;         /* 淡墨 */
     --ink-soft:#8a938e;        /* 远墨 */
-    --jade:#00E5C3;            /* 青绿 */
+    --jade:#23b39c;            /* 青绿 */
     --ochre:#a0522d;           /* 赭印 */
-    --vermilion:#d94f4f;       /* 朱红（链断） */
+    --vermilion:#c04343;       /* 朱红（链断） */
     --paper:#e9e4d8;           /* 宣纸 */
     --paper-2:#ded7c7;
   }
@@ -25,7 +25,11 @@
       linear-gradient(180deg,var(--paper),var(--paper-2));
     min-height:100vh;
   }
-  .wrap{max-width:1080px;margin:0 auto;padding:38px 26px 60px;}
+  .wrap{position:relative;z-index:3;background:var(--paper);max-width:1080px;margin:100vh auto 0;padding:38px 26px 60px;}
+
+  .js .reveal{opacity:0;transform:translateY(26px);transition:opacity .9s ease,transform .9s ease;}
+  .js .reveal.in{opacity:1;transform:none;}
+  .block{padding:8px 0;}
 
   .stamp{
     position:fixed;top:18px;right:18px;z-index:50;
@@ -38,23 +42,28 @@
   .stamp b{display:block;font-size:13px;margin-bottom:4px;letter-spacing:1px;}
   .stamp .en{font-family:system-ui,sans-serif;font-size:9px;opacity:.92;margin-top:4px;line-height:1.35;}
 
-  /* ===== 封面 / 首屏（同盲点地图模式，赵孟頫水墨 v1.1） ===== */
-  .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;
-    align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:0 24px;}
-  #inkbg{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block;}
-  .hero-inner{position:relative;z-index:1;max-width:780px;transform-style:preserve-3d;}
-  .hero h1{font-size:clamp(40px,8vw,76px);margin:0;font-weight:600;letter-spacing:10px;
+  /* ===== 封面 / 首屏（对齐前 4 工具卡模板：#inkbg 固定满屏画布 + .hero-overlay 居中标题 + .hstars 三墨点动机） ===== */
+  #inkbg{position:fixed;inset:0;width:100vw;height:100vh;z-index:0;display:block;}
+  .hero-overlay{position:fixed;inset:0;display:flex;flex-direction:column;justify-content:center;
+    align-items:center;pointer-events:none;text-align:center;z-index:2;padding:0 24px;}
+  .hero-overlay .en{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:var(--ink-soft);margin:0 0 22px;opacity:.85;}
+  .hero-overlay h1{font-size:clamp(40px,8vw,76px);margin:0;font-weight:600;letter-spacing:10px;
     color:var(--ink-deep);
     text-shadow:0 1px 0 rgba(255,255,255,.45), 0 14px 34px rgba(10,15,13,.20);}
-  .hero .sub{margin-top:16px;font-size:clamp(13px,2.4vw,18px);color:var(--ink-mid);letter-spacing:3px;}
-  .hero .tag{display:inline-block;margin-top:24px;padding:7px 18px;border:1px solid var(--ink-mid);
-    border-radius:999px;font-size:12.5px;letter-spacing:2px;color:var(--ink-mid);
-    background:rgba(233,228,216,.5);}
-  .hero .cue{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);z-index:1;
-    color:var(--ink-mid);font-size:12px;letter-spacing:4px;text-align:center;
-    animation:bob 1.8s ease-in-out infinite;}
-  .hero .cue span{display:block;font-size:22px;margin-top:6px;}
-  @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,9px)}}
+  .hero-overlay .lead{margin-top:16px;font-size:clamp(13px,2.2vw,17px);font-weight:300;color:var(--ink-mid);letter-spacing:2px;max-width:500px;line-height:1.85;opacity:.92;}
+  .hero-overlay .badge{margin-top:22px;padding:5px 15px;border:1px solid rgba(74,85,80,.5);border-radius:999px;
+    font-size:11px;letter-spacing:2px;color:var(--ink-mid);background:rgba(233,228,216,.4);}
+  .scroll-hint{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:2;
+    color:var(--ink-soft);font-size:10px;letter-spacing:.28em;opacity:.6;animation:fade 2.8s ease-in-out infinite;}
+  @keyframes fade{0%,100%{opacity:.25}50%{opacity:.7}}
+  /* 三墨点 = 3 个真实 block（对应 detector 的三星动机） */
+  .hstars{display:flex;gap:38px;margin-top:28px;justify-content:center;pointer-events:auto;}
+  .hstar{position:relative;display:flex;flex-direction:column;align-items:center;cursor:default;}
+  .hstar svg{width:30px;height:30px;transition:filter .35s ease,transform .35s ease;}
+  .hstar:hover svg{filter:drop-shadow(0 0 9px var(--jade));transform:translateY(-2px);}
+  .hstar em{position:absolute;top:38px;font-style:normal;font-size:11px;letter-spacing:.08em;color:var(--ochre);
+    opacity:0;transform:translateY(-4px);transition:opacity .35s ease,transform .35s ease;white-space:nowrap;pointer-events:none;}
+  .hstar:hover em{opacity:1;transform:none;}
 
   header h1{font-size:30px;margin:0 0 6px;font-weight:600;letter-spacing:2px;}
   header .sub{color:var(--ink-mid);font-size:14px;letter-spacing:1px;}
@@ -72,17 +81,42 @@
     background:
       repeating-linear-gradient(90deg, rgba(10,15,13,.025) 0 1px, transparent 1px 60px);
   }
+  /* 流动墨点：沿链线 #0→#2 滑过，7s 循环 */
+  .flow-dot{position:absolute;top:calc(50% + 2px);left:7.4%;width:7px;height:7px;border-radius:50%;
+    background:var(--ink-mid);opacity:0;pointer-events:none;transform:translate(-50%,-50%);
+    animation:flowSlide 7s ease-in-out infinite;}
+  @keyframes flowSlide{
+    0%{left:7.4%;opacity:0;}
+    8%{opacity:0.30;}
+    46%{left:92.6%;opacity:0.30;}
+    54%{left:92.6%;opacity:0;}
+    54.01%{left:7.4%;opacity:0;}
+    100%{left:7.4%;opacity:0;}
+  }
+  /* 墨点呼吸：极微 scale，4s，三点错相位 */
+  .dot circle.core{animation:dotBreathe 4s ease-in-out infinite;}
+  .dot:nth-child(odd) circle.core{animation-delay:0s;}
+  .dot:nth-child(even) circle.core{animation-delay:1.3s;}
+  .dot:nth-child(3n) circle.core{animation-delay:2.6s;}
+  @keyframes dotBreathe{
+    0%,100%{r:6;}
+    50%{r:6.3;}
+  }
+  @media(prefers-reduced-motion:reduce){
+    .flow-dot{display:none;}
+    .dot circle.core{animation:none;}
+  }
   svg.handscroll{display:block;width:100%;height:240px;min-width:760px;}
-  .ink-line{stroke:var(--ink-mid);stroke-width:2.4;fill:none;opacity:.75;}
-  .ink-line.broken{stroke:var(--vermilion);stroke-dasharray:6 7;opacity:.9;}
+  .ink-line{stroke:var(--ink-mid);stroke-width:2.8;fill:none;opacity:.72;stroke-linecap:round;}
+  .ink-line.broken{stroke:var(--vermilion);stroke-width:2.8;stroke-dasharray:6 7;opacity:.9;stroke-linecap:round;}
   .dot{cursor:pointer;}
   .dot circle.core{fill:var(--ink-deep);transition:r .15s ease;}
-  .dot:hover circle.core{r:9;}
+  .dot:hover circle.core{r:10;}
   .dot:focus{outline:none;}
-  .dot:focus circle.core{r:9;stroke:var(--jade);stroke-width:2;}
-  .dot circle.halo{fill:var(--jade);opacity:0;transition:opacity .15s ease;}
-  .dot:hover circle.halo{opacity:.35;}
-  .axis-label{fill:var(--ink-soft);font-size:11px;font-family:system-ui,sans-serif;}
+  .dot:focus circle.core{r:10;stroke:var(--jade);stroke-width:2;}
+  .dot circle.halo{fill:var(--jade);opacity:0.18;transition:opacity .15s ease;}
+  .dot:hover circle.halo{opacity:.40;}
+  .axis-label{fill:var(--ink-soft);font-size:10px;font-family:system-ui,sans-serif;opacity:.72;}
   .tick{stroke:var(--ink-soft);stroke-width:1;opacity:.5;}
 
   .snap{position:fixed;pointer-events:none;z-index:60;min-width:260px;max-width:330px;
@@ -95,19 +129,46 @@
   .snap .v{word-break:break-all;color:var(--ink-deep);}
   .snap .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;}
 
-  #verifyOut{font-size:13px;line-height:1.8;}
+  #verifyOut{font-size:13px;line-height:1.8;opacity:0;transition:opacity 0.25s ease;}
+  #verifyOut.rendered{opacity:1;}
   .ok{color:#1b7a5a;font-weight:600;}
   .bad{color:var(--vermilion);font-weight:600;}
   .btn{display:inline-block;cursor:pointer;border:1px solid var(--ink-mid);
     background:var(--ink-deep);color:var(--paper);padding:8px 18px;border-radius:6px;
     font-size:13px;letter-spacing:1px;font-family:inherit;margin-top:4px;}
   .btn:hover{background:var(--ochre);}
+  button.btn[data-loading="true"]{opacity:.55;cursor:wait;background:var(--ink-mid);}
+  .v-card{background:rgba(10,15,13,.04);border:1px solid rgba(10,15,13,.10);border-left:3px solid var(--ink-mid);padding:10px 14px;margin-bottom:8px;border-radius:2px;font-size:12.5px;line-height:1.7;transition:background .18s ease;}
+  .v-card:hover{background:rgba(10,15,13,.07);}
+  .v-card.ok{border-left-color:var(--jade);}
+  .v-card.bad{border-left-color:var(--vermilion);}
+  .v-card-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-weight:600;}
+  .v-card-num{font-family:ui-monospace,Menlo,Consolas,monospace;color:var(--ink-deep);letter-spacing:.04em;}
+  .v-card-status{font-size:12px;}
+  .v-card.ok .v-card-status{color:var(--jade);}
+  .v-card.bad .v-card-status{color:var(--vermilion);}
+  .v-row{display:grid;grid-template-columns:92px 1fr;gap:8px;}
+  .v-row .k{color:var(--ink-mid);font-size:11.5px;}
+  .v-row .v{color:var(--ink-deep);font-size:11.5px;}
+  .v-row .v.mono{font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:-.01em;}
+  .v-card.summary{margin-top:12px;background:rgba(10,15,13,.06);display:flex;justify-content:space-between;align-items:center;font-size:13px;font-weight:600;}
   .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--ink-mid);margin-top:8px;}
   .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;}
   footer{margin-top:30px;font-size:11px;color:var(--ink-soft);line-height:1.7;
     border-top:1px dashed rgba(10,15,13,.2);padding-top:14px;}
   code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;
     background:rgba(10,15,13,.06);padding:1px 5px;border-radius:3px;}
+
+  /* ===== 隶书字体栈：系统有则隶书，无则楷体降级衬线 ===== */
+  .hero-overlay h1,
+  .hero-overlay .en,
+  .hero-overlay .lead,
+  .hero-overlay .badge,
+  .panel h2,
+  .v-card-num,
+  .snap h3,
+  header h1,
+  .stamp b{font-family:"STLiti","LiSu","FZLiShu","华文隶书","STKaiti","KaiTi","Noto Serif SC",serif;}
 </style>
 </head>
 <body>
@@ -118,23 +179,29 @@
   </div>
 
   <!-- 封面 / 首屏 -->
-  <section class="hero" id="hero">
-    <canvas id="inkbg"></canvas>
-    <div class="hero-inner">
-      <h1>密码时间账本</h1>
-      <div class="sub">Crypto Time Ledger · 可复现 RFC 3161 时间戳链</div>
-      <div class="tag">demo seed · 3 block · 真 TSR 验签</div>
+  <canvas id="inkbg"></canvas>
+  <div class="hero-overlay">
+    <div class="en">Crypto Time Ledger</div>
+    <h1>密码时间账本</h1>
+    <div class="lead">把「某算法在某 commit 下被纳入账本」串成可复现的 RFC 3161 时间戳链，水墨手卷逐点展开。</div>
+    <div class="badge">demo seed · 3 block · 真 TSR 验签</div>
+    <div class="hstars">
+      <div class="hstar"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="none" stroke="#0a0f0d" stroke-width="1.4" opacity=".7"/><circle cx="18" cy="18" r="4" fill="#0a0f0d"/></svg><em>block #0</em></div>
+      <div class="hstar"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="none" stroke="#0a0f0d" stroke-width="1.4" opacity=".7"/><circle cx="18" cy="18" r="4" fill="#0a0f0d"/></svg><em>block #1</em></div>
+      <div class="hstar"><svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="12" fill="none" stroke="#0a0f0d" stroke-width="1.4" opacity=".7"/><circle cx="18" cy="18" r="4" fill="#0a0f0d"/></svg><em>block #2</em></div>
     </div>
-    <div class="cue">看手卷<span>↓</span></div>
-  </section>
+  </div>
+  <div class="scroll-hint">SCROLL ↓</div>
 
   <div class="wrap">
+    <section class="block reveal">
     <div class="panel">
       <h2>手卷 · 时间链</h2>
-      <p>横向展开如赵孟頫手卷：每一墨点为一个账本时间点（block），墨线串接即链连续；
+      <p>横向展开如手卷：每一墨点为一个账本时间点（block），墨线串接即链连续；
          若某点 <code>hash_prev</code> 与前一 <code>hash_now</code> 不符，则此处朱红断笔，明示链断。</p>
       <div class="scroll-area">
         <svg class="handscroll" id="scroll" preserveAspectRatio="none"></svg>
+        <div class="flow-dot" aria-hidden="true"></div>
       </div>
       <div class="legend">
         <span><i style="background:var(--ink-deep)"></i>墨点 = 时间点</span>
@@ -142,7 +209,9 @@
         <span><i style="background:var(--vermilion)"></i>朱红 = 链断</span>
       </div>
     </div>
+    </section>
 
+    <section class="block reveal">
     <div class="panel">
       <h2>验真 · 浏览器内复算</h2>
       <p>下方按钮在浏览器用 Web Crypto 重算每 block 的 <code>hash_now</code>（采用与
@@ -151,6 +220,7 @@
       <button class="btn" id="verifyBtn">验真整链</button>
       <div id="verifyOut" style="margin-top:12px"></div>
     </div>
+    </section>
 
     <footer>
       <div>本页为<strong>演示种子数据</strong>：3 个 block 由 <code>fibemate-tools</code> 的
@@ -164,10 +234,14 @@
     </footer>
   </div>
 
+  </div>
+
   <div class="snap" id="snap"></div>
 
+  <script>document.documentElement.className=(document.documentElement.className+' js').trim();</script>
+
 <script>
-/* ===== 马蒂斯《舞蹈》封面动画（Canvas 2D，零外部依赖；5 人环舞 + 手拉手链 + 红/蓝/绿 + 未来链朱红虚线） ===== */
+/* ===== 水墨封面 v2（Canvas 2D，零外部依赖；fbm 不对称山形 + 分形墨洇 + 飞白笔触 + 远山三层视差 + 雾带 + 滚动透视） ===== */
 (function(){
   const cv=document.getElementById('inkbg');
   if(!cv) return;
@@ -175,64 +249,214 @@
   if(!ctx) return;
   const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let W=0,H=0,dpr=1;
-  const RED='#c8302a', REDGHOST='rgba(200,48,42,0.30)', BLUE_A='#163e6e', BLUE_B='#1f5a8a', GREEN_A='#1f5a3a', GREEN_B='#2f7a4a', INK='#0a0f0d', FUTURE='#d94f4f';
+  // 颗粒/噪点层（宣纸/胶片质感）：离屏生成一次，帧末低透明叠加
+  const grainCv=document.createElement('canvas'); grainCv.width=128; grainCv.height=128;
+  const gctx=grainCv.getContext('2d');
+  (function buildGrain(){
+    const id=gctx.createImageData(128,128); const d=id.data;
+    for(let i=0;i<d.length;i+=4){ const v=Math.random()*255|0; d[i]=d[i+1]=d[i+2]=v; d[i+3]=255; }
+    gctx.putImageData(id,0,0);
+  })();
+  const grainPat=ctx.createPattern(grainCv,'repeat');
+  function drawGrain(){
+    ctx.save(); ctx.globalAlpha=0.07; ctx.fillStyle=grainPat; ctx.fillRect(0,0,W,H); ctx.restore();
+  }
+  // 确定性 value noise + fbm（避免 SSR 依赖）
+  function hash(n){ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); }
+  function vnoise(x){ const i=Math.floor(x), f=x-i, u=f*f*(3-2*f); return hash(i)*(1-u)+hash(i+1)*u; }
+  function fbm(x){ let v=0,a=0.5,f=1; for(let o=0;o<4;o++){ v+=a*vnoise(x*f); f*=2.1; a*=0.5; } return v; }
   function resize(){
     dpr=Math.min(window.devicePixelRatio||1,2);
     W=cv.clientWidth; H=cv.clientHeight;
     cv.width=Math.max(1,W*dpr); cv.height=Math.max(1,H*dpr);
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
-  // 背景：蓝/绿平涂渐变（马蒂斯式）
-  function drawBg(a){
-    const g=ctx.createLinearGradient(0,0,W,H);
-    g.addColorStop(0, BLUE_A); g.addColorStop(0.5, BLUE_B); g.addColorStop(1, GREEN_B);
-    ctx.globalAlpha=0.92+0.08*Math.sin(a*0.7); ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
-    const gg=ctx.createLinearGradient(0,H*0.6,0,H);
-    gg.addColorStop(0,'rgba(31,90,58,0)'); gg.addColorStop(1, GREEN_A);
-    ctx.globalAlpha=0.5+0.1*Math.sin(a*0.5+1.5); ctx.fillStyle=gg; ctx.fillRect(0,H*0.6,W,H*0.4);
-    ctx.globalAlpha=1;
+  // 山脊基准 y 坐标（每层有不同斜率 = 左右不对称）+ fbm 多倍频山形
+  function mountainShape(x,yBase,amp,freq,phase,asym){
+    const nx=x/W, base=yBase+(nx-0.5)*asym;
+    // fbm 多倍频叠加替代单一正弦：oct1 大势 + oct2 山脊细节 + oct3 微褶
+    const o1=fbm(x*freq+phase)*amp;
+    const o2=fbm(x*freq*2.3+phase*1.7)*amp*0.40;
+    const o3=fbm(x*freq*5.1+phase*2.9)*amp*0.12;
+    return base-(o1+o2+o3);
   }
-  // 5 人围圈手拉手；idx<3 实心红=真 block，其余为「未来/潜在」ghost
-  function drawDancers(angle, t){
-    const cx=W*0.5, cy=H*0.52, R=Math.min(W,H)*0.27, N=5;
-    const pts=[];
-    for(let i=0;i<N;i++){
-      const a=angle + i/N*Math.PI*2;
-      const swing=Math.sin(t*1.1 + i*1.3)*0.06;
-      const rr=R*(1+swing);
-      pts.push({x:cx+Math.cos(a)*rr, y:cy+Math.sin(a)*rr, real:i<3});
+  function ridgeY(x,yBase,amp,freq,phase,asym){
+    return mountainShape(x,yBase,amp,freq,phase,asym);
+  }
+  // 主峰局部高斯抬升（近山右侧 W*0.63，郭熙"主峰如君臣"）
+  function mainPeakBoost(x,yBase,amp){
+    const cx=W*0.63, sigma=W*0.06;
+    const dx=x-cx, boost=40*Math.exp(-(dx*dx)/(2*sigma*sigma));
+    return -boost; // 负值 = 山脊上抬
+  }
+  // 远山三层：山线抬高（占画面 1/2）+ 幅加大；花青(远)/青绿灰(中)/淡墨(主)
+  function ridge(yBase,amp,freq,phase,color,alpha,asym,side){
+    side = side===undefined?1:side;
+    // 浓淡渗染（皴法）：顶浓底透的线性渐变，替代平涂
+    const r=parseInt(color.slice(1,3),16), g=parseInt(color.slice(3,5),16), b=parseInt(color.slice(5,7),16);
+    const grad=ctx.createLinearGradient(0,yBase-amp*0.3, 0,H);
+    grad.addColorStop(0,    `rgba(${r},${g},${b},${alpha})`);
+    grad.addColorStop(0.35, `rgba(${r},${g},${b},${alpha*0.55})`);
+    grad.addColorStop(1,    `rgba(${r},${g},${b},0)`);
+    ctx.fillStyle=grad;
+    ctx.beginPath(); ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=5){ const nx=x/W; const ramp=side===1?Math.pow(nx,1.4):Math.pow(1-nx,1.4); const y=ridgeY(x,yBase,amp*ramp,freq,phase,asym)+(yBase>H*0.5?mainPeakBoost(x,yBase,amp*ramp):0); ctx.lineTo(x,y); }
+    ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+  }
+  // 飞白笔触：沿山脊走，hash>0.10 才画 => 不规则断笔
+  function brushEdge(yBase,amp,freq,phase,asym,color,side){
+    side = side===undefined?1:side;
+    ctx.strokeStyle=color; ctx.globalAlpha=1;
+    let pen=false;
+    for(let x=0;x<=W;x+=3){
+      const nx=x/W; const ramp=side===1?Math.pow(nx,1.25):Math.pow(1-nx,1.25);
+      const jit=(fbm(x*0.6+phase*2.3)-0.5)*6;
+      const y=ridgeY(x,yBase,amp*ramp,freq,phase,asym)+jit;
+      if(hash(x*0.9+phase*3.1)>0.08){
+        ctx.lineWidth=0.8+hash(x*1.7+phase)*1.4;
+        ctx.globalAlpha=0.35+hash(x*2.3+phase)*0.5;
+        if(!pen){ ctx.beginPath(); ctx.moveTo(x,y); pen=true; } else ctx.lineTo(x,y);
+      } else if(pen){ ctx.stroke(); pen=false; }
     }
-    // 手拉手：real-real 实线；含 ghost 的链为「未来/未锚定」=> 朱红虚线
-    ctx.lineWidth=3.2; ctx.lineCap='round';
-    for(let i=0;i<N;i++){
-      const p=pts[i], q=pts[(i+1)%N];
-      const future = !(p.real && q.real);
-      ctx.strokeStyle = future ? FUTURE : INK;
-      if(future){ ctx.setLineDash([6,7]); ctx.globalAlpha=0.9; } else { ctx.setLineDash([]); ctx.globalAlpha=1; }
-      ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y); ctx.stroke();
+    if(pen) ctx.stroke(); ctx.globalAlpha=1;
+  }
+  // 主山山顶赭石点缀（点——马蒂斯原画里的岩块小色块）
+  function inkMist(t){
+    // 水墨云气·缓漂（山间留白处呼吸感，三团云气缓慢横向漂移）
+    const clouds=[
+      {fx:0.25,fy:0.40,r:130,dx:40,dy:14,alpha:0.06,speed:0.20},
+      {fx:0.50,fy:0.50,r:170,dx:32,dy:18,alpha:0.05,speed:0.15},
+      {fx:0.75,fy:0.55,r:110,dx:48,dy:12,alpha:0.07,speed:0.25}
+    ];
+    for(const c of clouds){
+      const x=W*c.fx + Math.sin(t*c.speed)*c.dx;
+      const y=H*c.fy + Math.cos(t*c.speed*0.7)*c.dy;
+      const g=ctx.createRadialGradient(x,y,c.r*0.2, x,y,c.r);
+      g.addColorStop(0,`rgba(20,40,70,${c.alpha})`);
+      g.addColorStop(1,'rgba(20,40,70,0)');
+      ctx.fillStyle=g; ctx.beginPath(); ctx.arc(x,y,c.r,0,Math.PI*2); ctx.fill();
     }
-    ctx.setLineDash([]); ctx.globalAlpha=1;
-    // 人：圆头 + 身体椭圆
-    for(let i=0;i<N;i++){
-      const p=pts[i], bodyR=R*0.20;
-      ctx.fillStyle = p.real ? RED : REDGHOST;
-      ctx.beginPath(); ctx.arc(p.x, p.y-bodyR*0.55, bodyR*0.42, 0, Math.PI*2); ctx.fill();
-      ctx.beginPath(); ctx.ellipse(p.x, p.y+bodyR*0.45, bodyR*0.30, bodyR*0.62, 0, 0, Math.PI*2); ctx.fill();
-      if(p.real){ ctx.strokeStyle='rgba(255,255,255,0.35)'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(p.x, p.y-bodyR*0.55, bodyR*0.42, 0, Math.PI*2); ctx.stroke(); }
+  }
+
+  function vermilionDrops(t){
+    // 朱红渲染色块（滴墨感）：位置稳定，大小不一，沿远山山脊偏右
+    const drops=[
+      {fx:0.48,r:8},{fx:0.52,r:4},{fx:0.55,r:11},
+      {fx:0.59,r:3},{fx:0.62,r:6},{fx:0.66,r:9},
+      {fx:0.70,r:4},{fx:0.74,r:13},{fx:0.78,r:5},
+      {fx:0.82,r:8},{fx:0.86,r:3},{fx:0.90,r:6}
+    ];
+    const yB=H*0.24,amp=35,freq=0.003,phase=t*0.5,asym=50;
+    for(const d of drops){
+      const x=W*d.fx;
+      const y=ridgeY(x,yB,amp,freq,phase,asym)-6;
+      const r=d.r;
+      // 滴墨：径向渐变（中心实色，向外晕染至透明）
+      const grad=ctx.createRadialGradient(x,y,0,x,y,r);
+      grad.addColorStop(0,  'rgba(200,48,42,0.80)');
+      grad.addColorStop(0.5,'rgba(200,48,42,0.45)');
+      grad.addColorStop(1,  'rgba(200,48,42,0)');
+      ctx.fillStyle=grad;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
+    }
+  }
+  // 披麻黴·山脊下侧柔和平行短线簇（赵孟黼一路水墨）
+  function hempCun(yBase,amp,freq,phase,asym,side){
+    side=side===undefined?1:side;
+    ctx.lineCap='round'; ctx.lineWidth=1;
+    const strokes=22;
+    for(let i=0;i<strokes;i++){
+      const xFrac=0.18+i*0.030+Math.sin(i*1.7)*0.008;
+      const x=W*xFrac, nx=x/W;
+      const ramp=side===1?Math.pow(nx,1.4):Math.pow(1-nx,1.4);
+      const top=ridgeY(x,yBase,amp*ramp,freq,phase,asym);
+      const len=10+(i%4)*3; // 10-19px
+      const ang=Math.PI/2+(Math.sin(i*2.7)-0.5)*0.3;
+      const ex=x+Math.cos(ang)*1.5, ey=top+2+Math.sin(ang)*len;
+      const a=0.08+Math.sin(i*1.3)*0.025; // 0.055-0.105
+      ctx.strokeStyle=`rgba(20,30,50,${a.toFixed(3)})`;
+      ctx.beginPath(); ctx.moveTo(x,top+2); ctx.lineTo(ex,ey); ctx.stroke();
+    }
+  }
+  // 浓墨点·几株小树（介字点简版，黛色，比山重，近山脊上点睛）
+  function inkTrees(){
+    ctx.fillStyle='rgba(15,25,40,0.88)';
+    ctx.strokeStyle='rgba(15,25,40,0.88)';
+    ctx.lineWidth=0.8;
+    const positions=[
+      {x:0.52,y:0.72,s:1.00},
+      {x:0.60,y:0.74,s:0.85},
+      {x:0.69,y:0.76,s:1.10},
+      {x:0.78,y:0.79,s:0.90},
+      {x:0.85,y:0.81,s:0.80}
+    ];
+    for(const p of positions){
+      const x=W*p.x, y=H*p.y, s=p.s;
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+4*s); ctx.stroke();
+      ctx.beginPath(); ctx.arc(x-2*s,y-1*s,1.6*s,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x+2*s,y-1*s,1.6*s,0,Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(x,y+1*s,1.4*s,0,Math.PI*2); ctx.fill();
+    }
+  }
+  // 分形墨洇：多层 radialGradient 错位叠加 => 不规则墨边
+  const blooms=[]; let lastSpawn=0;
+  function spawnBloom(){
+    blooms.push({x:W*(0.5+Math.random()*0.45),y:H*(0.18+Math.random()*0.42),r:1,max:46+Math.random()*64,a:0.12,seed:Math.random()*100});
+  }
+  function drawBloom(b){
+    for(let l=0;l<5;l++){
+      const ox=(fbm(b.seed+l*1.3)-0.5)*b.r*0.5;
+      const oy=(fbm(b.seed+l*2.7)-0.5)*b.r*0.5;
+      const rr=b.r*(0.45+l/5);
+      const rg=ctx.createRadialGradient(b.x+ox,b.y+oy,0,b.x+ox,b.y+oy,rr);
+      rg.addColorStop(0,'rgba(10,15,13,'+(b.a*0.55).toFixed(3)+')');
+      rg.addColorStop(1,'rgba(10,15,13,0)');
+      ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(b.x+ox,b.y+oy,rr,0,Math.PI*2); ctx.fill();
     }
   }
   let t=0, running=true;
   function frame(ts){
     if(!running) return;
-    t+=0.004; const angle=t*0.18;
+    t+=0.004;
     ctx.clearRect(0,0,W,H);
-    drawBg(t); drawDancers(angle, t);
+    // 远山三层（花青/青绿灰/淡墨，山占画面约 1/2）
+    // 三层山（远淡中浓近深·蓝靛色为主）—— 顶部上抬，上半屏不再空白
+    ridge(H*0.24,35,0.0030,t*0.5,   '#8a94a6',0.12,  50,1);  // 远（冷灰蓝·黛·退）
+    ridge(H*0.42,55,0.0040,t*0.8+2, '#5a6678',0.28, -40,1);  // 中（深灰蓝·黛）
+    ridge(H*0.62,95,0.0050,t*1.1+4, '#1f2a3a',0.58,  30,1);  // 近（墨·黛·渗染晕开·主峰）
+    // 披麻黴·山脊下侧柔和平行短线簇（赵孟黼水墨一路）
+    hempCun(H*0.24,35,0.0030,t*0.5,  50,1);
+    hempCun(H*0.42,55,0.0040,t*0.8+2,-40,1);
+    hempCun(H*0.62,95,0.0050,t*1.1+4, 30,1);
+    // 飞白笔触（色随层 + 毛边抖动）
+    brushEdge(H*0.24,35,0.0030,t*0.5,  50,'rgba(138,148,166,0.50)',1);
+    brushEdge(H*0.42,55,0.0040,t*0.8+2,-40,'rgba(90,102,120,0.62)',1);
+    brushEdge(H*0.62,95,0.0050,t*1.1+4, 30,'rgba(31,42,58,0.88)',1);
+    // 朱红渲染色块（滴墨感，大小不一）
+    vermilionDrops(t);
+    // 水墨云气·缓漂（山间留白处呼吸感）
+    inkMist(t);
+    // 青绿树
+    inkTrees();
+    drawGrain();
+    // 雾带（宣纸般淡暖色）
+    for(let i=0;i<3;i++){
+      const my=H*(0.38+i*0.18)+Math.sin(t*0.7+i)*8;
+      const g=ctx.createLinearGradient(0,my-26,0,my+26);
+      g.addColorStop(0,'rgba(233,228,216,0)'); g.addColorStop(0.5,'rgba(233,228,216,0.45)'); g.addColorStop(1,'rgba(233,228,216,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,my-26,W,52);
+    }
+    // 分形墨洇
+    if(!reduce && ts-lastSpawn>2400){ spawnBloom(); lastSpawn=ts; }
+    for(let i=blooms.length-1;i>=0;i--){
+      const b=blooms[i]; b.r+=0.45; b.a*=0.993;
+      if(b.r>b.max||b.a<0.008){ blooms.splice(i,1); continue; }
+      drawBloom(b);
+    }
     requestAnimationFrame(frame);
   }
-  function onScroll(){
-    const hero=document.getElementById('hero');
-    if(hero) hero.style.transform='perspective(900px) rotateX('+Math.min((window.scrollY||0)*0.02,6)+'deg)';
-  }
+  // 旧：per-scroll 伪 3D 倾斜（A 对齐后 hero 固定满屏，已禁用，避免与 .hero-overlay 冲突）
+  function onScroll(){}
   if('IntersectionObserver' in window){
     const io=new IntersectionObserver((es)=>{ es.forEach(e=>{ running=e.isIntersecting; if(running) requestAnimationFrame(frame); }); },{threshold:0});
     io.observe(cv);
@@ -240,7 +464,18 @@
   window.addEventListener('resize',resize);
   window.addEventListener('scroll',onScroll,{passive:true});
   resize();
-  if(reduce){ drawBg(0); drawDancers(0,0); } else { requestAnimationFrame(frame); }
+  if(reduce){
+    ridge(H*0.24,35,0.0030,0,'#8a94a6',0.12, 50,1);
+    ridge(H*0.42,55,0.0040,2,'#5a6678',0.28,-40,1);
+    ridge(H*0.62,95,0.0050,4,'#1f2a3a',0.58, 30,1);
+    hempCun(H*0.24,35,0.0030,0, 50,1);
+    hempCun(H*0.42,55,0.0040,2,-40,1);
+    hempCun(H*0.62,95,0.0050,4, 30,1);
+    vermilionDrops(0);
+    inkMist(0);
+    inkTrees();
+    drawGrain();
+  } else { requestAnimationFrame(frame); }
 })();
 </script>
 
@@ -373,6 +608,104 @@ document.getElementById('verifyBtn').addEventListener('click',async()=>{
 });
 
 loadChain();
+window.CHAIN = CHAIN;
+</script>
+<script>
+/* 轻量对齐：.reveal 进入视口渐显（独立脚本，不触及手卷/验真逻辑层） */
+(function(){
+  var els=document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)){ els.forEach(function(e){e.classList.add('in');}); return; }
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+  },{threshold:0.12});
+  els.forEach(function(e){ io.observe(e); });
+})();
+</script>
+
+<script>
+/* ===== 验真重排 v2：读 CHAIN 不解析文本，整体替换 #verifyOut ===== */
+(function(){
+  if(!window.CHAIN) return;
+  var out=document.getElementById('verifyOut');
+  var btn=document.getElementById('verifyBtn');
+  if(!out||!btn) return;
+
+  var processing=false;
+
+  function checkAndRender(){
+    if(processing) return;
+    var divs=out.querySelectorAll('div.ok, div.bad');
+    if(divs.length<CHAIN.length+1) return;  // 等 handler 写完：N+1 行
+
+    processing=true;
+
+    // 结构信号：读 class，不读文本
+    var verdicts=[];
+    for(var i=0;i<divs.length && verdicts.length<CHAIN.length;i++){
+      verdicts.push(divs[i].classList.contains('ok'));
+    }
+
+    renderCards(out, verdicts);
+
+    setTimeout(function(){
+      btn.disabled=false;
+      btn.removeAttribute('data-loading');
+      btn.textContent='验真整链';
+      processing=false;
+    }, 50);
+  }
+
+  function renderCards(target, verdicts){
+    var cards=[];
+    var prev='genesis';
+    var allOk=true;
+    for(var i=0;i<CHAIN.length;i++){
+      var b=CHAIN[i];
+      var ok=verdicts[i];
+      if(!ok) allOk=false;
+      var linkOk=(i===0 && b.hash_prev==='genesis') || (b.hash_prev===prev);
+      var tsrOk=!!b.tsr_digest && b.tsr_digest.startsWith('sha256:');
+      prev=b.hash_now;
+      cards.push(cardHtml(b, ok, linkOk, tsrOk));
+    }
+    cards.push(summaryHtml(allOk, CHAIN.length));
+    target.innerHTML=cards.join('');
+    target.classList.add('rendered');  // 触发渐显
+  }
+
+  function esc(s){ return String(s).replace(/[&<>]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]; }); }
+  function shortHash(h){ return esc(h.slice(0,22))+'…'; }
+
+  function cardHtml(b, ok, linkOk, tsrOk){
+    return '<div class="v-card '+(ok?'ok':'bad')+'">'
+      +'<div class="v-card-head">'
+        +'<span class="v-card-num">#'+esc(b.index)+'</span>'
+        +'<span class="v-card-status">'+(ok?'✓ 通过':'✗ 失败')+'</span>'
+      +'</div>'
+      +'<div class="v-row"><span class="k">hash_now</span><span class="v mono">'+shortHash(b.hash_now)+'</span></div>'
+      +'<div class="v-row"><span class="k">链连续</span><span class="v">'+(linkOk?'✓ 是':'✗ 断')+'</span></div>'
+      +'<div class="v-row"><span class="k">TSR 附着</span><span class="v">'+(tsrOk?'✓ 是':'✗ 否')+'</span></div>'
+    +'</div>';
+  }
+
+  function summaryHtml(allOk, n){
+    return '<div class="v-card summary '+(allOk?'ok':'bad')+'">'
+      +'<span class="v-card-num">总计</span>'
+      +'<span class="v-card-status">'+(allOk?'✓ 整链验真通过（'+n+' blocks）':'✗ 验真失败')+'</span>'
+    +'</div>';
+  }
+
+  var obs=new MutationObserver(checkAndRender);
+  obs.observe(out, {childList:true, subtree:true, characterData:true});
+
+  btn.addEventListener('click', function(){
+    out.innerHTML='';                 // 清旧结果（避免重验时被旧 divs 误判）
+    out.classList.remove('rendered');  // 触发 fade-out
+    btn.disabled=true;
+    btn.setAttribute('data-loading','true');
+    btn.textContent='验真中…';
+  });
+})();
 </script>
 </body>
 </html>
