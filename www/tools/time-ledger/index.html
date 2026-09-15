@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>密码时间账本 · Crypto Time Ledger</title>
+<style>
+  :root{
+    --ink-deep:#0a0f0d;        /* 深墨 */
+    --ink-mid:#4a5550;         /* 淡墨 */
+    --ink-soft:#8a938e;        /* 远墨 */
+    --jade:#00E5C3;            /* 青绿 */
+    --ochre:#a0522d;           /* 赭印 */
+    --vermilion:#d94f4f;       /* 朱红（链断） */
+    --paper:#e9e4d8;           /* 宣纸 */
+    --paper-2:#ded7c7;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:var(--paper);color:var(--ink-deep);
+    font-family:"Songti SC","STSong","SimSun","Noto Serif CJK SC",serif;}
+  /* 宣纸纹理 + 淡墨晕染 */
+  body{
+    background:
+      radial-gradient(120% 80% at 20% -10%, rgba(10,15,13,.06), transparent 60%),
+      radial-gradient(100% 70% at 90% 110%, rgba(10,15,13,.08), transparent 55%),
+      linear-gradient(180deg,var(--paper),var(--paper-2));
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:38px 26px 60px;}
+
+  /* 朱印式角标（demo 声明） */
+  .stamp{
+    position:fixed;top:18px;right:18px;z-index:50;
+    width:128px;padding:10px 8px;text-align:center;
+    background:var(--vermilion);color:#fff;
+    border:2px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.25);
+    transform:rotate(3deg);font-size:11px;line-height:1.5;letter-spacing:.5px;
+    border-radius:4px;font-family:"KaiTi","STKaiti",serif;
+  }
+  .stamp b{display:block;font-size:13px;margin-bottom:4px;letter-spacing:1px;}
+  .stamp .en{font-family:system-ui,sans-serif;font-size:9px;opacity:.92;margin-top:4px;line-height:1.35;}
+
+  header h1{font-size:30px;margin:0 0 6px;font-weight:600;letter-spacing:2px;}
+  header .sub{color:var(--ink-mid);font-size:14px;letter-spacing:1px;}
+  header .rule{height:2px;background:linear-gradient(90deg,var(--ink-deep),transparent);
+    margin:16px 0 26px;opacity:.65;}
+
+  .panel{background:rgba(255,255,255,.28);border:1px solid rgba(10,15,13,.12);
+    border-radius:8px;padding:18px 20px;margin-bottom:22px;
+    backdrop-filter:blur(2px);}
+  .panel h2{margin:0 0 10px;font-size:17px;letter-spacing:1px;color:var(--ink-deep);}
+  .panel p{margin:6px 0;font-size:13.5px;color:var(--ink-mid);line-height:1.7;}
+
+  /* 手卷 */
+  .scroll-area{position:relative;overflow-x:auto;padding:34px 10px 26px;
+    border-top:1px solid rgba(10,15,13,.15);border-bottom:1px solid rgba(10,15,13,.15);
+    background:
+      repeating-linear-gradient(90deg, rgba(10,15,13,.025) 0 1px, transparent 1px 60px);
+  }
+  svg.handscroll{display:block;width:100%;height:240px;min-width:760px;}
+  .ink-line{stroke:var(--ink-mid);stroke-width:2.4;fill:none;opacity:.75;}
+  .ink-line.broken{stroke:var(--vermilion);stroke-dasharray:6 7;opacity:.9;}
+  .dot{cursor:pointer;}
+  .dot circle.core{fill:var(--ink-deep);transition:r .15s ease;}
+  .dot:hover circle.core{r:9;}
+  .dot:focus{outline:none;}
+  .dot:focus circle.core{r:9;stroke:var(--jade);stroke-width:2;}
+  .dot circle.halo{fill:var(--jade);opacity:0;transition:opacity .15s ease;}
+  .dot:hover circle.halo{opacity:.35;}
+  .axis-label{fill:var(--ink-soft);font-size:11px;font-family:system-ui,sans-serif;}
+  .tick{stroke:var(--ink-soft);stroke-width:1;opacity:.5;}
+
+  /* 快照卡 */
+  .snap{position:fixed;pointer-events:none;z-index:60;min-width:260px;max-width:330px;
+    background:rgba(233,228,216,.98);border:1px solid var(--ink-mid);border-radius:8px;
+    padding:12px 14px;font-size:12.5px;color:var(--ink-deep);box-shadow:0 6px 22px rgba(0,0,0,.18);
+    display:none;line-height:1.65;}
+  .snap h3{margin:0 0 6px;font-size:14px;color:var(--ochre);letter-spacing:1px;}
+  .snap .row{display:flex;gap:8px;}
+  .snap .k{color:var(--ink-mid);min-width:74px;}
+  .snap .v{word-break:break-all;color:var(--ink-deep);}
+  .snap .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;}
+
+  /* 验证结果 */
+  #verifyOut{font-size:13px;line-height:1.8;}
+  .ok{color:#1b7a5a;font-weight:600;}
+  .bad{color:var(--vermilion);font-weight:600;}
+  .btn{display:inline-block;cursor:pointer;border:1px solid var(--ink-mid);
+    background:var(--ink-deep);color:var(--paper);padding:8px 18px;border-radius:6px;
+    font-size:13px;letter-spacing:1px;font-family:inherit;margin-top:4px;}
+  .btn:hover{background:var(--ochre);}
+  .legend{display:flex;gap:18px;flex-wrap:wrap;font-size:12px;color:var(--ink-mid);margin-top:8px;}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:6px;vertical-align:-1px;}
+  footer{margin-top:30px;font-size:11px;color:var(--ink-soft);line-height:1.7;
+    border-top:1px dashed rgba(10,15,13,.2);padding-top:14px;}
+  code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;
+    background:rgba(10,15,13,.06);padding:1px 5px;border-radius:3px;}
+</style>
+</head>
+<body>
+  <!-- 朱印式 demo 角标 -->
+  <div class="stamp" role="note" aria-label="demo seed disclaimer">
+    <b>演示种子</b>
+    来自工具 test fixtures<br/>非生产测量
+    <div class="en">DEMO SEED DATA · from tool test fixtures · not production measurement</div>
+  </div>
+
+  <div class="wrap">
+    <header>
+      <h1>密码时间账本</h1>
+      <div class="sub">Crypto Time Ledger · 可复现 RFC 3161 时间戳链</div>
+      <div class="rule"></div>
+    </header>
+
+    <div class="panel">
+      <h2>手卷 · 时间链</h2>
+      <p>横向展开如赵孟頫手卷：每一墨点为一个账本时间点（block），墨线串接即链连续；
+         若某点 <code>hash_prev</code> 与前一 <code>hash_now</code> 不符，则此处朱红断笔，明示链断。</p>
+      <div class="scroll-area">
+        <svg class="handscroll" id="scroll" preserveAspectRatio="none"></svg>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--ink-deep)"></i>墨点 = 时间点</span>
+        <span><i style="background:var(--jade)"></i>青绿 = 链连续</span>
+        <span><i style="background:var(--vermilion)"></i>朱红 = 链断</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>验真 · 浏览器内复算</h2>
+      <p>下方按钮在浏览器用 Web Crypto 重算每 block 的 <code>hash_now</code>（采用与
+         <code>core.ts</code> 一致的 RFC 8785 风格键排序），并校验链连续性与 TSR 附着标记。
+         TSR 签名验真在服务端 <code>cli.ts add</code> 已执行（本页仅标注其附着）。</p>
+      <button class="btn" id="verifyBtn">验真整链</button>
+      <div id="verifyOut" style="margin-top:12px"></div>
+    </div>
+
+    <footer>
+      <div>本页为<strong>演示种子数据</strong>：3 个 block 由 <code>fibemate-tools</code> 的
+        <code>crypto-time-ledger</code> 工具经 <code>cli.ts add</code> 真实写入，每个 TSR 均由
+        <code>test/fixtures</code> 中真实 <code>.tsr</code> + <code>pinned-certs.pem</code> 密码学验签通过
+        （<code>d22f33f6…</code> 因签发证书不在锚点内，系工具故意负例，未纳入）。</div>
+      <div style="margin-top:6px"><code>git_commit = 0c4f3c3</code>（fibemate-tools 当时 HEAD，可复现）。
+        <strong>非生产测量，不代表任何真实业务时间线。</strong></div>
+      <div style="margin-top:6px">数据实时取自 fibemate-tools <code>main</code> 的 <code>data/time-ledger/chain.json</code>（跨仓 raw 拉取）；
+        若拉取失败则回退至本页内联快照（与链同源，可能非最新）。</div>
+    </footer>
+  </div>
+
+  <div class="snap" id="snap"></div>
+
+<script>
+/* ===== 内联兜底数据（与 data/time-ledger/chain.json 同源；优先 fetch 真实文件） ===== */
+const EMBEDDED = [
+  {"schema_version":1,"index":0,"ts":"2026-09-14T09:37:16.000Z","state":{"algorithms":[{"name":"ML-KEM-768","version":"1.0","lib":"noble"}],"git_commit":"0c4f3c3","note":"demo-seed from test fixtures"},"tsr_digest":"sha256:a1dc0b259c908d82dc5cf6d7c66e6e788d2573e16ec43652bd3518e4465a0ea8","tsr_ref":"a1dc0b259c908d82dc5cf6d7c66e6e788d2573e16ec43652bd3518e4465a0ea8.tsr","hash_prev":"genesis","hash_now":"sha256:afa972af57bbbe12f85f01c3d1d19b3600cd7c43d19c351ed1ea8631d199a6f5"},
+  {"schema_version":1,"index":1,"ts":"2026-09-14T09:37:16.000Z","state":{"algorithms":[{"name":"ML-DSA-65","version":"2.0","lib":"noble"}],"git_commit":"0c4f3c3","note":"demo-seed from test fixtures"},"tsr_digest":"sha256:acc11a37bd8cd3e53c980e0450243908d23925ec128cb1299fc94377d7ee69f0","tsr_ref":"acc11a37bd8cd3e53c980e0450243908d23925ec128cb1299fc94377d7ee69f0.tsr","hash_prev":"sha256:afa972af57bbbe12f85f01c3d1d19b3600cd7c43d19c351ed1ea8631d199a6f5","hash_now":"sha256:2678dc22248e718b0dac3dd2f2c79b0a9d1340c3094b9fb8b3b2b77e0964f33b"},
+  {"schema_version":1,"index":2,"ts":"2026-09-14T09:37:17.000Z","state":{"algorithms":[{"name":"SLH-DSA-128f","version":"1.0","lib":"noble"}],"git_commit":"0c4f3c3","note":"demo-seed from test fixtures"},"tsr_digest":"sha256:c229ed071f3611c3b4ac25bd39bc1743af7c5ec4cd58b57ac1c990af0649b53a","tsr_ref":"c229ed071f3611c3b4ac25bd39bc1743af7c5ec4cd58b57ac1c990af0649b53a.tsr","hash_prev":"sha256:2678dc22248e718b0dac3dd2f2c79b0a9d1340c3094b9fb8b3b2b77e0964f33b","hash_now":"sha256:9a54e29de07fe6bf3360fe1fd84eb07a4cf87d9cb5b3d3e5dd8b1d1271541b42"}
+];
+
+let CHAIN = EMBEDDED;
+
+/* RFC 8785 风格键排序（与 core.ts canonicalize 对齐：排除 hash_now、tsr_ref） */
+function stableStringify(v){
+  if(v===null||typeof v!=='object'){
+    if(typeof v==='string') return JSON.stringify(v).replace(/ /g,'\\u2028').replace(/ /g,'\\u2029');
+    return JSON.stringify(v);
+  }
+  if(Array.isArray(v)) return '['+v.map(stableStringify).join(',')+']';
+  const keys=Object.keys(v).sort();
+  return '{'+keys.map(k=>JSON.stringify(k)+':'+stableStringify(v[k])).join(',')+'}';
+}
+function canonical(block){
+  const o={schema_version:block.schema_version,index:block.index,ts:block.ts,
+    state:block.state,tsr_digest:block.tsr_digest,hash_prev:block.hash_prev};
+  return stableStringify(o);
+}
+async function sha256hex(s){
+  const buf=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));
+  return 'sha256:'+[...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function loadChain(){
+  try{
+    const r=await fetch('https://raw.githubusercontent.com/Lennonhaha/fibemate-tools/main/data/time-ledger/chain.json',{cache:'no-store'});
+    if(r.ok){ const j=await r.json(); if(Array.isArray(j)&&j.length) CHAIN=j; }
+  }catch(e){ /* 用内联兜底 */ }
+  drawScroll();
+}
+
+/* ===== 手卷绘制 ===== */
+function drawScroll(){
+  const svg=document.getElementById('scroll');
+  const W=Math.max(760, CHAIN.length*230+120), H=240, padX=60, padY=70;
+  svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+  svg.setAttribute('width',W);
+  const tsList=CHAIN.map(b=>Date.parse(b.ts));
+  const tmin=Math.min(...tsList), tmax=Math.max(...tsList);
+  const xOf=(t)=> tmax===tmin ? padX+(W-2*padX)/2 : padX+(t-tmin)/(tmax-tmin)*(W-2*padX);
+  const y=H/2;
+  let svgParts='';
+  // 轴线
+  svgParts+=`<line class="ink-line${brokenFlag()?' broken':''}" x1="${padX}" y1="${y}" x2="${W-padX}" y2="${y}"/>`;
+  CHAIN.forEach((b,i)=>{
+    const x=xOf(tsList[i]);
+    const prevOk = i===0 ? (b.hash_prev==='genesis') : (b.hash_prev===CHAIN[i-1].hash_now);
+    const col = prevOk ? 'var(--ink-deep)' : 'var(--vermilion)';
+    svgParts+=`<g class="dot" data-i="${i}" tabindex="0" role="button" aria-label="Block #${i} 时间点">
+      <circle class="halo" cx="${x}" cy="${y}" r="14"/>
+      <circle class="core" cx="${x}" cy="${y}" r="6" style="fill:${col}"/>
+    </g>`;
+    // 时间刻度
+    const d=new Date(tsList[i]);
+    const lbl=d.toISOString().slice(11,19)+'Z';
+    svgParts+=`<line class="tick" x1="${x}" y1="${y+10}" x2="${x}" y2="${y+16}"/>
+      <text class="axis-label" x="${x}" y="${y+30}" text-anchor="middle">${lbl}</text>
+      <text class="axis-label" x="${x}" y="${y-22}" text-anchor="middle">#${b.index}</text>`;
+  });
+  svg.innerHTML=svgParts;
+  // 绑定悬停 + 键盘可达性（WCAG：tabindex/role + Enter/Space）
+  svg.querySelectorAll('.dot').forEach(g=>{
+    const idx=+g.dataset.i;
+    const showAt=(ev)=>{
+      const r=g.getBoundingClientRect();
+      const cx=(ev&&typeof ev.clientX==='number')?ev.clientX:(r.left+r.width/2);
+      const cy=(ev&&typeof ev.clientY==='number')?ev.clientY:r.top;
+      showSnap(idx,{clientX:cx,clientY:cy});
+    };
+    g.addEventListener('mousemove',showAt);
+    g.addEventListener('mouseleave',hideSnap);
+    g.addEventListener('focus',showAt);
+    g.addEventListener('blur',hideSnap);
+    g.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); showAt(e); }});
+  });
+}
+function brokenFlag(){
+  for(let i=1;i<CHAIN.length;i++){
+    if(CHAIN[i].hash_prev!==CHAIN[i-1].hash_now) return true;
+  }
+  return false;
+}
+const snap=document.getElementById('snap');
+function showSnap(i,ev){
+  const b=CHAIN[i];
+  snap.innerHTML=`<h3>Block #${b.index}</h3>
+    <div class="row"><span class="k">时间</span><span class="v">${b.ts}</span></div>
+    <div class="row"><span class="k">算法</span><span class="v">${b.state.algorithms.map(a=>`${a.name}@${a.version}/${a.lib}`).join(', ')}</span></div>
+    <div class="row"><span class="k">git</span><span class="v mono">${b.state.git_commit}</span></div>
+    <div class="row"><span class="k">hash_now</span><span class="v mono">${b.hash_now.slice(0,22)}…</span></div>
+    <div class="row"><span class="k">hash_prev</span><span class="v mono">${b.hash_prev==='genesis'?'genesis':b.hash_prev.slice(0,22)+'…'}</span></div>
+    <div class="row"><span class="k">tsr</span><span class="v mono">${b.tsr_digest.slice(0,18)}…</span></div>
+    <div class="row"><span class="k">note</span><span class="v">${b.state.note||''}</span></div>`;
+  snap.style.display='block';
+  const x=Math.min(ev.clientX+14, window.innerWidth-340);
+  const y=Math.min(ev.clientY+14, window.innerHeight-220);
+  snap.style.left=x+'px'; snap.style.top=y+'px';
+}
+function hideSnap(){ snap.style.display='none'; }
+
+/* ===== 验真 ===== */
+document.getElementById('verifyBtn').addEventListener('click',async()=>{
+  const out=document.getElementById('verifyOut');
+  out.innerHTML='验真中…';
+  let allOk=true, lines=[];
+  let prev='genesis';
+  for(const b of CHAIN){
+    const recomputed=await sha256hex(canonical(b));
+    const hashOk=recomputed===b.hash_now;
+    const linkOk=(b.index===0 && b.hash_prev==='genesis') || (b.hash_prev===prev);
+    const tsrOk=!!b.tsr_digest && b.tsr_digest.startsWith('sha256:');
+    const ok=hashOk&&linkOk&&tsrOk;
+    if(!ok) allOk=false;
+    prev=b.hash_now;
+    lines.push(`<div class="${ok?'ok':'bad'}">#${b.index} ${ok?'✓':'✗'} 重算hash=${hashOk?'一致':'不符'} · 链连续=${linkOk?'是':'断'} · TSR附着=${tsrOk?'是':'否'}</div>`);
+  }
+  lines.push(`<div class="${allOk?'ok':'bad'}" style="margin-top:6px">${allOk?'整链验真通过 ✓（'+CHAIN.length+' blocks）':'链验真失败 ✗'}</div>`);
+  out.innerHTML=lines.join('');
+});
+
+loadChain();
+</script>
+</body>
+</html>
