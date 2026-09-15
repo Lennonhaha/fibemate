@@ -162,7 +162,7 @@ let CHAIN = EMBEDDED;
 /* RFC 8785 风格键排序（与 core.ts canonicalize 对齐：排除 hash_now、tsr_ref） */
 function stableStringify(v){
   if(v===null||typeof v!=='object'){
-    if(typeof v==='string') return JSON.stringify(v).replace(/ /g,'\\u2028').replace(/ /g,'\\u2029');
+    if(typeof v==='string') return JSON.stringify(v).replace(/\u2028/g,'\\u2028').replace(/\u2029/g,'\\u2029');
     return JSON.stringify(v);
   }
   if(Array.isArray(v)) return '['+v.map(stableStringify).join(',')+']';
