@@ -18,7 +18,6 @@
   *{box-sizing:border-box}
   html,body{margin:0;padding:0;background:var(--paper);color:var(--ink-deep);
     font-family:"Songti SC","STSong","SimSun","Noto Serif CJK SC",serif;}
-  /* 宣纸纹理 + 淡墨晕染 */
   body{
     background:
       radial-gradient(120% 80% at 20% -10%, rgba(10,15,13,.06), transparent 60%),
@@ -28,7 +27,6 @@
   }
   .wrap{max-width:1080px;margin:0 auto;padding:38px 26px 60px;}
 
-  /* 朱印式角标（demo 声明） */
   .stamp{
     position:fixed;top:18px;right:18px;z-index:50;
     width:128px;padding:10px 8px;text-align:center;
@@ -39,6 +37,24 @@
   }
   .stamp b{display:block;font-size:13px;margin-bottom:4px;letter-spacing:1px;}
   .stamp .en{font-family:system-ui,sans-serif;font-size:9px;opacity:.92;margin-top:4px;line-height:1.35;}
+
+  /* ===== 封面 / 首屏（同盲点地图模式，赵孟頫水墨 v1.1） ===== */
+  .hero{position:relative;min-height:100vh;display:flex;flex-direction:column;
+    align-items:center;justify-content:center;text-align:center;overflow:hidden;padding:0 24px;}
+  #inkbg{position:absolute;inset:0;width:100%;height:100%;z-index:0;display:block;}
+  .hero-inner{position:relative;z-index:1;max-width:780px;transform-style:preserve-3d;}
+  .hero h1{font-size:clamp(40px,8vw,76px);margin:0;font-weight:600;letter-spacing:10px;
+    color:var(--ink-deep);
+    text-shadow:0 1px 0 rgba(255,255,255,.45), 0 14px 34px rgba(10,15,13,.20);}
+  .hero .sub{margin-top:16px;font-size:clamp(13px,2.4vw,18px);color:var(--ink-mid);letter-spacing:3px;}
+  .hero .tag{display:inline-block;margin-top:24px;padding:7px 18px;border:1px solid var(--ink-mid);
+    border-radius:999px;font-size:12.5px;letter-spacing:2px;color:var(--ink-mid);
+    background:rgba(233,228,216,.5);}
+  .hero .cue{position:absolute;bottom:34px;left:50%;transform:translateX(-50%);z-index:1;
+    color:var(--ink-mid);font-size:12px;letter-spacing:4px;text-align:center;
+    animation:bob 1.8s ease-in-out infinite;}
+  .hero .cue span{display:block;font-size:22px;margin-top:6px;}
+  @keyframes bob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,9px)}}
 
   header h1{font-size:30px;margin:0 0 6px;font-weight:600;letter-spacing:2px;}
   header .sub{color:var(--ink-mid);font-size:14px;letter-spacing:1px;}
@@ -51,7 +67,6 @@
   .panel h2{margin:0 0 10px;font-size:17px;letter-spacing:1px;color:var(--ink-deep);}
   .panel p{margin:6px 0;font-size:13.5px;color:var(--ink-mid);line-height:1.7;}
 
-  /* 手卷 */
   .scroll-area{position:relative;overflow-x:auto;padding:34px 10px 26px;
     border-top:1px solid rgba(10,15,13,.15);border-bottom:1px solid rgba(10,15,13,.15);
     background:
@@ -70,7 +85,6 @@
   .axis-label{fill:var(--ink-soft);font-size:11px;font-family:system-ui,sans-serif;}
   .tick{stroke:var(--ink-soft);stroke-width:1;opacity:.5;}
 
-  /* 快照卡 */
   .snap{position:fixed;pointer-events:none;z-index:60;min-width:260px;max-width:330px;
     background:rgba(233,228,216,.98);border:1px solid var(--ink-mid);border-radius:8px;
     padding:12px 14px;font-size:12.5px;color:var(--ink-deep);box-shadow:0 6px 22px rgba(0,0,0,.18);
@@ -81,7 +95,6 @@
   .snap .v{word-break:break-all;color:var(--ink-deep);}
   .snap .mono{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11px;}
 
-  /* 验证结果 */
   #verifyOut{font-size:13px;line-height:1.8;}
   .ok{color:#1b7a5a;font-weight:600;}
   .bad{color:var(--vermilion);font-weight:600;}
@@ -98,20 +111,24 @@
 </style>
 </head>
 <body>
-  <!-- 朱印式 demo 角标 -->
   <div class="stamp" role="note" aria-label="demo seed disclaimer">
     <b>演示种子</b>
     来自工具 test fixtures<br/>非生产测量
     <div class="en">DEMO SEED DATA · from tool test fixtures · not production measurement</div>
   </div>
 
-  <div class="wrap">
-    <header>
+  <!-- 封面 / 首屏 -->
+  <section class="hero" id="hero">
+    <canvas id="inkbg"></canvas>
+    <div class="hero-inner">
       <h1>密码时间账本</h1>
       <div class="sub">Crypto Time Ledger · 可复现 RFC 3161 时间戳链</div>
-      <div class="rule"></div>
-    </header>
+      <div class="tag">demo seed · 3 block · 真 TSR 验签</div>
+    </div>
+    <div class="cue">看手卷<span>↓</span></div>
+  </section>
 
+  <div class="wrap">
     <div class="panel">
       <h2>手卷 · 时间链</h2>
       <p>横向展开如赵孟頫手卷：每一墨点为一个账本时间点（block），墨线串接即链连续；
@@ -148,6 +165,111 @@
   </div>
 
   <div class="snap" id="snap"></div>
+
+<script>
+/* ===== 水墨封面动画 v1.1（Canvas 2D，零外部依赖；伪 3D 深度：远山噪声+不对称视差 + 墨洇分形边 + 飞白笔触 + 滚动透视） ===== */
+(function(){
+  const cv=document.getElementById('inkbg');
+  if(!cv) return;
+  const ctx=cv.getContext('2d');
+  if(!ctx) return;
+  const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let W=0,H=0,dpr=1;
+  // 确定性 value noise / fbm（避免 SSR 依赖）
+  function hash(n){ const s=Math.sin(n*127.1+311.7)*43758.5453; return s-Math.floor(s); }
+  function vnoise(x){ const i=Math.floor(x), f=x-i, u=f*f*(3-2*f); return hash(i)*(1-u)+hash(i+1)*u; }
+  function fbm(x){ let v=0,a=0.5,f=1; for(let o=0;o<4;o++){ v+=a*vnoise(x*f); f*=2.1; a*=0.5; } return v; }
+  function resize(){
+    dpr=Math.min(window.devicePixelRatio||1,2);
+    W=cv.clientWidth; H=cv.clientHeight;
+    cv.width=Math.max(1,W*dpr); cv.height=Math.max(1,H*dpr);
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+  }
+  // 远山：淡墨、多频段、不对称（asym 左右斜率）、顶部留白
+  function ridge(yBase, amp, freq, phase, color, alpha, asym){
+    ctx.beginPath(); ctx.moveTo(0,H);
+    for(let x=0;x<=W;x+=5){
+      const nx=x/W;
+      const base=yBase + (nx-0.5)*asym;
+      const n=fbm(x*freq+phase)*amp + fbm(x*freq*2.7+phase*1.7)*amp*0.35;
+      ctx.lineTo(x, base - n);
+    }
+    ctx.lineTo(W,H); ctx.closePath();
+    ctx.globalAlpha=alpha; ctx.fillStyle=color; ctx.fill(); ctx.globalAlpha=1;
+  }
+  // 山脊飞白笔触（随机断笔 = 飞白）
+  function brushEdge(yBase, amp, freq, phase, asym, color){
+    ctx.strokeStyle=color; ctx.lineWidth=1.3; ctx.globalAlpha=0.45;
+    let pen=false;
+    for(let x=0;x<=W;x+=3){
+      const nx=x/W; const base=yBase+(nx-0.5)*asym;
+      const y=base - (fbm(x*freq+phase)*amp + fbm(x*freq*2.7+phase*1.7)*amp*0.35);
+      if(hash(x*0.9+phase*3.1) > 0.10){
+        if(!pen){ ctx.beginPath(); ctx.moveTo(x,y); pen=true; } else ctx.lineTo(x,y);
+      } else if(pen){ ctx.stroke(); pen=false; }
+    }
+    if(pen) ctx.stroke(); ctx.globalAlpha=1;
+  }
+  const blooms=[]; let lastSpawn=0;
+  function spawnBloom(){ blooms.push({x:W*(0.15+Math.random()*0.7), y:H*(0.20+Math.random()*0.45), r:1, max:46+Math.random()*64, a:0.12, seed:Math.random()*100}); }
+  function drawBloom(b){ // 多层错位渐变 => 不规则分形墨边
+    const layers=5;
+    for(let l=0;l<layers;l++){
+      const ox=(fbm(b.seed+l*1.3)-0.5)*b.r*0.5;
+      const oy=(fbm(b.seed+l*2.7)-0.5)*b.r*0.5;
+      const rr=b.r*(0.45+l/layers);
+      const rg=ctx.createRadialGradient(b.x+ox,b.y+oy,0,b.x+ox,b.y+oy,rr);
+      rg.addColorStop(0,'rgba(10,15,13,'+(b.a*0.55).toFixed(3)+')');
+      rg.addColorStop(1,'rgba(10,15,13,0)');
+      ctx.fillStyle=rg; ctx.beginPath(); ctx.arc(b.x+ox,b.y+oy,rr,0,Math.PI*2); ctx.fill();
+    }
+  }
+  let t=0, running=true;
+  function frame(ts){
+    if(!running) return;
+    t+=0.004;
+    ctx.clearRect(0,0,W,H);
+    // 三层远山（淡墨、低透明、更多留白、相位/斜率各异 => 视差深度）
+    ridge(H*0.62, 26, 0.0035, t*0.5,   '#9aa39d', 0.10,  60);
+    ridge(H*0.74, 34, 0.0045, t*0.8+2, '#7c8580', 0.13, -40);
+    ridge(H*0.88, 42, 0.0055, t*1.1+4, '#5e6762', 0.16,  30);
+    brushEdge(H*0.62,26,0.0035,t*0.5,60,'rgba(10,15,13,.5)');
+    brushEdge(H*0.74,34,0.0045,t*0.8+2,-40,'rgba(10,15,13,.5)');
+    brushEdge(H*0.88,42,0.0055,t*1.1+4,30,'rgba(10,15,13,.5)');
+    // 雾带
+    for(let i=0;i<3;i++){
+      const my=H*(0.46+i*0.16)+Math.sin(t*0.7+i)*8;
+      const g=ctx.createLinearGradient(0,my-26,0,my+26);
+      g.addColorStop(0,'rgba(233,228,216,0)'); g.addColorStop(0.5,'rgba(233,228,216,0.45)'); g.addColorStop(1,'rgba(233,228,216,0)');
+      ctx.fillStyle=g; ctx.fillRect(0,my-26,W,52);
+    }
+    // 墨洇（分形边 bloom）
+    if(!reduce && ts-lastSpawn>2400){ spawnBloom(); lastSpawn=ts; }
+    for(let i=blooms.length-1;i>=0;i--){
+      const b=blooms[i]; b.r+=0.45; b.a*=0.993;
+      if(b.r>b.max||b.a<0.008){ blooms.splice(i,1); continue; }
+      drawBloom(b);
+    }
+    requestAnimationFrame(frame);
+  }
+  function onScroll(){
+    const hero=document.getElementById('hero');
+    if(hero) hero.style.transform='perspective(900px) rotateX('+Math.min((window.scrollY||0)*0.02,6)+'deg)';
+  }
+  if('IntersectionObserver' in window){
+    const io=new IntersectionObserver((es)=>{ es.forEach(e=>{ running=e.isIntersecting; if(running) requestAnimationFrame(frame); }); },{threshold:0});
+    io.observe(cv);
+  }
+  window.addEventListener('resize',resize);
+  window.addEventListener('scroll',onScroll,{passive:true});
+  resize();
+  if(reduce){
+    ridge(H*0.62,26,0.0035,0,'#9aa39d',0.10,60);
+    ridge(H*0.74,34,0.0045,2,'#7c8580',0.13,-40);
+    ridge(H*0.88,42,0.0055,4,'#5e6762',0.16,30);
+  } else { requestAnimationFrame(frame); }
+})();
+</script>
 
 <script>
 /* ===== 内联兜底数据（与 data/time-ledger/chain.json 同源；优先 fetch 真实文件） ===== */
