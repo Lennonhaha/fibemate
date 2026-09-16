@@ -111,6 +111,24 @@ and require a security reasoning section in the PR (see [Code Review](#code-revi
 - Large binary files (use `git-lfs` or external hosting)
 - Anything that weakens post-quantum security guarantees
 
+## Frontend (www/) Discipline
+
+All tool pages under `www/tools/` must follow these four rules:
+
+1. **Zero external dependencies.** No CDN, no framework, no webfont
+   links. Pure native HTML/CSS/JS with Canvas 2D or inline SVG only.
+2. **No living-artist attribution.** Hero visuals may reference the
+   styles of deceased artists (Van Gogh / Turner / Klimt / Kandinsky /
+   Matisse / Zhao Mengfu), or use plain style descriptors
+   ("starry swirl", "gold-leaf mosaic", "geometric composition").
+   Do not name living artists. Avoid trademark, likeness, and
+   copyright risk.
+3. **Accessibility (WCAG).** Interactive elements must carry
+   `tabindex`, `role`, and `aria-label`; must be keyboard reachable;
+   must honor `prefers-reduced-motion`.
+4. **Directory naming.** Use kebab-case for tool directories
+   (`blind-spot-map`, `time-ledger`, `time-machine`).
+
 ## Development Setup
 
 See [BUILD.md](BUILD.md) for full instructions. Quick start:
