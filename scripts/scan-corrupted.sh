@@ -26,7 +26,7 @@ ISSUES=""
 for file in "${FILES[@]}"; do
   [ -f "$file" ] || continue
   # Skip files that DELIBERATELY match U+FFFD as a "detect garbled text" regex
-  # (e.g. scripts/health-check.js uses /锟斤拷|�{2,}|/ to flag broken webpages).
+  # (e.g. scripts/health-check.js uses /锟斤拷|\uFFFD{2,}|/ to flag broken webpages).
   if LC_ALL=C grep -qE 'hasGarbage|锟斤拷|乱码|garbled' "$file" 2>/dev/null; then
     continue
   fi

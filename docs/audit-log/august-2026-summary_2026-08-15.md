@@ -16,9 +16,9 @@
 - **教训 3**：**U+FFFD 是「不可逆损坏」铁证**，一旦出现只能从备份/历史重写，无法自动还原
 
 **事故 2：字面 U+FFFD 字符导致 CI 编码检查失败（08-15，三踩同坑）**
-- **根因**：写文档时举例「乱码长什么样」把字面 `�` 字符写进 .md 文件，`check-encoding.cjs` 把它当编码损坏检测出来
+- **根因**：写文档时举例「乱码长什么样」把字面 `\uFFFD` 字符写进 .md 文件，`check-encoding.cjs` 把它当编码损坏检测出来
 - **波及**：`docs/audit-log/encoding-repair_2026-08-14.md` → `168b8bbbb` 修复；`github-repo-triple-audit_20260815.md` → `f4db47dda` 修复；`sm2-frontend-verification.html` 含 52 个 GBK→UTF-8 损坏字符 → `7f285eb24` 重写
-- **教训**：**进 git 的 .md，若要「举例说明乱码符号」，必须写转义 `\uFFFD`，禁止写字面 `�` 字符**。规则已写入 TOOLS.md，同类坑 08-14/08-15 已踩 3 次。
+- **教训**：**进 git 的 .md，若要「举例说明乱码符号」，必须写转义 `\uFFFD`，禁止写字面 `\uFFFD` 字符**。规则已写入 TOOLS.md，同类坑 08-14/08-15 已踩 3 次。
 
 **事故 3：sm2-frontend-verification.html GBK 字节被当 UTF-8 保存（08-15，16:49）**
 - **根因**：原始文件 GBK 编码，某次工具保存时被当 UTF-8 写入，52 个中文字符的 GBK 字节被错误解释成 Extension B 汉字（U+9000-U+9FFF 区，如「驗」「鏈」「鑰」），Tauri/WebView2 渲染不出，显示乱码方块

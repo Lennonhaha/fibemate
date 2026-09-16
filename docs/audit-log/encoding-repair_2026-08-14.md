@@ -37,7 +37,7 @@
 ## 三、验证结果
 
 - **全量语法检查**：383 个 git 跟踪的 JS/mjs/cjs 文件 `node --check` 全部通过（0 语法错误）
-- **全仓库 U+FFFD 扫描**：除 `scripts/health-check.js:79` 的故意检测正则（`/锟斤拷|�{2,}|.../` 用于检测网页乱码，保留）外，全仓库 0 处 U+FFFD
+- **全仓库 U+FFFD 扫描**：除 `scripts/health-check.js:79` 的故意检测正则（`/锟斤拷|\uFFFD{2,}|.../` 用于检测网页乱码，保留）外，全仓库 0 处 U+FFFD
 - **功能冒烟**：
   - `packages/pqc-kem/src/ml-kem-768.js`：keygen OK（pk=1184B），encap/decap 一致 ✅
   - `www/demo/ml-kem-768.js`：浏览器版（window.MLKEM768），encap/decap 一致 ✅
@@ -60,6 +60,6 @@
 - **scripts/check-encoding.cjs**（新增）：Node.js 权威检测器，检测 U+FFFD 替换符 + 无效 UTF-8 + NUL 字节 + BOM（是 check-bom.cjs 的超集）。跨平台，946 文件全绿。
 - **scripts/scan-corrupted.sh**（新增）：bash 快速版（仅 U+FFFD），CI/ubuntu 用。
 - **ci.yml**（修改）：bom-check job 新增 `node scripts/check-encoding.cjs`。
-- **豁免逻辑**：两个脚本都豁免「故意检测乱码」的正则（health-check.js 的 `/锟斤拷|�{2,}|/`），避免误报。
+- **豁免逻辑**：两个脚本都豁免「故意检测乱码」的正则（health-check.js 的 `/锟斤拷|\uFFFD{2,}|/`），避免误报。
 - **.gitattributes 与 check-bom.cjs 之前已存在**（只测 BOM），本次补齐 U+FFFD/NUL/无效 UTF-8 检测。
 - 附带修复 MEMORY.md 自身的 2 处 NUL 字节（wasm-bindgen 0.2.126 / getrandom 0.2.17 的 `0` 被损坏成 NUL）。
