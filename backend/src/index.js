@@ -1,21 +1,62 @@
 // SPDX-License-Identifier: GPL-3.0-only
+// ---- Feature Flags (P0: compile-time-equivalent isolation) ----
+// All experimental code is gated behind flags.EXPERIMENTAL.
+// Production:      FIBEMATE_EXPERIMENTAL=0  (default, no experimental code runs)
+// Development:     FIBEMATE_EXPERIMENTAL=1  node src/index.js
+// Subsystem off:   FIBEMATE_EXPERIMENTAL=1 FIBEMATE_NO_MIXNET=1 node src/index.js
+const flags = require('./flags');
+
+const { safeCompare, safeCompareHex, safeFind, safeFindByField, timingSafe404 } = require('./lib/constant-time');
+
 /**
- * FIBEMATE Backend - 隐私增强即时通讯服务器
+ * Noir Backend - 端到端加密社交服务器
  * 架构: 服务器零知识 - 只转发密文，不解密、不存储消息内容
- * 版本: 2.0.0-alpha
  */
 
 const express = require('express');
 const http = require('http');
 const https = require('https');
 const WebSocket = require('ws');
-const Database = require('../src/db');
+const { WsPadding } = require('./crypto/ws-padding');
+const { UnifiedTrafficObfuscator } = require('./crypto/unified-traffic-obfuscator');
+
+const Database = require('./db-sqlite');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
-const { v4: uuidv4 } = require('uuid');
 const crypto = require('crypto');
+const uuidv4 = crypto.randomUUID;
 const path = require('path');
 const fs = require('fs');
+// ML-KEM-768 dual backend (FIPS 203): C native addon preferred -> bridged JS fallback
+// Fix 2026-09-02: previously required the JS source file (which exports MLKEM768 and has
+// NO keygen/encaps/decaps) as the "C addon", causing "mlkem.keygen is not a function".
+// Now loads native/build/Release/mlkem.node and falls back through packages/pqc-kem (bridged API).
+let mlkem;
+try {
+  mlkem = require('../packages/pqc-kem/native/build/Release/mlkem.node');
+  mlkem.keygen(); // self-test: verify the addon actually works
+} catch (_) {
+  mlkem = null;
+}
+if (!mlkem || typeof mlkem.keygen !== 'function') {
+  const PQC = require('../packages/pqc-kem'); // bridged API: generateKeypair/encapsulate/decapsulate
+  mlkem = {
+    keygen: () => {
+      const { publicKey, secretKey } = PQC.generateKeypair();
+      return [Buffer.from(publicKey), Buffer.from(secretKey)];
+    },
+    encaps: (pk) => {
+      const { ciphertext, sharedSecret } = PQC.encapsulate(pk);
+      return [Buffer.from(ciphertext), Buffer.from(sharedSecret)];
+    },
+    decaps: (ct, sk) => Buffer.from(PQC.decapsulate(sk, ct)),
+  };
+  console.warn('[mlkem] C addon unavailable, using bridged JS fallback');
+}
+const mlkemPureJS = require('../packages/pqc-kem/src/ml-kem-768.js');
+const PQRatchet = require('../double-ratchet-pq');
+const pqSessions = new Map();
+
 const url = require('url');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -23,65 +64,177 @@ const helmet = require('helmet');
 // ========================
 // 配置
 // ========================
+// JWT_SECRET 持久化：环境变量 > 文件缓存 > 随机生成并写入文件
+const JWT_SECRET_FILE = path.join(__dirname, '..', 'data', '.jwt-secret');
+function resolveJwtSecret() {
+  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  try {
+    if (fs.existsSync(JWT_SECRET_FILE)) {
+      const secret = fs.readFileSync(JWT_SECRET_FILE, 'utf-8').trim();
+      if (secret.length >= 32) return secret;
+    }
+  } catch (_) { /* ignore */ }
+  const secret = crypto.randomBytes(64).toString('hex');
+  try {
+    const dir = path.dirname(JWT_SECRET_FILE);
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    fs.writeFileSync(JWT_SECRET_FILE, secret, 'utf-8');
+    console.log('[JWT] ✓ 密钥已持久化到文件，重启不再失效');
+  } catch (e) {
+    console.warn('[JWT] ⚠ 无法持久化密钥，重启后所有token将失效:', e.message);
+  }
+  return secret;
+}
+
 const CONFIG = {
   PORT: process.env.PORT || 3001,
-  JWT_SECRET: process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex'),
-  JWT_EXPIRES: '30d',
+  JWT_SECRET: resolveJwtSecret(),
+  JWT_EXPIRES: '2h',
+  JWT_REFRESH_EXPIRES: '7d',
   DB_PATH: path.join(__dirname, '..', 'data', 'noir-db.json'),
 };
+
+// 暴露 JWT_SECRET 给子模块
 
 // ========================
 // 数据库
 // ========================
-const db = new Database(CONFIG.DB_PATH);
 console.log('[DB] ✓ JSON数据库已加载:', CONFIG.DB_PATH);
+
+// ========================
+// Mixnet 元数据隐藏层 (Phase 3 & 4) — EXPERIMENTAL, gated by flags.MIXNET
+// ========================
+const MixnetTransport = flags.MIXNET ? require('../experimental/mixnet/mixnet-transport').MixnetTransport : null;
+const MIXNET_CONFIG = flags.MIXNET ? require('../experimental/mixnet/mixnet-transport').MIXNET_CONFIG : null;
+const Phase4Transport = flags.PHASE4 ? require('../experimental/phase4/integrate-phase4').Phase4Transport : null;
+let mixnetTransport = null;
+let phase4Transport = null;
+
 
 // ========================
 // Express
 // ========================
 const app = express();
+// --- FIBEMATE Static Frontend ---
+var staticPath = require("path").join(__dirname, "..", "www");
+app.use(require("express").static(staticPath));
+app.get("/", function(req, res) { res.sendFile(require("path").join(staticPath, "index.html")); });
+// --- END Static ---
+;
+const db = new Database(CONFIG.DB_PATH);
+app.set('db', db);
+const zkAnonAuth = flags.ZK_AUTH ? require("../experimental/zk-auth/zk-anonymous-auth") : { router: (req,res,next)=>next(), setDatabase: ()=>{} };
+const cryptoProxy = flags.EXPERIMENTAL ? require("../experimental/proxy/crypto-proxy") : (app) => {};
+const sm2Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm2-proxy") : (app) => {};
+if (flags.ZK_AUTH) zkAnonAuth.setDatabase(db);
+const opkServer = require('./opk-server'); // init moved after authMiddleware
+const sm34Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm34-proxy") : (app) => {};
+let checkAccountLockout, recordFailedLogin, resetLoginAttempts;
+try { ({ checkAccountLockout, recordFailedLogin, resetLoginAttempts } = require('./lib/lockout')); } catch (_) {
+  checkAccountLockout = (n,l) => ({ locked: false, remaining: 0, remainingSec: 0 });
+  recordFailedLogin = (n,l) => {};
+  resetLoginAttempts = (n,l) => {};
+} // security-hotfix 2026-06-09
+global.noirDb = db;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: '/ws' });
 
 app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginEmbedderPolicy: false,
-  hsts: false
+  hsts: { maxAge: 31536000, includeSubDomains: true, preload: true }
 }));
-app.use(cors({ origin: '*', methods: ['GET', 'POST', 'PUT', 'DELETE'] }));
+// CORS: 限制为本地来源（Electron 内嵌页 + 本地开发）
+const ALLOWED_ORIGINS = [
+  'app://-',           // Electron app:// 协议
+  'tauri://localhost',  // Tauri 协议
+  'http://tauri.localhost',  // Tauri v2 WebView (Windows)
+  'https://tauri.localhost', // Tauri HTTPS
+  'file://',           // 本地文件
+  'http://localhost',
+  'http://localhost:',
+  'http://127.0.0.1:',
+  'http://127.0.0.1',
+  'http://fibemate.net',
+  'https://fibemate.net',
+  'https://localhost',   // Capacitor Android WebView origin
+  'https://localhost:',
+];
+// 生产环境专属 origin 通过环境变量注入，避免将生产服务器 IP 硬编码进公开仓库
+// (制度 2: 生产配置外置。开发/通用 origin 保留在上方常量，生产 IP 由部署侧 .env 提供)
+if (process.env.ALLOWED_ORIGINS_EXTRA) {
+  for (const o of process.env.ALLOWED_ORIGINS_EXTRA.split(',')) {
+    const t = o.trim();
+    if (t) ALLOWED_ORIGINS.push(t);
+  }
+}
+app.use(cors({
+
+  origin: (origin, callback) => {
+    // Electron/Tauri 内嵌页面 origin 为 undefined，允许通过
+    if (!origin || ALLOWED_ORIGINS.some(allowed => origin.startsWith(allowed))) {
+      callback(null, true);
+    } else {
+      // 开发模式下宽松处理，生产环境可改为 callback(new Error('CORS blocked'))
+      console.error('[CORS] 拒绝未识别的 origin:', origin);
+      callback(new Error('CORS blocked: origin not allowed'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
+// SM2 公钥短指纹（与前端 _fingerprintOf 算法一致，用于客户端缓存主动失效）
+function simpleFingerprint(pk) {
+  if (typeof pk !== 'string' || pk.length < 8) return null;
+  let h = 5381;
+  for (let i = 0; i < pk.length; i++) h = ((h << 5) + h + pk.charCodeAt(i)) | 0;
+  return ('00000000' + (h >>> 0).toString(16)).slice(-8);
+}
+
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// API response header: build timestamp for auditors and developers
+app.use((req, res, next) => {
+  res.setHeader('Last-Modified', '2026-06-09T00:00:00Z');
+  next();
+});
+
 
 // 语音文件存储目录
 const VOICE_DIR = path.join(__dirname, '..', 'data', 'voice');
 if (!fs.existsSync(VOICE_DIR)) fs.mkdirSync(VOICE_DIR, { recursive: true });
-app.use('/voice', express.static(VOICE_DIR));
+
+// 语音文件加密密钥（每实例随机生成，重启后旧语音无法解密，符合阅后即焚理念）
+const VOICE_ENCRYPT_KEY = crypto.randomBytes(32);
+
+// AES-256-GCM 加密语音文件
+function encryptBuffer(plaintext) {
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-gcm', VOICE_ENCRYPT_KEY, iv);
+  const encrypted = Buffer.concat([cipher.update(plaintext), cipher.final()]);
+  const authTag = cipher.getAuthTag(); // 16 bytes
+  // 存储格式: [authTag(16)] [iv(16)] [ciphertext]
+  return Buffer.concat([authTag, iv, encrypted]);
+}
+
+// AES-256-GCM 解密语音文件
+function decryptBuffer(encData) {
+  const authTag = encData.subarray(0, 16);
+  const iv = encData.subarray(16, 32);
+  const ciphertext = encData.subarray(32);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', VOICE_ENCRYPT_KEY, iv);
+  decipher.setAuthTag(authTag);
+  return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+}
+
+// 语音文件路由占位（在 authMiddleware 定义后注册）
+let voiceRouteHandler = null;
 
 // 静态文件服务（前端）
-// 前端路径：支持环境变量覆盖，自动探测部署结构
-let frontendPath = process.env.FRONTEND_PATH;
-if (!frontendPath) {
-  // 尝试多个可能的前端路径
-  const candidates = [
-    path.join(__dirname, '..', '..', 'src'),           // 开发环境
-    path.join(__dirname, '..', 'www'),                  // 部署环境: backend/www
-    path.join(__dirname, '..', '..', 'www'),            // 部署环境: 项目根/www
-    path.join('/opt', 'fibemate-full', 'www'),          // 成都服务器标准路径
-    path.join('/opt', 'fibemate-full', 'src'),          // 成都服务器替代路径
-  ];
-  for (const p of candidates) {
-    if (fs.existsSync(p)) {
-      frontendPath = p;
-      console.log('[Frontend] ✓ 使用前端路径:', p);
-      break;
-    }
-  }
-  if (!frontendPath) {
-    frontendPath = candidates[0]; // 回退到默认值
-    console.warn('[Frontend] ⚠ 未找到前端目录，回退到:', frontendPath);
-  }
-}
+const frontendPath = path.join(__dirname, '..');
 app.use(express.static(frontendPath, {
+  index: false,  // 禁用默认 index.html，由路由控制
   setHeaders: (res, filePath) => {
     if (filePath.endsWith('.json')) res.setHeader('Content-Type', 'application/json');
     if (filePath.endsWith('manifest.json')) res.setHeader('Content-Type', 'application/json; charset=utf-8');
@@ -98,32 +251,24 @@ app.use(express.static(frontendPath, {
   }
 }));
 
-// 根路径 → 主应用（优先index.html，回退install.html）
+// 根路径 → 安装引导页
 app.get('/', (req, res) => {
-  const indexPath = path.join(frontendPath, 'index.html');
-  if (fs.existsSync(indexPath)) {
-    res.sendFile(indexPath);
-  } else {
-    const installPath = path.join(frontendPath, 'install.html');
-    if (fs.existsSync(installPath)) {
-      res.sendFile(installPath);
-    } else {
-      res.status(404).json({ error: 'Frontend not found', path: frontendPath });
-    }
-  }
+  res.sendFile(path.join(frontendPath, 'install.html'));
 });
 
 // SPA fallback
+
+// A2A Agent-to-Agent 接口 (2026-06-09 添加)
+// VWZ Research API — gated by flags.VWZ
+// VWZ Research API — moved to experimental/vwz-lg branch (2026-07-22)
+const a2aCore = require('../api/a2a/a2a-core');
+app.use('/a2a', a2aCore.router);
 app.use((req, res, next) => {
-  if (req.path.startsWith('/api') || req.path.startsWith('/voice') || req.path === '/health') return next();
+  if (req.path.startsWith('/api') || req.path.startsWith('/voice') || req.path.startsWith('/research') || req.path === '/health') return next();
   if (req.path === '/app' || req.path === '/index') {
-    const indexPath = path.join(frontendPath, 'index.html');
-    if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+    return res.sendFile(path.join(frontendPath, 'index.html'));
   }
-  // 404 fallback
-  const indexPath = path.join(frontendPath, 'index.html');
-  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
-  res.status(404).json({ error: 'Not found', path: req.path });
+  res.sendFile(path.join(frontendPath, 'install.html'));
 });
 
 app.use((req, res, next) => {
@@ -137,34 +282,104 @@ app.use((req, res, next) => {
   next();
 });
 
+
+const pqcHybrid = require("./pqc-hybrid-server");
 // ========================
-// 频率限制（内存计数器）— security 2026-08-13
-// 两档独立限流：
-//   1) 登录/注册：30 次 / 15 分钟（防爆破）
-//   2) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
+// 工具
 // ========================
-function makeRateLimiter(max, windowMs) {
-  const map = new Map(); // key: ip | value: { count, firstAt }
-  return (req, res, next) => {
-    const key = req.ip || req.socket.remoteAddress;
-    const now = Date.now();
-    const record = map.get(key);
-    if (!record || now - record.firstAt > windowMs) {
-      map.set(key, { count: 1, firstAt: now });
-      return next();
-    }
-    record.count++;
-    if (record.count > max) {
-      const retryAfter = Math.ceil((windowMs - (now - record.firstAt)) / 1000);
-      res.setHeader('Retry-After', String(retryAfter));
-      return res.status(429).json({ error: `请求过于频繁，请 ${retryAfter} 秒后再试` });
-    }
-    next();
-  };
+
+/**
+ * Sanitize a value before embedding it into a console/log line.
+ * User-controlled ids (usernames, device ids, message ids) may carry
+ * newlines or control characters that would let a caller forge log
+ * entries (log injection). Replace control chars with a visible escape.
+ */
+/* eslint-disable no-control-regex -- sanitizeLog intentionally strips control chars to prevent log injection */
+function sanitizeLog(value) {
+  if (value === undefined || value === null) return String(value);
+  return String(value).replace(/[\x00-\x1f\x7f]/g, (ch) => {
+    if (ch === '\n') return '\\n';
+    if (ch === '\r') return '\\r';
+    const code = ch.codePointAt(0).toString(16).padStart(2, '0');
+    return `\\x${code}`;
+  });
 }
+const logSecurity = (event, userId, details = {}, req = null) => {
+  db.addSecurityLog({
+    event,
+    userId,
+    ip: req?.ip || req?.socket?.remoteAddress || null,
+    userAgent: req?.headers?.['user-agent'] || null,
+    details
+  });
+};
+
+const authMiddleware = (req, res, next) => {
+  const header = req.headers['authorization'];
+  if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: '未授权' });
+  try {
+    req.user = jwt.verify(header.slice(7), CONFIG.JWT_SECRET);
+    next();
+  } catch {
+    res.status(401).json({ error: 'Token无效' });
+  }
+};
+
+// GET /api/auth/verify — verify token validity (frontend init call)
+app.get('/api/auth/verify', authMiddleware, (req, res) => {
+  res.json({ ok: true, userId: req.user.userId, username: req.user.username });
+});
+
+const genToken = (user) => jwt.sign(
+  { userId: user.id, username: user.username, deviceId: user.deviceId },
+  CONFIG.JWT_SECRET,
+  { expiresIn: CONFIG.JWT_EXPIRES }
+);
+
+const genRefreshToken = (user) => jwt.sign(
+  { userId: user.id, username: user.username, deviceId: user.deviceId, type: 'refresh' },
+  CONFIG.JWT_SECRET,
+  { expiresIn: CONFIG.JWT_REFRESH_EXPIRES }
+);
+
+
+// ========================
+// 频率限制 — security 2026-08-13 / updated 2026-09-08 to express-rate-limit
+// 使用 express-rate-limit（CodeQL js/missing-rate-limiting 识别的规范化限流库）
+// 两档独立限流：
+//   1) 登录/注册/刷新 token：30 次 / 15 分钟（防爆破）
+//   2) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
+// 内存计数器（单实例部署足够；多实例需外接 store，如 Redis）。
+// 注：限流按真实客户端 IP 计数。nginx 反代下 req.ip 恒为 127.0.0.1（共享桶），
+// 故 keyGenerator 取 nginx 注入的 X-Real-IP（$remote_addr，来自直连 peer，客户端不可伪造，
+// spoof-proof），而非 req.ip / X-Forwarded-For（XFF 由 nginx append，攻击者可控 → 可绕过）。
+// ========================
+const rateLimit = require('express-rate-limit');
 const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（两档共用）
-const authRateLimitMiddleware = makeRateLimiter(30, RATE_LIMIT_WINDOW);      // 登录/注册防爆破
-const globalRateLimitMiddleware = makeRateLimiter(600, RATE_LIMIT_WINDOW);   // 全局 API 防滥用
+// 真实客户端 IP：取 nginx 设置的 X-Real-IP（$remote_addr，直连 peer，不可客户端伪造）。
+// 忽略 X-Forwarded-For（客户端可控，nginx 会 append，用作 key 可被伪造绕过）。
+// 若无 X-Real-IP（直连场景）回退到 socket 地址。
+function realClientKey(req) {
+  const xr = req.headers && req.headers['x-real-ip'];
+  if (xr) return Array.isArray(xr) ? xr[xr.length - 1] : xr;
+  return req.socket && req.socket.remoteAddress;
+}
+const rateLimitMiddleware = rateLimit({
+  keyGenerator: realClientKey,
+  windowMs: RATE_LIMIT_WINDOW,
+  max: 30,                                   // 登录/注册防爆破
+  standardHeaders: 'draft-7',               // 返回 RateLimit-* 头
+  legacyHeaders: false,                     // 不返回 X-RateLimit-*（已弃用）
+  message: { error: '请求过于频繁，请稍后再试' },
+});
+const globalRateLimitMiddleware = rateLimit({
+  keyGenerator: realClientKey,
+  windowMs: RATE_LIMIT_WINDOW,
+  max: 600,                                  // 全局 API 防滥用
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' },
+});
 
 // ========================
 // 重放保护（phase 2，校验式）— REMINDER §4 / THREAT_MODEL.md
@@ -194,6 +409,9 @@ function replayGuardMiddleware(req, res, next) {
   next();
 }
 
+// OPK routes: must be registered after authMiddleware is defined
+opkServer.init(app, db, authMiddleware);
+
 // 全局 API 限流（挂载在所有 /api 路由之前生效）
 app.use('/api', globalRateLimitMiddleware);
 
@@ -201,39 +419,54 @@ app.use('/api', globalRateLimitMiddleware);
 app.use('/api', replayGuardMiddleware);
 
 // ========================
-// 工具
+// POST /api/auth/refresh - 刷新 access token
 // ========================
-const logSecurity = (event, userId, details = {}, req = null) => {
-  db.addSecurityLog({
-    event,
-    userId,
-    ip: req?.ip || req?.socket?.remoteAddress || null,
-    userAgent: req?.headers?.['user-agent'] || null,
-    details
-  });
-};
-
-const authMiddleware = (req, res, next) => {
-  const header = req.headers['authorization'];
-  if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: '未授权' });
+app.post('/api/auth/refresh', rateLimitMiddleware, (req, res) => {
   try {
-    req.user = jwt.verify(header.slice(7), CONFIG.JWT_SECRET);
-    next();
-  } catch {
-    res.status(401).json({ error: 'Token无效' });
+    const { refreshToken } = req.body;
+    if (!refreshToken) return res.status(400).json({ error: '缺少 refresh token' });
+    
+    const decoded = jwt.verify(refreshToken, CONFIG.JWT_SECRET);
+    if (decoded.type !== 'refresh') {
+      return res.status(401).json({ error: '无效的 refresh token' });
+    }
+    
+    const user = db.getUserById(decoded.userId);
+    if (!user) { timingSafe404(res, false, {}, '用户不存在'); return; }
+    
+    // Issue new access token + new refresh token (rotation)
+    const newToken = genToken({ id: user.id, username: user.username, deviceId: decoded.deviceId || '' });
+    const newRefreshToken = genRefreshToken({ id: user.id, username: user.username, deviceId: decoded.deviceId || '' });
+    
+    res.json({
+      token: newToken,
+      refreshToken: newRefreshToken,
+      userId: user.id,
+      username: user.username
+    });
+  } catch (e) {
+    return res.status(401).json({ error: 'Refresh token 已过期，请重新登录' });
   }
-};
-
-// GET /api/auth/verify — 校验 token（需 Bearer），对齐 OpenAPI spec 返回 { ok, userId, username }
-app.get('/api/auth/verify', authMiddleware, (req, res) => {
-  res.json({ ok: true, userId: req.user.userId, username: req.user.username });
 });
 
-const genToken = (user) => jwt.sign(
-  { userId: user.id, username: user.username, deviceId: user.deviceId },
-  CONFIG.JWT_SECRET,
-  { expiresIn: CONFIG.JWT_EXPIRES }
-);
+// 语音文件路由（在 authMiddleware 定义后注册）
+app.get('/voice/:fileId', authMiddleware, (req, res) => {
+  const filePath = path.join(VOICE_DIR, req.params.fileId);
+  if (!filePath.startsWith(VOICE_DIR)) return res.status(403).json({ error: '非法路径' });
+  if (!fs.existsSync(filePath)) { timingSafe404(res, false, {}, '文件不存在'); return; }
+  try {
+    const encrypted = fs.readFileSync(filePath);
+    const decrypted = decryptBuffer(encrypted);
+    const ext = path.extname(req.params.fileId).slice(1);
+    const mimeMap = { webm: 'audio/webm', ogg: 'audio/ogg', mp3: 'audio/mpeg' };
+    res.setHeader('Content-Type', mimeMap[ext] || 'application/octet-stream');
+    res.setHeader('Cache-Control', 'no-store');
+    res.send(decrypted);
+  } catch (e) {
+    console.error('[Voice] 解密失败:', e.message);
+    res.status(500).json({ error: '文件读取失败' });
+  }
+});
 
 // 在线用户映射
 const onlineUsers = new Map(); // userId -> Set<ws>
@@ -246,30 +479,97 @@ function broadcastPresence(userId, online) {
   }));
 }
 
-function sendToUser(userId, payload) {
+// 根据 wsMeta（WebSocket->{userId,deviceId}）找到该用户的 WebSocket（按 userId 路由）
+function _findUserWs(userId, excludeWs) {
+  let found = null;
+  for (const [ws, meta] of wsMeta.entries()) {
+    if (ws === excludeWs) continue; // 避免回环：发给其他人时不发回自己
+    if (meta.userId === userId) {
+      if (ws.readyState === 1) { found = ws; break; }
+    }
+  }
+  return found;
+}
+
+function sendToUser(userId, payload, senderWs) {
   const sockets = onlineUsers.get(userId);
-  if (!sockets) return false;
   const data = typeof payload === 'string' ? payload : JSON.stringify(payload);
+  const type = JSON.parse(data).type;
+
+  if (!sockets || sockets.size === 0) {
+    // 收方 WebSocket 已断开——通知发送方不要重试（会浪费 X3DH 握手）
+    if (senderWs && senderWs.readyState === 1) {
+      const fromId = wsMeta.get(senderWs)?.userId;
+      console.log('[ROUTE] OFFLINE ' + sanitizeLog(fromId) + ' -> ' + sanitizeLog(userId) + ' (type=' + sanitizeLog(type) + ', recipient WebSocket disconnected)');
+      senderWs.send(JSON.stringify({ type: 'recipient_offline', userId: userId, timestamp: Date.now() }));
+    }
+    return false;
+  }
+
+  // 用 wsMeta 精确路由：找到该用户的 WebSocket，发给那个具体 socket
+  const targetWs = _findUserWs(userId, senderWs || null);
+  if (targetWs) {
+    targetWs.send(data);
+    return true;
+  }
+  // 降级：发给该用户的所有 socket
   let ok = false;
   sockets.forEach(ws => {
-    if (ws.readyState === WebSocket.OPEN) { ws.send(data); ok = true; }
+    if (ws !== senderWs && ws.readyState === 1) { ws.send(data); ok = true; }
   });
   return ok;
 }
+// 初始化 Mixnet
+// 初始化 Mixnet 传输层 (Phase 3) — gated by flags.MIXNET
+if (flags.MIXNET) {
+  mixnetTransport = new MixnetTransport(db, onlineUsers, sendToUser);
+  console.log('[Mixnet] ✓ Phase 3 元数据隐藏层已启动 (padding: ' + MIXNET_CONFIG.PAD_MESSAGE_SIZE + 'B, cover: ' + Math.round(MIXNET_CONFIG.COVER_TRAFFIC_RATE * 100) + '%)');
+} else {
+  console.log('[Mixnet] Skipped (MIXNET flag off)');
+}
+
+// 初始化 Phase 4 抗流量分析层 — gated by flags.PHASE4
+if (flags.PHASE4) {
+  phase4Transport = new Phase4Transport(db, onlineUsers, sendToUser);
+  console.log('[Phase4] ✓ 抗流量分析层已启动 (Sphinx packets + Nym Mixnet)');
+} else {
+  console.log('[Phase4] Skipped (PHASE4 flag off)');
+}
+
+// 初始化统一流量混淆层 (TLS 1.3 + Poisson Cover Traffic + Random Padding)
+const trafficObfuscator = new UnifiedTrafficObfuscator(db, onlineUsers, sendToUser);
+trafficObfuscator.start();
+console.log('[TrafficObfuscator] Unified traffic obfuscation started (Poisson + Padding)');
+
+
 
 // ========================
 // WebSocket
 // ========================
 wss.on('connection', (ws, req) => {
+
+  // ===== Traffic Obfuscation Layer =====
+  // Transparent ws.send interceptor: all outgoing messages auto-padded
+  const _origSend = ws.send.bind(ws);
+  ws.send = function(data) {
+    const buf = Buffer.isBuffer(data) ? data : Buffer.from(typeof data === 'string' ? data : JSON.stringify(data), 'utf8');
+    return _origSend(WsPadding.pad(buf));
+  };
+  // ===== End Traffic Obfuscation Layer =====
+
   let authed = false;
+
   let userId = null;
   let deviceId = null;
 
   console.log(`[WS] 新连接 from ${req.socket.remoteAddress}`);
 
   ws.on('message', async (raw) => {
-    try {
-      const msg = JSON.parse(raw.toString());
+      console.log('[WS-MSG] Received:', raw ? raw.toString().substring(0, 200) : 'null');
+try {
+      const unpadded = WsPadding.unpad(Buffer.from(raw));
+      if (unpadded.isCover) return; // Discard cover traffic
+      const msg = JSON.parse(unpadded.payload.toString());
 
       // 认证
       if (!authed) {
@@ -309,7 +609,7 @@ wss.on('connection', (ws, req) => {
           }
 
           logSecurity('ws_connect', userId, { deviceId });
-          console.log(`[WS] 用户 ${userId} 认证成功`);
+          console.log(`[WS] 用户 ${sanitizeLog(userId)} 认证成功`);
         } catch {
           ws.send(JSON.stringify({ type: 'auth_failed' }));
           ws.close();
@@ -324,8 +624,9 @@ wss.on('connection', (ws, req) => {
           break;
 
         case 'message': {
-          const { to, ciphertext, messageType, burnAfterRead, messageId, voiceDuration } = msg;
-          if (!to || !ciphertext) { ws.send(JSON.stringify({ type: 'error', code: 'INVALID' })); return; }
+          const { to, ciphertext, envelope, messageType, burnAfterRead, messageId, voiceDuration } = msg;
+          const effectiveCiphertext = ciphertext || envelope;
+          if (!to || !effectiveCiphertext) { ws.send(JSON.stringify({ type: 'error', code: 'INVALID' })); return; }
 
           const conv = db.getOrCreateConversation(userId, to);
           const msgId = messageId || uuidv4();
@@ -338,7 +639,8 @@ wss.on('connection', (ws, req) => {
             senderUserId: userId,
             senderDeviceId: deviceId,
             recipientUserId: to,
-            ciphertext,
+            ciphertext: effectiveCiphertext,
+            envelope: envelope || null,
             messageType: messageType || 'text',
             voiceDuration: voiceDuration || null,
             isBurnAfterRead: !!burnAfterRead,
@@ -348,55 +650,85 @@ wss.on('connection', (ws, req) => {
             createdAt: now
           };
 
-          conv.messages = conv.messages || [];
-          conv.messages.push(msgObj);
-          conv.lastMessageAt = now;
-          conv.updatedAt = now;
+          // 真正落库到 messages 表（之前只用内存 push + 空 save，消息丢失）
+          db.createMessage(msgObj);
 
-          if (conv.userAId === to) conv.unreadCountA = (conv.unreadCountA || 0) + 1;
-          else conv.unreadCountB = (conv.unreadCountB || 0) + 1;
-
-          db.save();
-
-          const delivered = sendToUser(to, {
+          // 通过 Mixnet 传输层发送（带延迟、填充、假消息）
+          const outgoingMsg = {
             type: 'new_message',
             messageId: msgId,
             conversationId: conv.id,
             from: userId,
             fromDevice: deviceId,
-            ciphertext,
+            ciphertext: effectiveCiphertext,
+            envelope: envelope || null,
             messageType: messageType || 'text',
             voiceDuration: voiceDuration || null,
             burnAfterRead,
             createdAt: now
-          });
+          };
+          
+          // Mixnet 处理：填充、延迟、生成假消息
+          console.log('[MSG-FLOW] Calling phase4Transport.sendMessage to=' + to + ' msgType=' + (outgoingMsg ? outgoingMsg.type : 'undefined'));
+
+          let forwarded = false;
+          if (phase4Transport) {
+            phase4Transport.sendMessage(to, outgoingMsg, true);
+            forwarded = true;
+          } else if (mixnetTransport) {
+            mixnetTransport.sendMessage(to, outgoingMsg, false);
+            forwarded = true;
+          }
+          // 兜底：生产环境 phase4/mixnet 均关闭（EXPERIMENTAL=OFF），必须直接 sendToUser 转发，
+          // 否则消息只落库不转发，在线接收方实时收不到。
+          if (!forwarded) {
+            sendToUser(to, outgoingMsg, ws);
+          }
+          const delivered = onlineUsers.has(to); // 假设最终会送达
 
           ws.send(JSON.stringify({ type: 'message_sent', messageId: msgId, delivered, timestamp: now }));
           break;
         }
 
         case 'key_exchange': {
-          const { to, exchangeType, payload } = msg;
-          if (!to) break;
-          const exchangeId = uuidv4();
+          // 支持前端发送的格式 { ikPub, ekPub, kemCt }
+          // 也支持后端格式 { payload }
+          const { conversationId, ikPub, ekPub, kemCt, payload, to } = msg;
+          if (!to && !conversationId) break;
+          
+          // 如果传了 conversationId，找出对方用户
+          let recipientUserId = to;
+          if (!recipientUserId && conversationId) {
+            const conv = db.getConversationById(conversationId);
+            if (conv) {
+              recipientUserId = conv.participantUserId === userId 
+                ? conv.ownerUserId 
+                : conv.participantUserId;
+            }
+          }
+          if (!recipientUserId) break;
+          
+          const exchangeId = msg.exchangeId || uuidv4();
+          const exchangePayload = payload || { ikPub, ekPub, kemCt };
           const exchange = {
             id: exchangeId,
             fromUserId: userId,
-            toUserId: to,
+            toUserId: recipientUserId,
             fromDeviceId: deviceId,
-            exchangeType,
-            payload,
+            exchangeType: 'x3dh',
+            payload: exchangePayload,
             createdAt: Date.now(),
             expiresAt: Date.now() + 5 * 60_000
           };
           db.addPendingKey(exchange);
-          sendToUser(to, {
+          sendToUser(recipientUserId, {
             type: 'key_exchange_request',
             exchangeId,
             from: userId,
             fromDevice: deviceId,
-            exchangeType,
-            payload,
+            exchangeType: 'x3dh',
+            conversationId,
+            payload: exchangePayload,
             timestamp: Date.now()
           });
           ws.send(JSON.stringify({ type: 'key_exchange_sent', exchangeId }));
@@ -404,14 +736,31 @@ wss.on('connection', (ws, req) => {
         }
 
         case 'key_exchange_response': {
-          const { exchangeId, to, responsePayload } = msg;
-          sendToUser(to, {
-            type: 'key_exchange_response',
-            exchangeId,
-            from: userId,
-            responsePayload,
-            timestamp: Date.now()
-          });
+          const { conversationId, ratchetKey, to, responsePayload, exchangeId } = msg;
+          
+          // 支持前端发送的 { ratchetKey }
+          const payload = responsePayload || { ratchetKey };
+          
+          // 如果有 conversationId，找出对方
+          let recipientUserId = to;
+          if (!recipientUserId && conversationId) {
+            const conv = db.getConversationById(conversationId);
+            if (conv) {
+              recipientUserId = conv.participantUserId === userId 
+                ? conv.ownerUserId 
+                : conv.participantUserId;
+            }
+          }
+          
+          if (recipientUserId) {
+            sendToUser(recipientUserId, {
+              type: 'key_exchange_response',
+              exchangeId,
+              from: userId,
+              payload,
+              timestamp: Date.now()
+            });
+          }
           break;
         }
 
@@ -481,9 +830,7 @@ wss.on('connection', (ws, req) => {
         case 'call_offer':
         case 'call_answer':
         case 'call_ice':
-        case 'call_end':
-        case 'ice_candidate':
-        case 'call_hangup': {
+        case 'call_end': {
           const { to, ...rest } = msg;
           if (!to) break;
           sendToUser(to, { type: msg.type, from: userId, ...rest, timestamp: Date.now() });
@@ -513,7 +860,7 @@ wss.on('connection', (ws, req) => {
       }
       wsMeta.delete(ws);
       logSecurity('ws_disconnect', userId);
-      console.log(`[WS] 用户 ${userId} 断开`);
+      console.log(`[WS] 用户 ${sanitizeLog(userId)} 断开`);
     }
   });
 });
@@ -525,16 +872,63 @@ wss.on('connection', (ws, req) => {
 // 健康检查
 app.get('/health', (req, res) => {
   res.json({
-    status: 'ok', service: 'FIBEMATE Privacy Backend',
-    version: '2.0.0-alpha', architecture: 'zero-knowledge',
-    uptime: Math.floor(process.uptime()),
-    features: {
-      e2ee: true,
-      standardAuth: true,
-      zkAuth: false,
-      mixnet: false,
-      sphinx: false
-    }
+    status: 'ok', service: 'Noir E2E Backend',
+    version: '1.0.0', architecture: 'zero-knowledge',
+    phases: { p1: 'zk-identity', p2: 'pir-search', p3: 'mixnet', p4: 'sphinx-nym' },
+    uptime: Math.floor(process.uptime())
+  });
+});
+
+// API 健康检查别名（兼容监控脚本）
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok', service: 'Noir E2E Backend',
+    version: '1.0.0', timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime())
+  });
+});
+
+// 用户计数API - 公开访问（测试用户管理）
+app.get('/api/users/count', authMiddleware, (req, res) => {
+  try {
+    const users = db.data.users || {};
+    const totalUsers = Object.keys(users).length;
+    const testUsers = Object.values(users).filter(u => u.isTestUser).length;
+    res.json({
+      totalUsers,
+      testUsers,
+      maxUsers: MAX_USERS,
+      remainingSlots: Math.max(0, MAX_USERS - totalUsers),
+      isFull: totalUsers >= MAX_USERS
+    });
+  } catch (e) {
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+
+// Phase 4 配置端点 — gated by flags.PHASE4
+app.get('/api/nym/config', authMiddleware, (req, res) => {
+  if (!flags.PHASE4) return res.status(404).json({ error: 'phase4 not available' });
+  if (!phase4Transport) {
+    return res.status(503).json({ error: 'Phase 4 transport not initialized' });
+  }
+  res.json({
+    enabled: true,
+    config: phase4Transport.getClientConfig(),
+    stats: phase4Transport.getStats()
+  });
+});
+
+// Phase 4 统计端点（管理员/调试）
+app.get('/api/nym/stats', authMiddleware, (req, res) => {
+  if (!phase4Transport) {
+    return res.json({ enabled: false });
+  }
+  res.json({
+    enabled: true,
+    stats: phase4Transport.getStats(),
+    timestamp: Date.now()
   });
 });
 
@@ -544,18 +938,27 @@ app.post('/api/conversations/find-or-create', authMiddleware, (req, res) => {
   if (!userId) return res.status(400).json({ error: '缺少 userId' });
   if (userId === req.user.userId) return res.status(400).json({ error: '不能和自己聊天' });
   const other = db.getUserById(userId);
-  if (!other) return res.status(404).json({ error: '用户不存在' });
+  if (!other) { timingSafe404(res, false, {}, '用户不存在'); return; }
   const conv = db.getOrCreateConversation(req.user.userId, userId);
   res.json({ conversationId: conv.id, otherUser: { id: other.id, username: other.username, displayName: other.displayName, isOnline: !!other.isOnline } });
 });
 
 // ===== 用户限制配置 =====
-const MAX_USERS = 100;
+const MAX_USERS = 200;
 const RESERVED_IDS = ['id88888888', 'id1111111', 'id66666666', 'id99999999', 'id00000001'];
-const ADMIN_INVITE_CODE = process.env.ADMIN_INVITE_CODE || null;  // 无 env 时禁止保留ID注册（fail-closed）
+const ADMIN_INVITE_CODE = process.env.ADMIN_INVITE_CODE;
+if (!ADMIN_INVITE_CODE) {
+  console.error('[Admin] WARNING: ADMIN_INVITE_CODE not set in .env');
+}  // 建议通过环境变量设置，避免源码泄露
+
+// ZK 匿名认证端点 (必须在标准注册之前, 防止路径前缀匹配冲突)
+app.use('/api/auth', zkAnonAuth.router);
+cryptoProxy(app);
+sm2Proxy(app);
+sm34Proxy(app);
 
 // 注册
-app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
+app.post('/api/auth/register', rateLimitMiddleware, async (req, res) => {
   try {
     const { username, password, displayName, publicKey, signedPrekey, prekeySignature } = req.body;
     if (!username || !password || !publicKey) {
@@ -570,9 +973,6 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 
     // 保留ID检查 - 需要邀请码
     if (RESERVED_IDS.includes(username)) {
-      if (!ADMIN_INVITE_CODE) {
-        return res.status(403).json({ error: '该用户名为保留ID，暂未开放注册' });
-      }
       const inviteCode = req.body.inviteCode;
       if (inviteCode !== ADMIN_INVITE_CODE) {
         return res.status(403).json({ error: '该用户名为保留ID，需要邀请码' });
@@ -606,6 +1006,7 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
       securityScore: 60,
       lastSeen: null,
       createdAt: now,
+      isTestUser: true,
       updatedAt: now
     });
 
@@ -617,15 +1018,17 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
       publicKey,
       isActive: true,
       createdAt: now,
+      isTestUser: true,
       lastActive: now
     });
 
     db.setPresence(userId, false);
 
     const token = genToken({ id: userId, username, deviceId });
+    const refreshToken = genRefreshToken({ id: userId, username, deviceId });
     logSecurity('register', userId, { username });
 
-    res.status(201).json({ userId, deviceId, token, message: '注册成功' });
+    res.status(201).json({ userId, deviceId, token, refreshToken, message: '注册成功' });
   } catch (e) {
     console.error('[Auth] 注册错误:', e.message);
     res.status(500).json({ error: '服务器错误' });
@@ -633,13 +1036,26 @@ app.post('/api/auth/register', authRateLimitMiddleware, async (req, res) => {
 });
 
 // 登录
-app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
+app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
   try {
     const { username, password, devicePublicKey } = req.body;
     if (!username || !password) return res.status(400).json({ error: '缺少用户名或密码' });
 
+    // 账户锁定检查 (security-hotfix 2026-06-09)
+    const lockStatus = checkAccountLockout(username);
+    if (lockStatus.locked) {
+      const min = Math.floor(lockStatus.remainingSec / 60);
+      const sec = lockStatus.remainingSec % 60;
+      logSecurity('login_blocked', null, { username, remainingSec: lockStatus.remainingSec });
+      return res.status(429).json({
+        error: `账户已锁定，请 ${min} 分 ${sec} 秒后重试`,
+        lockoutRemaining: (lockStatus && lockStatus.remainingSec) || 0
+      });
+    }
+
     const user = db.getUserByUsername(username);
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
+      recordFailedLogin(username, req.ip);
       logSecurity('login_fail', null, { username });
       return res.status(401).json({ error: '用户名或密码错误' });
     }
@@ -660,8 +1076,10 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
     }
 
     const token = genToken({ id: user.id, username: user.username, deviceId: deviceId || '' });
+    const refreshToken = genRefreshToken({ id: user.id, username: user.username, deviceId: deviceId || '' });
     db.updateUser(user.id, { isOnline: 1, lastSeen: Date.now() });
     db.setPresence(user.id, true);
+    resetLoginAttempts(username);
     logSecurity('login', user.id, { deviceId });
 
     res.json({
@@ -671,6 +1089,7 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
       publicKey: user.publicKey,
       deviceId,
       token,
+      refreshToken,
       securityScore: user.securityScore,
       privacySettings: {
         hideOnlineStatus: !!user.hideOnlineStatus,
@@ -685,55 +1104,61 @@ app.post('/api/auth/login', authRateLimitMiddleware, async (req, res) => {
   }
 });
 
-// ========================
-// ZK 匿名认证路由
-// ========================
-
-// ZK 注册
-app.post('/api/auth/register-anonymous', authRateLimitMiddleware, async (req, res) => {
-  // SECURITY: proofOfKnowledge 尚未做密码学验证，匿名注册暂时禁用（fail-closed）。
-  // 重新启用前必须先实现真正的 Schnorr/离散对数证明校验，否则任何人可伪造匿名身份。
-  return res.status(501).json({ error: '匿名注册暂不可用（ZK 证明校验未实现）' });
-});
-
-// ZK 登录
-app.post('/api/auth/login-anonymous', authRateLimitMiddleware, async (req, res) => {
-  // SECURITY: 原实现仅按 zkCommitment 匹配用户、未对 proofOfKnowledge 做任何密码学验证，
-  // 任何人只要知道目标用户的 commitment 即可冒充其登录。在实现真 ZK 校验前禁用（fail-closed）。
-  return res.status(501).json({ error: '匿名登录暂不可用（ZK 证明校验未实现）' });
-});
-
-// 更新用户公钥
-app.put('/api/user/public-key', authMiddleware, async (req, res) => {
-  try {
-    const { publicKey } = req.body;
-    if (!publicKey) return res.status(400).json({ error: '缺少公钥' });
-    const user = db.data.users[req.user.userId];
-    if (!user) return res.status(404).json({ error: '用户不存在' });
-    user.publicKey = publicKey;
-    user.keyUpdatedAt = Date.now();
-    await db.write();
-    res.json({ success: true, keyUpdatedAt: user.keyUpdatedAt });
-  } catch(e) {
-    res.status(500).json({ error: e.message });
+// 更新公钥（登录后客户端生成密钥对并上传）
+app.post('/api/auth/update-keys', authMiddleware, rateLimitMiddleware, (req, res) => {
+  const { publicKey, signedPrekey, signedPreKey, prekeySignature, signedPreKeySignature, identitySigningKey, gmPublicKey, hybridKeyId, hybridBundleHex, hybridMode } = req.body;
+  const updates = {};
+  if (publicKey) {
+    updates.publicKey = publicKey;
+    const spk = signedPreKey || signedPrekey;
+    updates.signedPrekey = spk || publicKey;
+    updates.prekeySignature = prekeySignature || signedPreKeySignature || '';
   }
+  if (identitySigningKey) updates.identitySigningKey = identitySigningKey;
+  if (signedPreKeySignature) updates.signedPreKeySignature = signedPreKeySignature;
+  if (gmPublicKey) updates.gmPublicKey = gmPublicKey;
+  // Hybrid PQ advertisement (X25519 + ML-KEM-768 responder bundle) — additive
+  if (hybridKeyId) updates.hybridKeyId = hybridKeyId;
+  if (hybridBundleHex) updates.hybridBundleHex = hybridBundleHex;
+  if (hybridMode) updates.hybridMode = hybridMode;
+  if (Object.keys(updates).length === 0) {
+    return res.status(400).json({ error: '缺少公钥字段（publicKey 或 gmPublicKey）' });
+  }
+  db.updateUser(req.user.userId, updates);
+  // 同步更新设备公钥
+  if (req.user.deviceId && db.data.devices[req.user.userId]) {
+    const dev = db.data.devices[req.user.userId][req.user.deviceId];
+    if (dev) { dev.publicKey = publicKey; db.save(); }
+  }
+  logSecurity('update_keys', req.user.userId);
+  res.json({ success: true, message: '公钥已更新' });
 });
 
 // 搜索用户（必须放在 /:userId 前面，避免被误匹配）
 app.get('/api/users/search', authMiddleware, (req, res) => {
-  const { q } = req.query;
-  if (!q || q.length < 2) return res.status(400).json({ error: '搜索词至少2字符' });
-  const users = Object.values(db.data.users)
-    .filter(u => (u.username.includes(q) || (u.displayName && u.displayName.includes(q))) && u.id !== req.user.userId)
-    .slice(0, 20)
-    .map(u => ({ id: u.id, username: u.username, displayName: u.displayName, isOnline: !!u.isOnline }));
-  res.json({ users });
+  try {
+    const { q } = req.query;
+    if (!q || q.length < 2) return res.status(400).json({ error: '搜索词至少2字符' });
+    const users = Object.values(db.data.users)
+      .filter(u => {
+        if (u.id === req.user.userId) return false;
+        const uname = u.username || '';
+        const dname = u.displayName || '';
+        return uname.includes(q) || dname.includes(q);
+      })
+      .slice(0, 20)
+      .map(u => ({ id: u.id, username: u.username || '', displayName: u.displayName || '', isAnonymous: !!u.isAnonymous, isOnline: !!u.isOnline }));
+    res.json({ users });
+  } catch (e) {
+    console.error('[Search] 错误:', e.message);
+    res.status(500).json({ error: '搜索失败' });
+  }
 });
 
 // 获取用户信息
 app.get('/api/users/:userId', authMiddleware, (req, res) => {
   const user = db.getUserById(req.params.userId);
-  if (!user) return res.status(404).json({ error: '用户不存在' });
+  if (!user) { timingSafe404(res, false, {}, '用户不存在'); return; }
   res.json({
     id: user.id,
     username: user.username,
@@ -745,26 +1170,58 @@ app.get('/api/users/:userId', authMiddleware, (req, res) => {
 });
 
 // 获取公钥
+// 异步 X3DH 预密钥 bundle — Alice 离线时从服务器获取 Bob 的密钥
 app.get('/api/users/:userId/keys', authMiddleware, (req, res) => {
   const user = db.getUserById(req.params.userId);
-  if (!user) return res.status(404).json({ error: '用户不存在' });
+  if (!user) { timingSafe404(res, false, {}, '用户不存在'); return; }
+
+  // 消耗一个 OPK（如果有的话）
+  let oneTimePreKey = null;
+  try {
+    const { opkCache } = require('./opk-server');
+    const cache = opkCache[req.params.userId] || [];
+    const opk = cache.find(k => k.status === 'available');
+    if (opk) {
+      opk.status = 'used';
+      opk.usedBy = req.user.userId;
+      opk.usedAt = Date.now();
+      oneTimePreKey = { keyId: opk.keyId, publicKey: opk.publicKey };
+      // 持久化
+      try {
+        db._db.prepare(`UPDATE one_time_prekeys SET status='used', used_by=?, used_at=? WHERE id=?`)
+          .run(req.user.userId, Date.now(), `${req.params.userId}_${opk.keyId}`);
+      } catch (_) {}
+    }
+  } catch (e) {
+    console.warn('[keys] OPK consume failed:', e.message);
+  }
+
   res.json({
     userId: user.id,
     username: user.username,
     displayName: user.displayName,
     identityKey: user.publicKey,
+    identitySigningKey: user.identitySigningKey || null,
     signedPrekey: user.signedPrekey,
     signedPrekeySignature: user.prekeySignature,
+    signedPreKeySignature: user.signedPreKeySignature || user.prekeySignature || null,
+    oneTimePreKey,          //  { keyId, publicKey } 或 null
+    gmPublicKey: user.gmPublicKey || null,
+    gmKeyFingerprint: user.gmPublicKey ? simpleFingerprint(user.gmPublicKey) : null,
+    // Hybrid PQ advertisement (if responder uploaded one)
+    hybridKeyId: user.hybridKeyId || null,
+    hybridBundleHex: user.hybridBundleHex || null,
+    hybridMode: user.hybridMode || null,
     isOnline: !!user.isOnline
   });
 });
 
-// 联系人列表
+// 联系人列表（含 pending 状态）
 app.get('/api/contacts', authMiddleware, (req, res) => {
-  const contacts = db.getContacts(req.user.userId).map(c => {
+  const contacts = db.getContacts(req.user.userId, true).map(c => {
     const otherId = c.userId === req.user.userId ? c.contactUserId : c.userId;
     const other = db.getUserById(otherId);
-    return other ? { id: other.id, username: other.username, displayName: other.displayName, isOnline: !!other.isOnline } : null;
+    return other ? { id: other.id, username: other.username, displayName: other.displayName, isOnline: !!other.isOnline, contactStatus: c.status } : null;
   }).filter(Boolean);
   res.json({ contacts });
 });
@@ -773,14 +1230,28 @@ app.get('/api/contacts', authMiddleware, (req, res) => {
 app.post('/api/contacts', authMiddleware, (req, res) => {
   const { userId } = req.body;
   if (!userId || userId === req.user.userId) return res.status(400).json({ error: '无效ID' });
-  if (!db.getUserById(userId)) return res.status(404).json({ error: '用户不存在' });
-  const existing = db.getContacts(req.user.userId).find(c => c.contactUserId === userId || c.userId === userId);
-  if (existing) return res.status(409).json({ error: '已是联系人' });
+  if (!db.getUserById(userId)) { timingSafe404(res, false, {}, '用户不存在'); return; }
+  const existing = db.getContacts(req.user.userId, true).find(c => c.contactUserId === userId || c.userId === userId);
+  if (existing) return res.status(409).json({ error: '已是联系人或已发送请求' });
+  // 请求者: pending；被请求者: pending
   db.addContact(req.user.userId, userId, 'pending');
-  // 双向添加
   db.addContact(userId, req.user.userId, 'pending');
   logSecurity('contact_add', req.user.userId, { addedUserId: userId });
   res.json({ success: true, status: 'pending' });
+});
+
+// 接受/拒绝联系人请求
+app.put('/api/contacts/:userId', authMiddleware, (req, res) => {
+  const { status } = req.body; // 'accepted' | 'rejected'
+  if (!['accepted', 'rejected'].includes(status)) return res.status(400).json({ error: '无效状态' });
+  const otherId = req.params.userId;
+  const contact = db.getContacts(req.user.userId, true).find(c => c.contactUserId === otherId || c.userId === otherId);
+  if (!contact) { timingSafe404(res, false, {}, '联系人请求不存在'); return; }
+  if (contact.status !== 'pending') return res.status(400).json({ error: '联系人状态不是 pending' });
+  db.updateContactStatus(req.user.userId, otherId, status);
+  db.updateContactStatus(otherId, req.user.userId, status);
+  logSecurity('contact_' + status, req.user.userId, { otherUserId: otherId });
+  res.json({ success: true, status });
 });
 
 // 会话列表
@@ -801,7 +1272,7 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
       createdAt: conv.createdAt
     };
   });
-  res.json({ conversations: result });
+  res.json({ conversations: result.filter(c => c.otherUser !== null) });
 });
 
 // 消息历史
@@ -818,7 +1289,7 @@ app.get('/api/conversations/:conversationId/messages', authMiddleware, (req, res
   res.json({ messages: result });
 });
 
-// 语音文件上传
+// 语音文件上传（加密存储）
 app.post('/api/upload/voice', authMiddleware, (req, res) => {
   const { audio, mimeType } = req.body;
   if (!audio) return res.status(400).json({ error: '缺少音频数据' });
@@ -829,9 +1300,10 @@ app.post('/api/upload/voice', authMiddleware, (req, res) => {
     const ext = matches[1].includes('webm') ? 'webm' : matches[1].includes('ogg') ? 'ogg' : 'mp3';
     const buffer = Buffer.from(matches[2], 'base64');
     const fileId = uuidv4() + '.' + ext;
-    fs.writeFileSync(path.join(VOICE_DIR, fileId), buffer);
+    const encrypted = encryptBuffer(buffer);
+    fs.writeFileSync(path.join(VOICE_DIR, fileId), encrypted);
     const voiceUrl = `/voice/${fileId}`;
-    console.log(`[Voice] 上传成功: ${fileId} (${(buffer.length/1024).toFixed(1)}KB)`);
+    console.log(`[Voice] 上传并加密成功: ${fileId} (${(buffer.length/1024).toFixed(1)}KB)`);
     res.json({ url: voiceUrl, size: buffer.length });
   } catch (e) {
     console.error('[Voice] 上传失败:', e.message);
@@ -840,12 +1312,13 @@ app.post('/api/upload/voice', authMiddleware, (req, res) => {
 });
 
 // 发送消息 (REST备选)
-app.post('/api/messages', authMiddleware, (req, res) => {
-  const { conversationId, ciphertext, messageType, burnAfterRead } = req.body;
+app.post('/api/messages', authMiddleware, rateLimitMiddleware, (req, res) => {
+  const { conversationId, ciphertext, content, envelope, messageType, burnAfterRead } = req.body;
   const conv = Object.values(db.data.conversations || {}).find(c => c.id === conversationId);
   if (!conv || (conv.userAId !== req.user.userId && conv.userBId !== req.user.userId)) {
     return res.status(403).json({ error: '无权访问' });
   }
+  const effectiveCiphertext = ciphertext || content || envelope;
   const toUserId = conv.userAId === req.user.userId ? conv.userBId : conv.userAId;
   const msgId = uuidv4();
   const now = Date.now();
@@ -855,7 +1328,8 @@ app.post('/api/messages', authMiddleware, (req, res) => {
     senderUserId: req.user.userId,
     senderDeviceId: req.user.deviceId,
     recipientUserId: toUserId,
-    ciphertext,
+    ciphertext: effectiveCiphertext,
+    envelope: envelope || null,
     messageType: messageType || 'text',
     isBurnAfterRead: !!burnAfterRead,
     expiresAt: burnAfterRead ? now + 30_000 : null,
@@ -863,22 +1337,20 @@ app.post('/api/messages', authMiddleware, (req, res) => {
     readBy: [],
     createdAt: now
   };
-  conv.messages = conv.messages || [];
-  conv.messages.push(msgObj);
-  conv.lastMessageAt = now;
-  conv.updatedAt = now;
-  db.save();
+  // 真正落库到 messages 表
+  db.createMessage(msgObj);
 
   sendToUser(toUserId, {
     type: 'new_message',
     messageId: msgId,
     conversationId,
     from: req.user.userId,
-    ciphertext,
+    ciphertext: effectiveCiphertext,
+    envelope: envelope || null,
     messageType: messageType || 'text',
     burnAfterRead,
     createdAt: now
-  });
+  }, null);
 
   res.status(201).json({ messageId: msgId, createdAt: now });
 });
@@ -945,16 +1417,9 @@ app.delete('/api/account', authMiddleware, async (req, res) => {
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     return res.status(401).json({ error: '密码错误' });
   }
-  delete db.data.users[req.user.userId];
-  delete db.data.devices[req.user.userId];
-  // 删除会话和消息
-  Object.keys(db.data.conversations || {}).forEach(k => {
-    const c = db.data.conversations[k];
-    if (c.userAId === req.user.userId || c.userBId === req.user.userId) {
-      delete db.data.conversations[k];
-    }
-  });
-  db.save();
+  // SQLite 真实删除 + 内存缓存同步清理（修复历史 bug：此前只删内存缓存，
+  // 未执行 SQLite DELETE，导致用户「删不掉」重新登录又读回）
+  db.deleteUser(req.user.userId);
   logSecurity('account_delete', req.user.userId, { permanent: true });
   res.json({ success: true, message: '所有数据已永久删除' });
 });
@@ -992,26 +1457,217 @@ setInterval(() => {
 }, 30_000);
 
 // ========================
+// ZK 匿名身份认证路由
+// ========================
+// ZK Auth v2 routes — gated by flags.ZK_AUTH
+if (flags.ZK_AUTH) {
+  const zkRegV2Routes = require('../experimental/zk-auth/zk-register-v2');
+  app.use('/api/auth', zkRegV2Routes);
+}
+const smsRoutes = require('./sms-routes')(CONFIG.JWT_SECRET);
+app.use('/api/sms', smsRoutes);
+
+// ========================
+// Phase 2: 私密发现路由 (Bloom Filter PIR) — gated by flags.PIR
+// ========================
+const pirSearchRoutes = flags.PIR ? require('../experimental/pir/pir-search') : null;
+
+// ========================
+// Mixnet 配置 API
+// ========================
+// Mixnet 配置 API — gated by flags.MIXNET
+app.get('/api/mixnet/config', authMiddleware, (req, res) => {
+  if (!flags.MIXNET) return res.status(404).json({ error: 'mixnet not available' });
+  res.json({
+    padding: {
+      enabled: true,
+      messageSize: MIXNET_CONFIG.PAD_MESSAGE_SIZE,
+      blockSize: MIXNET_CONFIG.PAD_BLOCK_SIZE,
+    },
+    coverTraffic: {
+      enabled: true,
+      rate: MIXNET_CONFIG.COVER_TRAFFIC_RATE,
+    },
+    delay: {
+      minMs: MIXNET_CONFIG.DELAY_MIN_MS,
+      maxMs: MIXNET_CONFIG.DELAY_MAX_MS,
+    },
+    batching: {
+      enabled: true,
+      windowMs: MIXNET_CONFIG.BATCH_WINDOW_MS,
+      maxSize: MIXNET_CONFIG.BATCH_MAX_SIZE,
+    },
+  });
+});
+
+// PIR search routes — gated by flags.PIR
+if (flags.PIR) {
+  app.use('/api/search', authMiddleware, pirSearchRoutes(db));
+}
+
+// Nexus Community API — gated by flags.NEXUS
+if (flags.NEXUS) {
+  const integrateNexus = require("../experimental/nexus/nexus-integration");
+  app.use('/api/nexus', authMiddleware);
+  integrateNexus(app);
+}
+
+// ========================
 // 启动
 // ========================
-server.listen(CONFIG.PORT, '0.0.0.0', () => {
+
+// ========================
+// ML-KEM-768 API (FIPS 203 verified C code via native addon)
+// ========================
+
+app.post('/api/mlkem/keygen', authMiddleware, (req, res) => {
+  try {
+    const [pk, sk] = mlkem.keygen();
+    res.json({ publicKey: pk.toString('hex'), secretKey: sk.toString('hex') });
+  } catch (err) {
+    res.status(500).json({ error: 'keygen failed: ' + err.message });
+  }
+});
+
+app.post('/api/mlkem/encaps', authMiddleware, (req, res) => {
+  try {
+    const { publicKey } = req.body;
+    if (!publicKey) return res.status(400).json({ error: 'missing publicKey' });
+    const pk = Buffer.from(publicKey, 'hex');
+    const [ct, ss] = mlkem.encaps(pk);
+    res.json({ ciphertext: ct.toString('hex'), sharedSecret: ss.toString('hex') });
+  } catch (err) {
+    res.status(500).json({ error: 'encaps failed: ' + err.message });
+  }
+});
+
+app.post('/api/mlkem/decaps', authMiddleware, (req, res) => {
+  try {
+    const { ciphertext, secretKey } = req.body;
+    if (!ciphertext || !secretKey) return res.status(400).json({ error: 'missing ciphertext or secretKey' });
+    const ct = Buffer.from(ciphertext, 'hex');
+    const sk = Buffer.from(secretKey, 'hex');
+    const ss = mlkem.decaps(ct, sk);
+    res.json({ sharedSecret: ss.toString('hex') });
+  } catch (err) {
+    res.status(500).json({ error: 'decaps failed: ' + err.message });
+  }
+});
+
+// Test endpoint (no auth required for quick testing)
+app.post('/api/mlkem/register', authMiddleware, (req, res) => {
+  try {
+    var pk = req.body.publicKeyHex, uid = req.user.userId || req.user.sub;
+    if (!pk || pk.length !== 2368) return res.status(400).json({error:'Invalid key'});
+    db.updateUser(uid, {mlkemPublicKey: pk});
+    console.log('[ML-KEM] Registered key for', uid);
+    res.json({status:'ok', userId: uid});
+  } catch(e) { res.status(500).json({error:e.message}); }
+});
+
+app.get('/api/mlkem/public-key/:userId', authMiddleware, (req, res) => {
+  const u = db.getUserById(req.params.userId);
+  timingSafe404(res, !!(u && u.mlkemPublicKey),
+    {userId: req.params.userId, mlkemPublicKey: u?.mlkemPublicKey},
+    'No key');
+});
+
+app.get('/api/mlkem/test', (req, res) => {
+  try {
+    const [pk, sk] = mlkem.keygen();
+    const [ct, ss1] = mlkem.encaps(pk);
+    const ss2 = mlkem.decaps(ct, sk);
+    res.json({
+      status: 'ok',
+      pk_bytes: pk.length,
+      sk_bytes: sk.length,
+      ct_bytes: ct.length,
+      ss_bytes: ss1.length,
+      roundTrip: Buffer.compare(ss1, ss2) === 0
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Auth guard for CPU-intensive batch test endpoints
+// Fix 2026-09-02: token moved from query string to header — query tokens leak into
+// access logs / referrers. Accepts `x-batch-test-token` or `Authorization: Bearer <token>`.
+const batchTestAuth = (req, res, next) => {
+  const token = req.headers['x-batch-test-token'] ||
+    (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')
+      ? req.headers.authorization.slice(7).trim() : null);
+  if (!token || token !== process.env.BATCH_TEST_TOKEN) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  next();
+};
+
+// Batch KAT test endpoint — processes multiple rounds server-side
+// Avoids client-side concurrency overload and Nginx rate limiting
+app.get('/api/mlkem/test-batch', batchTestAuth, (req, res) => {
+  try {
+    const count = Math.min(parseInt(req.query.count) || 20, 50000);
+    const results = [];
+    const t0 = process.hrtime.bigint();
+    for (let i = 0; i < count; i++) {
+      const [pk, sk] = mlkem.keygen();
+      const [ct, ss1] = mlkem.encaps(pk);
+      const ss2 = mlkem.decaps(ct, sk);
+      results.push({
+        round: req.query.offset ? parseInt(req.query.offset) + i : i,
+        pass: Buffer.compare(ss1, ss2) === 0
+      });
+    }
+    const totalNs = Number(process.hrtime.bigint() - t0);
+    const totalMs = parseFloat((totalNs / 1e6).toFixed(1));
+    const avgMsPerRound = parseFloat((totalMs / count).toFixed(2));
+    res.json({ status: 'ok', count, totalMs, avgMsPerRound, results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+// Pure JS (ml-kem-768.js) test-batch endpoint — same logic, no C addon dependency
+app.get('/api/mlkem/test-batch-purejs', batchTestAuth, (req, res) => {
+  try {
+    const count = Math.min(parseInt(req.query.count) || 100, 50000);
+    const results = [];
+    const t0 = process.hrtime.bigint();
+    for (let i = 0; i < count; i++) {
+      const { publicKey, secretKey } = mlkemPureJS.generateKeypair();
+      const { ciphertext, sharedSecret: ss1 } = mlkemPureJS.encapsulate(publicKey);
+      const ss2 = mlkemPureJS.decapsulate(secretKey, ciphertext);
+      const ss1Buf = Buffer.from(ss1);
+      const ss2Buf = Buffer.from(ss2);
+      results.push({
+        round: req.query.offset ? parseInt(req.query.offset) + i : i,
+        pass: Buffer.compare(ss1Buf, ss2Buf) === 0
+      });
+    }
+    const totalNs = Number(process.hrtime.bigint() - t0);
+    const totalMs = parseFloat((totalNs / 1e6).toFixed(1));
+    const avgMsPerRound = parseFloat((totalMs / count).toFixed(2));
+    res.json({ status: 'ok', count, totalMs, avgMsPerRound, results });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+server.listen(CONFIG.PORT, '127.0.0.1', () => {
   console.log('');
   console.log('═══════════════════════════════════════════════');
-  console.log('  🔒  FIBEMATE Privacy Backend Server');
-  console.log('  版本: 2.0.0-alpha (合规版)');
+  console.log('  🔒  Noir E2E Encrypted Backend Server');
   console.log('═══════════════════════════════════════════════');
-  console.log(`  HTTP:      http://0.0.0.0:${CONFIG.PORT}`);
-  console.log(`  WebSocket: ws://0.0.0.0:${CONFIG.PORT}/ws`);
-  console.log(`  Health:    http://0.0.0.0:${CONFIG.PORT}/health`);
+  console.log(`  HTTP:      http://127.0.0.1:${CONFIG.PORT}`);
+  console.log(`  WebSocket: ws://127.0.0.1:${CONFIG.PORT}/ws`);
+  console.log(`  Health:    http://127.0.0.1:${CONFIG.PORT}/health`);
   console.log(`  架构:      服务器零知识`);
-  console.log(`  功能:      E2E加密 + 标准认证`);
   console.log('═══════════════════════════════════════════════');
   console.log('');
   console.log('[Init] REST API:');
   console.log('  POST   /api/auth/register       注册');
   console.log('  POST   /api/auth/login          登录');
   console.log('  GET    /api/users/:id/keys      获取公钥');
-  console.log('  PUT    /api/user/public-key     更新公钥');
   console.log('  GET    /api/users/search?q=     搜索用户');
   console.log('  GET    /api/contacts           联系人列表');
   console.log('  POST   /api/contacts           添加联系人');
@@ -1029,3 +1685,13 @@ server.listen(CONFIG.PORT, '0.0.0.0', () => {
 
 process.on('SIGTERM', () => { console.log('关闭中...'); process.exit(0); });
 process.on('SIGINT', () => { console.log('关闭中...'); process.exit(0); });
+
+// ZK-SNARKs Groth16 路由 (2026-05-14 添加) — gated by flags.ZK_AUTH
+if (flags.ZK_AUTH) {
+  const zkSnarksGroth16Routes = require('../experimental/zk-auth/zk-snarks-groth16');
+  app.use('/api/auth', zkSnarksGroth16Routes);
+}
+// PQC Hybrid TLS Session Key Exchange
+pqcHybrid.mount(app);
+
+
