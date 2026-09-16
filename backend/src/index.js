@@ -224,6 +224,11 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+// GET /api/auth/verify — 验证 token 是否有效（前端 init 调用）
+app.get('/api/auth/verify', authMiddleware, (req, res) => {
+  res.json({ valid: true, user: { userId: req.user.userId, username: req.user.username, deviceId: req.user.deviceId } });
+});
+
 const genToken = (user) => jwt.sign(
   { userId: user.id, username: user.username, deviceId: user.deviceId },
   CONFIG.JWT_SECRET,
