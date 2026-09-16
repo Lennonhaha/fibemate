@@ -224,9 +224,9 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
-// GET /api/auth/verify — 验证 token 是否有效（前端 init 调用）
+// GET /api/auth/verify — 校验 token（需 Bearer），对齐 OpenAPI spec 返回 { ok, userId, username }
 app.get('/api/auth/verify', authMiddleware, (req, res) => {
-  res.json({ valid: true, user: { userId: req.user.userId, username: req.user.username, deviceId: req.user.deviceId } });
+  res.json({ ok: true, userId: req.user.userId, username: req.user.username });
 });
 
 const genToken = (user) => jwt.sign(
