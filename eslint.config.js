@@ -48,6 +48,20 @@ module.exports = [
       }
     }
   },
+
+  // ===== src/ scope (added 2026-09-18) =====
+  // 目的：把 src/ 纳入 CI lint，靠 no-use-before-define 兜住 TDZ 类运行时崩溃
+  // （2026-09-18 生产事故根因：rateLimitMiddleware 先用后声明）。
+  // 历史遗留噪声（no-unused-vars / no-undef）本 PR 定向豁免、另行跟踪；
+  // 安全类自定义规则 custom/no-js-bigint-in-hotpath 保持开启（个案用行内豁免注释）。
+  {
+    files: ["src/**/*.js", "src/*.js"],
+    rules: {
+      "no-use-before-define": ["error", { "functions": false, "classes": false }],
+      "no-unused-vars": "off",
+      "no-undef": "off"
+    }
+  },
   {
     ignores: ["**/*.mjs", "scripts/tvla/**",
       "scripts/archive/**",
