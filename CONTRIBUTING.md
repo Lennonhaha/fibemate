@@ -140,6 +140,65 @@ npm install
 node ci-smoke.mjs   # verify baseline
 ```
 
+## Production Deployment
+
+FIBEMATE runs on a single Aliyun ECS instance. The production layout is:
+
+| Path | Role |
+|------|------|
+| `/opt/fibemate-repo` | Git repository (nginx static root = `/opt/fibemate-repo/www`) |
+| `/opt/fibemate-full` | PM2 runtime directory (`src/index.js`, `node_modules/`, `data/`) |
+
+### Single source of truth
+
+The git repository is the **only source of truth**. The PM2 runtime directory
+must never be edited directly — changes go through git first, then sync to
+production.
+
+### Deploy workflow
+
+```bash
+# 1. On the server, unlock chattr-protected directories
+sudo chattr -i /opt/fibemate-repo/www /opt/fibemate-repo/packages /opt/fibemate-repo/docs
+
+# 2. Pull latest main
+cd /opt/fibemate-repo
+git pull --ff-only origin main
+
+# 3. Re-lock
+sudo chattr +i /opt/fibemate-repo/www /opt/fibemate-repo/packages /opt/fibemate-repo/docs
+
+# 4. Sync backend to runtime directory (if backend/src/ changed)
+cp -r /opt/fibemate-repo/src/* /opt/fibemate-full/src/
+cp -r /opt/fibemate-repo/backend/src/* /opt/fibemate-full/src/  # if exists
+
+# 5. Restart PM2
+pm2 restart fibemate
+
+# 6. Verify
+curl -sI https://fibemate.net/ | head -1
+curl -sI https://fibemate.net/api/auth/verify | head -1  # expect 401 (no token)
+```
+
+### What NOT to do
+
+- **Do not** edit `/opt/fibemate-full/src/index.js` directly on the server.
+  Make the change in git, merge via PR, then deploy.
+- **Do not** `scp` files to the server without a corresponding git commit.
+- **Do not** leave `chattr -i` unlocked after deployment.
+
+### chattr locked directories
+
+The following directories are immutable (`chattr +i`) on production:
+
+- `/opt/fibemate-repo/www` (nginx static root)
+- `/opt/fibemate-repo/packages` (npm packages)
+- `/opt/fibemate-repo/docs` (documentation)
+
+Always unlock before `git pull`, re-lock after. The
+[`server-sync.sh`](https://github.com/Lennonhaha/fibemate-tools/blob/main/scripts/server-sync.sh)
+script in fibemate-tools automates this with a `trap` safety net.
+
 ## Cryptographic Code Policy
 
 - All cryptographic changes **must** pass existing KAT (Known Answer Test) vectors
