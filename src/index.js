@@ -290,6 +290,7 @@ const pqcHybrid = require("./pqc-hybrid-server");
  * newlines or control characters that would let a caller forge log
  * entries (log injection). Replace control chars with a visible escape.
  */
+/* eslint-disable no-control-regex */
 function sanitizeLog(value) {
   if (value === undefined || value === null) return String(value);
   return String(value).replace(/[\x00-\x1f\x7f]/g, (ch) => {
@@ -321,7 +322,7 @@ const authMiddleware = (req, res, next) => {
 };
 
 // GET /api/auth/verify — verify token validity (frontend init call)
-app.get('/api/auth/verify', authMiddleware, (req, res) => {
+app.get('/api/auth/verify', rateLimitMiddleware, authMiddleware, (req, res) => {
   res.json({ ok: true, userId: req.user.userId, username: req.user.username });
 });
 
