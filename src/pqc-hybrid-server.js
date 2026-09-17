@@ -16,6 +16,9 @@
 const crypto = require('crypto');
 
 // ============ SM2 (BigInt) ============
+// 定向豁免 custom/no-js-bigint-in-hotpath（2026-09-18）：
+// /api/pqc-hybrid/* 为参考实现路径，BigInt SM2 用于互操作验证；生产高性能主线走 C/WASM。
+// eslint-disable-next-line custom/no-js-bigint-in-hotpath
 const SM2 = require('../sm2-bigint-ec.js');
 console.log('[pqc-hybrid] SM2 BigInt 已加载');
 

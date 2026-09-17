@@ -8,6 +8,7 @@
  *   2. FIPS 140-3 完整性 + KAT 基线 (test/test-fibemate.js, 含 INTEGRITY-MANIFEST 比对)
  *   3. 密码冒烟                     (test/smoke-crypto.js)
  *   4. ML-KEM roundtrip CI          (scripts/ci-mlkem-kat.cjs)
+ *   5. Backend load smoke           (test/smoke-backend.js, TDZ/init guard)
  *
  * 任一失败 → 非零退出码。
  */
@@ -25,6 +26,7 @@ const suites = [
   ['TOTP (RFC 6238)', ['node', '--test', 'test/totp.test.js']],
   ['2FA integration', ['node', '--test', 'test/2fa-integration.test.js']],
   ['Account lockout', ['node', 'test/lockout.test.js']],
+  ['Backend load smoke (TDZ/init)', ['node', 'test/smoke-backend.js']],
 ];
 
 let failed = 0;
