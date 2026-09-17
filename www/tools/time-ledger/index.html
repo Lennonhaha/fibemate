@@ -520,7 +520,7 @@ async function loadChain(){
 /* ===== 手卷绘制 ===== */
 function drawScroll(){
   const svg=document.getElementById('scroll');
-  const W=Math.max(760, CHAIN.length*230+120), H=240, padX=60, padY=70;
+  const W=Math.max(760, CHAIN.length*230+120), H=240, padX=60;
   svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
   svg.setAttribute('width',W);
   const tsList=CHAIN.map(b=>Date.parse(b.ts));
