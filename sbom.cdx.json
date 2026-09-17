@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:9885d04f-a463-4028-9d7b-8a234f4a79cd",
+  "serialNumber": "urn:uuid:9893682f-cb02-40f9-b565-393798f0f228",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-08T15:19:50.521Z",
+    "timestamp": "2026-09-17T04:11:10.622Z",
     "component": {
       "type": "application",
       "bom-ref": "fibemate@3.3.0",
@@ -506,20 +506,6 @@
     },
     {
       "type": "library",
-      "bom-ref": "@mongodb-js/saslprep@1.4.12",
-      "name": "@mongodb-js/saslprep",
-      "version": "1.4.12",
-      "purl": "pkg:npm/@mongodb-js%2Fsaslprep@1.4.12",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
       "bom-ref": "@noble/ciphers@2.4.0",
       "name": "@noble/ciphers",
       "version": "2.4.0",
@@ -636,34 +622,6 @@
       "name": "@types/node",
       "version": "12.20.55",
       "purl": "pkg:npm/@types%2Fnode@12.20.55",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "@types/webidl-conversions@7.0.3",
-      "name": "@types/webidl-conversions",
-      "version": "7.0.3",
-      "purl": "pkg:npm/@types%2Fwebidl-conversions@7.0.3",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "@types/whatwg-url@13.0.0",
-      "name": "@types/whatwg-url",
-      "version": "13.0.0",
-      "purl": "pkg:npm/@types%2Fwhatwg-url@13.0.0",
       "licenses": [
         {
           "license": {
@@ -864,20 +822,6 @@
         {
           "license": {
             "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "bson@7.3.1",
-      "name": "bson",
-      "version": "7.3.1",
-      "purl": "pkg:npm/bson@7.3.1",
-      "licenses": [
-        {
-          "license": {
-            "name": "Apache-2.0"
           }
         }
       ]
@@ -1934,10 +1878,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "js-yaml@4.3.1",
+      "bom-ref": "js-yaml@4.3.2",
       "name": "js-yaml",
-      "version": "4.3.1",
-      "purl": "pkg:npm/js-yaml@4.3.1",
+      "version": "4.3.2",
+      "purl": "pkg:npm/js-yaml@4.3.2",
       "licenses": [
         {
           "license": {
@@ -2040,20 +1984,6 @@
         {
           "license": {
             "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "kareem@3.3.0",
-      "name": "kareem",
-      "version": "3.3.0",
-      "purl": "pkg:npm/kareem@3.3.0",
-      "licenses": [
-        {
-          "license": {
-            "name": "Apache-2.0"
           }
         }
       ]
@@ -2256,20 +2186,6 @@
     },
     {
       "type": "library",
-      "bom-ref": "lowdb@7.0.1",
-      "name": "lowdb",
-      "version": "7.0.1",
-      "purl": "pkg:npm/lowdb@7.0.1",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
       "bom-ref": "math-intrinsics@1.1.0",
       "name": "math-intrinsics",
       "version": "1.1.0",
@@ -2288,20 +2204,6 @@
       "name": "media-typer",
       "version": "1.1.1",
       "purl": "pkg:npm/media-typer@1.1.1",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "memory-pager@1.5.0",
-      "name": "memory-pager",
-      "version": "1.5.0",
-      "purl": "pkg:npm/memory-pager@1.5.0",
       "licenses": [
         {
           "license": {
@@ -2386,76 +2288,6 @@
       "name": "moment-timezone",
       "version": "0.5.48",
       "purl": "pkg:npm/moment-timezone@0.5.48",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "mongodb@7.2.0",
-      "name": "mongodb",
-      "version": "7.2.0",
-      "purl": "pkg:npm/mongodb@7.2.0",
-      "licenses": [
-        {
-          "license": {
-            "name": "Apache-2.0"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "mongodb-connection-string-url@7.0.2",
-      "name": "mongodb-connection-string-url",
-      "version": "7.0.2",
-      "purl": "pkg:npm/mongodb-connection-string-url@7.0.2",
-      "licenses": [
-        {
-          "license": {
-            "name": "Apache-2.0"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "mongoose@9.7.2",
-      "name": "mongoose",
-      "version": "9.7.2",
-      "purl": "pkg:npm/mongoose@9.7.2",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "mpath@0.9.0",
-      "name": "mpath",
-      "version": "0.9.0",
-      "purl": "pkg:npm/mpath@0.9.0",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "mquery@6.0.0",
-      "name": "mquery",
-      "version": "6.0.0",
-      "purl": "pkg:npm/mquery@6.0.0",
       "licenses": [
         {
           "license": {
@@ -3012,20 +2844,6 @@
     },
     {
       "type": "library",
-      "bom-ref": "sift@17.1.3",
-      "name": "sift",
-      "version": "17.1.3",
-      "purl": "pkg:npm/sift@17.1.3",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
       "bom-ref": "sm-crypto@0.5.6",
       "name": "sm-crypto",
       "version": "0.5.6",
@@ -3096,38 +2914,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "sparse-bitfield@3.0.3",
-      "name": "sparse-bitfield",
-      "version": "3.0.3",
-      "purl": "pkg:npm/sparse-bitfield@3.0.3",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
       "bom-ref": "statuses@2.0.2",
       "name": "statuses",
       "version": "2.0.2",
       "purl": "pkg:npm/statuses@2.0.2",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "steno@4.0.2",
-      "name": "steno",
-      "version": "4.0.2",
-      "purl": "pkg:npm/steno@4.0.2",
       "licenses": [
         {
           "license": {
@@ -3156,20 +2946,6 @@
       "name": "toidentifier",
       "version": "1.0.1",
       "purl": "pkg:npm/toidentifier@1.0.1",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "tr46@5.1.1",
-      "name": "tr46",
-      "version": "5.1.1",
-      "purl": "pkg:npm/tr46@5.1.1",
       "licenses": [
         {
           "license": {
@@ -3254,34 +3030,6 @@
       "name": "vary",
       "version": "1.1.2",
       "purl": "pkg:npm/vary@1.1.2",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "webidl-conversions@7.0.0",
-      "name": "webidl-conversions",
-      "version": "7.0.0",
-      "purl": "pkg:npm/webidl-conversions@7.0.0",
-      "licenses": [
-        {
-          "license": {
-            "name": "BSD-2-Clause"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "whatwg-url@14.2.0",
-      "name": "whatwg-url",
-      "version": "14.2.0",
-      "purl": "pkg:npm/whatwg-url@14.2.0",
       "licenses": [
         {
           "license": {
