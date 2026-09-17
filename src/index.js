@@ -129,12 +129,8 @@ const sm2Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm2-proxy") :
 if (flags.ZK_AUTH) zkAnonAuth.setDatabase(db);
 const opkServer = require('./opk-server'); // init moved after authMiddleware
 const sm34Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm34-proxy") : (app) => {};
-let checkAccountLockout, recordFailedLogin, resetLoginAttempts;
-try { ({ checkAccountLockout, recordFailedLogin, resetLoginAttempts } = require('./lib/lockout')); } catch (_) {
-  checkAccountLockout = (n,l) => ({ locked: false, remaining: 0, remainingSec: 0 });
-  recordFailedLogin = (n,l) => {};
-  resetLoginAttempts = (n,l) => {};
-} // security-hotfix 2026-06-09
+// Account lockout — in-memory, 5 attempts / 15 min (security-hotfix 2026-06-09)
+const { checkAccountLockout, recordFailedLogin, resetLoginAttempts } = require('./lib/lockout');
 global.noirDb = db;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: '/ws' });
