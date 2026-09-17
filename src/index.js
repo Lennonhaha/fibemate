@@ -324,6 +324,11 @@ const authMiddleware = (req, res, next) => {
   }
 };
 
+// GET /api/auth/verify — verify token validity (frontend init call)
+app.get('/api/auth/verify', authMiddleware, (req, res) => {
+  res.json({ ok: true, userId: req.user.userId, username: req.user.username });
+});
+
 const genToken = (user) => jwt.sign(
   { userId: user.id, username: user.username, deviceId: user.deviceId },
   CONFIG.JWT_SECRET,
