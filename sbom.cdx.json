@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:9893682f-cb02-40f9-b565-393798f0f228",
+  "serialNumber": "urn:uuid:56ab299f-ace3-4619-b582-209c3ddb94ba",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-17T04:11:10.622Z",
+    "timestamp": "2026-09-17T04:23:04.453Z",
     "component": {
       "type": "application",
       "bom-ref": "fibemate@3.3.0",
