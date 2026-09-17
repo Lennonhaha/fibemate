@@ -131,6 +131,18 @@ const opkServer = require('./opk-server'); // init moved after authMiddleware
 const sm34Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm34-proxy") : (app) => {};
 // Account lockout — in-memory, 5 attempts / 15 min (security-hotfix 2026-06-09)
 const { checkAccountLockout, recordFailedLogin, resetLoginAttempts } = require('./lib/lockout');
+// 2FA TOTP (RFC 6238) — in-memory ticket Map, 60s TTL
+const { generateSecret, totpUri, verify: totpVerify, generateRecoveryCodes } = require('./lib/totp');
+const twoFATickets = new Map(); // ticket → { userId, expiresAt, attempts }
+
+// 2FA ticket cleanup — remove expired entries every 60s
+setInterval(() => {
+  const now = Date.now();
+  for (const [k, v] of twoFATickets) {
+    if (v.expiresAt < now) twoFATickets.delete(k);
+  }
+}, 60000).unref();
+
 global.noirDb = db;
 const server = http.createServer(app);
 const wss = new WebSocket.Server({ server, path: '/ws' });
@@ -1071,6 +1083,15 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
       });
     }
 
+    // 2FA: if user has 2FA enabled, return ticket instead of token
+    if (user.twoFAEnabled) {
+      const ticket = crypto.randomBytes(32).toString('hex');
+      twoFATickets.set(ticket, { userId: user.id, expiresAt: Date.now() + 60000, attempts: 0 });
+      resetLoginAttempts(username);
+      logSecurity('login_2fa_required', user.id, { ticket: ticket.slice(0, 8) + '...' });
+      return res.json({ twoFARequired: true, ticket });
+    }
+
     const token = genToken({ id: user.id, username: user.username, deviceId: deviceId || '' });
     const refreshToken = genRefreshToken({ id: user.id, username: user.username, deviceId: deviceId || '' });
     db.updateUser(user.id, { isOnline: 1, lastSeen: Date.now() });
@@ -1128,6 +1149,165 @@ app.post('/api/auth/update-keys', authMiddleware, rateLimitMiddleware, (req, res
   }
   logSecurity('update_keys', req.user.userId);
   res.json({ success: true, message: '公钥已更新' });
+});
+
+// ═══════════════════════════════════════════════════════
+//  2FA — TOTP (RFC 6238) routes
+// ═══════════════════════════════════════════════════════
+
+// Verify 2FA credential without performing sensitive operations.
+// Returns { ok: true, consumeRecovery?: number } on success, { ok: false } on failure.
+// Caller is responsible for consuming the recovery code index and performing db.updateUser.
+function verify2FACredential(user, code, recoveryCode) {
+  if (typeof recoveryCode === 'string' && recoveryCode.length > 0) {
+    // Constant-time scan: each stored code is compared with crypto.timingSafeEqual,
+    // and the returned index is produced only by equal-length constant-time matches.
+    const codes = user.twoFARecoveryCodes || [];
+    const target = Buffer.from(recoveryCode.toUpperCase(), 'utf8');
+    let matchIdx = -1;
+    for (let i = 0; i < codes.length; i++) {
+      const candidate = Buffer.from(String(codes[i]), 'utf8');
+      if (candidate.length === target.length && crypto.timingSafeEqual(candidate, target)) {
+        matchIdx = i;
+      }
+    }
+    if (matchIdx < 0) return { ok: false };
+    return { ok: true, consumeRecovery: matchIdx };
+  }
+  if (typeof code === 'string' && code.length > 0) {
+    if (!totpVerify(user.twoFASecret, code, { window: 1 })) return { ok: false };
+    return { ok: true };
+  }
+  return { ok: false };
+}
+
+// GET /api/auth/2fa/status — check if 2FA is enabled
+app.get('/api/auth/2fa/status', authMiddleware, rateLimitMiddleware, (req, res) => {
+  const user = db.getUserById(req.user.userId);
+  res.json({ enabled: !!(user && user.twoFAEnabled) });
+});
+
+// POST /api/auth/2fa/enable — step 1: generate secret, return for QR
+app.post('/api/auth/2fa/enable', authMiddleware, rateLimitMiddleware, (req, res) => {
+  const user = db.getUserById(req.user.userId);
+  if (!user) return res.status(404).json({ error: '用户不存在' });
+  if (user.twoFAEnabled) return res.status(409).json({ error: '2FA 已启用' });
+
+  const secret = generateSecret();
+  const uri = totpUri(secret, user.username || 'user', 'FIBEMATE');
+  // Store secret temporarily (not yet enabled — confirm-enable will flip the flag)
+  db.updateUser(user.id, { twoFASecret: secret, twoFAEnabled: false });
+
+  logSecurity('2fa_enable_init', user.id);
+  res.json({ secret, uri });
+});
+
+// POST /api/auth/2fa/confirm-enable — step 2: verify first code, enable 2FA
+app.post('/api/auth/2fa/confirm-enable', authMiddleware, rateLimitMiddleware, (req, res) => {
+  const { code } = req.body;
+  if (!code) return res.status(400).json({ error: '请输入验证码' });
+
+  const user = db.getUserById(req.user.userId);
+  if (!user || !user.twoFASecret) return res.status(400).json({ error: '请先调用 enable 获取密钥' });
+  if (user.twoFAEnabled) return res.status(409).json({ error: '2FA 已启用' });
+
+  if (!totpVerify(user.twoFASecret, code, { window: 1 })) {
+    logSecurity('2fa_confirm_fail', user.id);
+    return res.status(401).json({ error: '验证码错误' });
+  }
+
+  const recoveryCodes = generateRecoveryCodes(10);
+  db.updateUser(user.id, { twoFAEnabled: true, twoFARecoveryCodes: recoveryCodes });
+
+  logSecurity('2fa_enabled', user.id);
+  res.json({ enabled: true, recoveryCodes });
+});
+
+// POST /api/auth/2fa/disable — disable 2FA (requires TOTP code or recovery code)
+app.post('/api/auth/2fa/disable', authMiddleware, rateLimitMiddleware, (req, res) => {
+  const { code, recoveryCode } = req.body;
+  const user = db.getUserById(req.user.userId);
+  if (!user || !user.twoFAEnabled) return res.status(400).json({ error: '2FA 未启用' });
+
+  // verify2FACredential performs constant-time matching and TOTP verification internally.
+  const result = verify2FACredential(user, code, recoveryCode);
+  if (!result.ok) {
+    logSecurity('2fa_disable_fail', user.id);
+    return res.status(401).json({ error: '验证码或恢复码错误' });
+  }
+
+  if (result.consumeRecovery !== undefined) {
+    const codes = user.twoFARecoveryCodes || [];
+    codes.splice(result.consumeRecovery, 1);
+    db.updateUser(user.id, { twoFARecoveryCodes: codes });
+  }
+
+  db.updateUser(user.id, { twoFAEnabled: false, twoFASecret: null, twoFARecoveryCodes: [] });
+  logSecurity('2fa_disabled', user.id);
+  res.json({ enabled: false });
+});
+
+// POST /api/auth/2fa/verify-login — verify TOTP during login (no authMiddleware)
+app.post('/api/auth/2fa/verify-login', rateLimitMiddleware, (req, res) => {
+  const { ticket, code, recoveryCode } = req.body;
+  if (!ticket || (!code && !recoveryCode)) {
+    return res.status(400).json({ error: '缺少 ticket 或验证码' });
+  }
+
+  const ticketData = twoFATickets.get(ticket);
+  if (!ticketData || ticketData.expiresAt < Date.now()) {
+    twoFATickets.delete(ticket);
+    return res.status(401).json({ error: 'ticket 已过期，请重新登录' });
+  }
+
+  const user = db.getUserById(ticketData.userId);
+  if (!user || !user.twoFAEnabled) {
+    twoFATickets.delete(ticket);
+    return res.status(400).json({ error: '2FA 未启用' });
+  }
+
+  // verify2FACredential performs constant-time matching and TOTP verification internally.
+  const result = verify2FACredential(user, code, recoveryCode);
+  if (!result.ok) {
+    ticketData.attempts++;
+    if (ticketData.attempts >= 3) {
+      twoFATickets.delete(ticket);
+      logSecurity('2fa_verify_fail_locked', user.id, { attempts: ticketData.attempts });
+      return res.status(429).json({ error: '验证失败次数过多，请重新登录' });
+    }
+    logSecurity('2fa_verify_fail', user.id, { attempts: ticketData.attempts });
+    return res.status(401).json({ error: '验证码或恢复码错误' });
+  }
+
+  if (result.consumeRecovery !== undefined) {
+    const codes = user.twoFARecoveryCodes || [];
+    codes.splice(result.consumeRecovery, 1);
+    db.updateUser(user.id, { twoFARecoveryCodes: codes });
+  }
+
+  // Success — issue real tokens
+  twoFATickets.delete(ticket);
+  const token = genToken({ id: user.id, username: user.username, deviceId: '' });
+  const refreshToken = genRefreshToken({ id: user.id, username: user.username, deviceId: '' });
+  db.updateUser(user.id, { isOnline: 1, lastSeen: Date.now() });
+  db.setPresence(user.id, true);
+  logSecurity('2fa_login', user.id);
+
+  res.json({
+    userId: user.id,
+    username: user.username,
+    displayName: user.displayName,
+    publicKey: user.publicKey,
+    token,
+    refreshToken,
+    securityScore: user.securityScore,
+    privacySettings: {
+      hideOnlineStatus: !!user.hideOnlineStatus,
+      hideReadReceipts: !!user.hideReadReceipts,
+      screenshotAlert: !!user.screenshotAlert,
+      burnAfterRead: !!user.burnAfterRead
+    }
+  });
 });
 
 // 搜索用户（必须放在 /:userId 前面，避免被误匹配）

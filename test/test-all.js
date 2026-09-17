@@ -22,6 +22,9 @@ const suites = [
   ['FIPS 140-3 integrity + full harness', ['node', 'test/test-fibemate.js']],
   ['Crypto smoke', ['node', 'test/smoke-crypto.js']],
   ['ML-KEM roundtrip CI', ['node', 'scripts/ci-mlkem-kat.cjs']],
+  ['TOTP (RFC 6238)', ['node', '--test', 'test/totp.test.js']],
+  ['2FA integration', ['node', '--test', 'test/2fa-integration.test.js']],
+  ['Account lockout', ['node', 'test/lockout.test.js']],
 ];
 
 let failed = 0;
