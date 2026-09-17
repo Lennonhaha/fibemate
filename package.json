@@ -21,6 +21,7 @@
     "@alicloud/dysmsapi20170525": "4.6.0",
     "@alicloud/openapi-client": "0.4.15",
     "@noble/curves": "2.2.0",
+    "@noble/hashes": "^2.2.0",
     "@noble/post-quantum": "0.7.1",
     "bcryptjs": "3.0.3",
     "better-sqlite3": "13.0.3",
@@ -46,6 +47,7 @@
     "test": "test"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.0",
     "eslint": "^9.7.0"
   },
   "repository": {
