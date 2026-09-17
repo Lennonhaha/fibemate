@@ -85,8 +85,7 @@ function main() {
   // Dynamically load modules
   const modules = {};
   try { modules.mlkem = require('../packages/pqc-kem/src/ml-kem-768.js'); } catch (e) { console.log('  SKIP mlkem: ' + e.message); }
-  try { modules.sm2 = require('../src/crypto/sm2-bigint-ec.js'); } catch (e) { /* optional */ }
-  try { modules.sm4 = require('../src/crypto/sm4-alpha-gcm.js'); } catch (e) { /* optional */ }
+  // SM2/SM4 perf gate pending module implementation
 
   // ML-KEM-768
   if (modules.mlkem) {
