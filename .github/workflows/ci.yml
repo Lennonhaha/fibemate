@@ -92,6 +92,9 @@ jobs:
         run: |
           node test/test-keccak.js
           node test/test-fibemate.js
+          node --test test/totp.test.js
+          node --test test/2fa-integration.test.js
+          node test/lockout.test.js
 
   # ─── PQC 性能基准（single platform，回归检测）────────────
   bench:
