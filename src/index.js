@@ -4,6 +4,21 @@
 // Production:      FIBEMATE_EXPERIMENTAL=0  (default, no experimental code runs)
 // Development:     FIBEMATE_EXPERIMENTAL=1  node src/index.js
 // Subsystem off:   FIBEMATE_EXPERIMENTAL=1 FIBEMATE_NO_MIXNET=1 node src/index.js
+// Load .env into process.env (zero-dependency; PM2 ecosystem.config.js does not auto-load .env)
+(function loadDotenv() {
+  const envFs = require("fs");
+  const envPath = require("path").join(__dirname, "..", ".env");
+  if (!envFs.existsSync(envPath)) return;
+  const raw = envFs.readFileSync(envPath, "utf8");
+  for (const line of raw.split("\n")) {
+    const m = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
+    if (!m) continue;
+    const key = m[1];
+    let val = m[2];
+    if (val.startsWith('"') && val.endsWith('"') || val.startsWith("'") && val.endsWith("'")) val = val.slice(1, -1);
+    if (!(key in process.env)) process.env[key] = val;
+  }
+})();
 const flags = require('./flags');
 
 const { safeCompare, safeCompareHex, safeFind, safeFindByField, timingSafe404 } = require('./lib/constant-time');
