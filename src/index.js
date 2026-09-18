@@ -322,6 +322,15 @@ const logSecurity = (event, userId, details = {}, req = null) => {
   });
 };
 
+// ===== 用户限制配置 =====
+// 注：必须定义在使用点（/api/users/count）之前（no-use-before-define 修复 2026-09-18）
+const MAX_USERS = 200;
+const RESERVED_IDS = ['id88888888', 'id1111111', 'id66666666', 'id99999999', 'id00000001'];
+const ADMIN_INVITE_CODE = process.env.ADMIN_INVITE_CODE || null;  // 无 env 时禁止保留ID注册（fail-closed）
+if (!ADMIN_INVITE_CODE) {
+  console.error('[Admin] WARNING: ADMIN_INVITE_CODE not set in .env');
+}  // 建议通过环境变量设置，避免源码泄露
+
 const authMiddleware = (req, res, next) => {
   const header = req.headers['authorization'];
   if (!header?.startsWith('Bearer ')) return res.status(401).json({ error: '未授权' });
@@ -332,11 +341,6 @@ const authMiddleware = (req, res, next) => {
     res.status(401).json({ error: 'Token无效' });
   }
 };
-
-// GET /api/auth/verify — verify token validity (frontend init call)
-app.get('/api/auth/verify', rateLimitMiddleware, authMiddleware, (req, res) => {
-  res.json({ ok: true, userId: req.user.userId, username: req.user.username });
-});
 
 const genToken = (user) => jwt.sign(
   { userId: user.id, username: user.username, deviceId: user.deviceId },
@@ -425,6 +429,14 @@ app.use('/api', globalRateLimitMiddleware);
 
 // 重放保护（校验式）：挂载在全局限流之后，对所有 /api 请求生效
 app.use('/api', replayGuardMiddleware);
+
+// ========================
+// GET /api/auth/verify — verify token validity (frontend init call)
+// 注：必须注册在 rateLimitMiddleware / globalRateLimitMiddleware 声明之后（TDZ 修复 2026-09-18）
+// ========================
+app.get('/api/auth/verify', rateLimitMiddleware, authMiddleware, (req, res) => {
+  res.json({ ok: true, userId: req.user.userId, username: req.user.username });
+});
 
 // ========================
 // POST /api/auth/refresh - 刷新 access token
@@ -951,14 +963,6 @@ app.post('/api/conversations/find-or-create', authMiddleware, (req, res) => {
   res.json({ conversationId: conv.id, otherUser: { id: other.id, username: other.username, displayName: other.displayName, isOnline: !!other.isOnline } });
 });
 
-// ===== 用户限制配置 =====
-const MAX_USERS = 200;
-const RESERVED_IDS = ['id88888888', 'id1111111', 'id66666666', 'id99999999', 'id00000001'];
-const ADMIN_INVITE_CODE = process.env.ADMIN_INVITE_CODE;
-if (!ADMIN_INVITE_CODE) {
-  console.error('[Admin] WARNING: ADMIN_INVITE_CODE not set in .env');
-}  // 建议通过环境变量设置，避免源码泄露
-
 // ZK 匿名认证端点 (必须在标准注册之前, 防止路径前缀匹配冲突)
 app.use('/api/auth', zkAnonAuth.router);
 cryptoProxy(app);
@@ -981,6 +985,10 @@ app.post('/api/auth/register', rateLimitMiddleware, async (req, res) => {
 
     // 保留ID检查 - 需要邀请码
     if (RESERVED_IDS.includes(username)) {
+      // fail-closed：未配置邀请码时一律拒绝保留ID注册（否则 undefined !== undefined 会放行）
+      if (!ADMIN_INVITE_CODE) {
+        return res.status(403).json({ error: '保留 ID 注册需要有效邀请码（未配置）' });
+      }
       const inviteCode = req.body.inviteCode;
       if (inviteCode !== ADMIN_INVITE_CODE) {
         return res.status(403).json({ error: '该用户名为保留ID，需要邀请码' });
