@@ -3,6 +3,9 @@
   "version": "3.3.0",
   "description": "FIBEMATE - E2E Encrypted Social Backend Server",
   "main": "src/index.js",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
