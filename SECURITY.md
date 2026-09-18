@@ -75,9 +75,11 @@ This is a **recognition-only** program. It may evolve into a paid program if the
 
 ## Dependency Risk Disposition
 
-### @noble/curves (65 source references) — Quantum Vulnerable
+### @noble/curves — Quantum Vulnerable (test-reference count: 65)
 
 **Risk**: Provides ECDSA/ECDH/EdDSA primitives (P-256, P-384, P-521, Ed25519). All elliptic curve cryptography is vulnerable to Shor's algorithm on a CRQC (cryptographically relevant quantum computer).
+
+> **Reference-count note**: The figure "65" is an automated scan count (`tools/pqc-ecosystem-scan.js`) of string matches / imports / type references within **test directories only** — *not* 65 distinct production usage points. Actual cryptographic use in core paths is zero (see "Current usage" below).
 
 **Current usage in FIBEMATE**: Referenced in `packages/pqc-kem/` test infrastructure and cross-validation scripts only. **Not used** in core cryptographic paths — the double ratchet uses Node.js built-in crypto for P-256 ECDH, not `@noble/curves`.
 
@@ -85,15 +87,15 @@ This is a **recognition-only** program. It may evolve into a paid program if the
 
 **Migration plan** (Q4 2026): Remove from `devDependencies` by replacing test-vector validation with KAT-based checks that don't require ECC libraries.
 
-### bcryptjs (2 source references) — Quantum Weakened
+### bcryptjs (2 source references) — Demo-Server Only
 
-**Risk**: bcrypt is a password hashing function. Grover's algorithm halves the effective security bits of any brute-force search, including bcrypt iterations. However, bcrypt's work factor can simply be doubled (e.g., cost factor 10→11) to compensate.
+**Risk**: bcrypt is a *password hashing function*, not a symmetric cipher. Its strength comes from the cost factor and the entropy of the user-chosen password — not from a "key length" that Grover's algorithm halves. bcrypt does not have a meaningful "effective security bits" figure in that sense, so the claim that Grover halves its strength does not apply. The genuine weaknesses are: (1) pure-JS implementation quality, and (2) password entropy / offline dictionary-attack cost. Raising the cost factor (10→12) is justified by reducing offline dictionary-attack compute cost in the *classical* setting, not by Grover. `Argon2id` is the better long-term replacement because it is memory-hard and GPU/ASIC-resistant — again unrelated to Grover.
 
-**Current usage in FIBEMATE**: Used in `reg-server/` for demo user registration hashing. This is a demo server, not a production authentication system.
+**Current usage in FIBEMATE**: Used in `reg-server/` for demo user registration hashing. This is a demo server, not a production authentication system. No real user credentials are stored.
 
-**Disposition**: Accept (educational demo). The demo server is for protocol illustration only. No real user credentials are stored. Increase cost factor from 10→12 as a defensive measure if the demo server ever leaves localhost.
+**Disposition**: Accept (educational demo). The demo server is for protocol illustration only, restricted to localhost or strictly isolated environments. It must not be used in any real deployment. Increase cost factor from 10→12 if retained.
 
-**Migration plan** (Q4 2026): Replace with Argon2id if the registration server becomes non-demo.
+**Migration plan** (Q4 2026): Replace with Argon2id (memory-hard, GPU/ASIC-resistant) if the registration server is ever promoted beyond demo status.
 
 ## Scope of This Policy
 

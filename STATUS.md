@@ -53,4 +53,4 @@ All jobs green on `main`:
 
 ## Not a Security Product
 
-FIBEMATE is an engineering demonstration platform, not a production-ready security library. Do not use it for classified, financial, government, or critical infrastructure scenarios. See [§11 Mandatory Usage Constraints](docs/security-limitations.md#11-强制使用约束必读) in security-limitations.md.
+FIBEMATE is an engineering demonstration platform, not a production-ready security library. Do not use it for classified, financial, government, or critical infrastructure scenarios. It must not be used for any real business or production deployment. See [§11 Mandatory Usage Constraints](docs/security-limitations.md#11-强制使用约束必读) in security-limitations.md.
