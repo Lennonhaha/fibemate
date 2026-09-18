@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:56ab299f-ace3-4619-b582-209c3ddb94ba",
+  "serialNumber": "urn:uuid:46be9143-8968-4cf0-be75-9c03b6f433bb",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-17T04:23:04.453Z",
+    "timestamp": "2026-09-18T14:55:35.089Z",
     "component": {
       "type": "application",
       "bom-ref": "fibemate@3.3.0",
@@ -2530,20 +2530,6 @@
         {
           "license": {
             "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "pqc-kyber@0.7.0",
-      "name": "pqc-kyber",
-      "version": "0.7.0",
-      "purl": "pkg:npm/pqc-kyber@0.7.0",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT/Apache-2.0"
           }
         }
       ]
