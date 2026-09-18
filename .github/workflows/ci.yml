@@ -70,11 +70,15 @@ jobs:
         run: node scripts/ci-mlkem-kat.cjs
 
   # ─── Node.js 单元测试 (multi-platform) ──────────────
+  # node-test requires Node >=22: better-sqlite3@13 declares engines >=22,
+  # src/index.js loads db-sqlite.js at startup, and Node 18 segfaults
+  # on new Database(...). Node 18 EOL 2025-04-30. Cross-version crypto
+  # coverage kept via gm-crossval / mlkem-kat.
   node-test:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        node: [18, 22]
+        node: [22]
       fail-fast: false
     runs-on: ${{ matrix.os }}
     steps:
