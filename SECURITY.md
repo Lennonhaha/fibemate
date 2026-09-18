@@ -18,7 +18,7 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform. It i
 - Pure JavaScript implementations are **not constant-time**
 - No hardware side-channel countermeasures beyond software simulation
 - C native addon has not undergone fuzzing
-- RTL source code is withheld pending security review
+- RTL (Verilog) source is currently withheld. No independent security review has been initiated; publication awaits an internal readiness assessment (In Development, not yet Signoff).
 
 ### How to Report
 

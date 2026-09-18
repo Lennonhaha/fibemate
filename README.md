@@ -499,7 +499,7 @@ rop: ≈2^143.8, red: ≈2^143.8, δ: 1.003941, β: 406, d: 998, tag: usvp
 - **Security Audits:** This project has not undergone a formal, third-party security audit. It is an engineering demonstration.
 - **Cryptographic Reductions:** Research components (VWZ) are experimental and lack a formal reduction to standard lattice assumptions.
 - **Physical Side-Channel:** Hardware TVLA (ChipWhisperer) is pending due to a level shifter issue (Q4 2026 target).
-- **Hardware Provisioning:** The FPGA source code (`rtl/`) is available upon request due to the specific toolchain requirements (Vivado).
+- **Hardware Provisioning:** The FPGA source code (`rtl/`) is currently withheld and is **not** released on request; per `SECURITY.md` it has not entered independent security review (In Development, not yet Signoff). The Verilog is preserved as timestamped evidence in the TSR archive (`docs/tsa/2026-06-25/hardware/`, e.g. `ntt_core.v`, `ntt_core_pipe.v`) rather than published as buildable source.
 
 ### Future Roadmap
 
