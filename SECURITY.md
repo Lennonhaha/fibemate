@@ -44,6 +44,12 @@ Given the project's educational nature, we follow a **coordinated disclosure** a
 - Critical issues: Fixed before public disclosure
 - Low-severity issues: May be disclosed in regular development updates
 
+### Coordinated Disclosure Timeline
+
+- We follow **coordinated disclosure**. Public disclosure is deferred until a fix is available or a mutually agreed timeline is reached.
+- Target embargo: **90 days from acknowledgment**, or earlier if a fix is released — whichever comes first.
+- For this single-maintainer project these are best-effort targets, not contractual guarantees. If you have a hard deadline, state it in your report and we will coordinate.
+
 ### Bug Bounty
 
 FIBEMATE is a single-maintainer educational/research project without funding. We **do not** operate a paid bounty program. However, we recognize and credit good-faith security research as follows:
@@ -121,6 +127,11 @@ This security policy applies to:
 
 We thank security researchers who report issues in good faith. This project is a single-maintainer educational effort; patience with response times is appreciated.
 
-## PGP Key
+## Encrypted Reporting
 
-Not available. This project does not handle production secrets.
+This project does not currently publish a PGP key. To report privately, use one of:
+
+1. **GitHub Security Advisory (preferred)** — open a private vulnerability report via the repository's Security tab. It stays encrypted within GitHub and is the recommended channel.
+2. **Email** — `security@fibemate.net` (plaintext only; do **not** send sensitive exploit details unencrypted). Mark the subject `SECURITY`.
+
+Response commitment follows the [Response Timeline](#response-timeline) above: acknowledgment within 14 days, assessment within 30 days. These are best-effort, single-maintainer targets — not guarantees.
