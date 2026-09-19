@@ -18,7 +18,7 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform. It i
 - Pure JavaScript implementations are **not constant-time**
 - No hardware side-channel countermeasures beyond software simulation
 - C native addon has not undergone fuzzing
-- RTL (Verilog) source is currently withheld. No independent security review has been initiated; publication awaits an internal readiness assessment (In Development, not yet Signoff).
+- RTL (Verilog) source status: the NTT/FPGA core implementations (`fpga/rtl/`) are published alongside the repository. The VWZ research-line BRAM solver RTL remains withheld and awaits an internal readiness assessment (In Development, not yet Signoff).
 
 ### How to Report
 
