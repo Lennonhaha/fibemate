@@ -67,19 +67,33 @@
 <body>
 <div class="wrap">
 <h1>VWZ Cryptanalysis Challenge</h1>
-<p class="subtitle">Public bounty for breaking the Vandermonde-Wronskian-Zariski tensor trapdoor</p>
+<p class="subtitle">Public cryptanalysis challenge for the FIBEMATE VWZ (Vandermonde-Wang-Zhang) rank-2 signature — based on Narayanan 2025/624 (retracted 2026-08-19)</p>
 
 <section>
   <h2>What is VWZ?</h2>
-  <p>VWZ is a post-quantum signature scheme (ePrint 2025/624, Narayanan / SandboxAQ) based on a novel
-  hardness assumption: the pseudorandomness of <strong>Vandermonde exponential-product tensors</strong> under
-  basis twist. Unlike lattice-based (ML-DSA) or hash-based (SLH-DSA) signatures, VWZ derives its security
-  from the difficulty of distinguishing specially structured tensors from truly random ones.</p>
+  <p><strong>VWZ</strong> (Vandermonde-<strong>Wang-Zhang</strong>) is FIBEMATE's independently named
+  post-quantum signature scheme. Its trapdoor reuses the <em>Vandermonde-Weyman-Zelevinsky (VWZ) tensor</em>
+  construction introduced by Narayanan in
+  <a href="https://eprint.iacr.org/2025/624">ePrint 2025/624</a>
+  ("Trapdoor one-way functions from tensors"). Note the shared "VWZ" abbreviation: FIBEMATE's
+  <em>Wang-Zhang</em> naming is distinct from the paper's <em>Weyman-Zelevinsky</em> attribution.</p>
+
+  <p><strong>Honesty note:</strong> the original 2025/624 construction was
+  <a href="https://eprint.iacr.org/2025/624">retracted by its author on 2026-08-19</a> — its rank-1
+  three-dimensional tensors are efficiently distinguishable from random (rank-deficient 2D slices). That is
+  exactly the weakness exploited by the rank-1 total break documented in our security assessment
+  (36/36 forgeries accepted). This challenge does <strong>not</strong> offer the original rank-1 scheme; it
+  offers FIBEMATE's <strong>rank-2 hardening variant</strong>, which closes the rank-1 distinguisher.</p>
+
+  <p>The rank-2 variant's security is <strong>only partially verified at the algebraic-attack layer</strong>
+  (rank-1 attacks score 0/27<a href="/docs/VWZ-STATUS.md#timeline" title="VWZ-STATUS.md 2026-09-06: rank-2 construction shipped, 306/306 slices rank=2, rank-1 attack 0/27">†</a>; 44/44 boundary tests pass<a href="/docs/VWZ-STATUS.md#timeline" title="VWZ-STATUS.md 2026-09-06: 44/44 boundary tests (rank-2 boundary-format verification in experimental/vwz-lg attack suite)">†</a>). There is <strong>no third-party audit</strong> and
+  <strong>no formal reduction</strong> to a standard assumption. Treat all security claims as experimental.
+  VWZ is not on any production code path.</p>
 
   <div class="status-bar" style="margin-top:14px;">
-    <div class="status-item"><span class="dot dot-green"></span> C implementation: 43/43 tests PASS</div>
-    <div class="status-item"><span class="dot dot-green"></span> Cross-verified: Python ↔ C</div>
-    <div class="status-item"><span class="dot dot-green"></span> KeyGen: 7.1 µs | Sign: 2.3 µs | Verify: 0.6 µs</div>
+    <div class="status-item"><span class="dot dot-gold"></span> Status: rank-2 variant, experimental</div>
+    <div class="status-item"><span class="dot dot-gold"></span> Upstream: Narayanan 2025/624 (retracted 2026-08-19)</div>
+    <div class="status-item"><span class="dot dot-gold"></span> Verification: algebraic layer only, unaudited</div>
   </div>
 </section>
 
@@ -179,7 +193,7 @@
     <div class="step-num">4</div>
     <div>
       <div class="step-title">Verification</div>
-      <p>All submissions are verified automatically against the reference C implementation.
+      <p>All submissions are verified automatically against the reference Rust/WASM implementation.
       Successful attacks are reviewed manually and posted to the leaderboard within 48 hours.</p>
     </div>
   </div>
@@ -217,7 +231,7 @@
       <td>Gröbner Basis (F4)</td>
       <td>k=3: seconds / k=4: >7h (did not finish)</td>
       <td><span class="badge badge-warn">Approaches viability at k=4</span></td>
-      <td>SageMath 10.4 experiment</td>
+      <td>SageMath 10.4 experiment <span class="badge badge-warn">artifact pending</span></td>
     </tr>
     <tr>
       <td>Existential Forgery</td>
@@ -226,13 +240,19 @@
       <td>Hamming sphere bound</td>
     </tr>
   </table>
+  <p style="color:var(--dim);font-size:.82rem;margin-top:8px;">
+    † 44/44 boundary tests and 0/27 rank-1 attacks refer to the rank-2 boundary-format verification in the
+    <a href="https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg">experimental/vwz-lg</a> attack suite
+    (see <a href="/docs/VWZ-STATUS.md">VWZ-STATUS.md</a>, 2026-09-06). Gröbner timing is a SageMath 10.4 experiment;
+    the run artifact (script + log) is pending publication.
+  </p>
 </section>
 
 <section>
   <h2>Resources</h2>
   <ul style="list-style:none;display:flex;flex-wrap:wrap;gap:12px;">
-    <li><a href="https://eprint.iacr.org/2025/624">📄 ePrint 2025/624</a> — Original VWZ paper (Narayanan)</li>
-    <li><a href="https://github.com/Lennonhaha/fibemate/tree/main/research/vwz-lock">💻 Source Code</a> — C + Python reference implementation</li>
+    <li><a href="https://eprint.iacr.org/2025/624">📄 ePrint 2025/624</a> — Narayanan, "Trapdoor one-way functions from tensors" — <strong>security claim retracted 2026-08-19</strong></li>
+    <li><a href="https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg/rust/vwz-sign-wasm">💻 Source Code</a> — FIBEMATE VWZ rank-2 implementation (Rust/WASM, GPL-3.0) — research branch (not merged to main)</li>
     <li><a href="https://eprint.iacr.org/2025/596">🔬 ePrint 2025/596</a> — Hull attack (Couvreur & Levrat)</li>
     <li><a href="https://eprint.iacr.org/2024/1396">🔬 ePrint 2024/1396</a> — Triangular attack (Ran & Samardjiska)</li>
   </ul>
