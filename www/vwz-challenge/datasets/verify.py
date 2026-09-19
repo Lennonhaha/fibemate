@@ -18,8 +18,13 @@ def hash_to_sphere(msg, seed=0xABCD):
             x ^= (x << 17) & 0xFFFFFFFFFFFFFFFF; self.state = x; return x
     rng = XS(h)
     t = [0]*9
-    pos = set()
-    while len(pos) < 5: pos.add(rng.n() % 9)
+    # Deterministic, language-agnostic: collect distinct positions in draw order,
+    # sort, then assign values. Avoids set-iteration-order divergence vs the JS/C ports.
+    pos = []
+    while len(pos) < 5:
+        r = rng.n() % 9
+        if r not in pos: pos.append(r)
+    pos.sort()
     for p in pos: t[p] = (rng.n() % 65536) + 1
     return t
 
