@@ -1,0 +1,9 @@
+name: "FIBEMATE CodeQL Config"
+
+# security-assessment/** holds frozen attack-evidence scripts synced from
+# experimental/vwz-lg. They are published as-is for reproducibility of the
+# public break advisory (2026-08-16) and are maintained on the research
+# branch. Excluded from CodeQL scanning so that analysis results reflect
+# the shipping codebase only.
+paths-ignore:
+  - security-assessment

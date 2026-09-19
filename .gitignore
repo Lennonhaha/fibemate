@@ -579,3 +579,8 @@ docs/tla/states/
 knip.jsonc
 # Windows reserved device name NUL phantom empty file (cannot exist as real file, makes git error)
 NUL
+
+# security-assessment/ holds official attack evidence synced from
+# experimental/vwz-lg; the scratch-file rules above (vwz*.md/py/html,
+# check_*.py, verify_*.py, _*.cjs/js) must not exclude it.
+!security-assessment/**
