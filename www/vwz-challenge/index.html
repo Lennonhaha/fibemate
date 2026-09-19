@@ -86,7 +86,7 @@
   offers FIBEMATE's <strong>rank-2 hardening variant</strong>, which closes the rank-1 distinguisher.</p>
 
   <p>The rank-2 variant's security is <strong>only partially verified at the algebraic-attack layer</strong>
-  (rank-1 attacks score 0/27; 44/44 boundary tests pass). There is <strong>no third-party audit</strong> and
+  (rank-1 attacks score 0/27<a href="/docs/VWZ-STATUS.md#timeline" title="VWZ-STATUS.md 2026-09-06: rank-2 construction shipped, 306/306 slices rank=2, rank-1 attack 0/27">†</a>; 44/44 boundary tests pass<a href="/docs/VWZ-STATUS.md#timeline" title="VWZ-STATUS.md 2026-09-06: 44/44 boundary tests (rank-2 boundary-format verification in experimental/vwz-lg attack suite)">†</a>). There is <strong>no third-party audit</strong> and
   <strong>no formal reduction</strong> to a standard assumption. Treat all security claims as experimental.
   VWZ is not on any production code path.</p>
 
@@ -231,7 +231,7 @@
       <td>Gröbner Basis (F4)</td>
       <td>k=3: seconds / k=4: >7h (did not finish)</td>
       <td><span class="badge badge-warn">Approaches viability at k=4</span></td>
-      <td>SageMath 10.4 experiment</td>
+      <td>SageMath 10.4 experiment <span class="badge badge-warn">artifact pending</span></td>
     </tr>
     <tr>
       <td>Existential Forgery</td>
@@ -240,6 +240,12 @@
       <td>Hamming sphere bound</td>
     </tr>
   </table>
+  <p style="color:var(--dim);font-size:.82rem;margin-top:8px;">
+    † 44/44 boundary tests and 0/27 rank-1 attacks refer to the rank-2 boundary-format verification in the
+    <a href="https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg">experimental/vwz-lg</a> attack suite
+    (see <a href="/docs/VWZ-STATUS.md">VWZ-STATUS.md</a>, 2026-09-06). Gröbner timing is a SageMath 10.4 experiment;
+    the run artifact (script + log) is pending publication.
+  </p>
 </section>
 
 <section>
