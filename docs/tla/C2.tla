@@ -204,6 +204,16 @@ ActiveLoopS(i) ==
   /\ UNCHANGED <<cState, cPQKey, cSM2Key, cSessionKey, cKeyValue,
                 sState, sPQKey, sSM2Key, sSessionKey, sKeyValue, network, nextSession>>
 
+ClosingLoopC(i) ==
+  /\ cState[i] = "closing"
+  /\ UNCHANGED <<cState, cPQKey, cSM2Key, cSessionKey, cKeyValue,
+                sState, sPQKey, sSM2Key, sSessionKey, sKeyValue, network, nextSession>>
+
+ClosingLoopS(i) ==
+  /\ sState[i] = "closing"
+  /\ UNCHANGED <<cState, cPQKey, cSM2Key, cSessionKey, cKeyValue,
+                sState, sPQKey, sSM2Key, sSessionKey, sKeyValue, network, nextSession>>
+
 \* =====================================================================
 \* Next
 \* =====================================================================
@@ -219,6 +229,8 @@ Next ==
     \/ ServerClose(i)
     \/ ActiveLoopC(i)
     \/ ActiveLoopS(i)
+    \/ ClosingLoopC(i)
+    \/ ClosingLoopS(i)
 
 Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
 
