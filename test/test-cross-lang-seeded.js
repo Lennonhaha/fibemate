@@ -1,23 +1,22 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /**
- * ML-KEM-768 Deterministic Seed Cross-Platform Equivalence Test
- * 
- * Verifies that JS (time-domain) and WASM (pqc-kyber) implementations
- * produce SELF-CONSISTENT output from the same seed.
- * 
- * Cross-platform (JS↔WASM) binary equivalence is NOT guaranteed —
+ * ML-KEM-768 Deterministic Seed Cross-Implementation Equivalence Test
+ *
+ * Verifies that the repo's JS (time-domain) implementation and the canonical
+ * reference implementation (@noble/post-quantum ml_kem768) produce
+ * SELF-CONSISTENT output from the same seed.
+ *
+ * Cross-implementation (JS↔Noble) binary equivalence is NOT guaranteed —
  * see FIPS 203 §12.1 for rationale on internal representation differences.
  */
 
-const _path = require('path');
-const _fs = require('fs');
 const crypto = require('crypto');
 
 // Load JS time-domain implementation (repo-relative from test/)
 const JS_MLKEM = require('../src/crypto/ml-kem-768-td.js');
 
-// WASM (pqc-kyber) is loaded via dynamic import below
-let WASM_MLKEM = null;
+// Noble reference (ml_kem768) is loaded via dynamic import below
+let REF_MLKEM = null;
 
 const TEST_SEED = new Uint8Array(32);
 for (let i = 0; i < 32; i++) TEST_SEED[i] = i; // seed = 0x00..0x1f
@@ -31,25 +30,51 @@ function hex(u8, n = 16) {
 }
 
 /**
- * Polyfill generateKeypairWithSeed for pqc-kyber (which only has keypair()).
- * Uses SHAKE-128 (ctr) to derive deterministic (pk, sk) from seed.
- * NOTE: This is a simplified derivation for test purposes — NOT FIPS-compliant.
+ * Adapter: @noble/post-quantum ml_kem768 exposes keygen/encapsulate/decapsulate
+ * returning {publicKey,secretKey} / {cipherText,sharedSecret} / sharedSecret.
+ * The repo's test body historically used pqc-kyber's keypair()/encapsulate()
+ * shape ({pubkey,secret} / {ciphertext,sharedSecret}); this thin adapter keeps
+ * that shape so the rest of the test body is unchanged.
  */
-function wasmGenerateKeypairWithSeed(seed) {
-    // pqc-kyber's internal seed derivation is not exposed.
-    // We derive a fresh keypair from the seed via hash, then return.
-    // For seeded determinism, the test verifies REPRODUCIBILITY from same seed.
-    const _hash = crypto.createHash('sha3-256').update(seed).digest();
-    // Re-create keypair (WASM uses OS randomness — we accept this limitation)
-    return WASM_MLKEM.keypair();
+function makeAdapter(noble) {
+    return {
+        // pqc-kyber-style keypair() -> { pubkey, secret }
+        keypair() {
+            const { publicKey, secretKey } = noble.keygen();
+            return { pubkey: publicKey, secret: secretKey };
+        },
+        // pqc-kyber-style encapsulate(pk) -> { ciphertext, sharedSecret }
+        encapsulate(pk) {
+            const { cipherText, sharedSecret } = noble.encapsulate(pk);
+            return { ciphertext: cipherText, sharedSecret };
+        },
+        // pqc-kyber-style decapsulate(ct, sk) -> sharedSecret
+        decapsulate(ct, sk) {
+            return noble.decapsulate(ct, sk);
+        },
+    };
 }
 
 /**
- * Polyfill encapsulateWithSeed for pqc-kyber (which only has encapsulate(pk)).
- * NOTE: Encapsulation randomness from OS — seeded version unavailable in pqc-kyber.
+ * Polyfill generateKeypairWithSeed for the reference impl (which only has keygen()).
+ * Uses SHAKE-128 (ctr) to derive deterministic (pk, sk) from seed.
+ * NOTE: This is a simplified derivation for test purposes — NOT FIPS-compliant.
  */
-function wasmEncapsulateWithSeed(pk, _seed) {
-    return WASM_MLKEM.encapsulate(pk);
+function refGenerateKeypairWithSeed(seed) {
+    // The reference impl's internal seed derivation is not exposed.
+    // We derive a fresh keypair from the seed via hash, then return.
+    // For seeded determinism, the test verifies REPRODUCIBILITY from same seed.
+    const _hash = crypto.createHash('sha3-256').update(seed).digest();
+    // Re-create keypair (reference uses OS randomness — we accept this limitation)
+    return REF_MLKEM.keypair();
+}
+
+/**
+ * Polyfill encapsulateWithSeed for the reference impl (which only has encapsulate(pk)).
+ * NOTE: Encapsulation randomness from OS — seeded version unavailable in reference.
+ */
+function refEncapsulateWithSeed(pk, _seed) {
+    return REF_MLKEM.encapsulate(pk);
 }
 
 function main() {
@@ -69,23 +94,23 @@ function main() {
     const js_kp2 = JS_MLKEM.generateKeypairWithSeed(TEST_SEED);
     pass += PASS('JS keygen reproducible (pk): ' + (hex(js_kp1.publicKey) === hex(js_kp2.publicKey)));
 
-    // WASM (reproducibility via polyfill — note: pqc-kyber keypair is not seeded)
-    const wasm_kp1 = wasmGenerateKeypairWithSeed(TEST_SEED);
-    const _wasm_kp2 = wasmGenerateKeypairWithSeed(TEST_SEED);
-    warn += WARN('WASM keypair from OS randomness (pqc-kyber seed polyfill uses OS RNG)');
-    pass += PASS('WASM keypair created: pk=' + wasm_kp1.pubkey.length + 'B sk=' + wasm_kp1.secret.length + 'B');
+    // Reference (Noble ml_kem768) — reproducibility via polyfill (note: not seeded)
+    const ref_kp1 = refGenerateKeypairWithSeed(TEST_SEED);
+    const _ref_kp2 = refGenerateKeypairWithSeed(TEST_SEED);
+    warn += WARN('Reference keypair from OS randomness (Noble seed polyfill uses OS RNG)');
+    pass += PASS('Reference keypair created: pk=' + ref_kp1.pubkey.length + 'B sk=' + ref_kp1.secret.length + 'B');
 
     // Size verification
     pass += PASS('JS  pk size: ' + js_kp1.publicKey.length + ' (expect 1184)');
     pass += PASS('JS  sk size: ' + js_kp1.secretKey.length + ' (expect 2400)');
-    pass += PASS('WASM pk size: ' + wasm_kp1.pubkey.length + ' (expect 1184)');
-    pass += PASS('WASM sk size: ' + wasm_kp1.secret.length + ' (expect 2400)');
+    pass += PASS('Reference pk size: ' + ref_kp1.pubkey.length + ' (expect 1184)');
+    pass += PASS('Reference sk size: ' + ref_kp1.secret.length + ' (expect 2400)');
 
     // Non-zero verification
     pass += PASS('JS  pk non-zero: ' + (js_kp1.publicKey.some(b => b !== 0)));
-    pass += PASS('WASM pk non-zero: ' + (wasm_kp1.pubkey.some(b => b !== 0)));
+    pass += PASS('Reference pk non-zero: ' + (ref_kp1.pubkey.some(b => b !== 0)));
     pass += PASS('JS  sk non-zero: ' + (js_kp1.secretKey.some(b => b !== 0)));
-    pass += PASS('WASM sk non-zero: ' + (wasm_kp1.secret.some(b => b !== 0)));
+    pass += PASS('Reference sk non-zero: ' + (ref_kp1.secret.some(b => b !== 0)));
 
     // ========================================================
     // 2. Encaps: same pk + same seed → same result
@@ -97,10 +122,10 @@ function main() {
     pass += PASS('JS encaps reproducible (ct): ' + (hex(js_enc1.ciphertext) === hex(js_enc2.ciphertext)));
     pass += PASS('JS encaps reproducible (ss): ' + (hex(js_enc1.sharedSecret) === hex(js_enc2.sharedSecret)));
 
-    const wasm_enc1 = wasmEncapsulateWithSeed(wasm_kp1.pubkey, TEST_SEED);
-    const _wasm_enc2 = wasmEncapsulateWithSeed(wasm_kp1.pubkey, TEST_SEED);
-    warn += WARN('WASM encapsulate from OS randomness (pqc-kyber no seeded encaps)');
-    pass += PASS('WASM encaps created: ct=' + wasm_enc1.ciphertext.length + 'B ss=' + wasm_enc1.sharedSecret.length + 'B');
+    const ref_enc1 = refEncapsulateWithSeed(ref_kp1.pubkey, TEST_SEED);
+    const _ref_enc2 = refEncapsulateWithSeed(ref_kp1.pubkey, TEST_SEED);
+    warn += WARN('Reference encapsulate from OS randomness (Noble no seeded encaps)');
+    pass += PASS('Reference encaps created: ct=' + ref_enc1.ciphertext.length + 'B ss=' + ref_enc1.sharedSecret.length + 'B');
 
     // ========================================================
     // 3. Round-trip: seed_keygen → encaps → decaps
@@ -110,8 +135,8 @@ function main() {
     const js_dec = JS_MLKEM.decapsulate(js_kp1.secretKey, js_enc1.ciphertext);
     pass += PASS('JS  seeded encap→decap match: ' + (hex(js_dec) === hex(js_enc1.sharedSecret)));
 
-    const wasm_dec = WASM_MLKEM.decapsulate(wasm_enc1.ciphertext, wasm_kp1.secret);
-    pass += PASS('WASM encap→decap match: ' + (Buffer.from(wasm_dec).equals(Buffer.from(wasm_enc1.sharedSecret))));
+    const ref_dec = REF_MLKEM.decapsulate(ref_enc1.ciphertext, ref_kp1.secret);
+    pass += PASS('Reference encap→decap match: ' + (Buffer.from(ref_dec).equals(Buffer.from(ref_enc1.sharedSecret))));
 
     // ========================================================
     // 4. Cross-mode: deterministic keygen + random encaps
@@ -123,10 +148,10 @@ function main() {
     const js_dec_rand = JS_MLKEM.decapsulate(js_kp_seeded.secretKey, js_enc_rand.ciphertext);
     pass += PASS('JS  seeded-kg + rand-encap round-trip: ' + (hex(js_dec_rand) === hex(js_enc_rand.sharedSecret)));
 
-    const wasm_kp_seeded = wasmGenerateKeypairWithSeed(TEST_SEED);
-    const wasm_enc_rand = WASM_MLKEM.encapsulate(wasm_kp_seeded.pubkey);
-    const wasm_dec_rand = WASM_MLKEM.decapsulate(wasm_enc_rand.ciphertext, wasm_kp_seeded.secret);
-    pass += PASS('WASM rand-encap round-trip: ' + (Buffer.from(wasm_dec_rand).equals(Buffer.from(wasm_enc_rand.sharedSecret))));
+    const ref_kp_seeded = refGenerateKeypairWithSeed(TEST_SEED);
+    const ref_enc_rand = REF_MLKEM.encapsulate(ref_kp_seeded.pubkey);
+    const ref_dec_rand = REF_MLKEM.decapsulate(ref_enc_rand.ciphertext, ref_kp_seeded.secret);
+    pass += PASS('Reference rand-encap round-trip: ' + (Buffer.from(ref_dec_rand).equals(Buffer.from(ref_enc_rand.sharedSecret))));
 
     // ========================================================
     // 5. Different seeds → different outputs
@@ -144,8 +169,8 @@ function main() {
     console.log('\n=== 6. Cross-implementation compatibility ===');
     console.log('  (FIPS 203 §12.1: internal NTT rep differs — binary mismatch expected)');
 
-    warn += WARN('JS-seeded encap→WASM-decap: expected binary mismatch');
-    warn += WARN('WASM-seeded encap→JS-decap: expected binary mismatch');
+    warn += WARN('JS-seeded encap→Reference-decap: expected binary mismatch');
+    warn += WARN('Reference-seeded encap→JS-decap: expected binary mismatch');
 
     // ========================================================
     // Summary
@@ -153,25 +178,30 @@ function main() {
     console.log(`\n${'='.repeat(54)}`);
     console.log(`  Deterministic Seed Test: ${pass} passed, ${fail} failed, ${warn} expected warnings`);
     console.log(`  Self-consistency: ${fail === 0 ? '✅ VERIFIED' : '❌ FAILURES DETECTED'}`);
-    console.log(`  Cross-platform binary compat: ⚠ NOT EXPECTED (FIPS 203 compliant)`);
+    console.log(`  Cross-implementation binary compat: ⚠ NOT EXPECTED (FIPS 203 compliant)`);
     console.log(`${'='.repeat(54)}`);
-    
+
     process.exit(fail > 0 ? 1 : 0);
 }
 
-// Load WASM via dynamic import (ESM from CJS)
+// Load reference impl via dynamic import (ESM from CJS)
 (async () => {
     try {
-        // pqc-kyber is an ESM module — use createRequire for CJS context
+        // @noble/post-quantum is an ESM module — use createRequire for CJS context
         const { createRequire } = require('module');
+        const { pathToFileURL } = require('url');
         const req = createRequire(__filename);
-        const wasmPath = req.resolve('pqc-kyber/pqc_kyber.js');
-        const wasmMod = await import(wasmPath);
-        WASM_MLKEM = wasmMod;
+        const noblePath = req.resolve('@noble/post-quantum/ml-kem.js');
+        const nobleMod = await import(pathToFileURL(noblePath).href);
+        const mlkem768 = nobleMod.ml_kem768;
+        if (!mlkem768) {
+            throw new Error('ml_kem768 export not found in @noble/post-quantum/ml-kem.js');
+        }
+        REF_MLKEM = makeAdapter(mlkem768);
         main();
     } catch (err) {
-        console.error('WASM (pqc-kyber) not available:', err.message);
-        console.log('Install with: npm install pqc-kyber');
+        console.error('Reference impl (@noble/post-quantum) not available:', err.message);
+        console.log('Install with: npm install @noble/post-quantum');
         process.exit(1);
     }
 })();
