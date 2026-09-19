@@ -99,6 +99,14 @@
 
 <section>
   <h2>Parameters Under Challenge</h2>
+  <div class="reconcile-note" style="color:var(--dim);font-size:.82rem;margin:0 0 14px;">
+    The challenge field size is <strong>q=65537</strong> for Levels 1&ndash;3 (standalone parameterization). This differs from the
+    normative reference spec (<code>docs/fibemate-vwz-specification_20260906.md</code>, rank-2, <strong>q=3329</strong>, branch
+    <code>experimental/vwz-lg</code>) used by the Rust/WASM reference build. The challenge runs on its own q=65537 field and is
+    verified by <code>datasets/verify.py</code> (q=65537) without needing the q=3329 reference build. Note: the
+    <code>44/44</code> boundary tests and <code>0/27</code> rank-1 attacks cited above were measured on the q=3329 reference
+    construction; the q=65537 challenge field is a separate parameterization of the same rank-2 VWZ scheme.
+  </div>
   <div class="params">
     <div class="parambox">
       <div class="label">Level 1 — Small</div>
@@ -115,10 +123,10 @@
       <div class="val">k=16</div>
       <div class="unit">q=65537 | 136B sig | 44KB pk</div>
     </div>
-    <div class="parambox">
+    <div class="parambox" style="opacity:.6;">
       <div class="label">Level 4 — Production</div>
       <div class="val">k=4</div>
-      <div class="unit">q≈2⁶⁴ | 160B sig | 3.5KB pk</div>
+      <div class="unit">q≈2⁶⁴ (placeholder, not issued)</div>
     </div>
   </div>
 </section>
@@ -171,6 +179,7 @@
       <p>Each dataset contains: a public key T<sub>pub</sub> (JSON), 100 valid (message, signature) pairs for training,
       and verification scripts (Python + C).</p>
       <pre><a href="/vwz-challenge/datasets/vwz-challenge-k4.zip">vwz-challenge-k4.zip</a> (k=4, q=65537) — 60 KB</pre>
+      <p style="color:var(--dim);font-size:.82rem;">Datasets for k=8 (Level 2) and k=16 (Level 3) are <strong>pending</strong>; only the k=4 dataset is published. A Python verifier (<code>datasets/verify.py</code>, q=65537) is provided; a C verifier and the k=8/k=16 datasets are not yet published.</p>
     </div>
   </div>
   <div class="step">
