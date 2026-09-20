@@ -149,4 +149,12 @@ jobs:
           TLA2TOOLS_JAR: /tmp/tla2tools.jar
         run: node fibemate-tools/tla-verifier/seam-checker.js
         # exit 1（G 层失败，OPK O4 违反）→ nightly 红（预期，非回归）
+        # 已知缺陷标注：红是预期信号，非工具故障（避免误读为 CI 回归）
+      - name: Annotate known defect (expected RED)
+        if: failure()
+        run: |
+          echo "::warning::KNOWN_DEFECT: OPK model never loaded by TLC (OPK-A: Next unparseable) + O4 reversed (OPK-B)"
+          echo "::warning::This RED is seam-checker detecting a proven model defect, NOT a regression. See seam-checklist-v1_20260920.md (OPK-A/B/C)."
+          echo "::warning::Do not 'fix' this by adding continue-on-error — that would recreate the silent-pass weak signal."
+
 
