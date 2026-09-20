@@ -1,0 +1,70 @@
+# Reproducible build — minimal determinism probe.
+#
+# 同一 commit 上，把 in-repo 唯一的生成器跑两次，比 SHA256。
+# 语义（重要，先约定）：不一致 = 「发现非确定性来源」，默认 warn，不自动判红。
+#   需要硬门禁时把 env REPRO_STRICT 设为 "1"。
+#
+# 目标物：sbom.cdx.json（gen-sbom.js）。该生成器已修为确定性
+#   （serial 内容派生 + timestamp 由 SOURCE_DATE_EPOCH 派生）。
+
+name: Reproducible build (minimal)
+permissions:
+  contents: read
+
+on:
+  pull_request:
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/gen-sbom.js'
+      - 'sbom.cdx.json'
+      - '.github/workflows/repro-build-check.yml'
+  workflow_dispatch:
+
+jobs:
+  double-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup Node.js (pinned)
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'   # 固定版本，避免跨跑 toolchain 漂移破坏确定性
+          cache: 'npm'
+
+      - name: Install (lockfile-exact)
+        run: npm ci --ignore-scripts
+
+      - name: Build #1
+        run: node scripts/gen-sbom.js "$RUNNER_TEMP/b1.cdx.json"
+
+      - name: Build #2
+        run: node scripts/gen-sbom.js "$RUNNER_TEMP/b2.cdx.json"
+
+      - name: Compare SHA256 + attribute
+        shell: bash
+        env:
+          REPRO_STRICT: "0"    # "1" = 不一致即红
+        run: |
+          h1=$(sha256sum "$RUNNER_TEMP/b1.cdx.json" | cut -d' ' -f1)
+          h2=$(sha256sum "$RUNNER_TEMP/b2.cdx.json" | cut -d' ' -f1)
+          {
+            echo "### Reproducible build - gen-sbom.js"
+            echo '```'
+            echo "run1=$h1"
+            echo "run2=$h2"
+            if [ "$h1" = "$h2" ]; then
+              echo "verdict=DETERMINISTIC OK"
+            else
+              echo "verdict=NON-DETERMINISTIC WARN (finding, not a hard failure)"
+              echo "--- diff (first 20 lines, heuristic) ---"
+              diff <(sort "$RUNNER_TEMP/b1.cdx.json") <(sort "$RUNNER_TEMP/b2.cdx.json") | head -n 20 || true
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$h1" != "$h2" ]; then
+            echo "::warning::gen-sbom.js output differs across two runs (non-determinism, see job summary)"
+            [ "$REPRO_STRICT" = "1" ] && exit 1 || exit 0
+          fi

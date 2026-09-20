@@ -58,13 +58,25 @@ for (const [k, v] of Object.entries(pkgs)) {
   components.push(comp);
 }
 
+// 确定性（reproducible-builds）：serial 由内容派生，timestamp 由 SOURCE_DATE_EPOCH 派生。
+// 相同 lockfile -> 相同 SBOM 字节。见 .github/workflows/repro-build-check.yml。
+const canonical = JSON.stringify(components);
+const serialSeed = crypto.createHash('sha256').update(canonical).digest('hex');
+const uuidLike =
+  serialSeed.slice(0, 8) + '-' + serialSeed.slice(8, 12) + '-5' +
+  serialSeed.slice(13, 16) + '-' + serialSeed.slice(16, 20) + '-' + serialSeed.slice(20, 32);
+const SOURCE_DATE_EPOCH = process.env.SOURCE_DATE_EPOCH;
+const timestamp = SOURCE_DATE_EPOCH
+  ? new Date(Number(SOURCE_DATE_EPOCH) * 1000).toISOString()
+  : '1970-01-01T00:00:00.000Z';
+
 const sbom = {
   bomFormat: 'CycloneDX',
   specVersion: '1.4',
-  serialNumber: 'urn:uuid:' + crypto.randomUUID(),
+  serialNumber: 'urn:uuid:' + uuidLike,
   version: 1,
   metadata: {
-    timestamp: new Date().toISOString(),
+    timestamp,
     component: components[0],
     tools: [{ vendor: 'FIBEMATE', name: 'gen-sbom', version: '1.0.0' }],
   },
