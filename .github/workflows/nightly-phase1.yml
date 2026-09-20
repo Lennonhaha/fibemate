@@ -153,7 +153,7 @@ jobs:
       - name: Annotate known defect (expected RED)
         if: failure()
         run: |
-          echo "::warning::KNOWN_DEFECT: OPK model never loaded by TLC (OPK-A: Next unparseable) + O4 reversed (OPK-B)"
+          echo "::warning::KNOWN_DEFECT: OPK model loads but O4_ConsumedNotReusable is REVERSED (OPK-B: confirmed by TLC EXIT 12, violates on first consume). Next/parse defect (OPK-A) was fixed so the model now runs and surfaces the real defect."
           echo "::warning::This RED is seam-checker detecting a proven model defect, NOT a regression. See seam-checklist-v1_20260920.md (OPK-A/B/C)."
           echo "::warning::Do not 'fix' this by adding continue-on-error — that would recreate the silent-pass weak signal."
 

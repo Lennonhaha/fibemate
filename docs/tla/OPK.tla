@@ -91,9 +91,7 @@ GetFirstAvailable(u) ==
 ClientUploadOPK(u, n) ==
   /\ u \in UserSet
   /\ nextKeyId[u] + n - 1 <= MaxOPKID
-  /\ HasAvailable(u, 0)  \* Only upload if currently empty (simplified)
-  /\ \/ opkCount[u] = 0
-     \/ TRUE  \* In real protocol, can upload additional batches
+  /\ opkCount[u] = 0  \* Only upload when no available OPKs remain (simplified)
   /\ opkStore' = [opkStore EXCEPT ![u] = 
        [k \in KeyIdSet |->
          IF k >= nextKeyId[u] /\ k < nextKeyId[u] + n
@@ -138,17 +136,10 @@ ServerQueryCount(u) ==
 (* ===================================================================== *)
 
 Next ==
-  \E u \in UserSet:
-    \E n \in 1..3:
-      \/ ClientUploadOPK(u, n)
-  \E u \in UserSet:
-    \E consumerId \in UserSet:
-      \/ ClientConsumeOPK(u, consumerId)
-  \E u \in UserSet:
-    \E keyId \in KeyIdSet:
-      \/ ClientVerifyConsumed(u, keyId)
-  \E u \in UserSet:
-    \/ ServerQueryCount(u)
+  \/ (\E u \in UserSet: \E n \in 1..3: ClientUploadOPK(u, n))
+  \/ (\E u \in UserSet: \E consumerId \in UserSet: ClientConsumeOPK(u, consumerId))
+  \/ (\E u \in UserSet: \E keyId \in KeyIdSet: ClientVerifyConsumed(u, keyId))
+  \/ (\E u \in UserSet: ServerQueryCount(u))
 
 Spec == Init /\ [][Next]_vars /\ WF_vars(Next)
 
