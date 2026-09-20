@@ -116,7 +116,7 @@ static void hash_to_sphere(const char *msg, long t[9]) {
     h ^= 0xABCDULL;
     for (const char *c = msg; *c; c++) {
         h ^= (unsigned char)*c;
-        h = (h * 0x100000001b3ULL) & 0xFFFFFFFFFFFFFFFFULL;
+        h *= 0x100000001b3ULL;
     }
     XS rng; rng.state = h ? h : 1ULL;
     int pos[5]; int pc = 0;
@@ -126,11 +126,12 @@ static void hash_to_sphere(const char *msg, long t[9]) {
         for (int i = 0; i < pc; i++) if (pos[i] == (int)r) dup = 1;
         if (!dup) pos[pc++] = (int)r;
     }
-    /* Python set() iterates small ints in ascending order; replicate that. */
-    for (int a = 0; a < pc; a++)
-        for (int b = a+1; b < pc; b++)
-            if (pos[b] < pos[a]) { int tmp = pos[a]; pos[a] = pos[b]; pos[b] = tmp; }
     for (int i = 0; i < 9; i++) t[i] = 0;
+    /* sort positions so value assignment order is deterministic and identical
+     * across the Python/JS/C ports (avoid set-iteration-order divergence). */
+    for (int a = 0; a < 5; a++)
+        for (int b = a + 1; b < 5; b++)
+            if (pos[b] < pos[a]) { int tmp = pos[a]; pos[a] = pos[b]; pos[b] = tmp; }
     for (int i = 0; i < 5; i++) t[pos[i]] = (modl((long)(xs_n(&rng) % 65536ULL)) + 1);
 }
 
@@ -174,13 +175,33 @@ int main(int argc, char **argv) {
 
     long tgt[9];
     hash_to_sphere(msg, tgt);
+    if (getenv("VWZ_DEBUG")) {
+        printf("w2="); for (int i=0;i<5;i++) printf("%ld ", w2[i]); printf("\n");
+        printf("w3="); for (int i=0;i<5;i++) printf("%ld ", w3[i]); printf("\n");
+        printf("msg=%s\n", msg);
+    }
 
     int ok = 1;
+    if (getenv("VWZ_DEBUG")) {
+        printf("T[0..4]=%ld %ld %ld %ld %ld\n", T[0],T[1],T[2],T[3],T[4]);
+        printf("T[25..29]=%ld %ld %ld %ld %ld\n", T[25],T[26],T[27],T[28],T[29]);
+        printf("w2="); for (int i=0;i<5;i++) printf("%ld ", w2[i]); printf("\n");
+        printf("w3="); for (int i=0;i<5;i++) printf("%ld ", w3[i]); printf("\n");
+        for (int i1 = 0; i1 < 9; i1++) {
+            long s = 0;
+            for (int i2 = 0; i2 < 5; i2++)
+                for (int i3 = 0; i3 < 5; i3++)
+                    s = (long)( ((long long)s + ((long long)T[i1*25 + i2*5 + i3] * w2[i2] % Q) * w3[i3] % Q) % Q );
+            printf("i1=%d s=%ld tgt=%ld\n", i1, s, tgt[i1]);
+        }
+    }
     for (int i1 = 0; i1 < 9; i1++) {
         long s = 0;
         for (int i2 = 0; i2 < 5; i2++) {
             for (int i3 = 0; i3 < 5; i3++) {
-                s = modl(s + modl(T[i1*25 + i2*5 + i3] * w2[i2]) * w3[i3]);
+                /* full 64-bit accumulation to avoid 32-bit long overflow
+                 * (T*w2 can reach 65536*65536 ~= 4.29e9 > LONG_MAX on Windows) */
+                s = (long)( ((long long)s + ((long long)T[i1*25 + i2*5 + i3] * w2[i2] % Q) * w3[i3] % Q) % Q );
             }
         }
         if (s != tgt[i1]) { ok = 0; break; }
