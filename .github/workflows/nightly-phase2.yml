@@ -50,8 +50,25 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm install
       - name: TVLA summary check
-        run: node scripts/tvla-summary.js
-        # Verifies TVLA reports exist and pass thresholds
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/tvla-summary.js 2>&1 | tee "$RUNNER_TEMP/tvla.log"
+
+      - name: Attribute - TVLA digest
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### TVLA - threshold |t| < 4.5"
+            echo '```'
+            if [ -f "$RUNNER_TEMP/tvla.log" ]; then
+              grep -E 'max\|t\||Summary:|THRESHOLD BREACHED|TVLA SUMMARY' "$RUNNER_TEMP/tvla.log" || echo '(no TVLA digest lines)'
+            else
+              echo '(log missing - step did not run)'
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # === Performance regression ===
   perf-gate:

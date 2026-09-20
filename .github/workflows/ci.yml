@@ -67,7 +67,26 @@ jobs:
         run: npm install --ignore-scripts
 
       - name: ML-KEM-768 roundtrip + KAT self-validation
-        run: node scripts/ci-mlkem-kat.cjs
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/ci-mlkem-kat.cjs 2>&1 | tee "$RUNNER_TEMP/mlkem-kat.log"
+
+      - name: Attribute - ML-KEM KAT digest
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### ML-KEM-768 KAT digest - ${{ matrix.os }} / node ${{ matrix.node }}"
+            echo '```'
+            if [ -f "$RUNNER_TEMP/mlkem-kat.log" ]; then
+              grep -E 'roundtrip:|Mismatch round|Error round|KAT vectors:|KAT header|FATAL|unique' "$RUNNER_TEMP/mlkem-kat.log" \
+                || echo '(no digest lines)'
+            else
+              echo '(log missing - step did not run)'
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ─── Node.js 单元测试 (multi-platform) ──────────────
   # node-test requires Node >=22: better-sqlite3@13 declares engines >=22,
@@ -133,8 +152,25 @@ jobs:
         run: node scripts/gen-sbom.js /tmp/sbom.cdx.json
 
       - name: Verify SBOM is committed and up-to-date
+        shell: bash
         run: |
-          node -e "const a=require('/tmp/sbom.cdx.json'),b=require('./sbom.cdx.json');if(a.components.length!==b.components.length){console.error('SBOM out of date: regenerated '+a.components.length+' vs committed '+b.components.length);process.exit(1)}console.log('SBOM up-to-date:',b.components.length,'components')"
+          set -o pipefail
+          node -e "const a=require('/tmp/sbom.cdx.json'),b=require('./sbom.cdx.json');if(a.components.length!==b.components.length){console.error('SBOM out of date: regenerated '+a.components.length+' vs committed '+b.components.length);process.exit(1)}console.log('SBOM up-to-date:',b.components.length,'components')" 2>&1 | tee "$RUNNER_TEMP/sbom.log"
+
+      - name: Attribute - SBOM digest
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "### SBOM - consistency"
+            echo '```'
+            if [ -f "$RUNNER_TEMP/sbom.log" ]; then
+              grep -E 'SBOM (out of date|up-to-date)' "$RUNNER_TEMP/sbom.log" || echo '(no SBOM verdict line)'
+            else
+              echo '(log missing - step did not run)'
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ─── ESLint 静态分析 (single platform, lint only) ────
   lint:

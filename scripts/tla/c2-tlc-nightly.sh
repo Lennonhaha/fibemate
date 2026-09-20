@@ -43,8 +43,21 @@ fi
 
 # 2. 跑 TLC（仅不变式，无 liveness —— 对应 G2 不在此 job）
 echo "==> Running TLC on $MODEL (Spec + 7 invariants; liveness excluded per G2)"
-java $JAVA_OPTS -jar "$JAR" -config "$CFG" -workers auto "$TLA" || rc=$?
-rc=${rc:-0}
+TLC_OUT="${TLC_OUT:-/tmp/${MODEL}-tlc.out}"
+java $JAVA_OPTS -jar "$JAR" -config "$CFG" -workers auto "$TLA" 2>&1 | tee "$TLC_OUT"
+rc=${PIPESTATUS[0]}
 echo "==> TLC exit code: $rc"
 # TLC 非 0 = 发现违反或异常 → 让 nightly 红
+
+# GitHub Actions 归因：把 TLC 摘要写进 job summary（本地无 GITHUB_STEP_SUMMARY 时自动跳过）
+if [ -n "${GITHUB_STEP_SUMMARY:-}" ] && [ -f "$TLC_OUT" ]; then
+  {
+    echo "### TLA+ - $MODEL (TLC)"
+    echo '```'
+    grep -E 'states generated|distinct states|states left on queue|Model checking completed|Invariant .* is violated|Error:|Temporal properties|Finished in' "$TLC_OUT" \
+      | tail -n 20 || echo '(no digest lines)'
+    echo "exit_code=$rc"
+    echo '```'
+  } >> "$GITHUB_STEP_SUMMARY"
+fi
 exit "$rc"

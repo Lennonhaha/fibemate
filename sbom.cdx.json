@@ -1,10 +1,10 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:46be9143-8968-4cf0-be75-9c03b6f433bb",
+  "serialNumber": "urn:uuid:e05acd94-47d0-586f-88cd-fcbb3d0755a0",
   "version": 1,
   "metadata": {
-    "timestamp": "2026-09-18T14:55:35.089Z",
+    "timestamp": "1970-01-01T00:00:00.000Z",
     "component": {
       "type": "application",
       "bom-ref": "fibemate@3.3.0",
@@ -534,10 +534,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "@noble/hashes@2.2.0",
+      "bom-ref": "@noble/hashes@2.4.0",
       "name": "@noble/hashes",
-      "version": "2.2.0",
-      "purl": "pkg:npm/@noble%2Fhashes@2.2.0",
+      "version": "2.4.0",
+      "purl": "pkg:npm/@noble%2Fhashes@2.4.0",
       "licenses": [
         {
           "license": {
