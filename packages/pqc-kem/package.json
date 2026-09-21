@@ -21,7 +21,7 @@
     "node-gyp": "^11.0.0"
   },
   "scripts": {
-    "test": "node test/basic.test.js",
+    "test": "node test/basic.test.js && node test/hybrid.test.js",
     "build:native": "node-gyp rebuild -C native",
     "build:native:release": "node-gyp rebuild -C native --release --msvs-version 2022",
     "test:native": "node ../../scripts/test-native-addon.cjs",
