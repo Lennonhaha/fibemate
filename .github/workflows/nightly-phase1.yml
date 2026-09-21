@@ -104,7 +104,9 @@ jobs:
 
   # === Seam checker (fibemate-tools, cross-repo) ===
   # G 层：C2/OPK 模型 TLC 实跑 + S 层接缝闭合报告
-  # 前提：PR #26 MERGED (mergeCommit f39a1f46b7d1ed222533089c4434575ada4db7dd)
+  # 前提：PR #27 MERGED (mergeCommit f21f36ed53b1f4709abccd465937a085db7d8f91) — v2 锚点层已合
+  # 注意：REF_COMMIT=8a1977bfe344deb2764a1e0f2f6e40f8783778bb 是 FIBEMATE 主仓 SHA（非 fibemate-tools）
+  #       跨仓误钉 tools SHA 会导致 git show 失败 -> REF_MISSING（阴性对照失效），务必传主仓 SHA
   # 注意：本 job 接入后 nightly 预期转红 — OPK O4_ConsumedNotReusable 为已证模型缺陷
   #        (非工具误报，是 seam-checker 拦截能力的证明，见 seam-checklist-v1)
   seam-check:
@@ -117,12 +119,13 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           path: main   # ← 显式 path，与下方 MAIN_REPO_DIR 字节级对齐（防读错目录→伪 PASS）
+          fetch-depth: 0   # 须完整历史：REF_COMMIT=8a1977b 是历史 commit，浅 fetch 会导致 git show 失败 -> REF_MISSING
 
       - name: Checkout fibemate-tools
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: Lennonhaha/fibemate-tools
-          ref: f39a1f46b7d1ed222533089c4434575ada4db7dd   # PR #26 merge 后 main SHA（钉死，密封）
+          ref: f21f36ed53b1f4709abccd465937a085db7d8f91   # PR #27 merge 后 main SHA（钉死，密封）— 升 v1->v2
           path: fibemate-tools
           # public 仓 + read-all 权限：默认 GITHUB_TOKEN 可读，无需 PAT
 
@@ -147,6 +150,7 @@ jobs:
         env:
           MAIN_REPO_DIR: ${{ github.workspace }}/main   # ← 与上面 checkout path: main 严格一致
           TLA2TOOLS_JAR: /tmp/tla2tools.jar
+          REF_COMMIT: 8a1977bfe344deb2764a1e0f2f6e40f8783778bb   # 主仓已合基线（已知良树，钉死；阴性对照 ref 源，非 tools SHA）
         run: node fibemate-tools/tla-verifier/seam-checker.js
         # exit 1（G 层失败，OPK O4 违反）→ nightly 红（预期，非回归）
         # 已知缺陷标注：红是预期信号，非工具故障（避免误读为 CI 回归）
