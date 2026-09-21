@@ -171,7 +171,7 @@ O4_ConsumedNotReusable ==
   \A u \in UserSet:
     \A k \in KeyIdSet:
       opkStore[u][k] = OPK_CONSUMED
-        => ~(\E i \in DOMAIN consumeLog:
+        => (\E i \in DOMAIN consumeLog:
               consumeLog[i].userId = u /\ consumeLog[i].keyId = k)
 
 (* O5: Only available OPKs can be consumed *)
