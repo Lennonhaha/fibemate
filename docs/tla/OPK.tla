@@ -23,10 +23,23 @@
 EXTENDS Integers, FiniteSets, Sequences, TLC
 
 CONSTANTS
-  MaxUsers,           (* Number of users in the model *)
+  User,               (* Set of user model values, e.g. {u1, u2, u3} *)
   MaxOPKPerUser       (* Max OPKs any single user can hold *)
   
 MaxOPKID == MaxOPKPerUser
+
+(*
+  Symmetry reduction (defect C mitigation): users are fully symmetric —
+  every user-indexed variable (opkStore, opkCount, nextKeyId) and every
+  consumeLog entry permutes uniformly under any permutation of User, and no
+  invariant/action references absolute user indices. Quotienting by
+  Permutations(User) collapses combinatorially-equivalent interleavings,
+  drastically cutting the state space WITHOUT changing any checked
+  property. This is a semantic-preserving reduction, NOT a
+  constant-lowering workaround (users are model values, so TLC's symmetry
+  requirement is satisfied).
+*)
+Symmetry == Permutations(User)
 
 (* OPK status *)
 OPK_AVAILABLE == 0
@@ -41,7 +54,7 @@ VARIABLES
   lastSessionId
 
 (* == Type definitions == *)
-UserSet == 1..MaxUsers
+UserSet == User
 KeyIdSet == 1..MaxOPKID
 
 vars == <<opkStore, opkCount, nextKeyId, consumeLog, lastSessionId>>
