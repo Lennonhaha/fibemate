@@ -10,7 +10,7 @@
 //   Periodic re-key:   ML-KEM refresh every 100 messages
 //
 // Requires:
-//   - mlkem.node (C native module, KAT-verified)
+//   - ml-kem-768.js (pure-JS FIPS 203 reference; KAT-verified)
 //   - DoubleRatchet (existing P-256 double ratchet)
 //   - Node.js crypto (built-in HKDF/SHA-256)
 // ============================================================
@@ -19,11 +19,11 @@
 
 const crypto = require('crypto');
 
-// ---- Load ML-KEM native module ----
+// ---- Load ML-KEM-768 (pure-JS reference) ----
 let mlkem;
 try {
   try { mlkem = require('./packages/pqc-kem/src/ml-kem-768.js'); } catch(__) { mlkem = null; }
-  console.log('[PQ-Ratchet] ML-KEM-768 native module loaded (KAT-verified)');
+  console.log('[PQ-Ratchet] ML-KEM-768 pure-JS module loaded (KAT-verified)');
 } catch (e) {
   console.error('[PQ-Ratchet] ML-KEM module not loaded:', e.message);
   mlkem = null;
