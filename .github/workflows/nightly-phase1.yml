@@ -153,8 +153,8 @@ jobs:
       - name: Annotate known defect (expected RED)
         if: failure()
         run: |
-          echo "::warning::KNOWN_DEFECT: OPK model loads but O4_ConsumedNotReusable is REVERSED (OPK-B: confirmed by TLC EXIT 12, violates on first consume). Next/parse defect (OPK-A) was fixed so the model now runs and surfaces the real defect."
-          echo "::warning::This RED is seam-checker detecting a proven model defect, NOT a regression. See seam-checklist-v1_20260920.md (OPK-A/B/C)."
-          echo "::warning::Do not 'fix' this by adding continue-on-error — that would recreate the silent-pass weak signal."
+          echo "::warning::KNOWN_DEFECT: OPK model — A (Next/parse) fixed so model loads; B (O4_ConsumedNotReusable reversed) fixed via #124 (consumed OPK must be logged)."
+          echo "::warning::KNOWN_DEFECT_DETAIL: C full-state OPEN — symmetry quotient applied (users=model values, Permutations(User)); local (2-user/3-OPK) green EXIT 0 / 0 violations; full (3-user/5-OPK) NOT reducible within 10min (42.3M states / 12.2M distinct / 9.3M queued @600s). No constant-lowering (would be a workaround, not a fix)."
+          echo "::warning::RED = C full-state non-termination (TLC timeout), expected signal NOT a regression. Do not mask with continue-on-error (recreates silent-pass). View abstraction is the proper follow-up, tracked separately."
 
 
