@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE · PQC 工程验证平台 — ML-KEM-768 · ML-DSA-65 · SLH-DSA · SM2/SM3/SM4 · FPGA</title>
-    <meta name="description" content="本仓库是 FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust · 端到端加密）另见 fibemate.net。覆盖 ML-KEM-768（FIPS 203）、ML-DSA-65（FIPS 204）、SLH-DSA-128s（FIPS 205）、SM2/SM3/SM4、FPGA NTT 加速器、TLA+ 形式化验证、100 份 TSR 存证。开源 GPL-3.0。">
+    <meta name="description" content="本仓库是 FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust · 端到端加密）另见 fibemate.net。覆盖 ML-KEM-768（FIPS 203）、ML-DSA-65（FIPS 204）、SLH-DSA-128s（FIPS 205）、SM2/SM3/SM4、FPGA NTT 加速器、TLA+ 形式化验证、100+ 份 TSR 存证。开源 GPL-3.0。">
     <meta property="og:title" content="FIBEMATE · 后量子密码学全栈工程验证平台（开源 GPL-3.0）">
-    <meta property="og:description" content="FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust）另见 fibemate.net。ML-KEM-768（FIPS 203）· ML-DSA-65（FIPS 204）· SLH-DSA-128s（FIPS 205）· SM2/SM3/SM4 · FPGA NTT · TLA+ · 100 TSR。">
+    <meta property="og:description" content="FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust）另见 fibemate.net。ML-KEM-768（FIPS 203）· ML-DSA-65（FIPS 204）· SLH-DSA-128s（FIPS 205）· SM2/SM3/SM4 · FPGA NTT · TLA+ · 100+ TSR。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net">
     <meta property="og:site_name" content="FIBEMATE PQC">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="FIBEMATE · 后量子密码学开源工程验证平台">
-    <meta name="twitter:description" content="FIBEMATE PQC 密码学平台。同名社交软件另见 fibemate.net。ML-KEM-768 · ML-DSA-65 · SLH-DSA-128s · SM2/SM3/SM4 · FPGA · TLA+ · 100 TSR。">
+    <meta name="twitter:description" content="FIBEMATE PQC 密码学平台。同名社交软件另见 fibemate.net。ML-KEM-768 · ML-DSA-65 · SLH-DSA-128s · SM2/SM3/SM4 · FPGA · TLA+ · 100+ TSR。">
     <link rel="canonical" href="https://fibemate.net">
     <style>
         * {
@@ -1021,8 +1021,8 @@
             <div class="feature-card">
                 <div class="feature-icon">🔓</div>
                 <div class="feature-title">开源协议</div>
-                <div class="feature-desc">计划 2026.08.31 开源。代码审计中，暂未公开。
-密码学不应是黑盒 —— 所有核心算法实现将在开源时完整公开。</div>
+                <div class="feature-desc">已于 2026-08-31 开源（GPLv3，GitHub: Lennonhaha/fibemate）。
+密码学不应是黑盒 —— 核心算法实现已完整公开。</div>
             </div>
         </div>
     </section>
@@ -1481,7 +1481,7 @@
         </div>
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-07-31 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.2.3 ❄️🔥 61/61 &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 100 份 (lg-001~100) ✓<br>
+            最后更新：2026-09-23 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.2.3 ❄️🔥 61/61 &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 100+ 份 (lg-001~108) ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (FIPS 204, ML-DSA-44/65/87 纯 JS 自研，跨 @noble/post-quantum 双向验证通过)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
