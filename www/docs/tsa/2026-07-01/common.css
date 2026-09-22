@@ -1,0 +1,7 @@
+/* placeholder — original asset never committed.
+   blog-4590-fix.html references common.css via a relative href, but the
+   original stylesheet was never committed to the repository. This file is a
+   minimal placeholder to resolve the 404 (HTTP 200) without altering the TSA
+   evidence HTML. It is NOT the original design; do not assume visual parity. */
+body { font-family: system-ui, sans-serif; margin: 0; color: #222; }
+a { color: #00E5C3; text-decoration: none; }
