@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /* placeholder — original asset never committed.
    blog-4590-fix.html references main.js via a relative src, but the original
    script was never committed to the repository. This file is an intentional
