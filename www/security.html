@@ -188,8 +188,8 @@
  <div class="security-card">
  <p>所有核心实现文件已通过 <strong>DigiCert</strong> 签发 RFC 3161 时间戳，确保代码在特定时间点的完整性可被第三方验证。</p>
  <ul>
- <li><strong>存证数量</strong>：122 份 RFC 3161 时间戳（DigiCert 签发，核心序列 lg-001~071 + lg-074~078（76 份） + 独立模块存证）</li>
- <li><strong>存证位置</strong>：<code>/docs/tsa/</code>（按日期分子目录，跨度 2026-06-25 ~ 2026-07-16）</li>
+ <li><strong>存证数量</strong>：260 份 RFC 3161 时间戳（DigiCert 签发，核心序列 lg-001~lg-108 + 独立模块存证）</li>
+ <li><strong>存证位置</strong>：<code>/docs/tsa/</code>（按日期分子目录，覆盖 2026-06 至 2026-08，最新至 lg-108）</li>
  <li><strong>验证命令</strong>：<code>openssl ts -verify -in *.tsr -CAfile digicert.pem -untrusted chain.pem</code></li>
  </ul>
  <p style="color:#8b949e;font-size:0.85rem;">📥 存证清单已归档至 <a href="/docs/tsa/">/docs/tsa/</a></p>
@@ -198,13 +198,13 @@
  <!-- ========== 6. 开源验证 ========== -->
  <h2>6. 开源验证</h2>
  <div class="security-card">
- <p>FIBEMATE 于 <strong>2026 年 8 月底</strong> 开源。届时你可以：</p>
+ <p>FIBEMATE 已于 <strong>2026-08-31 开源（v3.3.0）</strong>。你可以：</p>
  <ol>
  <li>自行构建并运行测试套件</li>
  <li>验证时间戳存证与源码哈希的匹配性</li>
  <li>审计所有密码学实现</li>
  </ol>
- <pre><code>git clone https://github.com/fibemate/fibemate
+ <pre><code>git clone https://github.com/Lennonhaha/fibemate
 npm install
 npm run test:formal # Track 1
 npm run test:cross-lang # Track 2
@@ -397,7 +397,7 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
   <p style="margin:0.5rem 0 0;color:#8b949e;">LookingGlass 是 FIBEMATE 的<strong>「默认关闭、按需开启」实验性模块</strong>。它独立于 SM2/ML-KEM/Cheshire Cat 底盘运行。</p>
 </div>
 
-<p style="font-size:0.85rem;color:#8b949e;">LookingGlass 全系列 38 份 DigiCert TSR · 2026-06-26 · 全部 Granted &#x2705; · 详见 <a href="/docs/pqc-readiness.html#7">抗量子就绪状态 §7</a></p>
+<p style="font-size:0.85rem;color:#8b949e;">LookingGlass 全系列 38 份 DigiCert TSR（子系列计数，已含于全站 260 份总存证）· 2026-06-26 · 全部 Granted · 详见 <a href="/docs/pqc-readiness.html#7">抗量子就绪状态 §7</a></p>
 
 
 </div>
