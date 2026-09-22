@@ -137,11 +137,11 @@
 
 <div style="margin:1rem 0;">
   <div style="display:flex;justify-content:space-between;font-size:0.85rem;color:var(--muted);margin-bottom:4px;">
-    <span>整体项目进度</span><span><strong style="color:var(--accent);">90%</strong></span>
+    <span>整体项目进度</span><span><strong style="color:var(--accent);">已开源 v3.3.0</strong></span>
   </div>
-  <div class="progress-bar"><div class="progress-fill" style="width:90%;"></div></div>
+  <div class="progress-bar"><div class="progress-fill" style="width:100%;"></div></div>
 </div>
-<p style="font-size:0.85rem;color:var(--muted);">核心密码算法模块：100% 完工；应用层 PQC 混合密钥交换：100% 上线；Pre-key 协议闭环・异步 X3DH：100% 完成；路径 A 已通过 oqs-provider + systemd override 激活（2026-07-17）；路径 C-2 已上线（SM2+ML-KEM-768 应用层混合密钥交换）· IANA #4590 E2E 集成到 reg-server（2026-07-16）。</p>
+<p style="font-size:0.85rem;color:var(--muted);">核心密码算法模块：100% 完工；应用层 PQC 混合密钥交换：100% 上线；Pre-key 协议闭环・异步 X3DH：100% 完成；路径 A 已通过 oqs-provider + systemd override 激活（2026-07-17）；路径 C-2 已上线（SM2+ML-KEM-768 应用层混合密钥交换）· IANA #4590 E2E 集成到 reg-server（2026-07-16）。<strong>FIBEMATE 已于 2026-08-31 开源（v3.3.0）。注意：TLS 层原生 PQC-Active（nginx NamedGroup）仍为实验性（⬜），生产环境当前运行经典 ECDH，普通客户端自动降级。</strong></p>
 
 <!-- ====== Section 2.5: Formal Security Model ====== -->
 <h2>2.5 形式化安全模型 — 混合 KEM 安全性证明</h2>
@@ -332,7 +332,7 @@
 </ul>
 
 <h4>Q：外界能否参与项目协作？</h4>
-<p>A：FIBEMATE 目前暂未开源，开源计划定于 2026 年 8 月。你可以持续跟踪本页面进度，技术建议可发送至项目官方邮箱。</p>
+<p>A：FIBEMATE 已于 <strong>2026-08-31 开源</strong>（v3.3.0，GitHub: Lennonhaha/fibemate，public）。研究线（LookingGlass / VWZ）为独立实验分支，默认关闭、不接入生产加密，详见各研究线状态文档（docs/VWZ-STATUS.md 等）。技术建议可发送至项目官方邮箱，亦欢迎通过 Issue / PR 参与。</p>
 
 <!-- ====== Section 6 ====== -->
 <h2>6. 关联文档入口</h2>
@@ -354,7 +354,7 @@
 <!-- 7.1 -->
 <h3>7.1 研究目标</h3>
 <p><strong>LookingGlass v2.1</strong> (三层逆向壁垒, 77/77 全绿) 是基于有限群表示论的克罗内克嵌套代数实验。通过多层线性代数构造（纯逆向混淆实验），验证变换不可逆性（局部不可合并性质）。在密码学安全维度：外层线性变换为可逆复合矩阵，攻击者可整体消去，不提升 LWE/BKZ 破解难度。v2 的工程价值在于线性代数教学、硬件张量运算验证及 L8/L9 运行时异常检测实验，不具备加密防护能力。</p>
-<p><strong>VWZ</strong> 是基于范德蒙德秩-1张量结构的原创格签名构造实验。签名 68 字节 (k=16, NIST-1 128-bit)，公钥 Rank-1 稀疏压缩 64.5 倍。Hull 攻击评估显示最优已知攻击复杂度在当前参数下超 2^2000，但安全性尚未经同行评议。研究代码部署于 /research/vwz/*，仅限内网访问，不接入生产加密路径。</p>
+<p><strong>VWZ</strong> 是 FIBEMATE 的独立研究子线——基于 Vandermonde 张量结构的格-张量混合签名实验。<strong>历史状态：</strong>原 rank-1 构造于 2026-08-16 被第三方多项式时间分离攻击攻破（rank-1 切片因式分解 → 密钥无关的 existential forgery，36/36 伪造成功）；<strong>当前采用 rank-2 加固构造</strong>（2026-09-06 上线 experimental/vwz-lg 分支，306/306 切片 rank=2，rank-1 攻击 0/27）。rank-2 仅针对攻破 rank-1 的那一层代数攻击做了验证，<strong>不是安全性证明，也无第三方密码学审计</strong>；VMQ-SPARSE → LWE 的归约存在已知缺口（H-1），底层困难假设 VWZ-PR 仍为猜想。Hull 攻击评估（Õ(q¹³⁰) ≥ 2²⁰⁸⁰，对 κ=128）针对 rank-1 参数给出，rank-2 下需重新评估。VWZ 安全性待同行评议，研究代码仅限内网访问，不接入生产加密路径。详见 docs/VWZ-STATUS.md 与 docs/vwz-lwe-reduction-gaps.md。</p>
 <p>两个模块均为探索性研究实验，<strong>不替代 FIPS 203/205 标准主干算法</strong>，默认关闭，不接入生产加密链路。LookingGlass v2 不提供密码安全增益，VWZ 安全性待外部评审。二者的工程价值在于线性代数/有限群表示教学、硬件张量运算验证、L8/L9 运行时异常检测及时间戳存证闭环。</p>
 
 <!-- 7.2: LookingGlass v1 -->
@@ -378,7 +378,7 @@
 
 <!-- 7.3: VWZ -->
 <h3>7.3 VWZ — 格-张量混合签名方案</h3>
-<p>VWZ（Vandermonde-Wang-Zhang）是 FIBEMATE 的独立研究子线——基于 Vandermonde 结构的格-张量混合签名方案。<strong>归约证明已完成：VMQ-SPARSE → OW-VWZ → EUF-CMA，148/148 测试通过，论文 §6.5 已合入。</strong> 核心创新：公钥稀疏 Rank-1 压缩（64.5×），签名尺寸 68B (k=16, NIST-1 128-bit)。与 LookingGlass 的 DMTH 假设正交，VWZ 的安全性依赖于 Vandermonde 编码的纠错困难性。研究端 API 已部署（<code>/research/vwz/*</code>），仅限内网访问，不接入生产加密路径。</p>
+<p>VWZ（Vandermonde-Wang-Zhang）是 FIBEMATE 的独立研究子线——基于 Vandermonde 张量结构的格-张量混合签名方案。<strong>诚实边界：</strong>VMQ-SPARSE → OW-VWZ → EUF-CMA 的 148/148 测试为<strong>实现层自测</strong>，VMQ-SPARSE → 标准 LWE 的完整归约尚未证明（已知缺口 H-1），故 unforgeability 不在我们自身验证计划的可形式化范围内；原论文为 IACR 2025/624《Trapdoor one-way functions from tensors》（VWZ 原始构造，非撤稿/攻击）。<strong>当前构造为 rank-2</strong>（原 rank-1 已于 2026-08-16 被第三方攻破，rank-2 于 2026-09-06 加固，306/306 切片）。核心创新：公钥稀疏 Rank-2 压缩；签名尺寸 68B (NIST-1 128-bit)。VWZ 的困难假设（VWZ-PR）为新颖猜想，无标准归约，安全性依赖公开挑战与持续分析。研究端 API 仅限内网访问，不接入生产加密路径。详见 docs/VWZ-STATUS.md。</p>
 
 <h4>验证清单</h4>
 <table>
@@ -387,11 +387,12 @@
 <tr><td>Hash-and-Sign 原型</td><td>Python 参考实现, k=16 公钥 1.7KB/签名 68B (NIST-1 primary), k=32 公钥 6.3KB/签名 132B</td><td><span style="color:var(--green);">6/6 全绿</span></td><td>lg-039</td></tr>
 <tr><td>VWZ 常数表预计算</td><td>Vandermonde 全局常数表 (k=2/4/8/16/32), k=32 崩溃修复 (col3 平方碰撞, safe_alphas() 拒绝 ± 对)</td><td><span style="color:var(--green);">14/14 全绿</span></td><td>lg-039</td></tr>
 <tr><td>Rust/WASM 双轨实现</td><td>constants.rs 345行 + structured.rs 128行, cargo test 29/29, wasm-pack build 96.9KB (gzip ~46KB)</td><td><span style="color:var(--green);">✅ 编译通过</span></td><td>lg-039</td></tr>
-<tr><td>Rank-1 稀疏压缩 (Rust/WASM)</td><td>Rust 原型 7/7 PASS, k=16 压缩 64.5× (19,074B→296B), wasm-pack 编译通过 (96.9KB / ~46KB gzip)</td><td><span style="color:var(--green);">✅ 7/7 全绿</span></td><td>lg-049</td></tr>
-<tr><td>Hull 攻击评估</td><td>Couvreur &amp; Levrat (Inria 2025/596), 对 VWZ κ=128: Õ(q¹³⁰) ≥ 2²⁰⁸⁰</td><td><span style="color:var(--green);">✅ 不可行</span></td><td>lg-041</td></tr>
+<tr><td>Rank-1 稀疏压缩 (Rust/WASM) <span style="color:var(--amber);">⚠ 已废弃</span></td><td>Rust 原型 7/7 PASS, 压缩 64.5× (19,074B→296B) — <strong>rank-1 构造已于 2026-08-16 被第三方攻破，此行仅作历史记录</strong></td><td><span style="color:var(--amber);">⚠ rank-1 已攻破</span></td><td>lg-049</td></tr>
+<tr><td>Rank-2 稀疏压缩 (Rust/WASM)</td><td>rank-2 加固构造（击败 rank-1 分离攻击）；306/306 切片 rank=2，rank-1 攻击 0/27，44/44 边界测试，无性能回退</td><td><span style="color:var(--green);">✅ 306/306</span></td><td>experimental/vwz-lg</td></tr>
+<tr><td>Hull 攻击评估 <span style="color:var(--amber);">⚠ 针对 rank-1</span></td><td>Couvreur &amp; Levrat (Inria 2025/596), 对 VWZ κ=128: Õ(q¹³⁰) ≥ 2²⁰⁸⁰ — <strong>该评估基于 rank-1 参数；rank-2 下需重新评估，且 VMQ-SPARSE→LWE 归约缺口 (H-1) 使整体安全性为启发式论证，非形式化证明</strong></td><td><span style="color:var(--amber);">⚠ rank-1 口径·待重评</span></td><td>lg-041</td></tr>
 <tr><td>服务端 API 集成</td><td>Node.js Express 路由, /research/vwz/* (内网隔离), JSON REST: keygen/sign/verify/status, WASM 懒加载, 外层 Nginx return 403, 内层 IP 守卫</td><td><span style="color:var(--green);">✅ 6/6 PASS</span></td><td>lg-046</td></tr>
 <tr><td>FPGA BRAM 求解器</td><td>Artix-7 A7-35T, vwz_lambda_rom.v + vwz_solve_preimage.v, 行为模型 5/5 PASS, ~503 cycles = 10μs @50MHz, 已合并至 v5 构建</td><td><span style="color:var(--green);">✅ 综合就绪</span></td><td>lg-047</td></tr>
-<tr><td>双签名路径</td><td>solve_preimage_sparse (通用随机 Λ) + solve_preimage_fast (固定 Vandermonde Λ, 零 pow)</td><td><span style="color:var(--green);">✅ 闭合</span></td><td>lg-041</td></tr>
+<tr><td>双签名路径</td><td>solve_preimage_sparse (通用随机 Λ) + solve_preimage_fast (固定 Vandermonde Λ, 零 pow) — <strong>基于 rank-1 实现记录；rank-2 路径详见 experimental/vwz-lg 分支</strong></td><td><span style="color:var(--green);">✅ rank-1 闭合</span></td><td>lg-041</td></tr>
 <tr><td>浏览器 WASM 基准</td><td>Edge WASM keygen k=8 ~2.2ms (1.02× native), k=16 ~69-78ms (1.10× native), sign/verify &lt;1ms</td><td><span style="color:var(--green);">✅ 通过</span></td><td>lg-049</td></tr>
 <tr><td>FPGA v5 硬件防护</td><td>Artix-7 A7-35T, 4 新模块合成通过: lfsr256_prng + ntt_masked_wrapper + ntt_fault_protect + hw_monitor, bitstream 618KB, 时序 MET (WNS=9.755ns)</td><td><span style="color:var(--green);">✅ 合成通过</span></td><td>lg-047</td></tr>
 <tr><td>FPGA v5 掩码接线</td><td>ntt_masked_wrapper v2 (combinational 去掩+1-cycle 重掩) + mask_ram.v (256x13-bit 双读口) + lfsr256_prng (32-bit Galois CRC-32 + rejection sampling) 已接入 ntt_core_pipe2</td><td><span style="color:var(--green);">✅ 接线完成</span></td><td>—</td></tr>
@@ -448,7 +449,7 @@
   <p style="margin:0.5rem 0 0;color:var(--muted);">DMTH 假设无已知反例。LookingGlass 默认关闭，不影响生产加密。VWZ 签名方案已完成全链路 Rust→WASM→前端部署→研究端 API 集成。技术文档已内部归档。</p>
 </div>
 
-<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>76 份（lg-001~lg-076）DigiCert/FreeTSA TSR 存证 · 批次 lg-001~lg-076 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-07-16</p>
+<p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>已累计 100+ 份（lg-001 起，含 v2.2 系列；实际 TSR 归档至 lg-108）DigiCert/FreeTSA TSR 存证 · 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-09-23</p>
 
 <hr>
 
@@ -657,7 +658,7 @@
 <p style="font-size:0.82rem;color:var(--muted);">DigiCert/FreeTSA 可信时间戳存证 · 2026-07-16 · <a href="/docs/tsa/2026-06-25/pqc-readiness.tsr">pqc-readiness.tsr</a></p>
 
 <footer>
-  <p>最后更新：2026-07-17 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
+  <p>最后更新：2026-09-23 · <a href="/">返回首页</a> · <a href="/docs/architecture.html">系统架构</a></p>
 </footer>
 
 </div>
