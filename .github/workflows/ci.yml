@@ -156,7 +156,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          node -e "const a=require('/tmp/sbom.cdx.json'),b=require('./sbom.cdx.json');if(a.components.length!==b.components.length){console.error('SBOM out of date: regenerated '+a.components.length+' vs committed '+b.components.length);process.exit(1)}console.log('SBOM up-to-date:',b.components.length,'components')" 2>&1 | tee "$RUNNER_TEMP/sbom.log"
+          node scripts/check-sbom-drift.cjs /tmp/sbom.cdx.json ./sbom.cdx.json 2>&1 | tee "$RUNNER_TEMP/sbom.log"
 
       - name: Attribute - SBOM digest
         if: always()
