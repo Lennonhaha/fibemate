@@ -78,7 +78,7 @@
     <span style="color:var(--muted);font-size:1.2rem;">→</span>
     <span class="status-tag pending">⬜ PQC-Active</span>
   </div>
-  <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid：路径 C-2（应用层 SM2+ML-KEM-768）已上线 ✅，900/900 全绿，p95=78.5ms。IANA #4590 E2E 混合 KEX 已集成到 reg-server（2026-07-16），10/10 集成测试通过。路径 A（TLS 层 X25519MLKEM768 NamedGroup）已通过 oqs-provider + systemd override 激活 ✅ Active 2026-07-17。</strong></p>
+  <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid：路径 C-2（应用层 SM2+ML-KEM-768）已上线 ✅，900/900 全绿，p95=78.5ms。IANA #4590 E2E 混合 KEX 已集成到 reg-server（2026-07-16），10/10 集成测试通过。路径 A（TLS 层 X25519MLKEM768 NamedGroup）为实验性/未上线（待 OpenSSL 3.2+，当前 3.0.13 不支持 oqs-provider）<span style="color:var(--amber);">⚠️ 实验性 2026-07-17</span>。</strong></p>
 </div>
 
 <p style="font-size:0.9rem;margin-top:0.5rem;color:var(--muted);max-width:44rem;">LookingGlass v2.1 为有限群表示克罗内克嵌套代数实验，外层纯无损线性变换，无法提升底层 LWE 格密码计算硬度；VWZ 为独立研究分支，安全性尚待同行评议。</p>
@@ -128,7 +128,7 @@
   <td><span style="color:var(--green);">✅ 上线</span></td>
   <td>不改 Nginx/OpenSSL，TLS 1.3 Session ID 绑定，会话密钥实时混合</td>
 </tr>
-<tr><td>TLS 1.3 混合握手对接<br/><span style="font-size:0.8rem;color:var(--muted);">路径 A: NamedGroup 原生集成</span></td><td><span style="color:#22c55e;">✅ Active 2026-07-17</span></td><td>已通过 oqs-provider + systemd override 激活 X25519MLKEM768 NamedGroup；nginx 原生 NamedGroup 接入已于 2026-07-10 评估不可行（浏览器 TLS 不受 JS/WASM 控制 + nginx 无混合协商回调 API）</td></tr>
+<tr><td>TLS 1.3 混合握手对接<br/><span style="font-size:0.8rem;color:var(--muted);">路径 A: NamedGroup 原生集成</span></td><td><span style="color:var(--amber);">⚠️ 实验性/未上线 <span style="font-size:0.8rem;">（更正：见 §2.5.1 表尾注）</span></span></td><td>此前误标 Active 2026-07-17，现更正：服务器 OpenSSL 3.0.13 不支持 oqs-provider，X25519MLKEM768 NamedGroup 无法在 TLS 层终止，混合握手未启用；nginx 原生 NamedGroup 接入已于 2026-07-10 评估不可行（浏览器 TLS 不受 JS/WASM 控制 + nginx 无混合协商回调 API）</td></tr>
 <tr><td>ClientHello 新增 #4590 扩展</td><td><span style="color:var(--green);">✅ reg-server 集成</span></td><td>TLS 层命名组待 oqs-provider 适配；应用层路径 C-2（SM2+ML-KEM-768）已集成到 reg-server（2026-07-16），E2E 握手协议固化，hybrid-kem-client.js + 5 类 E2E 消息类型，10/10 集成测试通过</td></tr>
 <tr><td>浏览器到服务端全链路 TLS 测试</td><td><span style="color:var(--amber);">⬜ 待启动</span></td><td>完整三节点联调环境</td></tr>
 <tr><td>官网生产环境开启混合加密</td><td><span style="color:var(--green);">🔧 待完成</span></td><td>oqs-provider 编出但未接入 nginx；当前 TLS 为经典 ECDH；Let’s Encrypt ECDSA cert + oqs-provider；普通客户端自动降级至经典 ECDH</td></tr>
@@ -141,7 +141,7 @@
   </div>
   <div class="progress-bar"><div class="progress-fill" style="width:100%;"></div></div>
 </div>
-<p style="font-size:0.85rem;color:var(--muted);">核心密码算法模块：100% 完工；应用层 PQC 混合密钥交换：100% 上线；Pre-key 协议闭环・异步 X3DH：100% 完成；路径 A 已通过 oqs-provider + systemd override 激活（2026-07-17）；路径 C-2 已上线（SM2+ML-KEM-768 应用层混合密钥交换）· IANA #4590 E2E 集成到 reg-server（2026-07-16）。<strong>FIBEMATE 已于 2026-08-31 开源（v3.3.0）。注意：TLS 层原生 PQC-Active（nginx NamedGroup）仍为实验性（⬜），生产环境当前运行经典 ECDH，普通客户端自动降级。</strong></p>
+<p style="font-size:0.85rem;color:var(--muted);">核心密码算法模块：100% 完工；应用层 PQC 混合密钥交换：100% 上线；Pre-key 协议闭环・异步 X3DH：100% 完成；路径 A 为实验性/未上线（待 OpenSSL 3.2+，当前 3.0.13 不支持 oqs-provider，2026-07-17 误标 Active 已更正）；路径 C-2 已上线（SM2+ML-KEM-768 应用层混合密钥交换）· IANA #4590 E2E 集成到 reg-server（2026-07-16）。<strong>FIBEMATE 已于 2026-08-31 开源（v3.3.0）。注意：TLS 层原生 PQC-Active（nginx NamedGroup）仍为实验性（⬜），生产环境当前运行经典 ECDH，普通客户端自动降级。</strong></p>
 
 <!-- ====== Section 2.5: Formal Security Model ====== -->
 <h2>2.5 形式化安全模型 — 混合 KEM 安全性证明</h2>
@@ -164,13 +164,13 @@
       <td><strong>经典随机预言机 (ROM)</strong></td>
       <td>混合 KEM = KDF(ECDH_ss || MLKEM_ss) 在 ROM 下 IND-CCA2 安全，前提是至少一个组件安全</td>
       <td style="color:var(--green);">✅ 已证明</td>
-      <td>Schäge et al., ACM CCS 2024</td>
+      <td>Huguenin-Dumittan &amp; Vaudenay, EUROCRYPT 2022 <span style="font-size:0.8rem;color:var(--amber);">（更正：见 §2.5.1 表尾注）</span></td>
     </tr>
     <tr>
       <td><strong>量子随机预言机 (QROM)</strong></td>
       <td>将上述证明扩展至 QROM，对抗拥有量子查询能力的攻击者——这是后量子时代所需的理论强度</td>
       <td style="color:var(--green);">✅ 已证明</td>
-      <td>Bergmann et al., ePrint 2025/xxx</td>
+      <td>Zhou et al., ASIACRYPT 2024；Chen et al., ePrint 2025/1748 <span style="font-size:0.8rem;color:var(--amber);">（更正：见 §2.5.1 表尾注）</span></td>
     </tr>
     <tr>
       <td><strong>标准模型 (无 RO)</strong></td>
@@ -181,7 +181,9 @@
   </tbody>
 </table>
 
-<p><strong>关键结论</strong>：FIBEMATE 的混合握手实现已有 ROM 和 QROM 两个层次的完整形式化安全证明作为理论支撑。QROM 证明尤其重要——它保证了量子攻击者即使拥有对哈希函数的量子查询能力，混合 KEM 的组合安全性依然成立。</p>
+<p style="font-size:0.85rem;color:var(--amber);margin-top:0.5rem;"><strong>更正注（2026-09-23）</strong>：此前版本本表 ROM/QROM 引用编号有误（Schäge CCS 2024 与本文不匹配；Bergmann et al. 2025/xxx 编号未填、无法核验），现更正为下列文献。</p>
+
+<p><strong>关键结论</strong>：FIBEMATE 已完成协议属性级形式化验证（TLA+ 状态机验证混合 KEM 组合器的密钥管理属性，属工程正确性验证，非密码学安全性归约）；混合 KEM 组合器的 ROM/QROM 密码学安全性依赖下列外部学术成果，<strong>非 FIBEMATE 自研归约证明</strong>。QROM 证明尤其重要——它保证了量子攻击者即使拥有对哈希函数的量子查询能力，混合 KEM 的组合安全性依然成立。</p>
 
 <h3>2.5.2 实现与标准的对齐</h3>
 
