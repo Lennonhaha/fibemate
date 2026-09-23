@@ -1,7 +1,7 @@
 {
   "name": "pqc-lens",
   "displayName": "PQC Lens",
-  "description": "PQC 感知的代码扫描 — 实时提示量子不安全算法，全球首个 PQC IDE 插件（FIBEMATE）",
+  "description": "PQC 感知的代码扫描 — 实时提示量子不安全算法，PQC IDE 插件（FIBEMATE）",
   "version": "0.1.0",
   "publisher": "fibemate",
   "engines": { "vscode": "^1.80.0" },
