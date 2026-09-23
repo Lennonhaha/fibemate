@@ -53,16 +53,6 @@
   <li><strong>桌面优先</strong>：Tauri v2 跨平台桌面应用（Windows/macOS/Linux）</li>
 </ul>
 
-<h3>Q2: 和 Signal / WhatsApp 有什么区别？</h3>
-<table>
-<tr><th>维度</th><th>Signal</th><th>FIBEMATE</th></tr>
-<tr><td>密钥封装</td><td>ECDH (X25519)</td><td><strong>ML-KEM-768</strong> (后量子)</td></tr>
-<tr><td>量子安全</td><td>❌ 不抵抗</td><td>✅ 抵抗</td></tr>
-<tr><td>国密支持</td><td>❌</td><td>✅ SM2/SM3/SM4</td></tr>
-<tr><td>侧信道审计</td><td>部分</td><td><strong>TVLA 10k+ 全通过</strong></td></tr>
-</table>
-<p>Signal 使用经典的 X25519 ECDH，在量子计算机下不保证安全。FIBEMATE 的 ML-KEM-768 基于格密码（Kyber），理论上抵抗 Shor 算法。</p>
-
 <h2>密码学</h2>
 
 <h3>Q3: 私钥存在哪里？会被盗吗？</h3>
