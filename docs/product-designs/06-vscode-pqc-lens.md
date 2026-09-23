@@ -75,7 +75,7 @@ const key = crypto.generateKeyPairSync('rsa', { modulusLength: 2048 });
 
 ## 5. 独特性
 
-**这是全球第一个 PQC 感知的 IDE 插件。** 已有工具（liboqs、OpenQuantumSafe）专注库替换，但没有任何工具在开发阶段就提醒开发者"你正在写的代码在量子时代不安全"。FIBEMATE 的 29 个可视化页面可直接链接为"为什么"的证据。
+**这是一个 PQC 感知的 IDE 插件。** 已有工具（liboqs、OpenQuantumSafe）专注库替换，但没有任何工具在开发阶段就提醒开发者"你正在写的代码在量子时代不安全"。FIBEMATE 的 29 个可视化页面可直接链接为"为什么"的证据。
 
 ---
 
