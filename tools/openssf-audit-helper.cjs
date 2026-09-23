@@ -49,7 +49,6 @@ for (let i = 0; i < args.length; i++) {
 
 const rootAbs = path.resolve(root);
 function has(f) { return fs.existsSync(path.join(rootAbs, f)); }
-function hasAny(files) { return files.some(f => has(f)); }
 
 // ════════════════════════════
 // 检测逻辑
