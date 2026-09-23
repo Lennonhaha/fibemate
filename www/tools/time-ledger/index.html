@@ -170,6 +170,7 @@
   header h1,
   .stamp b{font-family:"STLiti","LiSu","FZLiShu","华文隶书","STKaiti","KaiTi","Noto Serif SC",serif;}
 </style>
+<script defer src="https://cdn.jsdelivr.net/gh/Lennonhaha/fibemate-tools@main/crypto-time-ledger/www/verify.iife.js"></script>
 </head>
 <body>
   <div class="stamp" role="note" aria-label="demo seed disclaimer">
@@ -484,7 +485,8 @@
 const EMBEDDED = [
   {"schema_version":1,"index":0,"ts":"2026-09-14T09:37:16.000Z","state":{"algorithms":[{"name":"ML-KEM-768","version":"1.0","lib":"noble"}],"git_commit":"0c4f3c3","note":"demo-seed from test fixtures"},"tsr_digest":"sha256:a1dc0b259c908d82dc5cf6d7c66e6e788d2573e16ec43652bd3518e4465a0ea8","tsr_ref":"a1dc0b259c908d82dc5cf6d7c66e6e788d2573e16ec43652bd3518e4465a0ea8.tsr","hash_prev":"genesis","hash_now":"sha256:afa972af57bbbe12f85f01c3d1d19b3600cd7c43d19c351ed1ea8631d199a6f5"},
   {"schema_version":1,"index":1,"ts":"2026-09-14T09:37:16.000Z","state":{"algorithms":[{"name":"ML-DSA-65","version":"2.0","lib":"noble"}],"git_commit":"0c4f3c3","note":"demo-seed from test fixtures"},"tsr_digest":"sha256:acc11a37bd8cd3e53c980e0450243908d23925ec128cb1299fc94377d7ee69f0","tsr_ref":"acc11a37bd8cd3e53c980e0450243908d23925ec128cb1299fc94377d7ee69f0.tsr","hash_prev":"sha256:afa972af57bbbe12f85f01c3d1d19b3600cd7c43d19c351ed1ea8631d199a6f5","hash_now":"sha256:2678dc22248e718b0dac3dd2f2c79b0a9d1340c3094b9fb8b3b2b77e0964f33b"},
-  {"schema_version":1,"index":2,"ts":"2026-09-14T09:37:17.000Z","state":{"algorithms":[{"name":"SLH-DSA-128f","version":"1.0","lib":"noble"}],"git_commit":"0c4f3c3","note":"demo-seed from test fixtures"},"tsr_digest":"sha256:c229ed071f3611c3b4ac25bd39bc1743af7c5ec4cd58b57ac1c990af0649b53a","tsr_ref":"c229ed071f3611c3b4ac25bd39bc1743af7c5ec4cd58b57ac1c990af0649b53a.tsr","hash_prev":"sha256:2678dc22248e718b0dac3dd2f2c79b0a9d1340c3094b9fb8b3b2b77e0964f33b","hash_now":"sha256:9a54e29de07fe6bf3360fe1fd84eb07a4cf87d9cb5b3d3e5dd8b1d1271541b42"}
+  {"schema_version":1,"index":2,"ts":"2026-09-14T09:37:17.000Z","state":{"algorithms":[{"name":"SLH-DSA-128f","version":"1.0","lib":"noble"}],"git_commit":"0c4f3c3","note":"demo-seed from test fixtures"},"tsr_digest":"sha256:c229ed071f3611c3b4ac25bd39bc1743af7c5ec4cd58b57ac1c990af0649b53a","tsr_ref":"c229ed071f3611c3b4ac25bd39bc1743af7c5ec4cd58b57ac1c990af0649b53a.tsr","hash_prev":"sha256:2678dc22248e718b0dac3dd2f2c79b0a9d1340c3094b9fb8b3b2b77e0964f33b","hash_now":"sha256:9a54e29de07fe6bf3360fe1fd84eb07a4cf87d9cb5b3d3e5dd8b1d1271541b42"},
+  {"schema_version":1,"index":3,"ts":"2026-09-23T10:06:11.000Z","state":{"algorithms":[{"name":"ML-KEM-768","version":"1.0","lib":"noble"}],"git_commit":"0c4f3c3","note":"external anchor via FreeTSA (freetsa.org) \u2014 non-self-signed timestamp"},"tsr_digest":"sha256:f4f9fbbd8015656070d4229b7a0ba9e8ebe8700f6851c669aca79f891bb07220","tsr_ref":"f4f9fbbd8015656070d4229b7a0ba9e8ebe8700f6851c669aca79f891bb07220.tsr","hash_prev":"sha256:9a54e29de07fe6bf3360fe1fd84eb07a4cf87d9cb5b3d3e5dd8b1d1271541b42","hash_now":"sha256:8694c34fd00c794ecfc2f6e900d1d8549d4063aab4473fcfd3fe8b7011584129"}
 ];
 
 let CHAIN = EMBEDDED;
@@ -588,22 +590,57 @@ function showSnap(i,ev){
 function hideSnap(){ snap.style.display='none'; }
 
 /* ===== 验真 ===== */
+const RAW_TSR_BASE = 'https://raw.githubusercontent.com/Lennonhaha/fibemate-tools/main/crypto-time-ledger/test/fixtures/tsr/';
+async function fetchBytes(url){
+  const r = await fetch(url, {cache:'no-store'});
+  if(!r.ok) throw new Error('HTTP '+r.status);
+  return new Uint8Array(await r.arrayBuffer());
+}
+let _pinnedPem = null;
+async function getPinnedPem(){
+  if(_pinnedPem !== null) return _pinnedPem;
+  const r = await fetch(RAW_TSR_BASE + 'pinned-certs.pem', {cache:'no-store'});
+  _pinnedPem = r.ok ? await r.text() : null;
+  return _pinnedPem;
+}
 document.getElementById('verifyBtn').addEventListener('click',async()=>{
   const out=document.getElementById('verifyOut');
   out.innerHTML='验真中…';
-  let allOk=true, lines=[];
+  const V=window.CryptoTimeLedgerVerify;
+  const canCrypto=!!(V && typeof V.verifyTsrBytes==='function');
+  let pinnedPem=null;
+  if(canCrypto){ try{ pinnedPem=await getPinnedPem(); }catch(e){ pinnedPem=null; } }
+  let allOk=true, lines=[], anySkip=false;
   let prev='genesis';
   for(const b of CHAIN){
     const recomputed=await sha256hex(canonical(b));
     const hashOk=recomputed===b.hash_now;
     const linkOk=(b.index===0 && b.hash_prev==='genesis') || (b.hash_prev===prev);
-    const tsrOk=!!b.tsr_digest && b.tsr_digest.startsWith('sha256:');
-    const ok=hashOk&&linkOk&&tsrOk;
+    let tsrVerified=null;
+    if(canCrypto){
+      if(pinnedPem && b.tsr_digest && b.tsr_digest.startsWith('sha256:')){
+        try{
+          const der=await fetchBytes(RAW_TSR_BASE + b.tsr_digest.slice(7) + '.tsr');
+          tsrVerified=await V.verifyTsrBytes(der, b.tsr_digest, pinnedPem);
+        }catch(e){ tsrVerified=false; }
+      } else {
+        tsrVerified=false;
+      }
+    } else {
+      anySkip=true;
+    }
+    b._tsrVerified=tsrVerified;
+    const ok=hashOk&&linkOk&&(tsrVerified===true);
     if(!ok) allOk=false;
     prev=b.hash_now;
-    lines.push(`<div class="${ok?'ok':'bad'}">#${b.index} ${ok?'✓':'✗'} 重算hash=${hashOk?'一致':'不符'} · 链连续=${linkOk?'是':'断'} · TSR附着=${tsrOk?'是':'否'}</div>`);
+    const tsrTxt = tsrVerified===true ? '通过' : (tsrVerified===false ? '失败' : '未验');
+    lines.push(`<div class="${ok?'ok':'bad'}">#${b.index} ${ok?'✓':'✗'} 重算hash=${hashOk?'一致':'不符'} · 链连续=${linkOk?'是':'断'} · TSR验签=${tsrTxt}</div>`);
   }
-  lines.push(`<div class="${allOk?'ok':'bad'}" style="margin-top:6px">${allOk?'整链验真通过 ✓（'+CHAIN.length+' blocks）':'链验真失败 ✗'}</div>`);
+  let sumTxt;
+  if(allOk){ sumTxt='整链验真通过 ✓（'+CHAIN.length+' blocks · 含 TSR 密码学验签）'; }
+  else if(anySkip){ sumTxt='TSR 密码学验签不可用（bundle 未加载）；仅完成哈希与链连续核验 ✗'; }
+  else { sumTxt='链验真失败 ✗'; }
+  lines.push(`<div class="${allOk?'ok':'bad'}" style="margin-top:6px">${sumTxt}</div>`);
   out.innerHTML=lines.join('');
 });
 
@@ -664,9 +701,9 @@ window.CHAIN = CHAIN;
       var ok=verdicts[i];
       if(!ok) allOk=false;
       var linkOk=(i===0 && b.hash_prev==='genesis') || (b.hash_prev===prev);
-      var tsrOk=!!b.tsr_digest && b.tsr_digest.startsWith('sha256:');
+      var tsrVerified=b._tsrVerified;
       prev=b.hash_now;
-      cards.push(cardHtml(b, ok, linkOk, tsrOk));
+      cards.push(cardHtml(b, ok, linkOk, tsrVerified));
     }
     cards.push(summaryHtml(allOk, CHAIN.length));
     target.innerHTML=cards.join('');
@@ -676,7 +713,8 @@ window.CHAIN = CHAIN;
   function esc(s){ return String(s).replace(/[&<>]/g, function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]; }); }
   function shortHash(h){ return esc(h.slice(0,22))+'…'; }
 
-  function cardHtml(b, ok, linkOk, tsrOk){
+  function cardHtml(b, ok, linkOk, tsrVerified){
+    var tsrTxt = tsrVerified===true ? '✓ 通过' : (tsrVerified===false ? '✗ 失败' : '— 未验');
     return '<div class="v-card '+(ok?'ok':'bad')+'">'
       +'<div class="v-card-head">'
         +'<span class="v-card-num">#'+esc(b.index)+'</span>'
@@ -684,7 +722,7 @@ window.CHAIN = CHAIN;
       +'</div>'
       +'<div class="v-row"><span class="k">hash_now</span><span class="v mono">'+shortHash(b.hash_now)+'</span></div>'
       +'<div class="v-row"><span class="k">链连续</span><span class="v">'+(linkOk?'✓ 是':'✗ 断')+'</span></div>'
-      +'<div class="v-row"><span class="k">TSR 附着</span><span class="v">'+(tsrOk?'✓ 是':'✗ 否')+'</span></div>'
+      +'<div class="v-row"><span class="k">TSR 验签</span><span class="v">'+tsrTxt+'</span></div>'
     +'</div>';
   }
 
