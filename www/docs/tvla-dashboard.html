@@ -336,13 +336,13 @@ footer a { color:var(--accent); text-decoration:none; }
     <span class="test-status status-pass">PASS</span>
   </div>
   <div class="test-row">
-    <span class="test-name">[v1.3] 高阶 1–4 阶矩 (N=10,000)</span>
-    <span class="t-value">max |t| = 1.82</span>
+    <span class="test-name">[v1.3] 高阶 1–4 阶矩 (N=5,000)</span>
+    <span class="t-value">max |t| = 1.24</span>
     <div class="t-bar-wrap"><div class="t-bar-bg"></div><div class="t-bar-fill" style="width:11%;background:var(--pass)"></div></div>
     <span class="test-status status-pass">20/20 PASS</span>
   </div>
   <div class="card-footnote">
-    <strong>v1.3 终版</strong> · Montgomery Ladder 恒定时间点乘（固定 256 轮 · 无条件 ADD+DOUBLE）· 高阶 1–4 阶矩 20/20 全绿 (max|t|=1.82)<br>
+    <strong>v1.3 终版</strong> · Montgomery Ladder 恒定时间点乘（固定 256 轮 · 无条件 ADD+DOUBLE）· 高阶 1–4 阶矩 20/20 全绿 (max|t|=1.24)<br>
     <strong style="color:var(--pass)">旧版 verify/decrypt FAIL 已全部修复</strong>：verify |t| 7.42→1.19、decrypt |t| 8.22→2.06。上方 jsbn/BigInt 旧数据保留作演化路径教学展示。<br>
     <strong style="color:var(--known)">诚实标注</strong>：纯 JS 实现，非生产推荐 — 教学/验证用途（见 <a href="/docs/SM2_TVLA_STATUS.md" style="color:var(--accent)">SM2_TVLA_STATUS.md</a>）。
   </div>
