@@ -2,7 +2,7 @@
 
 > **最后更新**：2026-08-13（v6 · 全局 TSR 138 份 · Path A/C-2 Active · v3.3.0 · 全站校准）  
 > **定位**：本文档汇总 FIBEMATE 项目在硬件加速、软件优化、安全性三个维度的可验证证据，供开源社区、安全研究者及潜在用户查阅。  
-> **开源计划**：FIBEMATE 核心协议代码计划于 **2026.08.31** 开源。当前 repo 为 private，本文档所列验证结果均可在 [fibemate.net](https://fibemate.net) 的公开报告页面复现验证。
+> **开源计划**：FIBEMATE 核心协议代码已于 **2026-08-31** 开源。当前 repo 为 public，本文档所列验证结果均可在 [fibemate.net](https://fibemate.net) 的公开报告页面复现验证。
 
 ---
 

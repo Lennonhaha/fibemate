@@ -200,7 +200,7 @@ pip install pre-commit && pre-commit install
 | **KAT 验证** | NIST 向量 | ✅ |
 | **Noble 交叉验证** | 10,000/10,000 | ✅ |
 | **liboqs 交叉验证** | 10,000/10,000 双向 | ✅ |
-| **TVLA 侧信道** | N=10,000 SM2 | ✅ |
+| **TVLA 侧信道** | N=5,000 SM2 | ✅ |
 | **FPGA 行为模型** | 43/43 PASS | ✅ |
 | **VWZ 签名** | 148/148 | ✅ |
 | **Demo 浏览器验证** | lg-095 TSR 存证 | ✅ |

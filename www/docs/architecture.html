@@ -113,7 +113,7 @@ a:hover { text-decoration:underline; }
   <tr><td>密钥交换</td><td>ML-KEM-768 Hybrid X3DH</td><td><span class="green">Active</span></td></tr>
   <tr><td>PQC KEM</td><td>ML-KEM-768 (FIPS 203) &middot; SLH-DSA (FIPS 205)</td><td><span class="green">Implemented</span></td></tr>
   <tr><td>国密算法</td><td>SM2/SM3/SM4</td><td><span class="green">Implemented</span></td></tr>
-  <tr><td>侧信道防护</td><td>SM2 TVLA N=10,000 (20/20 PASS)</td><td><span class="green">Verified</span></td></tr>
+  <tr><td>侧信道防护</td><td>SM2 TVLA N=5,000 (20/20 PASS)</td><td><span class="green">Verified</span></td></tr>
   <tr><td>FPGA 加速</td><td>NTT 256/256 &middot; WNS +0.204ns</td><td><span class="green">v5 Verified</span></td></tr>
   <tr><td>纵深防御</td><td>LookingGlass v2.2 L1-L9</td><td><span class="amber">Research (off by default)</span></td></tr>
   <tr><td>形式化验证</td><td>TLA+ Path C-2 K3 Strong (7/7 invariants)</td><td><span class="green">Verified</span></td></tr>
@@ -172,8 +172,8 @@ a:hover { text-decoration:underline; }
 <!-- TSR -->
 <h2>TSR 时间戳存证体系</h2>
 <div class="card">
-  <p><strong>76</strong> 份 RFC 3161 时间戳（DigiCert + FreeTSA 双源）</p>
-  <p>序列：<code>lg-001~071 + lg-074~078</code></p>
+  <p><strong>260</strong> 份 RFC 3161 时间戳（DigiCert + FreeTSA 双源）</p>
+  <p>序列：<code>lg-001~lg-108</code></p>
   <p>全量 Manifest：<a href="/docs/timestamp-manifest.json">timestamp-manifest.json</a> (v3, 126 条)</p>
   
 </div>
