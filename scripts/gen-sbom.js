@@ -37,7 +37,9 @@ components.push({
 // 遍历 node_modules/* 传递依赖
 for (const [k, v] of Object.entries(pkgs)) {
   if (!k || !k.startsWith('node_modules/')) continue;
-  const name = k.replace(/^node_modules\//, '').replace(/\/node_modules\/.*$/, '');
+  // 嵌套依赖（如 node_modules/A/node_modules/B）要取最后一段 B 作为真实包名；
+  // 旧逻辑 replace(/\/node_modules\/.*$/, '') 会误取父包 A（name 与 version 串位）。
+  const name = k.replace(/^node_modules\//, '').split('/node_modules/').pop();
   const version = v.version;
   if (!version || seen.has(name + '@' + version)) continue;
   seen.add(name + '@' + version);

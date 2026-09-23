@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:e05acd94-47d0-586f-88cd-fcbb3d0755a0",
+  "serialNumber": "urn:uuid:635637d1-270c-510d-845e-9a1f2eac17f5",
   "version": 1,
   "metadata": {
     "timestamp": "1970-01-01T00:00:00.000Z",
@@ -100,10 +100,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "@alicloud/darabonba-signature-util@0.0.1",
-      "name": "@alicloud/darabonba-signature-util",
+      "bom-ref": "@alicloud/darabonba-encode-util@0.0.1",
+      "name": "@alicloud/darabonba-encode-util",
       "version": "0.0.1",
-      "purl": "pkg:npm/@alicloud%2Fdarabonba-signature-util@0.0.1",
+      "purl": "pkg:npm/@alicloud%2Fdarabonba-encode-util@0.0.1",
       "licenses": [
         {
           "license": {
@@ -296,10 +296,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "@eslint-community/eslint-utils@3.4.3",
-      "name": "@eslint-community/eslint-utils",
+      "bom-ref": "eslint-visitor-keys@3.4.3",
+      "name": "eslint-visitor-keys",
       "version": "3.4.3",
-      "purl": "pkg:npm/@eslint-community%2Feslint-utils@3.4.3",
+      "purl": "pkg:npm/eslint-visitor-keys@3.4.3",
       "licenses": [
         {
           "license": {
@@ -380,10 +380,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "@eslint/eslintrc@3.1.1",
-      "name": "@eslint/eslintrc",
+      "bom-ref": "strip-json-comments@3.1.1",
+      "name": "strip-json-comments",
       "version": "3.1.1",
-      "purl": "pkg:npm/@eslint%2Feslintrc@3.1.1",
+      "purl": "pkg:npm/strip-json-comments@3.1.1",
       "licenses": [
         {
           "license": {
@@ -534,6 +534,20 @@
     },
     {
       "type": "library",
+      "bom-ref": "@noble/hashes@2.2.0",
+      "name": "@noble/hashes",
+      "version": "2.2.0",
+      "purl": "pkg:npm/@noble%2Fhashes@2.2.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "@noble/hashes@2.4.0",
       "name": "@noble/hashes",
       "version": "2.4.0",
@@ -562,10 +576,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "@noble/post-quantum@2.4.0",
-      "name": "@noble/post-quantum",
+      "bom-ref": "@noble/curves@2.4.0",
+      "name": "@noble/curves",
       "version": "2.4.0",
-      "purl": "pkg:npm/@noble%2Fpost-quantum@2.4.0",
+      "purl": "pkg:npm/@noble%2Fcurves@2.4.0",
       "licenses": [
         {
           "license": {
@@ -800,10 +814,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "body-parser@2.1.0",
-      "name": "body-parser",
+      "bom-ref": "content-type@2.1.0",
+      "name": "content-type",
       "version": "2.1.0",
-      "purl": "pkg:npm/body-parser@2.1.0",
+      "purl": "pkg:npm/content-type@2.1.0",
       "licenses": [
         {
           "license": {
@@ -1696,10 +1710,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "httpx@20.19.43",
-      "name": "httpx",
+      "bom-ref": "@types/node@20.19.43",
+      "name": "@types/node",
       "version": "20.19.43",
-      "purl": "pkg:npm/httpx@20.19.43",
+      "purl": "pkg:npm/@types%2Fnode@20.19.43",
       "licenses": [
         {
           "license": {
@@ -2018,10 +2032,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "kitx@22.20.1",
-      "name": "kitx",
+      "bom-ref": "@types/node@22.20.1",
+      "name": "@types/node",
       "version": "22.20.1",
-      "purl": "pkg:npm/kitx@22.20.1",
+      "purl": "pkg:npm/@types%2Fnode@22.20.1",
       "licenses": [
         {
           "license": {
@@ -2330,20 +2344,6 @@
       "name": "negotiator",
       "version": "1.1.0",
       "purl": "pkg:npm/negotiator@1.1.0",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "negotiator@2.1.0",
-      "name": "negotiator",
-      "version": "2.1.0",
-      "purl": "pkg:npm/negotiator@2.1.0",
       "licenses": [
         {
           "license": {
