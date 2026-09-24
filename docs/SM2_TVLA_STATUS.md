@@ -24,12 +24,12 @@ SM2 在 FIBEMATE 中用于**教学演示和交叉验证**，不推荐生产环�
 |:---|:---|:---|:---|:---|:---|:---|
 | **裸 BigInt + wNAF**（无防护） | wNAF | 5,000 | **7.42** | **3.80** | ❌ FAIL | `tvla-sm2-v4-output.txt` |
 | **v1.2 masked**（两层） | binary d-a-a | 5,000 | **1.19** | **2.06** | ✅ 5/5 PASS | `tvla-sm2-masked-report.json` |
-| **v1.3 Montgomery Ladder**（三层，归档平行版） | Ladder | 10,000 | **0**（order1） | **1.8151**（order1） | ✅ 20/20 PASS | `tvla-sm2-high-order-report.json` |
+| **v1.3 Montgomery Ladder**（三层，归档平行版） | Ladder | 5,000 | **0**（order1） | **1.2427**（order4, encrypt） | ✅ 20/20 PASS | `tvla-sm2-high-order-report.json` |
 
 **说明**：
 - 裸版 verify |t|=7.42、decrypt |t|=3.80 显示 wNAF 无防护时的泄漏；
 - v1.2 masked 把 verify 降到 1.19、decrypt 降到 2.06（5/5 PASS）；
-- Montgomery Ladder 平行版在 N=10,000 高阶矩（order 1-4）下 20/20 PASS。
+- Montgomery Ladder 平行版在 N=5,000 高阶矩（order 1-4）下 20/20 PASS。
 
 > ⚠️ **诚实声明**：当前真源 v1.4 的第三层（verify scalar blinding）的 TVLA 存证情况分三层：
 >
@@ -65,7 +65,7 @@ SM2 在 FIBEMATE 中用于**教学演示和交叉验证**，不推荐生产环�
 - `archives/sm2-versions/sm2-bigint-ec-v1.3.js`（2026-06-18）：
   **Montgomery Ladder + Scalar Masking + Projective Randomization（三重防护）**。
   这是「三层防护 + Montgomery Ladder」的完整实现，但**从未成为网站真源主线**，现已归档。
-  其 TVLA 数据见上表「v1.3 Montgomery Ladder」行（high-order report，N=10,000，20/20 PASS）。
+  其 TVLA 数据见上表「v1.3 Montgomery Ladder」行（high-order report，N=5,000，20/20 PASS）。
 
 ## 为什么不用 Montgomery Ladder 作主线？
 
