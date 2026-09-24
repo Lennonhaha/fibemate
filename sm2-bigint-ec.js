@@ -8,6 +8,7 @@
  *   1) wNAF(w=4) 预计算窗口表 — 加法轮数从 256→~51 (↓80%)
  *   2) Comb 固定基点 G 预计算缓存 — mulG/sign/verify 共享
  *   3) Montgomery 批量求逆 — 表构建仅需 1 次模逆
+ *   3b) verify scalar blinding — mask s/t 防 wNAF 时序泄漏（与网站 v1.4 一致）
  *   TVLA 防护（v1.2）全部保留：scalar masking + projective randomization
  */
 
@@ -435,8 +436,14 @@ function verify(pubHex, msgHash, sigR, sigS) {
     // sG + tPA
     // sG: 使用缓存 G 表（w=4, 零构建成本）
     // tPA: 构建一次窗口表（w=4, 单次摊销）
-    const sG_J = toJ(mulG(s));
-    const tPA_J = toJ(pointMul(t, PA));
+    // Scalar blinding (verify): mask s and t to prevent wNAF timing leakage.
+    // (s + r1*N)*G = s*G + r1*(N*G) = s*G + r1*O = s*G  (same for t*PA)
+    const rV1 = BigInt('0x' + randomBytes(8).toString('hex'));
+    const sMasked = rV1 === ZERO ? s : s + rV1 * SM2_N;
+    const rV2 = BigInt('0x' + randomBytes(8).toString('hex'));
+    const tMasked = rV2 === ZERO ? t : t + rV2 * SM2_N;
+    const sG_J = toJ(mulG(sMasked));
+    const tPA_J = toJ(pointMul(tMasked, PA));
     const Q = toA(jAdd(sG_J, tPA_J));
 
     return F.addN(e, Q.x % SM2_N) === r;
