@@ -21,9 +21,17 @@ let REF_MLKEM = null;
 const TEST_SEED = new Uint8Array(32);
 for (let i = 0; i < 32; i++) TEST_SEED[i] = i; // seed = 0x00..0x1f
 
-const PASS = (s) => { console.log(`  \x1b[32m✓\x1b[0m ${s}`); return 1; };
-const WARN = (s) => { console.log(`  \x1b[33m⚠\x1b[0m ${s}`); return 1; };
-const _FAIL = (s) => { console.log(`  \x1b[31m✗\x1b[0m ${s}`); return -1; };
+// Test outcome counters. Module scope so CHECK/PASS/WARN/FAIL mutate them
+// directly; previously `fail` was initialised and never incremented, which
+// made `process.exit(fail > 0 ? 1 : 0)` a constant-false (always exit 0).
+let pass = 0, warn = 0, fail = 0;
+
+const PASS = (s) => { pass++; console.log(`  \x1b[32m✓\x1b[0m ${s}`); };
+const WARN = (s) => { warn++; console.log(`  \x1b[33m⚠\x1b[0m ${s}`); };
+const FAIL = (s) => { fail++; console.log(`  \x1b[31m✗\x1b[0m ${s}`); };
+// Assert a boolean condition and route it to PASS/FAIL so the process exit
+// code reflects real failures (fixes the constant-false `fail > 0`).
+const CHECK = (ok, s) => { if (ok) PASS(s); else FAIL(s); };
 
 function hex(u8, n = 16) {
     return Array.from(u8.slice(0, n)).map(b => b.toString(16).padStart(2, '0')).join('');
@@ -79,8 +87,6 @@ function refEncapsulateWithSeed(pk, _seed) {
 
 function main() {
 
-    let pass = 0, warn = 0, fail = 0;
-
     console.log('ML-KEM-768 Deterministic Seed Equivalence Test');
     console.log('Seed: ' + hex(TEST_SEED, 32) + '\n');
 
@@ -92,25 +98,25 @@ function main() {
     // JS (native seeded)
     const js_kp1 = JS_MLKEM.generateKeypairWithSeed(TEST_SEED);
     const js_kp2 = JS_MLKEM.generateKeypairWithSeed(TEST_SEED);
-    pass += PASS('JS keygen reproducible (pk): ' + (hex(js_kp1.publicKey) === hex(js_kp2.publicKey)));
+    CHECK(hex(js_kp1.publicKey) === hex(js_kp2.publicKey), 'JS keygen reproducible (pk): ' + (hex(js_kp1.publicKey) === hex(js_kp2.publicKey)));
 
     // Reference (Noble ml_kem768) — reproducibility via polyfill (note: not seeded)
     const ref_kp1 = refGenerateKeypairWithSeed(TEST_SEED);
     const _ref_kp2 = refGenerateKeypairWithSeed(TEST_SEED);
-    warn += WARN('Reference keypair from OS randomness (Noble seed polyfill uses OS RNG)');
-    pass += PASS('Reference keypair created: pk=' + ref_kp1.pubkey.length + 'B sk=' + ref_kp1.secret.length + 'B');
+    WARN('Reference keypair from OS randomness (Noble seed polyfill uses OS RNG)');
+    PASS('Reference keypair created: pk=' + ref_kp1.pubkey.length + 'B sk=' + ref_kp1.secret.length + 'B');
 
     // Size verification
-    pass += PASS('JS  pk size: ' + js_kp1.publicKey.length + ' (expect 1184)');
-    pass += PASS('JS  sk size: ' + js_kp1.secretKey.length + ' (expect 2400)');
-    pass += PASS('Reference pk size: ' + ref_kp1.pubkey.length + ' (expect 1184)');
-    pass += PASS('Reference sk size: ' + ref_kp1.secret.length + ' (expect 2400)');
+    CHECK(js_kp1.publicKey.length === 1184, 'JS  pk size: ' + js_kp1.publicKey.length + ' (expect 1184)');
+    CHECK(js_kp1.secretKey.length === 2400, 'JS  sk size: ' + js_kp1.secretKey.length + ' (expect 2400)');
+    CHECK(ref_kp1.pubkey.length === 1184, 'Reference pk size: ' + ref_kp1.pubkey.length + ' (expect 1184)');
+    CHECK(ref_kp1.secret.length === 2400, 'Reference sk size: ' + ref_kp1.secret.length + ' (expect 2400)');
 
     // Non-zero verification
-    pass += PASS('JS  pk non-zero: ' + (js_kp1.publicKey.some(b => b !== 0)));
-    pass += PASS('Reference pk non-zero: ' + (ref_kp1.pubkey.some(b => b !== 0)));
-    pass += PASS('JS  sk non-zero: ' + (js_kp1.secretKey.some(b => b !== 0)));
-    pass += PASS('Reference sk non-zero: ' + (ref_kp1.secret.some(b => b !== 0)));
+    CHECK(js_kp1.publicKey.some(b => b !== 0), 'JS  pk non-zero: ' + js_kp1.publicKey.some(b => b !== 0));
+    CHECK(ref_kp1.pubkey.some(b => b !== 0), 'Reference pk non-zero: ' + ref_kp1.pubkey.some(b => b !== 0));
+    CHECK(js_kp1.secretKey.some(b => b !== 0), 'JS  sk non-zero: ' + js_kp1.secretKey.some(b => b !== 0));
+    CHECK(ref_kp1.secret.some(b => b !== 0), 'Reference sk non-zero: ' + ref_kp1.secret.some(b => b !== 0));
 
     // ========================================================
     // 2. Encaps: same pk + same seed → same result
@@ -119,13 +125,13 @@ function main() {
 
     const js_enc1 = JS_MLKEM.encapsulateWithSeed(js_kp1.publicKey, TEST_SEED);
     const js_enc2 = JS_MLKEM.encapsulateWithSeed(js_kp1.publicKey, TEST_SEED);
-    pass += PASS('JS encaps reproducible (ct): ' + (hex(js_enc1.ciphertext) === hex(js_enc2.ciphertext)));
-    pass += PASS('JS encaps reproducible (ss): ' + (hex(js_enc1.sharedSecret) === hex(js_enc2.sharedSecret)));
+    CHECK(hex(js_enc1.ciphertext) === hex(js_enc2.ciphertext), 'JS encaps reproducible (ct): ' + (hex(js_enc1.ciphertext) === hex(js_enc2.ciphertext)));
+    CHECK(hex(js_enc1.sharedSecret) === hex(js_enc2.sharedSecret), 'JS encaps reproducible (ss): ' + (hex(js_enc1.sharedSecret) === hex(js_enc2.sharedSecret)));
 
     const ref_enc1 = refEncapsulateWithSeed(ref_kp1.pubkey, TEST_SEED);
     const _ref_enc2 = refEncapsulateWithSeed(ref_kp1.pubkey, TEST_SEED);
-    warn += WARN('Reference encapsulate from OS randomness (Noble no seeded encaps)');
-    pass += PASS('Reference encaps created: ct=' + ref_enc1.ciphertext.length + 'B ss=' + ref_enc1.sharedSecret.length + 'B');
+    WARN('Reference encapsulate from OS randomness (Noble no seeded encaps)');
+    PASS('Reference encaps created: ct=' + ref_enc1.ciphertext.length + 'B ss=' + ref_enc1.sharedSecret.length + 'B');
 
     // ========================================================
     // 3. Round-trip: seed_keygen → encaps → decaps
@@ -133,10 +139,10 @@ function main() {
     console.log('\n=== 3. Seeded Round-trip ===');
 
     const js_dec = JS_MLKEM.decapsulate(js_kp1.secretKey, js_enc1.ciphertext);
-    pass += PASS('JS  seeded encap→decap match: ' + (hex(js_dec) === hex(js_enc1.sharedSecret)));
+    CHECK(hex(js_dec) === hex(js_enc1.sharedSecret), 'JS  seeded encap→decap match: ' + (hex(js_dec) === hex(js_enc1.sharedSecret)));
 
     const ref_dec = REF_MLKEM.decapsulate(ref_enc1.ciphertext, ref_kp1.secret);
-    pass += PASS('Reference encap→decap match: ' + (Buffer.from(ref_dec).equals(Buffer.from(ref_enc1.sharedSecret))));
+    CHECK(Buffer.from(ref_dec).equals(Buffer.from(ref_enc1.sharedSecret)), 'Reference encap→decap match: ' + Buffer.from(ref_dec).equals(Buffer.from(ref_enc1.sharedSecret)));
 
     // ========================================================
     // 4. Cross-mode: deterministic keygen + random encaps
@@ -146,12 +152,12 @@ function main() {
     const js_kp_seeded = JS_MLKEM.generateKeypairWithSeed(TEST_SEED);
     const js_enc_rand = JS_MLKEM.encapsulate(js_kp_seeded.publicKey);
     const js_dec_rand = JS_MLKEM.decapsulate(js_kp_seeded.secretKey, js_enc_rand.ciphertext);
-    pass += PASS('JS  seeded-kg + rand-encap round-trip: ' + (hex(js_dec_rand) === hex(js_enc_rand.sharedSecret)));
+    CHECK(hex(js_dec_rand) === hex(js_enc_rand.sharedSecret), 'JS  seeded-kg + rand-encap round-trip: ' + (hex(js_dec_rand) === hex(js_enc_rand.sharedSecret)));
 
     const ref_kp_seeded = refGenerateKeypairWithSeed(TEST_SEED);
     const ref_enc_rand = REF_MLKEM.encapsulate(ref_kp_seeded.pubkey);
     const ref_dec_rand = REF_MLKEM.decapsulate(ref_enc_rand.ciphertext, ref_kp_seeded.secret);
-    pass += PASS('Reference rand-encap round-trip: ' + (Buffer.from(ref_dec_rand).equals(Buffer.from(ref_enc_rand.sharedSecret))));
+    CHECK(Buffer.from(ref_dec_rand).equals(Buffer.from(ref_enc_rand.sharedSecret)), 'Reference rand-encap round-trip: ' + Buffer.from(ref_dec_rand).equals(Buffer.from(ref_enc_rand.sharedSecret)));
 
     // ========================================================
     // 5. Different seeds → different outputs
@@ -161,7 +167,7 @@ function main() {
     const seed2 = new Uint8Array(32);
     seed2[0] = 0xff;
     const js_kp_seed2 = JS_MLKEM.generateKeypairWithSeed(seed2);
-    pass += PASS('JS  pk differs by seed: ' + (hex(js_kp_seed2.publicKey) !== hex(js_kp1.publicKey)));
+    CHECK(hex(js_kp_seed2.publicKey) !== hex(js_kp1.publicKey), 'JS  pk differs by seed: ' + (hex(js_kp_seed2.publicKey) !== hex(js_kp1.publicKey)));
 
     // ========================================================
     // 6. Cross-implementation (预期不兼容，FIPS 203 §12.1)
@@ -169,8 +175,8 @@ function main() {
     console.log('\n=== 6. Cross-implementation compatibility ===');
     console.log('  (FIPS 203 §12.1: internal NTT rep differs — binary mismatch expected)');
 
-    warn += WARN('JS-seeded encap→Reference-decap: expected binary mismatch');
-    warn += WARN('Reference-seeded encap→JS-decap: expected binary mismatch');
+    WARN('JS-seeded encap→Reference-decap: expected binary mismatch');
+    WARN('Reference-seeded encap→JS-decap: expected binary mismatch');
 
     // ========================================================
     // Summary
