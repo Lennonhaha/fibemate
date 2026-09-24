@@ -6,49 +6,72 @@
 
 SM2 在 FIBEMATE 中用于**教学演示和交叉验证**，不推荐生产环境直接使用纯 JS 实现。
 
-## TVLA 结果总表（v1.3 Montgomery Ladder 终版）
+## 当前实现（唯一真源）
 
-| 操作 | 后端 | N | \|t\| | 阈值 | 结论 |
-|:---|:---|:---|:---|:---|:---|
-| encrypt | BigInt | 5,000 | 2.31 | 4.5 | ✅ PASS |
-| decrypt | BigInt | 5,000 | **0.16** | 4.5 | ✅ PASS |
-| sign | BigInt | 5,000 | 2.89 | 4.5 | ✅ PASS |
-| verify | BigInt | 5,000 | **0.10** | 4.5 | ✅ PASS |
-| keygen | BigInt | 5,000 | 3.15 | 4.5 | ✅ PASS |
+- **真源文件**：`www/crypto/sm2-bigint-ec.js` · **v1.4**（2026-07-23）
+- **标量乘算法**：wNAF(w=4) + Comb 固定基点预计算缓存
+- **侧信道防护（三层）**：
+  1. Scalar masking — 标量 k 加随机掩码（k' = k + r·N，不做 mod N）
+  2. Projective randomization — Jacobian 坐标随机 z 起点
+  3. **verify scalar blinding** — verify 阶段对 s、t 做标量盲化，抑制 wNAF 时序泄漏
 
-**总计**: 5/5 PASS（100%）· SM2 BigInt v1.3 三重防护
+> 注：v1.4 的第三层防护是 **verify scalar blinding**（commit `f163972e`），
+> **不是** Montgomery Ladder。Montgomery Ladder 三层版本只在历史归档中（见下文「归档版本」）。
 
-### 演化路径（修复时间线）
+## TVLA 结果总表（按实现版本，数据均来自 evidence 可溯报告）
 
-| 版本 | verify \|t\| | decrypt \|t\| | 状态 |
-|:---|:---|:---|:---|
-| v3 裸 | 7.42 | 8.22 | ❌ FAIL |
-| v1.2 Scalar Masking | 1.19 | 2.06 | ⚠️ 部分 |
-| **v1.3 Montgomery Ladder** | **0.10** | **0.16** | **✅ PASS** |
+| 实现版本 | 标量乘 / 防护 | N | verify \|t\| | decrypt \|t\| | 结论 | 报告来源 |
+|:---|:---|:---|:---|:---|:---|:---|
+| **裸 BigInt + wNAF**（无防护） | wNAF | 5,000 | **7.42** | **3.80** | ❌ FAIL | `tvla-sm2-v4-output.txt` |
+| **v1.2 masked**（两层） | binary d-a-a | 5,000 | **1.19** | **2.06** | ✅ 5/5 PASS | `tvla-sm2-masked-report.json` |
+| **v1.3 Montgomery Ladder**（三层，归档平行版） | Ladder | 10,000 | **0**（order1） | **1.8151**（order1） | ✅ 20/20 PASS | `tvla-sm2-high-order-report.json` |
 
-**核心改进**: wNAF 窗口乘 → Montgomery Ladder（常数时间，固定迭代次数，无条件 ADD+DOUBLE）
+**说明**：
+- 裸版 verify |t|=7.42、decrypt |t|=3.80 显示 wNAF 无防护时的泄漏；
+- v1.2 masked 把 verify 降到 1.19、decrypt 降到 2.06（5/5 PASS）；
+- Montgomery Ladder 平行版在 N=10,000 高阶矩（order 1-4）下 20/20 PASS。
 
-**三重防护**: Scalar Masking + Projective Randomization (Z-blinding) + Montgomery Ladder
+> ⚠️ **诚实声明**：当前真源 v1.4 的第三层（verify scalar blinding）的 TVLA 存证情况分三层：
+>
+> 1. **修复前诊断（lg-097，2026-07-23）**：`scripts/tvla/gradient-results.txt` 证明 verify 有 wNAF 时序泄漏
+>    （`|t|` 随 √N 增长，R²=0.956，N≈1749 处 `|t|` 越阈值 4.5）——这正是引入 verify blinding 的动机；
+> 2. **修复代码 + 验证脚本（lg-098，2026-07-23）**：`scripts/fix-verify-blinding.cjs`（第三层 blinding 实现）
+>    与 `scripts/verify-gradient-quick.cjs`（修复后 gradient 扫描脚本）均已 TSR 时间戳存证；
+> 3. **缺失：修复后的验证运行输出未落成 JSON 报告**——`verify-gradient-quick.cjs` 跑完会输出
+>    `ALL |t| <= 4.5 — verify leak CLOSED`，但该运行结果没有存盘成正式 JSON（如 evidence/tvla/ 下的报告），
+>    只有脚本本体、无结果文件。
+>
+> 故 v1.4 的 verify blinding 属「有修复前诊断 + 有修复代码/脚本存证 + 缺修复后正式 JSON 结果」状态。
+>
+> **待办（P2）**：跑 `verify-gradient-quick.cjs`，把「修复后」的 verify gradient 结果落成正式 JSON 报告
+> （进 evidence/tvla/，如 `tvla-sm2-v1.4-verify-blinding-report.json`，并做 TSR 存证）。
 
-## 修复路径（v1.2 → v1.3）
+## 演化路径（修复时间线，已修正方向）
 
-### 阶段 1: Scalar Masking + Projective Randomization (v1.2)
-- **手段**: 每个标量 k 拆分为 k = k_mask + k_secret；点乘用 (k_mask · P + k_secret · P) 形式计算
-- **效果**: 把单一可观测的标量泄漏分散到两个独立均匀分布上
-- **结果**: verify |t| 从 7.42 → 1.19（仍高于阈值 4.5，但显著下降）
-- **残余泄漏**: wNAF 窗口乘的 ADD/DOUBLE 迭代次数依赖标量位模式
+| 版本 | 标量乘算法 | verify \|t\| | decrypt \|t\| | 状态 |
+|:---|:---|:---|:---|:---|
+| v3 裸（无防护） | wNAF | 7.42 | 3.80 | ❌ FAIL |
+| v1.2 masked | binary double-and-add | 1.19 | 2.06 | ✅ 5/5 PASS |
+| v1.3 真源 | wNAF(w=4) + Comb | （保留 v1.2 防护） | （保留 v1.2 防护） | ✅ 性能优化 |
+| v1.4 真源 | wNAF + verify blinding | 修复前诊断见 lg-097；修复后输出未落 JSON | 同左 | ⚠️ 缺修复后正式报告 |
 
-### 阶段 2: Montgomery Ladder (v1.3 终版)
-- **手段**: 替换 wNAF 窗口乘为 Montgomery Ladder — 固定迭代次数、无条件 ADD+DOUBLE、与标量位无关
-- **算法**: R0=O, R1=P; for bit in k (MSB→LSB): swap(if bit=0); R0,R1 = R0+R1, R0+R1
-- **效果**: 迭代次数 = 256 (固定), 不分支, 不依赖秘密
-- **结果**: verify |t| 1.19 → 0.10 · decrypt |t| 2.06 → 0.16 — 全部 PASS
-- **副作用**: 性能下降 ~3.8x（528s for N=5,000），安全性优先
+**核心改进方向**（v1.2 → v1.4）：
+- **v1.2**：加入 Scalar Masking + Projective Randomization，verify 7.42 → 1.19；
+- **v1.3**：性能优化，binary double-and-add → wNAF(w=4) + Comb（加法轮数 256 → ~51），防护保留；
+- **v1.4**：补 verify scalar blinding，抑制 wNAF 在 verify 阶段的时序泄漏。
 
-### 为什么 Montgomery Ladder 能修？
-- wNAF: 平均迭代次数依赖 k 的非零位密度（|t|=6-7 来自这个差异）
-- Montgomery: 恒定 256 次迭代 + 1 次条件 swap（swap 依赖 k 但与 P 无关）
-- 验证: Z-blinding 让 swap 操作的数据依赖也消失 → |t| < 1
+## 归档版本（历史，非当前真源）
+
+- `archives/sm2-versions/sm2-bigint-ec-v1.3.js`（2026-06-18）：
+  **Montgomery Ladder + Scalar Masking + Projective Randomization（三重防护）**。
+  这是「三层防护 + Montgomery Ladder」的完整实现，但**从未成为网站真源主线**，现已归档。
+  其 TVLA 数据见上表「v1.3 Montgomery Ladder」行（high-order report，N=10,000，20/20 PASS）。
+
+## 为什么不用 Montgomery Ladder 作主线？
+
+- FIBEMATE 是教育/验证平台，v1.3 真源选择 wNAF+Comb 是**性能优先**（Add 256→~51，sign 3-4x，verify 2-3x）；
+- Montgomery Ladder 代价是 ~3.8x 性能下降（528s for N=5,000），对教学演示场景收益有限；
+- 当前 v1.4 用 verify scalar blinding 替代 Ladder 来抑制 wNAF 时序泄漏，保留了性能优势。
 
 ## 为什么不做 WASM 重写？
 
@@ -58,7 +81,6 @@ SM2 在 FIBEMATE 中用于**教学演示和交叉验证**，不推荐生产环�
 | 教学价值 | 这些 FAIL 本身就是教学内容 — 展示「纯 JS 密码学的物理边界」 |
 | 开源策略 | v3.x 聚焦可复现+可审计，WASM 引入新工具链会稀释这一定位 |
 | 留给社区 | 开源后社区可贡献 Rust/WASM 实现，更有叙事意义 |
-
 
 ---
 
@@ -74,7 +96,6 @@ SM2 在 FIBEMATE 中用于**教学演示和交叉验证**，不推荐生产环�
 | Phase 3 | 签名：SM2 签名（e || r || s 格式） | ⏳ |
 | Phase 4 | TVLA：高阶矩验证，|t| < 4.5 全阶通过 | ⏳ |
 
-
 ## 诚实声明
 
 > SM2 在 FIBEMATE 中**仅用于教学/验证/对比研究**。
@@ -83,4 +104,4 @@ SM2 在 FIBEMATE 中用于**教学演示和交叉验证**，不推荐生产环�
 
 ---
 
-*最后更新：2026-08-05 · FIBEMATE v3.3.0 · 开源 GPL-3.0*
+*最后更新：2026-09-24 · FIBEMATE v3.3.0 · 开源 GPL-3.0*
