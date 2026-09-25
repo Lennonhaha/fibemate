@@ -84,8 +84,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="${{ github.ref_name }}"
-          gh release view "$TAG" --json tagName >/dev/null 2>&1
-          rc=$?
+          rc=0
+          gh release view "$TAG" --json tagName >/dev/null 2>&1 || rc=$?
           if [ "$rc" -eq 0 ]; then
             echo "release $TAG exists; uploading assets"
           elif [ "$rc" -eq 1 ]; then
