@@ -1,6 +1,6 @@
 # FIBEMATE PQC Bench — 性能基准镜像
 # 设计文档: docs/product-designs/08-pqc-docker.md §7.3
-FROM node:22-slim
+FROM node:22-slim@sha256:43ac6c60b8f89723f746e8a92ce91abd5017e627ce1ddfe4238355d3a30b772c
 
 LABEL org.fibemate.image="pqc-bench"
 LABEL org.fibemate.version="3.3.0"

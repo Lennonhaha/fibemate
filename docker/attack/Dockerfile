@@ -1,6 +1,6 @@
 # FIBEMATE PQC Attack — 攻防沙盒镜像（仅供本地研究）
 # 设计文档: docs/product-designs/08-pqc-docker.md §7.2
-FROM python:3.12-slim
+FROM python:3.12-slim@sha256:2f17fc044b579bab302c2e8054d3a686e2cb9a83de48e70534b94cd8ebbe06a9
 
 LABEL org.fibemate.image="pqc-attack"
 LABEL org.fibemate.warning="FOR LOCAL RESEARCH ONLY — NOT FOR PRODUCTION"
