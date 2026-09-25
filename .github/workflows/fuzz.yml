@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: GPL-3.0-only
+name: Fuzz
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * *'   # daily 06:00 UTC
+
+permissions:
+  contents: read
+
+jobs:
+  jazzer:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        harness:
+          - harness-pqc-kem-generateKeypair
+          - harness-pqc-kem-encapsulate
+          - harness-pqc-kem-decapsulate
+          - harness-pqc-kem-compress
+          - harness-pqc-kem-shake128
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
+        with:
+          node-version: 22
+
+      - run: npm ci --ignore-scripts
+
+      - name: Fuzz ${{ matrix.harness }}
+        run: npx jazzer fuzz/${{ matrix.harness }}.js -- -runs=10000 -max_len=4096
+        timeout-minutes: 5
+
+  # Smoke test: verify all harnesses load without error
+  load-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@cdca7365b2dadb8aad0a33bc7601856ffabcc48e # v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - name: Verify CJS harnesses load
+        run: |
+          for f in fuzz/harness-pqc-kem-*.js; do
+            echo "Loading $f"
+            node -e "require('./$f')"
+          done
+      - name: Verify ESM harnesses load
+        run: |
+          for f in fuzz/harness-fml-dsa-*.mjs; do
+            echo "Loading $f"
+            node --input-type=module -e "await import('./$f')"
+          done

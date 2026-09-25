@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: GPL-3.0-only
+# ClusterFuzzLite project configuration
+
+project_name: fibemate
+language: node_js
+fuzzing_engines:
+  - libfuzzer
+sanitizers:
+  - undefined
+  - address
