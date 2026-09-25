@@ -12,6 +12,13 @@
 
 const crypto = require('crypto');
 
+// Node <19 does not expose webcrypto as a global; @noble/post-quantum expects
+// crypto.getRandomValues at module init. Polyfill from node:crypto webcrypto.
+// No-op on Node >=19 where globalThis.crypto already exists.
+if (!globalThis.crypto || !globalThis.crypto.getRandomValues) {
+    globalThis.crypto = require('node:crypto').webcrypto;
+}
+
 // Load JS time-domain implementation (repo-relative from test/)
 const JS_MLKEM = require('../src/crypto/ml-kem-768-td.js');
 
