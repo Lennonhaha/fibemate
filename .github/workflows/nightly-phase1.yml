@@ -40,7 +40,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install npm deps
-        run: npm install
+        run: npm ci
 
       - name: ESLint strict check
         run: npm run lint
@@ -68,7 +68,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
 
       - name: Install npm deps
-        run: npm install
+        run: npm ci
 
       - name: Cross-lang seed test
         run: node test/test-cross-lang-seeded.js
