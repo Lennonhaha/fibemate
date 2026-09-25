@@ -30,6 +30,9 @@ updates:
       - dependency-name: "eslint"
         # ESLint 10 is a major version with breaking rule changes.
         # Pre-8/31 launch stability: defer to post-launch review.
+    groups:
+     npm-deps:
+      patterns: ["*"]
 
   # GitHub Actions
 
@@ -63,9 +66,12 @@ updates:
       day: "saturday"
       time: "09:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 5
     labels:
       - "dependencies"
       - "ci"
     commit-message:
       prefix: "chore(ci)"
+    groups:
+     actions-ecosystem:
+      patterns: ["*"]
