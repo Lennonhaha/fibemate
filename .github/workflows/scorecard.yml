@@ -1,9 +1,6 @@
 name: OpenSSF Scorecard
 
-permissions:
-  contents: read
-  actions: read
-  id-token: write
+permissions: read-all
 
 on:
   workflow_dispatch:
@@ -18,7 +15,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-      security-events: write
       id-token: write
     steps:
       - name: Harden Runner
