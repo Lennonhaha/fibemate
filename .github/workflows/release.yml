@@ -26,6 +26,9 @@ jobs:
 
   release-check:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
 
@@ -76,12 +79,25 @@ jobs:
             --bundle RELEASE_CHECKSUMS.bundle \
             RELEASE_CHECKSUMS.txt
 
-      - name: Upload release checksums + signature
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
-        with:
-          name: release-checksums
-          path: |
-            RELEASE_CHECKSUMS.txt
-            RELEASE_CHECKSUMS.sig
-            RELEASE_CHECKSUMS.pem
-            RELEASE_CHECKSUMS.bundle
+      - name: Upload signed assets to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ github.ref_name }}"
+          gh release view "$TAG" --json tagName >/dev/null 2>&1
+          rc=$?
+          if [ "$rc" -eq 0 ]; then
+            echo "release $TAG exists; uploading assets"
+          elif [ "$rc" -eq 1 ]; then
+            echo "release $TAG not found; creating"
+            gh release create "$TAG" --title "$TAG" --generate-notes
+          else
+            echo "gh release view failed (exit $rc); aborting"
+            exit 1
+          fi
+          gh release upload "$TAG" \
+            RELEASE_CHECKSUMS.txt \
+            RELEASE_CHECKSUMS.sig \
+            RELEASE_CHECKSUMS.pem \
+            RELEASE_CHECKSUMS.bundle \
+            --clobber
