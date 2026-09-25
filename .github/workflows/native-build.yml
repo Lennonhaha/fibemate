@@ -1,5 +1,8 @@
 name: Native Addon Build
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [main]
