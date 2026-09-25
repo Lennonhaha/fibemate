@@ -21,12 +21,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /opt/fibemate-full
 COPY package*.json ./
-RUN npm ci --ignore-scripts || npm install --ignore-scripts
+RUN npm ci --ignore-scripts
 COPY . .
 
 # 子服务依赖（各自 lockfile 已生成）
-RUN [ -f www/package.json ] && (cd www && npm ci --ignore-scripts || npm install --ignore-scripts) || true
-RUN [ -f reg-server/package.json ] && (cd reg-server && npm ci --ignore-scripts || npm install --ignore-scripts) || true
+RUN [ -f www/package.json ] && (cd www && npm ci --ignore-scripts) || true
+RUN [ -f reg-server/package.json ] && (cd reg-server && npm ci --ignore-scripts) || true
 
 # 可选：原生 ML-KEM 插件构建（ADDON_DIR 提供源码时启用）
 # ARG ADDON_DIR=
