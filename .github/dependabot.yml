@@ -8,7 +8,7 @@ updates:
       day: "saturday"
       time: "09:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "npm"
@@ -30,6 +30,12 @@ updates:
       - dependency-name: "eslint"
         # ESLint 10 is a major version with breaking rule changes.
         # Pre-8/31 launch stability: defer to post-launch review.
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+        # @eslint/js 10 has breaking peer dep change on eslint 10.
+        # Major bumps need manual review first.
+      - dependency-name: "express"
+        update-types: ["version-update:semver-major"]
     groups:
      npm-deps:
       patterns: ["*"]
@@ -43,7 +49,7 @@ updates:
       day: "saturday"
       time: "09:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "ci"
@@ -61,12 +67,17 @@ updates:
       day: "saturday"
       time: "09:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "docker"
     commit-message:
       prefix: "chore(docker)"
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+        # Node major version bumps cross 6+ versions (20 -> 26).
+        # Need manual compatibility testing before upgrading.
     groups:
       docker-base:
         patterns: ["*"]
@@ -78,12 +89,15 @@ updates:
       day: "saturday"
       time: "09:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "docker"
     commit-message:
       prefix: "chore(docker)"
+    ignore:
+      - dependency-name: "python"
+        update-types: ["version-update:semver-major"]
     groups:
       docker-attack:
         patterns: ["*"]
@@ -95,12 +109,17 @@ updates:
       day: "saturday"
       time: "09:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "docker"
     commit-message:
       prefix: "chore(docker)"
+    ignore:
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
+        # Node major version bumps cross 6+ versions (20 -> 26).
+        # Need manual compatibility testing before upgrading.
     groups:
       docker-bench:
         patterns: ["*"]
@@ -112,12 +131,17 @@ updates:
       day: "saturday"
       time: "09:00"
       timezone: "Asia/Shanghai"
-    open-pull-requests-limit: 3
+    open-pull-requests-limit: 2
     labels:
       - "dependencies"
       - "docker"
     commit-message:
       prefix: "chore(docker)"
+    ignore:
+      - dependency-name: "nginx"
+        update-types: ["version-update:semver-major"]
+        # nginx 2.x is a major version with breaking config changes.
+        # Manual compatibility testing required before upgrading.
     groups:
       docker-learn:
         patterns: ["*"]
