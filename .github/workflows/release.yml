@@ -51,10 +51,10 @@ jobs:
         run: |
           node -e "
             const m = require('./www/crypto/ml-kem-768.js');
-            const kp = m.keygen();
-            const ct = m.encaps(kp[0]);
-            const ss = m.decaps(ct, kp[1]);
-            console.log('ML-KEM-768: ?', kp[0].length+'B pk |', ss.length+'B shared');
+            const kp = m.generateKeypair();
+            const enc = m.encapsulate(kp.publicKey);
+            const ss = m.decapsulate(enc.ciphertext, kp.secretKey);
+            console.log('ML-KEM-768: OK |', kp.publicKey.length+'B pk |', ss.length+'B shared');
           "
 
       - name: Generate SHA256 manifest
