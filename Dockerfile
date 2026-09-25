@@ -12,7 +12,7 @@
 #   generateKeypair/encapsulate/decapsulate），进程不再退出。
 #   如需更高性能，可在 ADDON_DIR 提供源码并在构建期执行 addon 构建。
 # =============================================================================
-FROM node:20.18.1-bookworm@sha256:968ca0550acc7589a8b1324401ec6e39ace53b2c82d2aed3a278e9ff491c2b1c AS build
+FROM node:20.20.2-bookworm@sha256:8f693eaa7e0a8e71560c9a82b55fd54c2ae920a2ba5d2cde28bac7d1c01c9ba5 AS build
 
 # 构建期工具（better-sqlite3 / 原生插件需要）
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -35,7 +35,7 @@ RUN [ -f reg-server/package.json ] && (cd reg-server && npm ci --ignore-scripts)
 #     fi
 
 # ---- 运行时 ----
-FROM node:20.18.1-bookworm@sha256:968ca0550acc7589a8b1324401ec6e39ace53b2c82d2aed3a278e9ff491c2b1c AS runtime
+FROM node:20.20.2-bookworm@sha256:8f693eaa7e0a8e71560c9a82b55fd54c2ae920a2ba5d2cde28bac7d1c01c9ba5 AS runtime
 RUN apt-get update && apt-get install -y --no-install-recommends \
         nginx \
     && rm -rf /var/lib/apt/lists/* \
