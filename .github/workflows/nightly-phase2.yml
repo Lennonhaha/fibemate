@@ -36,7 +36,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: npm install
+      - run: npm ci
       - name: Full KAT 10,000 rounds
         run: node scripts/kat-quick.js --samples 10000
 
@@ -48,7 +48,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: npm install
+      - run: npm ci
       - name: TVLA summary check
         shell: bash
         run: |
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: ${{ env.NODE_VERSION }}
-      - run: npm install
+      - run: npm ci
       - name: Performance gate
         run: node scripts/perf-gate.js
         # FAIL if p95 latency degrades >20%
@@ -105,7 +105,7 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
         with:
           node-version: 22
-      - run: npm install
+      - run: npm ci
       - name: Build liboqs from source
         run: |
           sudo apt-get update -qq

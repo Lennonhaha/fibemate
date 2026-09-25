@@ -44,7 +44,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
       - name: ML-KEM-768 full KAT — 10,000 rounds roundtrip + uniqueness
         run: node scripts/kat-quick.js --samples 10000
       - name: FIPS 203 KAT .rsp header + vector presence
@@ -80,7 +80,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
       - name: SM2 sign/verify + encrypt/decrypt (100+100)
         run: node scripts/ci-gm-sm2.cjs
       - name: SM3 hash (30)
@@ -97,7 +97,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
       - name: Keccak/SHA-3/SHAKE vectors
         run: node test/test-keccak.js
       - name: FIPS 140-3 §11.9 integrity baseline + harness
