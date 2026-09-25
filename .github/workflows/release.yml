@@ -74,9 +74,10 @@ jobs:
       - name: Sign release checksums (keyless)
         run: |
           cosign sign-blob --yes \
+            --new-bundle-format=false \
+            --use-signing-config=false \
             --output-signature RELEASE_CHECKSUMS.sig \
             --output-certificate RELEASE_CHECKSUMS.pem \
-            --bundle RELEASE_CHECKSUMS.bundle \
             RELEASE_CHECKSUMS.txt
 
       - name: Upload signed assets to release
@@ -99,5 +100,4 @@ jobs:
             RELEASE_CHECKSUMS.txt \
             RELEASE_CHECKSUMS.sig \
             RELEASE_CHECKSUMS.pem \
-            RELEASE_CHECKSUMS.bundle \
             --clobber
