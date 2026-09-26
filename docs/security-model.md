@@ -68,6 +68,7 @@
 |------|------|------|
 | Rust (LG v2.2) | 37/37 unit | ✅ |
 | Rust (LG v2.2.3) | 61/61 (含冷热分离) | ✅ |
+| Rust (LG v2.4.0) | 36 passed, 2 ignored (FIPS 202 KAT) | ✅ |
 | Node.js (Path C-2) | 5/5 E2E | ✅ |
 | Node.js (reg-server IANA) | 10/10 E2E | ✅ |
 | FPGA (NTT core) | 256/256 hardware loopback | ✅ |

@@ -63,7 +63,7 @@ provide **no cryptographic security guarantees** and are default-off.
 |---|---|
 | Third-party audit | **Not performed** — RFP planned (Q4 2026) |
 | Physical TVLA (ChipWhisperer) | Planned — Q4 2026 |
-| Fuzz (OSS-Fuzz continuous) | Not running (post-8.31 item) |
+| Fuzz | ClusterFuzzLite deployed (17 harnesses, CI-integrated); OSS-Fuzz application planned |
 | Dependency risk | `@noble/curves` (classical, quantum-vulnerable — acceptable for
   classical hybrid leg); `bcryptjs` legacy — see SECURITY.md §Dependency Risk |
 | Coverage ≥ 95% | P3 (c8 + nyc instrumentation) |
