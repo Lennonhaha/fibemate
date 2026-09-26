@@ -1,0 +1,21 @@
+# SPDX-License-Identifier: GPL-3.0-only
+name: OSV-Scan
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  osv-scan:
+    uses: google/osv-scanner-action/.github/workflows/osv-scanner-reusable.yml@8ac9e5ce44cc7178e0e04229a91bdcc003166e57 # v2.6.0
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
