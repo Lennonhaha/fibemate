@@ -47,7 +47,7 @@
 
 <header>
   <h1>SM2 逐级性能优化：从 jsbn 基线到 wNAF 的 6 阶段攀升</h1>
-  <p class="meta"><strong>FIBEMATE 技术博客</strong> · 2026-06-16 · ~2700 字 · 测试环境：Node.js v22.16, Intel Xeon Ice Lake @ 2.50GHz</p>
+  <p class="meta"><strong>FIBEMATE 技术博客</strong> · 2026-07-09 · ~2700 字 · 最后更新 2026-08-31 · 测试环境：Node.js v22.16, Intel Xeon Ice Lake @ 2.50GHz</p>
 </header>
 
 <h2>摘要</h2>
@@ -242,7 +242,7 @@ const T = getGTable();  // O(1) 缓存命中
 <ul>
   <li>scalar masking（k+rN）在 wNAF 数字生成之前执行，两套防护完全独立</li>
   <li>射影随机化（随机 z 坐标起始）继续阻止 V8 JIT 特化</li>
-  <li>v1.3 高阶 <strong>TVLA 20/20（N=5,000, max|t|=1.24）</strong> 结论在 v1.3 中继续成立</li>
+  <li>v1.3 高阶 <strong>TVLA 20/20（N=5,000, max|t|=1.24，与 v1.2 相同口径）</strong> 结论在 v1.3 中继续成立</li>
 </ul>
 
 <h4>版本历史</h4>
@@ -250,8 +250,8 @@ const T = getGTable();  // O(1) 缓存命中
   <thead><tr><th>版本</th><th>日期</th><th>主要变更</th><th>测试状态</th></tr></thead>
   <tbody>
     <tr><td>v1.0</td><td>2026-06-16</td><td>jsbn → Native BigInt（7.3× 底层）</td><td>KAT 通过</td></tr>
-    <tr><td>v1.1</td><td>2026-06-17</td><td>Jacobian 投影坐标 + a=-3 倍点优化</td><td>TVLA v1</td></tr>
-    <tr><td>v1.2</td><td>2026-06-18</td><td>wNAF(w=4) + scalar masking + 射影随机化</td><td>TVLA v3 20/20</td></tr>
+    <tr><td>v1.1</td><td>2026-06-17</td><td>Jacobian 投影坐标 + a=-3 倍点优化</td><td>TVLA 10/10 (N=2,000)</td></tr>
+    <tr><td>v1.2</td><td>2026-06-18</td><td>wNAF(w=4) + scalar masking + 射影随机化</td><td>TVLA 20/20 (N=5,000)</td></tr>
     <tr><td><strong>perf v1.3</strong></td><td><strong>2026-07-09</strong></td><td><strong>Comb G 表全局缓存 + Montgomery 批量求逆</strong></td><td>10/10 功能回归 + lg-058</td></tr>
   </tbody>
 </table>
@@ -298,7 +298,7 @@ const T = getGTable();  // O(1) 缓存命中
       <p style="margin:0;font-size:0.82rem;color:#c9d1d9;line-height:1.7;">
         本文优化方法全部位于 JavaScript 层面（V8 引擎）。纯 JS 实现的 SM2 密钥生成 ~1.5ms、签名 ~4.9ms 已接近 V8 BigInt + GC 的天花板——wNAF 理论 1.3× 加速被 GC 压力吃掉 ~10%（实测 1.16×）即是例证。<br><br>
         <strong style="color:#f0a040;">为什么还做纯 JS 优化？</strong> 目标场景是<strong style="color:#00E5C3;">禁用二进制插件的环境</strong>（如微信小程序、政务网页、部分安全桌面），无法使用 WASM 或 Native Addon。在这些环境中，pure-JS SM2 是唯一选项，本文的优化方法提供 3–8× 的实际可用性改进。<br><br>
-        <strong>更高性能路径</strong>：WASM（<span>Rust pq-wasm（2026-08-31 开源）</span>，opt-level=s + lto + strip，预期 +20–40%）或 C Native Addon（另见<a href="/security.html">安全页面</a>中 ML-KEM-768 的 C Addon AVX2 方案：keygen 48µs / encaps 51µs）。
+        <strong>更高性能路径</strong>：WASM（<span>Rust pq-wasm（2026-08-31 开源）</span>，opt-level=s + lto + strip，预期 +20–40%（待 WASM 实测确认）或 C Native Addon（另见<a href="/security.html">安全页面</a>中 ML-KEM-768 的 C Addon AVX2 方案：keygen 48µs / encaps 51µs）。
       </p>
     </div>
 
@@ -315,7 +315,7 @@ const T = getGTable();  // O(1) 缓存命中
 </tbody>
 </table>
 
-<p class="dim"><strong>验签瓶颈</strong>：一次一般点乘（verify 中的 e·s⁻¹·PA）无法利用 G 表；v1.3 的 Comb 仅加速 G 侧，verify 剩余 ~2× 来自 wNAF 优化。WASM 移植可将 verify 进一步提升至 10–15ms 级别。</p>
+<p class="dim"><strong>验签瓶颈</strong>：一次一般点乘（verify 中的 e·s⁻¹·PA）无法利用 G 表；v1.3 的 Comb 仅加速 G 侧，verify 剩余 ~2× 来自 wNAF 优化。WASM 移植预期可将 verify 进一步提升至 10–15ms 级别。</p>
 
 <h2>5. 经验总结</h2>
 
@@ -386,7 +386,7 @@ const T = getGTable();  // O(1) 缓存命中
         </tbody>
       </table>
       <p style="margin:0.8rem 0 0;font-size:0.78rem;color:#8b949e;">
-        🎉 优化版 SM2 已于 2026-06-16 通过 TVLA v2（N=2,000, 10/10 全部通过）。完整 TVLA 演进史见 <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">SM2 TVLA 侧信道安全分析报告</a>。欢迎安全研究者独立复现。
+        🎉 优化版 SM2 已于 2026-06-16 通过 TVLA (N=2,000, 10/10 全部通过）。完整 TVLA 演进史见 <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">SM2 TVLA 侧信道安全分析报告</a>。欢迎安全研究者独立复现。
       </p>
     </div>
 
@@ -416,7 +416,7 @@ const T = getGTable();  // O(1) 缓存命中
               <td style="padding:5px 8px;"><strong>新版 BigInt + Jacobian + wNAF</strong></td>
               <td style="text-align:center;padding:5px 8px;color:#00d4aa;">✅ <strong>通过</strong></td>
               <td style="text-align:center;padding:5px 8px;">2,000</td>
-              <td style="padding:5px 8px;font-size:0.7rem;color:#8b949e;">2026-06-16 TVLA v2，10/10 SM2 操作通过。wNAF 理论风险在 V8 环境下被噪声稀释，实测安全。详阅 <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">侧信道分析页面</a></td>
+              <td style="padding:5px 8px;font-size:0.7rem;color:#8b949e;">2026-06-16 TVLA (N=2,000)，10/10 SM2 操作通过。wNAF 理论风险在 V8 环境下被噪声稀释，实测安全。详阅 <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">侧信道分析页面</a></td>
             </tr>
           </tbody>
         </table>
@@ -435,7 +435,7 @@ const T = getGTable();  // O(1) 缓存命中
         </ul>
 
         <p style="margin:1rem 0 0;font-size:0.78rem;color:#8b949e;">
-          <strong>🎉 状态更新（2026-06-16）</strong>：优化版 SM2 的 TVLA v2 测试已完成！10/10 SM2 操作（jsbn + BigInt/wNAF 各 5 项）全部通过（|t| ≤ 4.5, N=2,000）。总耗时 537.8 秒（≈ 9 分钟）。完整技术分析和数据见 <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">SM2 优化版本的侧信道安全分析（TVLA）</a>。欢迎社区独立复现或委托第三方实验室进行功耗/EM 级别的补充评估。
+          <strong>🎉 状态更新（2026-06-16）</strong>：优化版 SM2 的 TVLA (N=2,000) 测试已完成！10/10 SM2 操作（jsbn + BigInt/wNAF 各 5 项）全部通过（|t| ≤ 4.5, N=2,000）。总耗时 537.8 秒（≈ 9 分钟）。完整技术分析和数据见 <a href="/docs/sm2-tvla-analysis.html" style="color:#00E5C3;">SM2 优化版本的侧信道安全分析（TVLA）</a>。欢迎社区独立复现或委托第三方实验室进行功耗/EM 级别的补充评估。
         </p>
       </div>
     </details>
