@@ -81,8 +81,8 @@
   <p>ML-KEM-768（FIPS 203）已经完整实现并完成合规验证，暂时还未嵌入 TLS 1.3 握手链路。这是一个清晰可核验的中间状态：<strong>PQC-Hybrid：路径 C-2（应用层 SM2+ML-KEM-768）已上线 ✅，900/900 全绿，p95=78.5ms。IANA #4590 E2E 混合 KEX 已集成到 reg-server（2026-07-16），10/10 集成测试通过。路径 A（TLS 层 X25519MLKEM768 NamedGroup）为实验性/未上线（待 OpenSSL 3.2+，当前 3.0.13 不支持 oqs-provider）<span style="color:var(--amber);">⚠️ 实验性 2026-07-17</span>。</strong></p>
 </div>
 
-<p style="font-size:0.9rem;margin-top:0.5rem;color:var(--muted);max-width:44rem;">LookingGlass v2.1 为有限群表示克罗内克嵌套代数实验，外层纯无损线性变换，无法提升底层 LWE 格密码计算硬度；VWZ 为独立研究分支，安全性尚待同行评议。</p>
-<p style="font-size:0.85rem;margin-top:0.3rem;color:var(--accent);max-width:44rem;">LookingGlass v2.1 is a finite-group representation Kronecker product algebraic experiment. Its outer lossless linear transform does not increase LWE lattice hardness. VWZ is an independent research track pending peer review.</p>
+<p style="font-size:0.9rem;margin-top:0.5rem;color:var(--muted);max-width:44rem;">LookingGlass v2.4.0 为有限群表示克罗内克嵌套代数实验，外层纯无损线性变换，无法提升底层 LWE 格密码计算硬度；VWZ 为独立研究分支，安全性尚待同行评议。</p>
+<p style="font-size:0.85rem;margin-top:0.3rem;color:var(--accent);max-width:44rem;">LookingGlass v2.4.0 is a finite-group representation Kronecker product algebraic experiment. Its outer lossless linear transform does not increase LWE lattice hardness. VWZ is an independent research track pending peer review.</p>
 
 <!-- ====== Section 1 ====== -->
 <h2>1. 什么是 PQC-Ready</h2>
@@ -350,12 +350,12 @@
 
 <div class="card card-amber" style="margin-bottom:1.5rem;">
   <p style="margin:0;color:var(--amber);"><strong>⚠ 实验性模块 · 默认关闭 · 不影响生产加密</strong></p>
-  <p style="margin:0.5rem 0 0;color:var(--muted);">LookingGlass v2.1 是有限群表示论与克罗内克积的代数实验原型。其外层为纯无损线性变换，不引入独立噪声，无法提升底层 LWE 格计算硬度。VWZ 是独立研究分支，安全性待同行评议。两个模块默认关闭，不接入生产加密链路。</p>
+  <p style="margin:0.5rem 0 0;color:var(--muted);">LookingGlass v2.4.0 是有限群表示论与克罗内克积的代数实验原型。其外层为纯无损线性变换，不引入独立噪声，无法提升底层 LWE 格计算硬度。VWZ 是独立研究分支，安全性待同行评议。两个模块默认关闭，不接入生产加密链路。</p>
 </div>
 
 <!-- 7.1 -->
 <h3>7.1 研究目标</h3>
-<p><strong>LookingGlass v2.1</strong> (三层逆向壁垒, 77/77 全绿) 是基于有限群表示论的克罗内克嵌套代数实验。通过多层线性代数构造（纯逆向混淆实验），验证变换不可逆性（局部不可合并性质）。在密码学安全维度：外层线性变换为可逆复合矩阵，攻击者可整体消去，不提升 LWE/BKZ 破解难度。v2 的工程价值在于线性代数教学、硬件张量运算验证及 L8/L9 运行时异常检测实验，不具备加密防护能力。</p>
+<p><strong>LookingGlass v2.4.0</strong> (三层逆向壁垒, 77/77 全绿) 是基于有限群表示论的克罗内克嵌套代数实验。通过多层线性代数构造（纯逆向混淆实验），验证变换不可逆性（局部不可合并性质）。在密码学安全维度：外层线性变换为可逆复合矩阵，攻击者可整体消去，不提升 LWE/BKZ 破解难度。v2 的工程价值在于线性代数教学、硬件张量运算验证及 L8/L9 运行时异常检测实验，不具备加密防护能力。</p>
 <p><strong>VWZ</strong> 是 FIBEMATE 的独立研究子线——基于 Vandermonde 张量结构的格-张量混合签名实验。<strong>历史状态：</strong>原 rank-1 构造于 2026-08-16 被第三方多项式时间分离攻击攻破（rank-1 切片因式分解 → 密钥无关的 existential forgery，36/36 伪造成功）；<strong>当前采用 rank-2 加固构造</strong>（2026-09-06 上线 experimental/vwz-lg 分支，306/306 切片 rank=2，rank-1 攻击 0/27）。rank-2 仅针对攻破 rank-1 的那一层代数攻击做了验证，<strong>不是安全性证明，也无第三方密码学审计</strong>；VMQ-SPARSE → LWE 的归约存在已知缺口（H-1），底层困难假设 VWZ-PR 仍为猜想。Hull 攻击评估（Õ(q¹³⁰) ≥ 2²⁰⁸⁰，对 κ=128）针对 rank-1 参数给出，rank-2 下需重新评估。VWZ 安全性待同行评议，研究代码仅限内网访问，不接入生产加密路径。详见 docs/VWZ-STATUS.md 与 docs/vwz-lwe-reduction-gaps.md。</p>
 <p>两个模块均为探索性研究实验，<strong>不替代 FIPS 203/205 标准主干算法</strong>，默认关闭，不接入生产加密链路。LookingGlass v2 不提供密码安全增益，VWZ 安全性待外部评审。二者的工程价值在于线性代数/有限群表示教学、硬件张量运算验证、L8/L9 运行时异常检测及时间戳存证闭环。</p>
 
@@ -491,7 +491,7 @@
 <tr><td>Python roundtrip</td><td>256 维正向→逆向循环验证</td><td><span style="color:var(--green);">零误差</span></td><td>lg-042</td></tr>
 <tr><td>无公共交换矩阵证明</td><td>commuting_matrix_test.py 构建对易方程 → 零空间维度</td><td><span style="color:var(--green);">零空间 = 0 ✅</span></td><td>lg-042</td></tr>
 <tr><td>WASM 编译</td><td>wasm-pack build --target web --release, wasm-opt -Oz</td><td><span style="color:var(--green);">17.89KB (gzip &lt;5KB)</span></td><td>lg-042</td></tr>
-                  <tr><td>LG v2.1 三层壁垒</td><td>方案1: 全局仿射偏移(Q^256) + 方案2: 5040种层序随机化 + 方案3: 48维稀疏子空间偏移</td><td><span style="color:var(--green);">77/77 全绿</span></td><td>lg-057</td></tr>
+                  <tr><td>LG v2.4.0 三层壁垒</td><td>方案1: 全局仿射偏移(Q^256) + 方案2: 5040种层序随机化 + 方案3: 48维稀疏子空间偏移</td><td><span style="color:var(--green);">77/77 全绿</span></td><td>lg-057</td></tr>
 <tr><td>线上部署</td><td>fibemate.net/wasm/lookingglass_v2_bg.wasm</td><td><span style="color:var(--green);">HTTP 200, application/wasm</span></td><td>lg-042</td></tr>
 <tr><td>时间戳存证</td><td>数学证明 + 源码哈希 + WASM 哈希 → FreeTSA (RFC 3161)</td><td><span style="color:var(--green);">✅ Verified OK</span></td><td>lg-043</td></tr>
 <tr><td>第七层本地验证</td><td>Rust 7/7 + Python roundtrip + commuting_matrix_test.py 4/4</td><td><span style="color:var(--green);">✅ 本地闭环</span></td><td>lg-044</td></tr>
@@ -512,7 +512,7 @@
 <div class="note"><strong>不可逾越上限：</strong>v2 不改变底层 LWE 硬度（BKZ 仍破内层格），不提升抗量子位数，仅增加后解密逆向工程成本。面对国家级持续密码分析，攻击者依然可以逐层完成剥离；该模块只提升逆向拆解的工程成本，无法改变底层 LWE 的计算复杂度，不存在无条件理论不可破解性。定位为<strong>"代数实验中的逆向混淆载体"</strong>，不具备加密防护能力。</div>
   <p style="margin:0.8rem 0 0;font-size:0.85rem;color:var(--muted);"><em>LookingGlass v2 由刘天赫设计并实现，是 FIBEMATE 项目研究线的组成部分。</em></p>
 
-<h4>v2.1 — 三层逆向壁垒加固</h4>
+<h4>v2.4.0 — 三层逆向壁垒加固</h4>
 <p><strong>定位：</strong>在 v2 数学不可并层基础上叠加三层工程加固，提升静态逆向工程成本 5-12 倍。仍为纯线性变换，不提升 LWE 格硬度。</p>
 <ul>
 <li><strong>方案1 全局仿射偏移</strong> — 随机 Q²⁵⁶ 仿射变换，验证 66/66 全绿</li>
