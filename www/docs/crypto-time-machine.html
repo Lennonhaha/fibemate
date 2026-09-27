@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>密码时间机器：把 git 历史变成密码 API 的可查时间轴 - FIBEMATE</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--accent:#00E5C3;--green:#22c55e;--amber:#f59e0b;--red:#f87171;--blue:#58a6ff;--purple:#bc8cff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;padding:0 1rem 4rem}
+.container{max-width:960px;margin:0 auto}
+header{padding:3rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2rem}
+header h1{font-size:2rem;color:#f0f6fc}
+header h1 .gradient{background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header .meta{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+h2{font-size:1.3rem;color:#f0f6fc;margin:2.5rem 0 1rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)}
+h3{font-size:1.08rem;color:#e6edf3;margin:1.8rem 0 0.8rem}
+p{margin:0.8rem 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1rem 0}
+.card h3{margin-top:0}
+.green{color:var(--green)}.amber{color:var(--amber)}.red{color:var(--red)}.blue{color:var(--blue)}.accent{color:var(--accent)}.muted{color:var(--muted)}
+code{background:rgba(110,118,129,0.2);padding:0.15em 0.4em;border-radius:4px;font-size:0.9em;font-family:"SF Mono",Consolas,monospace}
+pre{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:1rem 1.2rem;overflow-x:auto;margin:1rem 0;font-size:0.85rem;line-height:1.6}
+pre code{background:none;padding:0}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.9rem}
+th,td{padding:0.55rem 0.8rem;text-align:left;border:1px solid var(--border)}
+th{background:var(--card);color:#f0f6fc}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+blockquote{border-left:3px solid var(--accent);padding-left:1rem;margin:1.5rem 0;color:var(--muted)}
+ul,ol{margin:0.8rem 0 0.8rem 1.5rem}
+li{margin:0.3rem 0}
+.hero{text-align:center;padding:2rem 0}
+.hero .badge{display:inline-block;background:var(--amber);color:#0d1117;font-weight:700;padding:0.3em 1em;border-radius:20px;font-size:0.85rem;margin-bottom:1rem}
+footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--muted);font-size:0.85rem}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="hero">
+    <span class="badge">TOOL RELEASE</span>
+    <h1><span class="gradient">密码时间机器</span>：把 git 历史变成密码 API 的可查时间轴</h1>
+    <p class="meta">2026-09-27 &middot; 文章 GPL-3.0 / 工具 Apache-2.0 &middot; <a href="https://github.com/Lennonhaha/fibemate-tools">GitHub</a></p>
+  </div>
+</header>
+
+<blockquote>FIBEMATE 系列。本系列另一篇《密码学时间账本》解决「证据在何时存在」；这一篇回答一个更日常的问题：<code>ml_kem768</code> 这个符号是哪天进仓的？<code>X3DH</code> 的实现被改过几次？某次审计说「我们 6 月就支持了 SM3」，怎么一句话证实或证伪？答案是 git 历史本身——只是要能查。工具已开源：<code>crypto-time-machine</code>（<a href="https://github.com/Lennonhaha/fibemate-tools">github.com/Lennonhaha/fibemate-tools</a>，纯 Python 标准库）。</blockquote>
+
+<h2>一、git log 不够用</h2>
+<p>git 本身能回答一半问题：<code>git log -S</code> / <code>-G</code>（pickaxe）可以找「一个字符串何时进入或离开代码库」。问题在工程侧：</p>
+<ul>
+  <li>输出是人读的，不是结构化的——没有表、没法聚合、没法画时间轴。</li>
+  <li>每次都要手工拼参数、选范围、翻提交。</li>
+  <li>审计要的是「某个符号的完整变更轨迹 + 谁改的 + 哪些文件」，一条命令给全。</li>
+</ul>
+<p>crypto-time-machine 做的事：把 <code>git log -S/-G</code> 包成 CLI，结果写进 SQLite 的时间轴表（sha、日期、作者、主题、涉及文件），可查、可导出、可复现。</p>
+
+<h2>二、一条命令</h2>
+<pre><code>python ctime/core.py --repo /path/to/fibemate --pattern ml_kem768 --mode=-S</code></pre>
+<p>参数五个关键位：</p>
+<ul>
+  <li><code>--pattern</code>：追踪的符号或字符串（<code>ml_kem768</code>、<code>X3DH</code>、<code>3329</code>、<code>sm3_compress</code>&hellip;&hellip;）。</li>
+  <li><code>--mode=-S</code> / <code>--mode=-G</code>：直通 git 的两种 pickaxe 语义——<code>-S</code> 统计出现次数变化，<code>-G</code> 按正则比对新旧 diff。两种模式回答的问题不同，都保留。</li>
+  <li><code>--db</code>：SQLite 输出路径。</li>
+  <li><code>--since</code> / <code>--until</code> / <code>--query-after</code>：时间窗。</li>
+</ul>
+
+<h2>三、实测</h2>
+<p>扫 fibemate 主仓（2026-09-27 实测）：</p>
+<ul>
+  <li><code>ml_kem768</code>，<code>-S</code> 模式：<strong>6 个事件</strong>——从 initial commit（<code>db81c7f</code>，2026-07-06，v3.1-preview 开源）到 2026-09-19 换用 @noble/post-quantum 参考实现（<code>cba1915</code>，#115），每个事件带完整 sha、时间戳、作者、主题。</li>
+  <li><code>X3DH</code>，<code>-S</code> 模式：<strong>69 个事件</strong>。</li>
+  <li><code>sm3_compress</code>，<code>-G</code> 模式：<strong>0 个事件</strong>——当前主仓没有这个符号的变更记录，查询本身就证伪了一句「我们改过 SM3 底层」。</li>
+</ul>
+<p>注意这些数字会随仓库增长而漂移——<code>X3DH</code> 一周前还是 67，现在是 69。时间轴是活数据，引用时给查询日期。</p>
+
+<h2>四、两个设计决定</h2>
+<p><strong>直通 git pickaxe，不自建索引。</strong> <code>-S</code> 和 <code>-G</code> 的语义差异（出现次数 vs diff 内容）是 git 十几年打磨出来的，自己重写一遍只会引入分歧。工具的价值在结构化输出和时间窗，不在重新发明搜索。</p>
+<p><strong>SQLite 单表。</strong> <code>timeline(id, sha, date, author, subject, files)</code>——六个字段，够画时间轴、够做审计附件、够被别的脚本 join。多一层抽象都不加。</p>
+
+<h2>五、测试与 CI</h2>
+<ul>
+  <li><code>test/local_test.py</code>：10 项（文件历史非空、不存在符号返回空等），对主仓实测 <strong>ALL PASS</strong>。</li>
+  <li><code>test/ci_test.py</code>：9 项（query 返回列表、条目含 files 等），<strong>ALL PASS</strong>。</li>
+  <li>CI 挂 <code>time-machine-ci</code> workflow，截至 2026-09-27 累计 <strong>51 次成功运行</strong>。</li>
+  <li>零外部依赖：imports 只有 <code>json / os / re / sqlite3 / subprocess / datetime</code>，全标准库。<code>ctime/core.py</code> 当前 168 行。</li>
+</ul>
+
+<h2>六、边界</h2>
+<p><strong>只回答「何时出现、何时消失、改了哪些文件」，不解释动机。</strong> 提交主题是作者写的，时间机器不猜测「为什么改」。</p>
+<p><strong>git 历史可重写。</strong> rebase、重新签名都能改写过去——这正是《密码学时间账本》一篇讨论过的问题，两个工具是互补关系：时间机器管「查」，时间账本管「锚」。查询结果的可信度以 git 对象图的完整性为界。</p>
+<p><strong>模式匹配抓不到语义等价。</strong> 符号改名（<code>kyber</code> → <code>ml_kem768</code>）会表现为一消一长两个事件，不会自动合并。</p>
+
+<h2>七、结语</h2>
+<p>系列至此四条线：可观测性管运行时，TLA+ 管协议逻辑，时间账本管存证锚定，时间机器管历史查询。四条线共同的出发点：审计的人不该信任何一句口头断言——每句话都应该能变成一条可执行的查询。</p>
+<p>工具页：<a href="/tools/time-machine">fibemate.net/tools/time-machine</a>。</p>
+
+<h2>参考实践</h2>
+<ul>
+  <li>工具：<a href="https://github.com/Lennonhaha/fibemate-tools">github.com/Lennonhaha/fibemate-tools</a> → <code>crypto-time-machine/</code>（19 项测试 = 10 local + 9 ci，全 PASS，零外部依赖）</li>
+  <li>查询示例：<code>ml_kem768</code> 6 事件 / <code>X3DH</code> 69 事件 / <code>sm3_compress</code> 0 事件（2026-09-27 实测）</li>
+  <li>CI：<code>.github/workflows/time-machine-ci.yml</code>（51 次 success）</li>
+  <li>姊妹篇：<a href="crypto-time-ledger.html">时间账本</a>（RFC 3161 锚定）——本篇查询层与其锚定层互补</li>
+</ul>
+
+<h2>词汇注释</h2>
+<ul>
+  <li><strong>pickaxe（-S / -G）</strong>：git 的历史搜索模式。-S 统计字符串出现次数的变化，-G 用正则比对新旧 diff 内容。</li>
+  <li><strong>SQLite</strong>：嵌入式单文件数据库，本文工具的输出格式。</li>
+  <li><strong>事件（event）</strong>：一个 commit 中目标符号发生增删改的一次记录。</li>
+</ul>
+
+<footer>
+  <p>最后更新：2026-09-27 &middot; 文章 GPL-3.0 / 工具 Apache-2.0 &middot; <a href="/docs/">文档首页</a></p>
+  <p>crypto-time-machine &mdash; 密码时间机器 · git pickaxe 结构化输出 · SQLite 时间轴</p>
+</footer>
+
+</div>
+</body>
+</html>
