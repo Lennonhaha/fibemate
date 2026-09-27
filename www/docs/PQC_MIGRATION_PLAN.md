@@ -366,3 +366,5 @@ FIBEMATE 是一个后量子密码学（PQC）工程验证平台，而非生产�
 **维护者**: Tianhe Liu (Lennonhaha)
 **最后更新**: 2026-08-02
 **下次审查**: 2026-09-01
+
+<!-- sentinel trigger verification, will be reverted -->
