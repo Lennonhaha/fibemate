@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>verifact：声明对齐证据 - FIBEMATE</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--accent:#00E5C3;--green:#22c55e;--amber:#f59e0b;--red:#f87171;--blue:#58a6ff;--purple:#bc8cff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;padding:0 1rem 4rem}
+.container{max-width:960px;margin:0 auto}
+header{padding:3rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2rem}
+header h1{font-size:2rem;color:#f0f6fc}
+header h1 .gradient{background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header .meta{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+h2{font-size:1.3rem;color:#f0f6fc;margin:2.5rem 0 1rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)}
+h3{font-size:1.08rem;color:#e6edf3;margin:1.8rem 0 0.8rem}
+p{margin:0.8rem 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1rem 0}
+.card h3{margin-top:0}
+.green{color:var(--green)}.amber{color:var(--amber)}.red{color:var(--red)}.blue{color:var(--blue)}.accent{color:var(--accent)}.muted{color:var(--muted)}
+code{background:rgba(110,118,129,0.2);padding:0.15em 0.4em;border-radius:4px;font-size:0.9em;font-family:"SF Mono",Consolas,monospace}
+pre{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:1rem 1.2rem;overflow-x:auto;margin:1rem 0;font-size:0.85rem;line-height:1.6}
+pre code{background:none;padding:0}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.9rem}
+th,td{padding:0.55rem 0.8rem;text-align:left;border:1px solid var(--border)}
+th{background:var(--card);color:#f0f6fc}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+blockquote{border-left:3px solid var(--accent);padding-left:1rem;margin:1.5rem 0;color:var(--muted)}
+ul,ol{margin:0.8rem 0 0.8rem 1.5rem}
+li{margin:0.3rem 0}
+.hero{text-align:center;padding:2rem 0}
+.hero .badge{display:inline-block;background:var(--amber);color:#0d1117;font-weight:700;padding:0.3em 1em;border-radius:20px;font-size:0.85rem;margin-bottom:1rem}
+footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--muted);font-size:0.85rem}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="hero">
+    <span class="badge">TOOL RELEASE</span>
+    <h1><span class="gradient">verifact</span>：声明对齐证据</h1>
+    <p class="meta">2026-09-27 &middot; 文章 GPL-3.0 / 工具 Apache-2.0 &middot; <a href="https://github.com/Lennonhaha/fibemate-tools">GitHub</a></p>
+  </div>
+</header>
+
+<blockquote>一篇文档在发布前被合并——内容里的数字是过时的。改代码的人不会记得去更新文档；写文档的人不会知道代码变了。哨兵不解决这个问题的根源，但它让「忘了更新」变成「不让你合」。于无声处。——题记</blockquote>
+
+<p>FIBEMATE 系列。此前讲过 CBOM（盘点用了哪些算法）、密码学时间账本（证据在何时存在）、密码时间机器（查 git 历史）。这一篇解决最后一个问题：<strong>文档里写的数字，和产出物对不对得上。</strong> 这不是抽查，是把文档传唤到证据面前——每条声明要么对上产出物，要么交代自己为什么对不上。</p>
+<p>工具叫 verifact，事实哨兵。已开源，Apache-2.0，零依赖（Node ≥ 18）。</p>
+
+<h2>问题：文档会漂移</h2>
+<p>仓库里到处是硬数字：性能基准、测试计数、状态数、文件行数。文档写在某个时刻，产出物在另一个时刻重测，两边的数字就开始各走各的。</p>
+<p>真实例子，2026-09-27 实测：</p>
+<ul>
+  <li><code>PROGRESS.md:79</code> 写「ML-KEM-768 keygen 103µs」。产出物 <code>pqc-hw-bench/README.md</code> 实测 <strong>262μs</strong>。score=0.66，value_differs。</li>
+  <li><code>RELEASE_NOTES.md</code> 写 TLA+ 不变式 3 条。模型文件里是 <strong>7 条</strong>。</li>
+  <li>多篇对外文章的头条数字 <code>p95=78.5ms</code>，在全部 5369 条产出物里<strong>找不到来源</strong>——它出现在主仓 README 和官网 pqc-readiness、FAQ、architecture 四处，出处一栏全是空的。</li>
+</ul>
+<p>前两条是文档落后于代码。第三条更麻烦：一个没有出处的数字，挂在最显眼的位置。</p>
+<p>人工核对这类问题靠 grep 和肉眼。文档 341 份、声明 2251 条，肉眼核对每轮发稿都来一遍不现实。这就是工具要占的位置。</p>
+
+<h2>设计：抽声明、绑产出物、六态判定</h2>
+<p>工作分三步。</p>
+<p><strong>抽取。</strong>扫描 markdown（默认也查代码块外的正文），把带单位的数字连同键名抽出来：<code>103µs</code>、<code>26,115 states</code>、<code>654 行</code>。每条声明记文件、行号、键名、数值。</p>
+<p><strong>绑定。</strong>把声明和产出物对接。产出物来源在配置里登记：benchmark 的 JSON/日志、主仓 scripts、时间戳目录、核心库。绑定按键名相似度和数值容差打分（阈值 <code>minScore: 0.45</code>，相对容差 0.5%）。</p>
+<p><strong>判定。</strong>六种结果，只有一种是红的：</p>
+<table>
+  <tr><th>判定</th><th>含义</th><th>处置</th></tr>
+  <tr><td>verified</td><td>文档值和产出物在容差内一致</td><td class="green">绿</td></tr>
+  <tr><td><strong>drift</strong></td><td>绑定成功但数值超出容差</td><td class="red"><strong>红，门禁拦截</strong></td></tr>
+  <tr><td>ambiguous</td><td>多个产出物候选冲突，或跨模块同名键</td><td class="amber">交人工</td></tr>
+  <tr><td>unbound</td><td>找不到产出物依据</td><td class="amber">交人工</td></tr>
+  <tr><td>引用存在 / 缺失</td><td>声明引用 <code>lg-XXX</code> 这类实体，查它在不在扫描范围</td><td>存在绿 / 缺失交人工</td></tr>
+</table>
+<p>这套分级的关键是<strong>不把「没证据」当「错」</strong>。unbound 1836 条不等于文档在说谎——可能证据没导出成机器可读格式，可能是叙述性文字。把 unbound 也算失败，工具会在第一天就被噪音淹没。红只留给一种情况：<strong>找到了依据，但数字对不上</strong>。</p>
+
+<h2>实测</h2>
+<p>2026-09-27，对 fibemate 全仓 + 待发布文章 + benchmark 产出物跑全量：</p>
+<pre><code>文档 341 份 产出物 5369 条 声明 2251 条
+verified 145 drift 24 ambiguous 227 unbound 1836
+引用型 19（存在 17 / 缺失 2） 另有 17 条声明经 ignore 规则收敛、不计入六态
+核验率 7.2%
+用语线索 high 5 medium 117 low 10
+耗时 4.1s（workers=6，冷缓存）</code></pre>
+<p>核验率的计算口径：<strong>（verified 145 + 引用存在 17）÷ 可判定声明 2251</strong>。可判定 = 六态合计，被 ignore 规则收敛的 17 条不计入。计算在 <code>bin/verifact.js:117</code>，读者可以自己验。</p>
+<p>核验率 7.2%，不高。这是诚实的上限：能自动核验的前提是产出物机器可读，而大多数声明（叙事、对比、非数值）没有对应格式。工具的作用是<strong>守住有依据的那部分</strong>，不是假装能核全部。</p>
+<p>回归测试 19 项（<code>test/run.js</code>），全部 PASS。</p>
+
+<h2>在 CI 里：sentinel.yml</h2>
+<p>本地跑工具只是第一步——人不一定记得跑。真正的门禁在 CI。</p>
+<p>主仓新增 <code>sentinel.yml</code>：任何 PR 改了 <code>www/docs/**</code>、<code>packages/pqc-kem/**</code>、<code>packages/fml-dsa/**</code>，自动触发。作业内容一条命令：</p>
+<pre><code>node bin/verifact.js verify --docs ../../fibemate/www/docs --fail-on drift --no-cache</code></pre>
+<p>双仓 checkout（主仓 + fibemate-tools），两个 Action 都用 40 位 SHA 钉死版本；<code>--no-cache</code> 保证每次全量、不吃缓存红利；<code>--fail-on drift</code> 把红锁定在唯一一种该红的判定上。比成功，CI 绿；比出 drift，CI 红——不让你合。</p>
+<p>ignore 机制在这里发挥作用：当前 12 条规则、收敛 17 条声明，每条规则带 note 说明为什么——比如「RSA-2048 那一行的 60ms，与 ML-KEM keygen 无关」「文档引的是 JS 基准，verifact 查到的是硬件基准，两套数据都对，口径不同」。ignore 不是掩盖，是<strong>把「口径差异」和「真过期」分开登记</strong>，将来口径统一了再撤。</p>
+
+<h2>一个插曲：xdiff</h2>
+<p>哨兵本来还有一个作业——xdiff（实现差分检测：同一个算法，两个实现各跑一遍，看输出是否逐字节一致）。它在本地跑是对的，但 CI 里硬编码了本地绝对路径 <code>D:/FIBEMATE/...</code>，CI 上找不到实现文件，一直假红。</p>
+<p>两个选项：</p>
+<ul>
+  <li>挂 <code>continue-on-error</code>——门禁炸了当看不见</li>
+  <li>拆了，留 TODO，不自欺欺人</li>
+</ul>
+<p>选了后者。xdiff 从 sentinel.yml 拆除（2026-09-27，workflow 里留了注释说明原因），等它支持相对路径再挂回来。有的门禁挂一个 <code>continue-on-error: true</code> 看起来体面，实际上更不体面。CI 门禁要么拦，要么不存在，中间状态是噪音。</p>
+
+<h2>三条守门线</h2>
+<ul>
+  <li><strong>cbom-tools</strong> 盘点密码资产、diff 前后变化——回答「密码部分多了/少了什么」。</li>
+  <li><strong>verifact</strong> 核对文档事实性声明——回答「文档里写的数字是不是真能对上产出物」。</li>
+  <li><strong>xdiff</strong>（等它回来）做实现差分——回答「两套实现是不是算得一样」。</li>
+</ul>
+<p>三条守门线，各自不重叠。</p>
+
+<h2>抓到过什么</h2>
+<p>工具投产两周，实际拦下的：</p>
+<ol>
+  <li><strong>头条数字无出处。</strong><code>p95=78.5ms</code> 出现在主仓 README 和官网 pqc-readiness、FAQ、architecture 四处，产出物里无依据。处理方式二选一：补实测证据，或改写口径——发稿前必须处理。</li>
+  <li><strong>15-31x 性能声明的底数漂移。</strong><code>PROGRESS.md</code> 的 103µs 对不上产出物的 262μs，「提升 15-31x」的倍数声明跟着动摇。</li>
+  <li><strong>TLA+ 不变式 3 vs 7。</strong>发布物和模型文件各说各话。</li>
+  <li><strong>lg-079 引用缺失。</strong>两个文档副本指向同一份本地查不到的时间戳实体，收敛成 1 条待办。</li>
+</ol>
+<p>用语线索单独说。抽取器顺带查绝对化措辞，今天的 high 级 5 条：「全球唯一」「绝对安全」「零风险」。这类词在任何审计语境都站不住，位置和上下文一起列出来，改稿时逐条清。</p>
+
+<h2>边界</h2>
+<ul>
+  <li><strong>工具不调 git，不判 commit 级正确性。</strong>声明绑定的是文件当前状态，不追溯「这个数字在哪个提交改的」——那是密码时间机器的活。</li>
+  <li><strong>不自动修文档。</strong>只报问题，不改内容——verifact 是指纹比对，不是内容审查。</li>
+  <li><strong>unbound 不等于说谎。</strong>缺证据只交人工，不进门禁。</li>
+  <li><strong>绑定阈值是经验值。</strong><code>minScore: 0.45</code> 和容差按本项目调的，换仓库要重新调。</li>
+  <li><strong>无出站网络。</strong>全部扫描和比对在本机完成；<code>serve</code> 起的看板只监听 <code>127.0.0.1:8787</code>。</li>
+  <li><strong>写入边界：</strong>只写 <code>--out</code> 指定的路径和 <code>.verifact/</code> 缓存目录。扫描显式跳过 <code>.git/</code>、<code>node_modules/</code>。</li>
+</ul>
+
+<h2>使用</h2>
+<pre><code>git clone https://github.com/Lennonhaha/fibemate-tools
+cd fibemate-tools/verifact
+
+node bin/verifact.js init                          # 生成配置样例
+node bin/verifact.js verify                         # 全量核验，exit 0=过 / 1=有drift / 2=配置错
+node bin/verifact.js verify --fail-on unbound       # 收紧门禁——慎用
+node bin/verifact.js explain <文件>:<行>:<键>        # 单条溯源
+node bin/verifact.js diff                           # 和上一轮对比
+node bin/verifact.js serve                          # 本地看板</code></pre>
+<p>配置里 <code>deny</code> 和 <code>ignore</code> 两段是人工复核后的沉淀：deny 拦已知误绑，ignore 收敛同名键的语义冲突。每条带 note，说明为什么。</p>
+
+<h2>参考实践</h2>
+<ul>
+  <li>工具：<a href="https://github.com/Lennonhaha/fibemate-tools">github.com/Lennonhaha/fibemate-tools</a> → <code>verifact/</code>（19 项回归，<code>node test/run.js</code>）</li>
+  <li>CI 门禁：fibemate 主仓 <code>.github/workflows/sentinel.yml</code>（双仓 checkout，Action SHA pin）</li>
+  <li>配置样例：<code>verifact/verifact.json.example</code>（roots / deny / ignore 三段结构）</li>
+  <li>全量报告：<code>node bin/verifact.js verify --format md --out report.md</code></li>
+</ul>
+
+<footer>
+  <p>最后更新：2026-09-27 &middot; 文章 GPL-3.0 / 工具 Apache-2.0 &middot; <a href="/docs/">文档首页</a></p>
+  <p>verifact &mdash; 文档事实性声明核验工具 · 纯 JS · 零外部依赖</p>
+</footer>
+
+</div>
+</body>
+</html>
