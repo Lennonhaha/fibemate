@@ -30,7 +30,24 @@ jobs:
         working-directory: .sentinel-tools/verifact
         run: node bin/verifact.js verify --docs ../../fibemate/www/docs --fail-on drift --no-cache
 
-# xdiff job removed 2026-09-27
-#   xdiff.json hardcodes D:/FIBEMATE paths, unusable in CI.
-#   Self-regression already runs in fibemate-tools (xdiff-ci.yml).
-#   Re-add when xdiff supports relative paths + cross-impl mode.
+  xdiff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          path: fibemate
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: LennonHaha/fibemate-tools
+          path: .sentinel-tools
+          ref: main
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Install @noble/post-quantum (no-save)
+        working-directory: fibemate
+        run: npm install @noble/post-quantum --no-save
+      - name: Run xdiff (main + noble; cp/liboqs unavailable in CI)
+        working-directory: .sentinel-tools/xdiff
+        run: node bin/xdiff.js run --require-impl 2
