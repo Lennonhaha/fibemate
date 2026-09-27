@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cbom-tools v0.1.0 发布 - FIBEMATE</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--accent:#00E5C3;--green:#22c55e;--amber:#f59e0b;--red:#f87171;--blue:#58a6ff;--purple:#bc8cff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;padding:0 1rem 4rem}
+.container{max-width:960px;margin:0 auto}
+header{padding:3rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2rem}
+header h1{font-size:2rem;color:#f0f6fc}
+header h1 .gradient{background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header .meta{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+h2{font-size:1.3rem;color:#f0f6fc;margin:2.5rem 0 1rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)}
+h3{font-size:1.08rem;color:#e6edf3;margin:1.8rem 0 0.8rem}
+p{margin:0.8rem 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1rem 0}
+.card h3{margin-top:0}
+.green{color:var(--green)}.amber{color:var(--amber)}.red{color:var(--red)}.blue{color:var(--blue)}.accent{color:var(--accent)}.muted{color:var(--muted)}
+code{background:rgba(110,118,129,0.2);padding:0.15em 0.4em;border-radius:4px;font-size:0.9em;font-family:"SF Mono",Consolas,monospace}
+pre{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:1rem 1.2rem;overflow-x:auto;margin:1rem 0;font-size:0.85rem;line-height:1.6}
+pre code{background:none;padding:0}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.9rem}
+th,td{padding:0.55rem 0.8rem;text-align:left;border:1px solid var(--border)}
+th{background:var(--card);color:#f0f6fc}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+blockquote{border-left:3px solid var(--accent);padding-left:1rem;margin:1.5rem 0;color:var(--muted)}
+ul,ol{margin:0.8rem 0 0.8rem 1.5rem}
+li{margin:0.3rem 0}
+.hero{text-align:center;padding:2rem 0}
+.hero .badge{display:inline-block;background:var(--green);color:#0d1117;font-weight:700;padding:0.3em 1em;border-radius:20px;font-size:0.85rem;margin-bottom:1rem}
+footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--muted);font-size:0.85rem}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="hero">
+    <span class="badge">TOOL RELEASE</span>
+    <h1><span class="gradient">cbom-tools v0.1.0</span> — 密码资产盘点工具</h1>
+    <p class="meta">2026-09-27 · Apache-2.0 · <a href="https://github.com/Lennonhaha/fibemate-tools">GitHub</a></p>
+  </div>
+</header>
+
+<blockquote>密码物料清单（CBOM）回答「这个项目用了哪些密码算法、用在哪里」。本文发布工具——盘点本身。</blockquote>
+
+<h2>一条命令</h2>
+<pre><code>npm install -g cbom-tools
+cbom-scan --dir ./my-project --out cbom.json</code></pre>
+<p>输出是 CycloneDX 1.6 格式的 CBOM JSON。每个算法条目带 <code>cryptoProperties</code>（资产类型、密码原语、量子安全等级）和 <code>evidence.occurrences</code>（文件路径加行号，单算法上限 50 处，去重）。</p>
+<p>检测两个来源：</p>
+<ol>
+  <li><code>package.json</code> 依赖——查规则表（<code>@noble/post-quantum</code>、<code>sm-crypto</code> 这类包名）。</li>
+  <li>源码——对 <code>.js/.cjs/.mjs/.ts/.tsx/.jsx</code> 做模式匹配（<code>crypto.createHash('sha3-256')</code> 这类调用）。</li>
+</ol>
+
+<h2>实测</h2>
+<p>扫 fibemate 主仓（PQC 全栈平台，算法横跨 ML-KEM/ML-DSA/SLH-DSA、SM2/3/4、SHA-2/SHA-3/Keccak）：</p>
+<ul>
+  <li>检出 <strong>13 个组件</strong>，CycloneDX 1.6。</li>
+  <li>耗时：首扫 <strong>884ms</strong>，后续两次 <strong>524ms / 559ms</strong>（2026-09-27 连续三次实测）。</li>
+</ul>
+<p>发布物两个：</p>
+<ul>
+  <li>npm：<code>cbom-tools@0.1.0</code>（<code>npm view cbom-tools</code> 可查）。</li>
+  <li>GitHub Release：tag <code>cbom-tools-v0.1.0</code>，asset <code>cbom-tools-0.1.0.tgz</code>，<strong>10,996 字节</strong>（Release API 核验：2026-09-26T23:30:21Z 发布）。</li>
+</ul>
+
+<h2>diff：迁移的前后对照</h2>
+<p>盘点只是起点。CBOM 的日常用法是 diff——迁移前后各扫一次，算法增删一目了然：</p>
+<pre><code>cbom-diff cbom-before.json cbom-after.json
+# Removed: none
+# Added: Keccak-256, SHA3-512
+# Exit code: 1</code></pre>
+<p>退出码三条：<code>0</code> 无变化，<code>1</code> 有变化，<code>2</code> 文件缺失或解析错误。放进 CI 就是密码资产的守门规则——依赖升级悄悄换掉哈希算法这类事，diff 第一时间报。</p>
+
+<h2>边界：不做什么</h2>
+<p>四条，写进了 README：</p>
+<ul>
+  <li>不实现密码算法。</li>
+  <li>不提供密码操作——没有 keygen、encrypt、sign。</li>
+  <li>不读取、不验证密钥、证书、签名。</li>
+  <li>不构成合规证书或审计。</li>
+</ul>
+<p>全部信息来自 CycloneDX SBOM 规范和公开算法参数，纯静态模式匹配，不做任何密码计算。扫描器读你的代码，不碰你的密钥。</p>
+
+<h2>工程面</h2>
+<ul>
+  <li>零外部依赖，纯 Node.js，<code>npm install -g</code> 即用。</li>
+  <li>许可 <strong>Apache-2.0</strong>，与主仓 fibemate 的 GPL-3.0 是两个仓库两套许可，商用项目可直接用。</li>
+  <li>仓库：<a href="https://github.com/Lennonhaha/fibemate-tools">github.com/Lennonhaha/fibemate-tools</a>，<code>cbom-tools/</code> 子目录。</li>
+</ul>
+<p>规则表当前覆盖 KEM、签名、哈希、对称四类原语，支持按源码规则扩展。国密和 NIST 后量子套件都在表内。</p>
+
+<h2>系列索引</h2>
+<p>前作讲为什么需要 CBOM；本文解决「怎么扫、怎么 diff」。下一步是把 diff 挂进 CI 门禁，和 verifact 的事实核验、xdiff 的实现差分组成三条守门线。</p>
+
+<footer>
+  <p>最后更新：2026-09-27 &middot; Apache-2.0 &middot; <a href="/docs/">文档首页</a></p>
+  <p>cbom-tools &mdash; 密码资产盘点工具 · 零外部依赖 · 纯 Node.js</p>
+</footer>
+
+</div>
+</body>
+</html>
