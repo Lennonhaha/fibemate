@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>密码学时间账本：给每份证据盖一个可验证的章 - FIBEMATE</title>
+<style>
+:root{--bg:#0d1117;--card:#161b22;--border:#30363d;--text:#c9d1d9;--muted:#8b949e;--accent:#00E5C3;--green:#22c55e;--amber:#f59e0b;--red:#f87171;--blue:#58a6ff;--purple:#bc8cff}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.75;padding:0 1rem 4rem}
+.container{max-width:960px;margin:0 auto}
+header{padding:3rem 0 2rem;border-bottom:1px solid var(--border);margin-bottom:2rem}
+header h1{font-size:2rem;color:#f0f6fc}
+header h1 .gradient{background:linear-gradient(135deg,var(--accent),var(--blue));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header .meta{color:var(--muted);font-size:0.9rem;margin-top:0.5rem}
+h2{font-size:1.3rem;color:#f0f6fc;margin:2.5rem 0 1rem;padding-bottom:0.4rem;border-bottom:1px solid var(--border)}
+h3{font-size:1.08rem;color:#e6edf3;margin:1.8rem 0 0.8rem}
+p{margin:0.8rem 0}
+.card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:1.2rem 1.5rem;margin:1rem 0}
+.card h3{margin-top:0}
+.green{color:var(--green)}.amber{color:var(--amber)}.red{color:var(--red)}.blue{color:var(--blue)}.accent{color:var(--accent)}.muted{color:var(--muted)}
+code{background:rgba(110,118,129,0.2);padding:0.15em 0.4em;border-radius:4px;font-size:0.9em;font-family:"SF Mono",Consolas,monospace}
+pre{background:var(--card);border:1px solid var(--border);border-radius:6px;padding:1rem 1.2rem;overflow-x:auto;margin:1rem 0;font-size:0.85rem;line-height:1.6}
+pre code{background:none;padding:0}
+table{width:100%;border-collapse:collapse;margin:1rem 0;font-size:0.9rem}
+th,td{padding:0.55rem 0.8rem;text-align:left;border:1px solid var(--border)}
+th{background:var(--card);color:#f0f6fc}
+a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+blockquote{border-left:3px solid var(--accent);padding-left:1rem;margin:1.5rem 0;color:var(--muted)}
+ul,ol{margin:0.8rem 0 0.8rem 1.5rem}
+li{margin:0.3rem 0}
+.hero{text-align:center;padding:2rem 0}
+.hero .badge{display:inline-block;background:var(--amber);color:#0d1117;font-weight:700;padding:0.3em 1em;border-radius:20px;font-size:0.85rem;margin-bottom:1rem}
+footer{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);color:var(--muted);font-size:0.85rem}
+.tag-commentary{background:rgba(0,229,195,0.06);border-left:3px solid var(--accent);border-radius:0 6px 6px 0;padding:0.8rem 1.2rem;margin:0.8rem 0;font-size:0.9rem;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <div class="hero">
+    <span class="badge">TOOL RELEASE</span>
+    <h1><span class="gradient">密码学时间账本</span>：给每份证据盖一个可验证的章</h1>
+    <p class="meta">2026-09-27 &middot; 文章 GPL-3.0 / 工具 Apache-2.0 &middot; <a href="https://github.com/Lennonhaha/fibemate-tools">GitHub</a></p>
+  </div>
+</header>
+
+<blockquote>FIBEMATE 系列。此前讲过迁移动因、混合 HTTPS、CBOM、FPGA 基准、预硅侧信道、TLA+ 形式化验证。这一篇解决一个更基础的问题：你产出的每一份审计证据——TVLA 报告、TLA+ 记录、KAT 结果——怎么证明它<strong>在某个时刻就存在、此后没被改过</strong>？答案是哈希链 + RFC 3161 可信时间戳 + 可执行验证。工具已开源，仓里躺着 260 份真时间戳（截至 2026-09-27 实测，分散在 40+ 个目录）。</blockquote>
+
+<h2>一、没有时间的证据不算证据</h2>
+<p>一个典型场景：侧信道评估做完，报告落盘。三个月后有人质疑「这份报告是测试当天生成的，还是后来补的？中间改过没有？」</p>
+<p>回答不了。文件系统时间戳可改，git commit 可重写（rebase、重新签名），报告内容对不对得上当时的原始数据，无法证明。</p>
+<p>密码工程比一般软件更需要这一层：TVLA 结论、形式化验证记录、KAT 回归结果，都是「某个时刻的状态」的断言。断言没有可信时间锚，审计链条就断在第一步。</p>
+<p>解法分三步：把状态快照哈希进链、把链条锚到第三方时间戳、让任何人能在浏览器里重算验证。对应一个工具：<code>crypto-time-ledger</code>（<a href="https://github.com/Lennonhaha/fibemate-tools">github.com/Lennonhaha/fibemate-tools</a>，Apache-2.0）。</p>
+
+<h2>二、账本块：状态进哈希，时间戳进链</h2>
+<p>每个账本块（block）记录「某算法在某 commit 下被纳入账本」：</p>
+<pre><code>LedgerBlock {
+  schema_version, index, ts,
+  state: { algorithms, git_commit, note },
+  tsr_digest,   // sha256:&lt;hex&gt; — 时间戳文件的指纹，进哈希
+  tsr_ref,      // 指向 &lt;id&gt;.tsr 的路径 — 不进哈希
+  hash_prev,    // "genesis" 或上一块 hash_now
+  hash_now      // sha256:&lt;hex&gt; — 对前面全部字段的哈希
+}</code></pre>
+<p>两个设计决定：</p>
+<p><strong>tsr_ref 不进哈希，tsr_digest 进。</strong> 路径是定位符，挪个目录哈希就变——不行。时间戳文件的 SHA-256 指纹才是内容绑定，块哈希锁住指纹，指纹锁定那份 <code>.tsr</code>。改动时间戳文件一个字节，链条立刻断。</p>
+<p><strong>ts 必须与 TSR 时间一致。</strong> 块自己声明的时间如果和时间戳服务器签发的不符，链在逻辑上自洽、在事实上造假——验证规则里两者必须对上。</p>
+
+<h2>三、两个细节</h2>
+<p><strong>细节一：canonicalize。</strong> 哈希前要序列化，而原生 <code>JSON.stringify</code> 不排序键——同一个对象，键序不同，哈希不同，跨语言验证直接失败。所以自实现 RFC 8785 风格的规范化：递归键排序、紧凑输出、UTF-8。还有一个容易漏的细节：RFC 8785 要求 U+2028 / U+2029 转义为 <code>\u2028</code> / <code>\u2029</code>，原生 <code>JSON.stringify</code> 不转——不处理，JS 和其他语言对同一段数据算出的哈希就不一致。跨实现可验证性死在字符转义上，比死在密码学上常见。</p>
+<p><strong>细节二：负例。</strong> 演示数据里有一份 TSR（<code>d22f33f6&hellip;</code>）签发证书<strong>不在信任锚列表内</strong>，工具拒绝它、不写进链——这是故意留的负例，验证 fail-closed 行为：任何一项检查不满足，宁可拒收也不放行。信任锚机制是 SPKI DER 逐字节对比已知 TSA 证书列表，不是「信任系统证书库」这种软约束。</p>
+
+<h2>四、TSR 验签：为什么用 pkijs</h2>
+<p>RFC 3161 时间戳响应（TSR）是 CMS 结构，验签要解析 ASN.1、比对 messageImprint、验证签名证书链。手写这套解析的风险我们实测过——探索期发现多个具体 bug，ASN.1/CMS 手工解析属于高风险区。最终用 pkijs（成熟库，密码操作委托给平台 webcrypto），自己只写胶水：TSR 加载、eContentType 处理、messageImprint 的 SHA-256 十六进制比对、信任锚 pinning、fail-closed 收口。</p>
+<p>当前版本 63 个测试，分布在 7 个套件（ledger add / verify / query / export、全局旗标、stdin、错误格式），文件层面是 cli / core / storage / tsr 四个测试文件，<code>npm test</code> 一条命令跑完（实测 11.5s 全 PASS），CI 挂 ledger 专用 workflow。</p>
+
+<h2>五、生产账本：260 份时间戳在仓里</h2>
+<p>工具之外，主仓已经攒下生产证据（origin/main 实测 260 个 <code>.tsr</code> 文件）：</p>
+<table>
+<tr><th>位置</th><th>数量</th><th>内容</th></tr>
+<tr><td><code>www/docs/tsa/</code>（按日期序列）</td><td style="text-align:right">135</td><td>线上文档快照、审计记录、FreeTSA 批次</td></tr>
+<tr><td><code>docs/tsa/</code></td><td style="text-align:right">96</td><td>架构文档、协议验证、事件复盘</td></tr>
+<tr><td><code>backend/timestamps/</code></td><td style="text-align:right">9</td><td>2026-06 后端 PQC 批次</td></tr>
+<tr><td><code>www/docs/tvla/</code>、<code>evidence/tvla/</code></td><td style="text-align:right">8</td><td>TVLA 侧信道证据</td></tr>
+<tr><td><code>www/timestamps/digicert/</code></td><td style="text-align:right">5</td><td>DigiCert 公共 TSA</td></tr>
+<tr><td><code>www/docs/evidence/</code></td><td style="text-align:right">4</td><td>混合 KEM 验证证据</td></tr>
+<tr><td><code>papers/</code>、<code>lib/</code>、<code>fips205/</code></td><td style="text-align:right">3</td><td>论文与依赖快照</td></tr>
+<tr><td><strong>合计</strong></td><td style="text-align:right"><strong>260</strong></td><td></td></tr>
+</table>
+<p>时间戳来源刻意分散：自建 TSA、FreeTSA、DigiCert——单一 TSA 失效不拖垮整条证据线。</p>
+<p>每份证据有 <code>lg-</code> 编号。<code>lg-069</code> 盖的是 2026-07-14 的 K3 形式化验证审计记录，连同 <code>tsq</code>（请求）和 SHA-256 清单一起进 <code>timestamp-manifest.json</code>——三份 manifest（docs、docs/tsa、www/docs）把全部 260 份 TSR 的文件名、大小、指纹登记在册。TLC 跑出「101,467 状态零违反」（其中 26,115 个去重状态）的那次审计，就是 lg-069 盖的章（两个数字官网 <a href="/docs/cars-radar.html">cars-radar.html</a> 可查，26,115 distinct 与 2026-09-25 本机复跑 TLC 及 tla-verifier README 记录一致）。</p>
+
+<h2>六、可执行验证：浏览器里重算整条链</h2>
+<p>工具页（<a href="/tools/time-ledger">fibemate.net/tools/time-ledger</a>）做成水墨手卷：每个账本块是一个墨点，青绿为链连续，朱红为链断。「验真整链」按钮在浏览器里用 Web Crypto 逐块重算 <code>hash_now</code>（与 core.ts 同一套 RFC 8785 键排序），校验链连续性与 TSR 附着标记——不装任何东西，打开页面就能验。</p>
+<p>演示种子 3 个块全部真实：由 <code>cli.ts add</code> 写入，TSR 来自 test fixtures，逐份验签通过后入链；<code>git_commit</code> 记录工具仓当时的 HEAD，整条链可复现。页面声明写死在开头：demo seed，非生产测量。</p>
+
+<h2>七、边界</h2>
+<p><strong>TSR 证明「文件在该时刻存在」，不证明内容正确。</strong> 时间戳服务器只对哈希签名，不看内容。报告内容错，盖章也没用——证据正确性靠 TVLA 和 TLA+ 流程，本工具管存证时间线。</p>
+<p><strong>信任根是 TSA。</strong> 信任锚 pinning 把信任缩到已知 TSA 列表，但列表本身要人维护；TSA 私钥泄露、TSA 关停，都是这条线的现实风险。多 TSA 分散是对冲，不是消除。</p>
+<p><strong>演示链 3 块，非生产测量。</strong> 生产规模在主仓的 260 份 TSR 和 manifest，工具链与生产账本目前是两条线（工具 v0.1.1，账本由脚本批次生成）——合并是下一步。</p>
+
+<h2>八、结语</h2>
+<p>系列到这凑齐三条证据线：可观测性管运行时（线上真走了混合路径），TLA+ 管协议逻辑（状态空间无反例），时间账本管存证（证据在何时存在、此后未改）。三条线互相不替代：跑着的不代表验证过，验证过的不代表存了证，存了证的不代表内容对——但三样叠在一起，审计的人就不用再信任何一句「我们做过」。</p>
+<p>下一篇换视角：把 git 历史变成密码 API 的可查时间轴——算法参数什么时候改的、谁改的，一条命令查清。</p>
+
+<h2>参考实践</h2>
+<ul>
+  <li>工具：<a href="https://github.com/Lennonhaha/fibemate-tools">github.com/Lennonhaha/fibemate-tools</a> → <code>crypto-time-ledger/</code>（63 测试，<code>npm test</code>，v0.1.1）</li>
+  <li>演示页：<a href="/tools/time-ledger">fibemate.net/tools/time-ledger</a>（Web Crypto 浏览器验链）</li>
+  <li>生产账本：<code>fibemate</code> 仓 <code>docs/tsa/</code>、<code>www/docs/tsa/</code>、<code>docs/timestamp-manifest.json</code></li>
+  <li>依赖：pkijs ^3.4.0（TSR/CMS 解析与验签）；其余零运行时依赖</li>
+</ul>
+
+<h2>词汇注释</h2>
+<ul>
+  <li><strong>RFC 3161</strong>：时间戳协议。时间戳服务器对「数据的哈希 + 时间」签名，返回 TSR。</li>
+  <li><strong>TSR</strong>：TimeStampResp，RFC 3161 的响应结构，含签名时间戳令牌。</li>
+  <li><strong>哈希链</strong>：每块哈希包含前块哈希，改任何一块，其后全部失效。</li>
+  <li><strong>RFC 8785</strong>：JSON 规范化标准（键排序 + 紧凑编码），保证跨语言哈希一致。</li>
+  <li><strong>SPKI</strong>：Subject Public Key Info，证书的公钥部分；逐字节对比用于信任锚固定。</li>
+  <li><strong>fail-closed</strong>：校验不通过即拒绝执行，而不是放行。</li>
+</ul>
+
+<footer>
+  <p>最后更新：2026-09-27 &middot; 文章 GPL-3.0 / 工具 Apache-2.0 &middot; <a href="/docs/">文档首页</a></p>
+  <p>crypto-time-ledger &mdash; 密码学时间账本 · 哈希链 + RFC 3161 可信时间戳 · 可执行验证</p>
+</footer>
+
+</div>
+</body>
+</html>
