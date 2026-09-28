@@ -1,0 +1,13 @@
+node_modules/
+dist/
+build/
+coverage/
+.git/
+
+# verifact scans these — formatting would shift line numbers
+docs/**
+www/docs/**
+
+# generated
+*.min.js
+package-lock.json
