@@ -584,3 +584,7 @@ NUL
 # experimental/vwz-lg; the scratch-file rules above (vwz*.md/py/html,
 # check_*.py, verify_*.py, _*.cjs/js) must not exclude it.
 !security-assessment/**
+
+# one-off tools (from stash@{1} context, 2026-09-28)
+tools/pin-deps-step1.cjs
+fuzz/test-esm-harness.mjs
