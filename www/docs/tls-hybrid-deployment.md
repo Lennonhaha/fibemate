@@ -1,6 +1,6 @@
 # FIBEMATE TLS 1.3 混合后量子握手 — 部署文档
 
-**v1.0** | 2026-07-17 | TSR lg-079
+**v1.0** | 2026-07-17
 **作者**：FIBEMATE Project | **许可证**：GNU GPLv3
 
 ---

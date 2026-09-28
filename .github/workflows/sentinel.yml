@@ -7,8 +7,7 @@ on:
   pull_request:
     paths:
       - 'www/docs/**'
-      - 'packages/pqc-kem/**'
-      - 'packages/fml-dsa/**'
+      - 'packages/**'
 
 jobs:
   verifact:
