@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:b4294681-0b05-56d0-9ac4-4fe96080bb39",
+  "serialNumber": "urn:uuid:24020922-d611-5497-a2a1-37cd1e67638c",
   "version": 1,
   "metadata": {
     "timestamp": "1970-01-01T00:00:00.000Z",
@@ -2550,10 +2550,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "ip-address@10.3.1",
+      "bom-ref": "ip-address@10.7.2",
       "name": "ip-address",
-      "version": "10.3.1",
-      "purl": "pkg:npm/ip-address@10.3.1",
+      "version": "10.7.2",
+      "purl": "pkg:npm/ip-address@10.7.2",
       "licenses": [
         {
           "license": {
