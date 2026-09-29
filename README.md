@@ -32,6 +32,7 @@
 [![Version](https://img.shields.io/badge/version-3.3.0-brightgreen.svg)](https://fibemate.net)
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
+> **五条设计原则** → [不假装完整 · 证据链优先 · 边界公开 · 发布前预检 · 诚实纠错](PRINCIPLES.md)
 
 > ⚠️ **OpenSSF passing certifies engineering hygiene (CI, docs, license), not cryptographic correctness or security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
 
