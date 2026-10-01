@@ -80,7 +80,7 @@ FIBEMATE answers: *Can one person build, verify, and timestamp-evidence the enti
 | Hardware security | ❌ No secure element, physical TVLA pending Q4 2026 |
 | ML-KEM formal proof | ❌ TLA+ covers handshake protocol, not lattice math |
 
-→ [security-limitations.md](docs/security-limitations.md)
+→ [security-limitations.md](security-limitations.md)
 
 ---
 
