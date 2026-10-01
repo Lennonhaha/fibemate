@@ -172,7 +172,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 ### Production Environment
 
-- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, p95=78.5ms, lg-053/lg-057
+- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, lg-053/lg-057
 - **Dual-track graceful degradation** - Standard clients automatically fall back to classical ECDH
 
 ---

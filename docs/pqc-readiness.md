@@ -13,7 +13,7 @@ ML-KEM-768（FIPS 203）完整实现，通过全套合规验证，密码学模�
 2. **PQC-Hybrid（已达成）**
 两条独立混合密钥交换通道并行可用：
 - **路径C-2（应用层 SM2+ML-KEM-768，IANA #4590）** ✅ 正式上线
- 900/900 测试全绿，p95=78.5ms；IANA #4590 E2E混合KEX集成至reg-server（2026-07-16），10/10集成测试通过。
+ 900/900 测试全绿；IANA #4590 E2E混合KEX集成至reg-server（2026-07-16），10/10集成测试通过。
 - **路径A（TLS层 X25519MLKEM768 NamedGroup）** ✅ 激活（2026-07-17）
 依托 oqs-provider + systemd override 部署；**Nginx原生NamedGroup接入方案已于2026-07-10评估搁置**，技术阻断原因：浏览器TLS协议栈不受JS/WASM控制、Nginx缺少TLS1.3混合协商回调API。
 3. **PQC-Active（待落地）**
@@ -160,7 +160,7 @@ Client Server
 > Nginx原生NamedGroup接入路线2026-07-10评估判定不可行，永久搁置。
 > 两大有效通道现状：
 > - 路径A：TLS层 X25519MLKEM768（oqs-provider）
-> - 路径C-2：应用层 SM2+ML-KEM-768，依托TLS Exporter + HTTP POST；900/900全绿，p95=78.5ms
+> - 路径C-2：应用层 SM2+ML-KEM-768，依托TLS Exporter + HTTP POST；900/900全绿
 > 下文七步路线为**历史评估记录**，不作为当前主线实施计划。
 
 > 🔄 2026-09-06 状态更新（工具链就绪，等待系统级升级）

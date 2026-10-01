@@ -588,3 +588,5 @@ NUL
 # one-off tools (from stash@{1} context, 2026-09-28)
 tools/pin-deps-step1.cjs
 fuzz/test-esm-harness.mjs
+
+l.includes('ip-address')
