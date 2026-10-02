@@ -40,7 +40,11 @@
     "jsonpath": "1.1.1",
     "bfj": "8.0.0",
     "js-yaml": "4.3.2",
-    "ip-address": "10.7.2"
+    "ip-address": "10.7.2",
+    "minimatch": {
+      "brace-expansion": "^1.1.21"
+    },
+    "moment": "^2.31.0"
   },
   "directories": {
     "doc": "docs",
