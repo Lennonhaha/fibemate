@@ -214,7 +214,8 @@ void indcpa_keypair_derand(uint8_t pk[KYBER_INDCPA_PUBLICKEYBYTES],
   polyvec a[KYBER_K], e, pkpv, skpv;
 
   memcpy(buf, coins, KYBER_SYMBYTES);
-  hash_g(buf, buf, KYBER_SYMBYTES);
+  buf[KYBER_SYMBYTES] = KYBER_K;  // FIPS 203 domain separator
+  hash_g(buf, buf, KYBER_SYMBYTES + 1);  // SHA3-512(d || K)
 
   gen_a(a, publicseed);
 
