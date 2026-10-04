@@ -4,7 +4,7 @@ const path = require('node:path');
 const assert = require('node:assert');
 const { test } = require('node:test');
 
-// 鈿狅笍 鐩稿璺緞 require 鈥斺€?缁曡繃 index.js 鍏紑 API
+// ⚠️ 相对路径 require —— 绕过 index.js 公开 API
 const kem = require('../src/ml-kem-768.js');
 
 const ACVP_DIR = path.join(process.env.TEMP, 'acvp', 'ML-KEM-keyGen-FIPS203');
