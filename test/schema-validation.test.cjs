@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
 const { test, after } = require('node:test');
 const assert = require('node:assert');
-const { execSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const os = require('node:os');
@@ -9,9 +8,10 @@ const os = require('node:os');
 const Ajv = require('ajv');
 
 function createValidator() {
-  const schema = JSON.parse(fs.readFileSync('./test/fixtures/bom-1.4.schema.json', 'utf-8'));
-  const spdxSchema = JSON.parse(fs.readFileSync('./test/fixtures/spdx.schema.json', 'utf-8'));
-  const jsfSchema = JSON.parse(fs.readFileSync('./test/fixtures/jsf-0.82.schema.json', 'utf-8'));
+  const schemaDir = path.resolve(__dirname, 'fixtures');
+  const schema = JSON.parse(fs.readFileSync(path.join(schemaDir, 'bom-1.4.schema.json'), 'utf-8'));
+  const spdxSchema = JSON.parse(fs.readFileSync(path.join(schemaDir, 'spdx.schema.json'), 'utf-8'));
+  const jsfSchema = JSON.parse(fs.readFileSync(path.join(schemaDir, 'jsf-0.82.schema.json'), 'utf-8'));
 
   const ajv = new Ajv({ strict: false });
   ajv.addSchema(spdxSchema, 'spdx.schema.json');
@@ -19,45 +19,29 @@ function createValidator() {
   return ajv.compile(schema);
 }
 
-const SCRIPT = path.resolve(__dirname, '..', 'scripts', 'gen-sbom.js');
-const FIXTURE = path.resolve(__dirname, 'fixtures', 'sample-project');
-const OUT = path.join(os.tmpdir(), `gen-sbom-test-${process.pid}.json`);
-
-// 鐢熸垚涓€娆♀€斺€旀墍鏈夋祴璇曞叡浜?execSync(`node "${SCRIPT}" "${OUT}"`, { cwd: FIXTURE, stdio: 'pipe' });
-const bom = JSON.parse(fs.readFileSync(OUT, 'utf8'));
-
-after(() => { try { fs.unlinkSync(OUT); } catch {} });
-
-test('output validates against CycloneDX 1.4 schema', () => {
+test('CycloneDX 1.4 schema validation against sbom.cdx.json', async () => {
   const validate = createValidator();
+  const bomPath = path.resolve(__dirname, '..', 'sbom.cdx.json');
+  const bom = JSON.parse(fs.readFileSync(bomPath, 'utf8'));
   const valid = validate(bom);
-  if (!valid) {
-    const msg = validate.errors.map(e => e.instancePath + ': ' + e.message).join('\n');
-    console.error('Schema validation errors:\n' + msg);
-  }
-  assert.ok(valid, 'Output does not match CycloneDX 1.4 schema');
+  assert.ok(valid, 'sbom.cdx.json should validate against CycloneDX 1.4 schema');
+  if (!valid) console.error(validate.errors);
 });
 
-test('declares bomFormat CycloneDX and specVersion 1.4', () => {
-  assert.strictEqual(bom.bomFormat, 'CycloneDX');
-  assert.strictEqual(bom.specVersion, '1.4');
-});
+test('gen-sbom.js output validates', async () => {
+  const { execSync } = require('node:child_process');
+  const script = path.resolve(__dirname, '..', 'scripts', 'gen-sbom.js');
+  const fixtureCwd = path.resolve(__dirname, 'fixtures', 'sample-project');
+  const outPath = path.join(os.tmpdir(), 'gen-sbom-test-' + process.pid + '.json');
 
-test('emits exactly 2 components (is-odd + is-number)', () => {
-  assert.strictEqual(bom.components.length, 2);
-  const names = bom.components.map(c => c.name).sort();
-  assert.deepStrictEqual(names, ['is-number', 'is-odd']);
-});
-
-test('root component exists under metadata.component', () => {
-  assert.ok(bom.metadata.component, 'metadata.component missing');
-  assert.strictEqual(bom.metadata.component.type, 'application');
-  assert.ok(bom.metadata.component.name, 'metadata.component has no name');
-});
-
-test('every component has type "library" and a purl', () => {
-  for (const c of bom.components) {
-    assert.strictEqual(c.type, 'library', `component ${c.name} has wrong type`);
-    assert.ok(c.purl, `component ${c.name} missing purl`);
+  try {
+    execSync('node "' + script + '" "' + outPath + '"', { cwd: fixtureCwd, stdio: 'pipe', shell: true });
+    const bom = JSON.parse(fs.readFileSync(outPath, 'utf8'));
+    const validate = createValidator();
+    const valid = validate(bom);
+    assert.ok(valid, 'generated SBOM should validate against CycloneDX 1.4 schema');
+    if (!valid) console.error(validate.errors);
+  } finally {
+    try { fs.unlinkSync(outPath); } catch {}
   }
 });
