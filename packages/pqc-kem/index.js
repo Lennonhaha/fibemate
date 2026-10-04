@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-License-Identifier: Apache-2.0
 /**
- * @fibemate/pqc-kem — ML-KEM-768 (FIPS 203)
+ * @fibemate/pqc-kem 鈥?ML-KEM-768 (FIPS 203)
  *
  * Dual-backend: C native addon (preferred) -> pure JS (fallback).
  */
@@ -57,7 +57,7 @@ module.exports = {
     get SECRET_KEY_BYTES()   { return JS.SECRET_KEY_BYTES; },
     get CIPHERTEXT_BYTES()   { return JS.CIPHERTEXT_BYTES; },
     get SHARED_SECRET_BYTES(){ return JS.SHARED_SECRET_BYTES; },
-    // Algorithm agility — runtime parameter switching (forwarded from JS backend)
+    // Algorithm agility 鈥?runtime parameter switching (forwarded from JS backend)
     get currentParamSet()    { return JS.currentParamSet; },
     loadParams:              JS.loadParams,
     listParamSets:           JS.listParamSets,

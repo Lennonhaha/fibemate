@@ -1,4 +1,4 @@
-# @fibemate/pqc-kem
+# fibemate-pqc-kem
 
 **ML-KEM-768 (FIPS 203)** — zero-dependency, pure JavaScript post-quantum key encapsulation mechanism. No WASM, no NTT, no native addons.
 
@@ -7,7 +7,7 @@
 - **Pure JavaScript** — runs anywhere: Node.js, browsers, Deno, Bun
 - **Zero dependencies** — self-contained SHA3/Keccak implementation
 - **Constant-time** — TVLA v2 Enhanced (N=10,000) verified: 8/9 core ops constant-time ✅ (compress 公开数据依赖, |t|=23.93, 低严重度)
-- **KAT verified** — 10,000-round Known Answer Test against NIST test vectors
+- **NIST ACVP verified** — 180/180 NIST ACVP vectors pass for ML-KEM-512/768/1024 (keyGen, encaps, decaps)
 - **Performance (Pure JS)** — ~5.0ms/round, 10,000 rounds ~50s (阿里云 ECS实测)
 - **Performance (C Native Addon)** — ~0.29ms/round, 10,000 rounds ~2.9s (AVX2 optimized)
 - **IND-CPA roundtrip** — 14/14 tests passing ✅
@@ -88,4 +88,4 @@ FIBEMATE is the first browser-side ML-KEM-768 implementation to pass both KAT an
 
 ## License
 
-GPL-3.0-only
+Apache-2.0

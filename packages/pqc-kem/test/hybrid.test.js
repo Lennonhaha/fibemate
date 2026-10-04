@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /**
- * @fibemate/pqc-kem — HybridKeyExchange unit test
+ * fibemate-pqc-kem 鈥?HybridKeyExchange unit test
  *
  * Exercises the ML-KEM-768 + ECDH-P-256 hybrid handshake in hybrid.js:
  *   - initialize() produces a 1184B KEM public key + 65B ECDH public key
@@ -88,7 +88,7 @@ function is(val, len, name) {
         failed++;
     } else {
         passed++;
-        console.log('  Tamper correctly detected — decapsulate produced a different secret');
+        console.log('  Tamper correctly detected 鈥?decapsulate produced a different secret');
     }
 
     // Test 4: exported ECDH public key is a valid uncompressed P-256 point

@@ -1,25 +1,25 @@
-// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-License-Identifier: Apache-2.0
 // packages/pqc-kem/src/params.js
 // FIPS 203 (ML-KEM) runtime parameter sets
-// Pattern: match fml-dsa/src/core/params.js — runtime-switchable, not compile-time constants
+// Pattern: match fml-dsa/src/core/params.js 鈥?runtime-switchable, not compile-time constants
 
 // Shared across all ML-KEM parameter sets
-const Q = 3329;             // prime modulus (FIPS 203 §4.1)
+const Q = 3329;             // prime modulus (FIPS 203 搂4.1)
 const N = 256;              // ring dimension x^256+1
 const SEED_BYTES = 32;      // d || z (two 256-bit seeds)
 const SS_BYTES = 32;        // shared secret output length
 
 /**
- * ML-KEM parameter sets (FIPS 203 §4, Table 1)
+ * ML-KEM parameter sets (FIPS 203 搂4, Table 1)
  *
  * Security levels (NIST SP 800-208):
- *   ML-KEM-512  → Category 1 (AES-128 equivalent)
- *   ML-KEM-768  → Category 3 (AES-192 equivalent)
- *   ML-KEM-1024 → Category 5 (AES-256 equivalent)
+ *   ML-KEM-512  鈫?Category 1 (AES-128 equivalent)
+ *   ML-KEM-768  鈫?Category 3 (AES-192 equivalent)
+ *   ML-KEM-1024 鈫?Category 5 (AES-256 equivalent)
  *
  * Key/CT sizes include the implicit rejection hash:
- *   ek  = 384k + 32     (encapsulation key, incl. 32B ρ)
- *   dk  = 768k + 96     (decapsulation key, incl. 32B z + 32B ek_hash + 32B ρ)
+ *   ek  = 384k + 32     (encapsulation key, incl. 32B 蟻)
+ *   dk  = 768k + 96     (decapsulation key, incl. 32B z + 32B ek_hash + 32B 蟻)
  *   c   = 32(du*k + dv*k) + 32  (ciphertext, incl. 32B commitment hash)
  */
 const MLKEM_PARAMS = {
@@ -34,7 +34,7 @@ const MLKEM_PARAMS = {
     ctBytes: 768,      // 32*(10*2 + 4*2) + 32 = 928? recheck
     ssBytes: 32,
     nistLevel: 1,
-    description: 'ML-KEM-512 — NIST security category 1 (AES-128 equivalent)'
+    description: 'ML-KEM-512 鈥?NIST security category 1 (AES-128 equivalent)'
   },
 
   'ML-KEM-768': {
@@ -48,7 +48,7 @@ const MLKEM_PARAMS = {
     ctBytes: 1088,     // 32*(10*3 + 4*3) + 32 = 1376? recheck... 32*14*3=1344+32=1376. Hmm.
     ssBytes: 32,
     nistLevel: 3,
-    description: 'ML-KEM-768 — NIST security category 3 (AES-192 equivalent)'
+    description: 'ML-KEM-768 鈥?NIST security category 3 (AES-192 equivalent)'
   },
 
   'ML-KEM-1024': {
@@ -62,12 +62,12 @@ const MLKEM_PARAMS = {
     ctBytes: 1568,     // 32*(11*4 + 5*4) + 32 = 32*64+32 = 2080? No...
     ssBytes: 32,
     nistLevel: 5,
-    description: 'ML-KEM-1024 — NIST security category 5 (AES-256 equivalent)'
+    description: 'ML-KEM-1024 鈥?NIST security category 5 (AES-256 equivalent)'
   }
 };
 
 /**
- * getParams(paramSet) → MLKEM parameter bag
+ * getParams(paramSet) 鈫?MLKEM parameter bag
  *   paramSet: 'ML-KEM-512' | 'ML-KEM-768' | 'ML-KEM-1024'
  * Returns a frozen object with all run-time parameters + derived constants.
  */
@@ -106,14 +106,14 @@ function getParams(paramSet = 'ML-KEM-768') {
 }
 
 /**
- * listParamSets() → array of available parameter set names
+ * listParamSets() 鈫?array of available parameter set names
  */
 function listParamSets() {
   return Object.keys(MLKEM_PARAMS);
 }
 
 /**
- * validateParamSet(name) → bool
+ * validateParamSet(name) 鈫?bool
  */
 function validateParamSet(name) {
   return name in MLKEM_PARAMS;

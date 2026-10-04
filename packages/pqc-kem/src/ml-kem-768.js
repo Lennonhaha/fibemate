@@ -17,6 +17,7 @@
  * Use the WASM path for production workloads; this file is for auditability.
  */
 
+// SPDX-License-Identifier: Apache-2.0
 'use strict';
 
 // Runtime parameter set (AA: algorithm agility — switchable without recompile)

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 /**
- * @fibemate/pqc-kem — ML-KEM-768 basic test
+ * fibemate-pqc-kem 鈥?ML-KEM-768 basic test
  *
  * Tests the bridged API (generateKeypair / encapsulate / decapsulate).
  * Runs against the pure-JS backend when native addon is not available.
@@ -72,7 +72,7 @@ if (!tamperDetected) {
     failed++;
 } else {
     passed++;
-    console.log('  Tamper correctly detected — decapsulate produced different secret');
+    console.log('  Tamper correctly detected 鈥?decapsulate produced different secret');
 }
 
 // Test 5: cross-session isolation (fresh keypair each time)
