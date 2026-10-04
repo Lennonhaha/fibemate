@@ -152,6 +152,9 @@ jobs:
       - name: Generate SBOM
         run: node scripts/gen-sbom.js /tmp/sbom.cdx.json
 
+      - name: Schema validation test (CycloneDX 1.4)
+        run: node --test test/schema-validation.test.cjs
+
       - name: Verify SBOM is committed and up-to-date
         shell: bash
         run: |
