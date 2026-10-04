@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 /**
  * HybridKeyExchange 鈥?ML-KEM-768 + ECDH-P-256 hybrid key exchange.
  *

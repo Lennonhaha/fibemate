@@ -1,4 +1,4 @@
-﻿{
+{
   "name": "fibemate-pqc-kem",
   "version": "0.1.0",
   "description": "ML-KEM-768 (FIPS 203) - post-quantum KEM with optional C native addon.",

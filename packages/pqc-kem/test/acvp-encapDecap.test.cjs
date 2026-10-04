@@ -1,9 +1,10 @@
+// SPDX-License-Identifier: Apache-2.0
 const fs = require('node:fs');
 const path = require('node:path');
 const assert = require('node:assert');
 const { test } = require('node:test');
 
-// ⚠️ 相对路径 require —— 绕过 index.js 公开 API
+// 鈿狅笍 鐩稿璺緞 require 鈥斺€?缁曡繃 index.js 鍏紑 API
 const kem = require('../src/ml-kem-768.js');
 
 const ACVP_DIR = path.join(process.env.TEMP, 'acvp', 'ML-KEM-encapDecap-FIPS203');
@@ -65,8 +66,8 @@ for (const g of prompt.testGroups.filter(g => g.function === 'decapsulation')) {
 }
 
 // ---------- keyCheck ----------
-// 只有 ek 或 dk 字节，无 c/k 期望，需 JS 导出 validate 函数
-// testType=VAL -> testPassed=true 预期，暂无公开 API
+// 鍙湁 ek 鎴?dk 瀛楄妭锛屾棤 c/k 鏈熸湜锛岄渶 JS 瀵煎嚭 validate 鍑芥暟
+// testType=VAL -> testPassed=true 棰勬湡锛屾殏鏃犲叕寮€ API
 for (const g of prompt.testGroups.filter(g => g.function.includes('KeyCheck'))) {
- test.skip(`ACVP ${g.parameterSet} keyCheck tgId=${g.tgId} — pending validate API`, () => {});
+ test.skip(`ACVP ${g.parameterSet} keyCheck tgId=${g.tgId} 鈥?pending validate API`, () => {});
 }

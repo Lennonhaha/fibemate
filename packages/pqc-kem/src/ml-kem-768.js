@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
  * ML-KEM (FIPS 203) 鈥?Pure JavaScript NTT-Domain Implementation

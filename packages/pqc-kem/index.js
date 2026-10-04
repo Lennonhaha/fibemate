@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: Apache-2.0
+// SPDX-License-Identifier: Apache-2.0
 /**
  * @fibemate/pqc-kem 鈥?ML-KEM-768 (FIPS 203)
  *
