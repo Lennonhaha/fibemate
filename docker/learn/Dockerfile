@@ -1,6 +1,6 @@
 # FIBEMATE PQC Learn — 教育环境镜像
 # 设计文档: docs/product-designs/08-pqc-docker.md §7.1
-FROM nginx:alpine@sha256:1ed1b0e1d7652937d6cbdaf4018c7b6fc009a7dd6c3047351e2eddda745de43f
+FROM nginx:alpine@sha256:df221db836e1754089190208cee7eeda94f233197056426eda74a43ab1abeac2
 
 LABEL org.fibemate.image="pqc-learn"
 LABEL org.fibemate.version="3.3.0"
