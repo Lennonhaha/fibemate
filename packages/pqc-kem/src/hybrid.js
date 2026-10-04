@@ -1,6 +1,6 @@
-// SPDX-License-Identifier: GPL-3.0-only
+﻿// SPDX-License-Identifier: Apache-2.0
 /**
- * HybridKeyExchange — ML-KEM-768 + ECDH-P-256 hybrid key exchange.
+ * HybridKeyExchange 鈥?ML-KEM-768 + ECDH-P-256 hybrid key exchange.
  *
  * REQUIRES: crypto.subtle (available in browsers and Node.js >= 15 with WebCrypto)
  * This module depends on the core ml-kem-768.js for generateKeypair/encapsulate/decapsulate.

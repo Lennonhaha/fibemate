@@ -1,25 +1,25 @@
-// SPDX-License-Identifier: GPL-3.0-only
+﻿// SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
- * ML-KEM (FIPS 203) — Pure JavaScript NTT-Domain Implementation
+ * ML-KEM (FIPS 203) 鈥?Pure JavaScript NTT-Domain Implementation
  *
- * NTT encode: DIT butterfly (dit=false→isDit=true), ZETAS[1..127]
- * NTT decode: invertButterflies (dit=true→isDit=false), ZETAS[255..129], ×3303
- * polyMulNTT: BaseCaseMultiply with ZETAS[64+⌊i/2⌋]
+ * NTT encode: DIT butterfly (dit=false鈫抜sDit=true), ZETAS[1..127]
+ * NTT decode: invertButterflies (dit=true鈫抜sDit=false), ZETAS[255..129], 脳3303
+ * polyMulNTT: BaseCaseMultiply with ZETAS[64+鈱奿/2鈱媇
  *
  * Cross-validated with @noble/post-quantum ml-kem (200/200 both directions).
  *
  * Algorithm agility (AA): runtime-switchable parameter sets via loadParams()
- *   ML-KEM-512  (k=2, η1=3, η2=2, du=10, dv=4)
- *   ML-KEM-768  (k=3, η1=2, η2=2, du=10, dv=4)
- *   ML-KEM-1024 (k=4, η1=2, η2=2, du=11, dv=5)
+ *   ML-KEM-512  (k=2, 畏1=3, 畏2=2, du=10, dv=4)
+ *   ML-KEM-768  (k=3, 畏1=2, 畏2=2, du=10, dv=4)
+ *   ML-KEM-1024 (k=4, 畏1=2, 畏2=2, du=11, dv=5)
  *
  * Use the WASM path for production workloads; this file is for auditability.
  */
 
 'use strict';
 
-// Runtime parameter set (AA: algorithm agility — switchable without recompile)
+// Runtime parameter set (AA: algorithm agility 鈥?switchable without recompile)
 const { getParams, listParamSets, MLKEM_PARAMS } = require('./params');
 let _KYBER_N, _KYBER_Q, KYBER_K, _KYBER_ETA1, _KYBER_ETA2, KYBER_DU, KYBER_DV,
     KYBER_PUBLICKEYBYTES, KYBER_SECRETKEYBYTES, KYBER_CIPHERTEXTBYTES, KYBER_SSBYTES, _KYBER_QHALF;
@@ -46,7 +46,7 @@ const _webcrypto = (typeof crypto !== 'undefined' && crypto.getRandomValues) ? c
 const N = 256, Q = 3329, NTT_INV = 3303;
 
 // ============================================================================
-// ZETAS[256] — period-128, ZETAS[i]=17^{BR₇(i)} mod 3329
+// ZETAS[256] 鈥?period-128, ZETAS[i]=17^{BR鈧?i)} mod 3329
 // ============================================================================
 const ZETAS = new Int16Array([
       1,1729,2580,3289,2642,630,1897,848,1062,1919,193,797,2786,3260,569,1746,
@@ -73,7 +73,7 @@ const ZETAS = new Int16Array([
 // ============================================================================
 function ctSelectByte(a, b, mask) { return (a & mask) | (b & (0xFF ^ mask)); }
 
-/** Constant-time Uint8Array select. mask=0xFF → ok; 0x00 → reject. */
+/** Constant-time Uint8Array select. mask=0xFF 鈫?ok; 0x00 鈫?reject. */
 function ctSelectU8(ok, reject, mask) {
     if (ok.length !== reject.length) throw new RangeError('ctSelectU8 length mismatch');
     const out = new Uint8Array(ok.length);
@@ -94,7 +94,7 @@ function zeroizeI16(a) { for (let i = 0; i < a.length; i++) a[i] = 0; }
 function zeroizePolyVec(v) { for (let i = 0; i < v.length; i++) zeroizeI16(v[i]); }
 
 // ============================================================================
-// Modular arithmetic (Barrett reduction — safe for negative inputs)
+// Modular arithmetic (Barrett reduction 鈥?safe for negative inputs)
 // ============================================================================
 const _BAR_K = 24, BAR_MU = 5039;
 function modMulBarrett(a, b) {
@@ -111,7 +111,7 @@ function modMul(a, b) { return modMulBarrett(((a|0)%Q+Q)%Q, ((b|0)%Q+Q)%Q); }
 function modNeg(a) { const na = ((a|0)%Q+Q)%Q; return na ? Q-na : 0; }
 
 // ============================================================================
-// NTT / iNTT — 1:1 with @noble/curves FFTCore (genCrystals Kyber mode)
+// NTT / iNTT 鈥?1:1 with @noble/curves FFTCore (genCrystals Kyber mode)
 // ============================================================================
 function ntt(f) {
     let step = 1;
@@ -150,7 +150,7 @@ function intt(f) {
 }
 
 // ============================================================================
-// SHA-3 / SHAKE — pure JS Keccak with noble/crypto fallbacks
+// SHA-3 / SHAKE 鈥?pure JS Keccak with noble/crypto fallbacks
 // ============================================================================
 const KeccakRhoOffsets = [0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
 const KeccakPiOffsets = [10,7,11,17,0,3,5,4,15,12,2,13,9,6,1,14,8,16,19,18,23,22,20,24,21];
@@ -195,7 +195,7 @@ function cbd(buf, eta) {
 function cbd2(buf) { return cbd(buf, 2); }
 
 // Uniformly sample a polynomial in NTT domain.
-// seed = ρ‖j‖i (34 bytes) → SHAKE-128(840) rejection sampling.
+// seed = 蟻鈥杍鈥杋 (34 bytes) 鈫?SHAKE-128(840) rejection sampling.
 function sampleNTT(seed){const stream=shake128(seed,840);const a=new Int16Array(N);let j=0,off=0;while(j<N&&off+3<=stream.length){const d1=stream[off]|((stream[off+1]&0x0F)<<8),d2=(stream[off+1]>>4)|(stream[off+2]<<4);off+=3;if(d1<Q)a[j++]=d1;if(j<N&&d2<Q)a[j++]=d2}while(j<N)a[j++]=0;return a}
 
 function polyMulNTT(a,b){const r=new Int16Array(N);for(let i=0;i<128;i++){let z=ZETAS[64+(i>>1)];if(i&1)z=modNeg(z);const a0=a[2*i],a1=a[2*i+1],b0=b[2*i],b1=b[2*i+1];r[2*i]=modAdd(modMul(modMul(a1,b1),z),modMul(a0,b0));r[2*i+1]=modAdd(modMul(a0,b1),modMul(a1,b0))}return r}
@@ -207,7 +207,7 @@ function polyFromMsg(msg){const m=new Int16Array(N);for(let i=0;i<N;i++)m[i]=((m
 function polyToMsg(f){const m=new Uint8Array(32);for(let i=0;i<N;i++){const x=((f[i]%Q)+Q)%Q;if(x>832&&x<2497)m[i>>>3]|=1<<(i&7)}return m}
 
 // Back-compat wrapper for the legacy samplePoly(seed, nonce) signature
-// (nonce = (i<<8)|j → seed‖j‖i, FIPS 203 double-byte packing).
+// (nonce = (i<<8)|j 鈫?seed鈥杍鈥杋, FIPS 203 double-byte packing).
 function samplePolyCompat(seed, nonce) {
     const s = new Uint8Array(34);
     s.set(seed);
@@ -217,17 +217,21 @@ function samplePolyCompat(seed, nonce) {
 }
 
 // ============================================================================
-// KeyGen — FIPS 203 §7.1 (NTT domain, runtime parameter set)
+// KeyGen 鈥?FIPS 203 搂7.1 (NTT domain, runtime parameter set)
 // ============================================================================
-function generateKeypair(){
-    if (!_webcrypto) throw new Error('Web Crypto API (crypto.getRandomValues) required');
+
+/**
+ * @internal
+ * Deterministic key generation 鈥?for KAT/ACVP testing only.
+ * Do NOT expose to end users; fixed seeds produce predictable keys.
+ */
+function keygenInternal(d, z) {
     const K = KYBER_K, eta1 = _KYBER_ETA1;
-    const d=crypto.getRandomValues(new Uint8Array(32));
-    const z=crypto.getRandomValues(new Uint8Array(32));
-    const H=sha3_512(new Uint8Array([...d,K])); // G(d‖k) — domain separator k
+    const H=sha3_512(new Uint8Array([...d,K])); // G(d鈥杒) 鈥?domain separator k
+
     const rho=H.slice(0,32), sigma=H.slice(32,64);
 
-    // A[i][j] = sampleNTT(ρ‖j‖i) — FIPS Alg 13 step (already NTT domain)
+    // A[i][j] = sampleNTT(蟻鈥杍鈥杋) 鈥?FIPS Alg 13 step (already NTT domain)
     const A=[];
     for(let i=0;i<K;i++){
         A[i]=[];
@@ -238,24 +242,24 @@ function generateKeypair(){
         }
     }
 
-    // s[i] = ntt(CBD_eta1(PRF(σ,i))), e[i] = ntt(CBD_eta1(PRF(σ,i+k)))
+    // s[i] = ntt(CBD_eta1(PRF(蟽,i))), e[i] = ntt(CBD_eta1(PRF(蟽,i+k)))
     const s=[],e=[];
     for(let i=0;i<K;i++){
         s[i]=ntt(cbd(shake256(new Uint8Array([...sigma,i]),64*eta1),eta1));
         e[i]=ntt(cbd(shake256(new Uint8Array([...sigma,i+K]),64*eta1),eta1));
     }
 
-    // t_hat[i] = A[i]*s_hat + e_hat — NTT domain, encoded directly into pk
+    // t_hat[i] = A[i]*s_hat + e_hat 鈥?NTT domain, encoded directly into pk
     const As=matVecMulNTT(A,s,K);
     const t=As.map((row,i)=>polyAddNTT(row,e[i]));
 
-    // pk = byteEncode₁₂(t_hat) || ρ
+    // pk = byteEncode鈧佲倐(t_hat) || 蟻
     const pk=new Uint8Array(KYBER_PUBLICKEYBYTES);
     let off=0;
     for(let i=0;i<K;i++){pk.set(byteEncode(t[i],12),off);off+=384;}
     pk.set(rho,off);
 
-    // sk = byteEncode₁₂(s_hat) || pk || H(pk) || z  (s in NTT domain)
+    // sk = byteEncode鈧佲倐(s_hat) || pk || H(pk) || z  (s in NTT domain)
     const sk=new Uint8Array(KYBER_SECRETKEYBYTES);
     off=0;
     for(let i=0;i<K;i++){sk.set(byteEncode(s[i],12),off);off+=384;}
@@ -266,22 +270,33 @@ function generateKeypair(){
     return {publicKey:pk,secretKey:sk};
 }
 
-// ============================================================================
-// Encaps — FIPS 203 §7.2 (NTT domain)
-// ============================================================================
-function encapsulate(publicKey){
+function generateKeypair(){
     if (!_webcrypto) throw new Error('Web Crypto API (crypto.getRandomValues) required');
+    const d=crypto.getRandomValues(new Uint8Array(32));
+    const z=crypto.getRandomValues(new Uint8Array(32));
+    return keygenInternal(d, z);
+}
+
+// ============================================================================
+// Encaps 鈥?FIPS 203 搂7.2 (NTT domain)
+// ============================================================================
+
+/**
+ * @internal
+ * Deterministic encapsulation 鈥?for KAT/ACVP testing only.
+ * Do NOT expose to end users; fixed m produces predictable ciphertext.
+ */
+function encapsInternal(publicKey, m) {
     const K = KYBER_K, eta1 = _KYBER_ETA1, eta2 = _KYBER_ETA2;
     const duBytes = 32 * KYBER_DU;
-    const m=crypto.getRandomValues(new Uint8Array(32));
     const rho=publicKey.slice(K*384,K*384+32);
     const hpk=sha3_256(publicKey);
 
-    // G(m‖H(pk)) → SHA3-512 → (K_bar, r)
+    // G(m鈥朒(pk)) 鈫?SHA3-512 鈫?(K_bar, r)
     const G=sha3_512(new Uint8Array([...m,...hpk]));
     const K_bar=G.slice(0,32), r=G.slice(32,64);
 
-    // Â^T[i][j] = sampleNTT(ρ‖i‖j) — FIPS 203 §7.2 step 2
+    // 脗^T[i][j] = sampleNTT(蟻鈥杋鈥杍) 鈥?FIPS 203 搂7.2 step 2
     const AT=[];
     for(let i=0;i<K;i++){
         AT[i]=[];
@@ -311,12 +326,12 @@ function encapsulate(publicKey){
         u[i]=ui;
     }
 
-    // t_hat = byteDecode₁₂ from pk (NTT domain)
+    // t_hat = byteDecode鈧佲倐 from pk (NTT domain)
     const t_hat=[];
     let off=0;
     for(let i=0;i<K;i++){t_hat[i]=byteDecode(publicKey.slice(off,off+384),12);off+=384;}
 
-    // v = iNTT(t_hat^T * r_ntt) + e2 + Decompress₁(m)
+    // v = iNTT(t_hat^T * r_ntt) + e2 + Decompress鈧?m)
     const vprime=intt(vecDotNTT(t_hat,rr,K));
     const mu=polyFromMsg(m);
     const v=new Int16Array(N);
@@ -333,43 +348,49 @@ function encapsulate(publicKey){
     return {ciphertext:ct,sharedSecret:K_bar};  // return raw K_bar for noble compat
 }
 
+function encapsulate(publicKey){
+    if (!_webcrypto) throw new Error('Web Crypto API (crypto.getRandomValues) required');
+    const m=crypto.getRandomValues(new Uint8Array(32));
+    return encapsInternal(publicKey, m);
+}
+
 // ============================================================================
-// Decaps — FIPS 203 §7.3 (NTT domain)
+// Decaps 鈥?FIPS 203 搂7.3 (NTT domain)
 // ============================================================================
 function decapsulate(secretKey,ciphertext){
     const K = KYBER_K, eta1 = _KYBER_ETA1, eta2 = _KYBER_ETA2;
     const duBytes = 32 * KYBER_DU;
 
-    // sk = byteEncode₁₂(s_hat) || pk || H(pk) || z
+    // sk = byteEncode鈧佲倐(s_hat) || pk || H(pk) || z
     const s=[];
     let off=0;
     for(let i=0;i<K;i++){s[i]=byteDecode(secretKey.slice(off,off+384),12);off+=384;}
     const pk=secretKey.slice(off,off+KYBER_PUBLICKEYBYTES);off+=KYBER_PUBLICKEYBYTES;
-    const _h=secretKey.slice(off,off+32);off+=32;  // H(pk) — implicit-rejection check field
+    const _h=secretKey.slice(off,off+32);off+=32;  // H(pk) 鈥?implicit-rejection check field
     const z=secretKey.slice(off,off+32);
 
-    // ct = … || compress_du(u) || compress_dv(v)
+    // ct = 鈥?|| compress_du(u) || compress_dv(v)
     const u=[];
     off=0;
     for(let i=0;i<K;i++){u[i]=decompress(byteDecode(ciphertext.slice(off,off+duBytes),KYBER_DU),KYBER_DU);off+=duBytes;}
     const v=decompress(byteDecode(ciphertext.slice(off,off+32*KYBER_DV),KYBER_DV),KYBER_DV);
 
-    // u → NTT, s_hat · NTT(u) → iNTT = s·u
+    // u 鈫?NTT, s_hat 路 NTT(u) 鈫?iNTT = s路u
     const uNTT=u.map(ui=>ntt(new Int16Array(ui)));
     const su=intt(vecDotNTT(s,uNTT,K));
 
-    // v - s·u → m'
+    // v - s路u 鈫?m'
     const mp=new Int16Array(N);
     for(let i=0;i<N;i++)mp[i]=modSub(v[i],su[i]);
     const mPrime=polyToMsg(mp);
 
-    // G(m'‖H(pk)) → (K_bar', r')
+    // G(m'鈥朒(pk)) 鈫?(K_bar', r')
     const hpk=sha3_256(pk);
     const G2=sha3_512(new Uint8Array([...mPrime,...hpk]));
     const K_bar_prime=G2.slice(0,32), r2seed=G2.slice(32,64);
     const rho=new Uint8Array(pk.slice(K*384,K*384+32));
 
-    // Re-encrypt: Â^T[i][j] = sampleNTT(ρ‖i‖j)
+    // Re-encrypt: 脗^T[i][j] = sampleNTT(蟻鈥杋鈥杍)
     const AT=[];
     for(let i=0;i<K;i++){
         AT[i]=[];
@@ -410,10 +431,10 @@ function decapsulate(secretKey,ciphertext){
     for(let i=0;i<K;i++){ct2.set(byteEncode(compress(u2[i],KYBER_DU),KYBER_DU),off);off+=duBytes;}
     ct2.set(byteEncode(compress(v2,KYBER_DV),KYBER_DV),off);
 
-    // Constant-time FO implicit-rejection selection (FIPS 203 §7.3 step 8-10)
+    // Constant-time FO implicit-rejection selection (FIPS 203 搂7.3 step 8-10)
     const eqMask = ctEqMask(ciphertext, ct2);
-    const K_ok = K_bar_prime;                       // matches → return K̂'
-    const K_rej = shake256(new Uint8Array([...z,...ciphertext]),32);  // J(z‖c)
+    const K_ok = K_bar_prime;                       // matches 鈫?return K虃'
+    const K_rej = shake256(new Uint8Array([...z,...ciphertext]),32);  // J(z鈥朿)
     const sharedSecret = ctSelectU8(K_ok, K_rej, eqMask);
 
     zeroizeU8(K_ok); zeroizeU8(K_rej);
@@ -424,7 +445,7 @@ function decapsulate(secretKey,ciphertext){
 // Module export
 // ============================================================================
 const MLKEM768 = {
-    generateKeypair,encapsulate,decapsulate,
+    generateKeypair,keygenInternal,generateKeypairDerand:keygenInternal,encapsulate,encapsInternal,encapsulateDerand:encapsInternal,decapsulate,
     get PUBLIC_KEY_BYTES() { return KYBER_PUBLICKEYBYTES; },
     get SECRET_KEY_BYTES() { return KYBER_SECRETKEYBYTES; },
     get CIPHERTEXT_BYTES() { return KYBER_CIPHERTEXTBYTES; },
@@ -439,10 +460,10 @@ const MLKEM768 = {
     ZETAS,
     // Constant-time helpers (audit/tvla)
     ctSelectU8,ctEqMask,zeroizeU8,zeroizeI16,zeroizePolyVec,
-    // Algorithm agility — runtime parameter switching
+    // Algorithm agility 鈥?runtime parameter switching
     get currentParamSet() { return _currentParamSet; },
     loadParams,listParamSets,getParams,MLKEM_PARAMS,
-    // Back-compat aliases (legacy time-domain names → NTT semantics)
+    // Back-compat aliases (legacy time-domain names 鈫?NTT semantics)
     polyMul:polyMulNTT,
     vecDot:vecDotNTT,
     matVecMul:matVecMulNTT,
