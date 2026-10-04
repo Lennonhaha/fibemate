@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: Apache-2.0
 const { test, after } = require('node:test');
 const assert = require('node:assert');
 const { execSync } = require('node:child_process');
@@ -22,8 +23,7 @@ const SCRIPT = path.resolve(__dirname, '..', 'scripts', 'gen-sbom.js');
 const FIXTURE = path.resolve(__dirname, 'fixtures', 'sample-project');
 const OUT = path.join(os.tmpdir(), `gen-sbom-test-${process.pid}.json`);
 
-// 生成一次——所有测试共享
-execSync(`node "${SCRIPT}" "${OUT}"`, { cwd: FIXTURE, stdio: 'pipe' });
+// 鐢熸垚涓€娆♀€斺€旀墍鏈夋祴璇曞叡浜?execSync(`node "${SCRIPT}" "${OUT}"`, { cwd: FIXTURE, stdio: 'pipe' });
 const bom = JSON.parse(fs.readFileSync(OUT, 'utf8'));
 
 after(() => { try { fs.unlinkSync(OUT); } catch {} });
