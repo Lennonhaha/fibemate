@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:b84e3dca-29c6-5645-5464-758a89b5500b",
+  "serialNumber": "urn:uuid:fa0960c2-4b48-50db-4774-6e44fde63df2",
   "version": 1,
   "metadata": {
     "timestamp": "1970-01-01T00:00:00.000Z",
@@ -618,6 +618,34 @@
     },
     {
       "type": "library",
+      "bom-ref": "ajv@6.15.0",
+      "name": "ajv",
+      "version": "6.15.0",
+      "purl": "pkg:npm/ajv@6.15.0",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "json-schema-traverse@0.4.1",
+      "name": "json-schema-traverse",
+      "version": "0.4.1",
+      "purl": "pkg:npm/json-schema-traverse@0.4.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "strip-json-comments@3.1.1",
       "name": "strip-json-comments",
       "version": "3.1.1",
@@ -1122,10 +1150,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "ajv@6.15.0",
+      "bom-ref": "ajv@8.20.0",
       "name": "ajv",
-      "version": "6.15.0",
-      "purl": "pkg:npm/ajv@6.15.0",
+      "version": "8.20.0",
+      "purl": "pkg:npm/ajv@8.20.0",
       "licenses": [
         {
           "license": {
@@ -2074,6 +2102,20 @@
     },
     {
       "type": "library",
+      "bom-ref": "fast-uri@3.1.8",
+      "name": "fast-uri",
+      "version": "3.1.8",
+      "purl": "pkg:npm/fast-uri@3.1.8",
+      "licenses": [
+        {
+          "license": {
+            "name": "BSD-3-Clause"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
       "bom-ref": "file-entry-cache@8.0.0",
       "name": "file-entry-cache",
       "version": "8.0.0",
@@ -2788,10 +2830,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "json-schema-traverse@0.4.1",
+      "bom-ref": "json-schema-traverse@1.0.0",
       "name": "json-schema-traverse",
-      "version": "0.4.1",
-      "purl": "pkg:npm/json-schema-traverse@0.4.1",
+      "version": "1.0.0",
+      "purl": "pkg:npm/json-schema-traverse@1.0.0",
       "licenses": [
         {
           "license": {
@@ -3558,10 +3600,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "proxy-addr@2.0.7",
+      "bom-ref": "proxy-addr@2.0.8",
       "name": "proxy-addr",
-      "version": "2.0.7",
-      "purl": "pkg:npm/proxy-addr@2.0.7",
+      "version": "2.0.8",
+      "purl": "pkg:npm/proxy-addr@2.0.8",
       "licenses": [
         {
           "license": {
@@ -3646,6 +3688,20 @@
       "name": "require-directory",
       "version": "2.1.1",
       "purl": "pkg:npm/require-directory@2.1.1",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "require-from-string@2.0.2",
+      "name": "require-from-string",
+      "version": "2.0.2",
+      "purl": "pkg:npm/require-from-string@2.0.2",
       "licenses": [
         {
           "license": {

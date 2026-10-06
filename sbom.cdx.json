@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:1f1e0b56-ee10-5442-72af-ad00646fbb86",
+  "serialNumber": "urn:uuid:fa0960c2-4b48-50db-4774-6e44fde63df2",
   "version": 1,
   "metadata": {
     "timestamp": "1970-01-01T00:00:00.000Z",
@@ -3600,10 +3600,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "proxy-addr@2.0.7",
+      "bom-ref": "proxy-addr@2.0.8",
       "name": "proxy-addr",
-      "version": "2.0.7",
-      "purl": "pkg:npm/proxy-addr@2.0.7",
+      "version": "2.0.8",
+      "purl": "pkg:npm/proxy-addr@2.0.8",
       "licenses": [
         {
           "license": {
