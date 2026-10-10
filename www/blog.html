@@ -526,7 +526,7 @@
                 <li><strong>第二层 — ML-KEM-768（NIST FIPS 203）</strong>：基于格密码的密钥封装机制，按 NIST 安全等级 3（等效 AES-192）提供量子计算攻击下的安全保障，同样生成 32 字节共享密钥。</li>
                 <li><strong>统一层 — HKDF 密钥派生</strong>：将两层密钥通过标准 HKDF-SHA256 混合派生，输出统一的会话密钥。</li>
             </ul>
-            <p>这种"双密钥信封"设计的优势在于：<strong>任何一层被攻破，另一层仍然保护通讯安全</strong>。即使未来量子计算机能够破解 SM2 曲线，ML-KEM 层依然牢不可破；反之亦然。</p>
+            <p>这种"双密钥信封"设计的优势在于：<strong>任何一层被攻破，另一层仍然保护通讯安全</strong>。即使未来量子计算机能够破解 SM2 曲线，ML-KEM 层仍可提供保护；反之亦然。</p>
 
             <h2>WASM 实现：跨平台高性能</h2>
             <p>为了让混合加密方案能够同时运行在 Web 前端、Electron 桌面端和移动端，我们选择 <strong>Rust 编译到 WebAssembly (WASM)</strong> 作为统一的实现平台。</p>
@@ -664,7 +664,7 @@
             <ul>
                 <li><strong>安全透明性</strong>：双源时间戳 (FreeTSA + DigiCert) 存证了全部 260 份里程碑，开源后任何人可以独立验证从代码到 KAT 到 TVLA 的完整证据链。</li>
                 <li><strong>工程可重现性</strong>：ML-KEM-768 的 10,000 次 KAT、SM2 的 N=5,000 高阶 TVLA（20/20）、TLS 混合握手的 900/900 E2E，所有数字都可以在开源代码上重新跑通。</li>
-                <li><strong>生态桥接</strong>：IANA #4590 (SM2-MLKEM-768) 是目前唯一的国密+后量子混合命名组 — 开源降低国际社区对该方案的验证门槛。</li>
+                <li><strong>生态桥接</strong>：IANA #4590 (SM2-MLKEM-768) 是 IANA 注册表中的国密+后量子混合命名组 — 开源降低国际社区对该方案的验证门槛。</li>
             </ul>
 
             <h2>许可证选择：GPLv3</h2>
