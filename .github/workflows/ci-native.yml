@@ -46,7 +46,7 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y build-essential
 
-      - name: npm install (addon deps)
+      - name: npm ci (addon deps)
         working-directory: packages/pqc-kem
         run: npm ci
 
@@ -71,7 +71,7 @@ jobs:
         with:
           node-version: '22'
 
-      - name: npm install (JS-only, no native build)
+      - name: npm ci (JS-only, no native build)
         working-directory: packages/pqc-kem
         run: npm ci
 
