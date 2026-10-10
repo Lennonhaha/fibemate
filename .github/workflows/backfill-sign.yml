@@ -48,7 +48,10 @@ jobs:
               continue
             fi
             echo "signing: $f"
-            cosign sign-blob --yes --output-signature "$f.sig" --output-certificate "$f.pem" "$f"
+            cosign sign-blob --yes \
+              --new-bundle-format=false \
+              --use-signing-config=false \
+              --output-signature "$f.sig" --output-certificate "$f.pem" "$f"
           done
 
       - name: Upload signatures back to the release
