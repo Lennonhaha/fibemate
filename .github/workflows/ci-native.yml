@@ -48,7 +48,7 @@ jobs:
 
       - name: npm install (addon deps)
         working-directory: packages/pqc-kem
-        run: npm install
+        run: npm ci
 
       - name: Build C addon
         working-directory: packages/pqc-kem
@@ -73,7 +73,7 @@ jobs:
 
       - name: npm install (JS-only, no native build)
         working-directory: packages/pqc-kem
-        run: npm install
+        run: npm ci
 
       - name: Verify JS implementation loads
         working-directory: packages/pqc-kem
@@ -89,6 +89,6 @@ jobs:
         with: { node-version: '22' }
       - run: sudo apt-get update && sudo apt-get install -y build-essential
       - working-directory: packages/pqc-kem
-        run: npm install && npm run build:native:release
+        run: npm ci && npm run build:native:release
       - working-directory: packages/pqc-kem
         run: node ../../scripts/mlkem-bench-native.cjs 10000

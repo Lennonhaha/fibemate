@@ -35,7 +35,7 @@ jobs:
 
       - name: Install npm dependencies
         working-directory: packages/pqc-kem
-        run: npm install
+        run: npm ci
 
       - name: Build native addon
         working-directory: packages/pqc-kem

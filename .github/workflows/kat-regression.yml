@@ -69,7 +69,7 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
       - name: Install dependencies
         working-directory: ./packages/fml-dsa
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
       - name: ML-DSA KeyGen KAT — 75 vectors vs noble oracle
         working-directory: ./packages/fml-dsa
         run: node test/kat-verify.mjs
