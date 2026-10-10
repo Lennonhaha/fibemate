@@ -1,0 +1,61 @@
+# 补齐签名：给早于签名管道存在的 release 补上 keyless cosign 签名。
+# Backfill signatures for releases published before the signing pipeline existed.
+# 只签名、不重建：下载该 release 的现有资产 → cosign sign-blob → 回传 <asset>.sig + <asset>.pem。
+# 用法: Actions -> "Backfill signatures" -> Run workflow -> tag: v3.3.0
+name: Backfill signatures
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '已存在的 release tag（例如 v3.3.0）'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  sign:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write   # 下载 + 回传 release 资产
+      id-token: write   # keyless cosign（GitHub OIDC）——缺它签名步骤必红
+    steps:
+      - name: Install cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Download release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          mkdir -p rel && cd rel
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --clobber
+          ls -l
+
+      - name: Sign every asset that has no signature yet (keyless)
+        run: |
+          set -euo pipefail
+          cd rel
+          for f in *; do
+            case "$f" in
+              *.sig|*.pem) continue ;;
+            esac
+            if [ -f "$f.sig" ]; then
+              echo "skip (already signed): $f"
+              continue
+            fi
+            echo "signing: $f"
+            cosign sign-blob --yes --output-signature "$f.sig" --output-certificate "$f.pem" "$f"
+          done
+
+      - name: Upload signatures back to the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          gh release upload "$TAG" rel/*.sig rel/*.pem --clobber --repo "$GITHUB_REPOSITORY"
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[] | "\(.name) \(.size)"'
