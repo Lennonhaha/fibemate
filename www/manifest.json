@@ -1,7 +1,7 @@
 {
   "name": "FIBEMATE — 隐私增强即时通讯",
   "short_name": "FIBEMATE",
-  "description": "端到端加密、后量子安全、匿名通讯",
+  "description": "端到端加密、后量子密码学、匿名通讯",
   "start_url": "/main.html",
   "scope": "/",
   "display": "standalone",
