@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: FIBEMATE API
-  version: 3.3.0
+  version: 3.3.7
   description: |
     FIBEMATE 后量子加密即时通讯平台后端 API。
     生产环境: https://fibemate.net（nginx 443 → 127.0.0.1:3001）。

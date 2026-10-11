@@ -98,7 +98,7 @@
   <li><strong>SM2 国密性能调优</strong><br>v1.3 wNAF(w=4) + Comb 固定基点 G 缓存 — wNAF 窗口表+Montgomery 批量求逆，sign 加速 ≥3×、verify ≥2×、enc/dec ≥3×。Comb G 表全局缓存，首次构建后零成本。TVLA 防护（scalar masking + projective randomization）完整保留。</li>
   <li><strong>FPGA 硬件协同原型</strong><br>完成 NTT 运算单元硬件设计，ML-KEM 与 SM2 可以复用同一套 NTT 计算电路。</li>
   <li><strong>技术成果时间戳存证</strong><br>核心代码与方案在后量子国家标准定稿前完成第三方可信存证。</li>
-  <li><strong>PQC 混合密钥交换 (路径 C) 已上线</strong><br>TLS Exporter 后握手混合：ML-KEM-768 Encaps/Decaps + HKDF-SHA256，Session Key 绑定 TLS 1.3 Session ID，零风险部署。</li>
+  <li><strong>PQC 混合密钥交换 (路径 C) 已上线</strong><br>TLS Exporter 后握手混合：ML-KEM-768 Encaps/Decaps + HKDF-SHA256，Session Key 绑定 TLS 1.3 Session ID，分阶段部署。</li>
 </ol>
 
 <h3>⬜ 待落地：迈向 PQC-Active</h3>

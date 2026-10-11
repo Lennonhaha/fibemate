@@ -1,6 +1,6 @@
 {
   "name": "fibemate",
-  "version": "3.3.0",
+  "version": "3.3.7",
   "description": "FIBEMATE - E2E Encrypted Social Backend Server",
   "main": "src/index.js",
   "engines": {

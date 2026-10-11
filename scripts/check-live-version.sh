@@ -20,9 +20,9 @@ fi
 
 # Check 1: version badge in page content
 if grep -q 'v3\.3\.0' /tmp/deploy-check-body.txt; then
-  echo "✅ Version badge: v3.3.0 found in homepage"
+  echo "✅ Version badge: v3.3.7 found in homepage"
 else
-  echo "❌ Version badge: v3.3.0 NOT found"
+  echo "❌ Version badge: v3.3.7 NOT found"
   exit 1
 fi
 

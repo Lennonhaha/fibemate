@@ -1,6 +1,6 @@
 {
-  "generated": "2026-08-02T13:29:20.717Z",
-  "version": "v3.3.0",
+  "generated": "2026-10-10T09:27:41.361Z",
+  "version": "v3.3.7",
   "source": "@fibemate/algorithm-registry v1.0.0",
   "statistics": {
     "total": 12,
@@ -23,8 +23,8 @@
     },
     "pqcReady": 5,
     "nativeImplementations": 4,
-    "fpgaImplementations": 4,
-    "dashboardAlgoCount": 11,
+    "fpgaImplementations": 3,
+    "dashboardAlgoCount": 10,
     "avgCoverage": 68,
     "lowRisk": 5,
     "medRisk": 4,

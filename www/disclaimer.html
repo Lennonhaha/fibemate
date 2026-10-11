@@ -43,7 +43,7 @@
     </div>
     <div class="header">
       <div class="logo">Fibe<span>Mate</span></div>
-      <p class="subtitle">后量子安全即时通讯</p>
+      <p class="subtitle">后量子密码学即时通讯</p>
     </div>
 
     <h1>⚠️ 免责声明</h1>
@@ -113,7 +113,7 @@
     </div>
     <ul>
       <li><strong>技术验证性质</strong>：ZK 匿名登录仅用于展示零知识证明（Pedersen 承诺 + Schnorr ZK 证明）的技术能力，是前沿密码学技术验证，<strong>并非生产级身份验证方案</strong>；</li>
-      <li><strong>非实名替代</strong>：该功能不代表已落实法律法规要求的实名认证义务（《网络安全法》第24条、《反电信网络诈骗法》第21条）。正式使用场景中应补充符合监管要求的实名认证机制；</li>
+      <li><strong>非身份服务</strong>：该功能仅为密码学技术验证；本项目为研究原型，不提供注册、账号或即时通讯服务，不承担即时通讯服务提供者义务。正式使用场景中应由部署方自行补充符合当地监管要求的身份核验机制；</li>
       <li><strong>协议局限性</strong>：当前实现基于 P-256 椭圆曲线的 Schnorr 非交互零知识证明，尚未升级到量子安全的 ZK 方案（如 zk-STARK/zk-SNARK），在量子计算威胁下不具有长期安全性；</li>
       <li><strong>研究目的</strong>：所有 ZK 模块实现（<code>zk-auth.js</code>、<code>schnorr-prover-v2.js</code>、<code>bulletproofs.js</code>）均为密码学教育与学术研究目的，不涉及商业运营中的用户身份管理。</li>
     </ul>

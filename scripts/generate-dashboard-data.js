@@ -163,7 +163,7 @@ const dashboardStats = {
 
 const output = {
   generated: new Date().toISOString(),
-  version: 'v3.3.0',
+  version: 'v3.3.7',
   source: '@fibemate/algorithm-registry v1.0.0',
   statistics: dashboardStats,
   algorithms: dashboardAlgos,
