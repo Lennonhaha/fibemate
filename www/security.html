@@ -120,7 +120,7 @@
  <h1>🔐 安全验证</h1>
 
  <!-- ========== 0. 设计原则 ========== -->
- <p>FIBEMATE 采用<strong>"可验证优先"</strong>的设计原则。所有密码学实现均经过形式化测试、确定性验证和时间戳存证。</p>
+ <p>FIBEMATE 采用<strong>"可验证优先"</strong>的设计原则。核心密码学实现均经过形式化测试、确定性验证和时间戳存证。</p>
 
  <div class="badge-grid">
  <span class="badge">ML-KEM-768 (FIPS 203)</span>
@@ -137,7 +137,7 @@
  <li><strong>算法</strong>：ML-KEM-768 (NIST FIPS 203，原 CRYSTALS-Kyber)</li>
  <li><strong>实现</strong>：JavaScript 运行时版本 + Rust/WASM NTT 优化版本</li>
  <li><strong>安全性</strong>：IND-CPA 安全 + 隐式拒绝 (Implicit Rejection)</li>
- <li><strong>密钥生命周期</strong>：私钥仅存在于浏览器内存，会话结束即销毁，永不存储</li>
+ <li><strong>密钥生命周期</strong>：（Web 端）私钥仅存在于浏览器内存，会话结束即销毁，不在浏览器持久化</li>
  </ul>
  </div>
 
@@ -176,7 +176,7 @@
  <p><strong>信任边界断言语录：</strong></p>
  <ul>
  <li>✅ 私钥仅浏览器内存、会话结束即销毁</li>
- <li>✅ 服务端完全入侵无法解密（历史+未来消息）</li>
+ <li>✅ 在威胁模型假设内：服务端完全入侵也无法解密（历史+未来消息）</li>
  <li>✅ 零知识认证确保服务端不获知密钥</li>
  <li>⚠️ 浏览器环境（XSS/扩展/0-day）不在 TCB 内，由用户负责</li>
  </ul>
