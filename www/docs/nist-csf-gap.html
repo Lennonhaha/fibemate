@@ -628,7 +628,7 @@ const sp800Data = [
   {id:"SI-2",title:"Flaw Remediation",csf:"ID.IM",status:1,evidence:"3 bugs fixed; no formal remediation SLAs or tracking"},
   {id:"SI-4",title:"System Monitoring",csf:"DE.CM",status:2,evidence:"CI 24-matrix all green, Nightly CI, TVLA, TSR monitoring"},
   {id:"SI-5",title:"Security Alerts & Advisories",csf:"DE.AE",status:1,evidence:"GitHub Security Advisories; no automated advisory ingestion pipeline"},
-  {id:"SI-7",title:"Software & Info Integrity",csf:"RC.CO / PR.DS",status:2,evidence:"TSR 131 records, dual authority, manifest v3, TLA+ verification — best-in-class"}
+  {id:"SI-7",title:"Software & Info Integrity",csf:"RC.CO / PR.DS",status:2,evidence:"TSR 260 records, dual authority, manifest v3, TLA+ verification — best-in-class"}
 ];
 
 // ============ BUILD HEATMAP ============
@@ -732,7 +732,7 @@ function buildGapSummary() {
     <h4>✅ FIBEMATE Unique Strengths</h4>
     <ul>
       <li><strong>DE.CM — Continuous Monitoring:</strong> CI 24-matrix all green, TVLA 36/36 Welch's t-test, Nightly CI — exceeds typical open-source monitoring practices.</li>
-      <li><strong>RC.CO — Evidence Integrity Chain:</strong> TSR 131 records, DigiCert + FreeTSA dual authority, manifest v3 with complete chain of custody — best-in-class for any PQC project.</li>
+      <li><strong>RC.CO — Evidence Integrity Chain:</strong> TSR 260 records, DigiCert + FreeTSA dual authority, manifest v3 with complete chain of custody — best-in-class for any PQC project.</li>
       <li><strong>PR.AT — Cryptographic Technology:</strong> Triple FIPS algorithm suite (ML-KEM-768, fml-dsa, SLH-DSA-128s) plus Chinese national crypto, FPGA NTT core, TLA+ formal verification.</li>
       <li><strong>GV.SC — Supply Chain Visibility:</strong> 147 npm dependencies 100% classified with CBOM generation — rare for open-source projects.</li>
     </ul>
@@ -954,6 +954,6 @@ buildHeatmap();
 buildSP800Table();
 buildGapSummary();
 </script>
-<div id="fibemate-footer" style="position:fixed;bottom:0;left:0;right:0;height:22px;background:rgba(8,8,13,.92);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;gap:16px;font-size:10px;color:rgba(255,255,255,.35);z-index:9999;font-family:system-ui,sans-serif;backdrop-filter:blur(4px);"><span>FIBEMATE v3.3.7</span><span>·</span><span>2026-08-12</span></div>
+<div id="fibemate-footer" style="position:fixed;bottom:0;left:0;right:0;height:22px;background:rgba(8,8,13,.92);border-top:1px solid rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;gap:16px;font-size:10px;color:rgba(255,255,255,.35);z-index:9999;font-family:system-ui,sans-serif;backdrop-filter:blur(4px);"><span>FIBEMATE v3.3.2</span><span>·</span><span>2026-08-12</span></div>
 </body>
 </html>
