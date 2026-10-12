@@ -147,7 +147,7 @@
       "opsPerSecEnc": null,
       "opsPerSecDec": null,
       "perfNote": "fml-dsa (JS), ML-DSA-44",
-      "kat": "270/270 (nonce 随机)",
+      "kat": "75/75 (keyGen)",
       "tvla": "N/A",
       "hasKAT": true,
       "hasTVLA": false,

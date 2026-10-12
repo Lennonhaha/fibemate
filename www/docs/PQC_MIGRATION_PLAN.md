@@ -210,7 +210,7 @@ FIBEMATE 是一个后量子密码学（PQC）工程验证平台，而非生产�
 - `@noble/post-quantum` - ML-KEM/ML-DSA（验证通过）
 
 **实验级**（仅用于验证和测试）:
-- `fml-dsa` - 自研 ML-DSA 实现（教育用途）
+- `fml-dsa` - ML-DSA 实现（教育用途；Phase 1 公共 API 由 @noble/post-quantum 提供）
 - `ml-kem-768.js` - 自研 ML-KEM 实现（教育用途）
 - `sm2-bigint-ec.js` - 自研 SM2 实现（教育用途）
 
@@ -224,7 +224,7 @@ FIBEMATE 是一个后量子密码学（PQC）工程验证平台，而非生产�
 |------|----------|----------|----------|
 | @noble/curves | 低 | ✅ 已审计 | OpenSSL |
 | @noble/post-quantum | 低 | ✅ 已审计 | liboqs |
-| fml-dsa | 高 | ⚠️ 自研 | @noble/post-quantum |
+| fml-dsa | 高 | ⚠️ 自研 core 未接入（Phase 1 = @noble） | @noble/post-quantum |
 | ml-kem-768.js | 高 | ⚠️ 自研 | @noble/post-quantum |
 | sm2-bigint-ec | 高 | ⚠️ 自研 | OpenSSL/铜锁 |
 
