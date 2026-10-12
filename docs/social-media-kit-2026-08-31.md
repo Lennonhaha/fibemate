@@ -42,7 +42,7 @@ What does it actually take to ship PQC end-to-end?
 
 Not just swap algorithms. Engineer the whole stack:
 - NTT-domain ML-KEM (FIPS 203 §4.3)
-- fml-dsa native JS with Noble interop (FIPS 204)
+- fml-dsa (Phase 1 @noble backend) with Noble interop (FIPS 204)
 - Barrett reduction (14× faster, constant-time)
 - SM2 k-masking against SPA
 - IANA #4590 hybrid KEX

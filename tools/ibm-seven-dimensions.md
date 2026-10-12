@@ -116,7 +116,7 @@ const HYBRID_SS_LEN = 64;
 |------|----------|------|
 | SM2 | `sm2-bigint-ec.js`（BigInt 版）、`sm2-browser.js`（jsbn 版）、`sm2-ec-browser.js`（精简版）、`sm2-browser.bundle.js/esm.js/cjs.js`（打包分发版） | 6 个文件共存（4 实现 + bundle + bridge） |
 | ML-KEM | `ml-kem-768.js`（自研 JS）、C Native Addon、`@noble/post-quantum`（1024 TVLA） | 3 轨，但**不同算法**（768 vs 1024），非"同算法多版本" |
-| ML-DSA | `fml-dsa`（自研纯 JS）、`@noble/post-quantum ml-dsa.js`（交叉验证） | 2 轨，但 Noble 仅用于交叉验证，非正式支持 |
+| ML-DSA | `fml-dsa`（Phase 1 @noble 后端）、`@noble/post-quantum ml-dsa.js`（交叉验证） | 2 轨，但 Noble 仅用于交叉验证，非正式支持 |
 | SLH-DSA | WASM bridge（唯一版本） | 1 轨 |
 
 ### 版本管理机制
