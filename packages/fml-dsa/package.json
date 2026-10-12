@@ -1,7 +1,7 @@
 {
   "name": "fml-dsa",
   "version": "0.1.0",
-  "description": "FIBEMATE native ML-DSA (FIPS 204) — NTT-domain, Phase 1 noble-oracle, Phase 2 pure JS",
+  "description": "FIBEMATE ML-DSA (FIPS 204) — NTT-domain; Phase 1: algorithm provided by @noble/post-quantum",
   "type": "module",
   "exports": "./src/index.js",
   "scripts": {

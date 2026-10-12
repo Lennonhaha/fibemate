@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-// fml-dsa/src/index.js — ML-DSA (FIPS 204) self-implemented with noble oracle fallback
-// 2026-07-29: Phase 1 — noble-backed stubs; Phase 2 → native implementation
+// fml-dsa/src/index.js — ML-DSA (FIPS 204); Phase 1: algorithm provided by @noble/post-quantum
+// 2026-07-29: Phase 1 — noble-backed stubs (algorithm provided by @noble/post-quantum)
 
 import { ml_dsa44_raw, ml_dsa65_raw, ml_dsa87_raw } from './core/native.js';
 

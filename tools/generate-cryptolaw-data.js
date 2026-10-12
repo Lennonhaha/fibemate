@@ -59,7 +59,7 @@ const CLAUSES = [
       },
       {
         file: 'packages/fml-dsa/',
-        finding: 'FIPS 204 ML-DSA 自研 JS 实现，交叉验证 Noble 库，学术研究属性确认',
+        finding: 'FIPS 204 ML-DSA（Phase 1 @noble 后端）JS 实现，交叉验证 Noble 库，学术研究属性确认',
         status: 'compliant'
       }
     ]

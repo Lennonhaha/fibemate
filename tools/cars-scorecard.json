@@ -28,7 +28,7 @@
           },
           "ml_dsa_65_fml_dsa": {
             "standard": "FIPS 204",
-            "impl": "Pure JS self-developed (fml-dsa)",
+            "impl": "Phase 1 @noble backend (fml-dsa)",
             "verification": "84/84 self-test, KeyGen KAT 75/75, Noble bidirectional cross-validation"
           },
           "slh_dsa_128s": {

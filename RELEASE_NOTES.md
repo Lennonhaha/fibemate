@@ -16,7 +16,7 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 
 ### Post-Quantum Cryptography
 - **ML-KEM-768** (FIPS 203): NTT-domain implementation, KAT 10,000/10,000 Noble cross-validated, C Native Addon ~3,200 ops/s, TVLA 3/3 PASS
-- **fml-dsa** (FIPS 204): Self-developed pure JS ML-DSA-65, KeyGen KAT 75/75, Noble bidirectional cross-validation verified
+- **fml-dsa** (FIPS 204): ML-DSA-65 (Phase 1 @noble backend), KeyGen KAT 75/75, Noble bidirectional cross-validation verified
 - **ML-KEM-1024**: Noble implementation with TVLA 3/3 PASS
 - **SLH-DSA-128s** (FIPS 205): WASM bridge to NIST reference C, 5/5 smoke test
 - **SM2/SM3/SM4** (OSCCA): Pure JS, KAT verified, SM4-GCM cross-language validated
