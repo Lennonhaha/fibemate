@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/native.js — ML-DSA API factory
-// Phase 1: noble-backed stubs; Phase 2 → incremental native replacements
+// Phase 1: noble-backed stubs (algorithm provided by @noble/post-quantum)
 // All KAT verified against NIST ACVP (KeyGen 75/75 PASS) and noble oracle (sign/verify 7/7)
 
 import { readFileSync } from 'fs';
