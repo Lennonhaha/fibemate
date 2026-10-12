@@ -280,7 +280,7 @@ var ASSETS = [
         algorithmFamily: "国密椭圆曲线签名/密钥交换",
         quantumThreat: "SM2 基于 ECC，与 P-256 面临相同的 Shor 威胁。国密体系中的核心脆弱点。",
         migrationPath: "签名: SM2 → fml-dsa (ML-DSA-65) · 加密: SM2 → ML-KEM",
-        migrationDetail: "SM2 签名用 fml-dsa（ML-DSA-65，FIPS 204）替换。SM2 密钥交换用 ML-KEM-768 替换。可利用现有 GM prehash 桥接层（gm.js, sm2-bridge.js）实现平滑过渡。",
+        migrationDetail: "SM2 签名用 fml-dsa（ML-DSA-65；Phase 1 @noble 后端）替换。SM2 密钥交换用 ML-KEM-768 替换。可利用现有 GM prehash 桥接层（gm.js, sm2-bridge.js）实现平滑过渡。",
         bloomRiskNote: "75 个文件受影响，主要分布在 www/crypto/ 和 scripts/ 目录。SM2-browser 系列文件需要同时更新。",
         directFiles: [],
         indirectFiles: []
@@ -399,7 +399,7 @@ var ASSETS = [
         algorithmFamily: "NIST FIPS 204 PQC 签名 (MLWE+MSIS)",
         quantumThreat: "NIST 标准化 PQC 签名算法。基于 MLWE + MSIS 假设。量子安全，无需迁移。",
         migrationPath: "✅ 无需迁移 — 已是目标 PQC 算法",
-        migrationDetail: "ML-DSA-65（FIPS 204）已被 FIBEMATE 的 fml-dsa 包实现。作为签名迁移的目标方案。确保 KAT 向量与 NIST 标准一致。",
+        migrationDetail: "ML-DSA-65（FIPS 204）由 FIBEMATE 的 fml-dsa 包提供（Phase 1 算法来自 @noble/post-quantum）。作为签名迁移的目标方案。确保 KAT 向量与 NIST 标准一致。",
         bloomRiskNote: "51 个文件，主要通过 fml-dsa 包和 noble-pq 捆绑提供。量子安全核心算法。",
         directFiles: [],
         indirectFiles: []

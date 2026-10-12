@@ -251,7 +251,7 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
                 },
                 {
                     file:'packages/fml-dsa/src/core/{keygen,sign,verify}.js', lines:'L1-L285',
-                    finding:'fml-dsa — FIPS 204 ML-DSA-65 自研实现，三参数集 (44/65/87) 84/84 自测 + Noble 交叉验证双向全过。NTT 核常量 ζ=1753。',
+                    finding:'fml-dsa — ML-DSA-65（Phase 1 @noble 后端），三参数集 (44/65/87) 84/84 自测 + Noble 交叉验证双向全过。NTT 核常量 ζ=1753。',
                     code:'// ML-DSA-65 (FIPS 204) N=256 Q=8380417\nconst ζ = 1753, INV_N = 8347681;\nconst τ = 49, λ = 192, d = 13;\nconst T1_BITS = 10, POLY_T1_PACKED = 320;',
                     tags:['good']
                 },

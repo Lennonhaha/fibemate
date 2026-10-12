@@ -889,7 +889,7 @@
     <section class="hero">
         <div class="hero-content">
             <div class="hero-badge">
-                🔒 v3.3.2 | ML-KEM-768 · SM2 · SLH-DSA · ML-DSA-65 (fml-dsa 自研 · 跨 Noble 互操作验证) · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 (v1.3) + Mersenne 快速约减 1.8× · SLH-DSA WASM · OPK 预密钥协议
+                🔒 v3.3.2 | ML-KEM-768 · SM2 · SLH-DSA · ML-DSA-65 (fml-dsa · Phase 1 @noble 后端 · 跨 Noble 互操作验证) · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 (v1.3) + Mersenne 快速约减 1.8× · SLH-DSA WASM · OPK 预密钥协议
             </div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);">🏆 ML-KEM-768 通过 KAT 10,000 轮一致性验证 + TVLA v2 Enhanced (N=10,000) 时序侧信道验证 · <br><small style="color:#646c78;">C Native Addon (AVX2) 做了恒定时间实现尝试（未经独立 fuzzing / 侧信道审计，self-assessment）⚠ | 纯 JS 参考实现 时域泄漏评估见报告</small> · <a href="/crypto/test-ml-kem-kat.html" style="color:#00E5C3;text-decoration:underline;font-weight:600;">查看 KAT 10,000 轮验证报告 →</a></div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(255,165,0,0.06);border:1px solid rgba(255,165,0,0.15);">⚡ FPGA 合成通过 · ILA+L4 确认闭环 · UART 调试已打通 ✅ · Artix-7 35T 时序收敛 · <a href="/docs/fpga-report.html" style="color:#10b981;text-decoration:underline;font-weight:600;">查看硬件文档 ↓</a></div>
@@ -1040,10 +1040,10 @@
                     <div class="layer-title">后量子数字签名</div>
                 </div>
                 <div class="layer-desc">
-                    SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (FIPS 204 ML-DSA-44/65/87 纯 JS 自研实现)</strong><br>
+                    SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · Phase 1 算法由 @noble/post-quantum 提供)</strong><br>
                     · fml-dsa：纯 JavaScript，<strong style="color:#00d4aa;">跨 @noble/post-quantum 双向互操作验证通过</strong>（sign→verify / verify→sign 全绿）<br>
                     · SLH-DSA (SPHINCS+)：FIPS 205 标准，WASM 加速 107KB raw / 51KB gzip<br>
-                    · SHA3/SHAKE 后端 + Fisher-Yates 拒绝采样 + NTT 域矩阵乘法，自研实现覆盖 ML-DSA 全套算法<br>
+                    · SHA3/SHAKE 后端 + Fisher-Yates 拒绝采样 + NTT 域矩阵乘法（自研 core 覆盖 ML-DSA 全套算法，尚未接入公共 API）<br>
                     · <a href="/crypto/test-fml-dsa.html" style="color:#00d4aa;text-decoration:underline;">查看 fml-dsa 跨库验证报告</a>
                 </div>
             </div>
@@ -1087,7 +1087,7 @@
         <div style="color:#8b949e;font-size:0.82rem;margin-bottom:0.6rem;">Rust · 技术预览版</div>
         <ul style="margin:0;padding-left:1.2rem;color:#8b949e;font-size:0.8rem;line-height:1.7;">
           <li>WebSocket 性能提升 3-5×</li>
-          <li>PQC 签名已完成 &mdash; SLH-DSA (FIPS 205) + ML-DSA-65 (FIPS 204 <strong style="color:#7ee787;">自研实现</strong>，跨 Noble 互操作验证通过) &#x2705;</li>
+          <li>PQC 签名已完成 &mdash; SLH-DSA (FIPS 205) + ML-DSA-65 (FIPS 204 <strong style="color:#7ee787;">Phase 1 @noble 后端</strong>，跨 Noble 互操作验证通过) &#x2705;</li>
           <li>可能偶有不稳定 ⚠️</li>
         </ul>
       </div>
@@ -1109,7 +1109,7 @@
       <summary style="color:#00d4aa;font-size:0.82rem;margin-bottom:0.5rem;">📋 双后端架构详情</summary>
       <div style="color:#8b949e;font-size:0.8rem;line-height:1.8;padding-left:0.5rem;">
         • 稳定通道：Node.js 后端，功能完整，适合日常通信<br>
-        • 实验通道：Rust 后端，WebSocket 性能提升 3-5×，PQC 签名已完成 (SLH-DSA + ML-DSA-65 <strong style="color:#7ee787;">FIPS 204 自研</strong>)<br>
+        • 实验通道：Rust 后端，WebSocket 性能提升 3-5×，PQC 签名已完成 (SLH-DSA + ML-DSA-65 <strong style="color:#7ee787;">FIPS 204 · Phase 1 @noble</strong>)<br>
         • 默认使用稳定通道，可通过浏览器控制台 <code style="color:#7ee787;">BackendRouter.switchTo()</code> 切换<br>
         • 切换后页面自动刷新，偏好保存在 <code style="color:#7ee787;">localStorage</code>
       </div>
@@ -2277,7 +2277,7 @@
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
             最后更新：2026-10-11 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 260 份 (lg-001~lg-108) ✓<br>
-            后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (FIPS 204, ML-DSA-44/65/87 纯 JS 自研，跨 @noble/post-quantum 双向验证通过)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
+            后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · Phase 1 算法由 @noble/post-quantum 提供，双向验证通过)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
             <p style="margin:0 0 6px;font-size:0.85rem;color:#10b981;"><strong>🎉 已开源 (2026-08-31)</strong></p>
