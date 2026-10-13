@@ -379,7 +379,7 @@
 </table>
 
 <!-- 7.3: VWZ -->
-<h3>7.3 VWZ — 格-张量混合签名方案</h3>
+<h3 id="vwz">7.3 VWZ — 格-张量混合签名方案</h3>
 <p>VWZ（Vandermonde-Wang-Zhang）是 FIBEMATE 的独立研究子线——基于 Vandermonde 张量结构的格-张量混合签名方案。<strong>诚实边界：</strong>VMQ-SPARSE → OW-VWZ → EUF-CMA 的 148/148 测试为<strong>实现层自测</strong>，VMQ-SPARSE → 标准 LWE 的完整归约尚未证明（已知缺口 H-1），故 unforgeability 不在我们自身验证计划的可形式化范围内；原论文为 IACR 2025/624《Trapdoor one-way functions from tensors》（VWZ 原始构造，非撤稿/攻击）。<strong>当前构造为 rank-2</strong>（原 rank-1 已于 2026-08-16 被第三方攻破，rank-2 于 2026-09-06 加固，306/306 切片）。核心创新：公钥稀疏 Rank-2 压缩；签名尺寸 68B (NIST-1 128-bit)。VWZ 的困难假设（VWZ-PR）为新颖猜想，无标准归约，安全性依赖公开挑战与持续分析。研究端 API 仅限内网访问，不接入生产加密路径。详见 docs/VWZ-STATUS.md。</p>
 
 <h4>验证清单</h4>
