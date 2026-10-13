@@ -239,3 +239,17 @@ jobs:
 
       - name: Verify experimental code isolation (P0-01)
         run: node scripts/check-experimental-isolation.cjs
+
+  # ─── 公开措辞检查 R1（docs/pre-release-claims.md §三；single platform）──
+  claim-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+
+      - name: Check public-facing wording (R1 — CII / BP mixed spelling)
+        run: node scripts/check-claims.cjs
