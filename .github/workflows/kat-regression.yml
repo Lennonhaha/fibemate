@@ -79,6 +79,7 @@ jobs:
           node test/ntt.test.js
           node test/shakestream.test.js
           node test/fml-dsa.test.js
+          node test/context-passthrough.test.js
 
   gm-standards:
     runs-on: ubuntu-latest

@@ -12,7 +12,7 @@
     "test:kat": "node test/kat-verify.mjs",
     "test:input": "node test/input-validation.test.js",
     "test:tvla": "node test/tvla-timing.test.js",
-    "test:all": "node test/ntt.test.js && node test/noble-oracle.test.js && node test/fml-dsa.test.js && node test/edge.test.js && node test/input-validation.test.js"
+    "test:all": "node test/ntt.test.js && node test/noble-oracle.test.js && node test/fml-dsa.test.js && node test/edge.test.js && node test/input-validation.test.js && node test/context-passthrough.test.js"
   },
   "license": "GPL-3.0-only",
   "devDependencies": {

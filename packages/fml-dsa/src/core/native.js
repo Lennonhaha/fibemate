@@ -29,14 +29,14 @@ function createAPI(nobleFn, params) {
       return { publicKey: keys.publicKey, secretKey: keys.secretKey };
     },
 
-    // Phase 1: noble-backed Sign
-    sign(msg, sk) {
-      return nobleFn.sign(msg, sk);
+    // Phase 1: noble-backed Sign (FIPS 204 opts passthrough: { context?, extraEntropy?, externalMu? })
+    sign(msg, sk, opts) {
+      return nobleFn.sign(msg, sk, opts);
     },
 
-    // Phase 1: noble-backed Verify
-    verify(sig, msg, pk) {
-      return nobleFn.verify(sig, msg, pk);
+    // Phase 1: noble-backed Verify (FIPS 204 opts passthrough: { context? })
+    verify(sig, msg, pk, opts) {
+      return nobleFn.verify(sig, msg, pk, opts);
     },
 
     params: p,
