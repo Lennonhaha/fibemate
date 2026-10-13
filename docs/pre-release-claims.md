@@ -1,6 +1,6 @@
 # FIBEMATE 发布前声明核对清单（PRE-RELEASE-CLAIMS）
 
-> 版本：v1.0 · 日期：2026-10-14 · 适用：发布 / 官网更新 / 大型 PR 之前
+> 版本：v1.1 · 日期：2026-10-14 · 适用：发布 / 官网更新 / 大型 PR 之前
 > 目的：凡是**对外说过的话**，先要有出处。填不出可点击证据的声明，只有三条路：补证据、改措辞、撤回。
 > 由来：多次出现「文案与实现不符」（见第四节）。口头约定拦不住，CI 目前只能拦其中一类。
 
@@ -67,13 +67,14 @@
 
 ## 三、机械核（能自动拦的部分）
 
-**R1 混写「CII / BP」** —— 可直接进 CI：
+**R1 混写「CII / BP」** —— **已接入 CI**（`ci.yml` 的 `claim-check` job，实现在 `scripts/check-claims.cjs`）：
 
 ```bash
-grep -rn "CII / BP" www/ README.md
+node scripts/check-claims.cjs
 ```
 
-真阳性样例：`www/index.html` 里的旧写法（项目号应写作「CII Best Practices 项目号」）。
+范围：`www/` 与 `README.md`；**排除 `www/docs/tsa/**`**（冻结存档，改动会破坏存证链）。
+2026-10-14 首次运行时命中 1 处真阳性（`www/index.html`），已随该 PR 修掉。
 
 **R2 绝对化词（窄表）** —— 须**人工判**，多数命中是「反绝对化」的诚实文案：
 
@@ -115,4 +116,6 @@ grep -rn "自研" www/ README.md
 
 | 版本 | 日期 | 变更 |
 |------|------|------|
+| v1.1 | 2026-10-14 | R1 接入 CI（`claim-check` job）；修掉 `www/index.html` 的旧写法；明确排除 `www/docs/tsa/**` |
 | v1.0 | 2026-10-14 | 首版：五组核对表、机械核、由来案例 |
+| v1.1 | 2026-10-14 | R1 接入 CI（`.github/workflows/ci.yml` 的 `claim-check` job + `scripts/check-claims.cjs`）；修 `www/index.html` 的旧写法；明确排除 `www/docs/tsa/**` |
