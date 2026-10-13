@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
+// Phase 1: algorithm provided by @noble/post-quantum — numbers below measure the noble backend.
 import * as fml from '../src/index.js';
 import { Buffer } from 'node:buffer';
 
