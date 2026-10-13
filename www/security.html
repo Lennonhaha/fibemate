@@ -137,7 +137,7 @@
  <li><strong>算法</strong>：ML-KEM-768 (NIST FIPS 203，原 CRYSTALS-Kyber)</li>
  <li><strong>实现</strong>：JavaScript 运行时版本 + Rust/WASM NTT 优化版本</li>
  <li><strong>安全性</strong>：IND-CPA 安全 + 隐式拒绝 (Implicit Rejection)</li>
- <li><strong>密钥生命周期</strong>：（Web 端）私钥仅存在于浏览器内存，会话结束即销毁，不在浏览器持久化</li>
+ <li><strong>密钥生命周期</strong>：Web 端——私钥仅存在于浏览器内存，会话结束即销毁，不在浏览器持久化；Windows 桌面端——密钥由 DPAPI 绑定当前用户加密存储于本机；移动端——开发阶段，密钥暂存应用本地存储（未加密），计划接入系统安全存储</li>
  </ul>
  </div>
 
@@ -175,7 +175,7 @@
  <div class="security-card">
  <p><strong>信任边界断言语录：</strong></p>
  <ul>
- <li>✅ 私钥仅浏览器内存、会话结束即销毁</li>
+ <li>✅ Web 端私钥仅浏览器内存、会话结束即销毁；桌面端 DPAPI 加密存储；移动端暂为未加密本地存储（待接入安全存储）</li>
  <li>✅ 在威胁模型假设内：服务端完全入侵也无法解密（历史+未来消息）</li>
  <li>✅ 零知识认证确保服务端不获知密钥</li>
  <li>⚠️ 浏览器环境（XSS/扩展/0-day）不在 TCB 内，由用户负责</li>
