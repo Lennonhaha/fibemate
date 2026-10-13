@@ -171,7 +171,7 @@ const SCHEME_NOTES = {
   ecdsa:   { source: 'OpenSSL reference (~web crypto API)', warn: null },
   falcon:  { source: 'FALCON-512 厂商基准 (PQClean 参考)', warn: '数据来源不是本仓库实测，需独立基准验证' },
   mldsa44: { source: 'ML-DSA-44 noble-pq-bundle (本仓库)', warn: null },
-  mldsa65: { source: 'fml-dsa v0.1.0 via noble-pq oracle fallback (本仓库)', warn: 'Phase 1 阶段,noble 后端;Phase 2 纯 JS 性能待 8/31 后实装' },
+  mldsa65: { source: 'fml-dsa v0.1.0 via noble-pq oracle fallback (本仓库)', warn: 'Phase 1：算法由 @noble/post-quantum 提供（ACVP final 165/165）；自研 core 尚未接入公共 API' },
 };
 
 function updateSchemeNote() {
