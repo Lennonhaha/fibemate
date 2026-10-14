@@ -103,13 +103,14 @@ const BINARY_EXT = /\.(tsr|tsq|tsa|bit|zkey|wasm|pdf|png|jpe?g|gif|webp|avif|ico
 // invisible to CI for ten days.
 function isTextFile(p) {
   if (BINARY_EXT.test(p)) return false;
-  let st;
-  try { st = fs.lstatSync(p); } catch { return false; }
-  if (st.isSymbolicLink()) return false;   // symlink: skip the link, not the target
-  if (!st.isFile()) return false;
   let fd;
   try {
+    // Open once and stat the descriptor: a path-based "stat, then open on
+    // the same path" pair is a file-system race and CodeQL reports it.
+    // Symlinks never reach this for the repo-wide scan (git mode 120000 is
+    // filtered out first); an explicit argument that is a symlink is followed.
     fd = fs.openSync(p, 'r');
+    if (!fs.fstatSync(fd).isFile()) return false;
     const head = Buffer.alloc(8192);
     const n = fs.readSync(fd, head, 0, head.length, 0);
     return head.subarray(0, n).indexOf(0) === -1;   // NUL in head => binary
@@ -118,7 +119,7 @@ function isTextFile(p) {
 }
 
 function listFiles(args) {
-  if (args.length > 0) return args.filter(f => fs.existsSync(f) && isTextFile(f));
+  if (args.length > 0) return args.filter(isTextFile);
   try {
     // `git ls-files -s` also yields the mode, so symlinks (120000) are skipped
     // consistently on Windows (where git checks a symlink out as a regular
