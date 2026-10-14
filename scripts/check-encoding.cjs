@@ -19,7 +19,6 @@
 const { execSync } = require('child_process');
 const fs = require('fs');
 
-const PATTERN = /\.(js|mjs|cjs|jsx|ts|tsx|html|htm|md|json|css|scss|ya?ml|toml|py|rs|sh|ps1|sql|vue|txt|tcl|xml)$/i;
 
 // --- GBK mojibake fingerprints ---
 // When correct UTF-8 Chinese is mis-decoded as GBK (the 2026-08-14 corruption
@@ -92,11 +91,48 @@ function isValidUtf8(buf) {
   return true;
 }
 
-function listFiles(args) {
-  if (args.length > 0) return args.filter(f => PATTERN.test(f));
+// Binary formats that are never text: media, archives, the timestamp evidence
+// formats (.tsr/.tsq/.tsa) and FPGA/zk artifacts. Extension-based on purpose:
+// a content sniff alone misses binaries whose first block has no NUL byte.
+const BINARY_EXT = /\.(tsr|tsq|tsa|bit|zkey|wasm|pdf|png|jpe?g|gif|webp|avif|ico|svgz|zip|gz|tgz|tar|7z|bz2|xz|zst|woff2?|ttf|otf|eot|mp3|mp4|m4a|mov|webm|wav|avi|exe|dll|so|dylib|o|a|class|jar|pyc|bin|der|p12|pfx)$/i;
+
+// Scope is "every tracked file that looks like text", NOT an extension
+// allowlist. The old allowlist silently skipped .gitignore, .gitattributes,
+// Dockerfile, Makefile, *.h, *.c, *.v, *.sha256 -- which is exactly how the
+// UTF-8 BOM planted in .gitignore on 2026-10-04 (commit 6d8fa1b) stayed
+// invisible to CI for ten days.
+function isTextFile(p) {
+  if (BINARY_EXT.test(p)) return false;
+  let st;
+  try { st = fs.lstatSync(p); } catch { return false; }
+  if (st.isSymbolicLink()) return false;   // symlink: skip the link, not the target
+  if (!st.isFile()) return false;
+  let fd;
   try {
-    const out = execSync('git ls-files', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
-    return out.split('\n').filter(f => f && PATTERN.test(f));
+    fd = fs.openSync(p, 'r');
+    const head = Buffer.alloc(8192);
+    const n = fs.readSync(fd, head, 0, head.length, 0);
+    return head.subarray(0, n).indexOf(0) === -1;   // NUL in head => binary
+  } catch { return false; }
+  finally { if (fd !== undefined) try { fs.closeSync(fd); } catch {} }
+}
+
+function listFiles(args) {
+  if (args.length > 0) return args.filter(f => fs.existsSync(f) && isTextFile(f));
+  try {
+    // `git ls-files -s` also yields the mode, so symlinks (120000) are skipped
+    // consistently on Windows (where git checks a symlink out as a regular
+    // file holding the target path) and on Linux/macOS (where it is a link).
+    const out = execSync('git ls-files -s', { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+    const files = [];
+    for (const line of out.split('\n')) {
+      const tab = line.indexOf('\t');
+      if (tab < 0) continue;
+      if (line.slice(0, tab).startsWith('120000')) continue;   // symlink
+      const p = line.slice(tab + 1);
+      if (p && isTextFile(p)) files.push(p);
+    }
+    return files;
   } catch (e) {
     console.error('Error listing git files:', e.message);
     process.exit(2);
