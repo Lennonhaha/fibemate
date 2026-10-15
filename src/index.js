@@ -528,14 +528,29 @@ function _findUserWs(userId, excludeWs) {
 
 function sendToUser(userId, payload, senderWs) {
   const sockets = onlineUsers.get(userId);
+  // Buffer（WsPadding 二进制帧，如 cover traffic）直通为 WS 二进制帧。
+  // 修复：此前 JSON.stringify(Buffer) 会把它放大 ~5.25 倍成 {"0":2,"1":14,...}
+  // 数字键文本帧（8K Buffer → 42K 文本），isCover 标志丢失，客户端无法识别盖板
+  //（2026-10-09 SEND-LEN sample 破案：len 聚类 9.7K/20.5K/42K ≈ 2K/4K/8K 填充 × 5.25）。
+  if (Buffer.isBuffer(payload)) {
+    if (!sockets || sockets.size === 0) return false;
+    let sent = false;
+    sockets.forEach(ws => {
+      if (ws !== senderWs && ws.readyState === 1) { ws.send(payload); sent = true; }
+    });
+    return sent;
+  }
   const data = typeof payload === 'string' ? payload : JSON.stringify(payload);
-  const type = JSON.parse(data).type;
+  const payloadType = typeof payload;
+  const nativeType = payloadType === 'object' && payload ? payload.type : undefined;
+  const parsedType = JSON.parse(data).type;
+  console.log('[SEND-LEN] to=' + sanitizeLog(userId) + ' payload=' + payloadType + ' nativeType=' + sanitizeLog(nativeType) + ' parsedType=' + sanitizeLog(parsedType) + ' len=' + data.length);
 
   if (!sockets || sockets.size === 0) {
     // 收方 WebSocket 已断开——通知发送方不要重试（会浪费 X3DH 握手）
     if (senderWs && senderWs.readyState === 1) {
       const fromId = wsMeta.get(senderWs)?.userId;
-      console.log('[ROUTE] OFFLINE ' + sanitizeLog(fromId) + ' -> ' + sanitizeLog(userId) + ' (type=' + sanitizeLog(type) + ', recipient WebSocket disconnected)');
+      console.log('[ROUTE] OFFLINE ' + sanitizeLog(fromId) + ' -> ' + sanitizeLog(userId) + ' (type=' + sanitizeLog(parsedType) + ', recipient WebSocket disconnected)');
       senderWs.send(JSON.stringify({ type: 'recipient_offline', userId: userId, timestamp: Date.now() }));
     }
     return false;
@@ -1550,6 +1565,10 @@ app.post('/api/messages', authMiddleware, rateLimitMiddleware, (req, res) => {
     burnAfterRead,
     createdAt: now
   }, null);
+
+  // 判断是否投递成功——onlineUsers 里有 receiver 则 WS 直推，否则记为 offline（见 sendToUser 逻辑）
+  const pushed = onlineUsers && onlineUsers.has(toUserId);
+  console.log('[Messages] POST /api/messages pushed=' + pushed + ' toUserId=' + sanitizeLog(toUserId) + ' messageType=' + sanitizeLog(messageType || 'text'));
 
   res.status(201).json({ messageId: msgId, createdAt: now });
 });
