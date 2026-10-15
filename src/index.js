@@ -544,13 +544,13 @@ function sendToUser(userId, payload, senderWs) {
   const payloadType = typeof payload;
   const nativeType = payloadType === 'object' && payload ? payload.type : undefined;
   const parsedType = JSON.parse(data).type;
-  console.log('[SEND-LEN] to=' + sanitizeLog(userId) + ' payload=' + payloadType + ' nativeType=' + sanitizeLog(nativeType) + ' parsedType=' + sanitizeLog(parsedType) + ' len=' + data.length);
+  console.log('[SEND-LEN] user=' + (userId ? 'yes' : 'no') + ' payload=' + payloadType + ' native=' + (nativeType === undefined ? 'absent' : typeof nativeType) + ' parsed=' + (typeof parsedType) + ' len=' + data.length);
 
   if (!sockets || sockets.size === 0) {
     // 收方 WebSocket 已断开——通知发送方不要重试（会浪费 X3DH 握手）
     if (senderWs && senderWs.readyState === 1) {
       const fromId = wsMeta.get(senderWs)?.userId;
-      console.log('[ROUTE] OFFLINE ' + sanitizeLog(fromId) + ' -> ' + sanitizeLog(userId) + ' (type=' + sanitizeLog(parsedType) + ', recipient WebSocket disconnected)');
+      console.log('[ROUTE] OFFLINE from=' + (fromId ? 'yes' : 'no') + ' to=' + (userId ? 'yes' : 'no') + ' (type=' + (typeof parsedType) + ', recipient WebSocket disconnected)');
       senderWs.send(JSON.stringify({ type: 'recipient_offline', userId: userId, timestamp: Date.now() }));
     }
     return false;
@@ -1568,7 +1568,7 @@ app.post('/api/messages', authMiddleware, rateLimitMiddleware, (req, res) => {
 
   // 判断是否投递成功——onlineUsers 里有 receiver 则 WS 直推，否则记为 offline（见 sendToUser 逻辑）
   const pushed = onlineUsers && onlineUsers.has(toUserId);
-  console.log('[Messages] POST /api/messages pushed=' + pushed + ' toUserId=' + sanitizeLog(toUserId) + ' messageType=' + sanitizeLog(messageType || 'text'));
+  console.log('[Messages] POST /api/messages pushed=' + pushed);
 
   res.status(201).json({ messageId: msgId, createdAt: now });
 });
