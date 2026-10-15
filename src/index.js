@@ -544,7 +544,7 @@ function sendToUser(userId, payload, senderWs) {
   const payloadType = typeof payload;
   const nativeType = payloadType === 'object' && payload ? payload.type : undefined;
   const parsedType = JSON.parse(data).type;
-  console.log('[SEND-LEN] user=' + (userId ? 'yes' : 'no') + ' payload=' + payloadType + ' native=' + (nativeType === undefined ? 'absent' : typeof nativeType) + ' parsed=' + (typeof parsedType) + ' len=' + data.length);
+  console.log('[SEND-LEN] user=' + (userId ? 'yes' : 'no') + ' payload=' + payloadType + ' native=' + (nativeType === undefined ? 'absent' : typeof nativeType) + ' parsed=' + (typeof parsedType) + ' lenBucket=' + (data.length > 4096 ? 'gt4k' : 'le4k'));
 
   if (!sockets || sockets.size === 0) {
     // 收方 WebSocket 已断开——通知发送方不要重试（会浪费 X3DH 握手）
