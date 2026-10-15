@@ -12,7 +12,6 @@
 
 const { execSync } = require('child_process');
 const fs = require('fs');
-const path = require('path');
 
 // Binary formats that are never text: media, archives, the timestamp evidence
 // formats (.tsr/.tsq/.tsa) and FPGA/zk artifacts. Extension-based on purpose:
