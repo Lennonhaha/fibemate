@@ -1566,7 +1566,7 @@ app.post('/api/messages', authMiddleware, rateLimitMiddleware, (req, res) => {
     createdAt: now
   }, null);
 
-  // 判断是否投递成功——onlineUsers 里有 receiver 则 WS 直推，否则记为 offline（见 sendToUser 逻辑）
+  // 观察项：在线用户命中（仅日志用，不改变投递路径）
   const pushed = onlineUsers && onlineUsers.has(toUserId);
   console.log('[Messages] POST /api/messages pushed=' + pushed);
 
