@@ -1,4 +1,4 @@
-# FIBEMATE PQC Sandbox — 三镜像一键启动
+# FIBEMATE PQC Sandbox — 镜像一键启动（learn / attack / bench / interop）
 # 设计文档: docs/product-designs/08-pqc-docker.md §7.4
 version: '3.8'
 
@@ -35,3 +35,17 @@ services:
     volumes: ["./bench-out:/out"]
     security_opt: ["no-new-privileges:true"]
     command: ["run", "--rounds", "10000"]
+
+  # 差分互操作 + 一键镜像（P2）：陌生人一条命令跑出同一 SHA256 报告。
+  # 用法见 docs/interop.md；report.json 无时间戳（易变信息在 meta.json）⇒ 可跨机同哈希。
+  interop:
+    build:
+      context: .
+      dockerfile: docker/interop/Dockerfile
+    image: fibemate/pqc-interop:3.3.0
+    profiles: ["interop"]
+    read_only: true
+    tmpfs: ["/tmp"]
+    volumes: ["./interop-out:/report"]
+    security_opt: ["no-new-privileges:true"]
+    command: ["run", "--rounds", "1000", "--out", "/report"]
