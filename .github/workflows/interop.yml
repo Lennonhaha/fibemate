@@ -1,0 +1,63 @@
+# FIBEMATE - ML-KEM-768 cross-implementation interop (noble leg)
+#
+# Gate for every pull request. Runs the dependency-free interop harness:
+#   - deterministic KeyGen (fixed d,z): our ek must be byte-identical to noble's
+#   - bidirectional encaps/decaps interop with @noble/post-quantum
+#   - the committed vector file, checked vector by vector (the 500-assertion gate)
+#
+# liboqs is deliberately NOT part of this job: the pinned liboqs build runs in
+# nightly-phase2.yml (advisory). See docs/interop.md for the report format.
+#
+# The job id below is the required status-check context ("interop").
+
+name: interop
+permissions: read-all
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: interop-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
+jobs:
+
+  interop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - run: npm ci
+
+      - name: Interop + vector gate (1,000 rounds, noble)
+        env:
+          FIBEMATE_REPO_COMMIT: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -o pipefail
+          node scripts/interop/run.mjs run \
+            --rounds 1000 --partners noble --kat all --out interop-out
+
+      - name: Report digest
+        if: always()
+        run: |
+          if [ -f interop-out/report.json ]; then
+            sha256sum interop-out/report.json | tee interop-out/report.sha256.printed
+          else
+            echo "::warning::no report produced"
+          fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.1
+        if: always()
+        with:
+          name: interop-report
+          path: interop-out/
+          retention-days: 14
