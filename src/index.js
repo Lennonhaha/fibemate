@@ -1566,7 +1566,7 @@ app.post('/api/messages', authMiddleware, rateLimitMiddleware, (req, res) => {
     createdAt: now
   }, null);
 
-  // 观察项：在线用户命中（仅日志用，不改变投递路径）
+  // 观察项：在线用户命中（仅日志用，不改变投递路径；实际投递见 sendToUser）
   const pushed = onlineUsers && onlineUsers.has(toUserId);
   console.log('[Messages] POST /api/messages pushed=' + pushed);
 
