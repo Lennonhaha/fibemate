@@ -29,11 +29,15 @@ int crypto_kem_keypair_derand(uint8_t *pk,
   uint8_t indcpa_sk[KYBER_INDCPA_SECRETKEYBYTES];
   memset(sk, 0, KYBER_SECRETKEYBYTES);
   indcpa_keypair_derand(pk, indcpa_sk, coins);
-  /* FIPS 203 compact sk format: d(32) || ek(1184) || H(ek)(32) || z(32) = 1280 bytes */
-  memcpy(sk, coins, KYBER_SYMBYTES);
-  memcpy(sk + KYBER_SYMBYTES, pk, KYBER_PUBLICKEYBYTES);
-  hash_h(sk + KYBER_SYMBYTES + KYBER_PUBLICKEYBYTES, pk, KYBER_PUBLICKEYBYTES);
-  memcpy(sk + KYBER_SYMBYTES + KYBER_PUBLICKEYBYTES + KYBER_SYMBYTES, coins + KYBER_SYMBYTES, KYBER_SYMBYTES);
+  /* FIPS 203 §7.1: dk = dkPKE(1152) || ek(1184) || H(ek)(32) || z(32) = 2400 bytes.
+     An earlier revision stored a non-standard d || ek || H(ek) || z in the first
+     1280 bytes, which no other FIPS 203 implementation (and not even this
+     repository's JS/WASM path) could read. */
+  memcpy(sk, indcpa_sk, KYBER_INDCPA_SECRETKEYBYTES);
+  memcpy(sk + KYBER_INDCPA_SECRETKEYBYTES, pk, KYBER_PUBLICKEYBYTES);
+  hash_h(sk + KYBER_INDCPA_SECRETKEYBYTES + KYBER_PUBLICKEYBYTES, pk, KYBER_PUBLICKEYBYTES);
+  memcpy(sk + KYBER_INDCPA_SECRETKEYBYTES + KYBER_PUBLICKEYBYTES + KYBER_SYMBYTES,
+         coins + KYBER_SYMBYTES, KYBER_SYMBYTES);
   return 0;
 }
 
@@ -149,16 +153,14 @@ int crypto_kem_dec(uint8_t *ss,
   uint8_t kr[2*KYBER_SYMBYTES];
   uint8_t cmp[KYBER_CIPHERTEXTBYTES];
   uint8_t indcpa_sk[KYBER_INDCPA_SECRETKEYBYTES];
-  uint8_t indcpa_pk[KYBER_INDCPA_PUBLICKEYBYTES];
 
-  /* FIPS 203 sk format: d(32) || ek(1184) || H(ek)(32) || z(32) */
-  const uint8_t *d  = sk;
-  const uint8_t *pk = sk + KYBER_SYMBYTES;
-  const uint8_t *hpk = sk + KYBER_SYMBYTES + KYBER_PUBLICKEYBYTES;
-  const uint8_t *z  = sk + KYBER_SYMBYTES + KYBER_PUBLICKEYBYTES + KYBER_SYMBYTES;
+  /* FIPS 203 §7.1: dk = dkPKE || ek || H(ek) || z */
+  const uint8_t *pk  = sk + KYBER_INDCPA_SECRETKEYBYTES;
+  const uint8_t *hpk = sk + KYBER_INDCPA_SECRETKEYBYTES + KYBER_PUBLICKEYBYTES;
+  const uint8_t *z   = sk + KYBER_INDCPA_SECRETKEYBYTES + KYBER_PUBLICKEYBYTES + KYBER_SYMBYTES;
 
-  /* Rebuild s from seed d */
-  indcpa_keypair_derand(indcpa_pk, indcpa_sk, d);
+  /* dkPKE is stored directly (no re-derivation from d) */
+  memcpy(indcpa_sk, sk, KYBER_INDCPA_SECRETKEYBYTES);
 
   indcpa_dec(buf, ct, indcpa_sk);
 

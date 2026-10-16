@@ -1,8 +1,8 @@
 # FIPS 203 ML-KEM-768 — FIBEMATE 实现声明
 
 **版本**: v1.0  
-**日期**: 2026-05-19  
-**状态**: ✅ 通过 NIST 中间值 KAT 验证
+**日期**: 2026-05-19 ｜ **修订**: 2026-10-16（更正 KAT 来源措辞）  
+**状态**: 🟡 仓内可复现：自产确定性向量 + 逐向量门禁 + 与 `@noble/post-quantum` 交叉互操作（2026-10-16 修正重生成）。**NIST 官方向量未入库、不在 CI** ⇒「已通过 NIST 中间值 KAT」在**仓内不可复现**（见下方「仓内测试来源」）。
 
 ---
 
@@ -14,14 +14,18 @@ FIBEMATE 集成了 **FIPS 203 ML-KEM-768** 作为后量子密钥交换的核心�
 
 ## 验证状态
 
-| 测试向量 | 验证结果 |
+| 检查（仓内可复现，2026-10-16） | 结果 |
 |----------|----------|
-| Key Generation | ✅ ek (1184 字节) 完全匹配 |
-| Encapsulation | ✅ 共享密钥 K (32 字节) 完全匹配 |
-| Decapsulation | ✅ 解密 K 完全匹配 |
-| KEM 闭环 | ✅ 加密-解密往返通过 |
+| KAT 逐向量结构（FIPS 203 §7.1：`dkPKE@0 / ek@1152 / H(ek)@2336 / z@2368`） | ✅ 100/100 |
+| KAT `decapsulate(dk, c) == k` 逐向量 | ✅ 100/100 |
+| 独立公式 `k = SHA3-512(m ‖ SHA3-256(ek))[:32]` | ✅ 100/100 |
+| 与 `@noble/post-quantum@0.7.1` 双向互操作（只比 final `K`） | ✅ 200/200 |
+| KeyGen 定值：同 `(d,z)` 下 `ek` 逐字节一致 | ✅ |
+| native(C) / JS / noble 三方 `sk` 逐字节一致 | ✅（2026-10-16 修复 native `kem.c` 布局后实测） |
 
-**测试来源**: NIST PQC Intermediate Values KAT（`Key Generation -- ML-KEM-768.txt`, `Encapsulation -- ML-KEM-768.txt`, `Decapsulation -- ML-KEM-768.txt`），2023 年 10 月发布。
+**仓内测试来源**: `packages/pqc-kem/test/kat/mlkem-768-KAT.rsp` —— **本仓自产**的确定性向量（生成器 `packages/pqc-kem/scripts/generate-nist-kat.js`；2026-10-16 重生成，两次再生逐字节相同），由 `scripts/ci-mlkem-kat.cjs` 逐向量校验（500 断言）。
+
+**关于 NIST 官方向量（重要更正）**: 本仓**不含** NIST `PQC Intermediate Values` 的 `.txt` 向量文件（全仓 + 全历史检索 0 命中）。历史上确实用过该目录，但它在**服务器**上（`/opt/fibemate-full/public/test-vectors/intermediate-2023/PQC Intermediate Values/`，见 `docs/mlkem1024-kat-verified.md`），**未随仓入库 ⇒ 在仓内不可复现**。仓内另有 ACVP 官方向量脚本（`packages/pqc-kem/test/acvp-kat.test.cjs`、`acvp-encapDecap.test.cjs`），但向量需外部落到 `%TEMP%\acvp\...`，且**不在 CI**（`.github/workflows/native-build.yml:75` 留有 `if: false  # TODO: replace with ACVP-based KAT for C addon`）。
 
 ## 算法参数
 
@@ -49,4 +53,4 @@ FIBEMATE 集成了 **FIPS 203 ML-KEM-768** 作为后量子密钥交换的核心�
 
 ---
 
-**免责声明**: 本实现已通过 NIST 中间值 KAT 验证，但尚未经过第三方安全审计。生产部署前建议完成完整的形式化验证和安全审计。
+**免责声明**: 本实现已通过**仓内自产确定性 KAT**、逐向量门禁、独立公式校验，以及与 `@noble/post-quantum` 的**跨实现互操作**验证；**尚未**在仓内与 NIST 官方中间值 / ACVP 向量比对（官方向量未入库），亦未经第三方安全审计。生产部署前建议先完成官方向量比对、形式化验证与安全审计。

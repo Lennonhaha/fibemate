@@ -20,19 +20,16 @@ for (let i = 0; i < N; i++) {
     const { ct: ctHex, ss: ssLibHex } = JSON.parse(r1.stdout.trim());
     const ctBuf = fromHex(ctHex);
 
+    // 判据口径（2026-10-16 定案，FIPS 203 final §7.3）：只比 final K（raw），不做任何额外哈希。
+    // 实证：本实现 <-> @noble/post-quantum 双向 raw 200/200、SHA3-256(Kbar || H(ct)) 形态 0/200。
     const decJS = MLKEM768.decapsulate(keysJS.secretKey, ctBuf);
-    // decapsulate returns raw K_bar_implicit_rej (or hashed? depends on impl)
-    // Let's try both raw and hashed
-    
+
     const ssLib = fromHex(ssLibHex);
-    const hashHct = MLKEM768.sha3_256(ctBuf);
-    const decHashed = MLKEM768.sha3_256(Buffer.concat([decJS, hashHct]));
-    
-    const matchRaw = Buffer.from(decJS).equals(ssLib);
-    const matchHashed = decHashed.equals(ssLib);
-    
-    if (matchRaw) passA++;
-    else if (matchHashed) passA++;
+
+    const matchRawA = Buffer.from(decJS).equals(ssLib);
+
+    if (matchRawA) passA++;
+    else fail++;
 
     // --- Direction B: liboqs keygen → JS encaps → liboqs decaps ---
     const r2 = spawnSync(oqsPath, ['keygen'], { timeout: 5000, encoding: 'utf8' });
@@ -40,26 +37,19 @@ for (let i = 0; i < N; i++) {
     const pkLib = fromHex(pkLibHex);
 
     const encJS = MLKEM768.encapsulate(pkLib);
-    // encJS returns {ciphertext, sharedSecret:K_bar}
-    
-    // JS final K
-    const K_js = MLKEM768.sha3_256(Buffer.concat([
-        encJS.sharedSecret,
-        MLKEM768.sha3_256(encJS.ciphertext)
-    ]));
+    // encapsulate 的 sharedSecret 即 FIPS 203 final 的 K（无额外 KDF 步骤）
 
-    const r3 = spawnSync(oqsPath, ['decaps', toHex(encJS.ciphertext), skLibHex], { timeout: 5000, encoding: 'utf8' });
+    // 契约（scripts/oqs_gen.c Usage）：decaps <skHex> <ctHex>
+    const r3 = spawnSync(oqsPath, ['decaps', skLibHex, toHex(encJS.ciphertext)], { timeout: 5000, encoding: 'utf8' });
     const { ss: ssLibDecHex } = JSON.parse(r3.stdout.trim());
     
-    // Also try raw K_bar (no hash)
     const matchB_raw = Buffer.from(encJS.sharedSecret).equals(fromHex(ssLibDecHex));
-    const matchB_hashed = K_js.equals(fromHex(ssLibDecHex));
-    
-    if (matchB_raw) passB++;
-    else if (matchB_hashed) passB++;
 
-    if (i < 3 || (matchRaw || matchHashed ? 0 : 1) + (matchB_raw || matchB_hashed ? 0 : 1) > 0) {
-        if (i < 3) console.error(`[${i}] A:raw=${matchRaw} hash=${matchHashed} | B:raw=${matchB_raw} hash=${matchB_hashed}`);
+    if (matchB_raw) passB++;
+    else fail++;
+
+    if (i < 3 || !(matchRawA && matchB_raw)) {
+        console.error(`[${i}] A=${matchRawA} B=${matchB_raw}`);
     }
 
     if ((i+1) % 20 === 0) console.error(`${i+1}/${N} A=${passA} B=${passB}`);
