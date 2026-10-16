@@ -2,8 +2,15 @@
 // 10000-round liboqs cross-verification
 const MLKEM768 = require('../packages/pqc-kem/src/ml-kem-768.js');
 const { spawnSync } = require('child_process');
-const oqs = './scripts/oqs_gen';
-const env = { LD_LIBRARY_PATH: '/opt/oqs/liboqs-install/lib' };
+const fs = require('fs');
+const path = require('path');
+
+// oqs_gen 辅助程序：默认相对本脚本目录解析（不再依赖调用方 CWD）；可用 OQS_GEN 覆盖。
+const oqs = process.env.OQS_GEN || path.join(__dirname, 'oqs_gen');
+// liboqs 动态库目录：可用 OQS_LIB_DIR 覆盖；未设置时仅在既有默认路径真实存在时启用（不再凭空写死）。
+const DEFAULT_OQS_LIB_DIR = '/opt/oqs/liboqs-install/lib';
+const libDir = process.env.OQS_LIB_DIR || (fs.existsSync(DEFAULT_OQS_LIB_DIR) ? DEFAULT_OQS_LIB_DIR : '');
+const env = libDir ? Object.assign({}, process.env, { LD_LIBRARY_PATH: libDir }) : process.env;
 
 function toHex(b) { return Buffer.from(b).toString('hex'); }
 function fromHex(h) { return Buffer.from(h, 'hex'); }
