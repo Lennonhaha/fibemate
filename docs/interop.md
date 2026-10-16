@@ -5,11 +5,12 @@
 This is the entry point for reproducing FIBEMATE's ML-KEM-768 cross-implementation checks and
 verifying the result yourself, instead of trusting a claim.
 
-> **Status (2026-10-16).** The `noble` legs and the vector-file legs run today, locally and in CI
-> (`mlkem-kat`, `node-test`, `gm-crossval`, `build-native` — all green on `bcb626f`). The Docker
-> image (`docker/interop/Dockerfile`) is new and its **build is not wired into CI yet**; treat the
-> Docker commands below as untested until that lands. The `liboqs` legs need the image (or a local
-> liboqs) and are **advisory** — they never block a change.
+> **Status (2026-10-16).** The `noble` legs and the vector-file legs run in CI on every pull request
+> via the `interop` job (`.github/workflows/interop.yml`, 1,000 rounds) — its job id `interop` is the
+> status-check context. `nightly-phase2.yml` → `liboqs-cross` builds liboqs `0.12.0` from source
+> (commit-pinned) and runs 10,000 rounds; it is still **advisory** and never blocks a change. The
+> Docker image (`docker/interop/Dockerfile`) exists, but its **build is still not wired into CI**;
+> treat the Docker commands below as untested until that lands.
 
 ## What it checks
 
@@ -157,9 +158,10 @@ environment variable is the current way to bind a report to a commit.
 
 | where | what runs | gate |
 |---|---|---|
+| pull requests | `interop` → `scripts/interop/run.mjs run --rounds 1000 --partners noble --kat all` (report uploaded as the `interop-report` artifact) | required (job id `interop`) |
 | pull requests | `mlkem-kat`, `node-test`, `gm-crossval`, `build-native`, CodeQL, … | required |
-| `nightly-phase2.yml` → `liboqs-cross` | builds liboqs + `oqs_gen`, runs `scripts/liboqs-10000.cjs` | advisory (`continue-on-error: true`) |
-| planned | `scripts/interop/run.mjs run --rounds 1000` with the report as an artifact | noble legs required, liboqs nightly |
+| `nightly-phase2.yml` → `liboqs-cross` | liboqs `0.12.0` (commit-pinned) + `oqs_gen`, then `--rounds 10000 --liboqs-rounds 10000 --partners noble,liboqs` (artifact `interop-report-nightly`) | advisory (`continue-on-error: true`) |
+| not wired yet | `docker/interop/Dockerfile` build (base image pinned by digest) | none |
 
 ## Troubleshooting
 

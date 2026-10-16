@@ -96,26 +96,71 @@ jobs:
         run: make
         # FAIL on error — strict mode
 
-  # === liboqs cross-validation (build from source — liboqs-dev not in apt) ===
+  # === liboqs cross-validation (pinned 0.12.0 source build) ===
   liboqs-cross:
     runs-on: ubuntu-latest
-    continue-on-error: true  # best-effort: liboqs build may vary across releases
+    continue-on-error: true  # advisory: flip to a hard gate only once the pin proves stable
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: 22
       - run: npm ci
-      - name: Build liboqs from source
+
+      - name: Build liboqs 0.12.0 from source (commit-pinned)
+        env:
+          LIBOQS_TAG: '0.12.0'
+          LIBOQS_COMMIT: f4b96220e4bd208895172acc4fedb5a191d9f5b1
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq build-essential cmake ninja-build libssl-dev
-          git clone --depth 1 -b main https://github.com/open-quantum-safe/liboqs.git /tmp/liboqs
-          cd /tmp/liboqs && mkdir build && cd build
-          cmake -GNinja -DBUILD_SHARED_LIBS=ON -DOQS_BUILD_ONLY_LIB=ON ..
+          git clone --depth 1 --branch "$LIBOQS_TAG" https://github.com/open-quantum-safe/liboqs.git /tmp/liboqs
+          cd /tmp/liboqs
+          echo "liboqs HEAD: $(git rev-parse HEAD)"
+          test "$(git rev-parse HEAD)" = "$LIBOQS_COMMIT" || \
+            { echo "::error::liboqs commit drift - expected $LIBOQS_COMMIT"; exit 1; }
+          git rev-parse HEAD | sudo tee /liboqs.commit > /dev/null
+          mkdir build && cd build
+          cmake -GNinja -DBUILD_SHARED_LIBS=ON -DOQS_BUILD_ONLY_LIB=ON \
+                -DOQS_MINIMAL_BUILD=KEM_ml_kem_768 -DCMAKE_INSTALL_PREFIX=/usr/local ..
           ninja && sudo ninja install && sudo ldconfig
+
+      - name: Assert the build knob was honoured (ML-KEM-768 only)
+        run: |
+          if strings /usr/local/lib/liboqs.so | grep -q 'Classic-McEliece'; then
+            echo "::error::OQS_MINIMAL_BUILD was ignored - non-ML-KEM algorithms are present"
+            exit 1
+          fi
+          echo "liboqs built with ML-KEM-768 only"
+
       - name: Build oqs_gen helper
         run: |
           gcc -O2 -o scripts/oqs_gen scripts/oqs_gen.c -l oqs -lcrypto
-      - name: 10,000-round cross-validation
-        run: node scripts/liboqs-10000.cjs
+          ./scripts/oqs_gen keygen > /dev/null
+
+      - name: 10,000-round interop (noble + liboqs)
+        env:
+          LIBOQS_VERSION: '0.12.0'
+          FIBEMATE_REPO_COMMIT: ${{ github.sha }}
+        run: |
+          set -o pipefail
+          node scripts/interop/run.mjs run \
+            --rounds 10000 --liboqs-rounds 10000 --partners noble,liboqs \
+            --kat all --out interop-out
+
+      - name: Report digest
+        if: always()
+        run: |
+          if [ -f interop-out/report.json ]; then
+            sha256sum interop-out/report.json
+          else
+            echo "::warning::no report produced"
+          fi
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.1
+        if: always()
+        with:
+          name: interop-report-nightly
+          path: interop-out/
+          retention-days: 30
