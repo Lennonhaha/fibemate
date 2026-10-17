@@ -1,6 +1,6 @@
 # FIBEMATE 部署指南与生产规则
 
-> 版本: v3.4 | 最后更新: 2026-09-02
+> 版本: v3.5 | 最后更新: 2026-10-17
 > 本文档是生产部署的**唯一权威来源**。任何生产操作必须遵守下方六条规则（R1–R6）。
 
 ---
@@ -64,9 +64,12 @@ pm2 startup
 set -e
 REPO_DIR="/opt/fibemate-repo"
 
-# 1. 解锁全部内容目录（不能只解 www）
+# 1. 解锁全部内容目录与文件（不能只解 www；也不能只解目录）
+#    生产实际对「目录 + 目录内文件」都设了 +i（内容级防篡改）；只解目录不够：
+#    git 写盘要 unlink 旧 inode，文件级 +i 会报 Operation not permitted（2026-10-17 实测）
 for d in www docs viz src packages; do
   find "$REPO_DIR/$d" -type d -exec chattr -i {} \; 2>/dev/null || true
+  find "$REPO_DIR/$d" -type f -exec chattr -i {} \; 2>/dev/null || true
 done
 
 # 2. 检查工作区干净（R4）
@@ -80,9 +83,10 @@ fi
 git fetch origin main
 git reset --hard origin/main
 
-# 4. 重新上锁
+# 4. 重新上锁（目录 + 文件两层都恢复）
 for d in www docs viz src packages; do
   find "$REPO_DIR/$d" -type d -exec chattr +i {} \; 2>/dev/null || true
+  find "$REPO_DIR/$d" -type f -exec chattr +i {} \; 2>/dev/null || true
 done
 
 # 5. 重启服务
@@ -164,18 +168,20 @@ if [ -n "$(git status --porcelain)" ]; then
   exit 1
 fi
 
-echo "[2/5] 解锁内容目录..."
+echo "[2/5] 解锁内容目录与文件..."
 for d in $LOCK_DIRS; do
   find "$REPO_DIR/$d" -type d -exec chattr -i {} \; 2>/dev/null || true
+  find "$REPO_DIR/$d" -type f -exec chattr -i {} \; 2>/dev/null || true
 done
 
 echo "[3/5] 拉取最新代码..."
 git fetch origin main
 git reset --hard origin/main
 
-echo "[4/5] 恢复只读锁..."
+echo "[4/5] 恢复只读锁（目录 + 文件）..."
 for d in $LOCK_DIRS; do
   find "$REPO_DIR/$d" -type d -exec chattr +i {} \; 2>/dev/null || true
+  find "$REPO_DIR/$d" -type f -exec chattr +i {} \; 2>/dev/null || true
 done
 
 echo "[5/5] 重启 API + 健康检查..."
@@ -218,18 +224,53 @@ if [ "$code" = "200" ]; then echo "✅ 部署成功"; else echo "⚠️ /api/mlk
 
 ## 六、只读锁（chattr +i）正确用法
 
-**锁目录而非文件**（锁文件会挡 git checkout/pull 的 unlink）：
+> **2026-10-17 订正**：生产实际对 `www/`、`docs/`、`packages/` 的**目录与目录内文件都设了 `+i`**
+> （内容级防篡改），不是旧版本写的「锁目录而非文件」。实测后果：`git pull` / `git merge` 写盘时
+> 要 `unlink` 旧 inode，文件级 `+i` 会直接失败：`error: unable to unlink ...: Operation not permitted`
+> （2026-10-17 部署事故，已按本节方式修复）。
+
+**规则：部署前必须同时解锁「目录」与「目录内文件」；部署完成后按原状重新上锁。**
 
 ```bash
-# ✅ 正确：锁目录（防止新建/删除目录项，文件内容仍可改）
-chattr +i /opt/fibemate-repo/www
-chattr +i /opt/fibemate-repo/docs
+# 解锁（目录 + 文件，两层都要跑）
+for d in /opt/fibemate-repo/www /opt/fibemate-repo/docs /opt/fibemate-repo/packages; do
+  find "$d" -type d -exec chattr -i {} \; 2>/dev/null || true
+  find "$d" -type f -exec chattr -i {} \; 2>/dev/null || true
+done
 
-# ❌ 错误：锁单个文件（会导致 git pull 报 unlink Operation not permitted）
-chattr +i /opt/fibemate-repo/www/index.html
+# 核验解锁干净（期望 0）
+lsattr -R /opt/fibemate-repo/www /opt/fibemate-repo/docs /opt/fibemate-repo/packages 2>/dev/null \
+  | grep -v ':$' | grep -v '^$' | grep -v -- '----i' | wc -l
+
+# 重新上锁（目录 + 文件）
+for d in /opt/fibemate-repo/www /opt/fibemate-repo/docs /opt/fibemate-repo/packages; do
+  find "$d" -type d -exec chattr +i {} \; 2>/dev/null || true
+  find "$d" -type f -exec chattr +i {} \; 2>/dev/null || true
+done
 ```
 
-部署前先解锁，部署后重新上锁（见 R2 / deploy-fibemate.sh）。
+⚠️ `trap` 必须在第一条 `chattr -i` **之前**注册：任何失败（含 pull 失败）都要回到 `+i`；
+锚点实现见 fibemate-tools `scripts/server-sync.sh`。
+⚠️ 统计「未锁文件数」时，`lsattr -R` 的输出里既有**空行**也有**目录头行**（`xxx:`），
+两者都必须剔除，否则会得到假数字。
+
+### 6.1 两种锁策略的取舍（结论：保持现状）
+
+- **只锁目录**（旧文档口味）：`git pull` 顺滑，但目录内文件内容可被就地改写，防篡改弱一层。
+- **目录 + 文件都锁**（现状）：防篡改更强，但每次部署都要多走「文件解锁」这一步，
+  且**脚本必须同时解锁两层**，否则部署必然失败。
+
+2026-10-17 决定：**保持现状（目录 + 文件都锁）**，配套脚本按此升级
+（本文 §R2 / §三，以及服务器 `/root/deploy-fibemate.sh`）。
+
+### 6.2 同期复核发现（未改行为，待决策）
+
+- R4 与 §三 的「工作区必须干净」门禁，与「磁盘先行会留 WIP」的现实冲突：2026-10-17 部署前
+  `www/main-tiled.html` 就有未提交改动，按现脚本会被直接拒绝部署。
+- R2 与 §三 用 `git reset --hard origin/main` 会**静默丢弃**上述 WIP；安全等价写法是
+  `git merge --ff-only origin/main`（前提 HEAD 是 main 的祖先），本次实际部署采用后者。
+- R1 写「已就地修复、pm2 跑 repo 的 `src/index.js`」，但 2026-10-17 实测 pm2 `fibemate` 仍指向
+  `/opt/fibemate-full/src/index.js`（与 CONTRIBUTING.md 一致，与本文件 R1 不一致）。
 
 ---
 
