@@ -53,7 +53,7 @@ The name "FIBEMATE" is a coined word with no relation to any industry term in fi
 
 ## Scores (2026-08-03)
 
-- **CARS**: 78.50 (Crypto Inventory 90 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 73 · Organizational Readiness 78)
+- **CARS**: 77.30 (Crypto Inventory 95 · Algorithm Agility 61 · Key Lifecycle 82 · Protocol Coupling 73 · Organizational Readiness 70)
 - **IBM 7-Dimension**: 63.70 HIGH (D1 60 · D2 50 · D3 90 · D4 55 · D5 60 · D6 50 · D7 92)
 
 ## Safety Statement
