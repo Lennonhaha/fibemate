@@ -57,6 +57,14 @@ jobs:
             console.log('ML-KEM-768: OK |', kp.publicKey.length+'B pk |', ss.length+'B shared');
           "
 
+      - name: Verify CBOM (drift + official schema)
+        run: |
+          # Drift guard: the committed CBOM must match what the generator produces
+          # from tools/crypto-audit-scan.json (timestamp excluded).
+          node scripts/build-cbom.js --check
+          # Schema guard: CycloneDX 1.6, using the schemas vendored in tools/schemas.
+          node tools/validate-cbom.cjs tools/cbom-cyclonedx.json
+
       - name: Generate SHA256 manifest
         run: |
           find . -type f \
@@ -100,4 +108,5 @@ jobs:
             RELEASE_CHECKSUMS.txt \
             RELEASE_CHECKSUMS.sig \
             RELEASE_CHECKSUMS.pem \
+            tools/cbom-cyclonedx.json \
             --clobber
