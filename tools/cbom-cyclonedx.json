@@ -2,3858 +2,2384 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.6",
   "version": 1,
-  "serialNumber": "urn:uuid:a134990a-72d6-4a79-b274-c0c007c7ec4c",
   "metadata": {
-    "timestamp": "2026-08-02T10:56:21.473Z",
+    "timestamp": "2026-10-19T06:44:44.262Z",
+    "tools": [
+      {
+        "vendor": "FIBEMATE",
+        "name": "build-cbom.js",
+        "version": "3.3.2"
+      }
+    ],
     "component": {
       "type": "application",
       "name": "FIBEMATE",
-      "version": "3.3.0",
+      "version": "3.3.2",
       "bom-ref": "root",
-      "description": "PQC full-stack engineering verification platform"
+      "description": "PQC full-stack engineering verification platform. Non-asset entries in the source scan (formal specification language, mathematical transforms, protocol constructions) are listed under properties as fibemate:excludedAsset:* instead of being emitted as components."
     }
   },
   "components": [
     {
       "type": "cryptographic-asset",
-      "bom-ref": "algo-0",
-      "name": "ML-KEM",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "KEM"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "safe"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "api/a2a/a2a-core.js",
-            "line": 1
-          },
-          {
-            "location": "bindings/python/fibemate_py/fibemate_bridge.js",
-            "line": 1
-          },
-          {
-            "location": "docs/tla/C2.tla",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-05-25/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-08/timestamp-manifest-seeded.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-08/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/hardware/ntt_butterfly_unif.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/hardware/ntt_core.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-26/hardware/ntt_core.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/ml-kem-768_存证清单.json",
-            "line": 1
-          },
-          {
-            "location": "docs/hmac-sm3-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "docs/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/mod_mult.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_butterfly.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_butterfly_unif.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_core.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/zeta_rom.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/zeta_rom_synth.v",
-            "line": 1
-          },
-          {
-            "location": "fuzz/fuzz_bytecodec.cjs",
-            "line": 1
-          },
-          {
-            "location": "fuzz/fuzz_decapsulate.cjs",
-            "line": 1
-          },
-          {
-            "location": "fuzz/fuzz_encapsulate.cjs",
-            "line": 1
-          },
-          {
-            "location": "lib/keccak.js",
-            "line": 1
-          },
-          {
-            "location": "p0_evidence_20260604_033053/kat_10000rounds_2026-06-03T18-57-09-936Z_FINAL.json",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/native/bench.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/scripts/generate-nist-kat.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/src/hybrid.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/src/ml-kem-768.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/diag-kat.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/diag2.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/index.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/kat-diag.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/package.json",
-            "line": 1
-          },
-          {
-            "location": "reg-server/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "reg-server/reg-e2e-test.js",
-            "line": 1
-          },
-          {
-            "location": "reg-server/server.js",
-            "line": 1
-          },
-          {
-            "location": "reg-server/stress-test-v2.js",
-            "line": 1
-          },
-          {
-            "location": "reg-server/stress-test.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_9of9_corrected.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/bench-proper.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/bench-v33.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/benchmark.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/build-demo.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/ci-mlkem-kat.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/daily-audit.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/debug_decaps_noble_vs_js.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/debug_decaps_sk.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/debug_ss_format.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/discover.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/fix-ratchet.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/fix_verify.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/health-check.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/js-liboqs-xcross.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/kat-bench.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/kat-jasmin-compare.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/kat-quick.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/kat500.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/liboqs-10000.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/micro-profile.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/mlkem-bench-native.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/noble-liboqs-xcross.mjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/p0-04-fix-validation.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/perf-gate.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/prep-release.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/profile-mlkem.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/smoke-test.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/stress-test.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/test-domain.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/test-native-addon.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/test_barrett.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/trace-roundtrip.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla-mlkem-1024.mjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/update-index-91.cjs",
-            "line": 1
-          },
-          {
-            "location": "src/crypto/ml-kem-768-td.js",
-            "line": 1
-          },
-          {
-            "location": "src/index.js",
-            "line": 1
-          },
-          {
-            "location": "src/pqc-hybrid-server.js",
-            "line": 1
-          },
-          {
-            "location": "src/tls-hybrid-extension.js",
-            "line": 1
-          },
-          {
-            "location": "test/fixtures/ml-kem-768-golden.json",
-            "line": 1
-          },
-          {
-            "location": "test/a2a-smoke.js",
-            "line": 1
-          },
-          {
-            "location": "test/compat-fixtures.test.js",
-            "line": 1
-          },
-          {
-            "location": "test/INTEGRITY-MANIFEST.json",
-            "line": 1
-          },
-          {
-            "location": "test/run-compat-fixtures.mjs",
-            "line": 1
-          },
-          {
-            "location": "test/smoke-crypto.js",
-            "line": 1
-          },
-          {
-            "location": "test/test-cross-lang-seeded.js",
-            "line": 1
-          },
-          {
-            "location": "test/test-cross-lang.js",
-            "line": 1
-          },
-          {
-            "location": "test/test-fibemate.js",
-            "line": 1
-          },
-          {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/risk-coverage-matrix.json",
-            "line": 1
-          },
-          {
-            "location": "www/bench/wasm-bench.html",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/crypto/ml-kem-768-wrapper.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/crypto/pq-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/wasm/fibemate_pq_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/wasm/mlkem-ct-wasm-bridge.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/wasm/mlkem_ct_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/ml-kem-768-wrapper.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/ml-kem-768.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/pq-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/pq-test-electron.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/slh-dsa.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-bridge.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/test-ml-kem-kat.html",
-            "line": 1
-          },
-          {
-            "location": "www/demo/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/demo/ml-kem-768.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/lg-remedial-manifest-20260701.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-09/lg-058.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/experiments/tvla-wasm-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-mlkem-report-v2.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-mlkem-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-report-20260531.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/API.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/architecture.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/cars-radar.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/FAQ.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/fpga-report.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/kakeya-perron.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-dashboard.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/publications.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-optimization.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/js/app.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/nexus-community.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/e2ee-display.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/keys.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/settings.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq/ml-dsa.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq/_crystals.js",
-            "line": 1
-          },
-          {
-            "location": "www/blog.html",
-            "line": 1
-          },
-          {
-            "location": "www/dev-portfolio.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer-en.html",
-            "line": 1
-          },
-          {
-            "location": "www/fibemate_pq_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/index-beian.html",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/kat-10000.html",
-            "line": 1
-          },
-          {
-            "location": "www/kat-purejs-10000.html",
-            "line": 1
-          },
-          {
-            "location": "www/kat_diag.html",
-            "line": 1
-          },
-          {
-            "location": "www/kat_quick.html",
-            "line": 1
-          },
-          {
-            "location": "www/kyber_nt_v3.js",
-            "line": 1
-          },
-          {
-            "location": "www/landing-new.html",
-            "line": 1
-          },
-          {
-            "location": "www/m.html",
-            "line": 1
-          },
-          {
-            "location": "www/ml-kem-hybrid-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/nexus-community.js",
-            "line": 1
-          },
-          {
-            "location": "www/pqc-hybrid-e2e.html",
-            "line": 1
-          },
-          {
-            "location": "www/security-block.html",
-            "line": 1
-          },
-          {
-            "location": "www/security.html",
-            "line": 1
-          },
-          {
-            "location": "www/session-manager.js",
-            "line": 1
-          },
-          {
-            "location": "www/settings.html",
-            "line": 1
-          },
-          {
-            "location": "www/sm-v12.js",
-            "line": 1
-          },
-          {
-            "location": "www/terms-en.html",
-            "line": 1
-          },
-          {
-            "location": "www/terms.html",
-            "line": 1
-          },
-          {
-            "location": "www/test_mlkem.html",
-            "line": 1
-          },
-          {
-            "location": "double-ratchet-pq.js",
-            "line": 1
-          },
-          {
-            "location": "test-tls-hybrid-extension.js",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-1",
-      "name": "NTT",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "MATH"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "safe"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "archives/sm2-versions/sm2-bigint-ec-v1.2.js",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/hardware/ntt_butterfly_unif.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/hardware/ntt_core.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/hardware/ntt_core_pipe.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/hardware/tb_ntt_compare.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-26/hardware/ntt_core.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-26/hardware/ntt_core_pipe.v",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/ml-kem-768_存证清单.json",
-            "line": 1
-          },
-          {
-            "location": "docs/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/hw_monitor.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/hw_monitor_resp.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/lfsr256_prng.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/lfsr_prng.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/mask_ram.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/mod_add.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/mod_mult.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/mod_sub.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_butterfly.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_butterfly_unif.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_core.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_core_pipe.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_core_pipe2.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_core_pipe2_nobom.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_core_pipe2_v5_2.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_fault_protect.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/ntt_masked_wrapper.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/shake_prng.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/tensor_ntt_scheduler.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/ntt/zeta_rom.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/vwz/vwz_solve_preimage.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/fibemate_fpga_top.v",
-            "line": 1
-          },
-          {
-            "location": "fpga/rtl/fibemate_fpga_vio_wrapper.v",
-            "line": 1
-          },
-          {
-            "location": "p0_evidence_20260604_033053/tvla-9of9-corrected-report.json",
-            "line": 1
-          },
-          {
-            "location": "p0_evidence_20260604_033053/tvla-experiment-5-polyMul-attack-verification.json",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/encode.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/keygen.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/ntt.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/polyvec.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/sampling.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/sign.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/verify.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/input-validation.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/noble-oracle.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/ntt.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/tvla-timing.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/package.json",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/src/ml-kem-768.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/diag-kat.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/index.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/kat-diag.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_9of9_corrected.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_diagnose.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/add-code-review-section.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/bench-v33.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/benchmark.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/fpga-l8l9-43-test.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/health-check.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/kat-diag.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/kat-jasmin-compare.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/micro-profile.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/profile-mlkem.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/update-index-91.cjs",
-            "line": 1
-          },
-          {
-            "location": "src/crypto/ml-kem-768-td.js",
-            "line": 1
-          },
-          {
-            "location": "src/pqc-hybrid-server.js",
-            "line": 1
-          },
-          {
-            "location": "src/tls-hybrid-extension.js",
-            "line": 1
-          },
-          {
-            "location": "test/test-cross-lang-seeded.js",
-            "line": 1
-          },
-          {
-            "location": "test/test-cross-lang.js",
-            "line": 1
-          },
-          {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/risk-coverage-matrix.json",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/wasm/mlkem-ct-wasm-bridge.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/constant-time.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/message-gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/ml-kem-768.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-bigint-ec.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-bridge.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-ec-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/demo/ml-kem-768.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/lib/three.min.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/lg-remedial-manifest-20260701.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-07/manifest_20260707.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-09/lg-058.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/experiments/tvla-experiment-1-fixed-vs-fixed-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/experiments/tvla-experiment-3-improved-tvla-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/experiments/tvla-experiment-3b-predictable-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/experiments/tvla-experiment-5-polyMul-attack-verification.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/experiments/tvla-wasm-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-9of9-corrected-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-mlkem-report-v2-final.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-mlkem-report-v2.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-mlkem-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-report-20260531.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/architecture.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/cars-radar.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/fpga-report.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/ntt-butterfly.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/ntt-minimal.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/publications.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/three-r128.min.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/js/ui/chat-ui.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/app.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/network-detector.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/satellite-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/WSManager.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/5g-a/5g-a-adapter.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/satellite/network-detector.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/satellite/satellite-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/app-state.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/navigation.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/notifications.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/settings.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/two-factor-auth.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/voice-message.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq/ml-dsa.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq/_crystals.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq-bundle/ml-dsa.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq-bundle/unified.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/index.js",
-            "line": 1
-          },
-          {
-            "location": "www/blog.html",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/kyber_nt_v3.js",
-            "line": 1
-          },
-          {
-            "location": "www/security.html",
-            "line": 1
-          },
-          {
-            "location": "www/websocket-manager.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk-snarks.js",
-            "line": 1
-          },
-          {
-            "location": "sm2-bigint-ec.js",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-2",
-      "name": "SHA-256",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "HASH"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "weak"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "api/a2a/a2a-core.js",
-            "line": 1
-          },
-          {
-            "location": "docs/tla/C2.tla",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-05-25/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-08/timestamp-manifest-seeded.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-08/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-15/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/ml-kem-768_存证清单.json",
-            "line": 1
-          },
-          {
-            "location": "docs/hmac-sm3-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "docs/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/scripts/generate-nist-kat.js",
-            "line": 1
-          },
-          {
-            "location": "reg-server/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_diagnose.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v2.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v3.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v3_masked.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/add-code-review-section.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/benchmark.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/test-sm2-browser-fix.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/test-sm2-node-fix.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/verify-tsr.js",
-            "line": 1
-          },
-          {
-            "location": "src/crypto/bloom-filter.js",
-            "line": 1
-          },
-          {
-            "location": "src/crypto/pedersen.js",
-            "line": 1
-          },
-          {
-            "location": "src/pqc-hybrid-server.js",
-            "line": 1
-          },
-          {
-            "location": "src/tls-hybrid-extension.js",
-            "line": 1
-          },
-          {
-            "location": "test/a2a-smoke.js",
-            "line": 1
-          },
-          {
-            "location": "test/INTEGRITY-MANIFEST.json",
-            "line": 1
-          },
-          {
-            "location": "test/test-fibemate.js",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/crypto/ml-kem-768-wrapper.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/wasm/fibemate_pq_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/ml-kem-768-wrapper.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.esm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/test-ml-kem-kat.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-07/manifest_20260707.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-09/lg-058.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-09/manifest_20260709-perf.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3-v1-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-report-20260531.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/sm2/tvla-sm2-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/sm2/tvla-sm2-v3-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/sm2/tvla-sm2-v4-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/FAQ.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-optimization.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-tvla-tsa-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/js/app.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/nexus-community.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/performance-optimization.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/secure-key-storage.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/sm3_implementation.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/zk-ui-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/quantum/quantum-crypto.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/backend.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq/index.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq/slh-dsa.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq-bundle/slh-dsa.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq-bundle/unified.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/device-binding.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/encrypted-file-transfer.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/index.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/key-rotation.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/pir-search.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/safety-numbers.js",
-            "line": 1
-          },
-          {
-            "location": "www/timestamps/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/zk/bulletproofs.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk/schnorr-prover-v2.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk/schnorr-prover.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk/schnorr-verifier.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk/zk-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/blog.html",
-            "line": 1
-          },
-          {
-            "location": "www/fibemate_pq_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/kyber_nt_v3.js",
-            "line": 1
-          },
-          {
-            "location": "www/nexus-community.js",
-            "line": 1
-          },
-          {
-            "location": "www/performance-optimization.js",
-            "line": 1
-          },
-          {
-            "location": "www/pqc-hybrid-e2e.html",
-            "line": 1
-          },
-          {
-            "location": "www/security.html",
-            "line": 1
-          },
-          {
-            "location": "www/zk-auth-poseidon.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk-identity-proof.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk-snarks.js",
-            "line": 1
-          },
-          {
-            "location": "double-ratchet-pq.js",
-            "line": 1
-          },
-          {
-            "location": "double-ratchet.js",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-3",
-      "name": "SM2",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "SIGN"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "vulnerable"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "archives/sm2-versions/sm2-bigint-ec-v1.2.js",
-            "line": 1
-          },
-          {
-            "location": "archives/sm2-versions/sm2-bigint-ec-v1.3.js",
-            "line": 1
-          },
-          {
-            "location": "docs/tla/C2.tla",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-05-25/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-08/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/hmac-sm3-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "packages/sm3-ref/test/sm3-cross-validate.cjs",
-            "line": 1
-          },
-          {
-            "location": "reg-server/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "reg-server/stress-test-v2.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_diagnose.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_high_order.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v2.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v3.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v3_masked.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_stress_gradient.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/apply-mersenne-reduction.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/bench-modinv.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/bench-v33.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/benchmark.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/ci-gm-sm2.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/discover.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/fix-verify-blinding.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/health-check.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/hmac-sm3-kat.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/perf-gate.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/quick-bench-sm2.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/smoke-test.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/test-sm2-browser-fix.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/test-sm2-node-fix.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/verify-gradient-quick.cjs",
-            "line": 1
-          },
-          {
-            "location": "src/index.js",
-            "line": 1
-          },
-          {
-            "location": "src/pqc-hybrid-server.js",
-            "line": 1
-          },
-          {
-            "location": "src/tls-hybrid-extension.js",
-            "line": 1
-          },
-          {
-            "location": "test/smoke-crypto.js",
-            "line": 1
-          },
-          {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/risk-coverage-matrix.json",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/message-gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-bigint-ec.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-bridge.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.bundle.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.cjs.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.esm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-ec-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm3-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-25/manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/lg-remedial-manifest-20260701.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-09/lg-058.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-09/manifest_20260709-perf.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/ml-kem-768/tvla-report-20260531.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/sm2/tvla-sm2-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/API.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/architecture.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/cars-radar.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/FAQ.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-dashboard.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/publications.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-frontend-verification.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-optimization.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-tvla-tsa-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/js/crypto/sm3.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/e2ee-display.js",
-            "line": 1
-          },
-          {
-            "location": "www/timestamps/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/blog.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer-en.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer.html",
-            "line": 1
-          },
-          {
-            "location": "www/gm-chat.html",
-            "line": 1
-          },
-          {
-            "location": "www/gm-test.html",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/security.html",
-            "line": 1
-          },
-          {
-            "location": "eslint.config.js",
-            "line": 1
-          },
-          {
-            "location": "package-lock.json",
-            "line": 1
-          },
-          {
-            "location": "sm2-bigint-ec.js",
-            "line": 1
-          },
-          {
-            "location": "test-tls-hybrid-extension.js",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-4",
-      "name": "P-256/ECDH",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "ECC"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "vulnerable"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "docs/tla/C2.tla",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/src/hybrid.js",
-            "line": 1
-          },
-          {
-            "location": "packages/pqc-kem/src/ml-kem-768.js",
-            "line": 1
-          },
-          {
-            "location": "reg-server/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "reg-server/stress-test-v2.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/ecdh-p256-kat.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/test-sm2-browser-fix.js",
-            "line": 1
-          },
-          {
-            "location": "src/crypto/ml-kem-768-td.js",
-            "line": 1
-          },
-          {
-            "location": "src/crypto/pedersen.js",
-            "line": 1
-          },
-          {
-            "location": "src/pqc-hybrid-server.js",
-            "line": 1
-          },
-          {
-            "location": "src/tls-hybrid-extension.js",
-            "line": 1
-          },
-          {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/risk-coverage-matrix.json",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/crypto/ml-kem-768-wrapper.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/crypto/pq-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/wasm/fibemate_pq_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/message-gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/ml-kem-768-wrapper.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/pq-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/security-levels.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-bridge.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-ec-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm3-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/API.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/cars-radar.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/FAQ.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-optimization.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "www/js/core/ws-handler.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/ui/e2ee-status.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/app.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/message-crypto.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/nexus-community.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/p2p-core.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/zk-ui-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/backend.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/keys.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/privacy.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/index.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/mix-config.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/mixnet-router.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk/schnorr-prover-v2.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk/schnorr-prover.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk/zk-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/blog.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer.html",
-            "line": 1
-          },
-          {
-            "location": "www/fibemate_pq_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/main-tiled.html",
-            "line": 1
-          },
-          {
-            "location": "www/message-crypto.js",
-            "line": 1
-          },
-          {
-            "location": "www/ml-kem-hybrid-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/nexus-community.js",
-            "line": 1
-          },
-          {
-            "location": "www/p2p-core.js",
-            "line": 1
-          },
-          {
-            "location": "www/terms.html",
-            "line": 1
-          },
-          {
-            "location": "www/test_mlkem.html",
-            "line": 1
-          },
-          {
-            "location": "www/zk-auth-poseidon.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk-identity-proof.js",
-            "line": 1
-          },
-          {
-            "location": "www/zk-ui-integration.js",
-            "line": 1
-          },
-          {
-            "location": "double-ratchet-pq.js",
-            "line": 1
-          },
-          {
-            "location": "double-ratchet.js",
-            "line": 1
-          },
-          {
-            "location": "message-crypto.js",
-            "line": 1
-          },
-          {
-            "location": "test-tls-hybrid-extension.js",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-5",
-      "name": "Double-Ratchet",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "PROTO"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "weak"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "docs/tla/OPK.tla",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "reg-server/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/bench-v33.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/benchmark.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/fix-ratchet.js",
-            "line": 1
-          },
-          {
-            "location": "src/index.js",
-            "line": 1
-          },
-          {
-            "location": "src/opk-server.js",
-            "line": 1
-          },
-          {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/risk-coverage-matrix.json",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/crypto/pq-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/wasm/fibemate_pq_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/message-gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/pq-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/security-levels.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-25/manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/API.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/architecture.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/cars-radar.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/FAQ.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
-          },
-          {
-            "location": "www/js/core/ws-handler.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/ui/e2ee-status.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/message-crypto.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/nexus-community.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/p2p-core.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/quantum/quantum-adapter.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/e2ee-display.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/privacy.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/voice-message.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/index.js",
-            "line": 1
-          },
-          {
-            "location": "www/tests/e2e/messaging.spec.js",
-            "line": 1
-          },
-          {
-            "location": "www/timestamps/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/article.html",
-            "line": 1
-          },
-          {
-            "location": "www/blog.html",
-            "line": 1
-          },
-          {
-            "location": "www/bridge_test.html",
-            "line": 1
-          },
-          {
-            "location": "www/dev-portfolio.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer.html",
-            "line": 1
-          },
-          {
-            "location": "www/e2ee-indicator.js",
-            "line": 1
-          },
-          {
-            "location": "www/fibemate_pq_wasm.js",
-            "line": 1
-          },
-          {
-            "location": "www/index-beian.html",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/landing-new.html",
-            "line": 1
-          },
-          {
-            "location": "www/legacy-crypto-bridge.js",
-            "line": 1
-          },
-          {
-            "location": "www/main-tiled.html",
-            "line": 1
-          },
-          {
-            "location": "www/message-crypto.js",
-            "line": 1
-          },
-          {
-            "location": "www/ml-kem-hybrid-integration.js",
-            "line": 1
-          },
-          {
-            "location": "www/nexus-community.js",
-            "line": 1
-          },
-          {
-            "location": "www/p2p-core.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-en.html",
-            "line": 1
-          },
-          {
-            "location": "www/privacy.html",
-            "line": 1
-          },
-          {
-            "location": "www/session-manager.js",
-            "line": 1
-          },
-          {
-            "location": "www/settings.html",
-            "line": 1
-          },
-          {
-            "location": "www/sm-v12.js",
-            "line": 1
-          },
-          {
-            "location": "www/terms-en.html",
-            "line": 1
-          },
-          {
-            "location": "www/terms.html",
-            "line": 1
-          },
-          {
-            "location": "www/zk-identity-proof.js",
-            "line": 1
-          },
-          {
-            "location": "double-ratchet-pq.js",
-            "line": 1
-          },
-          {
-            "location": "double-ratchet.js",
-            "line": 1
-          },
-          {
-            "location": "message-crypto.js",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-6",
-      "name": "SM3",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "HASH"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "weak"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "archives/sm2-versions/sm2-bigint-ec-v1.3.js",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-08/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/hmac-sm3-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "packages/sm3-ref/test/sm3-cross-validate.cjs",
-            "line": 1
-          },
-          {
-            "location": "reg-server/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_high_order.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v2.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v3.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/tvla/tvla_sm2_v3_masked.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/bench-v33.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/benchmark.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/ci-gm-sm3.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/discover.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/hmac-sm3-kat.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/quick-bench-sm2.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/sm3-bench.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/sm3-smoke.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/smoke-test.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/verify-gradient-quick.cjs",
-            "line": 1
-          },
-          {
-            "location": "src/index.js",
-            "line": 1
-          },
-          {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/risk-coverage-matrix.json",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/hybrid-kem-client.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/message-gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-bridge.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.bundle.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.cjs.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm3-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-09/lg-058.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-09/manifest_20260709-perf.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3-v1-report.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/architecture.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/FAQ.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-dashboard.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-frontend-verification.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-optimization.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "www/js/crypto/sm3.js",
-            "line": 1
-          },
-          {
-            "location": "www/js/sm3_implementation.js",
-            "line": 1
-          },
-          {
-            "location": "www/modules/e2ee-display.js",
-            "line": 1
-          },
-          {
-            "location": "www/timestamps/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/blog.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer-en.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer.html",
-            "line": 1
-          },
-          {
-            "location": "www/gm-chat.html",
-            "line": 1
-          },
-          {
-            "location": "www/gm-test.html",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/security.html",
-            "line": 1
-          },
-          {
-            "location": "package-lock.json",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-7",
-      "name": "ML-DSA/fml-dsa",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "SIGN"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "safe"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "docs/tsa/2026-05-25/timestamp-manifest.json",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/bench/bench-compare.cjs",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/encode.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/keygen.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/modmul.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/native.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/ntt.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/params.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/polyvec.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/precomputed.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/reduce.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/sampling.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/shakestream.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/sign.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/core/verify.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/src/index.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/cross-noble.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/debug-hint3.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/edge.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/fml-dsa.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/input-validation.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/kat-siggen-fetch.mjs",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/kat-vectors.mjs",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/kat-verify-siggen.mjs",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/kat-verify.mjs",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/noble-oracle.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/ntt.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/probe-noble-structure.mjs",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/shakestream.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/test/tvla-timing.test.js",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/package-lock.json",
-            "line": 1
-          },
-          {
-            "location": "packages/fml-dsa/package.json",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "www/docs/cars-radar.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/cars-self-assessment.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/FAQ.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/ntt-butterfly.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-dashboard.html",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq/ml-dsa.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq/_crystals.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq-bundle/ml-dsa.js",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq-bundle/pq_entry.mjs",
-            "line": 1
-          },
-          {
-            "location": "www/noble-pq-bundle/unified.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/index.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/signature.js",
-            "line": 1
-          },
-          {
-            "location": "www/privacy-layers/signature.v2.js",
-            "line": 1
-          },
-          {
-            "location": "www/vwz-challenge/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer-en.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer.html",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-8",
-      "name": "SM4",
-      "cryptoProperties": {
-        "assetType": "algorithm",
-        "algorithmProperties": {
-          "primitive": "SYM"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "weak"
-        }
-      },
-      "evidence": {
-        "occurrences": [
-          {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
-          },
-          {
-            "location": "docs/hmac-sm3-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "scripts/bench-v33.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/benchmark.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/ci-gm-sm4.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/discover.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/perf-gate.js",
-            "line": 1
-          },
-          {
-            "location": "scripts/sm4-bench.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/sm4-smoke.cjs",
-            "line": 1
-          },
-          {
-            "location": "scripts/smoke-test.js",
-            "line": 1
-          },
-          {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
-          },
-          {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
-          },
-          {
-            "location": "tools/risk-coverage-matrix.json",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/message-gm.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.bundle.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm2-browser.cjs.js",
-            "line": 1
-          },
-          {
-            "location": "www/crypto/sm4-browser.js",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/tvla/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/API.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/architecture.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/FAQ.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-dashboard.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-frontend-verification.html",
-            "line": 1
-          },
-          {
-            "location": "www/docs/sm2-tvla-analysis.html",
-            "line": 1
-          },
-          {
-            "location": "www/modules/e2ee-display.js",
-            "line": 1
-          },
-          {
-            "location": "www/blog.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer-en.html",
-            "line": 1
-          },
-          {
-            "location": "www/disclaimer.html",
-            "line": 1
-          },
-          {
-            "location": "www/gm-chat.html",
-            "line": 1
-          },
-          {
-            "location": "www/gm-test.html",
-            "line": 1
-          },
-          {
-            "location": "www/index.html",
-            "line": 1
-          },
-          {
-            "location": "www/security.html",
-            "line": 1
-          }
-        ]
-      }
-    },
-    {
-      "type": "cryptographic-asset",
-      "bom-ref": "algo-9",
+      "bom-ref": "crypto:AES",
       "name": "AES",
+      "description": "symmetric cipher",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
-          "primitive": "SYM"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "safe"
+          "primitive": "block-cipher",
+          "certificationLevel": [
+            "none"
+          ]
         }
       },
       "evidence": {
         "occurrences": [
           {
-            "location": "api/a2a/a2a-core.js",
-            "line": 1
+            "location": "api/a2a/a2a-core.js"
           },
           {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
+            "location": "docs/tsa/2026-06-25/index.html"
           },
           {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
           },
           {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
+            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html"
           },
           {
-            "location": "src/index.js",
-            "line": 1
+            "location": "src/index.js"
           },
           {
-            "location": "test/a2a-smoke.js",
-            "line": 1
+            "location": "test/a2a-smoke.js"
           },
           {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
+            "location": "tools/build-risk-assessment.cjs"
           },
           {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
+            "location": "tools/cars-scorecard.json"
           },
           {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
+            "location": "tools/ibm-dimensions-scorecard.json"
           },
           {
-            "location": "www/crypto/gm.js",
-            "line": 1
+            "location": "www/crypto/gm.js"
           },
           {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
+            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html"
           },
           {
-            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html",
-            "line": 1
+            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html"
           },
           {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
+            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html"
           },
           {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
+            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html"
           },
           {
-            "location": "www/docs/API.html",
-            "line": 1
+            "location": "www/docs/API.html"
           },
           {
-            "location": "www/docs/FAQ.html",
-            "line": 1
+            "location": "www/docs/FAQ.html"
           },
           {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
+            "location": "www/docs/pqc-readiness.html"
           },
           {
-            "location": "www/js/app.js",
-            "line": 1
+            "location": "www/js/app.js"
           },
           {
-            "location": "www/js/nexus-community.js",
-            "line": 1
+            "location": "www/js/nexus-community.js"
           },
           {
-            "location": "www/js/p2p-core.js",
-            "line": 1
+            "location": "www/js/p2p-core.js"
           },
           {
-            "location": "www/js/performance-optimization.js",
-            "line": 1
+            "location": "www/js/performance-optimization.js"
           },
           {
-            "location": "www/js/secure-key-storage.js",
-            "line": 1
+            "location": "www/js/secure-key-storage.js"
           },
           {
-            "location": "www/modules/quantum/quantum-crypto.js",
-            "line": 1
+            "location": "www/modules/quantum/quantum-crypto.js"
           },
           {
-            "location": "www/modules/backend.js",
-            "line": 1
+            "location": "www/modules/backend.js"
           },
           {
-            "location": "www/privacy-layers/encrypted-file-transfer.js",
-            "line": 1
+            "location": "www/privacy-layers/encrypted-file-transfer.js"
           },
           {
-            "location": "www/privacy-layers/index.js",
-            "line": 1
+            "location": "www/privacy-layers/index.js"
           },
           {
-            "location": "www/privacy-layers/key-rotation.js",
-            "line": 1
+            "location": "www/privacy-layers/key-rotation.js"
           },
           {
-            "location": "www/privacy-layers/mixnet-router.js",
-            "line": 1
+            "location": "www/privacy-layers/mixnet-router.js"
           },
           {
-            "location": "www/privacy-layers/offline-messages.js",
-            "line": 1
+            "location": "www/privacy-layers/offline-messages.js"
           },
           {
-            "location": "www/privacy-layers/pir-search.js",
-            "line": 1
+            "location": "www/privacy-layers/pir-search.js"
           },
           {
-            "location": "www/blog.html",
-            "line": 1
+            "location": "www/blog.html"
           },
           {
-            "location": "www/index-beian.html",
-            "line": 1
+            "location": "www/index-beian.html"
           },
           {
-            "location": "www/index.html",
-            "line": 1
+            "location": "www/index.html"
           },
           {
-            "location": "www/nexus-community.js",
-            "line": 1
+            "location": "www/nexus-community.js"
           },
           {
-            "location": "www/p2p-core.js",
-            "line": 1
+            "location": "www/p2p-core.js"
           },
           {
-            "location": "www/performance-optimization.js",
-            "line": 1
+            "location": "www/performance-optimization.js"
           },
           {
-            "location": "www/security.html",
-            "line": 1
+            "location": "www/security.html"
           },
           {
-            "location": "www/terms.html",
-            "line": 1
+            "location": "www/terms.html"
           },
           {
-            "location": "double-ratchet.js",
-            "line": 1
+            "location": "double-ratchet.js"
           }
         ]
-      }
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-safe"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "symmetric cipher"
+        }
+      ]
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "algo-10",
+      "bom-ref": "crypto:ML-DSA/fml-dsa",
+      "name": "ML-DSA/fml-dsa",
+      "description": "FIPS 204 (ML-DSA)",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "signature",
+          "certificationLevel": [
+            "none"
+          ]
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "docs/tsa/2026-05-25/timestamp-manifest.json"
+          },
+          {
+            "location": "docs/tsa/2026-06-25/index.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
+          },
+          {
+            "location": "packages/fml-dsa/bench/bench-compare.cjs"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/encode.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/keygen.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/modmul.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/native.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/ntt.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/params.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/polyvec.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/precomputed.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/reduce.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/sampling.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/shakestream.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/sign.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/core/verify.js"
+          },
+          {
+            "location": "packages/fml-dsa/src/index.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/cross-noble.test.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/debug-hint3.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/edge.test.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/fml-dsa.test.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/input-validation.test.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/kat-siggen-fetch.mjs"
+          },
+          {
+            "location": "packages/fml-dsa/test/kat-vectors.mjs"
+          },
+          {
+            "location": "packages/fml-dsa/test/kat-verify-siggen.mjs"
+          },
+          {
+            "location": "packages/fml-dsa/test/kat-verify.mjs"
+          },
+          {
+            "location": "packages/fml-dsa/test/noble-oracle.test.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/ntt.test.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/probe-noble-structure.mjs"
+          },
+          {
+            "location": "packages/fml-dsa/test/shakestream.test.js"
+          },
+          {
+            "location": "packages/fml-dsa/test/tvla-timing.test.js"
+          },
+          {
+            "location": "packages/fml-dsa/package-lock.json"
+          },
+          {
+            "location": "packages/fml-dsa/package.json"
+          },
+          {
+            "location": "tools/cars-scorecard.json"
+          },
+          {
+            "location": "tools/ibm-dimensions-scorecard.json"
+          },
+          {
+            "location": "www/docs/cars-radar.html"
+          },
+          {
+            "location": "www/docs/cars-self-assessment.html"
+          },
+          {
+            "location": "www/docs/FAQ.html"
+          },
+          {
+            "location": "www/docs/ntt-butterfly.html"
+          },
+          {
+            "location": "www/docs/pqc-dashboard.html"
+          },
+          {
+            "location": "www/noble-pq/ml-dsa.js"
+          },
+          {
+            "location": "www/noble-pq/_crystals.js"
+          },
+          {
+            "location": "www/noble-pq-bundle/ml-dsa.js"
+          },
+          {
+            "location": "www/noble-pq-bundle/pq_entry.mjs"
+          },
+          {
+            "location": "www/noble-pq-bundle/unified.js"
+          },
+          {
+            "location": "www/privacy-layers/index.js"
+          },
+          {
+            "location": "www/privacy-layers/signature.js"
+          },
+          {
+            "location": "www/privacy-layers/signature.v2.js"
+          },
+          {
+            "location": "www/vwz-challenge/index.html"
+          },
+          {
+            "location": "www/disclaimer-en.html"
+          },
+          {
+            "location": "www/disclaimer.html"
+          },
+          {
+            "location": "www/index.html"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-safe"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "FIPS 204 (ML-DSA)"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto:ML-KEM",
+      "name": "ML-KEM",
+      "description": "FIPS 203 (ML-KEM)",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "kem",
+          "certificationLevel": [
+            "none"
+          ]
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "api/a2a/a2a-core.js"
+          },
+          {
+            "location": "bindings/python/fibemate_py/fibemate_bridge.js"
+          },
+          {
+            "location": "docs/tla/C2.tla"
+          },
+          {
+            "location": "docs/tsa/2026-05-25/timestamp-manifest.json"
+          },
+          {
+            "location": "docs/tsa/2026-06-08/timestamp-manifest-seeded.json"
+          },
+          {
+            "location": "docs/tsa/2026-06-08/timestamp-manifest.json"
+          },
+          {
+            "location": "docs/tsa/2026-06-25/hardware/ntt_butterfly_unif.v"
+          },
+          {
+            "location": "docs/tsa/2026-06-25/hardware/ntt_core.v"
+          },
+          {
+            "location": "docs/tsa/2026-06-25/index.html"
+          },
+          {
+            "location": "docs/tsa/2026-06-26/hardware/ntt_core.v"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/tsa/ml-kem-768_存证清单.json"
+          },
+          {
+            "location": "docs/hmac-sm3-tvla-analysis.html"
+          },
+          {
+            "location": "docs/timestamp-manifest.json"
+          },
+          {
+            "location": "fpga/rtl/ntt/mod_mult.v"
+          },
+          {
+            "location": "fpga/rtl/ntt/ntt_butterfly.v"
+          },
+          {
+            "location": "fpga/rtl/ntt/ntt_butterfly_unif.v"
+          },
+          {
+            "location": "fpga/rtl/ntt/ntt_core.v"
+          },
+          {
+            "location": "fpga/rtl/ntt/zeta_rom.v"
+          },
+          {
+            "location": "fpga/rtl/ntt/zeta_rom_synth.v"
+          },
+          {
+            "location": "fuzz/fuzz_bytecodec.cjs"
+          },
+          {
+            "location": "fuzz/fuzz_decapsulate.cjs"
+          },
+          {
+            "location": "fuzz/fuzz_encapsulate.cjs"
+          },
+          {
+            "location": "lib/keccak.js"
+          },
+          {
+            "location": "p0_evidence_20260604_033053/kat_10000rounds_2026-06-03T18-57-09-936Z_FINAL.json"
+          },
+          {
+            "location": "packages/pqc-kem/native/bench.js"
+          },
+          {
+            "location": "packages/pqc-kem/scripts/generate-nist-kat.js"
+          },
+          {
+            "location": "packages/pqc-kem/src/hybrid.js"
+          },
+          {
+            "location": "packages/pqc-kem/src/ml-kem-768.js"
+          },
+          {
+            "location": "packages/pqc-kem/diag-kat.js"
+          },
+          {
+            "location": "packages/pqc-kem/diag2.js"
+          },
+          {
+            "location": "packages/pqc-kem/index.js"
+          },
+          {
+            "location": "packages/pqc-kem/kat-diag.js"
+          },
+          {
+            "location": "packages/pqc-kem/package.json"
+          },
+          {
+            "location": "reg-server/hybrid-kem-client.js"
+          },
+          {
+            "location": "reg-server/reg-e2e-test.js"
+          },
+          {
+            "location": "reg-server/server.js"
+          },
+          {
+            "location": "reg-server/stress-test-v2.js"
+          },
+          {
+            "location": "reg-server/stress-test.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_9of9_corrected.js"
+          },
+          {
+            "location": "scripts/bench-proper.js"
+          },
+          {
+            "location": "scripts/bench-v33.cjs"
+          },
+          {
+            "location": "scripts/benchmark.cjs"
+          },
+          {
+            "location": "scripts/build-demo.js"
+          },
+          {
+            "location": "scripts/ci-mlkem-kat.cjs"
+          },
+          {
+            "location": "scripts/daily-audit.js"
+          },
+          {
+            "location": "scripts/debug_decaps_noble_vs_js.cjs"
+          },
+          {
+            "location": "scripts/debug_decaps_sk.cjs"
+          },
+          {
+            "location": "scripts/debug_ss_format.cjs"
+          },
+          {
+            "location": "scripts/discover.cjs"
+          },
+          {
+            "location": "scripts/fix-ratchet.js"
+          },
+          {
+            "location": "scripts/fix_verify.cjs"
+          },
+          {
+            "location": "scripts/health-check.js"
+          },
+          {
+            "location": "scripts/js-liboqs-xcross.cjs"
+          },
+          {
+            "location": "scripts/kat-bench.js"
+          },
+          {
+            "location": "scripts/kat-jasmin-compare.js"
+          },
+          {
+            "location": "scripts/kat-quick.js"
+          },
+          {
+            "location": "scripts/kat500.js"
+          },
+          {
+            "location": "scripts/liboqs-10000.cjs"
+          },
+          {
+            "location": "scripts/micro-profile.js"
+          },
+          {
+            "location": "scripts/mlkem-bench-native.cjs"
+          },
+          {
+            "location": "scripts/noble-liboqs-xcross.mjs"
+          },
+          {
+            "location": "scripts/p0-04-fix-validation.js"
+          },
+          {
+            "location": "scripts/perf-gate.js"
+          },
+          {
+            "location": "scripts/prep-release.js"
+          },
+          {
+            "location": "scripts/profile-mlkem.js"
+          },
+          {
+            "location": "scripts/smoke-test.js"
+          },
+          {
+            "location": "scripts/stress-test.js"
+          },
+          {
+            "location": "scripts/test-domain.js"
+          },
+          {
+            "location": "scripts/test-native-addon.cjs"
+          },
+          {
+            "location": "scripts/test_barrett.js"
+          },
+          {
+            "location": "scripts/trace-roundtrip.js"
+          },
+          {
+            "location": "scripts/tvla-mlkem-1024.mjs"
+          },
+          {
+            "location": "scripts/update-index-91.cjs"
+          },
+          {
+            "location": "src/crypto/ml-kem-768-td.js"
+          },
+          {
+            "location": "src/index.js"
+          },
+          {
+            "location": "src/pqc-hybrid-server.js"
+          },
+          {
+            "location": "src/tls-hybrid-extension.js"
+          },
+          {
+            "location": "test/fixtures/ml-kem-768-golden.json"
+          },
+          {
+            "location": "test/a2a-smoke.js"
+          },
+          {
+            "location": "test/compat-fixtures.test.js"
+          },
+          {
+            "location": "test/INTEGRITY-MANIFEST.json"
+          },
+          {
+            "location": "test/run-compat-fixtures.mjs"
+          },
+          {
+            "location": "test/smoke-crypto.js"
+          },
+          {
+            "location": "test/test-cross-lang-seeded.js"
+          },
+          {
+            "location": "test/test-cross-lang.js"
+          },
+          {
+            "location": "test/test-fibemate.js"
+          },
+          {
+            "location": "tools/build-risk-assessment.cjs"
+          },
+          {
+            "location": "tools/cars-scorecard.json"
+          },
+          {
+            "location": "tools/ibm-dimensions-scorecard.json"
+          },
+          {
+            "location": "tools/risk-coverage-matrix.json"
+          },
+          {
+            "location": "www/bench/wasm-bench.html"
+          },
+          {
+            "location": "www/crypto/crypto/ml-kem-768-wrapper.js"
+          },
+          {
+            "location": "www/crypto/crypto/pq-integration.js"
+          },
+          {
+            "location": "www/crypto/wasm/fibemate_pq_wasm.js"
+          },
+          {
+            "location": "www/crypto/wasm/mlkem-ct-wasm-bridge.js"
+          },
+          {
+            "location": "www/crypto/wasm/mlkem_ct_wasm.js"
+          },
+          {
+            "location": "www/crypto/hybrid-kem-client.js"
+          },
+          {
+            "location": "www/crypto/ml-kem-768-wrapper.js"
+          },
+          {
+            "location": "www/crypto/ml-kem-768.js"
+          },
+          {
+            "location": "www/crypto/pq-integration.js"
+          },
+          {
+            "location": "www/crypto/pq-test-electron.js"
+          },
+          {
+            "location": "www/crypto/slh-dsa.js"
+          },
+          {
+            "location": "www/crypto/sm2-bridge.js"
+          },
+          {
+            "location": "www/crypto/test-ml-kem-kat.html"
+          },
+          {
+            "location": "www/demo/index.html"
+          },
+          {
+            "location": "www/demo/ml-kem-768.js"
+          },
+          {
+            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/lg-remedial-manifest-20260701.json"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-09/lg-058.html"
+          },
+          {
+            "location": "www/docs/tvla/experiments/tvla-wasm-report.json"
+          },
+          {
+            "location": "www/docs/tvla/ml-kem-768/tvla-mlkem-report-v2.json"
+          },
+          {
+            "location": "www/docs/tvla/ml-kem-768/tvla-mlkem-report.json"
+          },
+          {
+            "location": "www/docs/tvla/ml-kem-768/tvla-report-20260531.json"
+          },
+          {
+            "location": "www/docs/tvla/index.html"
+          },
+          {
+            "location": "www/docs/API.html"
+          },
+          {
+            "location": "www/docs/architecture.html"
+          },
+          {
+            "location": "www/docs/cars-radar.html"
+          },
+          {
+            "location": "www/docs/FAQ.html"
+          },
+          {
+            "location": "www/docs/fpga-report.html"
+          },
+          {
+            "location": "www/docs/kakeya-perron.html"
+          },
+          {
+            "location": "www/docs/pqc-dashboard.html"
+          },
+          {
+            "location": "www/docs/pqc-readiness.html"
+          },
+          {
+            "location": "www/docs/publications.html"
+          },
+          {
+            "location": "www/docs/sm2-optimization.html"
+          },
+          {
+            "location": "www/docs/sm2-tvla-analysis.html"
+          },
+          {
+            "location": "www/docs/timestamp-manifest.json"
+          },
+          {
+            "location": "www/js/app.js"
+          },
+          {
+            "location": "www/js/nexus-community.js"
+          },
+          {
+            "location": "www/modules/e2ee-display.js"
+          },
+          {
+            "location": "www/modules/keys.js"
+          },
+          {
+            "location": "www/modules/settings.js"
+          },
+          {
+            "location": "www/noble-pq/ml-dsa.js"
+          },
+          {
+            "location": "www/noble-pq/_crystals.js"
+          },
+          {
+            "location": "www/blog.html"
+          },
+          {
+            "location": "www/dev-portfolio.html"
+          },
+          {
+            "location": "www/disclaimer-en.html"
+          },
+          {
+            "location": "www/fibemate_pq_wasm.js"
+          },
+          {
+            "location": "www/index-beian.html"
+          },
+          {
+            "location": "www/index.html"
+          },
+          {
+            "location": "www/kat-10000.html"
+          },
+          {
+            "location": "www/kat-purejs-10000.html"
+          },
+          {
+            "location": "www/kat_diag.html"
+          },
+          {
+            "location": "www/kat_quick.html"
+          },
+          {
+            "location": "www/kyber_nt_v3.js"
+          },
+          {
+            "location": "www/landing-new.html"
+          },
+          {
+            "location": "www/m.html"
+          },
+          {
+            "location": "www/ml-kem-hybrid-integration.js"
+          },
+          {
+            "location": "www/nexus-community.js"
+          },
+          {
+            "location": "www/pqc-hybrid-e2e.html"
+          },
+          {
+            "location": "www/security-block.html"
+          },
+          {
+            "location": "www/security.html"
+          },
+          {
+            "location": "www/session-manager.js"
+          },
+          {
+            "location": "www/settings.html"
+          },
+          {
+            "location": "www/sm-v12.js"
+          },
+          {
+            "location": "www/terms-en.html"
+          },
+          {
+            "location": "www/terms.html"
+          },
+          {
+            "location": "www/test_mlkem.html"
+          },
+          {
+            "location": "double-ratchet-pq.js"
+          },
+          {
+            "location": "test-tls-hybrid-extension.js"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-safe"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript,tla+,verilog"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "FIPS 203 (ML-KEM)"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto:P-256/ECDH",
+      "name": "P-256/ECDH",
+      "description": "elliptic-curve key agreement",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "key-agree",
+          "certificationLevel": [
+            "none"
+          ]
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "docs/tla/C2.tla"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html"
+          },
+          {
+            "location": "packages/pqc-kem/src/hybrid.js"
+          },
+          {
+            "location": "packages/pqc-kem/src/ml-kem-768.js"
+          },
+          {
+            "location": "reg-server/hybrid-kem-client.js"
+          },
+          {
+            "location": "reg-server/stress-test-v2.js"
+          },
+          {
+            "location": "scripts/ecdh-p256-kat.cjs"
+          },
+          {
+            "location": "scripts/test-sm2-browser-fix.js"
+          },
+          {
+            "location": "src/crypto/ml-kem-768-td.js"
+          },
+          {
+            "location": "src/crypto/pedersen.js"
+          },
+          {
+            "location": "src/pqc-hybrid-server.js"
+          },
+          {
+            "location": "src/tls-hybrid-extension.js"
+          },
+          {
+            "location": "tools/build-risk-assessment.cjs"
+          },
+          {
+            "location": "tools/cars-scorecard.json"
+          },
+          {
+            "location": "tools/ibm-dimensions-scorecard.json"
+          },
+          {
+            "location": "tools/risk-coverage-matrix.json"
+          },
+          {
+            "location": "www/crypto/crypto/ml-kem-768-wrapper.js"
+          },
+          {
+            "location": "www/crypto/crypto/pq-integration.js"
+          },
+          {
+            "location": "www/crypto/wasm/fibemate_pq_wasm.js"
+          },
+          {
+            "location": "www/crypto/hybrid-kem-client.js"
+          },
+          {
+            "location": "www/crypto/message-gm.js"
+          },
+          {
+            "location": "www/crypto/ml-kem-768-wrapper.js"
+          },
+          {
+            "location": "www/crypto/pq-integration.js"
+          },
+          {
+            "location": "www/crypto/security-levels.js"
+          },
+          {
+            "location": "www/crypto/sm2-bridge.js"
+          },
+          {
+            "location": "www/crypto/sm2-ec-browser.js"
+          },
+          {
+            "location": "www/crypto/sm3-browser.js"
+          },
+          {
+            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html"
+          },
+          {
+            "location": "www/docs/API.html"
+          },
+          {
+            "location": "www/docs/cars-radar.html"
+          },
+          {
+            "location": "www/docs/FAQ.html"
+          },
+          {
+            "location": "www/docs/pqc-readiness.html"
+          },
+          {
+            "location": "www/docs/sm2-optimization.html"
+          },
+          {
+            "location": "www/docs/sm2-tvla-analysis.html"
+          },
+          {
+            "location": "www/js/core/ws-handler.js"
+          },
+          {
+            "location": "www/js/ui/e2ee-status.js"
+          },
+          {
+            "location": "www/js/app.js"
+          },
+          {
+            "location": "www/js/message-crypto.js"
+          },
+          {
+            "location": "www/js/nexus-community.js"
+          },
+          {
+            "location": "www/js/p2p-core.js"
+          },
+          {
+            "location": "www/js/zk-ui-integration.js"
+          },
+          {
+            "location": "www/modules/backend.js"
+          },
+          {
+            "location": "www/modules/keys.js"
+          },
+          {
+            "location": "www/modules/privacy.js"
+          },
+          {
+            "location": "www/privacy-layers/index.js"
+          },
+          {
+            "location": "www/privacy-layers/mix-config.js"
+          },
+          {
+            "location": "www/privacy-layers/mixnet-router.js"
+          },
+          {
+            "location": "www/zk/schnorr-prover-v2.js"
+          },
+          {
+            "location": "www/zk/schnorr-prover.js"
+          },
+          {
+            "location": "www/zk/zk-integration.js"
+          },
+          {
+            "location": "www/blog.html"
+          },
+          {
+            "location": "www/disclaimer.html"
+          },
+          {
+            "location": "www/fibemate_pq_wasm.js"
+          },
+          {
+            "location": "www/index.html"
+          },
+          {
+            "location": "www/main-tiled.html"
+          },
+          {
+            "location": "www/message-crypto.js"
+          },
+          {
+            "location": "www/ml-kem-hybrid-integration.js"
+          },
+          {
+            "location": "www/nexus-community.js"
+          },
+          {
+            "location": "www/p2p-core.js"
+          },
+          {
+            "location": "www/terms.html"
+          },
+          {
+            "location": "www/test_mlkem.html"
+          },
+          {
+            "location": "www/zk-auth-poseidon.js"
+          },
+          {
+            "location": "www/zk-identity-proof.js"
+          },
+          {
+            "location": "www/zk-ui-integration.js"
+          },
+          {
+            "location": "double-ratchet-pq.js"
+          },
+          {
+            "location": "double-ratchet.js"
+          },
+          {
+            "location": "message-crypto.js"
+          },
+          {
+            "location": "test-tls-hybrid-extension.js"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-vulnerable"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript,tla+"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "elliptic-curve key agreement"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto:SHA-256",
+      "name": "SHA-256",
+      "description": "Grover halves preimage resistance to ~128 bit",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "certificationLevel": [
+            "none"
+          ]
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "api/a2a/a2a-core.js"
+          },
+          {
+            "location": "docs/tla/C2.tla"
+          },
+          {
+            "location": "docs/tsa/2026-05-25/timestamp-manifest.json"
+          },
+          {
+            "location": "docs/tsa/2026-06-08/timestamp-manifest-seeded.json"
+          },
+          {
+            "location": "docs/tsa/2026-06-08/timestamp-manifest.json"
+          },
+          {
+            "location": "docs/tsa/2026-06-25/index.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-15/timestamp-manifest.json"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/tsa/ml-kem-768_存证清单.json"
+          },
+          {
+            "location": "docs/hmac-sm3-tvla-analysis.html"
+          },
+          {
+            "location": "docs/timestamp-manifest.json"
+          },
+          {
+            "location": "packages/pqc-kem/scripts/generate-nist-kat.js"
+          },
+          {
+            "location": "reg-server/hybrid-kem-client.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_sm2_diagnose.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_sm2_v2.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_sm2_v3.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_sm2_v3_masked.js"
+          },
+          {
+            "location": "scripts/add-code-review-section.cjs"
+          },
+          {
+            "location": "scripts/benchmark.cjs"
+          },
+          {
+            "location": "scripts/test-sm2-browser-fix.js"
+          },
+          {
+            "location": "scripts/test-sm2-node-fix.js"
+          },
+          {
+            "location": "scripts/verify-tsr.js"
+          },
+          {
+            "location": "src/crypto/bloom-filter.js"
+          },
+          {
+            "location": "src/crypto/pedersen.js"
+          },
+          {
+            "location": "src/pqc-hybrid-server.js"
+          },
+          {
+            "location": "src/tls-hybrid-extension.js"
+          },
+          {
+            "location": "test/a2a-smoke.js"
+          },
+          {
+            "location": "test/INTEGRITY-MANIFEST.json"
+          },
+          {
+            "location": "test/test-fibemate.js"
+          },
+          {
+            "location": "tools/cars-scorecard.json"
+          },
+          {
+            "location": "www/crypto/crypto/ml-kem-768-wrapper.js"
+          },
+          {
+            "location": "www/crypto/wasm/fibemate_pq_wasm.js"
+          },
+          {
+            "location": "www/crypto/gm.js"
+          },
+          {
+            "location": "www/crypto/hybrid-kem-client.js"
+          },
+          {
+            "location": "www/crypto/ml-kem-768-wrapper.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.esm.js"
+          },
+          {
+            "location": "www/crypto/test-ml-kem-kat.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-07/manifest_20260707.json"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-09/lg-058.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-09/manifest_20260709-perf.json"
+          },
+          {
+            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3-v1-report.json"
+          },
+          {
+            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js"
+          },
+          {
+            "location": "www/docs/tvla/ml-kem-768/tvla-report-20260531.json"
+          },
+          {
+            "location": "www/docs/tvla/sm2/tvla-sm2-report.json"
+          },
+          {
+            "location": "www/docs/tvla/sm2/tvla-sm2-v3-report.json"
+          },
+          {
+            "location": "www/docs/tvla/sm2/tvla-sm2-v4-report.json"
+          },
+          {
+            "location": "www/docs/FAQ.html"
+          },
+          {
+            "location": "www/docs/pqc-readiness.html"
+          },
+          {
+            "location": "www/docs/sm2-optimization.html"
+          },
+          {
+            "location": "www/docs/sm2-tvla-analysis.html"
+          },
+          {
+            "location": "www/docs/sm2-tvla-tsa-manifest.json"
+          },
+          {
+            "location": "www/docs/timestamp-manifest.json"
+          },
+          {
+            "location": "www/js/app.js"
+          },
+          {
+            "location": "www/js/nexus-community.js"
+          },
+          {
+            "location": "www/js/performance-optimization.js"
+          },
+          {
+            "location": "www/js/secure-key-storage.js"
+          },
+          {
+            "location": "www/js/sm3_implementation.js"
+          },
+          {
+            "location": "www/js/zk-ui-integration.js"
+          },
+          {
+            "location": "www/modules/quantum/quantum-crypto.js"
+          },
+          {
+            "location": "www/modules/backend.js"
+          },
+          {
+            "location": "www/noble-pq/index.js"
+          },
+          {
+            "location": "www/noble-pq/slh-dsa.js"
+          },
+          {
+            "location": "www/noble-pq-bundle/slh-dsa.js"
+          },
+          {
+            "location": "www/noble-pq-bundle/unified.js"
+          },
+          {
+            "location": "www/privacy-layers/device-binding.js"
+          },
+          {
+            "location": "www/privacy-layers/encrypted-file-transfer.js"
+          },
+          {
+            "location": "www/privacy-layers/index.js"
+          },
+          {
+            "location": "www/privacy-layers/key-rotation.js"
+          },
+          {
+            "location": "www/privacy-layers/pir-search.js"
+          },
+          {
+            "location": "www/privacy-layers/safety-numbers.js"
+          },
+          {
+            "location": "www/timestamps/index.html"
+          },
+          {
+            "location": "www/zk/bulletproofs.js"
+          },
+          {
+            "location": "www/zk/schnorr-prover-v2.js"
+          },
+          {
+            "location": "www/zk/schnorr-prover.js"
+          },
+          {
+            "location": "www/zk/schnorr-verifier.js"
+          },
+          {
+            "location": "www/zk/zk-browser.js"
+          },
+          {
+            "location": "www/blog.html"
+          },
+          {
+            "location": "www/fibemate_pq_wasm.js"
+          },
+          {
+            "location": "www/index.html"
+          },
+          {
+            "location": "www/kyber_nt_v3.js"
+          },
+          {
+            "location": "www/nexus-community.js"
+          },
+          {
+            "location": "www/performance-optimization.js"
+          },
+          {
+            "location": "www/pqc-hybrid-e2e.html"
+          },
+          {
+            "location": "www/security.html"
+          },
+          {
+            "location": "www/zk-auth-poseidon.js"
+          },
+          {
+            "location": "www/zk-identity-proof.js"
+          },
+          {
+            "location": "www/zk-snarks.js"
+          },
+          {
+            "location": "double-ratchet-pq.js"
+          },
+          {
+            "location": "double-ratchet.js"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-safe"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript,tla+"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "Grover halves preimage resistance to ~128 bit"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto:SLH-DSA",
       "name": "SLH-DSA",
+      "description": "FIPS 205 (SLH-DSA)",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
-          "primitive": "SIGN"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "safe"
+          "primitive": "signature",
+          "certificationLevel": [
+            "none"
+          ]
         }
       },
       "evidence": {
         "occurrences": [
           {
-            "location": "docs/tsa/2026-06-25/index.html",
-            "line": 1
+            "location": "docs/tsa/2026-06-25/index.html"
           },
           {
-            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html",
-            "line": 1
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
           },
           {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
+            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html"
           },
           {
-            "location": "scripts/slh-dsa-bench.mjs",
-            "line": 1
+            "location": "scripts/slh-dsa-bench.mjs"
           },
           {
-            "location": "scripts/slh-dsa-smoke.mjs",
-            "line": 1
+            "location": "scripts/slh-dsa-smoke.mjs"
           },
           {
-            "location": "tools/build-risk-assessment.cjs",
-            "line": 1
+            "location": "tools/build-risk-assessment.cjs"
           },
           {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
+            "location": "tools/cars-scorecard.json"
           },
           {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
+            "location": "tools/ibm-dimensions-scorecard.json"
           },
           {
-            "location": "tools/risk-coverage-matrix.json",
-            "line": 1
+            "location": "tools/risk-coverage-matrix.json"
           },
           {
-            "location": "www/crypto/crypto/pq-integration.js",
-            "line": 1
+            "location": "www/crypto/crypto/pq-integration.js"
           },
           {
-            "location": "www/crypto/message-gm.js",
-            "line": 1
+            "location": "www/crypto/message-gm.js"
           },
           {
-            "location": "www/crypto/pq-integration.js",
-            "line": 1
+            "location": "www/crypto/pq-integration.js"
           },
           {
-            "location": "www/crypto/slh-dsa.js",
-            "line": 1
+            "location": "www/crypto/slh-dsa.js"
           },
           {
-            "location": "www/crypto/slh-dsa.worker.js",
-            "line": 1
+            "location": "www/crypto/slh-dsa.worker.js"
           },
           {
-            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html",
-            "line": 1
+            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html"
           },
           {
-            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html",
-            "line": 1
+            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html"
           },
           {
-            "location": "www/docs/API.html",
-            "line": 1
+            "location": "www/docs/API.html"
           },
           {
-            "location": "www/docs/architecture.html",
-            "line": 1
+            "location": "www/docs/architecture.html"
           },
           {
-            "location": "www/docs/cars-radar.html",
-            "line": 1
+            "location": "www/docs/cars-radar.html"
           },
           {
-            "location": "www/docs/pqc-dashboard.html",
-            "line": 1
+            "location": "www/docs/pqc-dashboard.html"
           },
           {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
+            "location": "www/docs/pqc-readiness.html"
           },
           {
-            "location": "www/docs/sm2-frontend-verification.html",
-            "line": 1
+            "location": "www/docs/sm2-frontend-verification.html"
           },
           {
-            "location": "www/noble-pq/slh-dsa.js",
-            "line": 1
+            "location": "www/noble-pq/slh-dsa.js"
           },
           {
-            "location": "www/noble-pq-bundle/pq_entry.mjs",
-            "line": 1
+            "location": "www/noble-pq-bundle/pq_entry.mjs"
           },
           {
-            "location": "www/noble-pq-bundle/slh-dsa.js",
-            "line": 1
+            "location": "www/noble-pq-bundle/slh-dsa.js"
           },
           {
-            "location": "www/noble-pq-bundle/unified.js",
-            "line": 1
+            "location": "www/noble-pq-bundle/unified.js"
           },
           {
-            "location": "www/privacy-layers/index.js",
-            "line": 1
+            "location": "www/privacy-layers/index.js"
           },
           {
-            "location": "www/privacy-layers/signature.js",
-            "line": 1
+            "location": "www/privacy-layers/signature.js"
           },
           {
-            "location": "www/privacy-layers/signature.v2.js",
-            "line": 1
+            "location": "www/privacy-layers/signature.v2.js"
           },
           {
-            "location": "www/vwz-challenge/index.html",
-            "line": 1
+            "location": "www/vwz-challenge/index.html"
           },
           {
-            "location": "www/blog.html",
-            "line": 1
+            "location": "www/blog.html"
           },
           {
-            "location": "www/disclaimer-en.html",
-            "line": 1
+            "location": "www/disclaimer-en.html"
           },
           {
-            "location": "www/index.html",
-            "line": 1
+            "location": "www/index.html"
           }
         ]
-      }
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-safe"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "FIPS 205 (SLH-DSA)"
+        }
+      ]
     },
     {
       "type": "cryptographic-asset",
-      "bom-ref": "algo-11",
-      "name": "TLA+",
+      "bom-ref": "crypto:SM2",
+      "name": "SM2",
+      "description": "elliptic-curve signature",
       "cryptoProperties": {
         "assetType": "algorithm",
         "algorithmProperties": {
-          "primitive": "PROTO"
-        },
-        "implementationPlatform": "javascript",
-        "certificationLevel": "known-answer-tested",
-        "quantumSecurity": {
-          "level": "safe"
+          "primitive": "signature",
+          "certificationLevel": [
+            "none"
+          ]
         }
       },
       "evidence": {
         "occurrences": [
           {
-            "location": "archives/sm2-versions/sm2-bigint-ec-v1.3.js",
-            "line": 1
+            "location": "archives/sm2-versions/sm2-bigint-ec-v1.2.js"
           },
           {
-            "location": "docs/tla/C2.tla",
-            "line": 1
+            "location": "archives/sm2-versions/sm2-bigint-ec-v1.3.js"
           },
           {
-            "location": "docs/tla/OPK.tla",
-            "line": 1
+            "location": "docs/tla/C2.tla"
           },
           {
-            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html",
-            "line": 1
+            "location": "docs/tsa/2026-05-25/timestamp-manifest.json"
           },
           {
-            "location": "mixnet/entry/package-lock.json",
-            "line": 1
+            "location": "docs/tsa/2026-06-08/timestamp-manifest.json"
           },
           {
-            "location": "mixnet/exit/package-lock.json",
-            "line": 1
+            "location": "docs/tsa/2026-06-25/index.html"
           },
           {
-            "location": "mixnet/middle/package-lock.json",
-            "line": 1
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
           },
           {
-            "location": "mixnet/package-lock.json",
-            "line": 1
+            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html"
           },
           {
-            "location": "packages/fml-dsa/test/input-validation.test.js",
-            "line": 1
+            "location": "docs/hmac-sm3-tvla-analysis.html"
           },
           {
-            "location": "packages/pqc-kem/package-lock.json",
-            "line": 1
+            "location": "packages/sm3-ref/test/sm3-cross-validate.cjs"
           },
           {
-            "location": "tools/cars-scorecard.json",
-            "line": 1
+            "location": "reg-server/hybrid-kem-client.js"
           },
           {
-            "location": "tools/ibm-dimensions-scorecard.json",
-            "line": 1
+            "location": "reg-server/stress-test-v2.js"
           },
           {
-            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html",
-            "line": 1
+            "location": "scripts/tvla/tvla_sm2_diagnose.js"
           },
           {
-            "location": "www/docs/architecture.html",
-            "line": 1
+            "location": "scripts/tvla/tvla_sm2_high_order.js"
           },
           {
-            "location": "www/docs/cars-radar.html",
-            "line": 1
+            "location": "scripts/tvla/tvla_sm2_v2.js"
           },
           {
-            "location": "www/docs/pqc-readiness.html",
-            "line": 1
+            "location": "scripts/tvla/tvla_sm2_v3.js"
           },
           {
-            "location": "www/js/p2p-core.js",
-            "line": 1
+            "location": "scripts/tvla/tvla_sm2_v3_masked.js"
           },
           {
-            "location": "www/js/performance-optimization.js",
-            "line": 1
+            "location": "scripts/tvla/tvla_stress_gradient.cjs"
           },
           {
-            "location": "www/js/satellite-performance.js",
-            "line": 1
+            "location": "scripts/apply-mersenne-reduction.cjs"
           },
           {
-            "location": "www/modules/5g-a/5g-a-adapter.js",
-            "line": 1
+            "location": "scripts/bench-modinv.js"
           },
           {
-            "location": "www/modules/satellite/satellite-performance.js",
-            "line": 1
+            "location": "scripts/bench-v33.cjs"
           },
           {
-            "location": "www/noble-pq/slh-dsa.js",
-            "line": 1
+            "location": "scripts/benchmark.cjs"
           },
           {
-            "location": "www/privacy-layers/mixnet-router.js",
-            "line": 1
+            "location": "scripts/ci-gm-sm2.cjs"
           },
           {
-            "location": "www/index.html",
-            "line": 1
+            "location": "scripts/discover.cjs"
           },
           {
-            "location": "www/p2p-core.js",
-            "line": 1
+            "location": "scripts/fix-verify-blinding.cjs"
           },
           {
-            "location": "www/package-lock.json",
-            "line": 1
+            "location": "scripts/health-check.js"
           },
           {
-            "location": "www/performance-optimization.js",
-            "line": 1
+            "location": "scripts/hmac-sm3-kat.cjs"
           },
           {
-            "location": "www/security.html",
-            "line": 1
+            "location": "scripts/perf-gate.js"
           },
           {
-            "location": "package-lock.json",
-            "line": 1
+            "location": "scripts/quick-bench-sm2.cjs"
+          },
+          {
+            "location": "scripts/smoke-test.js"
+          },
+          {
+            "location": "scripts/test-sm2-browser-fix.js"
+          },
+          {
+            "location": "scripts/test-sm2-node-fix.js"
+          },
+          {
+            "location": "scripts/verify-gradient-quick.cjs"
+          },
+          {
+            "location": "src/index.js"
+          },
+          {
+            "location": "src/pqc-hybrid-server.js"
+          },
+          {
+            "location": "src/tls-hybrid-extension.js"
+          },
+          {
+            "location": "test/smoke-crypto.js"
+          },
+          {
+            "location": "tools/build-risk-assessment.cjs"
+          },
+          {
+            "location": "tools/cars-scorecard.json"
+          },
+          {
+            "location": "tools/ibm-dimensions-scorecard.json"
+          },
+          {
+            "location": "tools/risk-coverage-matrix.json"
+          },
+          {
+            "location": "www/crypto/gm.js"
+          },
+          {
+            "location": "www/crypto/hybrid-kem-client.js"
+          },
+          {
+            "location": "www/crypto/message-gm.js"
+          },
+          {
+            "location": "www/crypto/sm2-bigint-ec.js"
+          },
+          {
+            "location": "www/crypto/sm2-bridge.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.bundle.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.cjs.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.esm.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.js"
+          },
+          {
+            "location": "www/crypto/sm2-ec-browser.js"
+          },
+          {
+            "location": "www/crypto/sm3-browser.js"
+          },
+          {
+            "location": "www/docs/tsa/2026-06-25/manifest.json"
+          },
+          {
+            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/blog-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/lg-remedial-manifest-20260701.json"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-09/lg-058.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-09/manifest_20260709-perf.json"
+          },
+          {
+            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js"
+          },
+          {
+            "location": "www/docs/tvla/ml-kem-768/tvla-report-20260531.json"
+          },
+          {
+            "location": "www/docs/tvla/sm2/tvla-sm2-report.json"
+          },
+          {
+            "location": "www/docs/tvla/index.html"
+          },
+          {
+            "location": "www/docs/API.html"
+          },
+          {
+            "location": "www/docs/architecture.html"
+          },
+          {
+            "location": "www/docs/cars-radar.html"
+          },
+          {
+            "location": "www/docs/FAQ.html"
+          },
+          {
+            "location": "www/docs/pqc-dashboard.html"
+          },
+          {
+            "location": "www/docs/pqc-readiness.html"
+          },
+          {
+            "location": "www/docs/publications.html"
+          },
+          {
+            "location": "www/docs/sm2-frontend-verification.html"
+          },
+          {
+            "location": "www/docs/sm2-optimization.html"
+          },
+          {
+            "location": "www/docs/sm2-tvla-analysis.html"
+          },
+          {
+            "location": "www/docs/sm2-tvla-tsa-manifest.json"
+          },
+          {
+            "location": "www/docs/timestamp-manifest.json"
+          },
+          {
+            "location": "www/js/crypto/sm3.js"
+          },
+          {
+            "location": "www/modules/e2ee-display.js"
+          },
+          {
+            "location": "www/timestamps/index.html"
+          },
+          {
+            "location": "www/blog.html"
+          },
+          {
+            "location": "www/disclaimer-en.html"
+          },
+          {
+            "location": "www/disclaimer.html"
+          },
+          {
+            "location": "www/gm-chat.html"
+          },
+          {
+            "location": "www/gm-test.html"
+          },
+          {
+            "location": "www/index.html"
+          },
+          {
+            "location": "www/security.html"
+          },
+          {
+            "location": "eslint.config.js"
+          },
+          {
+            "location": "package-lock.json"
+          },
+          {
+            "location": "sm2-bigint-ec.js"
+          },
+          {
+            "location": "test-tls-hybrid-extension.js"
           }
         ]
-      }
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-vulnerable"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript,tla+"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "elliptic-curve signature"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto:SM3",
+      "name": "SM3",
+      "description": "Grover halves preimage resistance to ~128 bit",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "hash",
+          "certificationLevel": [
+            "none"
+          ]
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "archives/sm2-versions/sm2-bigint-ec-v1.3.js"
+          },
+          {
+            "location": "docs/tsa/2026-06-08/timestamp-manifest.json"
+          },
+          {
+            "location": "docs/tsa/2026-06-25/index.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/hmac-sm3-tvla-analysis.html"
+          },
+          {
+            "location": "packages/sm3-ref/test/sm3-cross-validate.cjs"
+          },
+          {
+            "location": "reg-server/hybrid-kem-client.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_sm2_high_order.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_sm2_v2.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_sm2_v3.js"
+          },
+          {
+            "location": "scripts/tvla/tvla_sm2_v3_masked.js"
+          },
+          {
+            "location": "scripts/bench-v33.cjs"
+          },
+          {
+            "location": "scripts/benchmark.cjs"
+          },
+          {
+            "location": "scripts/ci-gm-sm3.cjs"
+          },
+          {
+            "location": "scripts/discover.cjs"
+          },
+          {
+            "location": "scripts/hmac-sm3-kat.cjs"
+          },
+          {
+            "location": "scripts/quick-bench-sm2.cjs"
+          },
+          {
+            "location": "scripts/sm3-bench.cjs"
+          },
+          {
+            "location": "scripts/sm3-smoke.cjs"
+          },
+          {
+            "location": "scripts/smoke-test.js"
+          },
+          {
+            "location": "scripts/verify-gradient-quick.cjs"
+          },
+          {
+            "location": "src/index.js"
+          },
+          {
+            "location": "tools/build-risk-assessment.cjs"
+          },
+          {
+            "location": "tools/cars-scorecard.json"
+          },
+          {
+            "location": "tools/ibm-dimensions-scorecard.json"
+          },
+          {
+            "location": "tools/risk-coverage-matrix.json"
+          },
+          {
+            "location": "www/crypto/gm.js"
+          },
+          {
+            "location": "www/crypto/hybrid-kem-client.js"
+          },
+          {
+            "location": "www/crypto/message-gm.js"
+          },
+          {
+            "location": "www/crypto/sm2-bridge.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.bundle.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.cjs.js"
+          },
+          {
+            "location": "www/crypto/sm3-browser.js"
+          },
+          {
+            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-09/lg-058.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-09/manifest_20260709-perf.json"
+          },
+          {
+            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3-v1-report.json"
+          },
+          {
+            "location": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js"
+          },
+          {
+            "location": "www/docs/tvla/index.html"
+          },
+          {
+            "location": "www/docs/architecture.html"
+          },
+          {
+            "location": "www/docs/FAQ.html"
+          },
+          {
+            "location": "www/docs/pqc-dashboard.html"
+          },
+          {
+            "location": "www/docs/pqc-readiness.html"
+          },
+          {
+            "location": "www/docs/sm2-frontend-verification.html"
+          },
+          {
+            "location": "www/docs/sm2-optimization.html"
+          },
+          {
+            "location": "www/docs/sm2-tvla-analysis.html"
+          },
+          {
+            "location": "www/docs/timestamp-manifest.json"
+          },
+          {
+            "location": "www/js/crypto/sm3.js"
+          },
+          {
+            "location": "www/js/sm3_implementation.js"
+          },
+          {
+            "location": "www/modules/e2ee-display.js"
+          },
+          {
+            "location": "www/timestamps/index.html"
+          },
+          {
+            "location": "www/blog.html"
+          },
+          {
+            "location": "www/disclaimer-en.html"
+          },
+          {
+            "location": "www/disclaimer.html"
+          },
+          {
+            "location": "www/gm-chat.html"
+          },
+          {
+            "location": "www/gm-test.html"
+          },
+          {
+            "location": "www/index.html"
+          },
+          {
+            "location": "www/security.html"
+          },
+          {
+            "location": "package-lock.json"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-safe"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "Grover halves preimage resistance to ~128 bit"
+        }
+      ]
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "crypto:SM4",
+      "name": "SM4",
+      "description": "symmetric cipher",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "block-cipher",
+          "certificationLevel": [
+            "none"
+          ]
+        }
+      },
+      "evidence": {
+        "occurrences": [
+          {
+            "location": "docs/tsa/2026-06-25/index.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/fibemate-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/tsa/2026-07-21/pqc-readiness-website-2026-07-21.html"
+          },
+          {
+            "location": "docs/hmac-sm3-tvla-analysis.html"
+          },
+          {
+            "location": "scripts/bench-v33.cjs"
+          },
+          {
+            "location": "scripts/benchmark.cjs"
+          },
+          {
+            "location": "scripts/ci-gm-sm4.cjs"
+          },
+          {
+            "location": "scripts/discover.cjs"
+          },
+          {
+            "location": "scripts/perf-gate.js"
+          },
+          {
+            "location": "scripts/sm4-bench.cjs"
+          },
+          {
+            "location": "scripts/sm4-smoke.cjs"
+          },
+          {
+            "location": "scripts/smoke-test.js"
+          },
+          {
+            "location": "tools/build-risk-assessment.cjs"
+          },
+          {
+            "location": "tools/cars-scorecard.json"
+          },
+          {
+            "location": "tools/ibm-dimensions-scorecard.json"
+          },
+          {
+            "location": "tools/risk-coverage-matrix.json"
+          },
+          {
+            "location": "www/crypto/gm.js"
+          },
+          {
+            "location": "www/crypto/message-gm.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.bundle.js"
+          },
+          {
+            "location": "www/crypto/sm2-browser.cjs.js"
+          },
+          {
+            "location": "www/crypto/sm4-browser.js"
+          },
+          {
+            "location": "www/docs/tsa/2026-06-28/pqc-readiness-20260628.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/pqc-readiness-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tsa/2026-07-01/security-4590-fix.html"
+          },
+          {
+            "location": "www/docs/tvla/index.html"
+          },
+          {
+            "location": "www/docs/API.html"
+          },
+          {
+            "location": "www/docs/architecture.html"
+          },
+          {
+            "location": "www/docs/FAQ.html"
+          },
+          {
+            "location": "www/docs/pqc-dashboard.html"
+          },
+          {
+            "location": "www/docs/pqc-readiness.html"
+          },
+          {
+            "location": "www/docs/sm2-frontend-verification.html"
+          },
+          {
+            "location": "www/docs/sm2-tvla-analysis.html"
+          },
+          {
+            "location": "www/modules/e2ee-display.js"
+          },
+          {
+            "location": "www/blog.html"
+          },
+          {
+            "location": "www/disclaimer-en.html"
+          },
+          {
+            "location": "www/disclaimer.html"
+          },
+          {
+            "location": "www/gm-chat.html"
+          },
+          {
+            "location": "www/gm-test.html"
+          },
+          {
+            "location": "www/index.html"
+          },
+          {
+            "location": "www/security.html"
+          }
+        ]
+      },
+      "properties": [
+        {
+          "name": "fibemate:quantumSecurity:level",
+          "value": "quantum-safe"
+        },
+        {
+          "name": "fibemate:assetClass",
+          "value": "cryptographic-primitive"
+        },
+        {
+          "name": "fibemate:nistQuantumSecurityLevel",
+          "value": "notEvaluated"
+        },
+        {
+          "name": "fibemate:implementationLanguages",
+          "value": "javascript"
+        },
+        {
+          "name": "fibemate:note",
+          "value": "symmetric cipher"
+        }
+      ]
     }
   ],
   "dependencies": [
     {
-      "ref": "algo-0",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-1",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-2",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-3",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-4",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-5",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-6",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-7",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-8",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-9",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-10",
-      "dependsOn": []
-    },
-    {
-      "ref": "algo-11",
-      "dependsOn": []
-    },
-    {
       "ref": "root",
       "dependsOn": [
-        "algo-0",
-        "algo-1",
-        "algo-2",
-        "algo-3",
-        "algo-4",
-        "algo-5",
-        "algo-6",
-        "algo-7",
-        "algo-8",
-        "algo-9",
-        "algo-10",
-        "algo-11"
+        "crypto:AES",
+        "crypto:ML-DSA/fml-dsa",
+        "crypto:ML-KEM",
+        "crypto:P-256/ECDH",
+        "crypto:SHA-256",
+        "crypto:SLH-DSA",
+        "crypto:SM2",
+        "crypto:SM3",
+        "crypto:SM4"
       ]
     }
   ],
-  "qSafe": [
-    "ML-KEM",
-    "NTT",
-    "ML-DSA/fml-dsa",
-    "AES",
-    "SLH-DSA",
-    "TLA+"
+  "properties": [
+    {
+      "name": "fibemate:generator",
+      "value": "scripts/build-cbom.js"
+    },
+    {
+      "name": "fibemate:scanSource",
+      "value": "tools/crypto-audit-scan.json"
+    },
+    {
+      "name": "fibemate:scanEntries",
+      "value": "370"
+    },
+    {
+      "name": "fibemate:quantumSafe",
+      "value": "AES,ML-DSA/fml-dsa,ML-KEM,SHA-256,SLH-DSA,SM3,SM4"
+    },
+    {
+      "name": "fibemate:quantumVulnerable",
+      "value": "P-256/ECDH,SM2"
+    },
+    {
+      "name": "fibemate:excludedAsset:Double-Ratchet",
+      "value": "protocol construction composed of several primitives, not a single cryptographic asset"
+    },
+    {
+      "name": "fibemate:excludedAsset:NTT",
+      "value": "number-theoretic transform (mathematical building block), not a cryptographic primitive"
+    },
+    {
+      "name": "fibemate:excludedAsset:TLA+",
+      "value": "formal specification language, not a cryptographic asset"
+    }
   ],
-  "qVul": [
-    "SM2",
-    "P-256/ECDH"
-  ],
-  "qWeak": [
-    "SHA-256",
-    "Double-Ratchet",
-    "SM3",
-    "SM4"
-  ]
+  "serialNumber": "urn:uuid:cf3beb1f-c461-5078-80dd-97c053924651"
 }
