@@ -43,6 +43,18 @@ jobs:
           while IFS= read -r commit; do
             # rev-list --parents prints the commit itself plus its parents,
             # so a root commit gives 1 word and a merge commit gives 3+.
+            #
+            # ⚠️ RED LINE: keep the test below as `-gt 2`. Never rewrite it as
+            # `-eq 3`, and never compare against a real parent count here.
+            # `wc -w` counts the commit ITSELF plus its parents, so the numbers
+            # are offset by one:
+            #   root commit    -> 1 word  = 0 parents
+            #   normal commit  -> 2 words = 1 parent
+            #   2-parent merge -> 3 words = 2 parents   (the common GitHub case)
+            #   octopus merge  -> 4+ words = 3+ parents
+            # `-gt 2` therefore means "2 or more parents", i.e. ANY merge.
+            # Writing `-eq 3` would silently stop exempting octopus merges and
+            # writing `-gt 1` would exempt ordinary single-parent commits.
             parents=$(git rev-list --parents -n 1 "$commit" | wc -w)
             committer=$(git log -1 --format='%ce' "$commit")
             if [ "$parents" -gt 2 ] && [ "$committer" = "noreply@github.com" ]; then
