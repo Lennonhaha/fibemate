@@ -158,15 +158,23 @@ production.
 ### Deploy workflow
 
 ```bash
-# 1. On the server, unlock chattr-protected directories
-sudo chattr -i /opt/fibemate-repo/www /opt/fibemate-repo/packages /opt/fibemate-repo/docs
+# 1. On the server, unlock the protected trees: directories AND the files inside them
+#    (production sets +i on both layers; unlocking only the directories leaves every file
+#     immutable, and git then fails with "unable to unlink ...: Operation not permitted")
+for d in /opt/fibemate-repo/www /opt/fibemate-repo/packages /opt/fibemate-repo/docs; do
+  sudo find "$d" -type d -exec chattr -i {} \; 2>/dev/null || true
+  sudo find "$d" -type f -exec chattr -i {} \; 2>/dev/null || true
+done
 
 # 2. Pull latest main
 cd /opt/fibemate-repo
 git pull --ff-only origin main
 
-# 3. Re-lock
-sudo chattr +i /opt/fibemate-repo/www /opt/fibemate-repo/packages /opt/fibemate-repo/docs
+# 3. Re-lock (directories and files)
+for d in /opt/fibemate-repo/www /opt/fibemate-repo/packages /opt/fibemate-repo/docs; do
+  sudo find "$d" -type d -exec chattr +i {} \; 2>/dev/null || true
+  sudo find "$d" -type f -exec chattr +i {} \; 2>/dev/null || true
+done
 
 # 4. Sync backend to runtime directory (if backend/src/ changed)
 cp -r /opt/fibemate-repo/src/* /opt/fibemate-full/src/
@@ -187,16 +195,25 @@ curl -sI https://fibemate.net/api/auth/verify | head -1  # expect 401 (no token)
 - **Do not** `scp` files to the server without a corresponding git commit.
 - **Do not** leave `chattr -i` unlocked after deployment.
 
-### chattr locked directories
+### chattr locked paths
 
-The following directories are immutable (`chattr +i`) on production:
+The following trees are immutable (`chattr +i`) on production. Both the directories
+**and the files inside them** carry the flag, so every deploy unlocks and re-locks two
+layers:
 
 - `/opt/fibemate-repo/www` (nginx static root)
 - `/opt/fibemate-repo/packages` (npm packages)
 - `/opt/fibemate-repo/docs` (documentation)
 
-Always unlock before `git pull`, re-lock after. The
-[`server-sync.sh`](https://github.com/Lennonhaha/fibemate-tools/blob/main/scripts/server-sync.sh)
+Always unlock before `git pull`, re-lock after. Unlocking the directories alone is not
+enough: git rewrites a file by unlinking the old inode, which fails with
+`unable to unlink ...: Operation not permitted` while that file is still immutable
+(seen in the production deploy on 2026-10-17). Full procedure and copy-paste commands:
+[`docs/deployment.md`](docs/deployment.md) section 6. When counting what is still
+locked, note that `lsattr -R` also prints blank lines and directory headers, so both
+have to be filtered out before counting.
+
+The [`server-sync.sh`](https://github.com/Lennonhaha/fibemate-tools/blob/main/scripts/server-sync.sh)
 script in fibemate-tools automates this with a `trap` safety net.
 
 ## Cryptographic Code Policy

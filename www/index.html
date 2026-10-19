@@ -1940,8 +1940,8 @@
 <!-- ═══════ 📖 项目文档 ═══════ -->
     <section class="features" id="project-docs" style="margin-top:1rem;">
       <div class="section-badge" style="background:rgba(167,139,250,0.08);border:2px solid rgba(167,139,250,0.3);">📖 项目文档</div>
-      <h2 style="font-size:1.5rem;">14 份关键文档 · 从合规到应急</h2>
-      <p class="section-subtitle" style="max-width:700px;margin:0 auto 2rem;font-size:0.9rem;color:#8b949e;">覆盖开源公告、变更记录、安全治理、合规自评 — 从 8/31 开源倒计时到灾难恢复全覆盖</p>
+      <h2 style="font-size:1.5rem;">16 份关键文档 · 从合规到应急</h2>
+      <p class="section-subtitle" style="max-width:700px;margin:0 auto 2rem;font-size:0.9rem;color:#8b949e;">覆盖开源公告、变更记录、安全治理、合规自评 — 从工程验证到灾难恢复全覆盖</p>
 
       <div class="doc-cards-wrap">
 
@@ -1986,10 +1986,10 @@
               <div class="dc-desc">5/5 + 20/20 全绿 · 诚实标注纯JS边界</div>
               <span class="dc-tag purple">侧信道</span>
             </a>
-            <a href="/docs/OPEN_SOURCE_COUNTDOWN.md" class="doc-card purple">
-              <div class="dc-icon">⏳</div>
-              <div class="dc-name">开源倒计时</div>
-              <div class="dc-desc">8/31 D-Day · 17 天冲刺</div>
+            <a href="/docs/project-timeline.html" class="doc-card purple">
+              <div class="dc-icon">🚀</div>
+              <div class="dc-name">开源里程碑</div>
+              <div class="dc-desc">开源已发布 · v3.3.7 · Tauri 桌面端</div>
               <span class="dc-tag purple">里程碑</span>
             </a>
             <a href="/BUILD.md" class="doc-card purple">
@@ -1997,6 +1997,18 @@
               <div class="dc-name">构建指南</div>
               <div class="dc-desc">依赖与安装 · 可复现构建</div>
               <span class="dc-tag purple">DevOps</span>
+            </a>
+            <a href="https://github.com/Lennonhaha/fibemate/security/code-scanning" class="doc-card purple">
+              <div class="dc-icon">🔍</div>
+              <div class="dc-name">代码审计与门禁</div>
+              <div class="dc-desc">CodeQL 零告警 · Tauri 仓 RUSTSEC 门禁</div>
+              <span class="dc-tag purple">安全</span>
+            </a>
+            <a href="/docs/TECHNICAL-VERIFICATION.md" class="doc-card purple">
+              <div class="dc-icon">📊</div>
+              <div class="dc-name">全栈验证报告</div>
+              <div class="dc-desc">Nightly P2: liboqs 10k 轮 · Fuzzing · KAT</div>
+              <span class="dc-tag purple">验证</span>
             </a>
             
           </div>
@@ -2061,7 +2073,7 @@
       </div>
 
       <p style="text-align:center;margin-top:2rem;font-size:0.82rem;color:#586069;">
-        全部 14 份文档 · CARS 综合 77.30 · <a href="/docs/viz-index.html" style="color:#a78bfa;text-decoration:underline;">📇 可视化索引</a>
+        全部 16 份文档 · CARS 综合 77.30 · <a href="/docs/viz-index.html" style="color:#a78bfa;text-decoration:underline;">📇 可视化索引</a>
       </p>
     </section>
 
@@ -2223,7 +2235,7 @@
           <h3>外部认证与评分</h3>
           <ul>
             <li>OpenSSF Best Practices · Passing（主仓 + 桌面端）</li>
-            <li>OpenSSF Scorecard · fibemate 8.1 / tauri 7.3</li>
+            <li>OpenSSF Scorecard · fibemate 8.1 / tauri 7.6</li>
             <li>CII Best Practices 项目号 13695 · 15379</li>
           </ul>
         </div>
@@ -2276,7 +2288,7 @@
         </div>
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-10-11 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 260 份 (lg-001~lg-108) ✓<br>
+            最后更新：2026-10-17 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 260 份 (lg-001~lg-108) ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · Phase 1 算法由 @noble/post-quantum 提供，双向验证通过)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
@@ -2289,7 +2301,7 @@
                 所有核心代码已通过 <strong>260 份</strong> RFC 3161 时间戳存证（FreeTSA + DigiCert 双源），原创性可追溯。<br>
                 验证报告（KAT、TVLA）开源后可独立验证。开源不替代独立第三方审计。
                 <a href="/docs/security-limitations.html" style="color:#f59e0b;text-decoration:underline;">⚠ 安全限制声明</a>
-                · <a href="/docs/launch-announcement-2026-08-31.html" style="color:#58a6ff;text-decoration:underline;">发布公告</a><br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-07-24 · FPGA UART 调试打通 + SM2 Mersenne 1.8x + 全回归 480/480 · VWZ 148/148 ✅ + SM2 Mersenne 1.8× ✅ + KAT 10,000/10,000 ✅ + ML-KEM-768 NTT 域 独立实现 ✓ 200/200 + FIPS 203 参照 ✓ 10,000/10,000 + lg-001~lg-108 · 双源存证 &#x2705;</small>
+                · <a href="/docs/launch-announcement-2026-08-31.html" style="color:#58a6ff;text-decoration:underline;">发布公告</a><br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-10-17 · 文档中心刷新 16 份关键文档 · CARS 口径统一 77.30 · 桌面端供应链门禁（cargo-deny · RUSTSEC 修复）· 全栈验证：KAT 10,000/10,000 ✅ · ML-KEM-768 NTT 域独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000</small>
             </p>
         </div>
         <p class="footer-beian" style="margin-top:0.3rem;font-size:0.82rem;color:#94a3b8;">

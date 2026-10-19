@@ -12,7 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### 🎯 Highlights
 
 - **14 interactive 3D visualization dashboards** — full coverage from scores to supply chain risk
-- **CARS 78.50** (+15.0 from 63.50) · **IBM 63.70 HIGH** (+24.3 from 39.40)
+- **CARS 77.30** (+13.8 from 63.50) · **IBM 63.70 HIGH** (+24.3 from 39.40)
 - **Key Lifecycle engine** (27/27 PASS) + **KLSession** Double-Ratchet integration (35/35 PASS)
 - **Algorithm Registry npm package** — 12 algorithms, 9 APIs, structured metadata
 - **Cryptographic Law compliance self-assessment** — 12 articles, 88/100 score
@@ -73,7 +73,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 #### Scores (recalibrated)
-- **CARS**: 63.50 → 78.50 (+15.0) — AA 45→61, KL 70→82, PC 55→73, OR 70→78
+- **CARS**: 63.50 → 77.30 (+13.8) — AA 45→61, KL 70→82, PC 55→73, OR 65→70
 - **IBM 七维**: 39.40 → 63.70 HIGH (+24.3) — D1 25→60, D2 15→50, D3 40→90, D4 35→55, D5 20→60, D6 30→50, D7 65→92
 
 #### Refactored

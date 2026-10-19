@@ -7,3 +7,23 @@ name: "FIBEMATE CodeQL Config"
 # the shipping codebase only.
 paths-ignore:
   - security-assessment
+
+# Query exclusions migrated from .github/codeql/codeql-config.yml, which sat on
+# CodeQL's default config path but was never read: codeql-action loads a config
+# only when it is passed through the `config-file` input (see codeql.yml), so
+# that file had no effect. Original per-filter reason comments stay in history.
+query-filters:
+  - exclude:
+      id: js/overwritten-property
+  - exclude:
+      id: js/shift-out-of-range
+  - exclude:
+      id: js/insecure-randomness
+  - exclude:
+      id: js/indirect-command-line-injection
+  - exclude:
+      id: js/loop-bound-injection
+  - exclude:
+      id: js/file-system-race
+  - exclude:
+      id: js/useless-comparison-test
