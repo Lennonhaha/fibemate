@@ -1,0 +1,105 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Supply Chain: A Schema-Validated CBOM}
+\label{sec:cbom}
+
+\subsection{Why a CBOM, and why the standard matters}
+
+A Cryptographic Bill of Materials is the natural artefact for the question
+``which cryptographic assets are in this system''. CycloneDX 1.6~\cite{cyclonedx16} extends the
+SBOM format with \texttt{cryptoProperties}, giving components a place to declare
+their algorithm properties, their certification status, and their occurrences.
+
+The temptation is to invent a format. It is much easier, because a
+project-specific JSON schema can be designed to fit exactly what the generator
+already emits, and then validation is guaranteed to pass. That is not
+validation; it is transcription.
+
+We use the official CycloneDX 1.6 schema~\cite{cyclonedx-schema16}, vendored into
+the repository with its hash recorded, and validate against it in CI on every push.
+
+\subsection{The generator}
+
+\texttt{scripts/build-cbom.js} reads a scan of the source tree
+(\texttt{tools/crypto-audit-scan.json}, 370 entries) and emits
+\texttt{tools/cbom-cyclonedx.json}. It is deterministic: the serial number is
+derived by hashing the component set and the root properties, and the timestamp
+honours \texttt{SOURCE\_DATE\_EPOCH}, so two runs over the same tree produce
+byte-identical output. A \texttt{--check} mode regenerates and compares, and
+fails if the committed artefact is stale.
+
+\subsection{What is a component, and what is not}
+
+The scan finds more than cryptographic primitives. It also finds a formal
+specification language (TLA+), a mathematical transform (the number-theoretic
+transform), and a protocol construction (Double Ratchet). None of these is a
+cryptographic asset in the sense the schema means, and emitting them as
+components would inflate the inventory with things no one can migrate.
+
+They are not silently dropped. They are recorded as root properties under
+\texttt{fibemate:excludedAsset:*}, with the reason for exclusion attached, so
+that the decision is auditable and a reader can disagree with it.
+
+The result is 9 components:
+
+\begin{center}
+\begin{tabular}{@{}llrl@{}}
+\toprule
+Component & Primitive & Occurrences & Quantum status \\
+\midrule
+ML-KEM & kem & 164 & safe \\
+SHA-256 & hash & 94 & safe \\
+SM2 & signature & 90 & vulnerable \\
+P-256/ECDH & key-agree & 72 & vulnerable \\
+SM3 & hash & 62 & safe \\
+ML-DSA/fml-dsa & signature & 53 & safe \\
+SM4 & block-cipher & 40 & safe \\
+AES & block-cipher & 39 & safe \\
+SLH-DSA & signature & 33 & safe \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Across 304 distinct files, with 647 component--file occurrences.
+
+\subsection{Two numbers that must not be confused}
+
+647 is the number of occurrences. 304 is the number of distinct files. They
+differ because 139 files mention more than one algorithm, and one HTML page
+mentions nine.
+
+This distinction is not pedantry. Our viewer originally displayed 647 under a
+label reading ``total files'', overstating the footprint by 343. The error
+survived because the number was hardcoded and therefore never recomputed, and
+because no one checks a number that looks plausible.
+
+\subsection{What the schema forced us to stop saying}
+
+The most useful thing about validating against an external schema is that it
+refuses claims the project had been making.
+
+Our first CBOM failed validation with 51 errors in 7 categories. They were not
+typos. They were category errors: risk information placed where the schema does
+not allow it, an \texttt{implementationPlatform} value (``javascript'') that is
+not a platform, a \texttt{certificationLevel} of
+\texttt{known-answer-tested} which is not a certification level the schema
+recognises, and primitive names in upper case where the enumeration is lower
+case.
+
+Each of these was a small overclaim. ``KAT passed'' is not a certification.
+JavaScript is not a hardware platform. Fixing them meant either finding the
+correct field or \emph{removing the claim}, and in several cases the honest
+answer was removal: the project holds no FIPS or CC certification, so the
+certification level is \texttt{none}, and it says so.
+
+The design rule we settled on: \textbf{a missing field is better than an
+invented field}. A gap is visible and can be closed. A plausible fabrication is
+invisible and propagates.
+
+\subsection{Continuous validation}
+
+The CBOM is validated on every push in two ways: against the vendored official
+schema, and against a drift check that regenerates the artefact and fails if the
+committed copy differs. The drift check also verifies that the version recorded
+in the CBOM matches \texttt{package.json}, because a bill of materials that
+misstates the version of the thing it describes is worse than no bill of
+materials.

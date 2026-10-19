@@ -1,0 +1,48 @@
+% SPDX-License-Identifier: Apache-2.0
+%
+% Abstract. The rule here is that every number is one we can point at a file
+% for. No number in this abstract is aspirational.
+
+Post-quantum cryptography is being deployed under a deadline. NIST finalised
+ML-KEM and ML-DSA in 2024, the German BSI published its national migration
+guidance in October 2026 requiring cryptographic inventories by the end of that
+year, and the migration horizon for non-high-risk systems is 2035. What is
+scarce is not algorithms. It is \emph{evidence}: a machine-checkable account of
+what was proved, what was assumed, and what remains open.
+
+We report an engineering case study of one PQC implementation, FIBEMATE, along
+two axes that are usually reported separately. The first is formalization. We
+mechanize the VWZ construction in Isabelle/HOL, tiering 56 obligations by what
+each one depends on. Two tiers are complete with no remaining \texttt{sorry}
+(T0, purely formal rewriting, 17 lemmas; T1-A, algebraic axioms, 16 lemmas), one
+is nearly complete (T1-D, 5 lemmas with 2 open), and two are substantially open
+(T2, linear algebra, 10 lemmas with 7 open; T3, security and probabilistic
+obligations, 8 lemmas all open because their subjects are still undefined). The
+repository holds 169 lemmas and 2 theorems in total, of which 18 carry
+\texttt{sorry}.
+
+The second axis is supply chain. We generate a CycloneDX 1.6 conformant
+Cryptographic Bill of Materials covering 9 cryptographic components across 304
+distinct source files (647 component--file occurrences), validated against the
+official schema in CI.
+
+The methodological contribution is what happened when we pointed verification
+tools at our own artefacts. Three findings are reported in detail. First, the
+Isabelle session runs with \texttt{quick\_and\_dirty}, so a successful build
+proves only that the non-\texttt{sorry} parts type-check; the exit code is
+therefore not a progress metric, and we argue that reporting one is a form of
+misrepresentation. Second, our first CBOM failed official schema validation with
+51 errors across 7 categories, none of which our own 18 internal tests detected,
+because those tests validated the CBOM against our parser rather than against
+the standard. Third, our public CBOM viewer had never rendered its table at all:
+it threw on first call, and the defect was invisible to code review and to the
+tests, and would have been reported as working had we not executed it.
+
+We argue that these are not incidental bugs but the characteristic failure mode
+of self-validating engineering, and that the discipline required to catch them
+--- external references, negative controls, and execution rather than inspection
+--- is a prerequisite for PQC evidence to be worth anything to an auditor.
+
+\medskip
+\noindent\textbf{Keywords:} post-quantum cryptography, formal verification,
+Isabelle/HOL, CBOM, CycloneDX, software supply chain, BSI TR, reproducibility.

@@ -1,0 +1,95 @@
+% SPDX-License-Identifier: Apache-2.0
+%
+% Engineering Verification of PQC:
+% A Case Study on Formalizing VWZ in Isabelle/HOL and Supply Chain Integration
+%
+% STATUS: outline. Every number below was re-derived from the repository at the
+% time of writing. Prose is placeholder only where marked by a % TODO-NOTE
+% comment in the section files; those notes do not appear in the PDF.
+%
+% Build:  pdflatex main && bibtex main && pdflatex main && pdflatex main
+%
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{lmodern}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{amsmath,amssymb,amsthm}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{microtype}
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue!50!black,
+  citecolor=blue!50!black,
+  urlcolor=blue!50!black,
+}
+
+% --- draft markers ----------------------------------------------------------
+% Off by default. Uncomment \draftnotestrue to render the internal checklist.
+% The previous version used \ifdefined on a name it had just \newcommand'd,
+% which is always true, so the markers printed in every build -- including the
+% one that looked like a finished PDF.
+\newif\ifdraftnotes
+\draftnotesfalse
+% \draftnotestrue
+\ifdraftnotes
+  \newcommand{\todo}[1]{\textcolor{red}{[TODO: #1]}}
+  \newcommand{\claim}[1]{\textcolor{orange}{[CLAIM TO VERIFY: #1]}}
+\else
+  \newcommand{\todo}[1]{}
+  \newcommand{\claim}[1]{}
+\fi
+
+\newtheorem{theorem}{Theorem}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{remark}[theorem]{Remark}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  breaklines=true,
+  frame=single,
+  columns=fullflexible,
+}
+
+\title{Engineering Verification of PQC:\\[0.3em]
+A Case Study on Formalizing VWZ in Isabelle/HOL\\[0.15em]
+and Supply Chain Integration (CBOM)}
+\author{%
+  Liu Tianhe\\
+  \small Independent Researcher\\
+  \small \texttt{research@fibemate.net}
+}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+\input{sections/00-abstract}
+\end{abstract}
+
+\tableofcontents
+\newpage
+
+\input{sections/01-introduction}
+\input{sections/02-formalization}
+\input{sections/03-cbom}
+\input{sections/04-case-study}
+\input{sections/05-limitations}
+\input{sections/06-conclusion}
+
+\appendix
+\input{sections/07-appendix}
+
+\bibliographystyle{plain}
+\bibliography{references}
+
+\end{document}
