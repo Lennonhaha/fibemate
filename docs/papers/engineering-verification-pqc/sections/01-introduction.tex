@@ -1,0 +1,92 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Introduction}
+\label{sec:intro}
+
+\subsection{The evidence gap in PQC migration}
+
+The migration to post-quantum cryptography is now a scheduling problem with a
+regulatory deadline attached. NIST published ML-KEM~\cite{nist-fips203}, ML-DSA~\cite{nist-fips204} and
+SLH-DSA~\cite{nist-fips205} in August 2024. On 12 October 2026 the German
+Federal Ministry of the Interior (BMI), the Federal Ministry for Digital
+Transformation and Government Modernisation (BMDS) and the Federal Office for
+Information Security (BSI) published a joint national guideline implementing
+the EU roadmap~\cite{bsi-pqc-migration}. It asks every organisation in scope to
+finish an initial preparation and planning phase, including a cryptographic
+inventory, by the end of 2026; to complete migration of high-risk use cases by
+the end of 2030; and to have migrated nearly all systems by 2035
+(Section~4.1 of the guideline). The dates are described there as urgent
+recommendations rather than statutory deadlines, with the responsible bodies
+asked to make them binding. Where this paper cites a section number of the
+guideline, the number refers to the guideline and not to this paper; the two
+numberings are unrelated.
+
+The guideline is directly relevant to this paper for a second reason: it names
+the artefact we build. Section~4.3 of the guideline recommends that each
+organisation produce an overview of its cryptographic components, modelled on
+the crypto register of the BSI IT-Grundschutz Compendium, and states that
+``cryptographic inventory tools, repository scans and CBOMs (Cryptographic Bill
+of Materials, e.g.\ based on the CycloneDX standard) can support the creation of
+the cryptographic inventory.'' Section~4.6 of the guideline adds that providing
+CBOMs simplifies comparison of cryptographic capabilities across the supply
+chain, and that such provision ``can be set down in contracts.'' An inventory
+artefact has thus moved from a good engineering practice to something a supplier
+may be asked for contractually, which raises the cost of an inventory that does
+not validate against its own standard.
+
+Against this schedule, the binding constraint is not cryptographic primitives.
+It is the ability to answer, with evidence, three questions: which cryptographic
+assets are in a system, what has actually been proved about them, and what
+remains open. An inventory that cannot be audited is a spreadsheet. A proof
+whose gaps are not stated is a claim.
+
+\subsection{Contributions}
+
+This paper reports a case study along two axes, and one methodological finding
+that emerged from combining them.
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{A tiered Isabelle/HOL formalization of VWZ.} We mechanize the
+        construction and organise 56 obligations into tiers by dependency
+        (Section~\ref{sec:formalization}). Two tiers close with zero
+        \texttt{sorry}; we state precisely which, and which do not.
+
+  \item \textbf{A schema-validated CBOM in CI.} We generate a CycloneDX 1.6
+        Cryptographic Bill of Materials for the implementation and gate it
+        against the official schema on every push (Section~\ref{sec:cbom}).
+
+  \item \textbf{Three documented failures of self-validation}, each caught only
+        by an external reference: a build whose success means less than it
+        appears to; a standard-format artefact that failed the standard while
+        passing every internal test; and a user-facing page that never worked
+        and was never noticed (Section~\ref{sec:case-study}).
+\end{enumerate}
+
+\subsection{What this paper does not claim}
+
+We state this early because the failure mode we criticise is precisely the
+overclaim.
+
+We do not claim that VWZ is proved secure. Nineteen \texttt{sorry}s remain.
+T3, the tier containing the security and probabilistic obligations, is entirely
+open because its subjects are not yet defined. Key generation and the XOF are
+not modelled at all. What is proved is a set of algebraic and linear-algebraic
+facts about the construction, plus the correctness of a body of supporting
+infrastructure.
+
+We do not claim that a CBOM constitutes compliance with any regulation. It is an
+inventory. Whether an inventory satisfies a regulator is a legal question.
+
+We do not claim novelty in the cryptographic construction. The contribution is
+engineering: how the verification was organised, what it cost, and what it
+taught us about the reliability of our own evidence.
+
+\subsection{Reproducibility}
+
+Every number in this paper is re-derivable from the repositories. The
+formalization ships with a script that recounts obligations and open goals from
+the sources rather than from a table maintained by hand; the CBOM is regenerated
+by a deterministic generator with a recorded schema hash; and the negative
+control is a session that must fail.
+
+The repository URLs, the snapshot commit identifiers and the Isabelle version
+are given in Appendix~\ref{app:artefacts}.

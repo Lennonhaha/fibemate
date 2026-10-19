@@ -1,0 +1,160 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Artefact Appendix}
+\label{app:artefacts}
+
+\subsection{Repositories and versions}
+
+The snapshot described in this paper is:
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Artefact & Location & Commit \\
+\midrule
+Implementation + CBOM & \texttt{github.com/Lennonhaha/fibemate} & \texttt{95056b4} \\
+Formalization corpus & \texttt{github.com/Lennonhaha/fibemate-vwz} & \texttt{1361dbb} \\
+Isabelle version & Isabelle2025-2 & --- \\
+CBOM schema & CycloneDX 1.6, vendored & see below \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Both repositories are public. The formalization repository is deliberately
+separate from the product repository: research-line proofs do not ship in the
+product, and keeping them in a separate repository makes it impossible for the
+two to drift into each other by accident. It also means the proof corpus has its
+own remote, which it did not have for the first two days of its existence.
+
+The CBOM schema is vendored at \texttt{tools/schemas/} in three files, because
+\texttt{bom-1.6.schema.json} is not self-contained: it references
+\texttt{spdx.schema.json} and \texttt{jsf-0.82.schema.json}, and loading it alone
+makes the validator fail at schema-compile time rather than at validation time.
+The recorded hashes are:
+
+\begin{center}
+\begin{tabular}{@{}lrl@{}}
+\toprule
+File & Bytes & SHA-256 (prefix) \\
+\midrule
+\texttt{bom-1.6.schema.json} & 262{,}666 & \texttt{18f57f7482593bad} \\
+\texttt{spdx.schema.json} & 63{,}418 & \texttt{4b345e2329f209f3} \\
+\texttt{jsf-0.82.schema.json} & 8{,}058 & \texttt{8bae002c25e723db} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+These are the full-file hashes truncated for display; the full values are in
+\texttt{tools/schemas/README.md}. One honest caveat about their provenance: they
+were cross-checked against the copies in a sibling tools repository and found
+identical, but a direct fetch from \texttt{cyclonedx.org} could not be completed
+from the build machine, so what is asserted is ``the vendored copy is identical
+to the tools-repository fixture'', not ``re-verified against upstream on the date
+of writing''.
+
+\subsection{Recomputing the numbers}
+
+Every count in this paper is produced by a script shipped with the artefact.
+None is maintained by hand.
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Figure & Command \\
+\midrule
+Lemma / theorem / \texttt{sorry} counts & \texttt{node tools/count-obligations.cjs} \\
+CBOM regeneration & \texttt{node scripts/build-cbom.js} \\
+CBOM staleness check & \texttt{node scripts/build-cbom.js --check} \\
+CBOM schema validation & \texttt{node scripts/validate-cbom.cjs} \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The obligation counter exits non-zero if a \texttt{sorry} appears anywhere it is
+not expected. This is deliberate: the counter is the paper's primary claim, so it
+is written to fail loudly rather than to report a number quietly.
+
+\subsection{Building the formalization}
+
+\begin{lstlisting}
+isabelle build -D aligned    # the main session; see the quick_and_dirty caveat
+isabelle build -D smoke      # a small session that must build clean
+isabelle build -D neg        # negative control; MUST fail with exit 1
+\end{lstlisting}
+
+The third command failing is a prerequisite for the first command meaning
+anything. On Windows, \texttt{bin/isabelle} is a shell script and must be invoked
+through the bundled Cygwin bash; the repository README records the exact
+invocation.
+
+\subsection{Session structure}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Session & Purpose \\
+\midrule
+\texttt{VWZ\_A3\_Aligned} & obligations ledger, auxiliary library, matrix and field developments \\
+\texttt{VWZ\_A3\_Smoke} & installation sanity check \\
+\texttt{VWZ\_A3\_Neg} & negative control, must fail \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Obligation ledger}
+
+\begin{center}
+\begin{tabular}{@{}lrr@{}}
+\toprule
+Tier & Lemmas & \texttt{sorry} \\
+\midrule
+T0 --- purely formal rewriting & 17 & 0 \\
+T1-A --- algebraic axioms & 16 & 0 \\
+T1-D --- definition-dependent & 5 & 2 \\
+T2 --- linear algebra & 10 & 8 \\
+T3 --- security, probabilistic, parser & 8 & 8 \\
+\midrule
+Total & 56 & 18 \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Repository totals: 169 lemmas, 2 theorems, 19 \texttt{sorry}, across 9 theory
+files totalling 98{,}528 bytes. The difference between 18 and 19 is the open
+auxiliary theorem \texttt{aux\_el\_det\_elementary\_i\_gt\_0}, which is outside
+the ledger and is named explicitly in the counter rather than tolerated.
+
+\subsection{CBOM summary}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Property & Value \\
+\midrule
+Specification version & CycloneDX 1.6 \\
+Components & 9 \\
+Distinct files with occurrences & 304 \\
+Component--file occurrences & 647 \\
+Quantum-safe components & 7 \\
+Quantum-vulnerable components & 2 \\
+Excluded (recorded as root properties) & 3 \\
+Artefact size & 63{,}485 bytes \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The serial number is derived by hashing the component set and root properties,
+so it changes when and only when the content changes; it is not a random UUID.
+
+\subsection{Excluded assets}
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Asset & Reason for exclusion \\
+\midrule
+TLA+ & formal specification language, not a cryptographic asset \\
+NTT & number-theoretic transform, a mathematical building block \\
+Double Ratchet & protocol construction composed of several primitives \\
+\bottomrule
+\end{tabular}
+\end{center}

@@ -1,0 +1,302 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Case Study: Three Failures of Self-Validation}
+\label{sec:case-study}
+
+The three episodes below have a common shape. In each case the artefact passed
+every check the project had, and the check was the problem. In each case an
+external reference caught it. And in each case the failure was not a mistake in
+the work but a mistake in the \emph{evidence about} the work, which is the
+failure mode that matters when the evidence is what you are publishing.
+
+\subsection{Case 1: A build that succeeds because it is allowed to}
+\label{sec:case-study-quick-and-dirty}
+
+\subsubsection{The observation}
+
+The aligned Isabelle session builds cleanly:
+
+\begin{lstlisting}
+isabelle build -D aligned
+Finished VWZ_A3_Aligned (0:00:07 elapsed time)
+\end{lstlisting}
+
+Exit code 0. If this were the whole story, one would report the development as
+verified.
+
+It is not. The session's \texttt{ROOT} file carries the option
+\texttt{quick\_and\_dirty}, which admits \texttt{sorry} as a proof step instead
+of rejecting it. A \texttt{sorry} is Isabelle's explicit placeholder for an
+unproved goal; under normal options it makes the build fail, which is exactly
+what makes it useful. Under \texttt{quick\_and\_dirty} it is accepted silently.
+
+So \texttt{Finished} means: \emph{every step that is not marked \texttt{sorry}
+type-checks}. It does not mean the theorems are proved. The two statements
+produce identical output.
+
+\subsubsection{Why this is not a small caveat}
+
+A checker that accepts everything and a correct proof are indistinguishable from
+the outside. That is the defining hazard of machine-checked mathematics: the
+tool's authority is exactly what makes its silence uninformative.
+
+The consequence for reporting is concrete. \textbf{The exit code is not a
+progress metric.} Any paper, README, or dashboard that reports build status as
+evidence of verification is reporting a number that cannot move when proofs are
+removed. Our own README now states this at the top, before the layout section,
+because a reader who learns it after reading the results has already formed a
+false impression.
+
+\subsubsection{The negative control}
+
+The remedy is a session that \emph{must} fail. We maintain
+\texttt{neg/VWZ\_A3\_Neg.thy}, which states a deliberately false claim:
+
+\begin{lstlisting}
+isabelle build -D neg    # expected: exit 1
+\end{lstlisting}
+
+It fails, with exit code 1, as designed. If it ever succeeds, the session
+configuration is broken and every successful build in the repository becomes
+worthless.
+
+This is the cheapest available test of whether the verification means anything,
+and it is the one most likely to be omitted, because a project that is working
+does not naturally generate a test that must fail.
+
+\subsubsection{The progress metric we use instead}
+
+Progress is counted, not inferred:
+
+\begin{lstlisting}
+node tools/count-obligations.cjs
+\end{lstlisting}
+
+The script parses the sources, counts \texttt{lemma}, \texttt{theorem} and
+\texttt{sorry} per tier, and separates \texttt{sorry} inside the obligation
+ledger from \texttt{sorry} elsewhere. Anything unexpected outside the ledger
+fails the check.
+
+This matters because the counter is itself a claim. An earlier version simply
+failed whenever any \texttt{sorry} sat outside the ledger, which would have
+forced a choice between hiding the open theorem and loosening the check for
+everything. The current version names the one known open item explicitly, so
+that a \emph{new} \texttt{sorry} anywhere still fails. Naming an exception keeps
+the check strict; a blanket allowance does not.
+
+\subsection{Case 2: The CBOM that failed its own standard}
+\label{sec:case-study-cbom}
+
+\subsubsection{The observation}
+
+The project had 18 internal tests for the CBOM generator, all passing. The CBOM
+was, by that measure, correct.
+
+It was not valid CycloneDX 1.6. Validating against the official schema produced
+51 errors in 7 categories.
+
+\subsubsection{The root cause is the test, not the code}
+
+The internal tests fed the generated CBOM back into the project's own parser and
+checked that it could be read. This is circular: it verifies that the output
+matches \emph{our understanding of the format}, not that it matches the format.
+A parser written from the same misunderstanding will accept the same error
+happily.
+
+The errors were of three kinds, and the taxonomy is worth stating because it
+generalises:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Wrong location.} Risk metadata placed at
+        \texttt{cryptoProperties.quantumSecurity}, a key the schema does not
+        have; the correct place is a property, and in 1.6 the nearest standard
+        field is \texttt{nistQuantumSecurityLevel}, which is an integer and not
+        the same thing at all.
+  \item \textbf{Wrong type or enumeration.} \texttt{certificationLevel} given as
+        a string where the schema requires an array, and with a value
+        (\texttt{known-answer-tested}) that is not in the enumeration;
+        \texttt{primitive} in upper case where every legal value is lower case.
+  \item \textbf{Semantic mismatch.} \texttt{implementationPlatform} set to
+        ``javascript'', which is a language, not a platform. The value was true;
+        the field was wrong. The fix was to move it to a namespaced property
+        rather than to find a platform that happened to be close.
+\end{enumerate}
+
+\subsubsection{The general lesson}
+
+Internal consistency is not correctness. A test suite that shares an assumption
+with the code it tests cannot detect that assumption being wrong. The only
+remedy is an external reference: the official schema file, the official CLI, or
+a third party's fixture.
+
+The corollary is uncomfortable for anyone shipping standard-format artefacts. If
+the only validator you run is your own, you do not know whether your output is
+conformant. You know only that it is self-consistent, which is a weaker and much
+more common property.
+
+\subsection{Case 3: A page that never worked}
+\label{sec:case-study-viewer}
+
+\subsubsection{The observation}
+
+The project publishes a CBOM viewer: an HTML page that renders the bill of
+materials as a sortable table with risk badges and expandable file lists. It had
+been deployed, linked from the documentation, and described as working.
+
+It had never rendered its table. The page loaded, the summary cards displayed
+numbers, and the table beneath them was empty. The first call to the render
+function threw:
+
+\begin{lstlisting}
+TypeError: a.toLowerCase is not a function
+\end{lstlisting}
+
+The render function iterated over a list whose entries are objects and called a
+string method on each. The exception aborted the script before the table body
+was populated.
+
+\subsubsection{Why it survived}
+
+Three reasons, and each is a general failure mode rather than a local mistake.
+
+First, \emph{partial success looks like success}. The cards were populated by
+code that ran before the throw, so the page showed real numbers. A page with
+numbers on it does not look broken.
+
+Second, \emph{the defect was downstream of the thing everyone was watching}. The
+project knew the risk field had moved and expected that to be the bug. It was a
+bug. But the render function never got far enough to read the risk field, so the
+known defect was invisible behind an unknown one. Investigating the suspected
+cause would have found a second, deeper cause.
+
+Third, \emph{code review does not execute}. The defect is not subtle on
+inspection, but inspection is not what happened; the code was reviewed for
+whether the change looked right, and it looked right.
+
+\subsubsection{How it was actually found}
+
+By running the page's own script against a stub DOM, rather than by reading it:
+
+\begin{lstlisting}
+const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)];
+const main = scripts.find(s => s.includes('function renderTable'));
+vm.runInContext(main, vm.createContext({ document: stubDocument }));
+\end{lstlisting}
+
+This takes a few seconds and immediately produced the exception above. It also
+made the rest of the audit possible, because once the script runs, its output can
+be compared against the source of truth:
+
+\begin{center}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Quantity & Page claims & CBOM says \\
+\midrule
+Components & 12 & 9 \\
+Files & 370 (hardcoded) & 304 distinct (647 occurrences) \\
+Quantum-safe & 6 & 7 \\
+Quantum-vulnerable & 2 & 2 \\
+Certification & ``KAT passed'' for 5+ hits & \texttt{none} for all \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Every row was wrong except the vulnerable count, and the certification row was
+not wrong so much as invented: the page derived ``KAT passed'' from an occurrence
+count above five. That is a certification claim manufactured from a line count.
+
+\subsubsection{The finding that generalises}
+
+The page was stale in a way that no amount of care in the \emph{generator} would
+have fixed, because it was hand-maintained and embedded its own copy of the data.
+It displayed one document and offered a different one for download.
+
+The structural remedy is to make drift impossible rather than to detect it: the
+embedded payload should be generated from the same artefact the page claims to
+display, and a check should fail when they differ. Detection by discipline works
+until someone is tired.
+
+\subsection{What the three cases have in common}
+\label{sec:case-study-common}
+
+\begin{center}
+\begin{tabular}{@{}p{3.1cm}p{4.3cm}p{4.6cm}@{}}
+\toprule
+Case & Passed & Caught by \\
+\midrule
+\texttt{quick\_and\_dirty} build & the build itself & a session that must fail \\
+CBOM schema validity & 18 internal tests & the official schema \\
+Viewer rendering & code review, deployment & executing the page \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+In each row, the check that passed and the check that caught the defect differ in
+one respect: the passing check was internal to the project, and the catching
+check was external to it. The build was the project's own build; the negative
+control is an artefact whose only purpose is to be wrong. The tests used the
+project's parser; the schema is the standard's. The review read the project's
+code; execution ran it.
+
+We do not think this is a coincidence, and we do not think it is specific to
+this project. Self-validation cannot detect a shared false assumption, by
+construction. The evidence a PQC migration needs is evidence an auditor will
+accept, and an auditor is by definition external. Building the external reference
+into the development, rather than adding it at the end, is the difference between
+evidence and assertion.
+
+\subsection{The \texttt{nat} subtraction obstruction}
+\label{sec:case-study-nat}
+
+One open obligation deserves separate treatment, because it is a case where the
+verification tool was right and the mathematics was right, and the proof was
+blocked by something neither.
+
+The obligation (Section~\ref{sec:formalization}) is
+$\det(\texttt{row\_add\_matrix}\ m\ i\ j\ f) = 1$ for $i > 0$. The proof
+strategy is to expand along the first row and induct on $m$, which requires
+shifting the indices down by one. The needed shift lemma is:
+
+\begin{lstlisting}
+map (%c. if Suc k = i & Suc c = j then f
+         else (if Suc k = Suc c then 1 else 0)) [0..<m-1]
+=
+map (%c. if k = i-1 & c = j-1 then f
+         else (if k = c then 1 else 0)) [0..<m-1]
+\end{lstlisting}
+
+It is false at $j = 0$. In \texttt{nat}, subtraction saturates:
+$0 - 1 = 0$. So the right-hand side degenerates to
+\texttt{if k = c then 1 else 0}, while the left-hand side is identically zero
+because \texttt{Suc c = 0} is unsatisfiable. A proof that applies this shift
+uniformly over $j$ cannot be sound, and any attempt to force it would produce
+either a failed proof or, worse, a proof of a weakened statement that no longer
+implies the goal.
+
+The fix is to split on $j = 0$ \emph{before} the shift, and to prove the two
+minor shapes separately.
+
+\subsubsection{Why we report an open obligation instead of closing it}
+
+Before attempting the proof we verified the statement numerically, by evaluating
+the determinant exactly as defined --- Laplace along the first row,
+\texttt{nat} subtraction, integer entries --- over every $(i,j)$ with
+$i \neq j$ for $m \in \{1,2,3,4,5\}$ and several values of $f$, 166 cases in
+total, all giving $\det = 1$. A control sweep with $i = j$ gives $\det = f$,
+which is what it must be, and which shows the sweep is not passing vacuously.
+
+So the mathematics is not in doubt and the proof is what is missing. The
+obligation carries an explicit \texttt{sorry} and a \texttt{TODO(prove)} note
+recording the dead end, because the note is the useful part: the next attempt
+should not rediscover that the uniform shift lemma is false.
+
+\subsubsection{The general rule}
+
+\textbf{Any lemma that subtracts one from an index must be split on the zero
+case.} In \texttt{nat}, the intuition that subtraction undoes addition is
+false at the boundary, and the failure is silent: the lemma is not rejected, it
+is simply untrue, and a proof that appears to work is proving something else.
+
+This is a small instance of the paper's theme. The type checker accepted the
+statement; the statement was false; and only a counterexample at the boundary
+revealed it. A formalization that never tested its own auxiliary lemmas at the
+boundary would have carried the error forward into a proof that looked complete.

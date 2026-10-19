@@ -1,0 +1,223 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Formalization}
+\label{sec:formalization}
+
+\subsection{The VWZ construction}
+
+\claim{Describe VWZ: what it is, what it is for, and what security property it
+is intended to provide. This must be written from the specification, not from
+the Isabelle development, so that the formalization is seen to follow the
+specification rather than define its own subject.}
+
+The formalization is in Isabelle/HOL~\cite{isabelle}, on top of
+\texttt{HOL-Number\_Theory}. The
+session structure mirrors the dependency order of the mathematics:
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Session file & Contents \\
+\midrule
+\texttt{VWZ\_Fq3329} & the field $\mathbb{F}_q$ with $q = 3329$ \\
+\texttt{VWZ\_Matrix} & matrices, determinant, elementary row operations \\
+\texttt{VWZ\_Protocol} & protocol-level definitions \\
+\texttt{VWZ\_Aux} & auxiliary lemma library \\
+\texttt{VWZ\_ObligationsAligned} & the obligation ledger \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\subsection{Why tier the obligations}
+
+A single ``proved / not proved'' bit is useless for a development that is
+partially complete, and a bare \texttt{sorry} count is nearly as bad: it treats
+an open goal that depends only on rewriting and an open goal whose subject has
+not been defined as the same kind of debt. They are not. One is a proof waiting
+to be written; the other is a definition waiting to be made, and no amount of
+tactic engineering will close it.
+
+We therefore tier obligations by \emph{what they depend on}:
+
+\begin{center}
+\begin{tabular}{@{}lrrl@{}}
+\toprule
+Tier & Lemmas & \texttt{sorry} & Character of the obligations \\
+\midrule
+T0 --- purely formal rewriting & 17 & 0 & closed \\
+T1-A --- algebraic axioms & 16 & 0 & closed \\
+T1-D --- definition-dependent & 5 & 2 & nearly closed \\
+T2 --- linear algebra & 10 & 7 & substantially open \\
+T3 --- security, probabilistic, parser & 8 & 8 & subjects undefined \\
+\midrule
+\textbf{Total} & \textbf{56} & \textbf{17} & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The value of the split is that it makes the shape of the gap visible. ``17 open
+goals'' sounds like a development that is 70\% done if one divides 56 into 39.
+It is not, and the tier table says why: the closed tiers are the easy ones by
+construction, and the open tiers are open for different reasons that require
+different work.
+
+\subsection{The closed tiers}
+
+T0 covers purely formal rewriting: goals that follow from the definitions by
+simplification and case analysis, with no mathematical content beyond
+bookkeeping. The tier is not padding, and its lemmas are worth naming because
+they show what ``closed'' buys. Three of them are unconditional equalities that
+exist only to pin a definition down: \texttt{KeyGen\ k\ seed\ =\ KeyGen\ k\ seed}
+and the same for \texttt{hash\_target} and \texttt{Sign}. They are trivial, and
+they are recorded as obligations anyway, because a definition that cannot be
+elaborated will not prove its own reflexivity, and that failure is worth
+catching at the bottom of the stack rather than at the top.
+
+The substantive T0 results are length and acceptance facts:
+
+\begin{center}
+\begin{tabular}{@{}ll@{}}
+\toprule
+Lemma & Statement (abbreviated) \\
+\midrule
+\texttt{T0\_B8} & serialised public key of the all-zero matrix has length $1 + 2nm^2$ \\
+\texttt{T0\_C4\_size} & $n - w = k + 1$ \\
+\texttt{T0\_C4\_ge3} & $2 \le k \Rightarrow 3 \le n - w$ \\
+\texttt{T0\_E3a\_control\_accept} & the well-formed control instance is accepted \\
+\texttt{T0\_E3a\_N1..N5} & five malformed instances are each rejected \\
+\texttt{atMost\_Un\_atLeast\_nat} & $\{..c\} \cup \{c..\} = \mathrm{UNIV}$ \\
+\texttt{ZaZb\_union} & $Z_a \cup Z_b = Z$ \\
+\texttt{ZaZb\_inter} & $c \in Z \Rightarrow Z_a \cap Z_b = \{c\}$ \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+The \texttt{T0\_E3a\_N1..N5} family is the interesting one. Four of the five are
+negative: an empty public key, an empty signature, a mismatched $k$, and two
+length off-by-ones. They are proved, not assumed, and together with the control
+acceptance they establish that the length predicate is not the constant
+\texttt{False} and not the constant \texttt{True}. That matters because a
+predicate stuck at either constant would make every downstream parser lemma
+vacuously true, and the development would look further along than it is.
+
+T1-A covers the algebraic axioms of the field: commutativity and associativity
+of addition and multiplication (\texttt{T1\_A1\_*}, \texttt{T1\_A2\_*}),
+distributivity (\texttt{T1\_A3\_distrib}), additive and multiplicative identity
+(\texttt{T1\_A4\_*}), inverses (\texttt{T1\_A5\_*}), the power laws
+(\texttt{T1\_A6\_*}), the Fermat inverse $x^{-1} = x^{3327}$
+(\texttt{T1\_A7\_inv\_fermat}), involution of inversion
+(\texttt{T1\_A7\_inv\_inv}) and closure of the carrier
+(\texttt{T1\_A8\_range}). These are instantiated from
+\texttt{HOL-Number\_Theory.Residues} rather than reproved, and the obligation is
+that the instantiation is the intended one: that \texttt{carrier},
+$\oplus$ and $\otimes$ really are the field operations on $\mathbb{F}_{3329}$ and
+not a structure that merely type-checks. \texttt{T1\_A7\_inv\_fermat} is the
+load-bearing one, since the implementation computes inverses by exponentiation.
+Two further T1-A lemmas are serialisation facts: \texttt{T1\_F2} fixes the
+signature length at $1 + 4m$ and \texttt{T1\_F3\_u16le} fixes little-endian
+16-bit encoding as $[x \bmod 256, \lfloor x/256 \rfloor \bmod 256]$.
+
+\subsection{Linear algebra: what is done and what is not}
+
+\texttt{VWZ\_Matrix} provides vectors and matrices as lists of lists, a
+determinant defined by Laplace expansion along the first row, elementary row
+operations, and rank-one and rank-two solvers.
+
+The determinant is defined recursively:
+
+\begin{lstlisting}
+function det :: "int list list => int" where
+  "det [] = 1"
+| "det (r # rs) = sum_list (map (%j. (-1)^j * r!j *
+                    det (map (del_col j) rs)) [0..<length r])"
+\end{lstlisting}
+
+The elementary row-addition matrix \texttt{row\_add\_matrix m i j f} is the
+identity with $f$ placed at $(i,j)$. The obligation is that adding $f$ times row
+$j$ to row $i$ does not change the determinant:
+
+\begin{theorem}
+For $0 < m$, $i < m$, $j < m$, $i \neq j$:
+$\det(\texttt{row\_add\_matrix}\ m\ i\ j\ f) = 1$.
+\end{theorem}
+
+The case $i = 0$ is proved. The case $i > 0$ is \emph{not}, and
+Section~\ref{sec:case-study-nat} explains exactly why: not because the
+mathematics is in doubt, but because the proof requires an index shift that is
+false at a boundary.
+
+\subsection{Open obligations in T2 and T3}
+
+The eight open T2 lemmas and the eight open T3 lemmas are listed below with
+their statements. The T2 gaps are proof debt: the subjects are defined and the
+statements are meaningful. The T3 gaps are mostly modelling debt: their subjects
+are introduced as uninterpreted constants tagged \texttt{TODO(define)} with a
+specification section reference, so there is not yet a formal statement about a
+defined object to prove. Reporting both as ``8 open'' without that distinction
+would overstate the T3 work remaining.
+
+\begin{center}
+\begin{tabular}{@{}p{3.4cm}p{9.4cm}@{}}
+\toprule
+Lemma & Statement \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{T2 --- proof debt}} \\
+\texttt{T2\_B2} & $i \neq j \Rightarrow \det(\texttt{row\_add\_matrix}\ m\ i\ j\ f) = 1$ \\
+\texttt{T2\_B3} & $X_{2a}, X_{2b}, X_{3a}, X_{3b}$ are all invertible \\
+\texttt{T2\_B5} & invertibility of $X_{2a}, X_{3a}$ gives $X_{2b}X_{2a}^{-1} = M_2$ and $X_{3b}X_{3a}^{-1} = M_3$ \\
+\texttt{T2\_B7} & $\mathrm{rank}(\psi\text{-slice}) = 2$ \\
+\texttt{T2\_D4} & $2 \le k \Rightarrow k - 1 \le \dim(\text{nullspace of } \texttt{rows3\_of}\ k)$ \\
+\texttt{T2\_D5} & $i \in S_{\mathrm{set}} \Rightarrow \texttt{Eval}\ pk\ w_2\ w_3\, !\, i = \texttt{hash\_target}\ k\ msg\, !\, i$ \\
+\texttt{T2\_D6} & $i \in Z_{\mathrm{set}} \Rightarrow P_{2a}(i) = 0 \lor P_{2b}(i) = 0$ \\
+\texttt{T2\_D1\_correctness} & $\exists w_2 w_3.\ \texttt{Sign}\ sk\ msg = (w_2, w_3) \land \texttt{Eval}\ pk\ w_2\ w_3 = \texttt{hash\_target}\ k\ msg$ \\
+\midrule
+\multicolumn{2}{@{}l}{\textit{T3 --- modelling debt}} \\
+\texttt{T3\_B1} & \texttt{distinct\_lam} returns $n$ distinct values in $\{1 \ldots 3328\}$ \\
+\texttt{T3\_C1} & the Hamming weight of the target is $k + 1$ \\
+\texttt{T3\_C3} & the sampler is unbiased \\
+\texttt{T3\_D8\_empirical} & every message admits some signing pair \\
+\texttt{T3\_E1\_parse\_pk\_total} & \texttt{parse\_pk} is total: it never diverges \\
+\texttt{T3\_E2} & a signature of the wrong length is rejected \\
+\texttt{T3\_E3b\_conjectural} & verification implies existence of a witness pair \\
+\texttt{T3\_E4\_parse\_sig\_total} & \texttt{parse\_sig} is total \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+Two of these deserve a note. \texttt{T2\_B2} is the only open T2 lemma whose
+mathematics we have checked exhaustively and whose proof still resists; it is
+discussed in Section~\ref{sec:case-study-nat}. \texttt{T3\_E3b\_conjectural}
+carries the word \emph{conjectural} in its name because it may not be true as
+stated: it asserts that any accepted signature admits a witness pair, which is a
+soundness-shaped claim about an uninterpreted \texttt{Verify}. We have kept it in
+the ledger as a named conjecture rather than quietly weakening it, so that a
+reader can see it is open for a stronger reason than a missing tactic.
+
+\subsection{The supporting library}
+
+\texttt{VWZ\_Aux} contributes 43 lemmas and 2 theorems, of which 1 theorem is
+open. It is the largest single file in the development and contains the
+index-arithmetic infrastructure that the determinant arguments need: head and
+tail decomposition of sums, deletion of a column from a row, and the behaviour
+of the determinant on rows with a single non-zero entry. It is described by
+group rather than enumerated, because the individual statements are only
+meaningful in terms of the matrix representation.
+
+The groups are: row and column surgery (\texttt{del\_col} and its interaction
+with \texttt{map}, \texttt{tl}, \texttt{replicate}); determinant behaviour on
+structured rows (a row of zeros, a head row with one non-zero entry, a head row
+that is a sum); split lemmas that decompose a row or a list at an index; and the
+unit-vector lemmas that the elementary-matrix case analysis consumes.
+
+Two named lemmas carry the T2 argument. \texttt{aux\_det\_id\_mat} states that
+the determinant of the identity matrix is 1, proved by induction on the
+dimension; without it the elementary-matrix obligation has no base case.
+\texttt{aux\_det\_head\_one\_cons} is the head-collapse lemma: if a row begins
+with 1 and all its remaining entries are 0, the determinant of the matrix headed
+by that row equals the determinant of the minor obtained by deleting the first
+column. This is the lemma that turns a Laplace expansion into an induction, and
+every case of the determinant argument runs through it.
+
+The open theorem in this file, \texttt{aux\_el\_det\_elementary\_i\_gt\_0}, is
+the general-$i$ form of the elementary row-addition determinant. Its statement
+is verified numerically over 166 instances; its proof is open for the reason
+given in Section~\ref{sec:case-study-nat}.

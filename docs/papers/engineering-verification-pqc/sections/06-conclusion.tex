@@ -1,0 +1,55 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Conclusion}
+\label{sec:conclusion}
+
+PQC migration is being managed as a schedule, and the artefacts that will decide
+whether it succeeds are evidentiary. A cryptographic inventory that cannot be
+audited and a formalization whose gaps are not stated are both forms of
+assertion wearing the clothes of evidence.
+
+This paper reported one project's attempt to produce evidence along two axes:
+a tiered Isabelle/HOL formalization of the VWZ construction, and a
+schema-validated CycloneDX 1.6 CBOM in CI. The formalization closes two tiers
+with no remaining \texttt{sorry} and leaves 19 open across the repository; the
+CBOM covers 9 components over 304 files and validates against the official
+schema on every push.
+
+The methodological finding is the part we would carry to the next project. Three
+artefacts passed every internal check and were wrong: a build that succeeds
+because the session permits it, a standard-format document that fails the
+standard, and a page that never rendered. Each was caught by a reference external
+to the project, and no internal check could have caught it, because each internal
+check shared the assumption that was wrong.
+
+The discipline that follows is not elaborate. Make one test fail on purpose, so
+that passing means something. Validate standard formats against the standard, not
+against your parser. Execute the code instead of reading it. State the open
+obligations by name and the reason each is open. Prefer a missing field to an
+invented one.
+
+None of this is novel as individual practice. What we think is worth reporting is
+that all three failures occurred in a project that was actively trying to be
+careful, and that each was invisible until the external reference was applied.
+The evidence a PQC migration needs is evidence someone else will check. Building
+the external reference into the development is not a final audit step; it is the
+difference between having evidence and having a claim.
+
+\subsection{Future work}
+
+\paragraph{Closing T2.} The remaining 8 linear-algebra obligations are
+index bookkeeping, not open mathematics. The \texttt{i > 0} determinant case
+requires splitting on $j = 0$ before the index shift, as recorded in the source;
+the same boundary discipline likely applies to the other seven.
+
+\paragraph{Defining T3.} The 8 security and probabilistic obligations cannot be
+proved until their subjects are defined. That is modelling work, and it is the
+largest remaining item.
+
+\paragraph{Key generation and the XOF.} Both are outside the current model.
+Bringing them in is a prerequisite for any security statement rather than a
+structural one.
+
+\paragraph{Generalising the negative control.} A session that must fail is cheap
+and catches the most dangerous class of error. It would be worth understanding
+what the equivalent is for a CBOM pipeline: an artefact that a correct validator
+must reject, run on every build.

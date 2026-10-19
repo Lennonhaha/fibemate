@@ -1,0 +1,84 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Limitations}
+\label{sec:limitations}
+
+This section is not a formality. The paper argues that unstated limitations are
+the characteristic failure of PQC evidence, so the limitations are stated here
+in the same detail as the results.
+
+\subsection{What is not modelled}
+
+\paragraph{Key generation.} The formalization does not model key generation. The
+determinant results constrain the linear-algebraic structure of the construction,
+not the distribution from which keys are drawn. A statement about the
+determinant of an elementary matrix is not a statement about the security of a
+key generation procedure.
+
+\paragraph{The XOF.} The extendable output function is not modelled. Where the
+construction uses XOF output, the formalization treats it as given. Any security
+argument that depends on the XOF's properties is therefore outside what has been
+checked.
+
+\paragraph{T3 in its entirety.} The security, probabilistic and parser
+obligations are all open, and they are open for a reason that is worth stating
+plainly: their subjects are marked \texttt{TODO(define)}. There is no
+formal statement to prove yet. This is not a proof debt that more tactic work
+would clear; it is a modelling debt.
+
+\subsection{What is proved, precisely}
+
+Two tiers are closed with no remaining \texttt{sorry}: T0 (17 lemmas, purely
+formal rewriting) and T1-A (16 lemmas, algebraic axioms). T1-D is nearly closed
+(5 lemmas, 2 open). T2 has 2 of 10 closed. T3 has none.
+
+The closed obligations are real results and they are machine-checked, but they
+are supporting infrastructure for the construction rather than security theorems
+about it. Reporting ``38 of 56 obligations closed'' without that qualification
+would be the kind of number this paper is arguing against.
+
+\subsection{The inventory is not a compliance claim}
+
+The CBOM records which cryptographic assets are present in the source tree. It
+does not establish that the inventory is complete with respect to any regulatory
+definition of ``cryptographic asset'', and it does not establish compliance with
+the BSI guidance or any other framework. Those are questions for a regulator and
+an auditor, and a JSON file does not answer them.
+
+The scan is source-level. A cryptographic asset introduced by a binary
+dependency, generated at runtime, or reached through a code path the scanner does
+not follow will not appear. The 9 components should be read as ``what a
+source-level scan found'', not as ``what is in the system''.
+
+\subsection{The formalization is of one construction}
+
+This is a case study of one implementation of one construction. The tiering
+methodology and the negative-control discipline are intended to generalise; the
+specific lemma counts are not evidence about any other development.
+
+\subsection{The negative control is not a completeness proof}
+
+A failing negative control shows that the checker rejects a false statement. It
+does not show that the checker rejects \emph{the} false statement that matters,
+and it does not show that the formal statements capture the intended mathematics.
+Both of those remain human judgements.
+
+\subsection{Reproducibility has an expiry date}
+
+The numbers in this paper were derived from the repositories at the snapshot
+recorded in Appendix~\ref{app:artefacts}: \texttt{95056b4} in the product
+repository and \texttt{1361dbb} in the formalization repository, with
+Isabelle2025-2. The scripts that derive them are shipped, so the numbers can be
+recomputed; but a reader who recomputes them later will get different answers if
+the development has moved. The counts are a snapshot, not a constant. This is a
+real limitation and not a formality: a paper whose central claim is
+``count what is actually proved'' must itself be pinned to a commit, or it
+becomes the thing it criticises.
+
+\subsection{Threats to the case-study findings}
+
+The three failures in Section~\ref{sec:case-study} were found by one team in one
+project. We have argued that they share a structural cause, and the argument is
+that in each case the passing check was internal and the catching check external.
+That is a claim about mechanism, not a statistical claim about frequency. We do
+not know how often this happens elsewhere; we suspect often, because the
+mechanism is not project-specific, but we have not measured it.
