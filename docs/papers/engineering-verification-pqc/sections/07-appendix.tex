@@ -25,11 +25,11 @@ product, and keeping them in a separate repository makes it impossible for the
 two to drift into each other by accident. It also means the proof corpus has its
 own remote, which it did not have for the first two days of its existence.
 
-The CBOM schema is vendored at \texttt{tools/schemas/} in three files, because
-\texttt{bom-1.6.schema.json} is not self-contained: it references
-\texttt{spdx.schema.json} and \texttt{jsf-0.82.schema.json}, and loading it alone
-makes the validator fail at schema-compile time rather than at validation time.
-The recorded hashes are:
+The CBOM schema is vendored in three files under \texttt{tools/schemas/},
+because the BOM schema alone is not self-contained: it references the SPDX
+licence-expression schema and the JSON Signature Format schema, and loading it
+alone makes the validator fail at schema-compile time rather than at validation
+time. The recorded hashes are:
 
 \begin{center}
 \begin{tabular}{@{}lrl@{}}
@@ -43,13 +43,13 @@ File & Bytes & SHA-256 (prefix) \\
 \end{tabular}
 \end{center}
 
-These are the full-file hashes truncated for display; the full values are in
-\texttt{tools/schemas/README.md}. One honest caveat about their provenance: they
-were cross-checked against the copies in a sibling tools repository and found
-identical, but a direct fetch from \texttt{cyclonedx.org} could not be completed
-from the build machine, so what is asserted is ``the vendored copy is identical
-to the tools-repository fixture'', not ``re-verified against upstream on the date
-of writing''.
+These are the full-file hashes truncated for display; the full values are in the
+schemas README. One honest caveat about their provenance: they were
+cross-checked against the copies in a sibling tools repository and found
+identical, but a direct fetch from the upstream site could not be completed from
+the build machine, so what is asserted is ``the vendored copy is identical to
+the tools-repository fixture'', not ``re-verified against upstream on the date of
+writing''.
 
 \subsection{Recomputing the numbers}
 
@@ -118,10 +118,10 @@ Total & 56 & 18 \\
 \end{tabular}
 \end{center}
 
-Repository totals: 169 lemmas, 2 theorems, 19 \texttt{sorry}, across 9 theory
-files totalling 98{,}528 bytes. The difference between 18 and 19 is the open
-auxiliary theorem \texttt{aux\_el\_det\_elementary\_i\_gt\_0}, which is outside
-the ledger and is named explicitly in the counter rather than tolerated.
+Repository totals: 185 lemmas, 1 theorem and 17 \texttt{sorry}, across 10 theory
+files totalling 125{,}165 bytes. The ledger accounts for every \texttt{sorry}
+in the repository; the counter reports zero outside it, so the agreement is
+enforced rather than merely observed.
 
 \subsection{CBOM summary}
 

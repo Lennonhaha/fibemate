@@ -20,21 +20,25 @@ argument that depends on the XOF's properties is therefore outside what has been
 checked.
 
 \paragraph{T3 in its entirety.} The security, probabilistic and parser
-obligations are all open, and they are open for a reason that is worth stating
-plainly: their subjects are marked \texttt{TODO(define)}. There is no
-formal statement to prove yet. This is not a proof debt that more tactic work
-would clear; it is a modelling debt.
+obligations are all open. Seven of the eight quantify over subjects marked
+\texttt{TODO(define)}, so there is no formal statement about a defined object to
+prove yet; that is modelling debt, not proof debt. The exception is
+\texttt{T3\_E2}, whose predicate is defined and which is waiting only on a proof.
 
 \subsection{What is proved, precisely}
 
 Two tiers are closed with no remaining \texttt{sorry}: T0 (17 lemmas, purely
 formal rewriting) and T1-A (16 lemmas, algebraic axioms). T1-D is nearly closed
-(5 lemmas, 2 open). T2 has 2 of 10 closed. T3 has none.
+(5 lemmas, 2 open). T2 has 3 of 10 closed. T3 has none.
 
 The closed obligations are real results and they are machine-checked, but they
 are supporting infrastructure for the construction rather than security theorems
-about it. Reporting ``38 of 56 obligations closed'' without that qualification
-would be the kind of number this paper is arguing against.
+about it. Reporting ``39 of 56 obligations closed'' without that qualification
+would be the kind of number this paper is arguing against. The qualification is
+sharper than it first appears: of the fifteen open obligations in T2 and T3,
+fourteen quantify over subjects that are still uninterpreted constants. The
+closed count measures how much of the construction is \emph{defined}, and only
+secondarily how much is proved about it.
 
 \subsection{The inventory is not a compliance claim}
 

@@ -23,6 +23,13 @@
 \usepackage{listings}
 \usepackage{enumitem}
 \usepackage{microtype}
+\usepackage{array}
+
+% Long monospaced identifiers (aux\_t2\_minor0\_jpos, bom-1.6.schema.json) cannot
+% be hyphenated, so a paragraph containing one can overflow the measure. Allow
+% the interword spacing to absorb it instead. Without this the draft had ten
+% overfull boxes, the worst 42.6pt into the margin.
+\setlength{\emergencystretch}{3em}
 
 \hypersetup{
   colorlinks=true,

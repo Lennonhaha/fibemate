@@ -35,9 +35,10 @@ transform), and a protocol construction (Double Ratchet). None of these is a
 cryptographic asset in the sense the schema means, and emitting them as
 components would inflate the inventory with things no one can migrate.
 
-They are not silently dropped. They are recorded as root properties under
-\texttt{fibemate:excludedAsset:*}, with the reason for exclusion attached, so
-that the decision is auditable and a reader can disagree with it.
+They are not silently dropped. They are recorded as root properties in the
+\texttt{fibemate:} namespace with the prefix \texttt{excludedAsset}, each with
+the reason for exclusion attached, so that the decision is auditable and a
+reader can disagree with it.
 
 The result is 9 components:
 
