@@ -247,12 +247,13 @@ evidence and assertion.
 \subsection{The \texttt{nat} subtraction obstruction}
 \label{sec:case-study-nat}
 
-One open obligation deserves separate treatment, because it is a case where the
-verification tool was right and the mathematics was right, and the proof was
-blocked by something neither.
+One obligation deserves separate treatment, because it is a case where the
+verification tool was right, the mathematics was right, and the proof was
+blocked by something neither. It was open when this paper was first drafted and
+has since been closed; both halves are instructive.
 
 The obligation (Section~\ref{sec:formalization}) is
-$\det(\texttt{row\_add\_matrix}\ m\ i\ j\ f) = 1$ for $i > 0$. The proof
+$\det(\texttt{row\_add\_matrix}\ m\ i\ j\ f) = 1$ for $i \neq j$. The proof
 strategy is to expand along the first row and induct on $m$, which requires
 shifting the indices down by one. The needed shift lemma is:
 
@@ -272,10 +273,7 @@ uniformly over $j$ cannot be sound, and any attempt to force it would produce
 either a failed proof or, worse, a proof of a weakened statement that no longer
 implies the goal.
 
-The fix is to split on $j = 0$ \emph{before} the shift, and to prove the two
-minor shapes separately.
-
-\subsubsection{Why we report an open obligation instead of closing it}
+\subsubsection{How the obstruction was found}
 
 Before attempting the proof we verified the statement numerically, by evaluating
 the determinant exactly as defined --- Laplace along the first row,
@@ -284,10 +282,30 @@ $i \neq j$ for $m \in \{1,2,3,4,5\}$ and several values of $f$, 166 cases in
 total, all giving $\det = 1$. A control sweep with $i = j$ gives $\det = f$,
 which is what it must be, and which shows the sweep is not passing vacuously.
 
-So the mathematics is not in doubt and the proof is what is missing. The
-obligation carries an explicit \texttt{sorry} and a \texttt{TODO(prove)} note
-recording the dead end, because the note is the useful part: the next attempt
-should not rediscover that the uniform shift lemma is false.
+So the mathematics was never in doubt and the missing piece was the proof. The
+obligation was recorded with an explicit \texttt{sorry} and a \texttt{TODO(prove)}
+note naming the false shift lemma, because the note is the useful part: the next
+attempt should not rediscover the dead end.
+
+\subsubsection{How it was closed}
+
+The diagnosis was that the proof must split on $j = 0$ \emph{before} the shift.
+That is what closed it. The final proof inducts on $m$ and splits four ways:
+indices beyond the matrix in either coordinate, where the row operation does not
+fire and the matrix is the identity (\texttt{aux\_t2\_nofire\_i},
+\texttt{aux\_t2\_nofire\_j}); the case $i = 0$, discharged separately as the
+theorem \texttt{aux\_el\_det\_elementary\_i0}; and the case $0 < i$, where the
+determinant is reduced to the head-deleted minor by
+\texttt{aux\_t2\_head\_reduce} and then split on $j = 0$. The $j = 0$ branch
+collapses to an identity minor (\texttt{aux\_t2\_minor0\_j0}); the $j > 0$ branch
+is the only place the shift is applied, and there it is valid
+(\texttt{aux\_t2\_minor0\_jpos}), reducing the goal to the induction hypothesis
+at $(i-1, j-1)$.
+
+The obligation now carries no \texttt{sorry}. We report the before and the after
+rather than only the after, because the value of the episode is the diagnosis:
+the boundary split that the failed attempt predicted turned out to be the whole
+proof.
 
 \subsubsection{The general rule}
 
