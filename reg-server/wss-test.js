@@ -2,7 +2,7 @@
 const ws = require('ws');
 const w = new ws('wss://fibemate.net/reg/ws', { rejectUnauthorized: false });
 w.on('open', () => {
-  w.send(JSON.stringify({ type: 'register', username: 'e2ewss', identityKey: 'testkey1111111111111111111111111111111111111111111111111111111111111111' }));
+  w.send(JSON.stringify({ type: 'register', username: 'e2ewss', identityKey: '04' + '0'.repeat(128) }));
 });
 w.on('message', (d) => {
   console.log(JSON.stringify(JSON.parse(d.toString())));

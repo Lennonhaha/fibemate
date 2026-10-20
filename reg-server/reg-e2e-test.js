@@ -117,11 +117,11 @@ async function runTest(port) {
     const aliceUser = 'alice_' + uid();
     const bobUser = 'bob_' + uid();
 
-    alice.send({ type: 'register', username: aliceUser, identityKey: 'pk_alice' });
+    alice.send({ type: 'register', username: aliceUser, identityKey: '04' + 'a'.repeat(128) });
     const aliceReg = await alice.waitOk('Alice reg');
     check('Alice 注册', !!aliceReg.userId);
 
-    bob.send({ type: 'register', username: bobUser, identityKey: 'pk_bob' });
+    bob.send({ type: 'register', username: bobUser, identityKey: '04' + 'b'.repeat(128) });
     const bobReg = await bob.waitOk('Bob reg');
     check('Bob 注册', !!bobReg.userId);
 
