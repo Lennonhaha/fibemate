@@ -12,7 +12,7 @@ The snapshot described in this paper is:
 Artefact & Location & Commit \\
 \midrule
 Implementation + CBOM & \texttt{github.com/Lennonhaha/fibemate} & \texttt{95056b4} \\
-Formalization corpus & \texttt{github.com/Lennonhaha/fibemate-vwz} & \texttt{1361dbb} \\
+Formalization corpus & \texttt{github.com/Lennonhaha/vwz-formalization} & \texttt{3e04515} \\
 Isabelle version & Isabelle2025-2 & --- \\
 CBOM schema & CycloneDX 1.6, vendored & see below \\
 \bottomrule
@@ -61,7 +61,7 @@ None is maintained by hand.
 \toprule
 Figure & Command \\
 \midrule
-Lemma / theorem / \texttt{sorry} counts & \texttt{node tools/count-obligations.cjs} \\
+Lemma / theorem / \texttt{sorry} counts & \texttt{node tools/count-obligations.cjs} (formalization repository) \\
 CBOM regeneration & \texttt{node scripts/build-cbom.js} \\
 CBOM staleness check & \texttt{node scripts/build-cbom.js --check} \\
 CBOM schema validation & \texttt{node scripts/validate-cbom.cjs} \\
@@ -110,18 +110,19 @@ Tier & Lemmas & \texttt{sorry} \\
 T0 --- purely formal rewriting & 17 & 0 \\
 T1-A --- algebraic axioms & 16 & 0 \\
 T1-D --- definition-dependent & 5 & 2 \\
-T2 --- linear algebra & 10 & 8 \\
+T2 --- linear algebra & 10 & 7 \\
 T3 --- security, probabilistic, parser & 8 & 8 \\
 \midrule
-Total & 56 & 18 \\
+Total & 56 & 17 \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Repository totals: 169 lemmas, 2 theorems, 19 \texttt{sorry}, across 9 theory
-files totalling 98{,}528 bytes. The difference between 18 and 19 is the open
-auxiliary theorem \texttt{aux\_el\_det\_elementary\_i\_gt\_0}, which is outside
-the ledger and is named explicitly in the counter rather than tolerated.
+Repository totals: 185 lemmas, 1 theorem and 17 \texttt{sorry}, across 10 theory
+files totalling 125{,}165 bytes. The ledger count and the repository count agree:
+every open goal is an obligation, and there is no tolerated \texttt{sorry}
+outside the ledger. The counter still fails the build if one appears, so the
+agreement is enforced rather than merely observed.
 
 \subsection{CBOM summary}
 
