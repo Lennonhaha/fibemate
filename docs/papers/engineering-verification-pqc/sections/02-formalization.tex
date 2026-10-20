@@ -147,55 +147,70 @@ false at a boundary.
 
 \subsection{Open obligations in T2 and T3}
 
-The eight open T2 lemmas and the eight open T3 lemmas are listed below with
-their statements. The T2 gaps are proof debt: the subjects are defined and the
-statements are meaningful. The T3 gaps are mostly modelling debt: their subjects
-are introduced as uninterpreted constants tagged \texttt{TODO(define)} with a
-specification section reference, so there is not yet a formal statement about a
-defined object to prove. Reporting both as ``8 open'' without that distinction
-would overstate the T3 work remaining.
+The seven open T2 lemmas and the eight open T3 lemmas are listed below, with
+the undefined subjects each statement quantifies over. We do not describe the two
+tiers as two different kinds of gap, because the data does not support that
+reading: of these fifteen obligations, fourteen quantify over at least one subject
+that is still an uninterpreted constant tagged \texttt{TODO(define)}. The tier
+label records where in the development an obligation sits, not whether its
+subject exists yet.
+
+That matters for the headline count. An obligation whose subject is undefined
+cannot be proved in any meaningful sense, because there is nothing to reason
+about. So \emph{closed} in this paper means ``follows from the types and
+definitions alone, whatever the uninterpreted subjects turn out to be''. T0
+closes because its goals are reflexive or length facts; T1-A closes because
+$\mathbb{F}_{3329}$ is defined; \texttt{T2\_B2} closed because the determinant is
+defined and the statement is pure linear algebra. The count therefore measures
+how much of the construction is defined, and only secondarily how much is proved
+about it.
 
 \begin{center}
-\begin{tabular}{@{}p{3.4cm}p{9.4cm}@{}}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{@{}>{\raggedright\arraybackslash}p{4.05cm}>{\raggedright\arraybackslash}p{6.5cm}>{\raggedright\arraybackslash}p{4.3cm}@{}}
 \toprule
-Lemma & Statement \\
+Lemma & Statement & Undefined subjects \\
 \midrule
-\multicolumn{2}{@{}l}{\textit{T2 --- proof debt}} \\
-\texttt{T2\_B2} & $i \neq j \Rightarrow \det(\texttt{row\_add\_matrix}\ m\ i\ j\ f) = 1$ \\
-\texttt{T2\_B3} & $X_{2a}, X_{2b}, X_{3a}, X_{3b}$ are all invertible \\
-\texttt{T2\_B5} & invertibility of $X_{2a}, X_{3a}$ gives $X_{2b}X_{2a}^{-1} = M_2$ and $X_{3b}X_{3a}^{-1} = M_3$ \\
-\texttt{T2\_B7} & $\mathrm{rank}(\psi\text{-slice}) = 2$ \\
-\texttt{T2\_D4} & $2 \le k \Rightarrow k - 1 \le \dim(\text{nullspace of } \texttt{rows3\_of}\ k)$ \\
-\texttt{T2\_D5} & $i \in S_{\mathrm{set}} \Rightarrow \texttt{Eval}\ pk\ w_2\ w_3\, !\, i = \texttt{hash\_target}\ k\ msg\, !\, i$ \\
-\texttt{T2\_D6} & $i \in Z_{\mathrm{set}} \Rightarrow P_{2a}(i) = 0 \lor P_{2b}(i) = 0$ \\
-\texttt{T2\_D1\_correctness} & $\exists w_2 w_3.\ \texttt{Sign}\ sk\ msg = (w_2, w_3) \land \texttt{Eval}\ pk\ w_2\ w_3 = \texttt{hash\_target}\ k\ msg$ \\
+\multicolumn{3}{@{}l}{\textit{T2}} \\
+\texttt{T2\_B3} & $X_{2a}, X_{2b}, X_{3a}, X_{3b}$ are all invertible & $X_{2a}$, $X_{2b}$, $X_{3a}$, $X_{3b}$ \\
+\texttt{T2\_B5} & invertibility of $X_{2a}, X_{3a}$ gives $X_{2b}X_{2a}^{-1} = M_2$ and $X_{3b}X_{3a}^{-1} = M_3$ & $X_{2a}$, $X_{3a}$, $M_2$, $M_3$ \\
+\texttt{T2\_B7} & $\mathrm{rank}(\psi\text{-slice}) = 2$ & \texttt{mat\_rank}, \texttt{psi\_slice} \\
+\texttt{T2\_D4} & $2 \le k \Rightarrow k - 1 \le \dim(\text{nullspace of } \texttt{rows3\_of}\ k)$ & \texttt{dim\_nullspace}, \texttt{rows3\_of} \\
+\texttt{T2\_D5} & $i \in S_{\mathrm{set}} \Rightarrow \texttt{Eval}\ pk\ w_2\ w_3\, !\, i = \texttt{hash\_target}\ k\ msg\, !\, i$ & \texttt{hash\_target}, \texttt{Eval}, $S_{\mathrm{set}}$ \\
+\texttt{T2\_D6} & $i \in Z_{\mathrm{set}} \Rightarrow P_{2a}(i) = 0 \lor P_{2b}(i) = 0$ & $Z_{\mathrm{set}}$, $P_{2a}$, $P_{2b}$ \\
+\texttt{T2\_D1\_correctness} & $\exists w_2 w_3.\ \texttt{Sign}\ sk\ msg = (w_2, w_3) \land \texttt{Eval}\ pk\ w_2\ w_3 = \texttt{hash\_target}\ k\ msg$ & \texttt{hash\_target}, \texttt{Eval}, \texttt{Sign} \\
 \midrule
-\multicolumn{2}{@{}l}{\textit{T3 --- modelling debt}} \\
-\texttt{T3\_B1} & \texttt{distinct\_lam} returns $n$ distinct values in $\{1 \ldots 3328\}$ \\
-\texttt{T3\_C1} & the Hamming weight of the target is $k + 1$ \\
-\texttt{T3\_C3} & the sampler is unbiased \\
-\texttt{T3\_D8\_empirical} & every message admits some signing pair \\
-\texttt{T3\_E1\_parse\_pk\_total} & \texttt{parse\_pk} is total: it never diverges \\
-\texttt{T3\_E2} & a signature of the wrong length is rejected \\
-\texttt{T3\_E3b\_conjectural} & verification implies existence of a witness pair \\
-\texttt{T3\_E4\_parse\_sig\_total} & \texttt{parse\_sig} is total \\
+\multicolumn{3}{@{}l}{\textit{T3}} \\
+\texttt{T3\_B1} & \texttt{distinct\_lam} returns $n$ distinct values in $\{1 \ldots 3328\}$ & \texttt{distinct\_lam} \\
+\texttt{T3\_C1} & the Hamming weight of the target is $k + 1$ & \texttt{hash\_target}, \texttt{weight} \\
+\texttt{T3\_C3} & the sampler is unbiased & \texttt{unbiased} \\
+\texttt{T3\_D8\_empirical} & every message admits some signing pair & \texttt{Sign} \\
+\texttt{T3\_E1\_parse\_pk\_total} & \texttt{parse\_pk} is total: it never diverges & \texttt{parse\_pk} \\
+\texttt{T3\_E2} & a signature of the wrong length is rejected & none \\
+\texttt{T3\_E3b\_conjectural} & verification implies existence of a witness pair & \texttt{Verify} \\
+\texttt{T3\_E4\_parse\_sig\_total} & \texttt{parse\_sig} is total & \texttt{parse\_sig} \\
 \bottomrule
 \end{tabular}
 \end{center}
 
-Two of these deserve a note. \texttt{T2\_B2} is the only open T2 lemma whose
-mathematics we have checked exhaustively and whose proof still resists; it is
-discussed in Section~\ref{sec:case-study-nat}. \texttt{T3\_E3b\_conjectural}
+\texttt{T3\_E2} is the exception: its predicate is defined, so it is the one open
+obligation in the table waiting only on a proof. One of the fifteen also deserves
+a note for a different reason.
+\texttt{T3\_E3b\_conjectural}
 carries the word \emph{conjectural} in its name because it may not be true as
 stated: it asserts that any accepted signature admits a witness pair, which is a
 soundness-shaped claim about an uninterpreted \texttt{Verify}. We have kept it in
 the ledger as a named conjecture rather than quietly weakening it, so that a
-reader can see it is open for a stronger reason than a missing tactic.
+reader can see it is open for a stronger reason than a missing tactic. The T2
+obligation that was open when this paper was first drafted, \texttt{T2\_B2}, has
+since been closed; the obstruction it exposed and the way it was resolved are
+Case~3 in Section~\ref{sec:case-study-nat}.
 
 \subsection{The supporting library}
 
-\texttt{VWZ\_Aux} contributes 43 lemmas and 2 theorems, of which 1 theorem is
-open. It is the largest single file in the development and contains the
+\texttt{VWZ\_Aux} contributes 49 lemmas and 1 theorem, none of which is open. It
+is the largest single file in the development and contains the
 index-arithmetic infrastructure that the determinant arguments need: head and
 tail decomposition of sums, deletion of a column from a row, and the behaviour
 of the determinant on rows with a single non-zero entry. It is described by
@@ -215,9 +230,16 @@ dimension; without it the elementary-matrix obligation has no base case.
 with 1 and all its remaining entries are 0, the determinant of the matrix headed
 by that row equals the determinant of the minor obtained by deleting the first
 column. This is the lemma that turns a Laplace expansion into an induction, and
-every case of the determinant argument runs through it.
+Every case of the determinant argument runs through it. The theorem in this
+file, \texttt{aux\_el\_det\_elementary\_i0}, handles the boundary case $i = 0$
+that the induction cannot reach; it is a theorem rather than a lemma because the
+ledger treats it as a top-level result for that case.
 
-The open theorem in this file, \texttt{aux\_el\_det\_elementary\_i\_gt\_0}, is
-the general-$i$ form of the elementary row-addition determinant. Its statement
-is verified numerically over 166 instances; its proof is open for the reason
-given in Section~\ref{sec:case-study-nat}.
+The remaining five lemmas exist because the $i > 0$ case needed them:
+\texttt{aux\_t2\_nofire\_i} and \texttt{aux\_t2\_nofire\_j} cover the indices
+at which the row operation does not fire at all, \texttt{aux\_t2\_head\_reduce}
+expresses the determinant as the determinant of the head-deleted minor,
+\texttt{aux\_t2\_row\_shift} is the shift lemma that is valid once $j = 0$ has
+been excluded, and \texttt{aux\_t2\_minor0\_j0} / \texttt{aux\_t2\_minor0\_jpos}
+give the two minor shapes separately. That split is the resolution described in
+Section~\ref{sec:case-study-nat}.

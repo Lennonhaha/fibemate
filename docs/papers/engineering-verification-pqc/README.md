@@ -30,7 +30,7 @@ finished. Fixed by switching to `\newif\ifdraftnotes`.
 |---|---|
 | Abstract | numbers verified, prose drafted |
 | 1 Introduction | drafted; BSI citation verified against the primary PDF |
-| 2 Formalization | tier tables verified; T0/T1-A and all 16 open lemmas enumerated from source |
+| 2 Formalization | tier tables verified; T0/T1-A and all 15 open lemmas enumerated from source |
 | 3 CBOM | drafted; component table verified against the artefact |
 | 4 Case Study | drafted in full — this is the paper's contribution |
 | 5 Limitations | drafted in full; snapshot commit pinned |
@@ -51,11 +51,12 @@ Counts that appear in the paper and their sources:
 
 | Figure | Value | Source |
 |---|---|---|
-| Lemmas (whole corpus) | 169 | `count-obligations.cjs` |
+| Lemmas (whole corpus) | 185 | `count-obligations.cjs` |
 | Theorems | 2 | same |
-| `sorry` (whole corpus) | 19 | same |
-| Ledger lemmas / `sorry` | 56 / 18 | same |
-| Theory files / bytes | 9 / 98,528 | `git ls-files`, `stat` |
+| `sorry` (whole corpus) | 17 | same |
+| Ledger lemmas / `sorry` | 56 / 17 | same |
+| Theorems | 1 | same |
+| Theory files / bytes | 10 / 125,165 | `git ls-files`, `stat` |
 | CBOM components | 9 | `tools/cbom-cyclonedx.json` |
 | Distinct files | 304 | derived from `evidence.occurrences` |
 | Occurrences | 647 | same |
