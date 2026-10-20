@@ -161,6 +161,11 @@ node reg-server/server.js [port]   # 默认 ws://0.0.0.0:3080
 | whoami | C→S | userId | { ok, userId, username } |
 | lookup | C→S | username | { ok, userId, username, identityKey } |
 
+`identityKey` carries the SM2 **public** key only: an uncompressed point in hex,
+`04 || X(32) || Y(32)`, i.e. 130 characters. The server validates this shape on
+`register` and rejects anything else, including a bare 64-hex private scalar;
+`lookup` never returns a value that fails the same check.
+
 ### 4.2 IANA #4590 E2E 扩展
 
 | 类型 | 方向 | 说明 |

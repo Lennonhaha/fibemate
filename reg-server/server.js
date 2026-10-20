@@ -27,6 +27,16 @@ const e2ePendingResps = new Map();   // targetUserId => [{ responderId, keyShare
 const e2eMsgQueues = new Map();      // targetUserId => [{ from, payload, timestamp }]
 
 function uid() { return crypto.randomBytes(8).toString('hex'); }
+
+// `identityKey` carries an SM2 *public* key only: an uncompressed point, 04 || X || Y
+// in hex (130 chars).  A private scalar is 64 hex chars, so the two shapes cannot be
+// confused; rejecting everything else stops a client from making the server store and
+// then redistribute a private key (issue #263).
+const SM2_PUBLIC_KEY_HEX = /^04[0-9a-fA-F]{128}$/;
+const SM2_PRIVATE_KEY_HEX = /^[0-9a-fA-F]{64}$/;
+function isSm2PublicKeyHex(value) {
+  return typeof value === 'string' && SM2_PUBLIC_KEY_HEX.test(value);
+}
 function send(ws, data) { ws.send(JSON.stringify(data)); }
 function error(ws, text) { send(ws, { ok: false, error: text }); }
 
@@ -40,6 +50,11 @@ function handle(ws, msg) {
       case 'register': {
         const { username, identityKey } = rest;
         if (!username || !identityKey) return error(ws, 'username and identityKey required');
+        if (!isSm2PublicKeyHex(identityKey)) {
+          return error(ws, SM2_PRIVATE_KEY_HEX.test(String(identityKey))
+            ? 'identityKey must be the SM2 public key; a private key was supplied'
+            : 'identityKey must be an SM2 public key (04 followed by 128 hex digits)');
+        }
         if (usernameMap.has(username)) return error(ws, 'username taken');
         const id = uid();
         users.set(id, { username, identityKey });
@@ -212,6 +227,11 @@ function handle(ws, msg) {
         const id = usernameMap.get(username);
         if (!id) return error(ws, 'user not found');
         const u = users.get(id);
+        // Rows created before the shape check existed could hold anything; do not
+        // hand them out.  The store is in-memory, so the next restart clears them.
+        if (!isSm2PublicKeyHex(u.identityKey)) {
+          return error(ws, 'stored identityKey is not a public key; re-register');
+        }
         return send(ws, { ok: true, userId: id, username: u.username, identityKey: u.identityKey });
       }
 

@@ -38,22 +38,32 @@ async function runTests() {
 
   // 3. Register Alice
   test('Register Alice');
-  const aliceKey = crypto.randomBytes(32).toString('hex');
+  const aliceKey = '04' + crypto.randomBytes(64).toString('hex');
   const r1 = await wsSend(ws, { type: "register", username: 'alice', identityKey: aliceKey });
   if (r1.ok) { pass(`userId=${r1.userId}`); } else { fail('register', r1.error); }
   const aliceId = r1.userId;
 
   // 4. Register Bob
   test('Register Bob');
-  const bobKey = crypto.randomBytes(32).toString('hex');
+  const bobKey = '04' + crypto.randomBytes(64).toString('hex');
   const r2 = await wsSend(ws, { type: "register", username: 'bob', identityKey: bobKey });
   if (r2.ok) { pass(`userId=${r2.userId}`); } else { fail('register', r2.error); }
   const bobId = r2.userId;
 
   // 5. Duplicate username reject
   test('Duplicate Username Reject');
-  const r3 = await wsSend(ws, { type: "register", username: 'alice', identityKey: 'fake' });
+  const r3 = await wsSend(ws, { type: "register", username: 'alice', identityKey: '04' + crypto.randomBytes(64).toString('hex') });
   if (!r3.ok && r3.error === 'username taken') { pass('rejected correctly'); } else { fail('duplicate', JSON.stringify(r3)); }
+
+  // 5b. identityKey must be a public key, never a private scalar (issue #263)
+  test('Reject private-shaped identityKey');
+  const rPriv = await wsSend(ws, { type: "register", username: 'carol', identityKey: crypto.randomBytes(32).toString('hex') });
+  if (!rPriv.ok && /private key/.test(rPriv.error)) { pass('private key rejected'); } else { fail('private identityKey', JSON.stringify(rPriv)); }
+
+  // 5c. Anything that is not an SM2 public point is rejected too
+  test('Reject malformed identityKey');
+  const rBad = await wsSend(ws, { type: "register", username: 'dave', identityKey: 'deadbeef' });
+  if (!rBad.ok) { pass('malformed rejected'); } else { fail('malformed identityKey', JSON.stringify(rBad)); }
 
   // 6. Alice uploads OPKs
   test('Upload OPKs');

@@ -286,7 +286,13 @@ paths:
                   userId: { type: string }
                   username: { type: string }
                   displayName: { type: string }
-                  identityKey: { type: string }
+                  identityKey:
+                    type: string
+                    description: >-
+                      SM2 public key only, as an uncompressed point in hex
+                      (04 || X || Y, 130 characters). Private scalars are rejected
+                      on register and never returned by lookup.
+                    pattern: '^04[0-9a-fA-F]{128}$'
                   signedPrekey: { type: string }
                   signedPrekeySignature: { type: string }
                   oneTimePreKey:
