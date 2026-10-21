@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>当前状态：已验证的数字，与没做完的部分 - FIBEMATE</title>
+<style>
+:root {
+  --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9;
+  --muted:#8b949e; --accent:#00E5C3; --green:#22c55e; --amber:#f59e0b;
+  --red:#f87171; --blue:#58a6ff; --purple:#bc8cff;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.75; padding:0 1rem 4rem; }
+.container { max-width:960px; margin:0 auto; }
+header { padding:3rem 0 2rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+header h1 { font-size:2rem; color:#f0f6fc; }
+header h1 .gradient { background:linear-gradient(135deg,var(--accent),var(--blue)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+header .meta { color:var(--muted); font-size:0.9rem; margin-top:0.5rem; }
+h2 { font-size:1.3rem; color:#f0f6fc; margin:2.5rem 0 1rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border); }
+h3 { font-size:1.08rem; color:#e6edf3; margin:1.8rem 0 0.8rem; }
+p { margin:0.8rem 0; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.2rem 1.5rem; margin:1rem 0; }
+.card h3 { margin-top:0; }
+.green { color:var(--green); }
+.amber { color:var(--amber); }
+.red { color:var(--red); }
+.blue { color:var(--blue); }
+.accent { color:var(--accent); }
+.muted { color:var(--muted); }
+code { background:rgba(110,118,129,0.2); padding:0.15em 0.4em; border-radius:4px; font-size:0.9em; font-family:"SF Mono",Consolas,monospace; }
+pre { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:1rem 1.2rem; overflow-x:auto; margin:1rem 0; font-size:0.85rem; line-height:1.6; }
+pre code { background:none; padding:0; }
+table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.9rem; }
+th, td { padding:0.55rem 0.8rem; text-align:left; border:1px solid var(--border); }
+th { background:rgba(0,229,195,0.08); color:#f0f6fc; font-weight:600; }
+tr:nth-child(even) td { background:rgba(255,255,255,0.02); }
+.tag { display:inline-block; padding:0.1em 0.5em; border-radius:4px; font-size:0.8rem; font-weight:600; }
+.tag-green { background:rgba(34,197,94,0.15); color:var(--green); }
+.tag-amber { background:rgba(245,158,11,0.15); color:var(--amber); }
+.tag-blue { background:rgba(88,166,255,0.15); color:var(--blue); }
+.tag-purple { background:rgba(188,140,255,0.15); color:var(--purple); }
+.arch-box { font-family:"SF Mono",Consolas,monospace; font-size:0.82rem; line-height:1.4; color:var(--accent); white-space:pre; }
+.arch-box .dim { color:var(--muted); }
+.arch-box .hl { color:var(--blue); }
+.pipeline { display:flex; flex-wrap:wrap; gap:0.5rem; margin:1rem 0; align-items:center; }
+.pipeline .step { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:0.6rem 1rem; text-align:center; min-width:100px; }
+.pipeline .step .label { font-size:0.75rem; color:var(--muted); }
+.pipeline .step .value { font-size:1rem; color:#f0f6fc; font-weight:600; }
+.pipeline .arrow { color:var(--accent); font-size:1.2rem; }
+footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
+a { color:var(--accent); text-decoration:none; }
+a:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <h1>当前<span class="gradient">状态</span></h1>
+  <div class="meta">2026-10-21 · 工程状态说明 · 已验证的数字与明确未完成项</div>
+</header>
+<h2>一、工程基建：哪些是真的，哪些还不是</h2>
+<h3>合并门禁（main 分支，ruleset 强制）</h3>
+<ul>
+<li>7 项必需检查：<code>lint</code>、<code>bom-check</code>、<code>bench</code>、<code>sbom</code>、<code>docs-check</code>、<code>dco</code>、<code>interop</code>。</li>
+<li>分支必须与 base 同步；禁止强推、禁止删分支；所有变更走 PR。</li>
+<li>每个提交必须带 DCO <code>Signed-off-by</code>。这一条拦下过真实的违规：GitHub 网页端 "Update branch" 生成的 merge commit 不带 signoff，会被门禁拒绝——所以流程要求本地 rebase + <code>--force-with-lease</code>。</li>
+</ul>
+<h3>供应链</h3>
+<ul>
+<li><code>fibemate</code> 仓的 GitHub Actions 引用：<b>91 处全部固定到 40 位 commit SHA，浮动 tag 为 0</b>（按 <code>.github/workflows/*.yml</code> 逐文件扫描）。</li>
+<li>但"全部依赖已按 hash 固定"不成立：npm / pip / 容器镜像层仍有未按 hash 固定的项，Scorecard 的 Pinned-Dependencies 因此是 <b>8/10</b>。这是开放缺口，不是已完成项。</li>
+</ul>
+<h3>外部评分（照抄，不解释）</h3>
+<ul>
+<li>主仓 OpenSSF Scorecard <b>8.1 / 10</b>（2026-10-20T10:37:11Z，commit <code>7a29301</code>，scorecard v5.6.0）。</li>
+<li>桌面端（<code>fibemate-tauri</code>）<b>7.6 / 10</b>（2026-10-19T03:34:38Z，commit <code>64f8980</code>）。</li>
+</ul>
+<p>主仓失分项（同一份报告）：</p>
+<table>
+  <thead><tr><th>检查项</th><th>得分</th><th>说明</th></tr></thead>
+  <tbody>
+    <tr><td>Code-Review</td><td>0</td><td>0/28 个有审批的变更集</td></tr>
+    <tr><td>Branch-Protection</td><td>4</td><td>开发与所有发布分支未达最严配置</td></tr>
+    <tr><td>Contributors</td><td>3</td><td>仅 1 个贡献组织</td></tr>
+    <tr><td>Packaging</td><td>−1</td><td>未检测到打包工作流</td></tr>
+    <tr><td>Binary-Artifacts</td><td>8</td><td>源码树中存在二进制文件</td></tr>
+    <tr><td>Pinned-Dependencies</td><td>8</td><td>存在未按 hash 固定的依赖</td></tr>
+    <tr><td>Signed-Releases</td><td>8</td><td>3 个发布各有签名产物，缺 provenance</td></tr>
+    <tr><td>CII-Best-Practices</td><td>5</td><td>已获 Passing 徽章</td></tr>
+  </tbody>
+</table>
+<p>桌面端的 2 条 RUSTSEC 告警（<code>proc-macro-error</code>、<code>glib</code>）来自固定的 GTK 0.18 传递依赖，上游没有已发布补丁；<code>deny.toml</code> 没有 ignore 列表，靠作用域限定，缺口在仓内备案。</p>
+<h3>静态分析</h3>
+<ul>
+<li>CodeQL 开放告警：<code>fibemate</code>、<code>fibemate-mobile</code>、<code>fibemate-tools</code>、<code>fibemate-tauri</code> 均为 <b>0</b>。</li>
+<li><code>fibemate-react-native</code> 尚未启用 CodeQL（API 返回 <code>no analysis found</code>）。这是"没有分析"，不等于"没有告警"，所以不并入上面的 0。</li>
+</ul>
+<h3>CBOM</h3>
+<ul>
+<li>按 CycloneDX <b>1.6</b> 生成，当前 <b>9 个原语组件</b>（AES、ML-DSA、ML-KEM、P-256/ECDH、SHA-256、SLH-DSA、SM2、SM3、SM4）；自造信息统一放 <code>fibemate:</code> 命名空间，不冒充标准字段。</li>
+<li>生成器是确定性的（<code>SOURCE_DATE_EPOCH</code>、固定 <code>serialNumber</code>），发布流水线做两件事：drift 校验（<code>node scripts/build-cbom.js --check</code>）与官方 schema 校验（<code>tools/validate-cbom.cjs</code>；bom-1.6 / spdx / jsf 三份 schema 随仓 vendored）。</li>
+<li>PR 门禁里的 <code>bom-check</code> 目前覆盖 BOM、编码损坏扫描与实验代码隔离，CBOM 的 schema 校验还没进 PR 门禁——这也是缺口。</li>
+</ul>
+<h3>测试</h3>
+<ul>
+<li><code>fibemate-mobile</code> 有 <b>87 条 <code>node:test</code> 用例</b>（5 个文件，源码静态计数 16 / 10 / 15 / 37 / 9），含源码级静态守卫：某个修复被后续改动悄悄回退时，测试会红。</li>
+<li>这里要说明口径：87 是源码静态计数，不是 CI 实跑日志的取证结果；把它写成"CI 真实执行 87 条"是不准确的，所以不这么写。</li>
+</ul>
+<h2>二、形式化线：7 条 sorry，四处被机器判定的陈述</h2>
+<p>形式化在独立仓 <code>vwz-formalization</code>（公开，GPL-3.0），Isabelle/HOL，session <code>VWZ_A3_Aligned</code>。与业务仓分开是因为工具链、发布节奏和体积都不同。</p>
+<p>账本（由工具生成，不手填）：</p>
+<table>
+  <thead><tr><th>层级</th><th>内容</th><th>引理</th><th>sorry</th></tr></thead>
+  <tbody>
+    <tr><td>T0</td><td>纯形式改写</td><td>17</td><td>0</td></tr>
+    <tr><td>T1-A</td><td>代数公理</td><td>16</td><td>0</td></tr>
+    <tr><td>T1-D</td><td>定义相关义务</td><td>5</td><td>2</td></tr>
+    <tr><td>T2</td><td>线性代数 / 矩阵</td><td>10</td><td>3</td></tr>
+    <tr><td>T3</td><td>安全 / 概率 / 解析器</td><td>8</td><td>2</td></tr>
+    <tr><td><b>合计</b></td><td></td><td><b>56</b></td><td><b>7</b></td></tr>
+  </tbody>
+</table>
+<h3>已经有实体的部分</h3>
+<ul>
+<li><code>F_3329</code> 域表示。</li>
+<li>燃料参数化的 Gauss–Jordan 消元：<code>mat_rank</code>、<code>dim_nullspace</code>、<code>mat_inv</code> 不再是未解释常量。燃料让递归是结构递归，不需要终止性证明；但"消元到达行最简形""rank 等于域上秩""逆是双侧逆"这些没有被声称。</li>
+<li>§3.1 的 LCG 作为状态机（<code>nat ⇒ nat × nat</code>，返回值与后继状态）；拒绝采样采样器证的是部分正确性：返回值非空时，长度、互异、范围成立。终止性只以概率 1 成立，本 session 没有测度论，因此不作声称。</li>
+<li>§3.3 的行加法矩阵生成器（<code>m*m</code> 轮，<code>i=j</code> 时两次抽取都消耗后跳过）、按规范顺序生成四个矩阵、以及按 §3.6 字段填充的 KeyGen 实体。</li>
+<li><code>hash_target</code> 有实体了：池内的部分 Fisher–Yates 走位 + 指示向量（<code>fy_fuel</code> / <code>swap_at</code>），稠密性由走位长度保证，不靠假设。</li>
+</ul>
+<h3>四处被机器判定的陈述</h3>
+<table>
+  <thead><tr><th>义务</th><th>缺陷</th><th>状态</th></tr></thead>
+  <tbody>
+    <tr><td>T2_B3</td><td>按整数陈述可逆，实现每步模 3329 归约（域错配）</td><td>改述到 F_q 后<b>已闭合</b></td></tr>
+    <tr><td>T2_D4</td><td>对非方阵系统误用行零化度（口径错配）</td><td>改用列零化度后<b>已闭合</b></td></tr>
+    <tr><td>T2_B7</td><td>断言 ψ 每片秩为 2，但前提不排除零切片</td><td><b>机器反证</b>，待秩理论</td></tr>
+    <tr><td>T2_D5</td><td><code>Eval</code> 收不到 k / msg，却要求目标位依赖消息</td><td><b>机器反证</b>，待签名语义</td></tr>
+  </tbody>
+</table>
+<p>T2_B7 的反例满足前提而秩为 0，记录在 <code>VWZ_Refutations.thy</code>。原因是陈述缺良构前提——这是陈述缺陷，不是证明失败。把它留在仓里，比悄悄删掉更有用。</p>
+<h3>已知缺口</h3>
+<ul>
+<li>矩阵代数承重墙还剩一块：<b>T2_B7 的秩理论</b>——"两个外积之和的秩 ≤ 2"与"非零 2×2 子式 ⇒ 秩 ≥ 2"，需要行空间论证与初等行变换保持子式为零。T2_B3 需要的 <code>mat_mult</code> 结合律与初等矩阵桥已经完成。</li>
+<li>T3 剩余 <b>2 条</b>：概率与安全层的建模，需要先把签名语义定下来。</li>
+<li><code>digest</code>、<code>Eval</code>、<code>Sign</code>、<code>Verify</code>、<code>sample_below</code>、<code>nullspace</code>、<code>mat_solve</code> 仍是未解释常量，逐个标 <code>TODO(define)</code> 并注明所缺的规范内容。不写"忽略参数的占位定义"——那会让引理变成关于一个自造矩阵的陈述，比留着洞更糟。</li>
+<li>该仓目前没有 CI，也没有独立的 CONTRIBUTING；构建与计数命令在 README 里。构建：<code>isabelle build -D aligned</code>；负向对照：<code>isabelle build -D neg</code> 必须失败。</li>
+</ul>
+<h2>三、当前缺口（按上手难度排序）</h2>
+<ol>
+<li><b>秩理论</b>：外积和的秩上界 + 非零子式的秩下界，收口 T2_B7。</li>
+<li><b>T3 剩余 2 条</b>：签名语义（Sign 的输入输出与 pk 的联结）定下来之后才能谈目标独立性。</li>
+<li><b>ACVP 向量走公共 API</b>：<code>fml-dsa</code> 已透传 FIPS 204 的 context / extraEntropy，并有行为对照；但 75/75 的 KAT 只覆盖 KeyGen，sigGen / sigVer 的向量级覆盖还没有。</li>
+<li><b>RN 仓测试与 CI</b>：<code>fibemate-mobile</code> 的 <code>node:test</code> 模式已跑通，<code>fibemate-react-native</code> 的 test 脚本只有 jest，无测试文件时是否会静默通过尚未实测。</li>
+<li><b>CBOM 进 PR 门禁</b>，以及 npm / pip / 镜像层的 hash 固定。</li>
+<li><b>外部 code review</b>：Scorecard 的 Code-Review 0/28，每一个实质性评审都直接改变这个数字。</li>
+</ol>
+<h2>四、协作约定</h2>
+<ul>
+<li>提交必须 DCO sign-off；PR 落后 base 时用本地 rebase，不要用 GitHub 网页的 "Update branch"（它会生成不带 signoff 的 merge commit）。</li>
+<li>不接受掩盖错误。能用证据推翻既有结论的 PR 会被优先处理；被推翻的陈述会保留在仓里（T2_B7 就是例子）。</li>
+<li>声称与实现必须对齐：文档里写"已实现"，代码里就得有对应实体；写不出来就标 <code>TODO(define)</code>，不编造语义。</li>
+<li>提交前请自证：给出命令、输出，以及必要的字节级检查（编码、BOM）。</li>
+</ul>
+<h2>五、入口</h2>
+<ul>
+<li>主仓：<a href="https://github.com/Lennonhaha/fibemate">github.com/Lennonhaha/fibemate</a></li>
+<li>形式化仓：<a href="https://github.com/Lennonhaha/vwz-formalization">github.com/Lennonhaha/vwz-formalization</a></li>
+<li>论文（首发版）：<a href="https://github.com/Lennonhaha/vwz-formalization/releases/tag/v1.0.0-paper">v1.0.0-paper</a></li>
+<li>贡献指南：<a href="https://github.com/Lennonhaha/fibemate/blob/main/docs/CONTRIBUTORS-GUIDE.md">docs/CONTRIBUTORS-GUIDE.md</a></li>
+</ul>
+<p>本文数字的复核方式：</p>
+<pre><code>node tools/count-obligations.cjs
+curl -s https://api.securityscorecards.dev/projects/github.com/Lennonhaha/fibemate
+gh api "repos/Lennonhaha/fibemate/code-scanning/alerts?state=open" --jq length</code></pre>
+<h2>六、不适合谁</h2>
+<ul>
+<li>需要一个能直接上线、带 SLA 的密码库的：这里不是。</li>
+<li>只想要 star 数、不接受"未完成的证明必须显式标注"的：这里会更难受。</li>
+<li>期待"AI 生成即合并"的：门禁会拦，评审也会拦。</li>
+</ul>
+<p>如果你能补上面任何一块，直接开 issue 或 PR。用代码和证据说话，比什么都快。</p>
+<footer>FIBEMATE · 后量子密码工程验证平台 · 本文所有数字均可按文中的命令复跑</footer>
+</div>
+</body>
+</html>
