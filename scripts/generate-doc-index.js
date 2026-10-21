@@ -125,7 +125,9 @@ a:hover { text-decoration: underline; }
       const fp = path.join(docsDir, file);
       if (!fs.existsSync(fp)) continue; // 只索引真实存在的文件，避免死链
       const content = fs.readFileSync(fp, 'utf8');
-      const desc = extractFirstParagraph(content, file);
+      // Pages are HTML: extractFirstParagraph would return '<!DOCTYPE html>'. Only
+      // markdown carries a usable summary line.
+      const desc = file.endsWith('.md') ? extractFirstParagraph(content, file) : '';
       html += `<li><a href="/docs/${file}">${titleFromFilename(file)}</a>`;
       if (desc) html += `<span class="desc">${desc}</span>`;
       html += `</li>`;
