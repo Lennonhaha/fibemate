@@ -13,6 +13,10 @@ const DOCS_DIR = process.argv[3] || path.resolve(__dirname, '..', 'www', 'docs')
 // 角色映射只包含 www/docs/ 真实存在的文件
 const ROLE_MAP = [
   {
+    role: 'status', icon: '📌', label: '最新状态',
+    files: ['status-2026-10.html'],
+  },
+  {
     role: 'developer', icon: '🧑‍💻', label: '开发者入口',
     files: ['TECHNICAL-VERIFICATION.md', 'tls-hybrid-deployment.md', 'performance-benchmarks-2026-07-18.md', 'good-first-issues.md', 'ANNOUNCEMENT.md'],
   },
@@ -59,7 +63,7 @@ const DESC_MAP = {
 };
 
 function titleFromFilename(f) {
-  return f.replace(/\.md$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+  return f.replace(/\.(md|html)$/, '').replace(/[-_]/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 function extractFirstParagraph(content, file) {
