@@ -4,6 +4,13 @@
 # The offline job always runs; the live job runs only when the NGINX_SSH_KEY
 # secret is configured (it needs ssh access to the host, which CI has no other
 # reason to hold).
+#
+# Repository settings used by the live job:
+#   secret NGINX_SSH_KEY   private half of a key restricted on the host to
+#                          `command="cat /etc/nginx/sites-enabled/fibemate.net",restrict`
+#   var    NGINX_HOST      host name or address of the server (required)
+#   var    NGINX_USER      ssh user, default root
+#   var    NGINX_PORT      ssh port, default 22
 name: nginx-drift
 permissions:
   contents: read
@@ -39,7 +46,9 @@ jobs:
     needs: offline
     env:
       NGINX_SSH_KEY: ${{ secrets.NGINX_SSH_KEY }}
-      NGINX_HOST: ${{ vars.NGINX_HOST || 'fibemate' }}
+      NGINX_HOST: ${{ vars.NGINX_HOST }}
+      NGINX_USER: ${{ vars.NGINX_USER || 'root' }}
+      NGINX_PORT: ${{ vars.NGINX_PORT || '22' }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - name: Setup Node.js
@@ -48,18 +57,18 @@ jobs:
           node-version: 22
 
       - name: Live comparison is not configured
-        if: env.NGINX_SSH_KEY == ''
+        if: env.NGINX_SSH_KEY == '' || env.NGINX_HOST == ''
         run: 'echo "::notice::live drift check skipped (NGINX_SSH_KEY / vars.NGINX_HOST not set)"'
 
       - name: Install deploy key
-        if: env.NGINX_SSH_KEY != ''
+        if: env.NGINX_SSH_KEY != '' && env.NGINX_HOST != ''
         run: |
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
           printf '%s\n' "$NGINX_SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H "$NGINX_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          ssh-keyscan -p "$NGINX_PORT" -H "$NGINX_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Tracked copy matches the live file
-        if: env.NGINX_SSH_KEY != ''
-        run: node scripts/check-nginx-drift.cjs --host "$NGINX_HOST"
+        if: env.NGINX_SSH_KEY != '' && env.NGINX_HOST != ''
+        run: node scripts/check-nginx-drift.cjs --host "$NGINX_HOST" --user "$NGINX_USER" --port "$NGINX_PORT"

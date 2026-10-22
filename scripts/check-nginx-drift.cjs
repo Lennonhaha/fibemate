@@ -26,16 +26,28 @@ const DEFAULT_LOCAL = path.join(__dirname, '..', 'deploy', 'nginx', 'fibemate.ne
 const DEFAULT_REMOTE = '/etc/nginx/sites-enabled/fibemate.net';
 
 function parseArgs(argv) {
-  const opts = { offline: false, host: null, local: DEFAULT_LOCAL, remote: DEFAULT_REMOTE, quiet: false };
+  const opts = {
+    offline: false,
+    host: null,
+    user: null,
+    port: null,
+    identity: null,
+    local: DEFAULT_LOCAL,
+    remote: DEFAULT_REMOTE,
+    quiet: false
+  };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
     if (a === '--offline') opts.offline = true;
     else if (a === '--quiet') opts.quiet = true;
     else if (a === '--host') opts.host = argv[++i];
+    else if (a === '--user') opts.user = argv[++i];
+    else if (a === '--port') opts.port = argv[++i];
+    else if (a === '--identity') opts.identity = argv[++i];
     else if (a === '--local') opts.local = argv[++i];
     else if (a === '--remote') opts.remote = argv[++i];
     else if (a === '--help' || a === '-h') {
-      console.log('usage: check-nginx-drift.cjs [--offline] [--host <ssh-alias>] [--local <file>] [--remote <path>]');
+      console.log('usage: check-nginx-drift.cjs [--offline] [--host <host>] [--user <user>] [--port <n>] [--identity <key>] [--local <file>] [--remote <path>]');
       process.exit(0);
     } else {
       console.error('unknown argument: ' + a);
@@ -112,12 +124,18 @@ function main() {
     process.exit(1);
   }
 
-  const res = spawnSync('ssh', ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15', opts.host, 'sudo cat ' + opts.remote], {
+  const target = (opts.user ? opts.user + '@' : '') + opts.host;
+  const sshArgs = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15'];
+  if (opts.port) sshArgs.push('-p', String(opts.port));
+  if (opts.identity) sshArgs.push('-i', opts.identity);
+  sshArgs.push(target, 'sudo cat ' + opts.remote);
+
+  const res = spawnSync('ssh', sshArgs, {
     encoding: 'utf8',
     maxBuffer: 32 * 1024 * 1024
   });
   if (res.status !== 0) {
-    console.error('remote fetch failed (ssh ' + opts.host + ', exit ' + res.status + ')');
+    console.error('remote fetch failed (ssh ' + target + ', exit ' + res.status + ')');
     if (res.stderr) console.error(res.stderr.trim().split('\n').slice(0, 5).join('\n'));
     process.exit(3);
   }
@@ -136,7 +154,7 @@ function main() {
   }
 
   const diff = unified(mine, live, 'tracked', 'live', 20);
-  console.error('drift: tracked copy differs from ' + opts.host + ':' + opts.remote);
+  console.error('drift: tracked copy differs from ' + target + ':' + opts.remote);
   for (const line of diff) console.error(line);
   const extra = mine.length !== live.length ? ' (code lines: tracked ' + mine.length + ', live ' + live.length + ')' : '';
   console.error('update deploy/nginx/fibemate.net.conf from the live file, or fix the server.' + extra);
