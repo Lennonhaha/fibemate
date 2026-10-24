@@ -15,9 +15,16 @@ This package provides standardized metadata for all cryptographic algorithms use
 
 ## Installation
 
+**Not published to npm yet.** `npm install @fibemate/algorithm-registry` returns
+`404 Not Found`; the package currently ships inside this repository.
+
+Install it from a checkout:
+
 ```bash
-npm install @fibemate/algorithm-registry
+npm install /path/to/fibemate/packages/algorithm-registry
 ```
+
+The scoped npm release is tracked separately from the package contents.
 
 ## Usage
 
