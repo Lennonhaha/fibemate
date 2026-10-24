@@ -11,7 +11,7 @@
     "@noble/hashes": "2.2.0",
     "@noble/post-quantum": "0.6.1",
     "cors": "2.8.5",
-    "express": "4.21.2",
+    "express": "4.22.3",
     "snarkjs": "0.7.6",
     "ws": "^8.21.0"
   },
