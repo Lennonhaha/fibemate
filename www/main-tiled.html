@@ -1138,7 +1138,7 @@ const THEME = {
     bgInput:     '#162032',
     textPrimary: '#e8eaed',
     textSecondary:'#8b949e',
-    textMuted:   '#484f58',
+    textMuted:   '#6b7280',
     border:      '#30363d',
     accent:      '#00d4aa',
     accentDim:   'rgba(0,212,170,0.15)',
@@ -1523,11 +1523,11 @@ function renderMessages(convId) {
       rawCipher.indexOf('"messageNum"') !== -1
     );
     const text = isDrCipher
-      ? '<span style="display:inline-flex;align-items:center;gap:6px;opacity:0.75;font-style:italic;">🔒 加密消息 · 请在桌面端查看</span>'
+      ? '<span style="display:inline-flex;align-items:center;gap:6px;opacity:0.85;font-style:italic;color:var(--text-primary)">🔒 加密消息 · 请在桌面端查看</span>'
       : htmlEsc(rawCipher);
     const status = isSelf ? (m.status === 'read' ? '✓✓' : m.status === 'delivered' ? '✓✓' : '✓') : '';
     return `<div class="msg-row ${cls}" style="display:flex;${isSelf?'justify-content:flex-end':'justify-content:flex-start'};margin-bottom:8px;">
-      <div class="msg-bubble ${bubble}" style="max-width:70%;padding:8px 12px;border-radius:16px;line-height:1.5;font-size:0.9rem;">
+      <div class="msg-bubble ${bubble}" style="max-width:70%;padding:8px 12px;border-radius:16px;line-height:1.5;font-size:0.9rem;color:var(--text-primary);">
         <div>${text}</div>
         <div style="font-size:0.7rem;opacity:0.6;margin-top:4px;display:flex;gap:6px;justify-content:flex-end;">
           <span>${time}</span>${status&&isSelf?'<span style="opacity:0.8">'+status+'</span>':''}
@@ -1854,7 +1854,7 @@ function injectStyles() {
   --bg-input:      #162032;
   --text-primary:  #e8eaed;
   --text-secondary:#8b949e;
-  --text-muted:    #484f58;
+  --text-muted:    #6b7280;
   --border-color:  #30363d;
   --accent:        #00d4aa;
   --accent-dim:    rgba(0,212,170,0.15);
