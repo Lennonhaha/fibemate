@@ -16,13 +16,13 @@
 ## Install
 
 ```bash
-npm install @fibemate/pqc-kem
+npm install fibemate-pqc-kem
 ```
 
 ## Quick Start
 
 ```js
-const { generateKeypair, encapsulate, decapsulate } = require('@fibemate/pqc-kem');
+const { generateKeypair, encapsulate, decapsulate } = require('fibemate-pqc-kem');
 
 // Alice generates a keypair
 const kp = generateKeypair();
@@ -39,7 +39,7 @@ const aliceSecret = decapsulate(kp.secretKey, ciphertext);
 ## Hybrid Key Exchange (ML-KEM-768 + ECDH)
 
 ```js
-const { HybridKeyExchange } = require('@fibemate/pqc-kem');
+const { HybridKeyExchange } = require('fibemate-pqc-kem');
 
 const alice = new HybridKeyExchange();
 const aliceKeys = await alice.initialize();
