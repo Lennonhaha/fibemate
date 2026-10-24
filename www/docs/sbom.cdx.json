@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:466dbc6b-59b3-5bd3-a5cf-dda0eea46f35",
+  "serialNumber": "urn:uuid:4f22d7aa-cb9b-562b-4f70-f96c56c542e7",
   "version": 1,
   "metadata": {
     "timestamp": "1970-01-01T00:00:00.000Z",
@@ -1290,24 +1290,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "body-parser@2.3.0",
+      "bom-ref": "body-parser@2.4.0",
       "name": "body-parser",
-      "version": "2.3.0",
-      "purl": "pkg:npm/body-parser@2.3.0",
-      "licenses": [
-        {
-          "license": {
-            "name": "MIT"
-          }
-        }
-      ]
-    },
-    {
-      "type": "library",
-      "bom-ref": "content-type@2.1.0",
-      "name": "content-type",
-      "version": "2.1.0",
-      "purl": "pkg:npm/content-type@2.1.0",
+      "version": "2.4.0",
+      "purl": "pkg:npm/body-parser@2.4.0",
       "licenses": [
         {
           "license": {
@@ -1570,10 +1556,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "content-disposition@1.1.0",
+      "bom-ref": "content-disposition@2.0.1",
       "name": "content-disposition",
-      "version": "1.1.0",
-      "purl": "pkg:npm/content-disposition@1.1.0",
+      "version": "2.0.1",
+      "purl": "pkg:npm/content-disposition@2.0.1",
       "licenses": [
         {
           "license": {
@@ -1584,10 +1570,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "content-type@1.0.5",
+      "bom-ref": "content-type@2.1.0",
       "name": "content-type",
-      "version": "1.0.5",
-      "purl": "pkg:npm/content-type@1.0.5",
+      "version": "2.1.0",
+      "purl": "pkg:npm/content-type@2.1.0",
       "licenses": [
         {
           "license": {
@@ -2032,10 +2018,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "express@5.2.1",
+      "bom-ref": "express@5.3.0",
       "name": "express",
-      "version": "5.2.1",
-      "purl": "pkg:npm/express@5.2.1",
+      "version": "5.3.0",
+      "purl": "pkg:npm/express@5.3.0",
       "licenses": [
         {
           "license": {
@@ -2102,10 +2088,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "fast-uri@3.1.8",
+      "bom-ref": "fast-uri@3.1.9",
       "name": "fast-uri",
-      "version": "3.1.8",
-      "purl": "pkg:npm/fast-uri@3.1.8",
+      "version": "3.1.9",
+      "purl": "pkg:npm/fast-uri@3.1.9",
       "licenses": [
         {
           "license": {
@@ -2592,10 +2578,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "ip-address@10.7.2",
+      "bom-ref": "ip-address@10.7.4",
       "name": "ip-address",
-      "version": "10.7.2",
-      "purl": "pkg:npm/ip-address@10.7.2",
+      "version": "10.7.4",
+      "purl": "pkg:npm/ip-address@10.7.4",
       "licenses": [
         {
           "license": {
@@ -3628,10 +3614,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "qs@6.16.0",
+      "bom-ref": "qs@6.16.1",
       "name": "qs",
-      "version": "6.16.0",
-      "purl": "pkg:npm/qs@6.16.0",
+      "version": "6.16.1",
+      "purl": "pkg:npm/qs@6.16.1",
       "licenses": [
         {
           "license": {
