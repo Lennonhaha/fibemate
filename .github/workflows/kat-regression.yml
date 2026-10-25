@@ -58,6 +58,10 @@ jobs:
         run: node scripts/kat-quick.js --samples 10000
       - name: FIPS 203 KAT .rsp header + vector presence
         run: node scripts/ci-mlkem-kat.cjs
+      - name: NIST ACVP vectors - keyGen 75 + encaps 75 + decaps 30
+        run: |
+          node packages/pqc-kem/test/acvp-kat.test.cjs
+          node packages/pqc-kem/test/acvp-encapDecap.test.cjs
 
   fml-dsa-kat:
     runs-on: ubuntu-latest

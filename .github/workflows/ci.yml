@@ -72,6 +72,13 @@ jobs:
           set -o pipefail
           node scripts/ci-mlkem-kat.cjs 2>&1 | tee "$RUNNER_TEMP/mlkem-kat.log"
 
+      - name: NIST ACVP vectors - keyGen 75 + encaps 75 + decaps 30
+        shell: bash
+        run: |
+          set -o pipefail
+          node packages/pqc-kem/test/acvp-kat.test.cjs
+          node packages/pqc-kem/test/acvp-encapDecap.test.cjs
+
       - name: Attribute - ML-KEM KAT digest
         if: always()
         shell: bash

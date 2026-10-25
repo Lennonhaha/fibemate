@@ -52,6 +52,11 @@ module.exports = {
     generateKeypair,
     encapsulate,
     decapsulate,
+    // Deterministic variants for KAT / ACVP vectors. Always the JS backend, even when the
+    // native addon is present: the native addon takes (z, d) in the opposite order and has
+    // its own harness (scripts/test-native-addon.cjs). Do not pass reused entropy.
+    generateKeypairDerand: (d, z) => JS.generateKeypairDerand(d, z),
+    encapsulateDerand: (publicKey, m) => JS.encapsulateDerand(publicKey, m),
     HybridKeyExchange: require('./src/hybrid').HybridKeyExchange,
     get PUBLIC_KEY_BYTES()   { return JS.PUBLIC_KEY_BYTES; },
     get SECRET_KEY_BYTES()   { return JS.SECRET_KEY_BYTES; },

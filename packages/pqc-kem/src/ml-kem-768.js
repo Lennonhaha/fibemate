@@ -222,9 +222,20 @@ function samplePolyCompat(seed, nonce) {
 // ============================================================================
 function generateKeypair(){
     if (!_webcrypto) throw new Error('Web Crypto API (crypto.getRandomValues) required');
-    const K = KYBER_K, eta1 = _KYBER_ETA1;
     const d=crypto.getRandomValues(new Uint8Array(32));
     const z=crypto.getRandomValues(new Uint8Array(32));
+    return keygenDerand(d,z);
+}
+
+/**
+ * Deterministic key generation — FIPS 203 Algorithm 16 with caller-supplied seeds.
+ * Intended for KAT / ACVP vector testing only. Never pass attacker-controlled or
+ * reused entropy: the point of the random wrapper above is that d and z are fresh.
+ */
+function keygenDerand(d,z){
+    if(!(d instanceof Uint8Array)||d.length!==32) throw new Error('keygenDerand: d must be 32 bytes');
+    if(!(z instanceof Uint8Array)||z.length!==32) throw new Error('keygenDerand: z must be 32 bytes');
+    const K = KYBER_K, eta1 = _KYBER_ETA1;
     const H=sha3_512(new Uint8Array([...d,K])); // G(d‖k) — domain separator k
     const rho=H.slice(0,32), sigma=H.slice(32,64);
 
@@ -272,9 +283,18 @@ function generateKeypair(){
 // ============================================================================
 function encapsulate(publicKey){
     if (!_webcrypto) throw new Error('Web Crypto API (crypto.getRandomValues) required');
+    const m=crypto.getRandomValues(new Uint8Array(32));
+    return encapsDerand(publicKey,m);
+}
+
+/**
+ * Deterministic encapsulation — FIPS 203 Algorithm 17 with caller-supplied m.
+ * For KAT / ACVP vector testing only; see the warning on keygenDerand.
+ */
+function encapsDerand(publicKey,m){
+    if(!(m instanceof Uint8Array)||m.length!==32) throw new Error('encapsDerand: m must be 32 bytes');
     const K = KYBER_K, eta1 = _KYBER_ETA1, eta2 = _KYBER_ETA2;
     const duBytes = 32 * KYBER_DU;
-    const m=crypto.getRandomValues(new Uint8Array(32));
     const rho=publicKey.slice(K*384,K*384+32);
     const hpk=sha3_256(publicKey);
 
@@ -426,6 +446,8 @@ function decapsulate(secretKey,ciphertext){
 // ============================================================================
 const MLKEM768 = {
     generateKeypair,encapsulate,decapsulate,
+    // Deterministic variants — KAT/ACVP only (see keygenDerand doc comment)
+    generateKeypairDerand: keygenDerand, encapsulateDerand: encapsDerand,
     get PUBLIC_KEY_BYTES() { return KYBER_PUBLICKEYBYTES; },
     get SECRET_KEY_BYTES() { return KYBER_SECRETKEYBYTES; },
     get CIPHERTEXT_BYTES() { return KYBER_CIPHERTEXTBYTES; },
