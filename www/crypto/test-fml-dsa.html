@@ -65,7 +65,7 @@ a:hover{text-decoration:underline}
 
 <div class="hero">
   <strong style="color:#7ee787;">核心声明</strong>
-  <p>fml-dsa 是 FIBEMATE 的纯 JavaScript ML-DSA 参考实现。Phase 1 公共 API 的算法由 @noble/post-quantum 提供（ACVP final 165/165 ✓）；自研 core（<code>src/core/</code>）已与 Noble 完成 sign/verify 互操作验证，尚未接入公共 API，其 KeyGen 仍为 pre-final FIPS 204 派生。<br>
+  <p>fml-dsa 是 FIBEMATE 的纯 JavaScript ML-DSA 参考实现。Phase 1 公共 API 的算法由 @noble/post-quantum 提供（NIST ACVP keyGen 75/75 ✓；sigGen / sigVer 向量尚未入库，故不计入）；自研 core（<code>src/core/</code>）已与 Noble 完成 sign/verify 互操作验证，尚未接入公共 API，其 KeyGen 仍为 pre-final FIPS 204 派生。<br>
   覆盖 ML-DSA-44 (security strength II)、ML-DSA-65 (III)、ML-DSA-87 (V) 三个参数集。<br>
   <strong>与 @noble/post-quantum 完成 sign→verify 和 verify→sign 双向交叉验证——双方生成/验证对方签名全部通过。</strong></p>
 </div>
@@ -154,7 +154,7 @@ noble.sign(sk, msg)     →  fml-dsa.verify(noble-pk, msg, noble-sig)  ✅</pre>
     <li>KAT：ACVP keyGen 75/75 已通过（由 @noble/post-quantum 实现）；sigGen/sigVer 向量尚未入库（待补）</li>
     <li class="warn">ntt(负数) 输入验证未抛异常 (1/66 known issue)</li>
     <li class="warn">纯 JavaScript 实现，未做常数时间保障（生产部署建议 Rust/WASM 版本）</li>
-    <li>公共 API（@noble）已过 ACVP keyGen/sigGen/sigVer（165/165）；自研 core 待接入并补 KeyGen KAT</li>
+    <li>公共 API（@noble）已过 ACVP keyGen 75/75；sigGen / sigVer 的向量未入库、CI 也未跑，因此不声称 165/165。自研 core 待接入并补 KeyGen KAT</li>
   </ul>
   <div class="note">
     <strong>定位说明：</strong>fml-dsa 是教育/验证参考实现。跨 Noble 互操作验证确认了 FIPS 204 规范理解正确性。生产部署推荐 @noble/post-quantum 或 liboqs。

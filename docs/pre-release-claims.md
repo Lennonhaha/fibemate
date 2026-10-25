@@ -31,7 +31,8 @@
 | # | 检查项 | 事实（截至 2026-10-14） | 不得写成 | 证据（填） |
 |---|--------|--------------------------|----------|------------|
 | C1 | fml-dsa 后端 | Phase 1 公共 API 为 `@noble/post-quantum`；自研 core 未接线 | 「自研实现已上线」 | |
-| C2 | ACVP 成绩归属 | `165/165` 是**导出 API（noble）**的成绩 | 说成自研 core 合规 | |
+| C2 | ACVP 成绩归属 | `75/75` 是**导出 API（noble）的 keyGen** 成绩；sigGen / sigVer 向量未入库、CI 未跑，不构成 `165/165` | 说成自研 core 合规；把 keyGen 的 75 写成全 operation 的 165 |
+| C2b | ML-KEM ACVP 覆盖 | 240/240（keyGen 75、encaps 75、decaps 30、两个 key check 各 30），向量已入库且断网可跑 | 与 ML-DSA 的数字混用；把 operation 数当用例数 | |
 | C3 | KAT 覆盖 | ML-KEM-768 有 KAT | 「全算法均已 KAT」 | |
 | C4 | rustpq 一致性 | pre-final（2023-10 草案） | 「符合 FIPS 203/204」 | |
 | C5 | rustpq ML-DSA 边界 | 消息超过 254 B 会被静默截断；产品内唯一签名点消息 50 B | 声称任意长度签名可用 | |
