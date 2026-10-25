@@ -62,6 +62,8 @@ jobs:
         run: |
           node packages/pqc-kem/test/acvp-kat.test.cjs
           node packages/pqc-kem/test/acvp-encapDecap.test.cjs
+      - name: Internal-step invariants (NTT, codec, compress, samplers)
+        run: node packages/pqc-kem/test/internal-invariants.test.js
 
   fml-dsa-kat:
     runs-on: ubuntu-latest
