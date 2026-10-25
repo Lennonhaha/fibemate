@@ -57,6 +57,10 @@ module.exports = {
     // its own harness (scripts/test-native-addon.cjs). Do not pass reused entropy.
     generateKeypairDerand: (d, z) => JS.generateKeypairDerand(d, z),
     encapsulateDerand: (publicKey, m) => JS.encapsulateDerand(publicKey, m),
+    // Input validation, FIPS 203 §7.2 / §7.3. True means the key is well-formed for
+    // the parameter set currently selected by loadParams().
+    encapsKeyCheck: (ek) => JS.encapsKeyCheck(ek),
+    decapsKeyCheck: (dk) => JS.decapsKeyCheck(dk),
     HybridKeyExchange: require('./src/hybrid').HybridKeyExchange,
     get PUBLIC_KEY_BYTES()   { return JS.PUBLIC_KEY_BYTES; },
     get SECRET_KEY_BYTES()   { return JS.SECRET_KEY_BYTES; },

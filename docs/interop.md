@@ -149,17 +149,22 @@ environment variable is the current way to bind a report to a commit.
   Any check failing exits non-zero and writes nothing.
 - The gate `scripts/ci-mlkem-kat.cjs` re-checks the committed file vector by vector (500
   assertions) on every change.
-- **Not in this repository:** the NIST `PQC Intermediate Values` files. Older revisions of
-  `docs/fips203-mlkem768.md` claimed those tests had been run; the files live outside the
-  repository and cannot be reproduced here. `packages/pqc-kem/test/acvp-*.test.cjs` can execute the
-  official ACVP vectors, but those must be fetched separately and the tests are not wired into CI.
+- **In this repository:** the official NIST ACVP vectors. `packages/pqc-kem/test/vectors/` holds the
+  ML-KEM keyGen (75) and encapDecap (165) case files, rebuilt from two pinned blob SHAs in
+  `usnistgov/ACVP-Server` by `packages/pqc-kem/test/acvp-vectors.mjs`; each file records its upstream
+  path, blob sha, byte length, sha256 and retrieval date. The two test files run offline against those
+  vectors and are wired into `ci.yml` (`mlkem-kat`) and `kat-regression.yml`, 240 cases in total.
+- **Still not in this repository:** the NIST `PQC Intermediate Values` files. Older revisions of
+  `docs/fips203-mlkem768.md` claimed those tests had been run; the files live outside the repository
+  and cannot be reproduced here. ACVP coverage is not a substitute: intermediate values would pin the
+  internal steps, while ACVP only pins the outputs.
 
 ## CI wiring
 
 | where | what runs | gate |
 |---|---|---|
 | pull requests | `interop` → `scripts/interop/run.mjs run --rounds 1000 --partners noble --kat all` (report uploaded as the `interop-report` artifact) | required (job id `interop`) |
-| pull requests | `mlkem-kat`, `node-test`, `gm-crossval`, `build-native`, CodeQL, … | required |
+| pull requests | `mlkem-kat` (roundtrip gate + 240 ACVP cases), `node-test`, `gm-crossval`, `build-native`, CodeQL, … | required |
 | `nightly-phase2.yml` → `liboqs-cross` | liboqs `0.12.0` (commit-pinned) + `oqs_gen`, then `--rounds 10000 --liboqs-rounds 10000 --partners noble,liboqs` (artifact `interop-report-nightly`) | advisory (`continue-on-error: true`) |
 | not wired yet | `docker/interop/Dockerfile` build (base image pinned by digest) | none |
 

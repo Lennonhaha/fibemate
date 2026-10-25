@@ -442,12 +442,56 @@ function decapsulate(secretKey,ciphertext){
 }
 
 // ============================================================================
+// Key checks — FIPS 203 §7.2 (encapsulation key) / §7.3 (decapsulation key)
+// ============================================================================
+
+/**
+ * Encapsulation key check — FIPS 203 §7.2.
+ * Two conditions: length matches the active parameter set, and the 12-bit encoded
+ * t̂ is canonical (byteEncode12 ∘ byteDecode12 is the identity). Values ≥ q survive
+ * decoding but not re-encoding, which is exactly what the modulus check catches.
+ * Returns a boolean; the ACVP keyCheck groups expect nothing else.
+ */
+function encapsKeyCheck(ek){
+    if(!(ek instanceof Uint8Array)) return false;
+    if(ek.length!==KYBER_PUBLICKEYBYTES) return false;
+    const K=KYBER_K;
+    for(let i=0;i<K;i++){
+        const slice=ek.subarray(i*384,(i+1)*384);
+        const reenc=byteEncode(byteDecode(slice,12),12);
+        for(let j=0;j<reenc.length;j++) if(reenc[j]!==slice[j]) return false;
+    }
+    return true;
+}
+
+/**
+ * Decapsulation key check — FIPS 203 §7.3.
+ * Two conditions: length matches the active parameter set, and the stored H(ek)
+ * agrees with a fresh hash of the embedded ek. The embedded ek is deliberately
+ * not modulus-checked: FIPS 203 does not require it here, and ACVP marks keys as
+ * valid when only the hash agrees.
+ */
+function decapsKeyCheck(dk){
+    if(!(dk instanceof Uint8Array)) return false;
+    if(dk.length!==KYBER_SECRETKEYBYTES) return false;
+    const K=KYBER_K;
+    const ekOff=K*384;
+    const ek=dk.subarray(ekOff,ekOff+KYBER_PUBLICKEYBYTES);
+    const stored=dk.subarray(ekOff+KYBER_PUBLICKEYBYTES,ekOff+KYBER_PUBLICKEYBYTES+32);
+    const fresh=sha3_256(ek);
+    for(let i=0;i<32;i++) if(stored[i]!==fresh[i]) return false;
+    return true;
+}
+
+// ============================================================================
 // Module export
 // ============================================================================
 const MLKEM768 = {
     generateKeypair,encapsulate,decapsulate,
     // Deterministic variants — KAT/ACVP only (see keygenDerand doc comment)
     generateKeypairDerand: keygenDerand, encapsulateDerand: encapsDerand,
+    // Input validation — FIPS 203 §7.2 / §7.3
+    encapsKeyCheck, decapsKeyCheck,
     get PUBLIC_KEY_BYTES() { return KYBER_PUBLICKEYBYTES; },
     get SECRET_KEY_BYTES() { return KYBER_SECRETKEYBYTES; },
     get CIPHERTEXT_BYTES() { return KYBER_CIPHERTEXTBYTES; },
