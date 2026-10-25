@@ -25,7 +25,7 @@ FIBEMATE 集成了 **FIPS 203 ML-KEM-768** 作为后量子密钥交换的核心�
 
 **仓内测试来源**: `packages/pqc-kem/test/kat/mlkem-768-KAT.rsp` —— **本仓自产**的确定性向量（生成器 `packages/pqc-kem/scripts/generate-nist-kat.js`；2026-10-16 重生成，两次再生逐字节相同），由 `scripts/ci-mlkem-kat.cjs` 逐向量校验（500 断言）。
 
-**关于 NIST 官方向量（重要更正）**: 本仓**不含** NIST `PQC Intermediate Values` 的 `.txt` 向量文件（全仓 + 全历史检索 0 命中）。历史上确实用过该目录，但它在**服务器**上（`/opt/fibemate-full/public/test-vectors/intermediate-2023/PQC Intermediate Values/`，见 `docs/mlkem1024-kat-verified.md`），**未随仓入库 ⇒ 在仓内不可复现**。仓内另有 ACVP 官方向量脚本（`packages/pqc-kem/test/acvp-kat.test.cjs`、`acvp-encapDecap.test.cjs`），但向量需外部落到 `%TEMP%\acvp\...`，且**不在 CI**（`.github/workflows/native-build.yml:75` 留有 `if: false  # TODO: replace with ACVP-based KAT for C addon`）。
+**关于 NIST 官方向量（重要更正）**: 本仓**不含** NIST `PQC Intermediate Values` 的 `.txt` 向量文件（全仓 + 全历史检索 0 命中）。历史上确实用过该目录，副本仍在部署机备份里（`/opt/backups/fibemate-20260609-031422/fibemate-full/public/test-vectors/intermediate-2023/`），但**它们不能当最终标准的门禁**：随包的 `Readme.txt` 明写这批结果是 **draft FIPS 203**，且 `K-PKE.KeyGen` / `K-PKE.Encrypt` 第 6 步故意交换了 XOF 的 `i`/`j` 输入顺序，`Encrypt` 还用 `bHat = aHatᵀ`。连 `rho` 都不同代：文件里 `rho = SHA3-512(d)[0:32]`（实测逐字节相等），而最终标准与我们的实现走 `G(d ‖ k)`（`sha3_512(d ‖ K)`，K=3），两者不等。因此对照这些文件失败时分不清是"我们错了"还是"向量早于标准"，它们不进 CI。ACVP 现在已入库并在 CI 里跑（240/240），但只钉输出；内部步骤只能由 FIPS 203 伪代码和本仓结构性测试约束，这个缺口是真的。
 
 ## 算法参数
 
@@ -44,7 +44,7 @@ FIBEMATE 集成了 **FIPS 203 ML-KEM-768** 作为后量子密钥交换的核心�
 - **NTT**: 优化的数论变换，使用 Montgomery 约简
 - **CBD 采样**: 中心二项分布 (η₁=2, η₂=2)
 - **哈希**: FIPS 202 SHAKE-128/SHA3-512
-- **领域分隔**: `G(d)` (32B) 而非 Kyber R3 的 `G(d || 0x03)` (33B)
+- **领域分隔**: `G(d ‖ k)`（33B 输入，k 为参数集字节，ML-KEM-768 取 0x03），即 `sha3_512(d ‖ K)`；不是 draft 的 `G(d)`
 - **polyvec 压缩**: 4 系数/块 → 5 字节 (10 bits/coefficient)，符合 FIPS 203 位布局
 
 ## 对齐日志

@@ -1,5 +1,7 @@
 # ML-KEM-1024 FIPS 203 KAT 全量验证通过
 
+> **2026-10-25 复核结论（先看这个）**：文中 "ALL MATCH" 对照的是 NIST **draft** FIPS 203 的 `PQC Intermediate Values`（2023-10），不是最终标准。随包 `Readme.txt` 写明那批结果交换了 XOF 的 `i`/`j` 输入，且 `rho = SHA3-512(d)[0:32]`；最终标准的 keygen 走 `G(d ‖ k)`（本仓 `sha3_512(d ‖ K)`），两者可实测区分。所以下面的 "MATCH" 证明的是「当年那份 C 代码与 draft 一致」，**不能读作「符合 FIPS 203 最终版」**。最终版覆盖现在由 ACVP 的 ML-KEM-1024 keyGen 25 例承担（已入库、在 CI）。原文保留为历史记录。
+
 **时间**: 2026-05-19 22:15 (GMT+8)
 **目标**: 编译 ML-KEM-1024 (K=4) C 实现，验证 FIPS 203 KAT
 
