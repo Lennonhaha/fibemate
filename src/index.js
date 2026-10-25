@@ -146,6 +146,8 @@ const opkServer = require('./opk-server'); // init moved after authMiddleware
 const sm34Proxy = flags.EXPERIMENTAL ? require("../experimental/sm2/sm34-proxy") : (app) => {};
 // Account lockout — in-memory, 5 attempts / 15 min (security-hotfix 2026-06-09)
 const { checkAccountLockout, recordFailedLogin, resetLoginAttempts } = require('./lib/lockout');
+// 会话对端解析 — key_exchange 只带 conversationId 时用（2026-10-25 fix）
+const { resolvePeerId } = require('./lib/conversation-peer');
 // 2FA TOTP (RFC 6238) — in-memory ticket Map, 60s TTL
 const { generateSecret, totpUri, verify: totpVerify, generateRecoveryCodes } = require('./lib/totp');
 const twoFATickets = new Map(); // ticket → { userId, expiresAt, attempts }
@@ -749,14 +751,12 @@ try {
           if (!to && !conversationId) break;
           
           // 如果传了 conversationId，找出对方用户
+          // fix 2026-10-25: 会话存的是 userAId/userBId，不是 participantUserId/ownerUserId。
+          // 旧写法算出 undefined，被下面 `if (!recipientUserId) break;` 静默丢弃，
+          // 发起方会永远停在 "establishing secure session"。
           let recipientUserId = to;
           if (!recipientUserId && conversationId) {
-            const conv = db.getConversationById(conversationId);
-            if (conv) {
-              recipientUserId = conv.participantUserId === userId 
-                ? conv.ownerUserId 
-                : conv.participantUserId;
-            }
+            recipientUserId = resolvePeerId(db.getConversationById(conversationId), userId);
           }
           if (!recipientUserId) break;
           
@@ -793,15 +793,10 @@ try {
           // 支持前端发送的 { ratchetKey }
           const payload = responsePayload || { ratchetKey };
           
-          // 如果有 conversationId，找出对方
+          // 如果有 conversationId，找出对方（同 key_exchange：userAId/userBId，2026-10-25 fix）
           let recipientUserId = to;
           if (!recipientUserId && conversationId) {
-            const conv = db.getConversationById(conversationId);
-            if (conv) {
-              recipientUserId = conv.participantUserId === userId 
-                ? conv.ownerUserId 
-                : conv.participantUserId;
-            }
+            recipientUserId = resolvePeerId(db.getConversationById(conversationId), userId);
           }
           
           if (recipientUserId) {
