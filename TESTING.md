@@ -68,7 +68,7 @@ See [docs/INTEGRITY-MANIFEST.md](./docs/INTEGRITY-MANIFEST.md) for full details.
 | Algorithm | Standard | CI script |
 |---|---|---|
 | ML-KEM-768 | FIPS 203 | `scripts/ci-mlkem-kat.cjs` |
-| ML-DSA (fml-dsa) | FIPS 204 | `packages/fml-dsa/test/` (KeyGen KAT 75/75, noble oracle 7/7) |
+| ML-DSA (fml-dsa) | FIPS 204 | `packages/fml-dsa/test/` (KeyGen 75/75 vs NIST ACVP — validates the @noble backend that Phase 1 wraps; noble oracle 7/7) |
 | SM2 | GB/T 32918 | `scripts/ci-gm-sm2.cjs` (100 sign/verify + 100 encrypt/decrypt) |
 | SM3 | GB/T 32905 | `scripts/ci-gm-sm3.cjs` (30) |
 | SM4-GCM | GB/T 32907 | `scripts/ci-gm-sm4.cjs` (30) |

@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/src/core/native.js — ML-DSA API factory
 // Phase 1: noble-backed stubs (algorithm provided by @noble/post-quantum)
-// All KAT verified against NIST ACVP (KeyGen 75/75 PASS) and noble oracle (sign/verify 7/7)
+// Phase 1 wraps @noble/post-quantum: the KeyGen 75/75 NIST ACVP result belongs to that backend,
+// not to code in this package. The wrapper's own surface is checked by test/fml-dsa.test.js
+// against the same vectors; sign/verify additionally uses a noble oracle (7/7).
 
 import { readFileSync } from 'fs';
 import { resolve, dirname } from 'path';

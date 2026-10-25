@@ -236,7 +236,7 @@ FIBEMATE 的"协商"实质上是**参数声明**而非**能力协商**——客�
 | 代码完整性 | 8 个 CI/CD workflows（ci, ci-native, native-build, nightly-phase1/2, release, repolinter, scorecard） | 每次 push / 每日 |
 | 密码学正确性 | TSR 证据链 lg-001~100（DigiCert + FreeTSA 双机构） | 100 份时间戳存证 |
 | 安全性 | TVLA 36/36（N=10000, WARMUP=2000, THRESH=4.5） | 3 个实现 × 12 项测试 |
-| 标准合规 | KAT (Known Answer Tests) | ML-KEM 10000/10000, SM2 100/100, SM3/SM4 30/30, fml-dsa 75/75 |
+| 标准合规 | KAT (Known Answer Tests) | ML-KEM 10000/10000, SM2 100/100, SM3/SM4 30/30, fml-dsa 75/75（NIST ACVP keyGen 向量，验证 @noble 后端） |
 | 性能 | benchmark.cjs + perf-gate.js（WARN 20% / FAIL 50%） | 每次 CI 运行 |
 | 依赖 | package-lock.json / npm ci | 构建时 |
 | 漏洞披露 | SECURITY.md + VULNERABILITIES.md | 安全研究员 |

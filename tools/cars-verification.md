@@ -43,7 +43,7 @@ PQC 生态扫描器（`tools/pqc-ecosystem-scan.js`）提供了完整的机器�
 |------|------|----------|----------|
 | ML-KEM-768 | FIPS 203 | JS 原生 + C Native Addon | KAT 10000/10000 Noble 交叉验证、TVLA 软件侧信道 3/3 PASS |
 | ML-KEM-1024 | FIPS 203 | Noble `@noble/post-quantum` | TVLA 3/3 PASS（Noble 实现，非自研） |
-| ML-DSA-65 (fml-dsa) | FIPS 204 | Phase 1 @noble 后端（fml-dsa） | 84/84 自测、KeyGen KAT 75/75、Noble 双向交叉验证 |
+| ML-DSA-65 (fml-dsa) | FIPS 204 | Phase 1 @noble 后端（fml-dsa 为包装层） | 84/84 自测、KeyGen KAT 75/75（NIST ACVP 向量，验证的是 @noble 后端）、Noble 双向交叉验证 |
 | SLH-DSA-128s | FIPS 205 | WASM bridge（NIST 参考 C） | 5/5 smoke test、bench 基准 |
 
 #### 国密算法（Chinese Cryptography）

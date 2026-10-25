@@ -40,7 +40,7 @@
 - [x] **key-lifecycle 包新建**：27/27 测试全过
 - [x] **fml-dsa input-validation 修复**：66/66 PASS
 - [x] **7 个 npm 包全绿**：algorithm-registry / fml-dsa / key-lifecycle / pqc-kem / sm2-ref / sm3-ref / sm4-ref
-- [x] **fml-dsa KAT 向量补全**：75/75 PASS（ML-DSA-44/65/87 各 25）
+- [x] **fml-dsa KAT 向量补全**：75/75 PASS（ML-DSA-44/65/87 各 25；NIST ACVP keyGen 向量，验证对象为 @noble 后端，Phase 1 为包装）
 
 ### 8/11 ~ 8/12：D-20 自检 + ESLint 归零 + 2FA
 - [x] **Dependabot 25 告警审计**：零 critical，全部传递性依赖，零触及核心 PQC 代码

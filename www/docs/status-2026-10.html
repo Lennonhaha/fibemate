@@ -159,7 +159,7 @@ a:hover { text-decoration:underline; }
 <ol>
 <li><b>T2_D5 的规范决策</b>：给 <code>Sign</code> / <code>Eval</code> 定语义（消息与目标位如何联结），才能决定这条义务是改述还是删除。</li>
 <li><b>T3 剩余 2 条</b>：签名语义（Sign 的输入输出与 pk 的联结）定下来之后才能谈目标独立性。</li>
-<li><b>ACVP 向量走公共 API</b>：<code>fml-dsa</code> 已透传 FIPS 204 的 context / extraEntropy，并有行为对照；但 75/75 的 KAT 只覆盖 KeyGen，sigGen / sigVer 的向量级覆盖还没有。</li>
+<li><b>ACVP 向量走公共 API</b>：<code>fml-dsa</code> 已透传 FIPS 204 的 context / extraEntropy，并有行为对照；现有 75/75 的 keyGen KAT 由 Phase 1 包装的 <code>@noble/post-quantum</code> 后端产出（包装层 API 用同一批向量验证），且只覆盖 KeyGen，sigGen / sigVer 的向量级覆盖还没有。</li>
 <li><b>RN 仓测试与 CI</b>：<code>fibemate-mobile</code> 的 <code>node:test</code> 模式已跑通，<code>fibemate-react-native</code> 的 test 脚本只有 jest，无测试文件时是否会静默通过尚未实测。</li>
 <li><b>CBOM 进 PR 门禁</b>，以及 npm / pip / 镜像层的 hash 固定。</li>
 <li><b>外部 code review</b>：Scorecard 的 Code-Review 0/28，每一个实质性评审都直接改变这个数字。</li>

@@ -127,7 +127,8 @@ What is explicitly open:
 3. ACVP vectors through the public API: `fml-dsa` forwards the FIPS 204
    `context` and `extraEntropy` options and has a behavioural check (verification
    passes with the context and fails without it), but the 75/75 KAT covers
-   KeyGen only. Vector-level `sigGen` / `sigVer` coverage is missing.
+   KeyGen only, and those keys come from the `@noble/post-quantum` backend that
+   Phase 1 wraps. Vector-level `sigGen` / `sigVer` coverage is missing.
 4. Tests and CI in `fibemate-react-native`: the `node:test` pattern already works
    in `fibemate-mobile`, while the React Native repository's `test` script only
    runs `jest`, and whether it silently passes with no test files has not been
