@@ -29,13 +29,18 @@
 <h1>DMTH 模型说明</h1>
 <p class="subtitle">深度可乘性陷门硬度 — 对 LookingGlass 的安全模型修正</p>
 
+<div class="card card-amber" style="border-left-color:var(--red);">
+  <p><strong>2026-10-25 状态更新：核心硬度主张已撤回，本页以下内容保留为历史记录。</strong>后续分析表明三条支撑都不成立：① DMH 的“深度放大计算硬度”可被<strong>代数论证</strong>否定（公钥就是标准 LWE 实例，<span class="eq">d</span> 不在攻击者视图内）；② 替代假设“陷门结构复杂度”<strong>无归约</strong>，其指标 <span class="eq">d·n·log₂q/2</span> 是公式而非测量；③ 解密步骤仍是概念性减法，正确性未证。因此也不存在“攻破 LWE 之后还有第二道墙”这个前提。</p>
+  <p style="margin-top:0.6rem;">完整分析（negative result，未经同行评审）：<a href="https://doi.org/10.5281/zenodo.23638522" style="color:var(--green);">DOI: 10.5281/zenodo.23638522</a>。<strong>本构造不作任何安全声称，不得用于任何系统。</strong></p>
+</div>
+
 <div class="card card-amber">
   <p><strong>一句话：</strong>DMTH 不声称 LWE 被嵌套后变"更难解"。它声称的是——即使攻击者解开了 LWE，他们面对的不是明文，而是 <strong>d−1 层需要逆向工程的 Kronecker 嵌套结构</strong>。</p>
 </div>
 
 <h2>1. DMH 原来的声称（已被修正）</h2>
 <p>DMH（Depth-Multiplicative Hardness）声称：多层 LWE 嵌套的难度随深度 <span class="eq">d</span> 指数增长——即 <span class="eq">d=2</span> 比 <span class="eq">d=1</span> 安全，<span class="eq">d=3</span> 比 <span class="eq">d=2</span> 更安全。</p>
-<p>这个声称在 BKZ 结构分析下被证明<strong>不成立</strong>：攻击者收到的公钥是一个标准 LWE 实例（<span class="eq">A, b = A·s + e</span>），无论 <span class="eq">d</span> 是多少，BKZ 攻击的复杂度由 <span class="eq">n</span> 和 <span class="eq">q</span> 决定，与 <span class="eq">d</span> 无关。</p>
+<p>这个声称已被<strong>代数论证</strong>否定（不依赖任何实验）：攻击者收到的公钥是一个标准 LWE 实例（<span class="eq">A, b = A·s + e</span>），无论 <span class="eq">d</span> 是多少，格攻击的复杂度由 <span class="eq">n</span> 和 <span class="eq">q</span> 决定，与 <span class="eq">d</span> 无关。<span style="color:var(--muted);">（早期版本此处写作“经 BKZ 结构分析验证”，实际只跑过 LLL（n=4–8），从未做过 BKZ 实验；该措辞已更正。）</span></p>
 
 <h2>2. DMTH 修正了什么</h2>
 <p>DMTH（Depth-Multiplicative <em>Trapdoor</em> Hardness）将 <strong>深度</strong> 的含义从"攻击难度"重新定义为<strong>"陷门结构复杂度"</strong>——不再声称 <span class="eq">d</span> 阻止攻击者求解 LWE，而是声称 <span class="eq">d</span> 阻止攻击者在求解 LWE <em>之后</em> 恢复明文。</p>
@@ -58,13 +63,14 @@
   <li>BKZ 结构分析<strong>确认</strong>：公钥在攻击者眼中是标准 LWE 实例</li>
   <li>χ² 独立性扫描<strong>通过</strong>：7 参数（n=8/16/32, σ=1/3/5），无显著层间相关性（Cohen's w ≤ 0.258）</li>
   <li>技术文档 v2 已生成（内部归档）</li>
+  <li><strong>负面结果报告已发布</strong>：<a href="https://doi.org/10.5281/zenodo.23638522" style="color:var(--green);">DOI 10.5281/zenodo.23638522</a>（模型更正 + LLL/χ² 实测 + 两条 Gap：无归约、指标非测量）</li>
   <li>LookingGlass 在 FIBEMATE 中<strong>默认关闭</strong>（<code>ENABLE_LOOKINGGLASS=false</code>）</li>
 </ul>
 
-<p style="margin-top:1rem;color:var(--muted);">DMTH 假设目前无已知反例。它不是一个承诺——它是一个公开检验中的密码学假设，完整记录在 arXiv 预印本和 DigiCert 可信时间戳中。</p>
+<p style="margin-top:1rem;color:var(--muted);">DMTH 假设<strong>既未被证明、也未获得支持性归约</strong>——此前版本写作“目前无已知反例”，但“没有反例”不等于“有支持”，该措辞已更正。完整记录在负面结果报告（<a href="https://doi.org/10.5281/zenodo.23638522" style="color:var(--green);">10.5281/zenodo.23638522</a>）与 DigiCert 可信时间戳中。原来的 arXiv 预印本未获接收，不再作为引用来源。</p>
 
 <footer>
-  <p>最后更新：2026-09-23 · <a href="/">返回首页</a> · <a href="/docs/pqc-readiness.html">PQC Readiness →</a></p>
+  <p>最后更新：2026-10-25 · <a href="/">返回首页</a> · <a href="/docs/pqc-readiness.html">PQC Readiness →</a></p>
 </footer>
 
 </body>

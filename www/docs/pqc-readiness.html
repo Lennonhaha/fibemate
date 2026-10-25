@@ -371,7 +371,7 @@
 <tr><td>单元测试</td><td>Jest 36 项功能覆盖</td><td><span style="color:var(--green);">36/36 全绿</span></td><td>lg-001~020</td></tr>
 <tr><td>集成测试</td><td>FIBEMATE 主线集成 Smoke 35 + E2E 31</td><td><span style="color:var(--green);">64/64 全绿</span></td><td>lg-023~032</td></tr>
 <tr><td>层间独立性</td><td>χ² 拟合优度, 7 参数扫描 (n=8/16/32, σ=1/3/5, α=0.01, 5×10⁴ 样本)</td><td><span style="color:var(--green);">Cohen's w ≤ 0.258 (可忽略)</span></td><td>lg-018~020</td></tr>
-<tr><td>BKZ 结构分析</td><td>Kannan 格嵌入 + LLL 规约 (n=4–8)</td><td><span style="color:var(--green);">确认公钥为标准 LWE 实例</span></td><td>lg-033~034</td></tr>
+<tr><td>格规约实验<span style="color:var(--muted);">（非 BKZ）</span></td><td>Kannan 格嵌入 + LLL 规约 (n=4–8)</td><td><span style="color:var(--green);">确认公钥为标准 LWE 实例</span></td><td>lg-033~034</td></tr>
 <tr><td>安全模型修正</td><td>DMH→DMTH (深度可乘性硬度→深度可乘性陷门硬度)</td><td><span style="color:var(--green);">✅ 完成, 内部技术文档</span></td><td>lg-035~038</td></tr>
 <tr><td>FIBEMATE 集成</td><td>透明嵌入, ENABLE_LOOKINGGLASS=false 默认</td><td><span style="color:var(--green);">✅ 零侵入</span></td><td>lg-023~032</td></tr>
 <tr><td>张量运算 TVLA 仿真</td><td>Hamming Weight 模型, N=10,000, 掩码版 max|t|=0.72, 0/320 fail</td><td><span style="color:var(--green);">✅ 全绿</span></td><td>lg-040</td></tr>
@@ -405,7 +405,8 @@
 
 <!-- 7.4: DMTH Security Model -->
 <h3>7.4 DMTH 安全模型 (v2 修正版)</h3>
-<div class="note"><strong>2026-06-26 模型修正声明：</strong>早期版本 (DMH) 声称多层 LWE 嵌套可乘法放大计算硬度。经 BKZ 结构分析验证，该声称不成立——攻击者收到的是标准 LWE 公钥。修正后 DMTH 正确定义 depth 为<strong>陷门结构复杂度</strong>参数，而非攻击计算硬度。</div>
+<div class="note"><strong>2026-06-26 模型修正声明：</strong>早期版本 (DMH) 声称多层 LWE 嵌套可乘法放大计算硬度。该声称不成立——攻击者收到的是标准 LWE 公钥。<span style="color:var(--muted);">（原写作“经 BKZ 结构分析验证”，实际只跑过 LLL，n=4–8；否证依据是代数论证，不是格攻击实验。）</span>修正后 DMTH 将 depth 定义为<strong>陷门结构复杂度</strong>参数，而非攻击计算硬度。</div>
+<div class="note" style="border-left:3px solid var(--red);"><strong>2026-10-25 状态更新：上述“陷门结构复杂度”亦未被支持，本节保留为历史记录。</strong>后续分析给出三条 Gap：① 该复杂度指标 <code>d·n·log₂q/2</code> 无归约；② 它是公式而非测量值；③ 解密步骤仍是概念性减法，正确性未证。完整分析（negative result，未经同行评审）：<a href="https://doi.org/10.5281/zenodo.23638522" style="color:var(--green);">DOI 10.5281/zenodo.23638522</a>。<strong>本构造不作任何安全声称，不得用于任何系统。</strong></div>
 
 <table>
 <thead><tr><th>参数</th><th>DMTH 陷门结构</th><th>实际安全强度 (标准 LWE bound)</th></tr></thead>
@@ -415,7 +416,7 @@
 <tr><td>n=32, d=3, q=3329</td><td>中层嵌套 (d=3)</td><td><strong>~323 bits</strong></td></tr>
 </tbody>
 </table>
-<p style="font-size:0.85rem;color:var(--muted);">DMTH 列仅为定性结构复杂度分级（浅层/中层/深层），不分配具体安全 bit 数。实际安全强度仅由标准 LWE bound 决定 | <a href="/docs/dmth-explanation.html" style="color:var(--green);">→ 非专业语言说明</a>。</p>
+<p style="font-size:0.85rem;color:var(--muted);">表中 bit 数为启发式公式 <code>d·n·log₂q/2</code> 的算术结果，<strong>不是格估计器的测量结果，也没有归约支撑</strong>（此前标为“实际安全强度 (标准 LWE bound)”属措辞不当，已更正）；不得引用为安全级别 | <a href="/docs/dmth-explanation.html" style="color:var(--green);">→ 非专业语言说明</a> · <a href="https://doi.org/10.5281/zenodo.23638522" style="color:var(--green);">→ 负面结果报告</a>。</p>
 
 <!-- 7.5: Cheshire Cat -->
 <h3>7.5 物理层：Cheshire Cat 三重防护</h3>
@@ -437,7 +438,7 @@
   <table>
   <thead><tr><th>结局</th><th>场景</th><th>FIBEMATE 的价值</th></tr></thead>
   <tbody>
-  <tr><td style="color:var(--green);"><strong>A. 假设成立</strong></td><td>DMTH 陷门确实为 LWE 公钥提供了额外的结构混淆</td><td>FIBEMATE 成为第一个拥有「正交安全层」的 PQC 通信系统——即使 LWE 被量子算法攻破，DMTH 陷门维持结界</td></tr>
+  <tr><td style="color:var(--muted);"><strong>A. 假设成立</strong><br><span style="color:var(--red);">（已于 2026-10-25 排除）</span></td><td>DMTH 陷门确实为 LWE 公钥提供了额外的结构混淆</td><td><span style="color:var(--muted);text-decoration:line-through;">FIBEMATE 成为第一个拥有「正交安全层」的 PQC 通信系统——即使 LWE 被量子算法攻破，DMTH 陷门维持结界</span><br>该情景不成立：既无归约，正确性亦未证，不存在“第二道墙”</td></tr>
   <tr><td style="color:var(--amber);"><strong>B. 假设被攻破</strong></td><td>密码分析发现 Kronecker 嵌套在 LWE 下可被多项式时间剥离</td><td>FIBEMATE 依然是一个经过 TVLA 验证的混合 PQC 通信系统（ML-KEM-768 + SLH-DSA + SM2）- 工程线不受任何影响。同时，不论学术发表与否，「为什么这种陷门不工作」的分析本身具有存档价值</td></tr>
   <tr><td style="color:var(--muted);"><strong>C. 长期悬置</strong></td><td>像许多密码学假设一样，DMTH 既未被证明也未被推翻</td><td>LookingGlass 作为「探索性模块」持续存在，每个新版本保留其代码但不默认启用——这是学术透明度的实践：不隐藏失败过的尝试，也不假装确定未验证的假设</td></tr>
   </tbody>
@@ -447,8 +448,8 @@
 <!-- 7.8: Current Positioning & Attribution -->
 <h3>7.8 当前定位与存证</h3>
 <div class="card card-green">
-  <p style="margin:0;"><strong>✅ 代码验证已完成 · 实验验证已完成 · 安全模型已修正 · 数学假设正在公开检验中</strong></p>
-  <p style="margin:0.5rem 0 0;color:var(--muted);">DMTH 假设无已知反例。LookingGlass 默认关闭，不影响生产加密。VWZ 签名方案已完成全链路 Rust→WASM→前端部署→研究端 API 集成。技术文档已内部归档。</p>
+  <p style="margin:0;"><strong>✅ 代码验证已完成 · 实验验证已完成 · 安全模型已撤回（2026-10-25）</strong></p>
+  <p style="margin:0.5rem 0 0;color:var(--muted);">DMTH 的硬度主张已作为负面结果公开发布（<a href="https://doi.org/10.5281/zenodo.23638522" style="color:var(--green);">DOI 10.5281/zenodo.23638522</a>）：DMH 被代数论证否定，“陷门结构复杂度”无归约。此前“假设无已知反例”的表述已更正——无已知反例不等于有支持。LookingGlass 默认关闭，不影响生产加密。VWZ 签名方案已完成全链路 Rust→WASM→前端部署→研究端 API 集成。</p>
 </div>
 
 <p style="font-size:0.85rem;color:var(--muted);margin-top:1rem;">LookingGlass 全系列 <strong>已累计 260 份（lg-001 起，含 v2.2 系列；实际 TSR 归档至 lg-108）DigiCert/FreeTSA TSR 存证 · 全部 Granted ✅ (含 v2 独立存证) · 截止 2026-09-23</p>

@@ -360,6 +360,7 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
  <div class="card card-amber" style="margin-bottom:1.5rem;">
  <p style="margin:0;color:#f59e0b;"><strong>⚠️ 2026-06-26 实验分支声明</strong></p>
  <p style="margin:0.5rem 0 0;color:#8b949e;">LookingGlass (原 DMH) 为 FIBEMATE 自研实验性混淆方案，已更名为 DMTH（确定性掩码 + 标准矩阵对）。它<strong>不提升底层 LWE 难度</strong>，仅增加软件层混淆；默认关闭，不部署生产环境。</p>
+ <p style="margin:0.75rem 0 0;color:#ef4444;"><strong>⚠️ 2026-10-25 状态更新：DMTH 的硬度主张已撤回，本节保留为历史记录。</strong>后续分析给出三条 Gap：陷门复杂度指标无归约、指标为公式而非测量、解密仍是概念性减法且正确性未证。完整分析（negative result，未经同行评审）：<a href="https://doi.org/10.5281/zenodo.23638522" style="color:#00d4aa;">DOI 10.5281/zenodo.23638522</a>。<strong>本构造不作任何安全声称，不得用于任何系统。</strong></p>
  </div>
 
  <h3>11.1 修正对比</h3>
@@ -368,33 +369,33 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
 <tbody>
 <tr><td>安全声称</td><td>depth × n × log(q) 计算硬度</td><td>标准 LWE 计算硬度 + 陷门复杂度</td></tr>
 <tr><td>depth 作用</td><td>错误地作为攻击难度</td><td>正确定义为陷门隐蔽性参数</td></tr>
-<tr><td>公钥形态</td><td>未验证</td><td>BKZ 确认标准 LWE</td></tr>
+<tr><td>公钥形态</td><td>未验证</td><td>LLL 实验 / 代数论证确认标准 LWE（未做 BKZ）</td></tr>
 <tr><td>学术诚实</td><td>不准确</td><td>自我修正 &#x2705;</td></tr>
 </tbody>
 </table>
 
-<h3>11.2 实际安全强度</h3>
+<h3>11.2 启发式参数表（非安全级别）</h3>
 <table>
-<thead><tr><th>参数</th><th>DMTH 陷门复杂度</th><th>LWE 攻击复杂度 (实际安全)</th></tr></thead>
+<thead><tr><th>参数</th><th>DMTH 陷门复杂度（启发式公式）</th><th>同公式的算术值（非测量、无归约）</th></tr></thead>
 <tbody>
 <tr><td>n=8, d=2, q=3329</td><td>~94 bits</td><td><strong>~81 bits</strong></td></tr>
 <tr><td>n=16, d=2, q=3329</td><td>~187 bits</td><td><strong>~162 bits</strong></td></tr>
 <tr><td>n=32, d=3, q=3329</td><td>~374 bits</td><td><strong>~323 bits</strong></td></tr>
 </tbody>
 </table>
-<p style="font-size:0.85rem;color:#8b949e;">实际安全强度按 <strong>LWE 攻击复杂度</strong> 列（标准 LWE bound）。DMTH 列为陷门结构复杂度指标，不提供额外计算硬度。</p>
+<p style="font-size:0.85rem;color:#8b949e;">两列均由公式 <code>d·n·log₂q/2</code> 推得，<strong>不是格估计器的输出，也没有归约支撑</strong>；不得引用为安全级别。（此前标为“LWE 攻击复杂度 (实际安全 / 标准 LWE bound)”属措辞不当，2026-10-25 已更正。）</p>
 
 <h3>11.3 验证方法</h3>
 <ul>
-  <li><strong>BKZ 结构分析</strong>: Kannan 格嵌入 + LLL 格基规约 (n=4–8)，确认公钥分布与标准 LWE 一致</li>
+  <li><strong>格规约实验（非 BKZ）</strong>: Kannan 格嵌入 + LLL 格基规约 (n=4–8)，确认公钥分布与标准 LWE 一致</li>
   <li><strong>层间独立性</strong>: &chi;&sup2; 拟合优度, 7 参数扫描 (n=8/16/32, &sigma;=1/3/5, &alpha;=0.01, 5&times;10&sup4; 样本)</li>
   <li><strong>效应量</strong>: Cohen&rsquo;s w &le; 0.258，不随 n 增长</li>
 </ul>
 
 <h3>11.4 LookingGlass 定位</h3>
 <div class="card card-green" style="border-left:4px solid #22c55e;background:#1a1f2e;border:1px solid #30363d;border-radius:8px;padding:1.2rem 1.5rem;margin:1rem 0;">
-  <p style="margin:0;"><strong>&#x2705; 代码验证已完成 · 实验验证已完成 · 安全模型已修正</strong></p>
-  <p style="margin:0.5rem 0 0;color:#8b949e;">LookingGlass 是 FIBEMATE 的<strong>「默认关闭、按需开启」实验性模块</strong>。它独立于 SM2/ML-KEM/Cheshire Cat 底盘运行。</p>
+  <p style="margin:0;"><strong>&#x2705; 代码验证已完成 · 实验验证已完成 · 硬度主张已撤回（2026-10-25）</strong></p>
+  <p style="margin:0.5rem 0 0;color:#8b949e;">LookingGlass 是 FIBEMATE 的<strong>「默认关闭、按需开启」实验性模块</strong>。它独立于 SM2/ML-KEM/Cheshire Cat 底盘运行。DMTH 的负面结果已公开发布：<a href="https://doi.org/10.5281/zenodo.23638522" style="color:#00d4aa;">DOI 10.5281/zenodo.23638522</a>。</p>
 </div>
 
 <p style="font-size:0.85rem;color:#8b949e;">LookingGlass 全系列 38 份 DigiCert TSR（子系列计数，已含于全站 260 份总存证）· 2026-06-26 · 全部 Granted · 详见 <a href="/docs/pqc-readiness.html#7">抗量子就绪状态 §7</a></p>
