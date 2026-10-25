@@ -147,7 +147,7 @@
       "opsPerSecEnc": null,
       "opsPerSecDec": null,
       "perfNote": "fml-dsa (JS), ML-DSA-44",
-      "kat": "75/75 (keyGen)",
+      "kat": "75/75 (keyGen, noble backend)",
       "tvla": "N/A",
       "hasKAT": true,
       "hasTVLA": false,

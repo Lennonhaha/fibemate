@@ -31,7 +31,7 @@
 | 子项 | 外部人判断 | 实际情况 | 偏差根因 |
 |------|-----------|---------|---------|
 | 加密算法清单 | "有完整清单"（选了最高选项）→ 估算 75 | 扫描器 100% 覆盖 147 依赖，15 算法 + 2 FPGA 模块 | 外部人在问卷界面上看不到扫描器输出；如果问卷附了 `tools/pqc-ecosystem-scan.json` 摘要，答案会一致 |
-| KAT 覆盖 | "部分覆盖"→ 扣分 | ML-KEM KAT 10000/10000、SM2 100/100、SM3/SM4 各 30/30、HMAC-SM3 6/6、fml-dsa 75/75、SLH-DSA 5/5 | 外部人确实知道 `scripts/kat-*.js` 存在，但不确定覆盖范围 |
+| KAT 覆盖 | "部分覆盖"→ 扣分 | ML-KEM KAT 10000/10000、SM2 100/100、SM3/SM4 各 30/30、HMAC-SM3 6/6、fml-dsa 75/75（NIST ACVP keyGen，验证的是 @noble 后端）、SLH-DSA 5/5 | 外部人确实知道 `scripts/kat-*.js` 存在，但不确定覆盖范围 |
 | TSR 存证 | "有 git tag"→ 扣分 | TSR lg-001~100, DigiCert+FreeTSA 双机构, timestamp-manifest.json v3, 总计 131 条 | 外部人不知道 TSR 体系的存在——这个不会出现在 `ls scripts/` 里 |
 
 **纠正后预测**：如果外部人能看完 `evidence/tvla/` 和 `tsa/` 目录，Crypto Inventory 会评 90-95。

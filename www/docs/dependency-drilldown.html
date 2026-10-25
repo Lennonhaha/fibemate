@@ -80,7 +80,7 @@ var ALGOS = [
     desc:'FIPS 203 密钥封装 · C/WASM 双后端 · NTT 加速 · KAT 10,000 轮零偏差' },
   { id:'mldsa', name:'ML-DSA-65', cat:'pqc', risk:'safe', riskScore:8,
     pk:1952, sk:4032, sig:3309, ss:0, fips:'FIPS 204', cov:70,
-    keygen:null, sign:2400, verify:700, kat:'75/75', tvla:'', nat:false, fpga:true,
+    keygen:null, sign:2400, verify:700, kat:'75/75 (noble)', tvla:'', nat:false, fpga:true,
     files:47, deps:['sha256','ntt'], depWeight:[2,1],
     desc:'FIPS 204 数字签名 · fml-dsa（Phase 1 @noble）· 自研 core 与 Noble 互操作 7/7' },
   { id:'slhdsa', name:'SLH-DSA-128s', cat:'pqc', risk:'warning', riskScore:30,

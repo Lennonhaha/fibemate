@@ -200,7 +200,7 @@
           "code_integrity": "8 CI/CD workflows (ci, ci-native, native-build, nightly-phase1, nightly-phase2, release, repolinter, scorecard) — every push",
           "cryptographic_correctness": "TSR evidence chain lg-001~100 (DigiCert + FreeTSA dual authority), 100 timestamp records",
           "security": "TVLA 36/36 (N=10000, WARMUP=2000, THRESH=4.5), 3 implementations × 12 tests",
-          "standard_compliance": "KAT: ML-KEM 10000/10000, SM2 100/100, SM3/SM4 30/30, fml-dsa 75/75",
+          "standard_compliance": "KAT: ML-KEM 10000/10000, SM2 100/100, SM3/SM4 30/30, fml-dsa 75/75 (NIST ACVP keyGen; validates the @noble backend that Phase 1 wraps)",
           "performance": "benchmark.cjs + perf-gate.js (WARN 20%, FAIL 50%) — every CI run",
           "dependency": "package-lock.json / npm ci — build-time",
           "vulnerability_disclosure": "SECURITY.md + VULNERABILITIES.md — security researchers",

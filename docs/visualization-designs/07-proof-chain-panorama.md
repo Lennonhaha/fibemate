@@ -33,7 +33,7 @@
 | 数据项 | 来源 |
 |--------|------|
 | 算法清单 | `packages/*`（7 个 npm 包）+ 国密 SM2/SM3/SM4 |
-| KAT 结果 | `packages/fml-dsa/kat-vectors/`（75 向量 75/75）+ pqc-kem KAT 10k |
+| KAT 结果 | `packages/fml-dsa/kat-vectors/`（75 向量 75/75，NIST ACVP keyGen，验证 @noble 后端）+ pqc-kem KAT 10k |
 | TLA+ 模型 | `docs/tla/`（C2.tla + C2.cfg，7 不变式 0 violation） |
 | TVLA 结果 | SM2 TVLA 5/5 + 高阶 20/20（`www/docs/SM2_TVLA_STATUS.md`） |
 | TSR 存证 | `www/docs/tsa/`（lg-001~068，时间戳存证） |

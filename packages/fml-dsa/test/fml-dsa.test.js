@@ -1,7 +1,8 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // fml-dsa/test/fml-dsa.test.js — Comprehensive test suite
 // Phase 1: noble-backed API → KAT verification + oracle cross-verification
-// 2026-07-29: KeyGen KAT 75/75 + Sign/Verify oracle + API surface test
+// 2026-07-29: KeyGen KAT 75/75 (vectors from NIST ACVP; the keys are produced by the @noble
+// backend this package wraps) + Sign/Verify oracle + API surface test
 
 import { readFileSync, readdirSync } from 'fs';
 import { resolve, dirname } from 'path';
