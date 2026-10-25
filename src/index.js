@@ -614,12 +614,14 @@ wss.on('connection', (ws, req) => {
 
   console.log(`[WS] 新连接 from ${req.socket.remoteAddress}`);
 
-  ws.on('message', async (raw) => {
-      console.log('[WS-MSG] Received:', raw ? raw.toString().substring(0, 200) : 'null');
+  ws.on('message', async (raw, isBinary) => {
 try {
-      const unpadded = WsPadding.unpad(Buffer.from(raw));
-      if (unpadded.isCover) return; // Discard cover traffic
-      const msg = JSON.parse(unpadded.payload.toString());
+      // 帧格式由 WsPadding.decodeFrame 统一判定（二进制填充帧 / 裸文本帧 / 填充但未置标志的旧客户端帧）。
+      // TODO: Remove the text-frame fallback once all clients are >= v3.3.3.
+      const frame = WsPadding.decodeFrame(raw, isBinary);
+      if (frame.skip === 'cover') return; // Discard cover traffic
+      if (frame.skip === 'malformed') return; // 长度字段与实收字节不自洽：丢弃，不解析残包
+      const msg = JSON.parse(frame.text);
 
       // 认证
       if (!authed) {
