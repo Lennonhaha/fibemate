@@ -132,6 +132,45 @@ jobs:
           node test/lockout.test.js
           node test/smoke-backend.js
 
+  # ─── C 原生 addon：构建后与 JS 后端对拍 ───────────────────
+  # index.js prefers the C addon whenever it is present, so this is the path
+  # users actually execute in a native build. Nothing else in CI compiles it.
+  native-parity:
+    strategy:
+      matrix:
+        # windows-2022 rather than -latest: the latest image now carries Visual
+        # Studio 18, whose install node-gyp 11.5 parses as version "undefined"
+        # and then reports "could not find a version of Visual Studio 2017 or
+        # newer". Revisit when node-gyp learns to read it.
+        os: [ubuntu-latest, windows-2022]
+        node: [22]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Install build toolchain
+        run: npm install --no-save --no-package-lock --no-audit --no-fund node-gyp@11 node-addon-api@8
+
+      - name: Build the native addon
+        run: npx --no-install node-gyp rebuild -C packages/pqc-kem/native --release
+
+      - name: Native self-test
+        run: node scripts/test-native-addon.cjs
+
+      - name: C <-> JS parity (deterministic vectors, implicit rejection, validation)
+        env:
+          REQUIRE_NATIVE: '1'
+        run: node packages/pqc-kem/test/native-parity.test.js
+
   # ─── PQC 性能基准（single platform，回归检测）────────────
   bench:
     runs-on: ubuntu-latest

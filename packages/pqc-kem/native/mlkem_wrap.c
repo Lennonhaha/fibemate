@@ -1,4 +1,6 @@
 #include <node_api.h>
+#include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include "kem.h"
@@ -6,10 +8,99 @@
 
 /* ── helpers ────────────────────────────────────────────────── */
 
-static inline uint8_t* get_buf(napi_env env, napi_value val, size_t* out_len) {
-    void* data;
-    napi_get_buffer_info(env, val, &data, out_len);
+/*
+ * Read a Buffer / Uint8Array argument and require an exact byte length.
+ *
+ * The single-shot entry points copy fixed-size arrays out of whatever pointer
+ * they are handed, so a short buffer is an out-of-bounds read rather than a
+ * soft error: crypto_kem_dec() on a 1087-byte ciphertext would read one byte
+ * past the view and its result would depend on adjacent heap memory. Every
+ * pointer that crosses into the C side goes through this check.
+ *
+ * Returns NULL with a pending exception on failure.
+ */
+static uint8_t* get_buf_exact(napi_env env, napi_value val, size_t expected,
+                              const char* label) {
+    void* data = NULL;
+    size_t len = 0;
+    bool is_buf = false;
+
+    if (napi_is_buffer(env, val, &is_buf) == napi_ok && is_buf) {
+        if (napi_get_buffer_info(env, val, &data, &len) != napi_ok) data = NULL;
+    } else {
+        bool is_ta = false;
+        if (napi_is_typedarray(env, val, &is_ta) == napi_ok && is_ta) {
+            napi_typedarray_type type;
+            size_t length = 0;
+            void* tdata = NULL;
+            napi_value ab;
+            size_t off = 0;
+            if (napi_get_typedarray_info(env, val, &type, &length, &tdata, &ab, &off) == napi_ok &&
+                (type == napi_uint8_array || type == napi_uint8_clamped_array)) {
+                data = tdata;
+                len = length;
+            }
+        }
+    }
+
+    if (!data) {
+        char msg[128];
+        snprintf(msg, sizeof msg, "%s: expected a Buffer or Uint8Array", label);
+        napi_throw_type_error(env, NULL, msg);
+        return NULL;
+    }
+    if (len != expected) {
+        char msg[192];
+        snprintf(msg, sizeof msg, "%s: expected %zu bytes, got %zu", label, expected, len);
+        napi_throw_range_error(env, NULL, msg);
+        return NULL;
+    }
     return (uint8_t*)data;
+}
+
+/* Same type validation as get_buf_exact, but reports the actual length so the
+ * batch entry points can check it against their count argument. */
+static uint8_t* get_buf_any(napi_env env, napi_value val, size_t* out_len,
+                            const char* label) {
+    void* data = NULL;
+    size_t len = 0;
+    bool is_buf = false;
+
+    if (napi_is_buffer(env, val, &is_buf) == napi_ok && is_buf) {
+        if (napi_get_buffer_info(env, val, &data, &len) != napi_ok) data = NULL;
+    } else {
+        bool is_ta = false;
+        if (napi_is_typedarray(env, val, &is_ta) == napi_ok && is_ta) {
+            napi_typedarray_type type;
+            size_t length = 0;
+            void* tdata = NULL;
+            napi_value ab;
+            size_t off = 0;
+            if (napi_get_typedarray_info(env, val, &type, &length, &tdata, &ab, &off) == napi_ok &&
+                (type == napi_uint8_array || type == napi_uint8_clamped_array)) {
+                data = tdata;
+                len = length;
+            }
+        }
+    }
+
+    if (!data) {
+        char msg[128];
+        snprintf(msg, sizeof msg, "%s: expected a Buffer or Uint8Array", label);
+        napi_throw_type_error(env, NULL, msg);
+        return NULL;
+    }
+    *out_len = len;
+    return (uint8_t*)data;
+}
+
+/* Require at least `expected` arguments before touching args[]. */
+static bool have_args(napi_env env, size_t argc, size_t expected, const char* label) {
+    if (argc >= expected) return true;
+    char msg[128];
+    snprintf(msg, sizeof msg, "%s: expected %zu arguments, got %zu", label, expected, argc);
+    napi_throw_type_error(env, NULL, msg);
+    return false;
 }
 
 /**
@@ -49,10 +140,11 @@ static napi_value KeygenDerand(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value args[1];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (!have_args(env, argc, 1, "keygenDerand")) return NULL;
     uint8_t pk[KYBER_PUBLICKEYBYTES];
     uint8_t sk[KYBER_SECRETKEYBYTES];
-    size_t coins_len;
-    uint8_t* coins = get_buf(env, args[0], &coins_len);
+    uint8_t* coins = get_buf_exact(env, args[0], 2 * KYBER_SYMBYTES, "keygenDerand coins");
+    if (!coins) return NULL;
     crypto_kem_keypair_derand(pk, sk, coins);
     napi_value buf_pk, buf_sk, ret;
     napi_create_buffer_copy(env, KYBER_PUBLICKEYBYTES, pk, NULL, &buf_pk);
@@ -67,8 +159,9 @@ static napi_value Encaps(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value args[1];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    size_t pk_len;
-    uint8_t* pk = get_buf(env, args[0], &pk_len);
+    if (!have_args(env, argc, 1, "encaps")) return NULL;
+    uint8_t* pk = get_buf_exact(env, args[0], KYBER_PUBLICKEYBYTES, "encaps publicKey");
+    if (!pk) return NULL;
     uint8_t ct[KYBER_CIPHERTEXTBYTES];
     uint8_t ss[KYBER_SSBYTES];
     crypto_kem_enc(ct, ss, pk);
@@ -85,9 +178,11 @@ static napi_value EncapsDerand(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value args[2];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    size_t pk_len, coins_len;
-    uint8_t* pk = get_buf(env, args[0], &pk_len);
-    uint8_t* coins = get_buf(env, args[1], &coins_len);
+    if (!have_args(env, argc, 2, "encapsDerand")) return NULL;
+    uint8_t* pk = get_buf_exact(env, args[0], KYBER_PUBLICKEYBYTES, "encapsDerand publicKey");
+    if (!pk) return NULL;
+    uint8_t* coins = get_buf_exact(env, args[1], KYBER_SYMBYTES, "encapsDerand coins");
+    if (!coins) return NULL;
     uint8_t ct[KYBER_CIPHERTEXTBYTES];
     uint8_t ss[KYBER_SSBYTES];
     crypto_kem_enc_derand(ct, ss, pk, coins);
@@ -104,9 +199,11 @@ static napi_value Decaps(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value args[2];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
-    size_t ct_len, sk_len;
-    uint8_t* ct = get_buf(env, args[0], &ct_len);
-    uint8_t* sk = get_buf(env, args[1], &sk_len);
+    if (!have_args(env, argc, 2, "decaps")) return NULL;
+    uint8_t* ct = get_buf_exact(env, args[0], KYBER_CIPHERTEXTBYTES, "decaps ciphertext");
+    if (!ct) return NULL;
+    uint8_t* sk = get_buf_exact(env, args[1], KYBER_SECRETKEYBYTES, "decaps secretKey");
+    if (!sk) return NULL;
     uint8_t ss[KYBER_SSBYTES];
     crypto_kem_dec(ss, ct, sk);
     napi_value buf_ss;
@@ -130,6 +227,7 @@ static napi_value KeygenBatch(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value args[1];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (!have_args(env, argc, 1, "keygen_batch")) return NULL;
 
     int64_t count;
     napi_get_value_int64(env, args[0], &count);
@@ -174,13 +272,24 @@ static napi_value EncapsBatch(napi_env env, napi_callback_info info) {
     size_t argc = 2;
     napi_value args[2];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (!have_args(env, argc, 2, "encaps_batch")) return NULL;
 
-    size_t pk_total_len;
-    uint8_t* pk_flat = get_buf(env, args[0], &pk_total_len);
+    size_t pk_total_len = 0;
+    uint8_t* pk_flat = get_buf_any(env, args[0], &pk_total_len, "encaps_batch publicKeys");
+    if (!pk_flat) return NULL;
 
     int64_t count;
     napi_get_value_int64(env, args[1], &count);
     if (count <= 0 || count > 100000) count = 1;
+
+    if (pk_total_len != (size_t)count * KYBER_PUBLICKEYBYTES) {
+        char msg[192];
+        snprintf(msg, sizeof msg,
+                 "encaps_batch publicKeys: expected %zu bytes for %lld keys, got %zu",
+                 (size_t)count * KYBER_PUBLICKEYBYTES, (long long)count, pk_total_len);
+        napi_throw_range_error(env, NULL, msg);
+        return NULL;
+    }
 
     size_t ct_total = (size_t)count * KYBER_CIPHERTEXTBYTES;
     size_t ss_total = (size_t)count * KYBER_SSBYTES;
@@ -219,14 +328,34 @@ static napi_value DecapsBatch(napi_env env, napi_callback_info info) {
     size_t argc = 3;
     napi_value args[3];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (!have_args(env, argc, 3, "decaps_batch")) return NULL;
 
-    size_t ct_len, sk_len;
-    uint8_t* ct_flat = get_buf(env, args[0], &ct_len);
-    uint8_t* sk_flat = get_buf(env, args[1], &sk_len);
+    size_t ct_len = 0, sk_len = 0;
+    uint8_t* ct_flat = get_buf_any(env, args[0], &ct_len, "decaps_batch ciphertexts");
+    if (!ct_flat) return NULL;
+    uint8_t* sk_flat = get_buf_any(env, args[1], &sk_len, "decaps_batch secretKeys");
+    if (!sk_flat) return NULL;
 
     int64_t count;
     napi_get_value_int64(env, args[2], &count);
     if (count <= 0 || count > 100000) count = 1;
+
+    if (ct_len != (size_t)count * KYBER_CIPHERTEXTBYTES) {
+        char msg[192];
+        snprintf(msg, sizeof msg,
+                 "decaps_batch ciphertexts: expected %zu bytes for %lld items, got %zu",
+                 (size_t)count * KYBER_CIPHERTEXTBYTES, (long long)count, ct_len);
+        napi_throw_range_error(env, NULL, msg);
+        return NULL;
+    }
+    if (sk_len != (size_t)count * KYBER_SECRETKEYBYTES) {
+        char msg[192];
+        snprintf(msg, sizeof msg,
+                 "decaps_batch secretKeys: expected %zu bytes for %lld keys, got %zu",
+                 (size_t)count * KYBER_SECRETKEYBYTES, (long long)count, sk_len);
+        napi_throw_range_error(env, NULL, msg);
+        return NULL;
+    }
 
     size_t ss_total = (size_t)count * KYBER_SSBYTES;
     uint8_t *ss_buf = malloc(ss_total);
@@ -263,15 +392,13 @@ static napi_value RoundtripBatch(napi_env env, napi_callback_info info) {
     size_t argc = 1;
     napi_value args[1];
     napi_get_cb_info(env, info, &argc, args, NULL, NULL);
+    if (!have_args(env, argc, 1, "roundtrip_batch")) return NULL;
 
     int64_t count;
     napi_get_value_int64(env, args[0], &count);
     if (count <= 0 || count > 100000) count = 1;
 
     size_t ss_total = (size_t)count * KYBER_SSBYTES;
-    size_t ct_bytes  = KYBER_CIPHERTEXTBYTES;
-    size_t pk_bytes  = KYBER_PUBLICKEYBYTES;
-    size_t sk_bytes  = KYBER_SECRETKEYBYTES;
 
     uint8_t *ss_sender   = malloc(ss_total);
     uint8_t *ss_receiver = malloc(ss_total);
@@ -283,9 +410,9 @@ static napi_value RoundtripBatch(napi_env env, napi_callback_info info) {
 
     int64_t ok = 0;
     for (int64_t i = 0; i < count; i++) {
-        uint8_t pk[pk_bytes];   /* stack allocation, single-shot */
-        uint8_t sk[sk_bytes];
-        uint8_t ct[ct_bytes];
+        uint8_t pk[KYBER_PUBLICKEYBYTES];   /* constant-size: MSVC has no VLA */
+        uint8_t sk[KYBER_SECRETKEYBYTES];
+        uint8_t ct[KYBER_CIPHERTEXTBYTES];
         uint8_t ss_e[KYBER_SSBYTES];
         uint8_t ss_d[KYBER_SSBYTES];
 
