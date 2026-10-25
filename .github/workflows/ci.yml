@@ -138,7 +138,11 @@ jobs:
   native-parity:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        # windows-2022 rather than -latest: the latest image now carries Visual
+        # Studio 18, whose install node-gyp 11.5 parses as version "undefined"
+        # and then reports "could not find a version of Visual Studio 2017 or
+        # newer". Revisit when node-gyp learns to read it.
+        os: [ubuntu-latest, windows-2022]
         node: [22]
       fail-fast: false
     runs-on: ${{ matrix.os }}
