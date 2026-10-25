@@ -57,7 +57,7 @@ a:hover { text-decoration:underline; }
 <div class="container">
 <header>
   <h1>当前<span class="gradient">状态</span></h1>
-  <div class="meta">2026-10-21 · 工程状态说明 · 已验证的数字与明确未完成项</div>
+  <div class="meta">2026-10-25 · 工程状态说明 · 已验证的数字与明确未完成项</div>
 </header>
 <h2>一、工程基建：哪些是真的，哪些还不是</h2>
 <h3>合并门禁（main 分支，ruleset 强制）</h3>
@@ -73,7 +73,7 @@ a:hover { text-decoration:underline; }
 </ul>
 <h3>外部评分（照抄，不解释）</h3>
 <ul>
-<li>主仓 OpenSSF Scorecard <b>8.1 / 10</b>（2026-10-20T10:37:11Z，commit <code>7a29301</code>，scorecard v5.6.0）。</li>
+<li>主仓 OpenSSF Scorecard <b>8.1 / 10</b>（2026-10-25T03:27:27Z，commit <code>2de752d</code>，scorecard v5.6.0）。</li>
 <li>桌面端（<code>fibemate-tauri</code>）<b>7.6 / 10</b>（2026-10-19T03:34:38Z，commit <code>64f8980</code>）。</li>
 </ul>
 <p>主仓失分项（同一份报告）：</p>
@@ -91,6 +91,11 @@ a:hover { text-decoration:underline; }
   </tbody>
 </table>
 <p>桌面端的 2 条 RUSTSEC 告警（<code>proc-macro-error</code>、<code>glib</code>）来自固定的 GTK 0.18 传递依赖，上游没有已发布补丁；<code>deny.toml</code> 没有 ignore 列表，靠作用域限定，缺口在仓内备案。</p>
+<h3>依赖告警</h3>
+<ul>
+<li>Dependabot 开放告警：<code>fibemate</code>、<code>fibemate-tools</code>、<code>pqc-hw-bench</code> 均为 <b>0</b>（2026-10-25 复核）。<code>fibemate</code> 此前积压 11 条，其中 3 条 <code>body-parser</code> 拒绝服务（<code>GHSA-27r3-jxmh-p828</code>）在运行路径上，已按同一 advisory 的两段 range 分别修掉：1.x 线到 1.20.9，2.x 线到 2.4.0。</li>
+<li>另有 8 条 <code>electron</code> 告警位于 <code>tools/pqc-desktop</code>，<code>scope=development</code>，不随产物分发，按 <code>tolerable_risk</code> 关闭并在告警里写明「为什么不可达 + 何时重做」。这类关闭不是「已修复」，单独说明。</li>
+</ul>
 <h3>静态分析</h3>
 <ul>
 <li>CodeQL 开放告警：<code>fibemate</code>、<code>fibemate-mobile</code>、<code>fibemate-tools</code>、<code>fibemate-tauri</code> 均为 <b>0</b>。</li>
@@ -107,7 +112,7 @@ a:hover { text-decoration:underline; }
 <li><code>fibemate-mobile</code> 有 <b>87 条 <code>node:test</code> 用例</b>（5 个文件，源码静态计数 16 / 10 / 15 / 37 / 9），含源码级静态守卫：某个修复被后续改动悄悄回退时，测试会红。</li>
 <li>这里要说明口径：87 是源码静态计数，不是 CI 实跑日志的取证结果；把它写成"CI 真实执行 87 条"是不准确的，所以不这么写。</li>
 </ul>
-<h2>二、形式化线：7 条 sorry，四处被机器判定的陈述</h2>
+<h2>二、形式化线：6 条 sorry，四处被机器判定的陈述</h2>
 <p>形式化在独立仓 <code>vwz-formalization</code>（公开，GPL-3.0），Isabelle/HOL，session <code>VWZ_A3_Aligned</code>。与业务仓分开是因为工具链、发布节奏和体积都不同。</p>
 <p>账本（由工具生成，不手填）：</p>
 <table>
@@ -116,9 +121,9 @@ a:hover { text-decoration:underline; }
     <tr><td>T0</td><td>纯形式改写</td><td>17</td><td>0</td></tr>
     <tr><td>T1-A</td><td>代数公理</td><td>16</td><td>0</td></tr>
     <tr><td>T1-D</td><td>定义相关义务</td><td>5</td><td>2</td></tr>
-    <tr><td>T2</td><td>线性代数 / 矩阵</td><td>10</td><td>3</td></tr>
+    <tr><td>T2</td><td>线性代数 / 矩阵</td><td>10</td><td>2</td></tr>
     <tr><td>T3</td><td>安全 / 概率 / 解析器</td><td>8</td><td>2</td></tr>
-    <tr><td><b>合计</b></td><td></td><td><b>56</b></td><td><b>7</b></td></tr>
+    <tr><td><b>合计</b></td><td></td><td><b>56</b></td><td><b>6</b></td></tr>
   </tbody>
 </table>
 <h3>已经有实体的部分</h3>
@@ -135,22 +140,24 @@ a:hover { text-decoration:underline; }
   <tbody>
     <tr><td>T2_B3</td><td>按整数陈述可逆，实现每步模 3329 归约（域错配）</td><td>改述到 F_q 后<b>已闭合</b></td></tr>
     <tr><td>T2_D4</td><td>对非方阵系统误用行零化度（口径错配）</td><td>改用列零化度后<b>已闭合</b></td></tr>
-    <tr><td>T2_B7</td><td>断言 ψ 每片秩为 2，但前提不排除零切片</td><td><b>机器反证</b>，待秩理论</td></tr>
+    <tr><td>T2_B7</td><td>断言 ψ 每片秩为 2，但前提不排除零切片</td><td>补非零 2×2 子式前提后<b>已闭合</b>（2026-10-24）</td></tr>
     <tr><td>T2_D5</td><td><code>Eval</code> 收不到 k / msg，却要求目标位依赖消息</td><td><b>机器反证</b>，待签名语义</td></tr>
   </tbody>
 </table>
-<p>T2_B7 的反例满足前提而秩为 0，记录在 <code>VWZ_Refutations.thy</code>。原因是陈述缺良构前提——这是陈述缺陷，不是证明失败。把它留在仓里，比悄悄删掉更有用。</p>
+<p>T2_B7 的反例满足前提而秩为 0，记录在 <code>VWZ_Refutations.thy</code>。原因是陈述缺良构前提——这是陈述缺陷，不是证明失败。把反例留在仓里，比悄悄删掉更有用。</p>
+<p>改述后它已经闭合：补上「存在非零 2×2 子式」这一前提，秩 ≤ 2 由「每片是两个外积之和、因而行落在二维 span 内」得到（<code>rows_in_span_psi_slice_of</code> + <code>mat_rank_le_two_of_rows_in_span</code>），秩 ≥ 2 由非零子式得到（<code>rank_ge_two_of_nonzero_minor</code>），两侧夹出 <code>mat_rank (psi_slice …) = 2</code>。这条路只证明这一族切片，<b>没有建立通用秩理论</b>。</p>
 <p>这不仅是诚实，更是后续迭代的锚点：每一次改述都有机器证据可回溯，下一个人不必重新争一遍。</p>
 <h3>已知缺口</h3>
 <ul>
-<li>矩阵代数承重墙还剩一块：<b>T2_B7 的秩理论</b>——"两个外积之和的秩 ≤ 2"与"非零 2×2 子式 ⇒ 秩 ≥ 2"，需要行空间论证与初等行变换保持子式为零。T2_B3 需要的 <code>mat_mult</code> 结合律与初等矩阵桥已经完成。</li>
+<li><b>T2_D5 是唯一剩余缺陷</b>：<code>Eval</code> 是 <code>consts</code>，不接收 k / msg，而义务要求目标位依赖消息。这是规范本身的冲突，不是证明欠账；要修它得先决定 <code>Sign</code> 的签名语义，所以保留 <code>sorry</code> 与缺陷标签，等规范决策。</li>
+<li>原计划的通用秩理论（行最简形、子式在初等行变换下的不变性、<code>mat_rank (A·B) ≤ n_cols A</code>）标记为 <b>superseded</b>：T2_B7 已用二维 span 的窄路线闭合，这几个引理不再是前置条件。</li>
 <li>T3 剩余 <b>2 条</b>：概率与安全层的建模，需要先把签名语义定下来。</li>
 <li><code>digest</code>、<code>Eval</code>、<code>Sign</code>、<code>Verify</code>、<code>sample_below</code>、<code>nullspace</code>、<code>mat_solve</code> 仍是未解释常量，逐个标 <code>TODO(define)</code> 并注明所缺的规范内容。不写"忽略参数的占位定义"——那会让引理变成关于一个自造矩阵的陈述，比留着洞更糟。</li>
 <li>该仓目前没有 CI，也没有独立的 CONTRIBUTING；构建与计数命令在 README 里。构建：<code>isabelle build -D aligned</code>；负向对照：<code>isabelle build -D neg</code> 必须失败。</li>
 </ul>
 <h2>三、当前缺口（按上手难度排序）</h2>
 <ol>
-<li><b>秩理论</b>：外积和的秩上界 + 非零子式的秩下界，收口 T2_B7。</li>
+<li><b>T2_D5 的规范决策</b>：给 <code>Sign</code> / <code>Eval</code> 定语义（消息与目标位如何联结），才能决定这条义务是改述还是删除。</li>
 <li><b>T3 剩余 2 条</b>：签名语义（Sign 的输入输出与 pk 的联结）定下来之后才能谈目标独立性。</li>
 <li><b>ACVP 向量走公共 API</b>：<code>fml-dsa</code> 已透传 FIPS 204 的 context / extraEntropy，并有行为对照；但 75/75 的 KAT 只覆盖 KeyGen，sigGen / sigVer 的向量级覆盖还没有。</li>
 <li><b>RN 仓测试与 CI</b>：<code>fibemate-mobile</code> 的 <code>node:test</code> 模式已跑通，<code>fibemate-react-native</code> 的 test 脚本只有 jest，无测试文件时是否会静默通过尚未实测。</li>
@@ -168,13 +175,16 @@ a:hover { text-decoration:underline; }
 <ul>
 <li>主仓：<a href="https://github.com/Lennonhaha/fibemate">github.com/Lennonhaha/fibemate</a></li>
 <li>形式化仓：<a href="https://github.com/Lennonhaha/vwz-formalization">github.com/Lennonhaha/vwz-formalization</a></li>
+<li>归档代码（v1.0.1，Apache-2.0）：<a href="https://doi.org/10.5281/zenodo.23622795">10.5281/zenodo.23622795</a>（concept DOI <code>10.5281/zenodo.23622177</code>）</li>
+<li>技术说明（中文，CC BY 4.0）：<a href="https://doi.org/10.5281/zenodo.23632173">10.5281/zenodo.23632173</a></li>
 <li>论文（首发版）：<a href="https://github.com/Lennonhaha/vwz-formalization/releases/tag/v1.0.0-paper">v1.0.0-paper</a></li>
 <li>贡献指南：<a href="https://github.com/Lennonhaha/fibemate/blob/main/docs/CONTRIBUTORS-GUIDE.md">docs/CONTRIBUTORS-GUIDE.md</a></li>
 </ul>
 <p>本文数字的复核方式：</p>
 <pre><code>node tools/count-obligations.cjs
 curl -s https://api.securityscorecards.dev/projects/github.com/Lennonhaha/fibemate
-gh api "repos/Lennonhaha/fibemate/code-scanning/alerts?state=open" --jq length</code></pre>
+gh api "repos/Lennonhaha/fibemate/code-scanning/alerts?state=open" --jq length
+gh api "repos/Lennonhaha/fibemate/dependabot/alerts?state=open" --jq length</code></pre>
 <h2>六、不适合谁</h2>
 <ul>
 <li>需要一个能直接上线、带 SLA 的密码库的：这里不是。</li>
