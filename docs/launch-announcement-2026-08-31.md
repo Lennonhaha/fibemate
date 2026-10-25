@@ -44,7 +44,16 @@ FIBEMATE answers: *Can one person build, verify, and timestamp-evidence the enti
 ### Core Cryptography
 
 - **ML-KEM-768**: NTT domain (FIPS 203 aligned) · noble 10K/10K ✅ · liboqs 10K/10K ✅
-- **C Native Addon**: keygen 103µs (15.8× JS), encaps 92µs (31.5×), decaps 184µs (14.1×)
+- **C Native Addon**（性能强依赖机器，按环境分行给出；**跨机数值不可比**）:
+
+  | 环境 | keygen | encaps | decaps | vs 同机 JS |
+  |:---|:---|:---|:---|:---|
+  | Linux Xeon（2026-07，C addon） | 69.0 µs | 97.7 µs | 164.0 µs | 15.2× / 11.3× / 8.4× |
+  | AMD Ryzen 5 5600U（2026-10，Windows） | 49.1 µs | 53.9 µs | 59.0 µs | 8.7× / 11.5× / 14.9× |
+
+  > Linux 行取自 `scripts/benchmark-report_2026-07-24.md` §1.1（同报告 JS fallback 基线 1.05 ms，比例即由该基线算出）。
+  > 早前此处写「keygen 103µs (15.8× JS)」：103 µs 是另一次 Linux 运行的值，而 15.8× 与同段引用的 1.19 ms JS 基线不自洽（1.19 ms ÷ 103 µs = 11.6×），故不再使用该比例。
+
 - **SM2**: GB/T 32918 · constant-time Barrett reduction (14×) · scalar masking · software TVLA N=10K PASS
 - **SM3/SM4-GCM**: KAT vectors · pure JS benchmarks (SM3 21K ops/s, SM4-GCM ~230KB/s)
 - **Hybrid KEX**: SM2 + ML-KEM-768 · IANA #4590 registration
@@ -59,7 +68,7 @@ FIBEMATE answers: *Can one person build, verify, and timestamp-evidence the enti
 
 - NTT 256×256 roundtrip verified on physical hardware
 - UART debug channel operational (CH340 external adapter)
-- Timing: WNS 9.869ns, WHS 0.131ns — plenty of slack
+- Timing: WNS +9.733 ns, WHS 0.131 ns — plenty of slack（复现值见 `pqc-hw-bench/hardware/README.md` 的可复现性证据表；历史 release 9.752 ns，run-to-run 差 0.02 ns）
 
 ### Reproducibility
 
@@ -114,7 +123,7 @@ Live demo: [fibemate.net/demo](https://fibemate.net/demo/)
 
 | Metric |  |
 |:---|:---|
-| ML-KEM-768 Native keygen | 103 µs |
+| ML-KEM-768 Native keygen | 49.1 µs（Ryzen 5 5600U, 2026-10） |
 | ML-KEM cross-validation | 20,000/20,000 (noble + liboqs) |
 | NTT Barrett reduction speedup | 14× |
 | SM2 software TVLA | 36/36 PASS (N=10,000) |
