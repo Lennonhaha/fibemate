@@ -79,6 +79,10 @@ jobs:
           node packages/pqc-kem/test/acvp-kat.test.cjs
           node packages/pqc-kem/test/acvp-encapDecap.test.cjs
 
+      - name: Internal-step invariants (NTT, codec, compress, samplers)
+        shell: bash
+        run: node packages/pqc-kem/test/internal-invariants.test.js
+
       - name: Attribute - ML-KEM KAT digest
         if: always()
         shell: bash
