@@ -32,7 +32,7 @@
 +------------------+          +----------------------+
 |  Node.js :3001   |          |    Rust :3002        |
 |  (光纤通道)       |          |   (实验室通道)      |
-|  fibermate.svc   |          |  fibermate-rust.svc  |
+|  fibemate.svc   |          |  fibemate-rust.svc  |
 +------------------+          +----------------------+
        |            Mixnet:
        |     +------+------+
@@ -63,7 +63,7 @@
 | SM2-KDF / SM3 | OK | 替换6处 HKDF 调用 |
 | ZK 匿名认证 | OK | E2E 18/18 + 边界 10/10 |
 | 签名模块 | OK | ML-DSA-44 + SLH-DSA |
-| WASM 加速 | OK | fibermate_pq_wasm.js |
+| WASM 加速 | OK | fibemate_pq_wasm.js |
 | Rust 后端 | OK | 17/17 E2E + 31/31 单元 |
 | 安全审计 | OK | 8/8 维度通过 (2026-05-22) |
 
@@ -131,16 +131,16 @@
 
 | 项 | 值 |
 |----|-----|
-| Node.js | /opt/fibermate-full/src/ |
-| 静态文件 | /opt/fibermate-full/www/ |
-| Rust | /opt/fibermate-rust/ |
-| Nginx | /etc/nginx/sites-enabled/fibermate.net |
-| SSL | /etc/letsencrypt/live/fibermate.net/ |
+| Node.js | /opt/fibemate-full/src/ |
+| 静态文件 | /opt/fibemate-full/www/ |
+| Rust | /opt/fibemate-rust/ |
+| Nginx | /etc/nginx/sites-enabled/fibemate.net |
+| SSL | /etc/letsencrypt/live/fibemate.net/ |
 
 ### Systemd 服务
-- fibermate.service (Node.js :3001)
-- fibermate-rust.service (Rust :3002)
-- fibermate-mixnet-*.service (Mixnet :9001-9003)
+- fibemate.service (Node.js :3001)
+- fibemate-rust.service (Rust :3002)
+- fibemate-mixnet-*.service (Mixnet :9001-9003)
 
 ---
 
