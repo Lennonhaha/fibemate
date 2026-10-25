@@ -6,6 +6,7 @@ type: software
 authors:
   - given-names: Tianhe
     family-names: Liu
+    orcid: https://orcid.org/0009-0009-1407-686X
 repository-code: 'https://github.com/Lennonhaha/fibemate'
 url: 'https://fibemate.net'
 abstract: >-
