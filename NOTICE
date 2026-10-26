@@ -51,3 +51,47 @@ SM2/SM3/SM4 Notice
 The Chinese national cryptographic algorithms (SM2, SM3, SM4) are provided for
 technical research purposes only. This product is NOT a certified commercial
 cryptographic product under Chinese regulations (商用密码产品).
+
+FIBEMATE PQC-KEM Native Addon (packages/pqc-kem)
+================================================
+
+The C sources under packages/pqc-kem/native/ are vendored from the reference
+implementation of the pq-crystals/kyber project:
+
+  Source:            https://github.com/pq-crystals/kyber (ref/ implementation)
+  Upstream license:  CC0-1.0 OR Apache-2.0 (dual-licensed, the licensee may choose)
+  Used here under:   Apache-2.0, matching packages/pqc-kem/package.json
+  Vendored:          2026-07-22, in FIBEMATE commit 59a00bd
+
+The upstream snapshot cannot be pinned to a single commit: 14 of the 25 files are
+byte-identical to pq-crystals/kyber da52c4d (2026-07-28), and a fifteenth
+(verify.c) is byte-identical to 4768bd37 (2025-02-16). The vendored tree therefore
+sits between those revisions.
+
+Files reproduced from upstream without functional change
+(an SPDX header is the only addition):
+  cbd.c cbd.h fips202.c fips202.h indcpa.h kem.h ntt.c ntt.h poly.h
+  reduce.c reduce.h symmetric-shake.c symmetric.h verify.c verify.h
+
+Files derived from upstream and modified by FIBEMATE:
+  indcpa.c      added a FIPS 203 domain-separator comment
+  kem.c         FIPS 203 decapsulation key layout, dk = dkPKE || ek || H(ek) || z
+  params.h      rewritten parameter header, including the KYBER_NAMESPACE macro
+  poly.c        upstream compile-time guard relaxed to a comment
+  polyvec.c     upstream compile-time guard relaxed to a comment
+  polyvec.h     removed the upstream KYBER_NAMESPACE rename block
+  randombytes.c replaced with /dev/urandom and BCryptGenRandom
+  randombytes.h kept for the derandomised API
+
+Original FIBEMATE code, not derived from upstream:
+  mlkem_wrap.c  Node-API addon glue
+  params_768.h  ML-KEM-768 parameter header
+
+fips202.c and fips202.h carry public-domain Keccak code by Ronny Van Keer and the
+"TweetFips202" implementation by Gilles Van Assche, Daniel J. Bernstein and Peter
+Schwabe. The attribution comment at the top of fips202.c is retained verbatim.
+
+The repository as a whole is distributed under GPL-3.0 (see LICENSE). This package
+is distributed under Apache-2.0 as declared in packages/pqc-kem/package.json;
+Apache-2.0 is compatible with GPL-3.0, so the combined work can be distributed
+under GPL-3.0 as well.
