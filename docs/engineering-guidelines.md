@@ -111,3 +111,69 @@ an availability risk.
 The job takes about 11 minutes, most of it building `HOL-Computational_Algebra` and
 `HOL-Number_Theory`, which the official image does not pre-build. That is a caching problem,
 not a correctness problem, and it is tracked rather than hidden.
+
+## 8. Two parsers reading the same document must share one "what is prose" mask
+
+A document contains both claims and examples of claims. Every parser that reads those
+documents has to agree about which is which — a directive parser that does not know about
+code fences is a smoke detector with the sensor unplugged.
+
+- **What happened**: `dispositions.js` (fibemate-tools#93) parsed `<!-- verifact: ... -->`
+  directives, but only masked HTML comments — not fenced code blocks, not inline code.
+  `claims.js`, reading the same files, had masked fences since it was written. The RFC's own
+  example of an unimplemented disposition (`docs/rfc-verifact-dispositions.md:192`) is
+  therefore read as a live declaration, and every real run aborted with `disposition_error`
+  before reaching the gate. Fixed in #109.
+- **Rule**: when two modules read one file format, the "is this prose?" decision belongs in
+  one function that both call. If two modules each implement it, they will drift, and the
+  drift is silent because each module's own tests pass.
+- **Rule**: test with the shapes that exist in the documents, not a simplified fixture. The
+  cases that broke were a fenced example, an inline-code example, and an unterminated fence
+  (CommonMark: a fence without a closing marker runs to end of file).
+- **Corollary**: a control case is mandatory — a test proving a *real* directive still parses.
+  A mask that hides everything also passes "the example was ignored".
+
+## 9. A table cell must not inherit its neighbour's unit
+
+In `| keygen | 48 µs | 0.522 ms |`, the `µs` of the native column tokenises to `s`, and if
+the extractor takes tokens from a window before the number, that `s` becomes part of the next
+cell's key: `keygen-s`. The key drives candidate selection, so a poisoned key means wrong
+candidates — and, historically, a hand-written exemption to silence the result.
+
+- **Rule**: tokens taken from a prefix window must be checked for "this belongs to the
+  previous number" (a trailing `<number><unit>` immediately before the current cell) and
+  dropped when so.
+- **Rule**: add the opposite control. `| keygen ms |` has a unit that genuinely belongs to the
+  header; a fix that strips every trailing unit breaks it.
+- **Symptom to look for**: exemption keys that contain a unit suffix (`keygen-s`, `keygen-ms`)
+  are a fingerprint of this bug, not of a measurement disagreement.
+
+## 10. A path glob is only as good as the string it is matched against
+
+`sealed: ["docs/tsa/**"]` matched nothing, and the guard it was supposed to provide did not
+exist — while the report stayed green (fibemate-tools#110).
+
+- **Cause**: claim paths carry the repository prefix (`fibemate/www/docs/tsa/...`) because
+  doc roots reach into sibling repos. A pattern anchored at `docs/` can never match them.
+  Measured against the real paths: `docs/tsa/**` → false, `www/docs/tsa/**` → false,
+  `**/docs/tsa/**` → true.
+- **Rule**: test a new pattern against an actual path taken from a report, not against the
+  path as it looks in your head. `**/`-anchoring is the safe default for cross-repo roots.
+- **Rule**: an unmatched rule must be an error, not a warning. A configured-but-unused rule
+  is indistinguishable from a rule that was deleted, except that everyone believes it works.
+- **Rule**: `0 files scanned` is never a pass for the same reason.
+
+## 11. CI must run the gate on real documents, and a zero must be red
+
+`verifact-ci.yml` ran only `test/run.js`. The suite could not catch the #93 bug because no
+test contained a fenced directive example — the real documents do. For the life of that bug,
+CI was green while every real run aborted (fibemate-tools#111).
+
+- **Rule**: at least one CI job runs the gate against documents that are not fixtures —
+  either a committed corpus copied from real docs, or a checkout of the doc repositories.
+- **Rule**: the job fails when the scanned document count is zero. A gate that scans nothing
+  passes everything.
+- **Rule**: mutation-check it. Change one number in a corpus document without touching its
+  artifact and confirm CI goes red. A gate nobody has made fail is an assumption.
+- **Prefer both**: the copied corpus on every push (fast, catches parser regressions), the
+  real repositories nightly (catches document drift).
