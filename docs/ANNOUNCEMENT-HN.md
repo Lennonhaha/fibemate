@@ -13,7 +13,7 @@ Post-quantum cryptography migration is happening, but the gap between NIST stand
 
 ### What's inside
 
-- **ML-KEM-768** (FIPS 203): Complete NTT-domain implementation with KAT vectors and constant-time verification
+- **ML-KEM-768** (FIPS 203): Complete NTT-domain implementation with KAT vectors and a documented timing analysis (pure JS: not constant-time — see limitations below)
 - **ML-DSA-65** (FIPS 204): Reference implementation aligned with @noble/post-quantum
 - **SLH-DSA-128s** (FIPS 205): Stateless hash-based signatures
 - **SM2/SM3/SM4** (GB/T): Chinese national elliptic curve + hash + block cipher suite
