@@ -4,12 +4,14 @@
 
 ## 1. ML-KEM-768 后量子密钥封装 (Pure JavaScript)
 
+<!-- verifact: begin disposition=narrative why="2026-07-18 在 Intel Xeon Platinum ECS 2 vCPU 上的一次性实测，原始输出未留存，无法独立复核；不得当作当前实现的性能基准" -->
 | 操作 | min | avg | p50 | p90 | p99 | max | 吞吐量 |
 |------|-----|-----|-----|-----|-----|-----|--------|
 | KeyGen | 1.58 ms | **2.04 ms** | 1.71 ms | 2.77 ms | 11.77 ms | 11.77 ms | **489/s** |
 | Encaps | 2.24 ms | **3.20 ms** | 2.89 ms | 4.17 ms | 8.45 ms | 8.45 ms | **313/s** |
 | Decaps | 3.04 ms | **4.14 ms** | 3.86 ms | 5.50 ms | 11.01 ms | 11.01 ms | **241/s** |
 | **KEM 完整** | — | **9.38 ms** | — | — | — | — | **107/s** |
+<!-- verifact: end -->
 
 数据结构: 公钥 1,184 B | 私钥 2,400 B | 密文 1,088 B | 共享密钥 32 B
 

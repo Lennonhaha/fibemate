@@ -168,7 +168,7 @@ FIBEMATE 是一个后量子密码学（PQC）工程验证平台，而非生产�
 - [ ] 监管合规认证
 
 **成功标准**:
-- ML-KEM-768 keygen < 200µs
+- ML-KEM-768 keygen < 200µs <!-- verifact: disposition=narrative why="成功标准里的目标值，不是实测值" -->
 - 完全符合 CNSA 2.0 要求
 - 通过 FIPS 140-3 认证
 
@@ -313,7 +313,7 @@ FIBEMATE 是一个后量子密码学（PQC）工程验证平台，而非生产�
 
 | 指标 | 当前值 | 目标值 | 时间框架 |
 |------|--------|--------|----------|
-| ML-KEM-768 keygen | 103µs (Native) | <200µs | ✅ 已达成 |
+| ML-KEM-768 keygen | 103µs (Native) | <200µs | ✅ 已达成 | <!-- verifact: disposition=narrative why="Linux 主机 C addon 单次实测（2026-07），原始输出未留存，无法独立复核" -->
 | ML-KEM-768 keygen (JS) | 1.19ms | <2ms | ✅ 已达成 |
 | TVLA 通过率 | 36/36 | 100% | ✅ 已达成 |
 | 跨库互操作 | 100% | 100% | ✅ 已达成 |

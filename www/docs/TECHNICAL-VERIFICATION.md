@@ -13,7 +13,7 @@
 | 🔐 后量子 | ML-KEM-768 KAT 一致性 | 10,000/10,000 ✅ | [KAT 报告](https://fibemate.net/kat-10000.html) |
 | 🔐 后量子 | ML-KEM-768 TVLA 侧信道 | N=10,000 通过 ✅ | [安全页面](https://fibemate.net/security.html) |
 | ⚡ 硬件 | FPGA NTT/INTT Round-trip | 256/256 全匹配 ✅ | [FPGA 报告](https://fibemate.net/docs/fpga-report.html) |
-| ⚡ 硬件 | 时序收敛 (WNS) | +0.204ns ✅ | [FPGA 报告](https://fibemate.net/docs/fpga-report.html) |
+| ⚡ 硬件 | 时序收敛 (WNS) | +0.204ns ✅ | [FPGA 报告](https://fibemate.net/docs/fpga-report.html) | <!-- verifact: disposition=narrative why="原始 Vivado 报告未随仓留存；仓内 timing_v5.txt 的 WNS 是 8.136ns，属另一次构建，不能为 0.204ns 作证" -->
 | 🇨🇳 国密 | SM2 全栈性能 | 2.1×–8.4× 加速 | [SM2 优化报告](https://fibemate.net/docs/sm2-optimization.html) |
 | 🇨🇳 国密 | SM2 TVLA 侧信道 (v1.3, 1-4阶) | N=5,000 20/20 ✅ | [TVLA 分析](https://fibemate.net/docs/sm2-tvla-analysis.html) |
 | 🇨🇳 国密 | sm-crypto 互操作 | 100% 兼容 ✅ | [SM2 优化报告](https://fibemate.net/docs/sm2-optimization.html) |
@@ -39,9 +39,11 @@ C Native Addon  10,000     100% ✅
 
 | 操作 | C Native Addon (AVX2) | 纯 JavaScript |
 |------|----------------------|---------------|
-| keygen | 48 µs | ~1.3 ms |
-| encaps | 51 µs | ~1.8 ms |
-| decaps | 105 µs | ~2.5 ms |
+| keygen | 48 µs | ~0.522 ms |
+| encaps | 51 µs | ~0.686 ms |
+| decaps | 105 µs | ~0.852 ms |
+
+> 纯 JavaScript 列已按 2026-10-26 复测值更新（旧值 ~1.3 / ~1.8 / ~2.5 ms 未留存产物）；宿主、轮次与逐项分位数见 `fibemate-tools/bench/bench-js-results.json`。
 
 ### TVLA 侧信道验证
 
@@ -72,7 +74,7 @@ FPGA 芯片    Xilinx Artix-7 xc7a35tfgg484-2
 | NTT 256 系数变换 | 256/256 匹配 ✅ |
 | INTT 256 系数逆变换 | 256/256 匹配 ✅ |
 | NTT → INTT Round-trip | 256/256 全匹配 ✅ |
-| 时序收敛 (WNS) | +0.204ns ✅ |
+| 时序收敛 (WNS) | +0.204ns ✅ | <!-- verifact: disposition=narrative why="同总览表，原始 Vivado 报告未随仓留存" -->
 | 时序收敛 (WHS) | +0.049ns ✅ |
 
 ### 资源占用

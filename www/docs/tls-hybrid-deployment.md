@@ -274,12 +274,14 @@ FIBEMATE 使用 `sslh` 在 443 端口复用 SSH 和 HTTPS。`sslh` 将 TLS 流�
 
 ### 6.2 算法级性能
 
+<!-- verifact: begin disposition=narrative why="OpenSSL CLI 批量 200 次取均值（Ubuntu 22.04 / OpenSSL 3.0.13），原始输出未随仓留存，数值不可独立复核；其中 5.97ms 是经典 X25519 keygen，曾被 verifact 误绑到 SM2 verify 50ms" -->
 | 操作 | X25519MLKEM768 | 经典 X25519 | 比值 |
 |------|:---:|:---:|:---:|
 | KeyGen | **9.50 ms/op** | 5.97 ms/op | 1.59× |
 | Encaps | **2.78 ms/op** | — | — |
 | Decaps | **2.79 ms/op** | — | — |
 | ECDH Derive | — | **5.66 ms/op** | — |
+<!-- verifact: end -->
 
 ### 6.3 TLS 握手吞吐
 
