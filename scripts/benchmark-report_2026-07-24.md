@@ -115,7 +115,7 @@ generateKeyPair → mulG → getGTable → buildWnafTable(G)
 
 | 操作 | 周期数 | 延迟 | 对比 JS |
 |------|--------|------|---------|
-| NTT roundtrip | 503 | **10 µs** | ~100× |
+| NTT roundtrip | 503 | **10 µs** | ~100× | <!-- verifact: disposition=narrative why="由 503 周期 @ 50MHz 推导的延迟，不是独立测量的耗时；原始综合报告见 fibemate/fpga/releases/v4/timing_v5.txt" -->
 | VWZ solve_preimage | ~503 | 10 µs | N/A |
 
 ## 7. 总结
