@@ -34,6 +34,9 @@
 [![Version](https://img.shields.io/badge/version-3.3.2-brightgreen.svg)](https://fibemate.net)
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
+[![ORCID](https://img.shields.io/badge/ORCID-0009--0009--1407--686X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-1407-686X)
+[![Zenodo](https://img.shields.io/badge/Zenodo-4%20records-1682D4)](https://zenodo.org/search?q=%220009-0009-1407-686X%22)
+[![CycloneDX](https://img.shields.io/badge/CycloneDX-spec%20PR%20%231176-informational)](https://github.com/CycloneDX/specification/pull/1176)
 > **五条设计原则** → [不假装完整 · 证据链优先 · 边界公开 · 发布前预检 · 诚实纠错](PRINCIPLES.md)
 
 > ⚠️ **OpenSSF passing certifies engineering hygiene (CI, docs, license), not cryptographic correctness or security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
