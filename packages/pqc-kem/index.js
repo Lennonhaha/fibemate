@@ -5,19 +5,74 @@
  * Dual-backend: C native addon (preferred) -> pure JS (fallback).
  */
 
+const fs = require('fs');
+const path = require('path');
 const JS = require('./src/ml-kem-768');
 
 // Native addon detection
-let native = null;
-try {
-    native = require('./native/build/Release/mlkem.node');
-    // Self-test
-    const k = native.keygen();
-    const e = native.encaps(k[0]);
-    const d = native.decaps(e[0], k[1]);
+//
+// The addon is optional, but a silent downgrade is not. A load failure or a
+// failed self-test used to be swallowed, so the process ran the pure JS backend
+// with no trace of why -- and a transient fault stayed permanent for the life of
+// the process. Both backends fail closed on a broken CSPRNG (see #344), so this
+// is about diagnosability, not key material (#348).
+const NATIVE_ADDON_PATH = './native/build/Release/mlkem.node';
+const NATIVE_ADDON_FILE = path.join(__dirname, 'native', 'build', 'Release', 'mlkem.node');
+
+function nativeSelfTest(addon) {
+    const k = addon.keygen();
+    const e = addon.encaps(k[0]);
+    const d = addon.decaps(e[0], k[1]);
     if (!Buffer.from(d).equals(e[1])) throw new Error('native self-test failed');
-} catch (_) {
-    /* fall through to JS */
+}
+
+function describe(err) {
+    if (!err) return { code: null, message: 'unknown error' };
+    return { code: err.code || null, message: err.message || String(err) };
+}
+
+/**
+ * Load and self-test the addon. Returns the addon, or null plus the reason it
+ * was rejected. Exported for tests: the two failure branches cannot be reached
+ * on a machine where the addon is simply not built.
+ */
+function detectNative(opts) {
+    const requireAddon = (opts && opts.require) || require;
+    const addonExists = (opts && opts.exists) || (() => fs.existsSync(NATIVE_ADDON_FILE));
+
+    let native = null;
+    let fallback = null;
+
+    try {
+        native = requireAddon(NATIVE_ADDON_PATH);
+    } catch (err) {
+        // A missing addon is a supported configuration (Windows, JS-only
+        // installs). An addon that is present but cannot be loaded is not.
+        if (addonExists()) fallback = Object.assign({ stage: 'load' }, describe(err));
+    }
+
+    if (native) {
+        try {
+            nativeSelfTest(native);
+        } catch (err) {
+            fallback = Object.assign({ stage: 'self-test' }, describe(err));
+            native = null;
+        }
+    }
+
+    return { native, fallback };
+}
+
+const detected = detectNative();
+const native = detected.native;
+const nativeFallback = detected.fallback;
+
+if (nativeFallback) {
+    process.emitWarning(
+        'native ML-KEM addon disabled (' + nativeFallback.stage + ': ' +
+        (nativeFallback.code || nativeFallback.message) + '); using the pure JS backend',
+        { code: 'FIBEMATE_PQC_KEM_JS_FALLBACK' }
+    );
 }
 
 const usingNative = !!native;
@@ -49,6 +104,8 @@ function decapsulate(secretKey, ciphertext) {
 
 module.exports = {
     usingNative,
+    nativeFallback,
+    detectNative,
     generateKeypair,
     encapsulate,
     decapsulate,
