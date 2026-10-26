@@ -583,6 +583,27 @@ All dashboards live at **[fibemate.net/docs/](https://fibemate.net/docs/)** — 
 
 GNU General Public License v3.0 — see [LICENSE](./LICENSE)
 
+### License map
+
+The repository is not under a single license. This table is the authoritative overview; every
+row matches a file that states the same thing.
+
+| Scope | License | Notes |
+|---|---|---|
+| Repository default: web application, protocol implementations, tools | `GPL-3.0-only` | `LICENSE`; root `package.json`; 15 sub-packages |
+| `packages/pqc-kem/` (including `native/`) | `Apache-2.0` | Single-package exception. The vendored Kyber sources and their provenance are documented in [`NOTICE`](./NOTICE) |
+| `mixnet/` (mixnet service) | `AGPL-3.0` | Network copyleft: running a modified mixnet as a service obliges you to offer its source |
+| `mixnet/{entry,exit,middle}/` | `ISC` | Per-node packages |
+| Documentation and non-code content (`www/`, `docs/`) | `CC BY-SA 4.0` | See [Documentation License](#documentation-license) below |
+
+Two companion repositories are Apache-2.0 and can be embedded in closed products:
+[`fibemate-core`](https://github.com/Lennonhaha/fibemate-core) (pure-JS ML-KEM-768) and
+[`fibemate-tools`](https://github.com/Lennonhaha/fibemate-tools) (verifact and the CBOM toolset).
+
+Integration guidance: use the Apache-2.0 packages and repositories as the embedding surface, and run
+the GPL-3.0 / AGPL-3.0 components as separately deployed services. Network copyleft applies to
+`mixnet/` only; nothing else in this repository is affected by it.
+
 ### SPDX Policy
 
 All tracked source files (JS/CJS/MJS/TS/C/H/PY/SH) carry an SPDX-License-Identifier header:
@@ -595,7 +616,7 @@ All tracked source files (JS/CJS/MJS/TS/C/H/PY/SH) carry an SPDX-License-Identif
 - **Enforcement**: CI runs `node tools/add-spdx-headers.cjs check --root .` in the `lint` job — a missing header fails the build
 - **Tooling**: `tools/add-spdx-headers.cjs` adds headers idempotently (`add`) or verifies (`check`)
 - **Exempt files** (third-party / public-domain / generated, never re-licensed):
-  - `packages/pqc-kem/native/` — pq-crystals Kyber reference implementation (public domain)
+  - `packages/pqc-kem/native/` — vendored pq-crystals Kyber reference implementation (upstream `CC0-1.0 OR Apache-2.0`, used here as `Apache-2.0`; see `NOTICE`)
   - `fips205/` — NIST SPHINCS+ reference implementation (public domain)
   - `**/vendor/` — Three.js and other MIT upstream code
   - `www/noble-pq-bundle/` — bundled noble code
