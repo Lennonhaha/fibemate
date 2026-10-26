@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 FIBEMATE Contributors
 #ifndef PARAMS_H
 #define PARAMS_H
 
