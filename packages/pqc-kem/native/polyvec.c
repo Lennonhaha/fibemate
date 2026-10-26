@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Source: pq-crystals/kyber (ref/), originally dual-licensed CC0-1.0 OR Apache-2.0
+// Vendored: 2026-07-22 (FIBEMATE commit 59a00bd); upstream ref/ snapshot not pinned to a single commit
 #include <stdint.h>
 #include "params.h"
 #include "poly.h"

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Copyright (c) 2026 FIBEMATE Contributors
 #include <node_api.h>
 #include <stdbool.h>
 #include <stdio.h>

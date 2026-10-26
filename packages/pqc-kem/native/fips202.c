@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: Apache-2.0
+// Source: pq-crystals/kyber (ref/), originally dual-licensed CC0-1.0 OR Apache-2.0
+// Vendored: 2026-07-22 (FIBEMATE commit 59a00bd); upstream ref/ snapshot not pinned to a single commit
 /* Based on the public domain implementation in crypto_hash/keccakc512/simple/ from
  * http://bench.cr.yp.to/supercop.html by Ronny Van Keer and the public domain "TweetFips202"
  * implementation from https://twitter.com/tweetfips202 by Gilles Van Assche, Daniel J. Bernstein,
