@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-License-Identifier: Apache-2.0
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
  * ML-KEM (FIPS 203) — Pure JavaScript NTT-Domain Implementation
@@ -17,7 +17,6 @@
  * Use the WASM path for production workloads; this file is for auditability.
  */
 
-// SPDX-License-Identifier: Apache-2.0
 'use strict';
 
 // Runtime parameter set (AA: algorithm agility — switchable without recompile)
