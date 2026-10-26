@@ -1,4 +1,5 @@
 # VWZ → LWE 归约缺口分析（H-1 / H-2）
+<!-- verifact: disposition=narrative why="研究缺口分析：本文件讨论的是尚未完成的归约与实验参数（k/q/rank/维度）和计划日期，属于研究计划与观察，不是任何产物里可读出的属性；没有可供绑定的条目。" -->
 
 > 研究文档 · experimental/vwz-lg 分支
 > 创建：2026-09-01
