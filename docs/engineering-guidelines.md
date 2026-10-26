@@ -61,3 +61,53 @@
 A gate has three parts, and all three have to be stated: **the command**, **the exact expected
 output**, and **a negative control** — what must go red if the thing being checked is broken.
 A gate without the third part is an assumption, not a check.
+
+## 6. Containers: the entry point and the working directory are coupled
+
+The official Isabelle image (`makarius/isabelle:Isabelle2025-2`) declares, as inspected:
+
+```
+Entrypoint: ["Isabelle/bin/isabelle"]     # relative, not absolute
+WorkingDir: /home/isabelle
+```
+
+Adding a reproduction job produced three failures worth keeping, because each one looks
+correct on the page:
+
+- `ENTRYPOINT ["isabelle"]` fails with `exec: "isabelle": executable file not found in
+  $PATH`. An exec-form entry point is not looked up in the image's `PATH`, and Isabelle is
+  not on it. A shell-form entry point would be, which is why the two are not
+  interchangeable.
+- Inheriting that relative entry point while setting `WORKDIR /workspace` fails with
+  `stat Isabelle/bin/isabelle: no such file or directory`. The relative path resolves
+  against the working directory, so changing the latter breaks the former.
+- `docker run -w /workspace` reproduces the same failure from the outside, even when the
+  image sets no `WORKDIR` of its own.
+
+The fix pins the absolute path and then refuses to trust it silently:
+
+```dockerfile
+RUN /home/isabelle/Isabelle/bin/isabelle version
+ENTRYPOINT ["/home/isabelle/Isabelle/bin/isabelle"]
+```
+
+The `RUN` line is the part that matters. A layout learned from `docker image inspect` is an
+assumption; exercising it in a build step turns it into a check. If the base image moves the
+distribution, the image stops building with a clear error instead of failing at run time with
+exit 127 and nothing else.
+
+**General rule**: every fact you read out of a base image (paths, versions, entry points)
+belongs in a `RUN` that exercises it, so the assumption fails at build time rather than in
+front of a reviewer.
+
+## 7. Heavy toolchains belong in CI, not on a laptop or a production host
+
+Isabelle needs about 4 GB of memory for small sessions. The reproduction job therefore runs
+on a stock public runner (4 cores, 16 GB) rather than on a development machine that has no
+container runtime, or on a production server that already serves traffic with 1 GB of RAM.
+That is not a performance question; running a multi-gigabyte toolchain next to a live site is
+an availability risk.
+
+The job takes about 11 minutes, most of it building `HOL-Computational_Algebra` and
+`HOL-Number_Theory`, which the official image does not pre-build. That is a caching problem,
+not a correctness problem, and it is tracked rather than hidden.
