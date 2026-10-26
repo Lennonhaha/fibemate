@@ -117,6 +117,12 @@ static napi_value external_buf(napi_env env, void* data, size_t len,
     return buf;
 }
 
+/* Throw a JS exception for a failed CSPRNG read; the caller returns NULL. */
+static void throw_rng_error(napi_env env) {
+    napi_throw_error(env, "ERR_RNG_FAILURE",
+        "randombytes failed: operating system entropy source unavailable");
+}
+
 static void free_cb(napi_env env, void* data, void* hint) {
     (void)env; (void)hint;
     free(data);
@@ -128,7 +134,10 @@ static napi_value Keygen(napi_env env, napi_callback_info info) {
     (void)info;
     uint8_t pk[KYBER_PUBLICKEYBYTES];
     uint8_t sk[KYBER_SECRETKEYBYTES];
-    crypto_kem_keypair(pk, sk);
+    if (crypto_kem_keypair(pk, sk) != 0) {
+        throw_rng_error(env);
+        return NULL;
+    }
     napi_value buf_pk, buf_sk, ret;
     napi_create_buffer_copy(env, KYBER_PUBLICKEYBYTES, pk, NULL, &buf_pk);
     napi_create_buffer_copy(env, KYBER_SECRETKEYBYTES, sk, NULL, &buf_sk);
@@ -166,7 +175,10 @@ static napi_value Encaps(napi_env env, napi_callback_info info) {
     if (!pk) return NULL;
     uint8_t ct[KYBER_CIPHERTEXTBYTES];
     uint8_t ss[KYBER_SSBYTES];
-    crypto_kem_enc(ct, ss, pk);
+    if (crypto_kem_enc(ct, ss, pk) != 0) {
+        throw_rng_error(env);
+        return NULL;
+    }
     napi_value buf_ct, buf_ss, ret;
     napi_create_buffer_copy(env, KYBER_CIPHERTEXTBYTES, ct, NULL, &buf_ct);
     napi_create_buffer_copy(env, KYBER_SSBYTES, ss, NULL, &buf_ss);
@@ -247,9 +259,14 @@ static napi_value KeygenBatch(napi_env env, napi_callback_info info) {
     }
 
     for (int64_t i = 0; i < count; i++) {
-        crypto_kem_keypair(
-            pk_buf + i * KYBER_PUBLICKEYBYTES,
-            sk_buf + i * KYBER_SECRETKEYBYTES);
+        if (crypto_kem_keypair(
+                pk_buf + i * KYBER_PUBLICKEYBYTES,
+                sk_buf + i * KYBER_SECRETKEYBYTES) != 0) {
+            free(pk_buf);
+            free(sk_buf);
+            throw_rng_error(env);
+            return NULL;
+        }
     }
 
     napi_value result, js_pk, js_sk, js_count;
@@ -418,8 +435,12 @@ static napi_value RoundtripBatch(napi_env env, napi_callback_info info) {
         uint8_t ss_e[KYBER_SSBYTES];
         uint8_t ss_d[KYBER_SSBYTES];
 
-        crypto_kem_keypair(pk, sk);
-        crypto_kem_enc(ct, ss_e, pk);
+        if (crypto_kem_keypair(pk, sk) != 0 || crypto_kem_enc(ct, ss_e, pk) != 0) {
+            free(ss_sender);
+            free(ss_receiver);
+            throw_rng_error(env);
+            return NULL;
+        }
         crypto_kem_dec(ss_d, ct, sk);
 
         memcpy(ss_sender   + i * KYBER_SSBYTES, ss_e, KYBER_SSBYTES);
