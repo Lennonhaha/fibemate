@@ -61,8 +61,15 @@ int crypto_kem_keypair(uint8_t *pk,
                        uint8_t *sk)
 {
   uint8_t coins[2*KYBER_SYMBYTES];
-  randombytes(coins, 2*KYBER_SYMBYTES);
+  if (randombytes(coins, 2*KYBER_SYMBYTES) != RANDOMBYTES_SUCCESS) {
+    /* Fail closed: never return a key derived from an unwritten buffer. */
+    memset(coins, 0, sizeof(coins));
+    if (pk != NULL) memset(pk, 0, KYBER_PUBLICKEYBYTES);
+    if (sk != NULL) memset(sk, 0, KYBER_SECRETKEYBYTES);
+    return -1;
+  }
   crypto_kem_keypair_derand(pk, sk, coins);
+  memset(coins, 0, sizeof(coins));
   return 0;
 }
 
@@ -125,8 +132,14 @@ int crypto_kem_enc(uint8_t *ct,
                    const uint8_t *pk)
 {
   uint8_t coins[KYBER_SYMBYTES];
-  randombytes(coins, KYBER_SYMBYTES);
+  if (randombytes(coins, KYBER_SYMBYTES) != RANDOMBYTES_SUCCESS) {
+    memset(coins, 0, sizeof(coins));
+    if (ct != NULL) memset(ct, 0, KYBER_CIPHERTEXTBYTES);
+    if (ss != NULL) memset(ss, 0, KYBER_SSBYTES);
+    return -1;
+  }
   crypto_kem_enc_derand(ct, ss, pk, coins);
+  memset(coins, 0, sizeof(coins));
   return 0;
 }
 

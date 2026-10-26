@@ -58,6 +58,12 @@ jobs:
         working-directory: packages/pqc-kem
         run: node ../../scripts/test-native-addon.cjs
 
+      # Negative controls: both defects are invisible to a green build, so the
+      # job asserts that the failure paths actually fail (mutation-checked).
+      - name: Fail-closed RNG and parameter-guard controls
+        working-directory: packages/pqc-kem
+        run: node ../../scripts/test-native-guards.cjs
+
       - name: Performance benchmark (500 rounds)
         working-directory: packages/pqc-kem
         run: node ../../scripts/mlkem-bench-native.cjs 500

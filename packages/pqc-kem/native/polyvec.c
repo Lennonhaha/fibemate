@@ -75,7 +75,7 @@ void polyvec_compress(uint8_t r[KYBER_POLYVECCOMPRESSEDBYTES], const polyvec *a)
     }
   }
 #else
-/* FIPS 203: allow 384*KYBER_K (12-bit) */
+#error "KYBER_POLYVECCOMPRESSEDBYTES needs to be in {320*KYBER_K, 352*KYBER_K}"
 #endif
 }
 
@@ -126,7 +126,7 @@ void polyvec_decompress(polyvec *r, const uint8_t a[KYBER_POLYVECCOMPRESSEDBYTES
     }
   }
 #else
-/* FIPS 203: allow 384*KYBER_K (12-bit) */
+#error "KYBER_POLYVECCOMPRESSEDBYTES needs to be in {320*KYBER_K, 352*KYBER_K}"
 #endif
 }
 

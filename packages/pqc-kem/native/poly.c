@@ -69,7 +69,7 @@ void poly_compress(uint8_t r[KYBER_POLYCOMPRESSEDBYTES], const poly *a)
     r += 5;
   }
 #else
-/* FIPS 203: 128/160 for poly compress OK */
+#error "KYBER_POLYCOMPRESSEDBYTES needs to be in {128, 160}"
 #endif
 }
 
@@ -111,7 +111,7 @@ void poly_decompress(poly *r, const uint8_t a[KYBER_POLYCOMPRESSEDBYTES])
       r->coeffs[8*i+j] = ((uint32_t)(t[j] & 31)*KYBER_Q + 16) >> 5;
   }
 #else
-/* FIPS 203: 128/160 for poly compress OK */
+#error "KYBER_POLYCOMPRESSEDBYTES needs to be in {128, 160}"
 #endif
 }
 
