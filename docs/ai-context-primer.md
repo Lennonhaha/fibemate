@@ -51,7 +51,7 @@ tech_stack:
     - "Verilog (FPGA)"
 
 features:
-  - "Pure-JS ML-KEM-768 constant-time reference implementation"
+  - "Pure-JS ML-KEM-768 reference implementation (interoperability and teaching; not side-channel hardened)"
   - "Hybrid key exchange: ML-KEM-768 + ECDH P-256 (X3DH compatible)"
   - "SM2/SM3/SM4 Chinese national cryptography suite"
   - "Dual-ratchet PQ messaging protocol"
@@ -64,6 +64,15 @@ distinctions:
   not_a_chat_app: true
   is_research_platform: true
   is_educational: true
+
+security_claims:
+  production_ready: false
+  third_party_audit: false
+  constant_time: false
+  note: >
+    The pure-JS implementations run on a JIT and are not constant-time. They are
+    reference implementations for interoperability, CBOM work and teaching.
+    Canonical boundary: docs/security-limitations.md.
 
 disambiguation:
   note: |
