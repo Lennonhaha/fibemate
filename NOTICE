@@ -77,11 +77,14 @@ Files derived from upstream and modified by FIBEMATE:
   indcpa.c      added a FIPS 203 domain-separator comment
   kem.c         FIPS 203 decapsulation key layout, dk = dkPKE || ek || H(ek) || z
   params.h      rewritten parameter header, including the KYBER_NAMESPACE macro
-  poly.c        upstream compile-time guard relaxed to a comment
-  polyvec.c     upstream compile-time guard relaxed to a comment
+  poly.c        upstream compile-time guard restored (had been relaxed to a comment; corrected in #347)
+  polyvec.c     upstream compile-time guard restored (had been relaxed to a comment; corrected in #347)
   polyvec.h     removed the upstream KYBER_NAMESPACE rename block
-  randombytes.c replaced with /dev/urandom and BCryptGenRandom
+  randombytes.c replaced with getrandom(2) / /dev/urandom fallback and BCryptGenRandom, failing closed (#344)
   randombytes.h kept for the derandomised API
+
+The package's own JavaScript (src/, test/, scripts/, native/bench.js) is Apache-2.0,
+matching packages/pqc-kem/package.json.
 
 Original FIBEMATE code, not derived from upstream:
   mlkem_wrap.c  Node-API addon glue

@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-only
+// SPDX-License-Identifier: Apache-2.0
 /**
  * fibemate-pqc-kem -- FIPS 203 internal-step invariants (ML-KEM-768, pure JS)
  *
