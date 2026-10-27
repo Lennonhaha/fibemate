@@ -872,6 +872,7 @@
         <div class="nav-logo">FIBEMATE</div>
         <ul class="nav-links">
             <li><a href="#features">特性</a></li>
+            <li><a href="#standard">标准</a></li>
             <li><a href="#privacy">技术栈</a></li>
             <li><a href="#visualizations">可视化</a></li>
             <li><a href="/calculator.html">算力计算器</a></li>
@@ -1202,6 +1203,45 @@
 密码学不应是黑盒 —— 所有核心算法实现将在开源时完整公开（VWZ 研究线专用 RTL 除外，见 SECURITY.md）。</div>
             </div>
         </div>
+    </section>
+
+    <!-- ═══════════ 标准参与与工具链保真（三卡） ═══════════ -->
+    <section class="features" id="standard">
+        <h2 class="section-title">标准参与与工具链保真</h2>
+        <p class="section-subtitle">不假装完整，证据链优先，边界公开</p>
+
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📐</div>
+                <div class="feature-title">标准化 · CycloneDX CBOM</div>
+                <div class="feature-desc">
+                    原生输出符合 OWASP CycloneDX 规范的 CBOM，字段位置、枚举大小写与命名语义按官方 schema 校验，而不是按自己的解析器「能吃回去」。
+                    同时参与该规范中密码学属性语义的澄清（提交记录见上游规范仓库）。
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">高保真 · 字段级往返校验</div>
+                <div class="feature-desc">
+                    内容寻址的稳定键 + 多维分类，显式区分「未评估」与「零值」；跨工具的序列化与往返测试逐字段比对，防止密码学属性在工具链流转中被静默丢弃。
+                    样例已由外部互操作性审查方独立复核。
+                </div>
+            </div>
+
+            <div class="feature-card">
+                <div class="feature-icon">🧾</div>
+                <div class="feature-title">可复现 · 离线审计</div>
+                <div class="feature-desc">
+                    审计全流程离线运行，不依赖网络；样例输入与校验值随制品归档，可离线复算。
+                    序列化输出内含生成时间戳，因此承诺的是「输入快照与校验值可复算」，不是「输出字节级一致」。
+                </div>
+            </div>
+        </div>
+
+        <p class="section-subtitle" style="max-width:760px;margin:1.25rem auto 0;font-size:0.85rem;color:#8b949e;">
+            按 OpenSSF 最佳实践标准自评达 Passing 级别（非第三方认证）· Scorecard 8.1 · 时间戳存证（TSR）链路持续运行
+        </p>
     </section>
 
         <!-- ═══════════ 辅助工具（直链展示页） ═══════════ -->
@@ -2263,6 +2303,28 @@
       </div>
     </section>
 
+    <!-- ═══════════ 许可分层 ═══════════ -->
+    <section class="section dev-section" id="license">
+      <div class="container">
+        <div class="section-header-center fade-in">
+          <h2 class="section-title">许可<span class="gradient-text">分层</span></h2>
+        </div>
+        <p style="text-align:center;color:#888;font-size:1rem;line-height:1.8;max-width:760px;margin:0 auto 18px;">
+          不同目录适用不同许可，按用途分层。以下为准确边界，集成前请对照仓库内 LICENSE 与 NOTICE。
+        </p>
+        <ul style="max-width:860px;margin:0 auto;color:#a9b4c0;font-size:0.95rem;line-height:2;">
+          <li><strong style="color:#e6edf3;">可嵌入式核心</strong> — fibemate-core / fibemate-tools：<span style="color:#00d4aa;">Apache-2.0</span></li>
+          <li><strong style="color:#e6edf3;">主仓 Web 应用与协议实现</strong> — <span style="color:#00d4aa;">GPL-3.0-only</span></li>
+          <li><strong style="color:#e6edf3;">网络组件 mixnet/</strong> — <span style="color:#00d4aa;">AGPL-3.0</span>（仅该目录；entry/exit/middle 为 ISC）</li>
+          <li><strong style="color:#e6edf3;">文档与非代码内容</strong> — <span style="color:#00d4aa;">CC BY-SA 4.0</span></li>
+          <li><strong style="color:#e6edf3;">原生 KEM 实现 packages/pqc-kem/native/</strong> — <span style="color:#00d4aa;">Apache-2.0</span>（上游 CC0-1.0 OR Apache-2.0，此处按 Apache-2.0 使用，见 NOTICE）</li>
+        </ul>
+        <p style="max-width:860px;margin:14px auto 0;color:#7d8590;font-size:0.88rem;line-height:1.8;">
+          需要闭源集成时，Apache-2.0 的 core 与 tools 是集成面；GPL 与 AGPL 部分可独立部署，网络 copyleft 义务仅限 mixnet/。
+        </p>
+      </div>
+    </section>
+
     <!-- CTA -->
     <section class="cta" id="download">
         <h2>准备好探索后量子密码了吗？</h2>
@@ -2270,6 +2332,10 @@
         <div class="hero-buttons">
             <a href="app.html" class="btn-primary">立即开始</a>
         </div>
+        <p style="margin-top:14px;font-size:0.9rem;color:#a9b4c0;">
+            下载：<a href="/docs/verifact-sample-report-20261026.pdf" style="color:#00d4aa;">Verifact 样例审计报告（PDF）</a>
+            · <a href="/docs/fibemate-intro-20261026.pdf" style="color:#00d4aa;">FIBEMATE 项目简介（PDF）</a>
+        </p>
     </section>
 
     <!-- Developer Section -->
