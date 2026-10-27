@@ -1205,12 +1205,12 @@
             <!-- cbom-tools 版本号：发版时与 fibemate-tools/cbom-tools/package.json 同步（keep in sync with fibemate-tools/cbom-tools/package.json） -->
             <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,229,195,0.18);">
                 <a href="https://www.npmjs.com/package/cbom-tools" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">
-                    <span style="display:inline-flex;border-radius:4px;overflow:hidden;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1;vertical-align:middle;"><span style="background:#3d444d;color:#e6edf3;padding:5px 9px;">npm</span><span style="background:#00d4aa;color:#04120f;padding:5px 9px;font-weight:700;">v0.2.4</span></span>
+                    <span style="display:inline-flex;border-radius:4px;overflow:hidden;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1;vertical-align:middle;"><span style="background:#3d444d;color:#e6edf3;padding:5px 9px;">npm</span><span style="background:#00d4aa;color:#04120f;padding:5px 9px;font-weight:700;">v0.2.5</span></span>
                     <span style="color:#c9d1d9;font-size:0.92rem;font-weight:600;">cbom-tools &middot; 物料清单生成器</span>
                 </a>
-                <span style="color:#8b949e;font-size:0.85rem;">&mdash; <strong style="color:#c9d1d9;">① 生成 CBOM</strong>：扫描代码产出 CycloneDX 1.6 清单，交给 verifact 核对</span>
+                <span style="color:#8b949e;font-size:0.85rem;">&mdash; <strong style="color:#c9d1d9;">① 生成 CBOM</strong>：扫描代码产出 CycloneDX 1.7 清单（旧版可用 <code style="background:none;border:0;padding:0;color:#8b949e;">--spec 1.6</code>），交给 verifact 核对</span>
                 <div style="margin-top:10px;">
-                    <code style="display:inline-block;padding:7px 14px;background:#0d1117;border:1px solid #21262d;border-radius:6px;color:#00d4aa;font-family:Consolas,'Courier New',monospace;font-size:0.85rem;">npx cbom-tools scan --dir ./project --out cbom.json</code>
+                    <code style="display:inline-block;padding:7px 14px;background:#0d1117;border:1px solid #21262d;border-radius:6px;color:#00d4aa;font-family:Consolas,'Courier New',monospace;font-size:0.85rem;">npx cbom-tools scan --dir ./project --out cbom.json --spec 1.7</code>
                 </div>
             </div>
 
