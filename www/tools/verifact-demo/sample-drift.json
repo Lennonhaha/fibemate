@@ -1,0 +1,284 @@
+{
+  "schema": "verifact-report/2",
+  "generatedAt": "2026-10-27T06:28:50.048Z",
+  "durationMs": 0,
+  "counts": {
+    "docs": 1,
+    "artifacts": 0,
+    "claims": 4,
+    "claimsTotal": 4,
+    "verified": 1,
+    "drift": 2,
+    "ambiguous": 0,
+    "unbound": 1,
+    "refFound": 0,
+    "refMissing": 0,
+    "ignored": 0
+  },
+  "gate": {
+    "failed": true,
+    "policy": "drift"
+  },
+  "meta": {
+    "synthetic": true,
+    "note": "Hand-made demo data: statuses were edited by hand to exercise the drift rendering path."
+  },
+  "subset": {
+    "enabled": false
+  },
+  "claims": [
+    {
+      "kind": "ratio",
+      "key": "kat",
+      "keyTokens": [
+        "kat"
+      ],
+      "primaryToken": "kat",
+      "value": {
+        "type": "ratio",
+        "raw": "10,000/10,000",
+        "numerator": 10000,
+        "denominator": 10000,
+        "ratio": 1
+      },
+      "id": "README.md:L45:ratio:kat",
+      "file": "README.md",
+      "line": 45,
+      "module": "ML-KEM-768",
+      "modulesAll": [
+        "ML-KEM-768",
+        "ML-KEM"
+      ],
+      "heading": "Core Features",
+      "sentence": "| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | KAT 10,000/10,000 |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ratio:kat:3f11d2b8334d",
+      "status": "verified",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.crypto_inventory.algorithms.pqc.ml_kem_768.verification#kat",
+        "keyTokens": [
+          "dimensions",
+          "crypto",
+          "inventory",
+          "algorithms",
+          "pqc",
+          "ml",
+          "kem",
+          "768",
+          "verification",
+          "kat"
+        ],
+        "primaryToken": "kat",
+        "module": "ML-KEM-768",
+        "value": {
+          "type": "ratio",
+          "raw": "10000/10000",
+          "numerator": 10000,
+          "denominator": 10000,
+          "ratio": 1
+        },
+        "raw": "10000/10000",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.95,
+      "cmp": {
+        "equal": true,
+        "comparable": true,
+        "reason": "exact"
+      },
+      "alternatives": [],
+      "note": "产出物中存在同键目且数值一致"
+    },
+    {
+      "kind": "kv",
+      "key": "wns",
+      "keyTokens": [
+        "wns"
+      ],
+      "primaryToken": "wns",
+      "value": {
+        "type": "scalar",
+        "raw": "9.755ns",
+        "number": 9.755,
+        "unit": "ns",
+        "dim": "time",
+        "base": 9.755
+      },
+      "id": "README.md:L54:kv:wns",
+      "file": "README.md",
+      "line": 54,
+      "module": "FPGA v5",
+      "modulesAll": [
+        "FPGA v5",
+        "NTT"
+      ],
+      "heading": "Core Features",
+      "sentence": "| **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | Artix-7 synthesized · WNS=9.755ns ✅ · ILA+L4 closed |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:kv:wns:ba16574a1d9a",
+      "status": "drift",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.crypto_inventory.hardware.ntt_accelerator.status#wns",
+        "keyTokens": [
+          "dimensions",
+          "crypto",
+          "inventory",
+          "hardware",
+          "ntt",
+          "accelerator",
+          "status",
+          "wns"
+        ],
+        "primaryToken": "wns",
+        "module": "NTT",
+        "value": {
+          "type": "scalar",
+          "raw": "9.755ns",
+          "number": 9.755,
+          "unit": "ns",
+          "dim": "time",
+          "base": 9.755
+        },
+        "raw": "9.755ns",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.7999999999999999,
+      "cmp": {
+        "equal": true,
+        "comparable": true,
+        "reason": "exact"
+      },
+      "alternatives": [
+        {
+          "source": "tools/risk-coverage-matrix.json",
+          "path": "matrix[7].note#wns",
+          "score": 0.8,
+          "value": {
+            "type": "scalar",
+            "raw": "9.755ns",
+            "number": 9.755,
+            "unit": "ns",
+            "dim": "time",
+            "base": 9.755
+          }
+        },
+        {
+          "source": "pqc-hw-bench/README.md",
+          "path": "pqc-hw-bench/README.md#L97#wns",
+          "score": 0.8,
+          "value": {
+            "type": "scalar",
+            "raw": "9.73ns",
+            "number": 9.73,
+            "unit": "ns",
+            "dim": "time",
+            "base": 9.73
+          }
+        },
+        {
+          "source": "pqc-hw-bench/README.md",
+          "path": "pqc-hw-bench/README.md#L111#wns",
+          "score": 0.8,
+          "value": {
+            "type": "scalar",
+            "raw": "9.73ns",
+            "number": 9.73,
+            "unit": "ns",
+            "dim": "time",
+            "base": 9.73
+          }
+        }
+      ],
+      "note": "synthetic: flipped for the red-path demo",
+      "reason": "value_mismatch_demo"
+    },
+    {
+      "kind": "ratio",
+      "key": "kex-iana",
+      "keyTokens": [
+        "kex",
+        "iana",
+        "e2e",
+        "p95"
+      ],
+      "primaryToken": "iana",
+      "value": {
+        "type": "ratio",
+        "raw": "5/5",
+        "numerator": 5,
+        "denominator": 5,
+        "ratio": 1
+      },
+      "id": "README.md:L26:ratio:kex-iana",
+      "file": "README.md",
+      "line": 26,
+      "module": "TLS 1.3 Hybrid",
+      "modulesAll": [
+        "TLS 1.3 Hybrid",
+        "ML-KEM-768",
+        "Path C-2",
+        "ML-KEM",
+        "SM2",
+        "C-2"
+      ],
+      "heading": "Production Environment",
+      "sentence": "- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, p95=78.5ms, lg-053/lg-057",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ratio:kex-iana:cf4adfd8fe7d",
+      "status": "drift",
+      "reason": "artifact_missing_demo",
+      "weakEvidence": 1,
+      "candidates": 3,
+      "note": "synthetic: flipped for the red-path demo"
+    },
+    {
+      "kind": "kv",
+      "key": "p95",
+      "keyTokens": [
+        "p95"
+      ],
+      "primaryToken": "p95",
+      "value": {
+        "type": "scalar",
+        "raw": "78.5ms",
+        "number": 78.5,
+        "unit": "ms",
+        "dim": "time",
+        "base": 78500000
+      },
+      "id": "README.md:L26:kv:p95",
+      "file": "README.md",
+      "line": 26,
+      "module": "TLS 1.3 Hybrid",
+      "modulesAll": [
+        "TLS 1.3 Hybrid",
+        "ML-KEM-768",
+        "Path C-2",
+        "ML-KEM",
+        "SM2",
+        "C-2"
+      ],
+      "heading": "Production Environment",
+      "sentence": "- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, p95=78.5ms, lg-053/lg-057",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:kv:p95:dc0bea33a099",
+      "status": "unbound",
+      "reason": "no_artifact_entry",
+      "note": "产出物中未找到可比对条目（可能是文档自称，也可能只是未导出）"
+    }
+  ]
+}
