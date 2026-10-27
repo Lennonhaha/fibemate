@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 /*
  * verifact 报告渲染器 — 只把 JSON 里已有的字段搬到 DOM 上，不做任何判定。
  *
