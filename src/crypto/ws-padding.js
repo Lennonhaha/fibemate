@@ -23,7 +23,6 @@
  */
 
 const BLOCK_SIZES = [256, 512, 1024, 2048, 4096];
-const MIN_BLOCK = 256;
 const MAX_BLOCK = 4096;
 
 // 16 位长度字段的上限；超过此值必须使用扩展头
