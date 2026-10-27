@@ -1,0 +1,1223 @@
+{
+  "schema": "verifact-report/2",
+  "generatedAt": "2026-10-27T06:22:35.945Z",
+  "durationMs": 940,
+  "counts": {
+    "lint": 57,
+    "crossDoc": 8,
+    "crossDocWarn": 2,
+    "codeArtifactClaims": 2136,
+    "allJudgedClaims": 2216,
+    "docs": 343,
+    "artifacts": 4742,
+    "claims": 2136,
+    "verified": 137,
+    "drift": 0,
+    "ambiguous": 213,
+    "unbound": 1768,
+    "refFound": 17,
+    "refMissing": 1,
+    "ignored": 21,
+    "denied": 8,
+    "claimsTotal": 2262,
+    "dispositioned": 72,
+    "dispositionCounts": {
+      "code-artifact": 2136,
+      "measured-once": 0,
+      "progress": 0,
+      "narrative": 72
+    },
+    "standardRefs": 25,
+    "sealed": 0,
+    "duplicateClaimGroups": 11,
+    "dispositionWarnings": {
+      "fullyDispositionedFiles": [
+        {
+          "file": "fibemate/www/docs/vwz-lwe-reduction-gaps.md",
+          "claims": 23
+        },
+        {
+          "file": "fibemate/www/docs/FIBEMATE-STATUS-20260527.md",
+          "claims": 12
+        }
+      ],
+      "share": 0.03260869565217391,
+      "shareExceedsHalf": false
+    },
+    "sealedWarnings": {
+      "emptyPatterns": [
+        "docs/tsa/**"
+      ]
+    }
+  },
+  "gate": {
+    "failed": false,
+    "policy": "drift"
+  },
+  "meta": {
+    "cache": "hit",
+    "cacheReason": null,
+    "workers": 6,
+    "pooled": true,
+    "docsMissing": [],
+    "docScanErrors": 0,
+    "docScanFatal": 0,
+    "skippedFiles": [],
+    "toleratedScanErrors": 0,
+    "artifactsScanned": 83,
+    "artifactsSkipped": 39,
+    "selfEvidenceRemoved": 130,
+    "history": {
+      "schema": 2,
+      "legacyDropped": 47
+    },
+    "source": {
+      "repo": "Lennonhaha/fibemate-tools",
+      "command": "node bin/verifact.js verify --format json",
+      "runAt": "2026-10-27T06:22:35.945Z",
+      "docs": 343,
+      "claimsTotal": 2262
+    }
+  },
+  "subset": {
+    "enabled": true,
+    "shownClaims": 17,
+    "ofClaims": 2262,
+    "rule": "first N per status"
+  },
+  "claims": [
+    {
+      "kind": "ratio",
+      "key": "kat",
+      "keyTokens": [
+        "kat"
+      ],
+      "primaryToken": "kat",
+      "value": {
+        "type": "ratio",
+        "raw": "10,000/10,000",
+        "numerator": 10000,
+        "denominator": 10000,
+        "ratio": 1
+      },
+      "id": "README.md:L45:ratio:kat",
+      "file": "README.md",
+      "line": 45,
+      "module": "ML-KEM-768",
+      "modulesAll": [
+        "ML-KEM-768",
+        "ML-KEM"
+      ],
+      "heading": "Core Features",
+      "sentence": "| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | KAT 10,000/10,000 |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ratio:kat:3f11d2b8334d",
+      "status": "verified",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.crypto_inventory.algorithms.pqc.ml_kem_768.verification#kat",
+        "keyTokens": [
+          "dimensions",
+          "crypto",
+          "inventory",
+          "algorithms",
+          "pqc",
+          "ml",
+          "kem",
+          "768",
+          "verification",
+          "kat"
+        ],
+        "primaryToken": "kat",
+        "module": "ML-KEM-768",
+        "value": {
+          "type": "ratio",
+          "raw": "10000/10000",
+          "numerator": 10000,
+          "denominator": 10000,
+          "ratio": 1
+        },
+        "raw": "10000/10000",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.95,
+      "cmp": {
+        "equal": true,
+        "comparable": true,
+        "reason": "exact"
+      },
+      "alternatives": [],
+      "note": "产出物中存在同键目且数值一致"
+    },
+    {
+      "kind": "kv",
+      "key": "wns",
+      "keyTokens": [
+        "wns"
+      ],
+      "primaryToken": "wns",
+      "value": {
+        "type": "scalar",
+        "raw": "9.755ns",
+        "number": 9.755,
+        "unit": "ns",
+        "dim": "time",
+        "base": 9.755
+      },
+      "id": "README.md:L54:kv:wns",
+      "file": "README.md",
+      "line": 54,
+      "module": "FPGA v5",
+      "modulesAll": [
+        "FPGA v5",
+        "NTT"
+      ],
+      "heading": "Core Features",
+      "sentence": "| **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | Artix-7 synthesized · WNS=9.755ns ✅ · ILA+L4 closed |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:kv:wns:ba16574a1d9a",
+      "status": "verified",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.crypto_inventory.hardware.ntt_accelerator.status#wns",
+        "keyTokens": [
+          "dimensions",
+          "crypto",
+          "inventory",
+          "hardware",
+          "ntt",
+          "accelerator",
+          "status",
+          "wns"
+        ],
+        "primaryToken": "wns",
+        "module": "NTT",
+        "value": {
+          "type": "scalar",
+          "raw": "9.755ns",
+          "number": 9.755,
+          "unit": "ns",
+          "dim": "time",
+          "base": 9.755
+        },
+        "raw": "9.755ns",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.7999999999999999,
+      "cmp": {
+        "equal": true,
+        "comparable": true,
+        "reason": "exact"
+      },
+      "alternatives": [
+        {
+          "source": "tools/risk-coverage-matrix.json",
+          "path": "matrix[7].note#wns",
+          "score": 0.8,
+          "value": {
+            "type": "scalar",
+            "raw": "9.755ns",
+            "number": 9.755,
+            "unit": "ns",
+            "dim": "time",
+            "base": 9.755
+          }
+        },
+        {
+          "source": "pqc-hw-bench/README.md",
+          "path": "pqc-hw-bench/README.md#L97#wns",
+          "score": 0.8,
+          "value": {
+            "type": "scalar",
+            "raw": "9.73ns",
+            "number": 9.73,
+            "unit": "ns",
+            "dim": "time",
+            "base": 9.73
+          }
+        },
+        {
+          "source": "pqc-hw-bench/README.md",
+          "path": "pqc-hw-bench/README.md#L111#wns",
+          "score": 0.8,
+          "value": {
+            "type": "scalar",
+            "raw": "9.73ns",
+            "number": 9.73,
+            "unit": "ns",
+            "dim": "time",
+            "base": 9.73
+          }
+        }
+      ],
+      "note": "产出物中存在同键目且数值一致"
+    },
+    {
+      "kind": "kv",
+      "key": "ntt-done",
+      "keyTokens": [
+        "ntt",
+        "done"
+      ],
+      "primaryToken": "done",
+      "value": {
+        "type": "scalar",
+        "raw": "0",
+        "number": 0,
+        "unit": null,
+        "dim": null,
+        "base": null
+      },
+      "id": "fpga-l8l9-43-tests_2026-07-15.md:L23:kv:ntt-done",
+      "file": "fibemate/fpga-l8l9-43-tests_2026-07-15.md",
+      "line": 23,
+      "module": "NTT",
+      "modulesAll": [
+        "NTT"
+      ],
+      "heading": "1️⃣ L8 故障计数器 (12 项)",
+      "sentence": "| L8-11 | 非 ntt_done 窗口内故障 | ntt_done=0 时 fault_alert 发生 | 计数器仍递增（跨周期追踪） |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "fibemate/fpga-l8l9-43-tests_2026-07-15.md:kv:ntt-done:639cfac3638a",
+      "status": "verified",
+      "best": {
+        "source": "tools/bloom-scan-output.json",
+        "path": "blastRadius.NTT.totalFiles",
+        "keyTokens": [
+          "blastradius",
+          "ntt",
+          "totalfiles"
+        ],
+        "primaryToken": "totalfiles",
+        "module": "NTT",
+        "value": {
+          "type": "scalar",
+          "raw": "0",
+          "number": 0,
+          "unit": null,
+          "dim": null,
+          "base": null
+        },
+        "raw": "0",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\bloom-scan-output.json"
+      },
+      "score": 0.47500000000000003,
+      "cmp": {
+        "equal": true,
+        "comparable": false,
+        "reason": "exact"
+      },
+      "alternatives": [],
+      "note": "产出物中存在同键目且数值一致"
+    },
+    {
+      "kind": "kv",
+      "key": "factor",
+      "keyTokens": [
+        "factor"
+      ],
+      "primaryToken": "factor",
+      "value": {
+        "type": "scalar",
+        "raw": "1",
+        "number": 1,
+        "unit": null,
+        "dim": null,
+        "base": null
+      },
+      "id": "ROADMAP.md:L63:kv:factor",
+      "file": "fibemate/ROADMAP.md",
+      "line": 63,
+      "module": null,
+      "modulesAll": [],
+      "heading": "Bus Factor 风险",
+      "sentence": "当前 Bus Factor = 1 (单维护者)。",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "fibemate/ROADMAP.md:kv:factor:9e41f93b432a",
+      "status": "verified",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.organizational_readiness.subdimensions.bus_factor.value",
+        "keyTokens": [
+          "dimensions",
+          "organizational",
+          "readiness",
+          "subdimensions",
+          "bus",
+          "factor",
+          "value"
+        ],
+        "primaryToken": "value",
+        "module": null,
+        "value": {
+          "type": "scalar",
+          "raw": "1",
+          "number": 1,
+          "unit": null,
+          "dim": null,
+          "base": null
+        },
+        "raw": "1",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.75,
+      "cmp": {
+        "equal": true,
+        "comparable": false,
+        "reason": "exact"
+      },
+      "alternatives": [
+        {
+          "source": "tools/cars-scorecard.json",
+          "path": "dimensions.organizational_readiness.notes.weakness#factor",
+          "score": 0.75,
+          "value": {
+            "type": "scalar",
+            "raw": "1",
+            "number": 1,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        },
+        {
+          "source": "tools/cars-scorecard.json",
+          "path": "dimensions.organizational_readiness.notes.cars_feedback#factor",
+          "score": 0.75,
+          "value": {
+            "type": "scalar",
+            "raw": "1",
+            "number": 1,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        },
+        {
+          "source": "tools/cars-scorecard.json",
+          "path": "cars_framework_feedback[3]#factor",
+          "score": 0.75,
+          "value": {
+            "type": "scalar",
+            "raw": "1",
+            "number": 1,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        }
+      ],
+      "note": "产出物中存在同键目且数值一致"
+    },
+    {
+      "kind": "ratio",
+      "key": "ml-dsa",
+      "keyTokens": [
+        "ml",
+        "dsa",
+        "kat",
+        "nist"
+      ],
+      "primaryToken": "dsa",
+      "value": {
+        "type": "ratio",
+        "raw": "84/84",
+        "numerator": 84,
+        "denominator": 84,
+        "ratio": 1
+      },
+      "id": "SECURITY-AUDIT-CHECKLIST.md:L12:ratio:ml-dsa",
+      "file": "fibemate/www/docs/SECURITY-AUDIT-CHECKLIST.md",
+      "line": 12,
+      "module": "ML-DSA",
+      "modulesAll": [
+        "ML-DSA"
+      ],
+      "heading": "一、算法正确性验证",
+      "sentence": "| ML-DSA-44/65/87 | 84/84 | KAT + NIST ACVP 75 向量 | ✅ PASS | 2026-08-12 |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "fibemate/www/docs/SECURITY-AUDIT-CHECKLIST.md:ratio:ml-dsa:de41fd026c3b",
+      "status": "verified",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.crypto_inventory.algorithms.pqc.ml_dsa_65_fml_dsa.verification#self",
+        "keyTokens": [
+          "dimensions",
+          "crypto",
+          "inventory",
+          "algorithms",
+          "pqc",
+          "ml",
+          "dsa",
+          "65",
+          "fml",
+          "dsa",
+          "verification",
+          "self"
+        ],
+        "primaryToken": "self",
+        "module": "ML-DSA",
+        "value": {
+          "type": "ratio",
+          "raw": "84/84",
+          "numerator": 84,
+          "denominator": 84,
+          "ratio": 1
+        },
+        "raw": "84/84",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.7250000000000001,
+      "cmp": {
+        "equal": true,
+        "comparable": true,
+        "reason": "exact"
+      },
+      "alternatives": [
+        {
+          "source": "tools/cars-scorecard.json",
+          "path": "dimensions.crypto_inventory.algorithms.pqc.ml_dsa_65_fml_dsa.verification#kat",
+          "score": 0.838,
+          "value": {
+            "type": "ratio",
+            "raw": "75/75",
+            "numerator": 75,
+            "denominator": 75,
+            "ratio": 1
+          }
+        }
+      ],
+      "note": "产出物中存在同键目且数值一致"
+    },
+    {
+      "kind": "kv",
+      "key": "factor",
+      "keyTokens": [
+        "factor"
+      ],
+      "primaryToken": "factor",
+      "value": {
+        "type": "scalar",
+        "raw": "1",
+        "number": 1,
+        "unit": null,
+        "dim": null,
+        "base": null
+      },
+      "id": "SECURITY-AUDIT-CHECKLIST.md:L107:kv:factor",
+      "file": "fibemate/www/docs/SECURITY-AUDIT-CHECKLIST.md",
+      "line": 107,
+      "module": null,
+      "modulesAll": [],
+      "heading": "八、开放 Gap",
+      "sentence": "| 6 | Bus Factor = 1 | 项目可持续性 | OpenSSF Silver 硬伤，依赖开源后贡献者 |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "fibemate/www/docs/SECURITY-AUDIT-CHECKLIST.md:kv:factor:dc94959e4d04",
+      "status": "verified",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.organizational_readiness.subdimensions.bus_factor.value",
+        "keyTokens": [
+          "dimensions",
+          "organizational",
+          "readiness",
+          "subdimensions",
+          "bus",
+          "factor",
+          "value"
+        ],
+        "primaryToken": "value",
+        "module": null,
+        "value": {
+          "type": "scalar",
+          "raw": "1",
+          "number": 1,
+          "unit": null,
+          "dim": null,
+          "base": null
+        },
+        "raw": "1",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.75,
+      "cmp": {
+        "equal": true,
+        "comparable": false,
+        "reason": "exact"
+      },
+      "alternatives": [
+        {
+          "source": "tools/cars-scorecard.json",
+          "path": "dimensions.organizational_readiness.notes.weakness#factor",
+          "score": 0.75,
+          "value": {
+            "type": "scalar",
+            "raw": "1",
+            "number": 1,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        },
+        {
+          "source": "tools/cars-scorecard.json",
+          "path": "dimensions.organizational_readiness.notes.cars_feedback#factor",
+          "score": 0.75,
+          "value": {
+            "type": "scalar",
+            "raw": "1",
+            "number": 1,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        },
+        {
+          "source": "tools/cars-scorecard.json",
+          "path": "cars_framework_feedback[3]#factor",
+          "score": 0.75,
+          "value": {
+            "type": "scalar",
+            "raw": "1",
+            "number": 1,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        }
+      ],
+      "note": "产出物中存在同键目且数值一致"
+    },
+    {
+      "kind": "ratio",
+      "key": "tvla",
+      "keyTokens": [
+        "tvla",
+        "pass",
+        "n"
+      ],
+      "primaryToken": "tvla",
+      "value": {
+        "type": "ratio",
+        "raw": "5/5",
+        "numerator": 5,
+        "denominator": 5,
+        "ratio": 1
+      },
+      "id": "README.md:L47:ratio:tvla",
+      "file": "README.md",
+      "line": 47,
+      "module": "TVLA",
+      "modulesAll": [
+        "TVLA",
+        "SM2",
+        "NTT"
+      ],
+      "heading": "Core Features",
+      "sentence": "| **SM2 ECDH** | BigInt scalar masking + projective randomization, constant-time | TVLA 5/5 PASS (N=10,000) |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ratio:tvla:f39f9c9b2ee9",
+      "status": "ambiguous",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.crypto_inventory.algorithms.chinese_crypto.sm2.verification#tvla",
+        "keyTokens": [
+          "dimensions",
+          "crypto",
+          "inventory",
+          "algorithms",
+          "chinese",
+          "crypto",
+          "sm2",
+          "verification",
+          "tvla"
+        ],
+        "primaryToken": "tvla",
+        "module": "TVLA",
+        "value": {
+          "type": "ratio",
+          "raw": "36/36",
+          "numerator": 36,
+          "denominator": 36,
+          "ratio": 1
+        },
+        "raw": "36/36",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.6500000000000001,
+      "cmp": {
+        "equal": false,
+        "comparable": true,
+        "reason": "denominator_differs"
+      },
+      "reason": "different_denominator_scope",
+      "alternatives": [
+        {
+          "source": "tools/ibm-dimensions-scorecard.json",
+          "path": "dimensions.d7_observability.evidence.offline_observability.security#tvla",
+          "score": 0.65,
+          "value": {
+            "type": "ratio",
+            "raw": "36/36",
+            "numerator": 36,
+            "denominator": 36,
+            "ratio": 1
+          }
+        }
+      ],
+      "note": "分母不同：测试规模不一致，无法判定为数值漂移，需人工确认口径"
+    },
+    {
+      "kind": "ratio",
+      "key": "2c-sm4",
+      "keyTokens": [
+        "2c",
+        "sm4",
+        "pass"
+      ],
+      "primaryToken": "sm4",
+      "value": {
+        "type": "ratio",
+        "raw": "10/10",
+        "numerator": 10,
+        "denominator": 10,
+        "ratio": 1
+      },
+      "id": "README.md:L48:ratio:2c-sm4",
+      "file": "README.md",
+      "line": 48,
+      "module": "SM4-GCM",
+      "modulesAll": [
+        "SM4-GCM",
+        "SM4"
+      ],
+      "heading": "Core Features",
+      "sentence": "| **SM4-αGCM** | α=7.5 authenticated encryption, auto-select λ2C or SM4 | 10/10 PASS |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ratio:2c-sm4:0e19b38516e9",
+      "status": "ambiguous",
+      "best": {
+        "source": "tools/cars-scorecard.json",
+        "path": "dimensions.crypto_inventory.algorithms.chinese_crypto.sm4_gcm.verification#kat",
+        "keyTokens": [
+          "dimensions",
+          "crypto",
+          "inventory",
+          "algorithms",
+          "chinese",
+          "crypto",
+          "sm4",
+          "gcm",
+          "verification",
+          "kat"
+        ],
+        "primaryToken": "kat",
+        "module": "SM4-GCM",
+        "value": {
+          "type": "ratio",
+          "raw": "30/30,",
+          "numerator": 30,
+          "denominator": 30,
+          "ratio": 1
+        },
+        "raw": "30/30,",
+        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+      },
+      "score": 0.6500000000000001,
+      "cmp": {
+        "equal": false,
+        "comparable": true,
+        "reason": "denominator_differs"
+      },
+      "reason": "different_denominator_scope",
+      "alternatives": [],
+      "note": "分母不同：测试规模不一致，无法判定为数值漂移，需人工确认口径"
+    },
+    {
+      "kind": "count",
+      "key": "ml-kem",
+      "keyTokens": [
+        "ml",
+        "kem",
+        "路",
+        "states"
+      ],
+      "primaryToken": "kem",
+      "value": {
+        "type": "scalar",
+        "raw": "7invariants",
+        "number": 7,
+        "unit": "invariants",
+        "dim": null,
+        "base": null
+      },
+      "id": "README.md:L55:count:ml-kem",
+      "file": "README.md",
+      "line": 55,
+      "module": "ML-KEM-768",
+      "modulesAll": [
+        "ML-KEM-768",
+        "Path C-2",
+        "ML-KEM",
+        "TLA+",
+        "SM2",
+        "C-2"
+      ],
+      "heading": "Core Features",
+      "sentence": "| **L4 Formal Verification** | TLA+ state machine 路 Path C-2 (SM2+ML-KEM-768) 路 7 invariants 路 101,467 states 路 TLC EXIT 0 路 DigiCert TSR lg-069 | ✅ Engineering validation |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:count:ml-kem:ab1fe2d0c5f1",
+      "status": "ambiguous",
+      "best": {
+        "source": "bench/bench-js-results.json",
+        "path": "ML-KEM-768.pure-js.keygen.minMs",
+        "keyTokens": [
+          "ml",
+          "kem",
+          "768",
+          "pure",
+          "js",
+          "keygen",
+          "minms"
+        ],
+        "primaryToken": "minms",
+        "module": "ML-KEM-768",
+        "value": {
+          "type": "scalar",
+          "raw": "0.365",
+          "number": 0.365,
+          "unit": null,
+          "dim": null,
+          "base": null
+        },
+        "raw": "0.365",
+        "abs": "D:\\FIBEMATE\\fibemate-tools\\bench\\bench-js-results.json"
+      },
+      "score": 0.7250000000000001,
+      "cmp": {
+        "equal": false,
+        "comparable": false,
+        "reason": "value_differs"
+      },
+      "reason": "candidate_conflict",
+      "alternatives": [
+        {
+          "source": "bench/bench-js-results.json",
+          "path": "ML-KEM-768.pure-js.keygen.minMs",
+          "score": 0.725,
+          "value": {
+            "type": "scalar",
+            "raw": "0.365",
+            "number": 0.365,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        },
+        {
+          "source": "bench/bench-js-results.json",
+          "path": "ML-KEM-768.pure-js.keygen.avgMs",
+          "score": 0.725,
+          "value": {
+            "type": "scalar",
+            "raw": "0.522",
+            "number": 0.522,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        },
+        {
+          "source": "bench/bench-js-results.json",
+          "path": "ML-KEM-768.pure-js.keygen.p50Ms",
+          "score": 0.725,
+          "value": {
+            "type": "scalar",
+            "raw": "0.441",
+            "number": 0.441,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        },
+        {
+          "source": "bench/bench-js-results.json",
+          "path": "ML-KEM-768.pure-js.keygen.p90Ms",
+          "score": 0.725,
+          "value": {
+            "type": "scalar",
+            "raw": "0.762",
+            "number": 0.762,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        },
+        {
+          "source": "bench/bench-js-results.json",
+          "path": "ML-KEM-768.pure-js.keygen.p99Ms",
+          "score": 0.725,
+          "value": {
+            "type": "scalar",
+            "raw": "1.188",
+            "number": 1.188,
+            "unit": null,
+            "dim": null,
+            "base": null
+          }
+        }
+      ],
+      "note": "多个候选产出物给出不同数值，需人工判定绑定关系"
+    },
+    {
+      "kind": "ratio",
+      "key": "fips-keygen",
+      "keyTokens": [
+        "fips",
+        "keygen",
+        "vs",
+        "nist"
+      ],
+      "primaryToken": "keygen",
+      "value": {
+        "type": "ratio",
+        "raw": "75/75",
+        "numerator": 75,
+        "denominator": 75,
+        "ratio": 1
+      },
+      "id": "TESTING.md:L71:ratio:fips-keygen",
+      "file": "fibemate/TESTING.md",
+      "line": 71,
+      "module": "ML-DSA",
+      "modulesAll": [
+        "ML-DSA"
+      ],
+      "heading": "National Standard Vectors",
+      "sentence": "| ML-DSA (fml-dsa) | FIPS 204 |                          (KeyGen 75/75 vs NIST ACVP — validates the @noble backend that Phase 1 wraps; noble oracle 7/7) |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "fibemate/TESTING.md:ratio:fips-keygen:f11c9cef9039",
+      "status": "ambiguous",
+      "best": {
+        "source": "pqc-hw-bench/reports/benchmark-2026Q3.md",
+        "path": "pqc-hw-bench/reports/benchmark-2026Q3.md#L17#nist-fips",
+        "keyTokens": [
+          "nist",
+          "fips"
+        ],
+        "primaryToken": "fips",
+        "module": "liboqs",
+        "value": {
+          "type": "ratio",
+          "raw": "203/204",
+          "numerator": 203,
+          "denominator": 204,
+          "ratio": 0.9950980392156863
+        },
+        "raw": "聚焦 NIST 标准化算法族 (FIPS 203/204):",
+        "abs": "D:\\FIBEMATE\\pqc-hw-bench\\reports\\benchmark-2026Q3.md"
+      },
+      "score": 0.5,
+      "cmp": {
+        "equal": false,
+        "comparable": true,
+        "reason": "denominator_differs"
+      },
+      "reason": "different_denominator_scope",
+      "alternatives": [],
+      "note": "分母不同：测试规模不一致，无法判定为数值漂移，需人工确认口径"
+    },
+    {
+      "kind": "ratio",
+      "key": "kex-iana",
+      "keyTokens": [
+        "kex",
+        "iana",
+        "e2e",
+        "p95"
+      ],
+      "primaryToken": "iana",
+      "value": {
+        "type": "ratio",
+        "raw": "5/5",
+        "numerator": 5,
+        "denominator": 5,
+        "ratio": 1
+      },
+      "id": "README.md:L26:ratio:kex-iana",
+      "file": "README.md",
+      "line": 26,
+      "module": "TLS 1.3 Hybrid",
+      "modulesAll": [
+        "TLS 1.3 Hybrid",
+        "ML-KEM-768",
+        "Path C-2",
+        "ML-KEM",
+        "SM2",
+        "C-2"
+      ],
+      "heading": "Production Environment",
+      "sentence": "- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, p95=78.5ms, lg-053/lg-057",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ratio:kex-iana:cf4adfd8fe7d",
+      "status": "unbound",
+      "reason": "below_score_threshold",
+      "weakEvidence": 1,
+      "candidates": 3,
+      "note": "产出物中未找到可比对条目（可能是文档自称，也可能只是未导出）"
+    },
+    {
+      "kind": "kv",
+      "key": "p95",
+      "keyTokens": [
+        "p95"
+      ],
+      "primaryToken": "p95",
+      "value": {
+        "type": "scalar",
+        "raw": "78.5ms",
+        "number": 78.5,
+        "unit": "ms",
+        "dim": "time",
+        "base": 78500000
+      },
+      "id": "README.md:L26:kv:p95",
+      "file": "README.md",
+      "line": 26,
+      "module": "TLS 1.3 Hybrid",
+      "modulesAll": [
+        "TLS 1.3 Hybrid",
+        "ML-KEM-768",
+        "Path C-2",
+        "ML-KEM",
+        "SM2",
+        "C-2"
+      ],
+      "heading": "Production Environment",
+      "sentence": "- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, p95=78.5ms, lg-053/lg-057",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:kv:p95:dc0bea33a099",
+      "status": "unbound",
+      "reason": "no_artifact_entry",
+      "note": "产出物中未找到可比对条目（可能是文档自称，也可能只是未导出）"
+    },
+    {
+      "kind": "ratio",
+      "key": "nist-security",
+      "keyTokens": [
+        "nist",
+        "security",
+        "cross",
+        "validation"
+      ],
+      "primaryToken": "security",
+      "value": {
+        "type": "ratio",
+        "raw": "43/43",
+        "numerator": 43,
+        "denominator": 43,
+        "ratio": 1
+      },
+      "id": "README.md:L35:ratio:nist-security",
+      "file": "README.md",
+      "line": 35,
+      "module": null,
+      "modulesAll": [],
+      "heading": "📄 Publications",
+      "sentence": "Signature 80 bytes · Public key 1.76 KB · NIST-1 security · 43/43 cross-validation tests PASS",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ratio:nist-security:f592e57078d3",
+      "status": "unbound",
+      "reason": "below_score_threshold",
+      "weakEvidence": 9,
+      "candidates": 10,
+      "note": "产出物中未找到可比对条目（可能是文档自称，也可能只是未导出）"
+    },
+    {
+      "kind": "count",
+      "key": "signature",
+      "keyTokens": [
+        "signature",
+        "public",
+        "key"
+      ],
+      "primaryToken": "signature",
+      "value": {
+        "type": "scalar",
+        "raw": "80bytes",
+        "number": 80,
+        "unit": "bytes",
+        "dim": "size",
+        "base": 80
+      },
+      "id": "README.md:L35:count:signature",
+      "file": "README.md",
+      "line": 35,
+      "module": null,
+      "modulesAll": [],
+      "heading": "📄 Publications",
+      "sentence": "Signature 80 bytes · Public key 1.76 KB · NIST-1 security · 43/43 cross-validation tests PASS",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:count:signature:3393a08b072a",
+      "status": "unbound",
+      "reason": "no_comparable_shape",
+      "weakEvidence": 3,
+      "candidates": 3,
+      "note": "产出物中存在同名条目但值形状不可比（比率 vs 标量 / 量纲不同）"
+    },
+    {
+      "kind": "ref",
+      "subtype": "tsr",
+      "key": "tsr",
+      "keyTokens": [
+        "tsr"
+      ],
+      "primaryToken": "tsr",
+      "value": {
+        "type": "ref",
+        "raw": "TSR vwz-076",
+        "ref": "vwz-076"
+      },
+      "id": "README.md:L38:ref:tsr",
+      "file": "README.md",
+      "line": 38,
+      "module": "VWZ",
+      "modulesAll": [
+        "VWZ"
+      ],
+      "heading": "📄 Publications",
+      "sentence": "> TSR vwz-076 — FreeTSA RFC 3161 timestamp (2026-07-17 11:30:15 GMT, serial 0x06497CB4): [vwz-076-main-20260717.tsr](papers/vwz-076-main-20260717.tsr)",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ref:tsr:66ed186f17e4",
+      "status": "ref-found",
+      "best": {
+        "source": "FIBEMATE/vwz-076-20260717.tsr",
+        "path": "existence",
+        "value": {
+          "type": "ref",
+          "raw": "vwz-076"
+        }
+      },
+      "score": 1,
+      "note": "引用到的产出物文件确实存在"
+    },
+    {
+      "kind": "ref",
+      "subtype": "tsr",
+      "key": "tsr",
+      "keyTokens": [
+        "tsr"
+      ],
+      "primaryToken": "tsr",
+      "value": {
+        "type": "ref",
+        "raw": "TSR lg-069",
+        "ref": "lg-069"
+      },
+      "id": "README.md:L55:ref:tsr",
+      "file": "README.md",
+      "line": 55,
+      "module": "ML-KEM-768",
+      "modulesAll": [
+        "ML-KEM-768",
+        "Path C-2",
+        "ML-KEM",
+        "TLA+",
+        "SM2",
+        "C-2"
+      ],
+      "heading": "Core Features",
+      "sentence": "| **L4 Formal Verification** | TLA+ state machine 路 Path C-2 (SM2+ML-KEM-768) 路 7 invariants 路 101,467 states 路 TLC EXIT 0 路 DigiCert TSR lg-069 | ✅ Engineering validation |",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "README.md:ref:tsr:c377cd8b9756",
+      "status": "ref-found",
+      "best": {
+        "source": "_backup_2026-07-18/01-TSR-20260718-1231/2026-07-14/lg-069-formal-verification-k3-20260714.sha256",
+        "path": "existence",
+        "value": {
+          "type": "ref",
+          "raw": "lg-069"
+        }
+      },
+      "score": 1,
+      "note": "引用到的产出物文件确实存在"
+    },
+    {
+      "kind": "ref",
+      "subtype": "tsr",
+      "key": "tsr",
+      "keyTokens": [
+        "tsr"
+      ],
+      "primaryToken": "tsr",
+      "value": {
+        "type": "ref",
+        "raw": "TSR lg-079",
+        "ref": "lg-079"
+      },
+      "id": "tls-hybrid-deployment.md:L3:ref:tsr",
+      "file": "fibemate/docs/tls-hybrid-deployment.md",
+      "line": 3,
+      "module": null,
+      "modulesAll": [],
+      "heading": "FIBEMATE TLS 1.3 混合后量子握手 — 部署文档",
+      "sentence": "**v1.0** | 2026-07-17 | TSR lg-079",
+      "disposition": "code-artifact",
+      "dispositionSource": "default",
+      "dispositionAt": null,
+      "stableKeyIndex": 1,
+      "stableKey": "fibemate/docs/tls-hybrid-deployment.md:ref:tsr:a0625620cfef",
+      "status": "ref-missing",
+      "reason": "ref_not_found",
+      "note": "引用到的产出物在扫描范围内不存在"
+    }
+  ]
+}

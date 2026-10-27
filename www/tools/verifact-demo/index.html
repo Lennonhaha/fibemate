@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>verifact 报告查看器 · 只渲染，不判定</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#0d1411;color:#cfe9e2;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;line-height:1.65;font-size:14.5px}
+  .wrap{max-width:1120px;margin:0 auto;padding:48px 24px 90px}
+  .eyebrow{font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#8b5cf6;margin-bottom:14px}
+  h1{font-size:30px;font-weight:300;color:#eafff9;letter-spacing:.02em}
+  h1 b{color:#8b5cf6;font-weight:600}
+  .lead{color:#9fc4bb;margin-top:12px;max-width:720px}
+
+  /* 横幅：这句是全页的契约，别改弱 */
+  .contract{margin:26px 0 0;border:1px solid #8b5cf6;border-left:4px solid #8b5cf6;border-radius:8px;
+    background:#161126;padding:16px 18px;color:#e6dcff}
+  .contract b{color:#c4b5fd;display:block;font-size:12px;letter-spacing:.16em;text-transform:uppercase;margin-bottom:6px}
+  .contract span{font-size:15px;color:#f3eeff}
+
+  .controls{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+  .drop{flex:1 1 340px;border:1px dashed #2a4a41;border-radius:10px;padding:16px 18px;color:#8fb8ae;font-size:13px;background:#0f1a16}
+  .drop.hot{border-color:#8b5cf6;color:#e6dcff}
+  button{background:#14231e;color:#cfe9e2;border:1px solid #24443b;border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer}
+  button:hover{border-color:#8b5cf6;color:#fff}
+  button[aria-pressed="true"]{border-color:#8b5cf6;background:#1c1533;color:#e6dcff}
+  input[type=file]{display:none}
+
+  .banner{border-radius:8px;padding:12px 16px;margin-top:14px;font-size:13.5px;line-height:1.7}
+  .banner b{font-weight:600}
+  .banner.drill{background:#2a1518;border:1px solid #d94f4f;color:#ffd9d9}
+  .banner.synthetic{background:#2a2314;border:1px solid #d9a94f;color:#ffeec9}
+  .banner.subset{background:#101c26;border:1px solid #2e6f8f;color:#cfe9ff}
+
+  #summary{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-top:24px}
+  .tile{border:1px solid #1c3a33;border-radius:12px;background:#0f1a16;padding:14px 16px}
+  .tile b{display:block;font-size:26px;font-weight:400;color:#eafff9;font-variant-numeric:tabular-nums}
+  .tile span{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#7fb8ad;margin-top:2px}
+  .tile i{display:block;font-style:normal;font-size:11px;color:#5f857c;margin-top:6px}
+  .tile.st-verified{border-color:#1f6f52}.tile.st-verified b{color:#6ee7b7}
+  .tile.st-drift{border-color:#8f2b2b}.tile.st-drift b{color:#ff8a8a}
+  .tile.st-ambiguous{border-color:#8a6a1f}.tile.st-ambiguous b{color:#f5c451}
+  .tile.st-unbound{border-color:#2a4a41}
+
+  #meta{margin-top:14px;font-size:11.5px;color:#5f857c;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;word-break:break-all}
+
+  .panel{margin-top:26px;border:1px solid #1c3a33;border-radius:12px;overflow:hidden;background:#0f1a16}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  thead th{background:#101d19;color:#7fb8ad;text-align:left;font-weight:500;padding:10px 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid #1c3a33}
+  tbody td{padding:10px 12px;border-bottom:1px solid #16241f;vertical-align:top}
+  tbody tr:last-child td{border-bottom:none}
+  td.file{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#9fc4bb;white-space:nowrap}
+  td.val{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#eafff9;white-space:nowrap}
+  td.say{color:#8fb8ae}
+  .chip{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;letter-spacing:.06em;border:1px solid #2a4a41;color:#cfe9e2;white-space:nowrap}
+  .chip.st-verified{background:#0e2a20;border-color:#1f6f52;color:#6ee7b7}
+  .chip.st-drift{background:#2a1518;border-color:#8f2b2b;color:#ff9b9b}
+  .chip.st-ambiguous{background:#2a2314;border-color:#8a6a1f;color:#f5c451}
+  .chip.st-unbound{background:#131f1b;border-color:#2a4a41;color:#9fc4bb}
+  .chip.st-ref-found{background:#101c26;border-color:#2e6f8f;color:#8fd0ff}
+  .chip.st-ref-missing{background:#241a12;border-color:#8f5a2b;color:#ffbf8a}
+  .chip.st-unknown{background:#1a1a1a;border-color:#6b6b6b;color:#d0d0d0;font-weight:600}
+  .empty{padding:26px;color:#7fb8ad;text-align:center}
+
+  footer{margin-top:34px;color:#5f857c;font-size:12.5px;line-height:1.9}
+  footer code{background:#101d19;border:1px solid #1c3a33;border-radius:4px;padding:1px 6px;color:#bfe6dc;font-size:12px}
+  a{color:#8b5cf6}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="eyebrow">verifact · report viewer</div>
+  <h1>把报告<b>画出来</b>，不替它<b>下结论</b></h1>
+  <p class="lead">
+    这个页面接收 <code>verifact verify --format json</code> 的输出文件，按文件里写的字段原样渲染。
+    它不知道什么是"安全"，也不会把任何状态改写成别的状态。
+  </p>
+
+  <div class="contract" role="note">
+    <b>契约</b>
+    <span>本页面仅渲染离线审计报告，不执行任何安全判定。</span>
+  </div>
+
+  <div class="controls">
+    <div class="drop" id="drop">把 verifact 的 JSON 报告拖到这里，或
+      <button type="button" id="pick">选择文件</button>
+      <input type="file" id="file" accept="application/json,.json">
+    </div>
+    <button type="button" id="sample-real" aria-pressed="true">真实运行（抽样）</button>
+    <button type="button" id="sample-drift" aria-pressed="false">合成示例（红色路径）</button>
+  </div>
+
+  <div id="banners"></div>
+  <div id="summary"></div>
+  <div id="meta"></div>
+
+  <div class="panel"><div id="table"></div></div>
+
+  <footer>
+    <p><b>怎么生成这份 JSON：</b><code>npx verifact verify --format json --out report.json</code>（0.2.1 起可直接用 npx）。</p>
+    <p><b>"真实运行（抽样）"</b>：来自本仓库的一次真实扫描（343 份文档 / 2262 条声明 / drift 0），表格按状态各抽 6 条，计数仍为全量值。</p>
+    <p><b>"合成示例（红色路径）"</b>：人工构造，只为展示 drift 的渲染样式，页面顶部会强制出现 SYNTHETIC 标记。</p>
+    <p>状态颜色只映射报告里的字符串；未知状态显示为灰色 <code>st-unknown</code> 并原样打印，不会落回绿色。</p>
+  </footer>
+</div>
+
+<script src="demo.js"></script>
+<script>
+(function () {
+  var doc = document;
+  var state = { real: null, drift: null };
+
+  function paint(report) {
+    window.VerifactDemo.mount(doc, report);
+  }
+
+  function setPressed(which) {
+    doc.getElementById('sample-real').setAttribute('aria-pressed', String(which === 'real'));
+    doc.getElementById('sample-drift').setAttribute('aria-pressed', String(which === 'drift'));
+  }
+
+  function loadUrl(url, which) {
+    return fetch(url, { cache: 'no-store' })
+      .then(function (r) {
+        if (!r.ok) throw new Error(url + ' → HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function (json) {
+        state[which] = json;
+        setPressed(which);
+        paint(json);
+      })
+      .catch(function (err) {
+        doc.getElementById('banners').innerHTML =
+          '<div class="banner drill" data-banner="load-error"><b>读取失败</b> ' +
+          String(err && err.message ? err.message : err).replace(/[<>&]/g, '') + '</div>';
+      });
+  }
+
+  function readFile(file) {
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var json = JSON.parse(String(reader.result));
+        setPressed('');
+        paint(json);
+      } catch (err) {
+        doc.getElementById('banners').innerHTML =
+          '<div class="banner drill" data-banner="parse-error"><b>不是合法 JSON</b> ' +
+          String(err && err.message ? err.message : err).replace(/[<>&]/g, '') + '</div>';
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  }
+
+  doc.getElementById('pick').addEventListener('click', function () { doc.getElementById('file').click(); });
+  doc.getElementById('file').addEventListener('change', function (e) { readFile(e.target.files && e.target.files[0]); });
+
+  var drop = doc.getElementById('drop');
+  ['dragenter', 'dragover'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add('hot'); });
+  });
+  ['dragleave', 'drop'].forEach(function (ev) {
+    drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove('hot'); });
+  });
+  drop.addEventListener('drop', function (e) {
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    readFile(f);
+  });
+
+  doc.getElementById('sample-real').addEventListener('click', function () { loadUrl('sample-real.json', 'real'); });
+  doc.getElementById('sample-drift').addEventListener('click', function () { loadUrl('sample-drift.json', 'drift'); });
+
+  var initial = new URLSearchParams(location.search).get('sample') === 'drift' ? 'drift' : 'real';
+  loadUrl(initial === 'drift' ? 'sample-drift.json' : 'sample-real.json', initial);
+})();
+</script>
+</body>
+</html>
