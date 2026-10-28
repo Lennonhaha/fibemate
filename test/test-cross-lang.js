@@ -9,6 +9,7 @@
 'use strict';
 
 const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 
 // ============================================================
@@ -30,15 +31,18 @@ console.log('[JS]  Pure ML-KEM-768 loaded (time-domain, O(n^2))');
 // Load WASM ML-KEM-768 (via wasm-bindgen) — optional, skip if unavailable
 // ============================================================
 let wasmBindgen = null;
+let wasmUnavailableReason = null;
 try {
   wasmBindgen = require('../src/crypto/pq-wasm-pkg/fibemate_pq_wasm.js');
   const wasmBytes = fs.readFileSync(
     path.join(__dirname, '../src/crypto/pq-wasm-pkg/fibemate_pq_wasm_bg.wasm')
   );
   wasmBindgen.initSync({ module: new WebAssembly.Module(wasmBytes) });
-  console.log('[WASM] ML-KEM-768 WASM loaded (Rust/pqc_kyber, ~200x faster)');
+  console.log('[WASM] ML-KEM-768 WASM loaded (Rust/pqc_kyber)');
 } catch (e) {
-  console.log(`[WASM] SKIP: WASM module not available (${e.message}). Running JS-only tests.`);
+  wasmBindgen = null;
+  wasmUnavailableReason = `${e.name}: ${e.message}`;
+  console.log(`[WASM] UNSUPPORTED: prerequisite missing (${wasmUnavailableReason})`);
 }
 
 // ============================================================
@@ -46,23 +50,18 @@ try {
 // ============================================================
 
 if (!wasmBindgen) {
-  console.log('\n=== SKIP: WASM unavailable — JS-only run ===');
-  console.log(`\n${'='.repeat(50)}`);
-  console.log(`  跨语言互操作: 0 passed, 0 failed, 0 warnings`);
-  console.log(`  SKIP: WASM module not available, JS-only validation completed.`);
-  console.log(`${'='.repeat(50)}`);
+  console.log('\n=== UNSUPPORTED: WASM end not present in this checkout ===');
+  console.log(`  reason: ${wasmUnavailableReason}`);
+  console.log('  RESULT: unsupported - the cross-implementation section did not run.');
+  console.log('  This is not a pass. Nothing in this file claims interoperability here.');
   process.exit(0);
 }
 
-let passed = 0, failed = 0, warned = 0;
+let passed = 0, failed = 0;
 
 function check(name, cond) {
     if (cond) { console.log(`  ✓ ${name}`); passed++; }
     else { console.error(`  ✗ FAIL: ${name}`); failed++; }
-}
-
-function warn(name) {
-    console.log(`  ⚠ ${name}`); warned++;
 }
 
 // --- Test 1: Key sizes match ---
@@ -98,13 +97,7 @@ try {
 } catch (_e) {
     // Expected: format mismatch
 }
-if (crossOk1) {
-    check('JS-encap → WASM-decap 匹配', true);
-} else {
-    warn('JS-encap → WASM-decap 不匹配 (预期: 内部序列化格式不同)');
-    console.log(`    → JS 使用纯时域实现, WASM 使用 pqc_kyber crate`);
-    console.log(`    → FIPS 203 未规范内部 NTT 表示`);
-}
+check('JS-encap -> WASM-decap 匹配', crossOk1);
 
 // --- Test 4: Cross-implementation (WASM encap → JS decap) ---
 console.log('\n=== 4. WASM encaps → JS decaps ===');
@@ -118,11 +111,7 @@ try {
 } catch (_e) {
     // Expected
 }
-if (crossOk2) {
-    check('WASM-encap → JS-decap 匹配', true);
-} else {
-    warn('WASM-encap → JS-decap 不匹配 (预期: 内部序列化格式不同)');
-}
+check('WASM-encap -> JS-decap 匹配', crossOk2);
 
 // --- Test 5: 常量一致性 ---
 console.log('\n=== 5. 常量一致性 ===');
@@ -172,22 +161,22 @@ try {
     const wasmEncapsWithJsPk = wasmBindgen.encapsulate(jsKp.publicKey);
     check('WASM encaps 接受 JS publicKey', wasmEncapsWithJsPk.ciphertext.length === 1088);
 } catch (_e) {
-    warn(`WASM encaps 拒绝 JS publicKey: ${_e.message}`);
+    check('WASM encaps 拒绝 JS publicKey', false);
 }
 
 try {
     const jsEncapsWithWasmPk = JS_MLKEM.encapsulate(wasmKp.public_key);
     check('JS encaps 接受 WASM publicKey', jsEncapsWithWasmPk.ciphertext.length === 1088);
 } catch (_e) {
-    warn(`JS encaps 拒绝 WASM publicKey: ${_e.message}`);
+    check('JS encaps 拒绝 WASM publicKey', false);
 }
 
 // ============================================================
 // Summary
 // ============================================================
 console.log(`\n${'='.repeat(50)}`);
-console.log(`  跨语言互操作: ${passed} passed, ${failed} failed, ${warned} warnings`);
-console.log(`  结论: JS/WASM 各自内部一致 ✅ | 跨格式不互操作 ⚠ (已知,FIPS 203 不要求)`);
+console.log(`  跨语言互操作: ${passed} passed, ${failed} failed`);
+console.log('  verdict: judged only by the PASS/FAIL rows above; this file has no warnings.');
 console.log(`${'='.repeat(50)}`);
 
 process.exit(failed > 0 ? 1 : 0);
