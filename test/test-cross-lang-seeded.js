@@ -2,12 +2,14 @@
 /**
  * ML-KEM-768 Deterministic Seed Cross-Implementation Equivalence Test
  *
- * Verifies that the repo's JS (time-domain) implementation and the canonical
- * reference implementation (@noble/post-quantum ml_kem768) produce
- * SELF-CONSISTENT output from the same seed.
+ * Verifies that the repo's JS implementation (packages/pqc-kem) and the
+ * canonical reference implementation (@noble/post-quantum ml_kem768) produce
+ * byte-identical keys from the same seed, and interoperate in both directions.
  *
- * Cross-implementation (JS↔Noble) binary equivalence is NOT guaranteed —
- * see FIPS 203 §12.1 for rationale on internal representation differences.
+ * The retired time-domain module (src/crypto/ml-kem-768-td.js, 2026-10-28) was
+ * self-consistent but shared no key material with the reference; this test now
+ * asserts the opposite of what it used to warn about, because the surviving
+ * implementation is bit-identical to the oracle.
  */
 
 const crypto = require('crypto');
@@ -20,13 +22,31 @@ if (!globalThis.crypto || !globalThis.crypto.getRandomValues) {
 }
 
 // Load JS time-domain implementation (repo-relative from test/)
-const JS_MLKEM = require('../src/crypto/ml-kem-768-td.js');
+const JS_MLKEM = require('../packages/pqc-kem/src/ml-kem-768.js');
 
 // Noble reference (ml_kem768) is loaded via dynamic import below
 let REF_MLKEM = null;
+let nobleKeygen = null;
 
 const TEST_SEED = new Uint8Array(32);
 for (let i = 0; i < 32; i++) TEST_SEED[i] = i; // seed = 0x00..0x1f
+
+/**
+ * The retired time-domain module exposed generateKeypairWithSeed(seed) and
+ * encapsulateWithSeed(pk, seed) directly. The surviving implementation exposes
+ * the FIPS 203 deterministic entry points, which take the actual d, z and m
+ * values, so the test derives those from its 32-byte seed. The two labels below
+ * are test-local domain separators: they are part of the fixture, not of the
+ * standard, and both the JS side and the oracle side are fed the same bytes.
+ */
+const deriveZ = (seed) => new Uint8Array(
+    crypto.createHash('sha256').update(Buffer.concat([Buffer.from('fibemate/test/z'), Buffer.from(seed)])).digest()
+);
+const deriveM = (seed) => new Uint8Array(
+    crypto.createHash('sha256').update(Buffer.concat([Buffer.from('fibemate/test/m'), Buffer.from(seed)])).digest()
+);
+const jsKeygenWithSeed = (seed) => JS_MLKEM.generateKeypairDerand(seed, deriveZ(seed));
+const jsEncapsWithSeed = (pk, seed) => JS_MLKEM.encapsulateDerand(pk, deriveM(seed));
 
 // Test outcome counters. Module scope so CHECK/PASS/WARN/FAIL mutate them
 // directly; previously `fail` was initialised and never incremented, which
@@ -103,8 +123,8 @@ function main() {
     console.log('=== 1. Deterministic Keygen (same seed) ===');
 
     // JS (native seeded)
-    const js_kp1 = JS_MLKEM.generateKeypairWithSeed(TEST_SEED);
-    const js_kp2 = JS_MLKEM.generateKeypairWithSeed(TEST_SEED);
+    const js_kp1 = jsKeygenWithSeed(TEST_SEED);
+    const js_kp2 = jsKeygenWithSeed(TEST_SEED);
     CHECK(hex(js_kp1.publicKey) === hex(js_kp2.publicKey), 'JS keygen reproducible (pk): ' + (hex(js_kp1.publicKey) === hex(js_kp2.publicKey)));
 
     // Reference (Noble ml_kem768) — reproducibility via polyfill (note: not seeded)
@@ -130,8 +150,8 @@ function main() {
     // ========================================================
     console.log('\n=== 2. Deterministic Encaps (same pk+seed) ===');
 
-    const js_enc1 = JS_MLKEM.encapsulateWithSeed(js_kp1.publicKey, TEST_SEED);
-    const js_enc2 = JS_MLKEM.encapsulateWithSeed(js_kp1.publicKey, TEST_SEED);
+    const js_enc1 = jsEncapsWithSeed(js_kp1.publicKey, TEST_SEED);
+    const js_enc2 = jsEncapsWithSeed(js_kp1.publicKey, TEST_SEED);
     CHECK(hex(js_enc1.ciphertext) === hex(js_enc2.ciphertext), 'JS encaps reproducible (ct): ' + (hex(js_enc1.ciphertext) === hex(js_enc2.ciphertext)));
     CHECK(hex(js_enc1.sharedSecret) === hex(js_enc2.sharedSecret), 'JS encaps reproducible (ss): ' + (hex(js_enc1.sharedSecret) === hex(js_enc2.sharedSecret)));
 
@@ -156,7 +176,7 @@ function main() {
     // ========================================================
     console.log('\n=== 4. Cross-mode (seeded-keygen + random-encaps) ===');
 
-    const js_kp_seeded = JS_MLKEM.generateKeypairWithSeed(TEST_SEED);
+    const js_kp_seeded = jsKeygenWithSeed(TEST_SEED);
     const js_enc_rand = JS_MLKEM.encapsulate(js_kp_seeded.publicKey);
     const js_dec_rand = JS_MLKEM.decapsulate(js_kp_seeded.secretKey, js_enc_rand.ciphertext);
     CHECK(hex(js_dec_rand) === hex(js_enc_rand.sharedSecret), 'JS  seeded-kg + rand-encap round-trip: ' + (hex(js_dec_rand) === hex(js_enc_rand.sharedSecret)));
@@ -173,17 +193,29 @@ function main() {
 
     const seed2 = new Uint8Array(32);
     seed2[0] = 0xff;
-    const js_kp_seed2 = JS_MLKEM.generateKeypairWithSeed(seed2);
+    const js_kp_seed2 = jsKeygenWithSeed(seed2);
     CHECK(hex(js_kp_seed2.publicKey) !== hex(js_kp1.publicKey), 'JS  pk differs by seed: ' + (hex(js_kp_seed2.publicKey) !== hex(js_kp1.publicKey)));
 
     // ========================================================
-    // 6. Cross-implementation (预期不兼容，FIPS 203 §12.1)
+    // 6. Cross-implementation compatibility (now CHECKED, not warned)
     // ========================================================
     console.log('\n=== 6. Cross-implementation compatibility ===');
-    console.log('  (FIPS 203 §12.1: internal NTT rep differs — binary mismatch expected)');
 
-    WARN('JS-seeded encap→Reference-decap: expected binary mismatch');
-    WARN('Reference-seeded encap→JS-decap: expected binary mismatch');
+    // The surviving implementation is byte-identical to @noble for the same
+    // (d, z), so the seeded key pair must be identical as well. This assertion
+    // is the one that would have caught the retired module: it was internally
+    // consistent but shared no key material with the reference.
+    const oracleSeed64 = new Uint8Array([...TEST_SEED, ...deriveZ(TEST_SEED)]);
+    const ref_seeded = nobleKeygen(oracleSeed64);
+    CHECK(hex(js_kp1.publicKey) === hex(ref_seeded.publicKey), 'JS seeded pk === reference seeded pk');
+    CHECK(hex(js_kp1.secretKey) === hex(ref_seeded.secretKey), 'JS seeded sk === reference seeded sk');
+
+    const js_to_ref = REF_MLKEM.decapsulate(js_enc1.ciphertext, ref_seeded.secretKey);
+    CHECK(hex(Buffer.from(js_to_ref)) === hex(js_enc1.sharedSecret), 'JS-seeded encap → reference decap matches ss');
+
+    const ref_enc_for_js = REF_MLKEM.encapsulate(js_kp1.publicKey);
+    const ref_to_js = JS_MLKEM.decapsulate(js_kp1.secretKey, ref_enc_for_js.ciphertext);
+    CHECK(hex(ref_to_js) === hex(ref_enc_for_js.sharedSecret), 'reference encap → JS decap matches ss');
 
     // ========================================================
     // Summary
@@ -191,7 +223,7 @@ function main() {
     console.log(`\n${'='.repeat(54)}`);
     console.log(`  Deterministic Seed Test: ${pass} passed, ${fail} failed, ${warn} expected warnings`);
     console.log(`  Self-consistency: ${fail === 0 ? '✅ VERIFIED' : '❌ FAILURES DETECTED'}`);
-    console.log(`  Cross-implementation binary compat: ⚠ NOT EXPECTED (FIPS 203 compliant)`);
+    console.log(`  Cross-implementation binary compat: ${fail === 0 ? '✅ VERIFIED against @noble/post-quantum' : '❌ MISMATCH'}`);
     console.log(`${'='.repeat(54)}`);
 
     process.exit(fail > 0 ? 1 : 0);
@@ -211,6 +243,7 @@ function main() {
             throw new Error('ml_kem768 export not found in @noble/post-quantum/ml-kem.js');
         }
         REF_MLKEM = makeAdapter(mlkem768);
+        nobleKeygen = (seed) => mlkem768.keygen(seed);
         main();
     } catch (err) {
         console.error('Reference impl (@noble/post-quantum) not available:', err.message);

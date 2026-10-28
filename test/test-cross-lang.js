@@ -3,7 +3,7 @@
 /**
  * FIBEMATE 跨语言互操作测试 — Node.js
  * ============================================================
- * JS Pure (ml-kem-768-td.js) vs WASM (Rust/pqc_kyber)
+ * JS Pure (packages/pqc-kem) vs WASM (Rust/pqc_kyber)
  * 验证：同一密钥在两种实现中产生相同 shared secret
  */
 'use strict';
@@ -12,7 +12,7 @@ const fs = require('fs');
 const crypto = require('crypto');
 
 // ============================================================
-// Mock browser globals for ml-kem-768-td.js
+// Mock browser globals for the JS ML-KEM implementation
 // ============================================================
 global.window = global;
 Object.defineProperty(global, 'crypto', {
@@ -23,7 +23,7 @@ Object.defineProperty(global, 'crypto', {
 // ============================================================
 // Load Pure JS ML-KEM-768
 // ============================================================
-const JS_MLKEM = require('../src/crypto/ml-kem-768-td.js');
+const JS_MLKEM = require('../packages/pqc-kem/src/ml-kem-768.js');
 console.log('[JS]  Pure ML-KEM-768 loaded (time-domain, O(n^2))');
 
 // ============================================================

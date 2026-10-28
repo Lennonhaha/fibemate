@@ -1,7 +1,8 @@
 <!-- SPDX-License-Identifier: Apache-2.0 -->
 # RFC: ML-KEM-768 seed derivation in `src/crypto/ml-kem-768-td.js`
 
-Status: **draft — decision needed, no code changed**
+Status: **decided — option B (retire `td`), implemented in #367**. No new TSR yet; one is issued
+against the merged commit, and the existing 2026-06-08 TSR stays frozen as history.
 Date: 2026-10-28
 Scope: `fibemate` repo. Not part of any release; nothing in this document has been deployed.
 
