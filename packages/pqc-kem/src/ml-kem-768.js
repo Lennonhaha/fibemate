@@ -348,8 +348,6 @@ function encapsDerand(publicKey,m){
     for(let i=0;i<K;i++){ct.set(byteEncode(compress(u[i],KYBER_DU),KYBER_DU),off);off+=duBytes;}
     ct.set(byteEncode(compress(v,KYBER_DV),KYBER_DV),off);
 
-    // ss (hashed) is available for self-use; we return raw K_bar for Noble compat
-    const _ss=sha3_256(new Uint8Array([...K_bar,...sha3_256(ct)]));
     return {ciphertext:ct,sharedSecret:K_bar};  // return raw K_bar for noble compat
 }
 
