@@ -6,7 +6,8 @@ This directory is a **reference implementation**, not part of the production pat
 
 - **Phase-1 pure-JS**: written to make the ML-DSA arithmetic readable and auditable, not to be fast or shipped.
 - **Not on the production path.** The published API enters at `packages/fml-dsa/src/index.js`, which imports `./core/native.js`; `native.js` is a Phase-1 wrapper that loads `www/noble-pq-bundle/ml-dsa.js` and exposes `ml_dsa44/65/87`. Nothing in the public API reaches the other modules here.
-- **Kept for reference.** Retained deliberately pending an architecture decision (either wire a pure-JS path in with its own test evidence, or retire the directory). No decision has been made, so nothing here has been deleted.
+- **Verified reference implementation (2026-10-28).** `pk` and `sk` are byte-identical to `@noble/post-quantum` 0.7.1 on three fixed seeds, and signatures verify in both directions; see `test/interop-oracle.test.js` (24 assertions, 0 warnings). Getting there required two FIPS 204 corrections: key generation now expands `H(\u03b6 \u2016 k \u2016 \u2113, 128)` instead of `H(\u03b6, 96)`, and the secret-key encoding now packs `\u03b7 \u2212 s` and `2^(d\u22121) \u2212 t0` instead of the raw values.
+- **Still not on the production path.** Byte equality with the oracle is evidence that the algorithm is right, not a reason to ship the slower implementation.
 
 ## Reference-analysis summary (2026-10-28, code-level only)
 
@@ -33,10 +34,16 @@ Zero *external* refs does not mean removable: those modules are imported by othe
 
 The pure-JS version is the readable statement of what the algorithm does; `native.js` is the shipped one. When the two disagree, the readable one is how you find out which is wrong — but only if it still compiles and the disagreement is checked by a test, not by eye.
 
+As of 2026-10-28 it is also the second opinion: two independent ML-DSA implementations that agree byte-for-byte are stronger evidence than one implementation checked against itself.
+
 ## What must pass before anything here is wired into production
 
 The bar is stated once, here, so it cannot drift. A module in this directory may enter the
 production path only after all four of the following hold.
+
+**Status of these four gates: all four pass as of 2026-10-28** (`test/interop-oracle.test.js`,
+ML-DSA-65, `@noble/post-quantum` 0.7.1, 24/24). The mutation check removes the `k \u2016 \u2113`
+separator from key generation and the suite goes red (6 failed rows); restoring it returns 24/24.
 
 ### 1. Fixed-seed byte equality
 

@@ -132,6 +132,12 @@ jobs:
           node test/lockout.test.js
           node test/smoke-backend.js
 
+      # FIPS 204 byte-level gate: pk/sk must equal the @noble/post-quantum oracle on three
+      # fixed seeds, and signatures must verify in both directions. See
+      # packages/fml-dsa/src/core/README.md for the four gates this enforces.
+      - name: fml-dsa byte-level oracle comparison
+        run: node packages/fml-dsa/test/interop-oracle.test.js
+
   # ─── C 原生 addon：构建后与 JS 后端对拍 ───────────────────
   # index.js prefers the C addon whenever it is present, so this is the path
   # users actually execute in a native build. Nothing else in CI compiles it.
