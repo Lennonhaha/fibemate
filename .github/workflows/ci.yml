@@ -214,6 +214,14 @@ jobs:
           set -o pipefail
           node scripts/check-sbom-drift.cjs /tmp/sbom.cdx.json ./sbom.cdx.json 2>&1 | tee "$RUNNER_TEMP/sbom.log"
 
+      # www/docs/sbom.cdx.json 是随站点一起发布的副本（#206）。只查根目录那份，
+      # 副本就能悄悄过期 —— 而读者看到的是副本。
+      - name: Verify the published SBOM copy matches
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/check-sbom-drift.cjs /tmp/sbom.cdx.json ./www/docs/sbom.cdx.json 2>&1 | tee -a "$RUNNER_TEMP/sbom.log"
+
       - name: Attribute - SBOM digest
         if: always()
         shell: bash
@@ -271,6 +279,9 @@ jobs:
           npx --yes markdown-link-check@3.12.2 README.md docs/*.md 2>/dev/null || true
 
   # ─── UTF-8 BOM check (single platform) ──────────────
+  # 注意：这个 job 叫 bom-check，但它查的是 BOM（字节序标记）、编码损坏与实验代码隔离，
+  # 与 CycloneDX CBOM 无关。CBOM 的漂移与 schema 校验在下面的 `cbom` job 里。
+  # 两个名字只差一个字母，历史上一度让读者以为 schema 校验已被覆盖 —— 保持此注释。
   bom-check:
     runs-on: ubuntu-latest
     steps:
@@ -289,6 +300,41 @@ jobs:
 
       - name: Verify experimental code isolation (P0-01)
         run: node scripts/check-experimental-isolation.cjs
+
+  # ─── CBOM 门禁（#298）：漂移 + 官方 CycloneDX schema ───
+  # 这两条以前只在 release.yml 里跑，于是 PR 可以改坏 CBOM 或生成器而保持全绿，
+  # 直到发版才暴露。校验器 tools/validate-cbom.cjs 用的是仓库自带的官方 schema
+  # （bom-1.6 + spdx + jsf），不是自家解析器 —— 外部参照必须在环路里。
+  cbom:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+
+      # ajv 是 devDependency，validate-cbom.cjs 从 node_modules 解析它
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: CBOM drift (committed artifact must match the generator)
+        run: node scripts/build-cbom.js --check
+
+      - name: CBOM schema (official CycloneDX 1.6 + spdx + jsf)
+        run: node tools/validate-cbom.cjs tools/cbom-cyclonedx.json
+
+      - name: Attribute - CBOM verdict
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo '### CBOM - drift + schema'
+            echo ''
+            echo 'generator: scripts/build-cbom.js --check'
+            echo 'validator: tools/validate-cbom.cjs tools/cbom-cyclonedx.json'
+          } >> "$GITHUB_STEP_SUMMARY"
 
   # ─── 公开措辞检查 R1（docs/pre-release-claims.md §三；single platform）──
   claim-check:
