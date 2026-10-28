@@ -19,3 +19,9 @@
 *.jpg binary
 *.wasm binary
 *.bit binary
+
+# Timestamped evidence must stay byte-exact. An RFC 3161 token binds a SHA-256 of the
+# exact bytes, so EOL normalization on checkout would make openssl ts -verify fail
+# against the file the token was issued for. -text disables conversion for
+# everything under docs/tsa/ (including the .tsq/.tsr tokens themselves).
+docs/tsa/** -text
