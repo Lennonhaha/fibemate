@@ -63,59 +63,54 @@ export function expandA(rho, paramSet) {
 // For η=2 (ML-DSA-44): read 3 bits → 0..7 → reject ≥ 5, map {0,1,2,3,4} → {-2,-1,0,1,2}
 // For η=4 (ML-DSA-65): read 4 bits → 0..15 → reject ≥ 9, map {0..8} → {-4..4}
 // ══════════════════════════════════════════════
-export function expandS(sigma, paramSet) {
+export function expandS(rhoPrime, paramSet) {
   const { k, l, eta } = MLDSA_PARAMS[paramSet];
   const totalVecs = l + k;
   const result = [];
 
   for (let veci = 0; veci < totalVecs; veci++) {
-    const seed = new Uint8Array(sigma.length + 2);
-    seed.set(sigma, 0);
-    seed[sigma.length] = veci & 0xFF;
-    seed[sigma.length + 1] = (veci >> 8) & 0xFF;
-
-    const poly = new Int32Array(N);
-    if (eta === 2) {
-      // 4-bit reads, reject ≥ 5
-      sampleEta2(seed, poly);
-    } else {
-      // 4-bit reads, reject ≥ 9
-      sampleEta4(seed, poly);
-    }
-    result.push(poly);
+    // FIPS 204 Algorithm 15: seed = ρ′ ‖ IntegerToBytes(r, 2), little-endian.
+    const seed = new Uint8Array(rhoPrime.length + 2);
+    seed.set(rhoPrime, 0);
+    seed[seed.length - 2] = veci & 0xFF;
+    seed[seed.length - 1] = (veci >> 8) & 0xFF;
+    result.push(rejBoundedPoly(seed, eta));
   }
   return result;
 }
 
-function sampleEta2(seed, dest) {
-  let idx = 0;
-  while (idx < N) {
-    const buf = shake256(seed, 136); // 136B = 272 nibbles
-    for (let i = 0; i < 136 && idx < N; i++) {
-      const b0 = buf[i] & 0xF;
-      const b1 = (buf[i] >> 4) & 0xF;
-      // b0: low nibble → b0 % 5 → b0-2
-      // b1: high nibble → b1 % 5 → b1-2
-      if (b0 < 5) dest[idx++] = b0 - 2; // {0,1,2,3,4} → {-2,-1,0,1,2}
-      if (b1 < 5 && idx < N) dest[idx++] = b1 - 2;
-    }
+/**
+ * RejBoundedPoly: rejection-sample one polynomial with coefficients in [-η, η].
+ *
+ * Consumes the SHAKE-256 stream in 168-byte blocks (the rate) and never re-reads the
+ * same bytes; half-byte coefficients follow FIPS 204 Algorithm 15:
+ *   η = 2: n < 15 → 2 − (n mod 5)
+ *   η = 4: n < 9  → 4 − n
+ */
+function rejBoundedPoly(seed, eta) {
+  const coef = eta === 2
+    ? (n) => (n < 15 ? 2 - (n % 5) : false)
+    : (n) => (n < 9 ? 4 - n : false);
+
+  const xof = rawShake256.create({});
+  xof.update(seed);
+  const buf = new Uint8Array(168); // SHAKE-256 rate in bytes
+  xof.xofInto(buf);
+  let pos = 0;
+
+  const poly = new Int32Array(N);
+  let j = 0;
+  while (j < 256) {
+    if (pos >= buf.length) { xof.xofInto(buf); pos = 0; }
+    const b = buf[pos++];
+    const d1 = coef(b & 0x0F);
+    const d2 = coef((b >> 4) & 0x0F);
+    if (d1 !== false) poly[j++] = d1;
+    if (j < 256 && d2 !== false) poly[j++] = d2;
   }
+  return poly;
 }
 
-function sampleEta4(seed, dest) {
-  let idx = 0;
-  while (idx < N) {
-    const buf = shake256(seed, 136);
-    for (let i = 0; i < 136 && idx < N; i++) {
-      const b0 = buf[i] & 0xF;
-      const b1 = (buf[i] >> 4) & 0xF;
-      if (b0 < 9) dest[idx++] = b0 - 4; // {0..8} → {-4..3,4}
-      if (b1 < 9 && idx < N) dest[idx++] = b1 - 4;
-    }
-  }
-}
-
-// ══════════════════════════════════════════════
 // ExpandMask: y = SHAKE-256(μ || κ) → l polys, coeff ∈ [-γ₁+1, γ₁-1]
 // FIPS 204 Algorithm 6
 // γ₁ = 2^17 (ML-DSA-44/65) or 2^19 (ML-DSA-65/87)

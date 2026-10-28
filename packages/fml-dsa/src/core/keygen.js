@@ -28,20 +28,31 @@ export function keygen(paramSet = 'ML-DSA-65') {
   // Step 1: ζ ← {0,1}^{256} (seed for ExpandS)
   const zeta = crypto.getRandomValues(new Uint8Array(32));
 
-  // Step 2: (ρ, σ, K) ← H(zeta) — split SHAKE-256(zeta, 96B)
-  const seed = shake256(zeta, 96); // 32+32+32 = 96
-  const rho = seed.slice(0, 32);      // seed for ExpandA
-  const sigma = seed.slice(32, 64);   // seed for ExpandS
-  const K = seed.slice(64, 96);       // symmetric key (not used in pure sign)
+  // Step 2: (ρ, ρ′, K) ← H(ζ ‖ k ‖ ℓ, 128) — FIPS 204 Algorithm 4 line 2
+  // The k,ℓ domain separator is mandatory: without it, key generation is not injective
+  // across parameter sets (this is the same defect that retired ml-kem-768-td).
+  const seedInput = new Uint8Array(zeta.length + 2);
+  seedInput.set(zeta, 0);
+  seedInput[zeta.length] = k;
+  seedInput[zeta.length + 1] = l;
+  const seed = shake256(seedInput, 128); // 32+64+32 = 128
+  const rho = seed.slice(0, 32);        // seed for ExpandA
+  const rhoPrime = seed.slice(32, 96);  // 64-byte seed for ExpandS
+  const K = seed.slice(96, 128);        // symmetric key (not used in pure sign)
 
   // Step 3: A ← ExpandA(ρ). Noble convention: pass time-domain A directly to
   // MultiplyNTTs (do not NTT-encode A).
   const A = expandA(rho, paramSet);
 
-  // Step 4: (s1, s2) ← ExpandS(σ) — s1 ∈ R_q^l, s2 ∈ R_q^k
-  const sAll = expandS(sigma, paramSet);
+  // Step 4: (s1, s2) ← ExpandS(ρ′) — s1 ∈ R_q^l, s2 ∈ R_q^k
+  const sAll = expandS(rhoPrime, paramSet);
   const s1_raw = sAll.slice(0, l); // l vectors
   const s2_raw = sAll.slice(l);    // k vectors
+
+  // FIPS 204 §5.2.2 packs s1,s2 in [-η, η] and encodeSK offsets by +η.
+  // Keep the signed values as key material; normalise separate copies for arithmetic.
+  const s1 = s1_raw.map((p) => Int32Array.from(p));
+  const s2 = s2_raw.map((p) => Int32Array.from(p));
 
   // Normalize: expandS outputs [-η,η], arithmetic requires [0,Q)
   const normalize = (v) => { for (const p of v) for (let j = 0; j < 256; j++) if (p[j] < 0) p[j] += 8380417; };
@@ -74,7 +85,7 @@ export function keygen(paramSet = 'ML-DSA-65') {
   const tr = shake256(encodePK(pkObj, paramSet), 64);
 
   // Step 8: return (pk, sk)
-  const sk = { rho: new Uint8Array(rho), K: new Uint8Array(K), tr, s1: s1_raw, s2: s2_raw, t0 };
+  const sk = { rho: new Uint8Array(rho), K: new Uint8Array(K), tr, s1, s2, t0 };
 
   return { pk: pkObj, sk };
 }

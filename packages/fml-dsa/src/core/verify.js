@@ -119,17 +119,10 @@ export function verify(pk_raw, msg, sig_raw, ctx = new Uint8Array(0), paramSet =
   const cTildePrime = shake256(new Uint8Array([...mu, ...w1Encoded]), cTildeBytes);
 
   // Step 13: c̃' == c̃
-  let firstDiff = -1;
+  // Step 13: c̃' == c̃. No debug output: expected rejections (flipped byte, wrong key)
+  // are normal outcomes, and printing them makes a green run look like a failing one.
   for (let i = 0; i < cTildeBytes; i++) {
-    if (cTildePrime[i] !== cTilde[i]) {
-      if (firstDiff < 0) {
-        firstDiff = i;
-        console.error('cTildePrime mismatch at byte', i, 'expected', cTilde[i], 'got', cTildePrime[i]);
-        console.error('cTildePrime[:16]:', Buffer.from(cTildePrime.slice(0, 16)).toString('hex'));
-        console.error('cTilde[:16]:', Buffer.from(cTilde.slice(0, 16)).toString('hex'));
-      }
-      return false;
-    }
+    if (cTildePrime[i] !== cTilde[i]) return false;
   }
 
   return true;

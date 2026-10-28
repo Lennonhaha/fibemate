@@ -133,20 +133,20 @@ export function encodeSK(sk, paramSet) {
   for (let i = 0; i < l; i++) {
     // s1 signed [-η,η] → offset to [0, 2η]
     const offset = new Int32Array(256);
-    for (let j = 0; j < 256; j++) offset[j] = sk.s1[i][j] + eta;
+    for (let j = 0; j < 256; j++) offset[j] = eta - sk.s1[i][j];
     bitPos = polyBitPack(offset, etaBits, buf, bitPos);
   }
 
   // s2
   for (let i = 0; i < k; i++) {
     const offset = new Int32Array(256);
-    for (let j = 0; j < 256; j++) offset[j] = sk.s2[i][j] + eta;
+    for (let j = 0; j < 256; j++) offset[j] = eta - sk.s2[i][j];
     bitPos = polyBitPack(offset, etaBits, buf, bitPos);
   }
 
   // t0
   for (let i = 0; i < k; i++) {
-    bitPos = polyBitPack(sk.t0[i], 13, buf, bitPos);
+    bitPos = polyBitPack(sk.t0[i].map((v) => (1 << 12) - v), 13, buf, bitPos);
   }
 
   return buf;
@@ -172,7 +172,7 @@ export function decodeSK(buf, paramSet) {
   const s1 = [];
   for (let i = 0; i < l; i++) {
     const packed = polyBitUnpack(buf, bitPos, etaBits);
-    for (let j = 0; j < 256; j++) packed[j] -= eta;
+    for (let j = 0; j < 256; j++) packed[j] = eta - packed[j];
     s1.push(packed);
     bitPos += 256 * etaBits;
   }
@@ -181,7 +181,7 @@ export function decodeSK(buf, paramSet) {
   const s2 = [];
   for (let i = 0; i < k; i++) {
     const packed = polyBitUnpack(buf, bitPos, etaBits);
-    for (let j = 0; j < 256; j++) packed[j] -= eta;
+    for (let j = 0; j < 256; j++) packed[j] = eta - packed[j];
     s2.push(packed);
     bitPos += 256 * etaBits;
   }
@@ -189,7 +189,7 @@ export function decodeSK(buf, paramSet) {
   // t0
   const t0 = [];
   for (let i = 0; i < k; i++) {
-    t0.push(polyBitUnpack(buf, bitPos, 13));
+    t0.push(polyBitUnpack(buf, bitPos, 13).map((v) => (1 << 12) - v));
     bitPos += 256 * 13;
   }
 
