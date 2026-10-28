@@ -32,3 +32,41 @@ Zero *external* refs does not mean removable: those modules are imported by othe
 ## Why keep it at all
 
 The pure-JS version is the readable statement of what the algorithm does; `native.js` is the shipped one. When the two disagree, the readable one is how you find out which is wrong — but only if it still compiles and the disagreement is checked by a test, not by eye.
+
+## What must pass before anything here is wired into production
+
+The bar is stated once, here, so it cannot drift. A module in this directory may enter the
+production path only after all four of the following hold.
+
+### 1. Fixed-seed byte equality
+
+With `seed = SHAKE256("fibemate-interop-matrix/2026-10/seed-i", 64)` for at least three
+seeds, the module's `pk` and `sk` must be **byte-identical** to an independent
+implementation. Not "interoperable", not "the same size" — identical bytes, compared as hex
+in the test output.
+
+### 2. Bidirectional signature interop
+
+Signatures produced by this module must verify under the independent implementation, and
+signatures produced there must verify here, for the same key and the same message. One
+direction is not interop; it is a coincidence that happens to be testable.
+
+### 3. Rejection control
+
+A signature with exactly one flipped byte — and a public key with one flipped byte — must
+verify `false`. It must not throw, and it must not verify. An exception in this control is
+a `FAIL`, not a skip: FIPS 204 defines verification as a decision, and "crashed" is not one
+of the two outcomes.
+
+### 4. Retirement, if it cannot be fixed
+
+If any of the above fails and cannot be fixed within one change, the module is **retired**
+(`git rm`), not kept with a `known mismatch` note. The retirement follows the
+`ml-kem-768-td` precedent: the deleted file's old TSR is frozen and stays valid for the
+file as it was, and a **new** timestamp is issued against the merged retirement commit,
+recording that the file is now deleted. No silent edit of a timestamped file.
+
+Evidence for any of the four is the same as everywhere else in this repository: the run
+manifest records the implementations and versions compared, every cell prints `PASS` or
+`FAIL` with a verbatim error on failure, and no `warn()` and no literal-`true` assertion
+appears in the harness. A conformance claim that cannot fail is not a claim.
