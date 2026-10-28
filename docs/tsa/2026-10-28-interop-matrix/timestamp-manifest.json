@@ -1,0 +1,21 @@
+[
+  {
+    "number": "lg-116",
+    "file": "SHA256SUMS",
+    "size": 1392,
+    "sha256": "11e98d8cf850d504cae404f532f28d588f018ca119a178b8c4d846d896a68c4e",
+    "covers": "interop-matrix/out/matrix.json, matrix.md and 12 logs/*.log in Lennonhaha/fibemate-tools at c64cf35",
+    "tsq": "lg-116-interop-matrix-SHA256SUMS.tsq",
+    "tsq_size": 69,
+    "tsr": "lg-116-interop-matrix-SHA256SUMS.tsr",
+    "tsr_size": 4643,
+    "tsr_sha256": "7e3477b02accfb15c0b8c35219863208e9a7c2d84e4a4c0002469b7723fcaccd",
+    "tsa": "FreeTSA",
+    "tsa_url": "https://freetsa.org/tsr",
+    "serial": "0x09823CA3",
+    "timestamp": "Oct 28 11:58:04 2026 GMT",
+    "status": "Granted",
+    "signature_verified_against": "docs/tsa/2026-09-06-vwz-rank2/freetsa-root-ca.pem",
+    "imprint_matches_sha256sums": true
+  }
+]
