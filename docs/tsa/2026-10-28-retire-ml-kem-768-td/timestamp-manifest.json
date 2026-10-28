@@ -1,0 +1,30 @@
+[
+  {
+    "number": "lg-109",
+    "file": "ml-kem-768-td-retirement.md",
+    "size": 2849,
+    "sha256": "0f30b0ed4eedb22605b47d0689625d98332e73b3e874f001baa612216448a086",
+    "tsr": "lg-109-ml-kem-768-td-retirement.tsr",
+    "tsr_size": 4633,
+    "tsr_sha256": "5cceec699fa8c5427511ca0e9b2bb8217f92d62462f0a102f54a24139fcf939d",
+    "tsa": "FreeTSA",
+    "tsa_url": "https://freetsa.org/tsr",
+    "timestamp": "Oct 28 08:44:47 2026 GMT",
+    "status": "Granted",
+    "signature_verified_against": "docs/tsa/2026-09-06-vwz-rank2/freetsa-root-ca.pem"
+  },
+  {
+    "number": "lg-110",
+    "file": "SHA256SUMS",
+    "size": 195037,
+    "sha256": "1f6a4d3bbf42f0213501ac1d9fe73119c8056c9814927c3e10961115e0feef5a",
+    "tsr": "lg-110-ml-kem-768-td-SHA256SUMS.tsr",
+    "tsr_size": 4632,
+    "tsr_sha256": "f9cf6e15df99f78b1407c99cd780e1bdd706a8f85e69bfa230199b419e4fe4d0",
+    "tsa": "FreeTSA",
+    "tsa_url": "https://freetsa.org/tsr",
+    "timestamp": "Oct 28 08:44:51 2026 GMT",
+    "status": "Granted",
+    "signature_verified_against": "docs/tsa/2026-09-06-vwz-rank2/freetsa-root-ca.pem"
+  }
+]
