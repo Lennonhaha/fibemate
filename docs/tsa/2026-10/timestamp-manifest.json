@@ -1,0 +1,62 @@
+{
+  "package": "fibemate core asset evidence, 2026-10",
+  "created_at": "2026-10-28",
+  "tsa": "FreeTSA (https://freetsa.org/tsr)",
+  "ca": "docs/tsa/2026-09-06-vwz-rank2/freetsa-root-ca.pem",
+  "superseded": [
+    {
+      "lg": "lg-112",
+      "reason": "manifest changed when the witness script gained its SPDX header"
+    }
+  ],
+  "entries": [
+    {
+      "lg": "lg-111",
+      "subject": "cyclonedx-data-loss-proof-202610.md",
+      "bytes": 6302,
+      "sha256": "26bf88cdf173db631e248597a32a5f485ca4c14ea69272f263b517123acd1bec",
+      "tsq": "lg-111-cyclonedx-data-loss-proof.tsq",
+      "tsr": "lg-111-cyclonedx-data-loss-proof.tsr",
+      "tsr_bytes": 4643,
+      "tsr_sha256": "df96a9d6e9390184b01c204c5351fe8d5a00f6f6806945b60e32d89fe2180a88",
+      "granted_at": "Oct 28 09:23:32 2026 GMT",
+      "verified_against_ca": true
+    },
+    {
+      "lg": "lg-113",
+      "subject": "repo-commits.txt",
+      "bytes": 1799,
+      "sha256": "c427498bad800055de6afd80351eed492fe650b50b906d2d380f26f9b5785da0",
+      "tsq": "lg-113-repo-commits.tsq",
+      "tsr": "lg-113-repo-commits.tsr",
+      "tsr_bytes": 4644,
+      "tsr_sha256": "019067f50ed078e34d002047db6b4e970667b40df6ddb1b6153e3cac730c8ce9",
+      "granted_at": "Oct 28 09:23:34 2026 GMT",
+      "verified_against_ca": true
+    },
+    {
+      "lg": "lg-114",
+      "subject": "verify_cyclonedx_data_loss.py",
+      "bytes": 5170,
+      "sha256": "accd674461443e264e2daf596f996a8d6717d9a730e34a59da2d878e8b6a6bb6",
+      "tsq": "lg-114-cyclonedx-data-loss-witness.tsq",
+      "tsr": "lg-114-cyclonedx-data-loss-witness.tsr",
+      "tsr_bytes": 4644,
+      "tsr_sha256": "bd20a0cf2e43856e81862350ea5351e4952f9401c23652ec1f5ac08d4f47d747",
+      "granted_at": "Oct 28 09:30:57 2026 GMT",
+      "verified_against_ca": true
+    },
+    {
+      "lg": "lg-115",
+      "subject": "ASSET-MANIFEST.md",
+      "bytes": 3867,
+      "sha256": "14a34aea7beb27c3c42cef90a5fa07138f0a4dd0cfff6288244857737ef48c5c",
+      "tsq": "lg-115-asset-manifest.tsq",
+      "tsr": "lg-115-asset-manifest.tsr",
+      "tsr_bytes": 4645,
+      "tsr_sha256": "f36fa617ecc6cb2ba19168dbc09f648b1d49d2f56facff6cfd294f5fe723f1bc",
+      "granted_at": "Oct 28 09:30:59 2026 GMT",
+      "verified_against_ca": true
+    }
+  ]
+}
