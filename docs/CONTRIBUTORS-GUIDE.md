@@ -35,7 +35,7 @@
 
 从国密（SM2/SM3/SM4）与 PQC（ML-KEM / ML-DSA / SLH-DSA）的混合协议，到 VWZ 签名方案的形式化验证，再到 FPGA NTT 硬件加速、TVLA 侧信道分析、CBOM 资产盘点——每条线都有足够的深度，且都有已跑起来的验证基线等着你推进。
 
-CBOM 现状要分清两条线：`fibemate-tools/cbom-tools` 已有通过官方 CycloneDX 1.6 schema 校验的产物（27 组件）与官方库交叉验证的 CI；主仓 `scripts/build-cbom.js` 已重写为可复现生成器（路径相对化、9 个密码原语组件、自定义字段走 `fibemate:` 命名空间），产物经 `tools/validate-cbom.cjs` 对官方 1.6 schema 校验通过（旧产物曾有 51 条 schema 错误：字段层级错位 + primitive 大写枚举）。接入 CI 与 release 制品的那一版在 **PR #284** 里，尚在评审——别把「已提 PR」读成「已上线」。
+CBOM 现状要分清两条线：`fibemate-tools/cbom-tools` 已有通过官方 CycloneDX 1.6 schema 校验的产物（27 组件）与官方库交叉验证的 CI；主仓 `scripts/build-cbom.js` 已重写为可复现生成器（路径相对化、9 个密码原语组件、自定义字段走 `fibemate:` 命名空间），产物经 `tools/validate-cbom.cjs` 对官方 1.6 schema 校验通过（旧产物曾有 51 条 schema 错误：字段层级错位 + primitive 大写枚举）。PR #284 已于 2026-10-19 合入。**自 2026-10-28 起，CBOM 漂移与官方 schema 校验是 PR 门禁**（CI job `cbom`：`node scripts/build-cbom.js --check` + `node tools/validate-cbom.cjs`），不再等到发版才跑——改坏生成器或提交过期 CBOM 的 PR 会直接变红。
 
 ### 证据文化
 
