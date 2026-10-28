@@ -162,7 +162,7 @@ if (MLKEM768 && typeof MLKEM768.encaps === 'function') {
 
 if (!useNative) {
   try {
-    MLKEM768 = require('./crypto/ml-kem-768-td.js');
+    MLKEM768 = require('../packages/pqc-kem/src/ml-kem-768.js');
     console.error('[tls-hybrid] ML-KEM-768 JS 实现已加载');
   } catch (_) {
     throw new Error('tls-hybrid-extension: ML-KEM-768 不可用');

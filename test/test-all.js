@@ -28,6 +28,7 @@ const suites = [
   ['Key exchange peer resolution', ['node', '--test', 'test/key-exchange-recipient.test.js']],
   ['Account lockout', ['node', 'test/lockout.test.js']],
   ['Backend load smoke (TDZ/init)', ['node', 'test/smoke-backend.js']],
+  ['ML-KEM-768 oracle interop', ['node', '--test', 'test/ml-kem-768-oracle-interop.test.js']],
 ];
 
 let failed = 0;
