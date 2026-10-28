@@ -1224,9 +1224,34 @@
                 <div style="margin-top:10px;">
                     <code style="display:inline-block;padding:7px 14px;background:#0d1117;border:1px solid #21262d;border-radius:6px;color:#00d4aa;font-family:Consolas,'Courier New',monospace;font-size:0.85rem;">npm i -g crypto-hallucination-detector</code>
                 </div>
-                <div style="margin-top:8px;color:#6e7681;font-size:0.78rem;">
-                    三个 npm 包均由 GitHub Actions 发布并带 Sigstore 签名（Built and signed on GitHub Actions），可在各自 npm 页面核验 provenance。<br>全部发行仓生产依赖已过 npm audit 复核，高危漏洞零告警。
+            </div>
+
+            <!-- fibemate-xdiff 版本号：发版时与 fibemate-tools/xdiff/package.json 同步（keep in sync with fibemate-tools/xdiff/package.json） -->
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,229,195,0.18);">
+                <a href="https://www.npmjs.com/package/fibemate-xdiff" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">
+                    <span style="display:inline-flex;border-radius:4px;overflow:hidden;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1;vertical-align:middle;"><span style="background:#3d444d;color:#e6edf3;padding:5px 9px;">npm</span><span style="background:#00d4aa;color:#04120f;padding:5px 9px;font-weight:700;">v0.1.0</span></span>
+                    <span style="color:#c9d1d9;font-size:0.92rem;font-weight:600;">fibemate-xdiff &middot; 差分哨兵</span>
+                </a>
+                <span style="color:#8b949e;font-size:0.85rem;">&mdash; <strong style="color:#c9d1d9;">④ 抓同一算法的实现分叉</strong>：拿两份实现比对派生路径与 KAT 输出，悄悄改了一处就红（命令行仍叫 <code style="background:none;border:0;padding:0;color:#8b949e;">xdiff</code>）</span>
+                <div style="margin-top:10px;">
+                    <code style="display:inline-block;padding:7px 14px;background:#0d1117;border:1px solid #21262d;border-radius:6px;color:#00d4aa;font-family:Consolas,'Courier New',monospace;font-size:0.85rem;">npm i -g fibemate-xdiff</code>
                 </div>
+            </div>
+
+            <!-- crypto-time-machine 版本号：发版时与 fibemate-tools/crypto-time-machine/ctime/__init__.py 同步（keep in sync） -->
+            <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,229,195,0.18);">
+                <a href="https://pypi.org/project/crypto-time-machine/" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">
+                    <span style="display:inline-flex;border-radius:4px;overflow:hidden;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1;vertical-align:middle;"><span style="background:#3d444d;color:#e6edf3;padding:5px 9px;">PyPI</span><span style="background:#00d4aa;color:#04120f;padding:5px 9px;font-weight:700;">v0.1.2</span></span>
+                    <span style="color:#c9d1d9;font-size:0.92rem;font-weight:600;">crypto-time-machine &middot; 密码时间机器</span>
+                </a>
+                <span style="color:#8b949e;font-size:0.85rem;">&mdash; <strong style="color:#c9d1d9;">⑤ 查某个 API 是哪天进来的</strong>：按真实 git 历史追一个密码学 API 的引入与变更，落到本地时间轴（命令 <code style="background:none;border:0;padding:0;color:#8b949e;">ctime</code>）</span>
+                <div style="margin-top:10px;">
+                    <code style="display:inline-block;padding:7px 14px;background:#0d1117;border:1px solid #21262d;border-radius:6px;color:#00d4aa;font-family:Consolas,'Courier New',monospace;font-size:0.85rem;">pip install crypto-time-machine</code>
+                </div>
+            </div>
+
+            <div style="margin-top:8px;color:#6e7681;font-size:0.78rem;">
+                npm 包均由 GitHub Actions 发布并带 Sigstore 签名（Built and signed on GitHub Actions），可在各自 npm 页面核验 provenance；PyPI 包由 Trusted Publishing（OIDC）发布，带 PyPI attestations。<br>全部发行仓生产依赖已过 npm audit 复核，高危漏洞零告警。
             </div>
             <div style="margin-top:18px;">
                 <a href="/tools/verifact-demo/" style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:#00d4aa;color:#04120f;font-weight:700;font-size:0.92rem;border-radius:8px;text-decoration:none;">👉 在线体验 verifact 审计看板（无需安装）</a>
