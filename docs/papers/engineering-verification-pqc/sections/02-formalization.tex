@@ -4,10 +4,52 @@
 
 \subsection{The VWZ construction}
 
-\claim{Describe VWZ: what it is, what it is for, and what security property it
-is intended to provide. This must be written from the specification, not from
-the Isabelle development, so that the formalization is seen to follow the
-specification rather than define its own subject.}
+VWZ is a signature construction over the field $\mathbb{F}_q$ with $q = 3329$,
+designed so that the public key is a rank-2 tensor rather than a single matrix.
+Instance parameters follow from a security parameter $k$: $n = 2k+2$ is the
+length of the target vectors and the number of tensor slices, $m = 2k+1$ is the
+slice dimension, and $w = k+1$ is the Hamming weight of every target vector, so
+that targets are exactly half-dense ($w = n/2$).
+
+A keypair fixes three pairwise-distinct evaluation-point vectors
+$\lambda_a, \lambda_b, \lambda_c \in \mathbb{F}_q^{\,n}$; four matrices
+$X_{2a}, X_{2b}, X_{3a}, X_{3b} \in \mathbb{F}_q^{\,m \times m}$ produced from the
+identity by row additions and therefore of determinant $1$; the derived products
+$M_2 = X_{2b} X_{2a}^{-1}$ and $M_3 = X_{3b} X_{3a}^{-1}$; and a nonzero vector
+$x_1 \in \mathbb{F}_q^{\,n}$. Writing $\mathrm{vand}(\lambda, m) =
+[1, \lambda, \dots, \lambda^{m-1}]$, the public key is the tensor $\psi$ of shape
+$n \times m \times m$ whose $i_1$-th slice is
+\[
+  \psi[i_1] \;=\; x_1[i_1] \cdot \bigl( u_a v_a^{\mathsf{T}} + u_b v_b^{\mathsf{T}} \bigr),
+\]
+where $u_a = X_{2a}^{\mathsf{T}} \mathrm{vand}(\lambda_a[i_1], m)$ and likewise
+for the other three factors. Each slice is a sum of two rank-1 outer products
+and is generically of rank 2, which is what distinguishes this construction from
+the rank-1 scheme of the earlier paper.
+
+Evaluation is the trilinear map
+\[
+  t[i_1] \;=\; \sum_{i_2=0}^{m-1} \sum_{i_3=0}^{m-1}
+               \psi[i_1][i_2][i_3]\, w_2[i_2]\, w_3[i_3],
+\]
+equivalently, in polynomial form, $t[i_1] = x_1[i_1]\bigl( P_{2a}(\lambda_a[i_1])
+P_{3a}(\lambda_c[i_1]) + P_{2b}(\lambda_b[i_1]) P_{3b}(\lambda_c[i_1]) \bigr)$
+with coefficient vectors $u_2 = X_{2a} w_2$, $u_3 = X_{3a} w_3$, and
+$M_2 u_2$, $M_3 u_3$ for the $b$-indexed pair. Signing samples $(w_2, w_3)$ so
+that the evaluation matches a sparse target vector of weight $w$ derived from
+the message by SHAKE-256; verification recomputes the product and compares it
+with that target.
+
+The property under study is existential unforgeability under chosen-message
+attack, with hardness resting on the one-wayness of the tensor map. This paper
+formalizes the algebraic and linear-algebraic layer beneath that statement, not
+the reduction to the one-wayness assumption; Section~\ref{sec:limitations} says
+exactly which obligations are open and why.
+
+This description is transcribed from the normative specification
+(v0.2.0-spec, Sections 1--4), not from the Isabelle development, so that the
+formalization can be read as following the specification rather than as defining
+its own subject.
 
 The formalization is in Isabelle/HOL~\cite{isabelle}, on top of
 \texttt{HOL-Number\_Theory}. The
