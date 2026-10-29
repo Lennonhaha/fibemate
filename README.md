@@ -1,6 +1,6 @@
 > **本仓库是 FIBEMATE PQC 密码学工程验证平台。** 同名社交软件（Rust · 端到端加密 · 独立项目）→ [fibemate.net](https://fibemate.net)
 >
-> **This repo is the FIBEMATE PQC cryptography engineering verification platform.** The chat app of the same name (Rust · E2E encrypted · separate project) lives elsewhere. This platform covers ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa — Phase 1 @noble backend, Noble cross-validated), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, application-layer hybrid KEX, TLA+ formal verification, and 256 TSR evidence records.
+> **This repo is the FIBEMATE PQC cryptography engineering verification platform.** The chat app of the same name (Rust · E2E encrypted · separate project) lives elsewhere. This platform covers ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa — Phase 1 @noble backend, Noble cross-validated), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, application-layer hybrid KEX, TLA+ formal verification, and 267 .tsr evidence files (260 unique tokens; 103 canonical records under `docs/tsa/`; measured 2026-10-29).
 
 > ⚠️ **安全声明 / Security Notice**
 >
@@ -25,7 +25,7 @@
 >
 > You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
 >
-> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 103 timestamped evidence records (lg-001~lg-116, gaps never reused; measured 2026-10-29) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
+> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 267 timestamped evidence files (260 unique tokens; lg-001~lg-116, gaps never reused; measured 2026-10-29) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
@@ -41,7 +41,7 @@
 
 > ⚠️ **OpenSSF passing certifies engineering hygiene (CI, docs, license), not cryptographic correctness or security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
 
-**v3.3.0** · 2026-08-03 · TSR: lg-001~lg-116 (103 .tsr files, gaps never reused; see [TSR Manifest](docs/TSR-MANIFEST.md), a 2026-09-04 snapshot) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3.0** · 2026-08-03 · TSR: lg-001~lg-116 (267 .tsr files repo-wide, 260 unique tokens, gaps never reused; see [TSR Manifest](docs/TSR-MANIFEST.md), a 2026-09-04 snapshot) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -396,8 +396,8 @@ fibemate/
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
 │   └── docs/            # Documentation + TSR evidence (lg-001~lg-116, gaps not reused)
-├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
-│   └── (timing-critical IP, available on request)
+├── fpga/rtl/            # FPGA RTL (Verilog) — 26 modules, published in full
+│   └── (prebuilt bitstreams under fpga/releases/)
 ├── c-stm32/             # STM32 C framework
 ├── scripts/             # CI / build / TVLA cross-verify
 ├── papers/              # Publications: VWZ ePrint 2026/110618
@@ -487,7 +487,7 @@ rop: ≈2^143.8, red: ≈2^143.8, δ: 1.003941, β: 406, d: 998, tag: usvp
 - **Security Audits:** This project has not undergone a formal, third-party security audit. It is an engineering demonstration.
 - **Cryptographic Reductions:** Research components (VWZ) are experimental and lack a formal reduction to standard lattice assumptions.
 - **Physical Side-Channel:** Hardware TVLA (ChipWhisperer) is pending due to a level shifter issue (Q4 2026 target).
-- **Hardware Provisioning:** The FPGA source code (`rtl/`) is currently withheld and is **not** released on request; per `SECURITY.md` it has not entered independent security review (In Development, not yet Signoff). The Verilog is preserved as timestamped evidence in the TSR archive (`docs/tsa/2026-06-25/hardware/`, e.g. `ntt_core.v`, `ntt_core_pipe.v`) rather than published as buildable source.
+- **Hardware Provisioning:** The FPGA source is published in this repository: 26 Verilog modules under `fpga/rtl/` (23 of them the NTT pipeline under `fpga/rtl/ntt/`), plus 13 prebuilt bitstreams under `fpga/releases/`. Nothing in it is held back: the whole design is buildable from source in the tree. What the RTL has **not** had is independent review: per `SECURITY.md` it is In Development, not Signoff, and the physical TVLA run is still pending, so it is published without a security claim attached to it. The same sources are also preserved as timestamped evidence in the TSR archive (`docs/tsa/2026-06-25/hardware/`, e.g. `ntt_core.v`, `ntt_core_pipe.v`). One exception, so this is not read as a blanket claim: the VWZ research-line BRAM solver RTL is a separate artifact and remains withheld pending an internal readiness assessment (see `SECURITY.md`).
 
 ### Future Roadmap
 

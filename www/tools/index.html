@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FIBEMATE 工具集 — 4 个辅助工具</title>
+<title>FIBEMATE 工具集 — 5 个核心工具</title>
 <style>
   :root {
     --ink: #1a1f1c;
@@ -31,9 +31,13 @@
   .tool .meta { font-size: 13px; color: var(--muted); margin: 0 0 12px; }
   .tool p { margin: 8px 0; }
   code { background: #f0f3f1; padding: 1px 5px; border-radius: 4px; font-size: 14px; }
+  .num { display: inline-block; min-width: 22px; height: 22px; line-height: 22px; text-align: center;
+         border-radius: 50%; background: var(--accent); color: #fff; font-size: 13px; font-weight: 700;
+         margin-right: 8px; vertical-align: 2px; }
   .ci { display: inline-block; font-size: 12px; color: var(--accent); border: 1px solid var(--accent); border-radius: 20px; padding: 1px 10px; margin-left: 8px; }
   .cta { display: inline-block; margin-top: 12px; padding: 8px 18px; border: 1px solid var(--accent); border-radius: 6px; color: var(--accent); font-size: 14px; font-weight: 600; text-decoration: none; transition: background .25s, color .25s; }
   .cta:hover { background: var(--accent); color: #fff; text-decoration: none; }
+  h3.group { font-size: 15px; color: var(--muted); margin: 34px 0 6px; font-weight: 600; letter-spacing: .02em; }
   footer { margin-top: 40px; font-size: 13px; color: var(--muted); border-top: 1px solid var(--line); padding-top: 16px; }
   a { color: var(--accent); text-decoration: none; }
   a:hover { text-decoration: underline; }
@@ -43,7 +47,7 @@
 <div class="wrap">
   <header>
     <h1>FIBEMATE Tools</h1>
-    <p>4 个辅助工具，跨 2 个仓库：3 个独立 Apache-2.0 + 1 个主仓内置（GPL-3.0）。</p>
+    <p>五个核心工具，同一仓库（<a href="https://github.com/Lennonhaha/fibemate-tools">Lennonhaha/fibemate-tools</a>，Apache-2.0）。另有 2 个演示页，见下方「附加演示」。</p>
     <p>它们不实现任何密码学算法，只做一件事：把「看起来对」变成「可复核」。</p>
   </header>
 
@@ -52,21 +56,47 @@
     它们给的是信号，不是判决。
   </div>
 
+  <h3 class="group">核心工具（① → ⑤ 与官网一致）</h3>
+
   <div class="tool">
-    <h2>密码幻觉检测器 <span class="ci">CI 13s</span></h2>
-    <p class="meta">Node.js · 零依赖 · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/hallucination-detector">源码</a></p>
+    <h2><span class="num">1</span>cbom-tools · 物料清单生成器</h2>
+    <p class="meta">npm <code>cbom-tools@0.2.6</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/cbom-tools">源码</a></p>
+    <p>扫描代码库，产出符合 OWASP CycloneDX 1.7 的 CBOM：算法、模式、曲线、密钥长度按官方 schema 校验，而不是按自己的解析器「能吃回去」。</p>
+    <p><code>npx cbom-tools scan --dir ./project --out cbom.json --spec 1.7</code>（旧版可用 <code>--spec 1.6</code>）</p>
+  </div>
+
+  <div class="tool">
+    <h2><span class="num">2</span>verifact · 事实哨兵</h2>
+    <p class="meta">npm <code>verifact@0.2.4</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/verifact">源码</a></p>
+    <a class="cta" href="/tools/verifact-demo/">查看演示 →</a>
+    <p>把文档里的声明和制品里的数字对上：逐条抽 claim，找到候选证据就判 verified，对不上就 drift。漂移即红，可作 CI 门禁（<code>--fail-on drift</code>）。</p>
+    <p>只做值级比对。它不校验字节完整性——那需要摘要 + 时间戳，见 <code>scripts/claim-evidence/verify-evidence.cjs</code>。</p>
+  </div>
+
+  <div class="tool">
+    <h2><span class="num">3</span>密码幻觉检测器 <span class="ci">CI 13s</span></h2>
+    <p class="meta">npm <code>crypto-hallucination-detector@0.1.2</code> · Node.js · 零依赖 · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/hallucination-detector">源码</a></p>
     <a class="cta" href="/tools/detector/">查看演示 →</a>
     <p>扫描 JS/TS 代码里 AI 容易编出来的写法：声称常数时间却按秘密分支、用数组下标索引秘密、调用不存在的加密 API。</p>
     <p>输出 <code>needs-human-review</code>，不宣判漏洞。样本测试全过，已在真实代码上验证过误报。</p>
   </div>
 
   <div class="tool">
-    <h2>密码时间机器 <span class="ci">CI 7s</span></h2>
-    <p class="meta">Python · 仅标准库 · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/crypto-time-machine">源码</a></p>
+    <h2><span class="num">4</span>fibemate-xdiff · 差分哨兵</h2>
+    <p class="meta">npm <code>fibemate-xdiff@0.1.0</code> · Node.js · 命令仍叫 <code>xdiff</code> · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/xdiff">源码</a></p>
+    <p>拿两份同一算法的实现比对派生路径与 KAT 输出：悄悄改了一处常量、少了一个域分隔字节，就红。</p>
+    <p><code>npm i -g fibemate-xdiff</code></p>
+  </div>
+
+  <div class="tool">
+    <h2><span class="num">5</span>密码时间机器 <span class="ci">CI 7s</span></h2>
+    <p class="meta">PyPI <code>crypto-time-machine@0.1.2</code> · Python · 仅标准库 · 命令 <code>ctime</code> · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/crypto-time-machine">源码</a></p>
     <a class="cta" href="/tools/time-machine/">查看演示 →</a>
     <p>把「某个密码学 API 在哪个 commit 引入、何时变更、影响了哪些文件」变成可查询的时间轴。</p>
     <p>基于 <code>git log -S/-G</code> 的真实历史，不靠记忆。CI 用自建临时仓库跑，零外部依赖。</p>
   </div>
+
+  <h3 class="group">附加演示（不在上面五个之内）</h3>
 
   <div class="tool">
     <h2>无法解密证明器 <span class="ci">CI 22s</span></h2>
@@ -78,17 +108,17 @@
 
   <div class="tool">
     <h2>密码时间账本</h2>
-    <p class="meta">主仓 · GPL-3.0 · 零依赖 · <a href="https://github.com/Lennonhaha/fibemate/blob/main/www/tools/time-ledger/index.html">源码</a></p>
+    <p class="meta">主仓 fibemate · GPL-3.0 · 零依赖 · <a href="https://github.com/Lennonhaha/fibemate/blob/main/www/tools/time-ledger/index.html">源码</a></p>
     <a class="cta" href="/tools/time-ledger/">查看演示 →</a>
     <p>把「某算法在某 commit 下被纳入账本」串成可复现的 RFC 3161 时间戳链（hash 用 RFC 8785 风格键排序）。</p>
     <p>浏览器内 Web Crypto 重算 SHA-256，零外部依赖。3 个演示 block 来自测试 fixture，非生产测量。</p>
   </div>
 
   <footer>
-    仓库：<a href="https://github.com/Lennonhaha/fibemate-tools">Lennonhaha/fibemate-tools</a> ·
+    核心五工具：<a href="https://github.com/Lennonhaha/fibemate-tools">Lennonhaha/fibemate-tools</a> ·
     许可：Apache-2.0 · 与主仓（GPL-3.0）分离，避免传染性。
-    <br>这些工具是「证据生成器」，不是「保证器」。结论由人基于证据判定。
     <br>时间账本属于主仓 fibemate（GPL-3.0），与独立 Apache-2.0 工具仓分离。
+    <br>这些工具是「证据生成器」，不是「保证器」。结论由人基于证据判定。
   </footer>
 </div>
 </body>
