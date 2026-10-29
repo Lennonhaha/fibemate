@@ -14,12 +14,15 @@
     "index.js",
     "src/"
   ],
+  "dependencies": {
+    "@noble/hashes": "^2.4.0"
+  },
   "devDependencies": {
     "node-addon-api": "^8.2.2",
     "node-gyp": "^11.0.0"
   },
   "scripts": {
-    "test": "node test/basic.test.js && node test/hybrid.test.js && node test/internal-invariants.test.js && node test/fallback-logging.test.js",
+    "test": "node test/basic.test.js && node test/hybrid.test.js && node test/internal-invariants.test.js && node test/fallback-logging.test.js && node test/hash-backends.test.js",
     "test:acvp": "node test/acvp-kat.test.cjs && node test/acvp-encapDecap.test.cjs",
     "test:parity": "node test/native-parity.test.js",
     "build:native": "node-gyp rebuild -C native",
