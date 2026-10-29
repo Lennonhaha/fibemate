@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FIBEMATE · PQC 工程验证平台 — ML-KEM-768 · ML-DSA-65 · SLH-DSA · SM2/SM3/SM4 · FPGA</title>
-    <meta name="description" content="本仓库是 FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust · 端到端加密）另见 fibemate.net。覆盖 ML-KEM-768（FIPS 203）、ML-DSA-65（FIPS 204）、SLH-DSA-128s（FIPS 205）、SM2/SM3/SM4、FPGA NTT 加速器、TLA+ 形式化验证、260 份 TSR 存证。开源 GPL-3.0。">
+    <meta name="description" content="本仓库是 FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust · 端到端加密）另见 fibemate.net。覆盖 ML-KEM-768（FIPS 203）、ML-DSA-65（FIPS 204）、SLH-DSA-128s（FIPS 205）、SM2/SM3/SM4、FPGA NTT 加速器、TLA+ 形式化验证、103 份 TSR 存证（2026-10-29 实测）。开源 GPL-3.0。">
     <meta property="og:title" content="FIBEMATE · 后量子密码学全栈工程验证平台（开源 GPL-3.0）">
     <meta property="og:description" content="FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust）另见 fibemate.net。ML-KEM-768（FIPS 203）· ML-DSA-65（FIPS 204）· SLH-DSA-128s（FIPS 205）· SM2/SM3/SM4 · FPGA NTT · TLA+ · 103 份 RFC 3161 时间戳存证（2026-10-29 实测）。">
     <meta property="og:type" content="website">
@@ -40,7 +40,7 @@
       "version": "3.3.2",
       "applicationCategory": "SecurityApplication",
       "operatingSystem": "Web, Linux, Node.js, FPGA, STM32, WASM",
-      "description": "后量子密码学全栈工程验证平台。ML-KEM-768 (FIPS 203) 密钥封装、ML-DSA-44/65/87 (FIPS 204) + SLH-DSA-128s/192f (FIPS 205) 数字签名、SM2/SM3/SM4 国密算法、FPGA Artix-7 NTT 加速器。30+ 个交互式三维可视化工具、260 份 RFC 3161 时间戳存证、KAT 10,000/10,000 一致性验证、TVLA 侧信道安全门。TLA+ 形式化密钥独立性验证。开源 GPL-3.0。",
+      "description": "后量子密码学全栈工程验证平台。ML-KEM-768 (FIPS 203) 密钥封装、ML-DSA-44/65/87 (FIPS 204) + SLH-DSA-128s/192f (FIPS 205) 数字签名、SM2/SM3/SM4 国密算法、FPGA Artix-7 NTT 加速器。30+ 个交互式三维可视化工具、103 份 RFC 3161 时间戳存证（2026-10-29 实测）、KAT 10,000/10,000 一致性验证、TVLA 侧信道安全门。TLA+ 形式化密钥独立性验证。开源 GPL-3.0。",
       "url": "https://fibemate.net",
       "license": "https://spdx.org/licenses/GPL-3.0-only.html",
       "codeRepository": "https://github.com/Lennonhaha/fibemate",
@@ -896,7 +896,7 @@
             </h1>
             <p>
                 FIPS 203 ML-KEM-768 &middot; SM2/SM3/SM4 &middot; FPGA NTT 加速器<br>
-                全栈 PQC 密码学工程验证 &middot; 103 份 RFC 3161 时间戳存证（2026-10-29 实测）
+                全栈 PQC 工程验证与证据生成 &middot; 103 份 RFC 3161 时间戳存证（2026-10-29 实测）
             </p>
             <div class="hero-badge" style="margin:1rem auto 0;">🔒 v3.3.2 · 代码自 2026-08-31 起公开</div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.22);">🔬 引擎：<strong>libcrux</strong>（hax/F* 形式化验证，未验证的 <code>kyber</code> 变体未启用）· 互操作参照 <strong>@noble/post-quantum</strong></div>
@@ -963,7 +963,7 @@
                     <div class="layer-number">2</div>
                     <div class="layer-title">后量子密钥交换</div>
                 </div>
-                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：FIPS 203 合规，纯 JavaScript，FIPS 203 官方 KAT 参照向量 9/9 通过 · 自跑 10,000 轮 roundtrip 一致性 10,000/10,000（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ 可选 WASM 模块（Rust → wasm-bindgen, <strong>63KB raw / 27KB gzip</strong>, opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 联合信任 + DigiCert 双源存证<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS+WASM 合计 82KB raw / 31KB gzip<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
+                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：FIPS 203 合规，纯 JavaScript，FIPS 203 官方 KAT 参照向量 9/9 通过 · 自跑 10,000 轮 roundtrip 一致性 10,000/10,000（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 联合信任 + DigiCert 双源存证<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
             </div>
 
             <div class="layer-card">
@@ -997,7 +997,7 @@
                 </div>
                 <div class="layer-desc">
                     SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · Phase 1 算法由 @noble/post-quantum 提供)</strong><br>
-                    · fml-dsa：纯 JavaScript，<strong style="color:#00d4aa;">跨 @noble/post-quantum 双向互操作验证通过</strong>（sign→verify / verify→sign 全绿）<br>
+                    · fml-dsa：纯 JavaScript，<strong style="color:#00d4aa;">跨 @noble/post-quantum 双向互操作验证通过</strong>（sign→verify / verify→sign 全绿）<br>· <strong style="color:#f59e0b;">范围</strong>：Phase-1 参考实现，<strong>不在生产路径</strong>（见 <a href="https://github.com/Lennonhaha/fibemate/blob/main/packages/fml-dsa/src/core/README.md" style="color:#00d4aa;text-decoration:underline;">packages/fml-dsa/src/core/README.md</a>）<br>
                     · SLH-DSA (SPHINCS+)：FIPS 205 标准，WASM 加速 107KB raw / 51KB gzip<br>
                     · SHA3/SHAKE 后端 + Fisher-Yates 拒绝采样 + NTT 域矩阵乘法（自研 core 覆盖 ML-DSA 全套算法，尚未接入公共 API）<br>
                     · <a href="/crypto/test-fml-dsa.html" style="color:#00d4aa;text-decoration:underline;">查看 fml-dsa 跨库验证报告</a>
@@ -1088,7 +1088,7 @@
 
     <section class="privacy-stack" id="audit">
         <h2 class="section-title">系统审计与证据链</h2>
-        <p class="section-subtitle">不是"我们认为正确"，而是"你可以自己复核" · 2026-10-29 全量审计</p>
+        <p class="section-subtitle">不是"我们认为正确"，而是"你可以自己复核" · 2026-10-29 全量审计<br><span style="font-size:0.85rem;color:#6e7681;">本站做的是工程验证与证据生成，不提供生产密码服务，也不承诺安全性</span></p>
 
         <div class="layers-container">
             <div class="layer-card">
@@ -1196,7 +1196,7 @@
             <div class="feature-card">
                 <div class="feature-icon">📱</div>
                 <div class="feature-title">多平台支持</div>
-                <div class="feature-desc">已闭环：Electron + Tauri v2 桌面端（v3.3.7 · Windows x64 · cosign 签名 + SLSA provenance）+ React Native 移动端 · FPGA 合成 + ILA/L4 验证通过</div>
+                <div class="feature-desc">已闭环：Electron + Tauri v2 桌面端（v3.3.7 · Windows x64 · cosign 签名 + SLSA provenance）+ React Native 移动端（clean-break 迁移完成，待真机 E2E 验证）· FPGA 合成 + ILA/L4 验证通过</div>
             </div>
 
             <div class="feature-card">
@@ -1302,7 +1302,7 @@
             </div>
 
             <div style="margin-top:8px;color:#6e7681;font-size:0.78rem;">
-                npm 包均由 GitHub Actions 发布并带 Sigstore 签名（Built and signed on GitHub Actions），可在各自 npm 页面核验 provenance；PyPI 包当前由 API token 发布，<strong>尚未</strong>附 PEP 740 provenance（已立项跟踪 #387，下次发版补齐）；npm 侧 provenance 已验证通过。<br>2026-10-29 实测：<code>www</code> 与 <code>mixnet</code> 生产依赖 <code>npm audit --omit=dev</code> 均为 <strong>0 vulnerabilities</strong>，Dependabot 开放告警 <strong>0</strong> 条（qs / CVE-2026-110816 已修复至 6.16.1）。
+                npm 包均由 GitHub Actions 发布并带 Sigstore 签名（Built and signed on GitHub Actions），可在各自 npm 页面核验 provenance；PyPI 包当前由 API token 发布，<strong>尚未</strong>附 PEP 740 provenance（已立项跟踪 #387，下次发版补齐）；npm 侧 provenance 已验证通过。<br>2026-10-29 实测：<code>www</code> 与 <code>mixnet</code> 运行时依赖 <code>npm audit --omit=dev</code> 均为 <strong>0 vulnerabilities</strong>，Dependabot 开放告警 <strong>0</strong> 条（qs / CVE-2026-110816 已修复至 6.16.1）。
             </div>
             <div style="margin-top:18px;">
                 <a href="/tools/verifact-demo/" style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:#00d4aa;color:#04120f;font-weight:700;font-size:0.92rem;border-radius:8px;text-decoration:none;">👉 在线体验 verifact 审计看板（无需安装）</a>
@@ -1345,7 +1345,7 @@
           <div class="feature-desc" style="font-size:0.82rem;line-height:1.6;">
             <strong>Python · 仅标准库</strong><br>
             把「某个密码学 API 在哪个 commit 引入、何时变更、影响了哪些文件」变成可查询的时间轴。<br>
-            <span style="color:#8b949e;">CI 7s · 基于 git log -S/-G 真实历史</span>
+            <span style="color:#8b949e;">CI 7s · 基于 git log -S/-G 真实历史</span><br><span style="color:#8b949e;">PyPI <code style="background:none;border:0;padding:0;color:#8b949e;">crypto-time-machine</code> v0.1.2 · <code style="background:none;border:0;padding:0;color:#8b949e;">pip install crypto-time-machine</code></span>
           </div>
           <a class="cta" href="/tools/time-machine/" style="display:inline-block;margin-top:12px;padding:8px 18px;border:2px solid #6c8eef;border-radius:4px;color:#6c8eef;font-weight:600;text-decoration:none;transition:background .3s, color .3s;">查看演示 →</a>
         </div>
@@ -2028,9 +2028,9 @@
     <!-- ══════════ 🧪 研究线 / 实验室（非生产组件） ══════════ -->
     <section class="features" id="research-lab" style="margin-top:1rem;border:1px solid rgba(255,93,108,0.15);border-radius:12px;padding:1rem 0 1.5rem;">
       <div class="section-badge" style="background:rgba(255,93,108,0.08);border:2px solid rgba(255,93,108,0.35);">🧪 研究线 / 实验室</div>
-      <h2 style="font-size:1.3rem;color:#ff8b94;">实验研究组件 · 与生产线隔离</h2>
+      <h2 style="font-size:1.3rem;color:#ff8b94;">实验研究组件 · 与工程验证线隔离</h2>
       <p class="section-subtitle" style="max-width:760px;margin:0 auto 1.5rem;font-size:0.85rem;color:#8b949e;">
-        实验性研究可视化与示例 — 非生产密码模块，仅供学术参考与安全研究。生产路径依赖 ML-KEM-768 + X25519 + AES-256-GCM，不依赖以下任何实验组件。
+        实验性研究可视化与示例 — 非生产密码模块，仅供学术参考与安全研究。参考实现路径依赖 ML-KEM-768 + X25519 + AES-256-GCM，不依赖以下任何实验组件。
         <a href="https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg" style="color:#ff8b94;text-decoration:underline;margin-left:0.5rem;">experimental/vwz-lg 分支 ↗;</a>
       </p>
       <div class="features-grid" style="grid-template-columns: repeat(3, 1fr);">
@@ -2352,8 +2352,8 @@
           <ul>
             <li>RFC 3161 标准时间戳</li>
             <li>FreeTSA 授时链</li>
-            <li>9 个核心文件已存证</li>
-            <li><code>/docs/tsa/2026-06-08/</code></li>
+            <li>9 个核心文件已存证（2026-06-08 快照；当前累计 103 份）</li>
+            <li><code>/docs/tsa/2026-06-08/</code> &middot; 最新存证见 <code>docs/tsa/</code></li>
           </ul>
         </div>
 
@@ -2482,7 +2482,7 @@
         </div>
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-10-29 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 103 份 (lg-001~lg-116，空号不复用) ✓<br>
+            最后更新：2026-10-29 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 103 份 (lg-001~lg-116，空号不复用) ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · Phase 1 算法由 @noble/post-quantum 提供，双向验证通过)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
@@ -2492,7 +2492,7 @@
                 <a href="https://github.com/Lennonhaha/fibemate" style="color:#00d4aa;">Lennonhaha/fibemate</a>（主仓 · 1722 文件 · CI 26/26 全绿）·
                 <a href="https://github.com/Lennonhaha/fibemate-tauri" style="color:#00d4aa;">fibemate-tauri</a>（Tauri 桌面 · Rust + WebView2 · 三平台 CI 50/50）·
                 <a href="https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg" style="color:#00d4aa;">experimental/vwz-lg</a>（实验研究分支）。<br>
-                所有核心代码已通过 <strong>260 份</strong> RFC 3161 时间戳存证（FreeTSA + DigiCert 双源），原创性可追溯。<br>
+                所有核心代码已通过 <strong>103 份</strong> RFC 3161 时间戳存证（2026-10-29 实测；FreeTSA + DigiCert 双源），原创性可追溯。<br>
                 验证报告（KAT、TVLA）开源后可独立验证。开源不替代独立第三方审计。
                 <a href="/docs/security-limitations.html" style="color:#f59e0b;text-decoration:underline;">⚠ 安全限制声明</a>
                 · <a href="/docs/launch-announcement-2026-08-31.html" style="color:#58a6ff;text-decoration:underline;">发布公告</a><br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-10-17 · 文档中心刷新 16 份关键文档 · CARS 口径统一 77.30 · 桌面端供应链门禁（cargo-deny · RUSTSEC 修复）· 全栈验证：KAT 10,000/10,000 ✅ · ML-KEM-768 NTT 域独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000</small>
@@ -2513,7 +2513,7 @@
   <span style="color:#00d4aa;">max |t|=1.24</span>
  </div>
  <div>
-  <span style="color:#00d4aa;">FreeTSA · 2026-07-08</span>&nbsp;<span style="color:#8b949e;">| FPGA v5 256/256 + LG v2.4.0 36 passed, 2 ignored + lg-001~108</span>
+  <span style="color:#00d4aa;">FreeTSA · 2026-07-08</span>&nbsp;<span style="color:#8b949e;">| FPGA v5 256/256 + LG v2.4.0 36 passed, 2 ignored + lg-001~lg-116</span>
   <a href="/docs/evidence/tvla_n10000.tsr" style="color:#8b949e;margin-left:6px;">⏱ N=10K TSR</a>
   <a href="/docs/evidence/tvla_n10000_report.sha256" style="color:#8b949e;margin-left:4px;">SHA256</a>
   <span style="color:#8b949e;margin-left:8px;">|</span>
@@ -2572,7 +2572,7 @@
         <div class="status-card">
           <span class="status-icon">&#x1F4F1;</span>
           <span class="status-name">React Native 移动端</span>
-          <span class="status-badge active">&#x2705; 已闭环（密钥生成/OPK/加解密）</span>
+          <span class="status-badge dev">&#x1F7E1; clean-break 迁移完成 · 待真机 E2E</span>
         </div>
         <div class="status-card">
           <span class="status-icon">&#x1F4F2;</span>
@@ -2665,7 +2665,7 @@
         <p class="footer-tech" style="margin-top: 0.5rem; font-size: 0.8rem;">
             <a href="/docs/pqc-readiness.html" style="color:#00E5C3;text-decoration:none;">Post-Quantum Ready</a> &middot; Double Ratchet · Sphinx · fml-dsa · FPGA v5
         <p class="footer-backend" style="margin-top: 0.8rem; font-size: 0.85rem;">
-            <span style="display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#22c55e;margin:0 8px;">&#x1F680; 生产通道: Node.js v2.21-pq</span>
+            <span style="display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(34,197,94,0.12);border:1px solid rgba(34,197,94,0.3);color:#22c55e;margin:0 8px;">&#x1F9EA; 工程验证通道: Node.js v2.21-pq</span>
             <span style="display:inline-block;padding:4px 14px;border-radius:20px;background:rgba(249,115,22,0.12);border:1px solid rgba(249,115,22,0.3);color:#f97316;margin:0 8px;">&#x1F52C; 实验通道: Rust v0.2-e2ee</span>
         </p>
         <p class="footer-arch-link" style="margin-top: 0.4rem; font-size: 0.75rem; color: #646c78;">
@@ -2742,7 +2742,7 @@
         <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,160,255,0.25);padding-bottom:0.3rem;">&#x1F4DD; 开发验证 &#x1F4C5; 2026-05-26 (5) <span style="font-size:0.6rem;color:#00a0ff;">DigiCert &#x1F33F; 免费</span></h5>
         <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
         <li><span style="color:#c9d1d9;">message-crypto-v2.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; 4947fac7...<br><span style="font-size:0.6rem;color:#646c78;">SM2 KDF (GB/T 32918.4) + SM3 (GB/T 32905) 实现</span></li>
-        <li><span style="color:#c9d1d9;">signature.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; e7cb8af3...<br><span style="font-size:0.6rem;color:#646c78;">PQ 混合签名 (SLH-DSA-SHA2-128s + ML-DSA-65) &mdash; 生产环境验证通过</span></li>
+        <li><span style="color:#c9d1d9;">signature.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; e7cb8af3...<br><span style="font-size:0.6rem;color:#646c78;">PQ 混合签名 (SLH-DSA-SHA2-128s + ML-DSA-65) &mdash; 工程验证通过（KAT + 互通）</span></li>
         <li><span style="color:#c9d1d9;">kat_fips.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; 7ef6e8e6...<br><span style="font-size:0.6rem;color:#646c78;">FIPS 203 KAT 验证框架</span></li>
         <li><span style="color:#c9d1d9;">verify_final.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; e1c9dec5...<br><span style="font-size:0.6rem;color:#646c78;">NTT 往返 + basemul zeta 修复</span></li>
         <li><span style="color:#c9d1d9;">fips203_verify.js</span> <span style="font-size:0.55rem;color:#00a0ff;" title="DigiCert 2026-05-26">TSA&#x2714;</span> &mdash; f970adc5...<br><span style="font-size:0.6rem;color:#646c78;">KeyGen+Encaps+Decaps KAT 全流程</span></li>
@@ -2785,7 +2785,7 @@
         </div>
         
         <div>
-        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,212,170,0.25);padding-bottom:0.3rem;">&#x26A1; WASM 加速模块<br><span style="font-size:0.6rem;color:#646c78;">pq-wasm 63KB raw / 27KB gzip | slh-dsa-wasm 107KB raw / 51KB gzip</span></h5>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,212,170,0.25);padding-bottom:0.3rem;">&#x26A1; WASM 加速模块<br><span style="font-size:0.6rem;color:#646c78;">mlkem-fips wasm 136.6KB raw / 33.4KB gzip | slh-dsa-wasm 107KB raw / 51KB gzip</span></h5>
         </div>
         
         </div>

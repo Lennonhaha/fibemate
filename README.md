@@ -25,7 +25,7 @@
 >
 > You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
 >
-> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 256 timestamped evidence records (lg-001~108) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
+> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 103 timestamped evidence records (lg-001~lg-116, gaps never reused; measured 2026-10-29) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
@@ -41,7 +41,7 @@
 
 > ⚠️ **OpenSSF passing certifies engineering hygiene (CI, docs, license), not cryptographic correctness or security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
 
-**v3.3.0** · 2026-08-03 · TSR: lg-001~108 (256 .tsr records, some IDs skipped; see [TSR Manifest](docs/TSR-MANIFEST.md)) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3.0** · 2026-08-03 · TSR: lg-001~lg-116 (103 .tsr files, gaps never reused; see [TSR Manifest](docs/TSR-MANIFEST.md), a 2026-09-04 snapshot) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -170,15 +170,17 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 | Track | Content | Status |
 |-------|---------|--------|
 | **Standard PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT, WASM, TLS 1.3 Hybrid KEX | ✅ Engineering Ready (Audit Pending) |
-| **National Crypto Hybrid** | SM2/SM3/SM4 + ML-KEM - IANA #4590 Application-Layer Verification | ✅ Dual-Track Live |
+| **National Crypto Hybrid** | SM2/SM3/SM4 + ML-KEM - IANA #4590 Application-Layer Verification | ✅ Dual-Track Verified |
 | **Research** | LookingGlass v2 (algebraic group experiment), VWZ lattice-tensor signature, FPGA v5 hardware protection | 🔬 Experimental Branch |
 
 > **Note**: All research components (LookingGlass, VWZ) are **default-off** and do not provide cryptographic security guarantees. See [Security Model](#security-model) for details.
 
-### Production Environment
+### Engineering Verification
 
-- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, lg-053/lg-057
-- **Dual-track graceful degradation** - Standard clients automatically fall back to classical ECDH
+This section states what has been verified and how to re-run it. It is **not** a claim of production readiness: FIBEMATE is an engineering-verification and evidence-generation project, not a hosted cryptographic service.
+
+- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, timestamped as lg-053/lg-057
+- **Dual-track graceful degradation** - verified behaviour: standard clients fall back to classical ECDH; tested, not operated as a production endpoint
 
 ---
 
@@ -393,7 +395,7 @@ fibemate/
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
-│   └── docs/            # Documentation + TSR evidence (lg-001~108, some IDs skipped)
+│   └── docs/            # Documentation + TSR evidence (lg-001~lg-116, gaps not reused)
 ├── rtl/                 # FPGA RTL (Verilog) — sources in TSR archive docs/tsa/2026-06-25/hardware/
 │   └── (timing-critical IP, available on request)
 ├── c-stm32/             # STM32 C framework
