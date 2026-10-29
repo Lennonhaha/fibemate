@@ -110,10 +110,24 @@ audit signatures exit: 0
 an attestation file merely exists. The tarball's sha512 matches the registry `integrity`
 field, so the verified subject is the artifact that would actually run.
 
-**PyPI: no provenance. This is a gap, not a pass.** `crypto-time-machine 0.1.2` publishes a
-wheel and sdist with no PEP 740 attestation (`hasProvenance: false` for both). Anyone
-downloading it gets bytes with no build provenance. Recorded here rather than omitted: a
-supply-chain section that only lists the packages that pass is not an audit.
+**PyPI provenance, verified.** `crypto-time-machine 0.1.2` ships a wheel and an sdist, and
+both carry a PEP 740 publish attestation:
+
+```
+https://pypi.org/integrity/crypto-time-machine/0.1.2/<file>/provenance   -> 200
+  publisher:     Lennonhaha/fibemate-tools
+  workflow:      release-pypi.yml
+  environment:   pypi
+  predicateType: https://docs.pypi.org/attestations/publish/v1
+  subject:       the file itself (wheel, sdist)
+```
+
+The first revision of this section reported the opposite, and the error is worth keeping:
+`https://pypi.org/pypi/<project>/json` has **no** `provenance` key. Per-file provenance is
+served only by the `/integrity/` endpoint. Reading an absent key as "no attestation"
+produced a false negative that was filed as issue #387 and copied onto the website. The
+artifact was never unsigned; the check was. A supply-chain section that cannot be wrong
+about its own method is not an audit either.
 
 **Timestamp token.** `lg-116` (FreeTSA, serial `0x09823CA3`, `Oct 28 11:58:04 2026 GMT`)
 against the 14-file interop-matrix digest list:
@@ -200,7 +214,9 @@ like. The probe PR was closed without merging and its branch deleted.
    It does not mean the standard is unbroken, nor that these binaries resist side channels.
 2. **That the protocol is secure.** The round trip above tests serialization, not the
    handshake, the ratchet, or key storage.
-3. **PyPI provenance.** Missing, as recorded in section 3.
+3. **That the provenance is honest.** A PEP 740 attestation binds an artifact to the
+   workflow run that built it. It says nothing about whether that run's inputs were
+   trustworthy. It is a chain-of-custody claim, not a correctness claim.
 4. **aarch64 was exercised in CI, not on hardware.** The cross-check runs on a native arm
    runner; NEON-specific behaviour on a physical device is not separately measured.
 5. **The WASM artifact has no site consumer yet.** It is built, tested and digest-pinned, but
