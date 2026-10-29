@@ -6,13 +6,13 @@
     <title>FIBEMATE · PQC 工程验证平台 — ML-KEM-768 · ML-DSA-65 · SLH-DSA · SM2/SM3/SM4 · FPGA</title>
     <meta name="description" content="本仓库是 FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust · 端到端加密）另见 fibemate.net。覆盖 ML-KEM-768（FIPS 203）、ML-DSA-65（FIPS 204）、SLH-DSA-128s（FIPS 205）、SM2/SM3/SM4、FPGA NTT 加速器、TLA+ 形式化验证、260 份 TSR 存证。开源 GPL-3.0。">
     <meta property="og:title" content="FIBEMATE · 后量子密码学全栈工程验证平台（开源 GPL-3.0）">
-    <meta property="og:description" content="FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust）另见 fibemate.net。ML-KEM-768（FIPS 203）· ML-DSA-65（FIPS 204）· SLH-DSA-128s（FIPS 205）· SM2/SM3/SM4 · FPGA NTT · TLA+ · 215 份 RFC 3161 时间戳存证。">
+    <meta property="og:description" content="FIBEMATE PQC 密码学工程验证平台。同名社交软件（Rust）另见 fibemate.net。ML-KEM-768（FIPS 203）· ML-DSA-65（FIPS 204）· SLH-DSA-128s（FIPS 205）· SM2/SM3/SM4 · FPGA NTT · TLA+ · 103 份 RFC 3161 时间戳存证（2026-10-29 实测）。">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://fibemate.net">
     <meta property="og:site_name" content="FIBEMATE PQC">
     <meta name="twitter:card" content="summary">
     <meta name="twitter:title" content="FIBEMATE · 后量子密码学开源工程验证平台">
-    <meta name="twitter:description" content="FIBEMATE PQC 密码学平台。同名社交软件另见 fibemate.net。ML-KEM-768 · ML-DSA-65 · SLH-DSA-128s · SM2/SM3/SM4 · FPGA · TLA+ · 215 份 RFC 3161 时间戳存证。">
+    <meta name="twitter:description" content="FIBEMATE PQC 密码学平台。同名社交软件另见 fibemate.net。ML-KEM-768 · ML-DSA-65 · SLH-DSA-128s · SM2/SM3/SM4 · FPGA · TLA+ · 103 份 RFC 3161 时间戳存证（2026-10-29 实测）。">
     <link rel="canonical" href="https://fibemate.net">
     <script type="application/ld+json">
 {
@@ -874,6 +874,7 @@
             <li><a href="#features">特性</a></li>
             <li><a href="#standard">标准</a></li>
             <li><a href="#privacy">技术栈</a></li>
+            <li><a href="#audit">审计</a></li>
             <li><a href="#visualizations">可视化</a></li>
             <li><a href="/calculator.html">算力计算器</a></li>
             <li><a href="#tech">技术</a></li>
@@ -895,9 +896,11 @@
             </h1>
             <p>
                 FIPS 203 ML-KEM-768 &middot; SM2/SM3/SM4 &middot; FPGA NTT 加速器<br>
-                全栈 PQC 密码学工程验证 &middot; 215 份 RFC 3161 时间戳存证
+                全栈 PQC 密码学工程验证 &middot; 103 份 RFC 3161 时间戳存证（2026-10-29 实测）
             </p>
             <div class="hero-badge" style="margin:1rem auto 0;">🔒 v3.3.2 · 代码自 2026-08-31 起公开</div>
+            <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.22);">🔬 引擎：<strong>libcrux</strong>（hax/F* 形式化验证，未验证的 <code>kyber</code> 变体未启用）· 互操作参照 <strong>@noble/post-quantum</strong></div>
+            <div class="hero-badge" style="margin-top:8px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.22);">✅ <strong>182</strong> 项 Rust 测试全过，<strong>0</strong> 项 <code>#[ignore]</code> · NIST ACVP KAT（ML-KEM-768 / ML-DSA-65 keygen·siggen·sigver）真实执行</div>
             <div class="hero-buttons">
                 <a href="https://github.com/Lennonhaha/fibemate" class="btn-primary" target="_blank">🌍 GitHub 仓库</a>
                 <a href="https://github.com/Lennonhaha/fibemate" class="btn-github-mobile" target="_blank" style="display:none;">🌍 在 GitHub 上查看源码</a>
@@ -1083,6 +1086,54 @@
 
 <!-- ==================== /通道选择说明 ==================== -->
 
+    <section class="privacy-stack" id="audit">
+        <h2 class="section-title">系统审计与证据链</h2>
+        <p class="section-subtitle">不是"我们认为正确"，而是"你可以自己复核" · 2026-10-29 全量审计</p>
+
+        <div class="layers-container">
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">1</div>
+                    <div class="layer-title">独立 Oracle 对拍</div>
+                </div>
+                <div class="layer-desc">
+                    3 组固定种子，Rust / WASM / <code>@noble/post-quantum</code> 三端逐字节比对：pk 1184 B · sk 2400 B · ct 1088 B · ss 32 B 全等，每种子 <strong>12/12</strong> 通过；互操作矩阵 <strong>62/62</strong>（12 行 · 6 基线 · 0 失败）。<br>
+                    ⚠️ 如实标注：Rust 与 WASM <strong>同源于 libcrux</strong>，真正独立的参照只有 noble —— 不把"三端一致"说成三次独立验证。
+                </div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">2</div>
+                    <div class="layer-title">防篡改证据链（值比对 ≠ 完整性）</div>
+                </div>
+                <div class="layer-desc">
+                    S2：只改 1 字节、不动任何数字 → 值比对<strong>仍然全绿</strong>，记录校验器判 <code>drift</code>；<br>
+                    S3：连摘要清单一起重写 → 被 TSR imprint 抓出 <code>drift</code>；<br>
+                    S4：缺少 CA 证书 → <code>unverifiable</code>（exit 3），<strong>绝不显示为"通过"</strong>。
+                </div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">3</div>
+                    <div class="layer-title">变异测试：证明 CI 真能拦住</div>
+                </div>
+                <div class="layer-desc">
+                    把 ML-DSA 验签故意改成恒真并推送 → CI 在<strong>测试步</strong>变红（177 passed / 5 failed），而不是停在格式检查；<br>
+                    第一个变异还暴露了覆盖缺口：ACVP 解封装向量走 typed 入口，字节层 wrapper 只被单元测试覆盖。
+                </div>
+            </div>
+        </div>
+
+        <div style="margin-top:18px;text-align:center;">
+            <a href="https://github.com/Lennonhaha/fibemate/blob/main/AUDIT.md" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;background:#00d4aa;color:#04120f;font-weight:700;font-size:0.95rem;border-radius:8px;text-decoration:none;">📄 阅读系统审计报告（AUDIT.md）</a>
+            <div style="margin-top:10px;color:#6e7681;font-size:0.78rem;max-width:760px;margin-left:auto;margin-right:auto;">
+                Oracle cross-validation · Mutation testing · TSR timestamping。报告同时列出 6 项"<strong>不能证明</strong>"：实现安全、协议安全、PyPI provenance、aarch64 真机、WASM 站点消费方、时间戳只证存在。
+            </div>
+        </div>
+    </section>
+
     <section class="features" id="features">
         <h2 class="section-title">核心特性</h2>
         <p class="section-subtitle">不只是加密，而是可验证的全栈密码学工程</p>
@@ -1091,7 +1142,7 @@
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <div class="feature-title">PQC 工程验证</div>
-                <div class="feature-desc">ML-KEM-768/1024 参考实现，FIPS 203 合规 · KAT 10,000/10,000 通过 · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 联合信任 ✓ + DigiCert ✓ 双源存证 · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
+                <div class="feature-desc">ML-KEM-768/1024 参考实现，FIPS 203 合规 · KAT 10,000/10,000 通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 联合信任 ✓ + DigiCert ✓ 双源存证 · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
             </div>
 
             <div class="feature-card">
@@ -1251,7 +1302,7 @@
             </div>
 
             <div style="margin-top:8px;color:#6e7681;font-size:0.78rem;">
-                npm 包均由 GitHub Actions 发布并带 Sigstore 签名（Built and signed on GitHub Actions），可在各自 npm 页面核验 provenance；PyPI 包由 Trusted Publishing（OIDC）发布，带 PyPI attestations。<br>全部发行仓生产依赖已过 npm audit 复核，高危漏洞零告警。
+                npm 包均由 GitHub Actions 发布并带 Sigstore 签名（Built and signed on GitHub Actions），可在各自 npm 页面核验 provenance；PyPI 包当前由 API token 发布，<strong>尚未</strong>附 PEP 740 provenance（已立项跟踪 #387，下次发版补齐）；npm 侧 provenance 已验证通过。<br>2026-10-29 实测：<code>www</code> 与 <code>mixnet</code> 生产依赖 <code>npm audit --omit=dev</code> 均为 <strong>0 vulnerabilities</strong>，Dependabot 开放告警 <strong>0</strong> 条（qs / CVE-2026-110816 已修复至 6.16.1）。
             </div>
             <div style="margin-top:18px;">
                 <a href="/tools/verifact-demo/" style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:#00d4aa;color:#04120f;font-weight:700;font-size:0.92rem;border-radius:8px;text-decoration:none;">👉 在线体验 verifact 审计看板（无需安装）</a>
@@ -1262,7 +1313,7 @@
         </div>
 
         <p class="section-subtitle" style="max-width:760px;margin:1.25rem auto 0;font-size:0.85rem;color:#8b949e;">
-            按 OpenSSF 最佳实践标准自评达 Passing 级别（非第三方认证）· Scorecard 主仓 7.7 / 工具仓 7.0（2026-10-28 实测）· 时间戳存证（TSR）链路持续运行
+            按 OpenSSF 最佳实践标准自评达 Passing 级别（非第三方认证）· Scorecard 主仓 8.0 / 工具仓 6.9（2026-10-29 实测）· 时间戳存证（TSR）链路持续运行
         </p>
     </section>
 
@@ -2311,7 +2362,7 @@
           <h3>外部认证与评分</h3>
           <ul>
             <li>OpenSSF Best Practices · Passing（主仓 + 桌面端）</li>
-            <li>OpenSSF Scorecard · fibemate 7.7 / tauri 6.7（2026-10-27 实测）</li>
+            <li>OpenSSF Scorecard · fibemate 8.0 / tauri 7.4（2026-10-29 实测）</li>
             <li>CII Best Practices 项目号 13695 · 15379</li>
           </ul>
         </div>
@@ -2431,7 +2482,7 @@
         </div>
         <p class="footer-copyright">© 2026 FIBEMATE. All rights reserved.</p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-10-25 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 260 份 (lg-001~lg-108) ✓<br>
+            最后更新：2026-10-29 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 已上线 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 103 份 (lg-001~lg-116，空号不复用) ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · Phase 1 算法由 @noble/post-quantum 提供，双向验证通过)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
@@ -2741,7 +2792,7 @@
         </details>
         <p style="margin:1rem 0 0;font-size:0.72rem;color:#646c78;line-height:1.6;">
         <small>验证: <code style="font-size:0.7rem;">openssl ts -verify -data [file] -in [file].tsr -CAfile cacert.pem</code></small><br>
-        <small>完整清单: <code style="font-size:0.7rem;">docs/timestamp-manifest.json</code> | 共 215 份 RFC 3161 时间戳存证（截至 2026-07-17 清单） | 联合信任 tsa.cn (付费) + DigiCert 双源存证</small>
+        <small>完整清单: <code style="font-size:0.7rem;">docs/timestamp-manifest.json</code> | 共 103 份 .tsr 存证（2026-10-29 实测，计数口径：docs/tsa 下 .tsr 文件数） | 联合信任 tsa.cn (付费) + DigiCert 双源存证</small>
         </p>
         <p style="margin: 0.8rem 0 0; font-size: 0.8rem; color: #646c78;">GPLv3 已开源 (2026-08-31) · 独立技术研究项目 · 非商业运营 · <a href="/docs/security-limitations.html" style="color:#f59e0b;text-decoration:underline;">⚠ 安全限制声明</a></p>
 
