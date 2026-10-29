@@ -14,7 +14,7 @@
 |---|---|
 | `index.html` | 页面骨架、横幅、上传区、样式 |
 | `demo.js` | 纯渲染函数（UMD，Node 可直接 require 做测试） |
-| `sample-real.json` | 真实运行抽样：343 份文档 / 2262 条声明 / drift 0，表格按状态各抽 6 条，计数为全量值 |
+| `sample-real.json` | 真实运行抽样：363 份文档 / 2301 条声明 / drift 0 / ref-missing 0，表格按状态各抽 6 条，计数为全量值 |
 | `sample-drift.json` | **人工构造**的红色路径示例，页面会强制显示 SYNTHETIC 标记 |
 
 ## 契约测试
