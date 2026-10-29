@@ -76,7 +76,7 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 1. **Pure JS not constant-time**: Timing attacks possible in browser
 2. **No hardware side-channel testing**: TVLA only software-simulated
 3. **C addon not fuzzed**: No continuous fuzzing infrastructure
-4. **RTL withheld**: Core IP not open (security review pending)
+4. **RTL published, not reviewed**: `fpga/rtl/` ships with the repository (26 Verilog modules); what is still missing is independent security review, not the source
 5. **Single maintainer**: Bus Factor = 1 (AI contributions don't count)
 6. **No third-party audit**: Self-verified only; external crypto review planned Q4 2026
 
