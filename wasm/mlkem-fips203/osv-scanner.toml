@@ -1,0 +1,22 @@
+# SPDX-License-Identifier: GPL-3.0-only
+#
+# OSV-Scanner configuration.
+#
+# Keep every entry narrow (one id), justified, and time-boxed: the point is to
+# record a decision, not to silence a scanner.
+
+[[IgnoredVulns]]
+id = "RUSTSEC-2026-0173" # proc-macro-error2 2.0.1 is unmaintained
+ignoreUntil = 2027-03-31
+reason = """
+Build-time only, and not in the shipped artifact. The chain is
+wasm/mlkem-fips203 -> libcrux-ml-kem 0.0.10 -> hax-lib -> hax-lib-macros
+(proc-macro) -> proc-macro-error2. `cargo tree -i proc-macro-error2
+--target wasm32-unknown-unknown` prints nothing, i.e. the crate is absent from
+the wasm32 graph that produces mlkem_fips_bg.wasm, and proc-macro crates run on
+the host at compile time only.
+
+Re-check at expiry: libcrux is pre-1.0 and its hax dependency is expected to
+move. If a runtime crate starts depending on proc-macro-error2, remove this
+entry instead of extending it.
+"""
