@@ -150,21 +150,56 @@ function intt(f) {
 }
 
 // ============================================================================
-// SHA-3 / SHAKE — pure JS Keccak with noble/crypto fallbacks
+// SHA-3 / SHAKE — node:crypto first, @noble/hashes second, otherwise throw.
+//
+// A hand-written Keccak used to sit here as a third fallback. It produced
+// non-SHA3 digests, and the @noble attempt in front of it did not resolve on
+// @noble/hashes v2 (subpath needs the .js suffix), so on any runtime without
+// SHA-3 in node:crypto that buggy path was the *only* thing left. A missing
+// backend is now an error instead of a silent wrong answer. See issue #384.
 // ============================================================================
-const KeccakRhoOffsets = [0,1,62,28,27,36,44,6,55,20,3,10,43,25,39,41,45,15,21,8,18,2,61,56,14];
-const KeccakPiOffsets = [10,7,11,17,0,3,5,4,15,12,2,13,9,6,1,14,8,16,19,18,23,22,20,24,21];
-const KeccakRC = [0x0000000000000001n,0x0000000000008082n,0x800000000000808an,0x8000000080008000n,0x000000000000808bn,0x0000000080000001n,0x8000000080008081n,0x8000000000008009n,0x000000000000008an,0x0000000000000088n,0x0000000080008009n,0x000000008000000an,0x000000008000808bn,0x800000000000008bn,0x8000000000008089n,0x8000000000008003n,0x8000000000008002n,0x8000000000000080n,0x000000000000800an,0x800000008000000an,0x8000000080008081n,0x8000000000008080n,0x0000000080000001n,0x8000000080008008n];
-
-function ROL64(a,n){if(!n)return a;n=Number(n);const lo=Number(a&0xFFFFFFFFn),hi=Number((a>>32n)&0xFFFFFFFFn);let nl,nh;if(n<32){nl=((lo<<n)|(hi>>>(32-n)))>>>0;nh=((hi<<n)|(lo>>>(32-n)))>>>0}else{const m=n-32;nl=((hi<<m)|(lo>>>(32-m)))>>>0;nh=((lo<<m)|(hi>>>(32-m)))>>>0}return(BigInt(nl)|(BigInt(nh)<<32n))&0xFFFFFFFFFFFFFFFFn}
-function KeccakF1600(st){const C=new BigInt64Array(5),B=new BigInt64Array(25);for(let r=0;r<24;r++){for(let x=0;x<5;x++)C[x]=st[x]^st[x+5]^st[x+10]^st[x+15]^st[x+20];for(let x=0;x<5;x++){const D=C[(x+4)%5]^ROL64(C[(x+1)%5],1);for(let y=0;y<5;y++)st[x+5*y]^=D}for(let i=0;i<25;i++)B[KeccakPiOffsets[i]]=ROL64(st[i],KeccakRhoOffsets[i]);for(let x=0;x<5;x++)for(let y=0;y<5;y++)st[x+5*y]=B[x+5*y]^((~B[(x+1)%5+5*y])&B[(x+2)%5+5*y]);st[0]^=KeccakRC[r]}}
-function load64(b,i){let r=0n;for(let j=0;j<8;j++)r|=BigInt(b[i+j])<<BigInt(8*j);return r}
-function store64(v){const b=new Uint8Array(8);let v2=v;for(let j=0;j<8;j++){b[j]=Number(v2&0xffn);v2>>=8n}return b}
-function keccak(data,rate,outLen,suffix){const st=new BigInt64Array(25);const bs=rate>>3;const pl=Math.ceil((data.length+2)/bs)*bs;const p=new Uint8Array(pl);p.set(data);p[data.length]=suffix;p[pl-1]|=0x80;for(let o=0;o<pl;o+=bs){for(let j=0;j<bs;j+=8)st[j>>3]^=load64(p,o+j);KeccakF1600(st)}const out=new Uint8Array(outLen);let o=0;while(o<outLen){const t=Math.min(bs,outLen-o);for(let j=0;j<t;j+=8){const bytes=store64(st[j>>3]);for(let k=0;k<8&&o+k<outLen;k++)out[o+k]=bytes[k]}o+=t;if(o<outLen)KeccakF1600(st)}return out}
-function sha3_256(d){try{return require("crypto").createHash("sha3-256").update(new Uint8Array(d)).digest()}catch(_e){}try{return require("@noble/hashes/sha3").sha3_256(d)}catch(_e){}return keccak(d,1088,32,0x06)}
-function sha3_512(d){try{return require("crypto").createHash("sha3-512").update(new Uint8Array(d)).digest()}catch(_e){}try{return require("@noble/hashes/sha3").sha3_512(d)}catch(_e){}return keccak(d,576,64,0x06)}
-function shake128(d,len){try{return require("crypto").createHash("shake128",{outputLength:len}).update(new Uint8Array(d)).digest()}catch(_e){}try{return require("@noble/hashes/sha3").shake128(d,len)}catch(_e){}return keccak(d,1344,len,0x1f)}
-function shake256(d,len){try{return require("crypto").createHash("shake256",{outputLength:len}).update(new Uint8Array(d)).digest()}catch(_e){}try{return require("@noble/hashes/sha3").shake256(d,len)}catch(_e){}return keccak(d,1088,len,0x1f)}
+let _nobleSha3;
+function nobleSha3() {
+  if (_nobleSha3 !== undefined) return _nobleSha3;
+  for (const id of ['@noble/hashes/sha3.js', '@noble/hashes/sha3']) {
+    try { _nobleSha3 = require(id); return _nobleSha3; } catch (_e) { /* try next */ }
+  }
+  _nobleSha3 = null;
+  return _nobleSha3;
+}
+function noSha3Backend(name) {
+  const err = new Error(
+    'ML-KEM: no SHA-3 backend for ' + name +
+    ' (neither node:crypto nor @noble/hashes resolved). Refusing to fall back' +
+    ' to a non-standard implementation.'
+  );
+  err.code = 'FIBEMATE_PQC_KEM_NO_SHA3';
+  return err;
+}
+function sha3_256(d) {
+  try { return require('crypto').createHash('sha3-256').update(new Uint8Array(d)).digest(); } catch (_e) {}
+  const n = nobleSha3();
+  if (n && typeof n.sha3_256 === 'function') return n.sha3_256(new Uint8Array(d));
+  throw noSha3Backend('sha3_256');
+}
+function sha3_512(d) {
+  try { return require('crypto').createHash('sha3-512').update(new Uint8Array(d)).digest(); } catch (_e) {}
+  const n = nobleSha3();
+  if (n && typeof n.sha3_512 === 'function') return n.sha3_512(new Uint8Array(d));
+  throw noSha3Backend('sha3_512');
+}
+function shake128(d, len) {
+  try { return require('crypto').createHash('shake128', { outputLength: len }).update(new Uint8Array(d)).digest(); } catch (_e) {}
+  const n = nobleSha3();
+  if (n && typeof n.shake128 === 'function') return n.shake128(new Uint8Array(d), len);
+  throw noSha3Backend('shake128');
+}
+function shake256(d, len) {
+  try { return require('crypto').createHash('shake256', { outputLength: len }).update(new Uint8Array(d)).digest(); } catch (_e) {}
+  const n = nobleSha3();
+  if (n && typeof n.shake256 === 'function') return n.shake256(new Uint8Array(d), len);
+  throw noSha3Backend('shake256');
+}
 
 // ============================================================================
 // byteEncode/Decode, compress/decompress, CBD, sampleNTT, poly ops
