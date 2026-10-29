@@ -1302,7 +1302,7 @@
             </div>
 
             <div style="margin-top:8px;color:#6e7681;font-size:0.78rem;">
-                npm 包均由 GitHub Actions 发布并带 Sigstore 签名（Built and signed on GitHub Actions），可在各自 npm 页面核验 provenance；PyPI 包当前由 API token 发布，<strong>尚未</strong>附 PEP 740 provenance（已立项跟踪 #387，下次发版补齐）；npm 侧 provenance 已验证通过。<br>2026-10-29 实测：<code>www</code> 与 <code>mixnet</code> 运行时依赖 <code>npm audit --omit=dev</code> 均为 <strong>0 vulnerabilities</strong>，Dependabot 开放告警 <strong>0</strong> 条（qs / CVE-2026-110816 已修复至 6.16.1）。
+                npm 包均由 GitHub Actions 发布并带 Sigstore 签名（Built and signed on GitHub Actions），可在各自 npm 页面核验 provenance；PyPI 包 <code>crypto-time-machine 0.1.2</code> 的 wheel 与 sdist <strong>均带 PEP 740 发布证明</strong>（publisher <code>Lennonhaha/fibemate-tools</code> · <code>release-pypi.yml</code> · environment <code>pypi</code>），可在 PyPI 的 <code>/integrity/</code> 端点核验；npm 侧 provenance 已验证通过。<br>2026-10-29 实测：<code>www</code> 与 <code>mixnet</code> 运行时依赖 <code>npm audit --omit=dev</code> 均为 <strong>0 vulnerabilities</strong>，Dependabot 开放告警 <strong>0</strong> 条（qs / CVE-2026-110816 已修复至 6.16.1）。
             </div>
             <div style="margin-top:18px;">
                 <a href="/tools/verifact-demo/" style="display:inline-flex;align-items:center;gap:8px;padding:11px 22px;background:#00d4aa;color:#04120f;font-weight:700;font-size:0.92rem;border-radius:8px;text-decoration:none;">👉 在线体验 verifact 审计看板（无需安装）</a>
