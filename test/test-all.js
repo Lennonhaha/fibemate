@@ -29,6 +29,7 @@ const suites = [
   ['Account lockout', ['node', 'test/lockout.test.js']],
   ['Backend load smoke (TDZ/init)', ['node', 'test/smoke-backend.js']],
   ['ML-KEM-768 oracle interop', ['node', '--test', 'test/ml-kem-768-oracle-interop.test.js']],
+  ['ML-KEM-768 WASM artifact (FIPS 203 vs noble)', ['node', '--test', 'test/mlkem-wasm-fips.test.cjs']],
 ];
 
 let failed = 0;

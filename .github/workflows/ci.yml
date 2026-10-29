@@ -138,6 +138,11 @@ jobs:
       - name: fml-dsa byte-level oracle comparison
         run: node packages/fml-dsa/test/interop-oracle.test.js
 
+      # The committed WASM artifact, not a rebuild: deploys must not need a Rust
+      # toolchain. Byte-compares against @noble/post-quantum on fixed seeds.
+      - name: ML-KEM-768 WASM artifact is FIPS 203 (vs noble)
+        run: node --test test/mlkem-wasm-fips.test.cjs
+
   # ─── C 原生 addon：构建后与 JS 后端对拍 ───────────────────
   # index.js prefers the C addon whenever it is present, so this is the path
   # users actually execute in a native build. Nothing else in CI compiles it.
