@@ -13,7 +13,10 @@ const path = require('path');
 const crypto = require('crypto');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
-const OUT = path.join(REPO_ROOT, 'docs', 'TSR-MANIFEST.md');
+// Optional first argument overrides the output path (relative to repo root),
+// so a frozen manifest can be superseded by a new dated file without
+// rewriting the sealed original.
+const OUT = path.resolve(REPO_ROOT, process.argv[2] || path.join('docs', 'TSR-MANIFEST.md'));
 
 function gitLs(pattern) {
   const out = execFileSync('git', ['ls-files', pattern], {
