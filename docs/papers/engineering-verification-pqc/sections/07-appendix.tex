@@ -61,15 +61,15 @@ Every count in this paper is produced by a script shipped with the artefact.
 None is maintained by hand.
 
 \begin{center}
-\begin{tabular}{@{}ll@{}}
+\begin{tabular}{@{}l>{\raggedright\arraybackslash}p{0.59\textwidth}@{}}
 \toprule
 Figure & Command \\
 \midrule
 Lemma / theorem / \texttt{sorry} counts & \texttt{node tools/count-obligations.cjs} \\
 CBOM regeneration & \texttt{node scripts/build-cbom.js} \\
-CBOM staleness check & \texttt{node scripts/build-cbom.js --check} \\
+CBOM staleness check & \texttt{node scripts/build-cbom.js -{}-check} \\
 CBOM schema validation & \texttt{node scripts/validate-cbom.cjs} \\
-Corpus claim counts & \texttt{node bin/verifact.js verify --config verifact/verifact.json} \\
+Corpus claim counts & \texttt{node bin/verifact.js verify -{}-config verifact/verifact.json} \\
 Delivery gate & \texttt{node scripts/check-live.cjs} \\
 \bottomrule
 \end{tabular}

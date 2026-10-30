@@ -24,7 +24,7 @@ the repository with its hash recorded, and validate against it in CI on every pu
 \texttt{tools/cbom-cyclonedx.json}. It is deterministic: the serial number is
 derived by hashing the component set and the root properties, and the timestamp
 honours \texttt{SOURCE\_DATE\_EPOCH}, so two runs over the same tree produce
-byte-identical output. A \texttt{--check} mode regenerates and compares, and
+byte-identical output. A \texttt{-{}-check} mode regenerates and compares, and
 fails if the committed artefact is stale.
 
 \subsection{What is a component, and what is not}
