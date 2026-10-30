@@ -19,7 +19,11 @@ CBOM schema & CycloneDX 1.6, vendored & see below \\
 \end{tabular}
 \end{center}
 
-Both repositories are public. The formalization repository is deliberately
+Both repositories are public. The commit column records the snapshot at
+submission; the commits measured on 2026-10-30 and reported in
+Section~\ref{sec:evaluation} are named in the provenance note there.
+
+The formalization repository is deliberately
 separate from the product repository: research-line proofs do not ship in the
 product, and keeping them in a separate repository makes it impossible for the
 two to drift into each other by accident. It also means the proof corpus has its
@@ -65,6 +69,8 @@ Lemma / theorem / \texttt{sorry} counts & \texttt{node tools/count-obligations.c
 CBOM regeneration & \texttt{node scripts/build-cbom.js} \\
 CBOM staleness check & \texttt{node scripts/build-cbom.js --check} \\
 CBOM schema validation & \texttt{node scripts/validate-cbom.cjs} \\
+Corpus claim counts & \texttt{node bin/verifact.js verify --config verifact/verifact.json} \\
+Delivery gate & \texttt{node scripts/check-live.cjs} \\
 \bottomrule
 \end{tabular}
 \end{center}

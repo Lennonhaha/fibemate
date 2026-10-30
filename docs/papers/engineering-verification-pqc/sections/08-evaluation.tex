@@ -11,9 +11,11 @@ each class of check can and cannot see when the same artefact is disturbed, and
 what happened when the same failure mode was looked for one layer below the
 document, in the delivery path that puts evidence on the network.
 
-All figures were produced by the commands listed in the reproduction appendix
-against the commits named in each table; none are quoted from an earlier
-revision of this paper.
+All figures were produced by the commands named in the reproduction appendix
+(\texttt{verifact verify} for the counts, \texttt{run-e2e.cjs} for the
+disturbance matrix, \texttt{check-live.cjs} for the delivery gate), each at
+the commit recorded in the provenance note to this section; none are quoted
+from an earlier revision of this paper.
 
 \subsection{What the checker could resolve}
 
@@ -21,9 +23,9 @@ The archived corpus holds 2{,}347 statements that assert a property of a named
 artefact (a file, symbol, constant or derived parameter). Of these, 2{,}137 are
 claims about a code artefact that the checker can locate; the remaining 210
 describe configuration, process or external facts and are out of scope for
-mechanical resolution. Judgement is reported against both denominators, because
-the choice of denominator moves the headline number by an order of magnitude and
-papers in this area rarely state which one they used.
+mechanical resolution. Both denominators are reported, because a rate over the
+claims that received a verdict and a rate over the claims that were mechanically
+resolvable are different statements about the same corpus.
 
 \begin{table}[t]
 \centering
@@ -53,9 +55,9 @@ The interesting number in Table~\ref{tab:verdicts} is not 137 but 1{,}768. A
 checker that reported only ''137 verified'' would be read as a statement about
 the corpus; what it actually establishes is that for 1{,}768 declarations the
 corpus does not record enough to decide. Those are not failures of the
-declarations --- most are prose assertions whose binding was never written down
---- but they are the boundary of what the method covers, and they are invisible
-in a green summary line.
+declarations. Most are prose assertions whose binding was never written down.
+They are the boundary of what the method covers, and they are invisible in a
+green summary line.
 
 The 19 exemptions were re-tested by removing all of them and re-running the
 checker: 6 then appeared as drift, and 13 did not, because they describe a
@@ -82,7 +84,7 @@ S0 & none                              & pass, exit 0        & pass, exit 0 \\
 S1 & one number changed (62 $\to$ 61)  & drift, exit 1       & drift, exit 1 \\
 S2 & one byte flipped, no number       & \textbf{pass, exit 0} & drift, exit 1 \\
 S3 & S2 + digest list rewritten        & pass, exit 0        & drift, exit 1 (imprint) \\
-S4 & signing CA omitted                & ---                 & unverifiable, exit 3 \\
+S4 & signing CA omitted                & n/a                 & unverifiable, exit 3 \\
 \bottomrule
 \end{tabular}
 \caption{Two checkers, four disturbances. S2 is the row that motivates this
@@ -97,7 +99,7 @@ line-ending conversion, a re-encoding, a minifier or a packaging step does by
 default, and every one of those steps is routine. Row S3 is the reason the
 digest list is sealed rather than trusted: rewriting the list restores link one
 of the chain, and only the token's imprint over the original list catches it.
-Row S4 exists to keep ''could not decide'' from rendering as ''passed'' --- the
+Row S4 exists to keep ''could not decide'' from rendering as ''passed''. The
 byte-level checker returns a distinct exit code, not a warning on a success
 path.
 
@@ -167,8 +169,7 @@ those the gate requires \emph{refusal}, so a 200 response would fail the deploy.
 The repair was a line in \texttt{.gitattributes} and the restoration of one file
 from its sealed blob. The manifest was deliberately not regenerated and no token
 was re-minted: re-sealing would assert a new fact about a newer file and destroy
-the only thing the package proves --- that on a given date, these were the
-digests. The mismatch is therefore recorded in a drift note rather than erased.
+the only thing the package proves: on a given date, these were the digests. The mismatch is therefore recorded in a drift note rather than erased.
 
 \subsection{Can the gate fail?}
 \label{sec:eval-negative}
@@ -203,8 +204,7 @@ What the gate proves is deliberately narrow, and its own output says so: for
 every file tracked under the sealed archive, the public site returns the
 committed blob byte for byte, or refuses it with the status the policy requires.
 It does not prove that the content is correct, that the archive is complete with
-respect to the world, or that any third party has examined it. The credibility
-of that sentence rests entirely on the table above.
+respect to the world, or that any third party has examined it.
 
 \subsection{Threats to these measurements}
 % NOTE: if Section~\ref{sec:limitations} keeps its own threats-to-validity
@@ -213,8 +213,8 @@ of that sentence rests entirely on the table above.
 
 \emph{Single project, single operator.} Every measurement comes from one
 repository maintained by one person. The failure modes are structural rather
-than idiosyncratic --- a schema that accepts a misplaced field, a conversion that
-normalises line endings, an exit code that reports the wrong thing --- but the
+than idiosyncratic: a schema that accepts a misplaced field, a conversion that
+normalises line endings, an exit code that reports the wrong thing. The
 frequencies are not transferable to other projects, and we do not report rates
 as if they were.
 
