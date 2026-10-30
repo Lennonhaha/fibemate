@@ -10,7 +10,7 @@ assertion wearing the clothes of evidence.
 This paper reported one project's attempt to produce evidence along two axes:
 a tiered Isabelle/HOL formalization of the VWZ construction, and a
 schema-validated CycloneDX 1.6 CBOM in CI. The formalization closes two tiers
-with no remaining \texttt{sorry} and leaves 19 open across the repository; the
+with no remaining \texttt{sorry} and leaves 17 open across the repository; the
 CBOM covers 9 components over 304 files and validates against the official
 schema on every push.
 
@@ -36,10 +36,10 @@ difference between having evidence and having a claim.
 
 \subsection{Future work}
 
-\paragraph{Closing T2.} The remaining 8 linear-algebra obligations are
+\paragraph{Closing T2.} The remaining 7 linear-algebra obligations are
 index bookkeeping, not open mathematics. The \texttt{i > 0} determinant case
 requires splitting on $j = 0$ before the index shift, as recorded in the source;
-the same boundary discipline likely applies to the other seven.
+the same boundary discipline likely applies to the other six.
 
 \paragraph{Defining T3.} The 8 security and probabilistic obligations cannot be
 proved until their subjects are defined. That is modelling work, and it is the
