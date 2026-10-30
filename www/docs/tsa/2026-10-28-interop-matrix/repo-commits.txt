@@ -1,0 +1,9 @@
+# Resolved at packaging time, 2026-10-28
+
+fibemate-tools  main          c64cf35248333429d38abbc8bb68036379825cb5
+fibemate-tools  artifacts     bb58561e1e6789db678b15f2319dd8c75cc054e5  (the commit that added these bytes)
+fibemate-tools  recorded run  898ce28a2c92053ef9f15293b0be70a0a7bafd17  (commits.fibemateTools in matrix.json)
+fibemate-tools  first release 6a5fe2c6506920b372111a8375f9255f3b535339  (PR #154)
+fibemate        main          e4d3d582bd6043613d00b1103aed5d78a57f00f0  (commits.fibemate in matrix.json)
+
+# paths in SHA256SUMS are relative to the fibemate-tools repository root

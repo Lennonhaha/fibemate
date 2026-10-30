@@ -1,0 +1,20 @@
+# Repository heads at packaging time
+# generated 2026-10-28 (Asia/Shanghai) — main branch, remote state via GitHub API
+
+fibemate               60382d64d78c200f27f3476654c37c7c4cf8a5b6  2026-10-28T09:08:19Z  ci: make CBOM drift and schema validation a pull-request gate (#369)
+fibemate-tools         523ae99619019ed537fa7fd43c55e854c5c83098  2026-10-28T09:08:23Z  test(ledger): cover the bundle verify failure paths (#153)
+fibemate-tauri         96b080102e6c181a1630bceb020471f3a4e87081  2026-10-28T07:46:43Z  fix(csp): keep inline styles working in the production build (#53) (#74)
+fibemate-mobile        84abca0cf63c52d5d96d09816594271434c014ac  2026-10-28T08:28:47Z  chore(crypto): retire the browser-only modules (#69) (#93)
+fibemate-react-native  4d95c72d29a5230e4fa5535e5cd2b6560053469b  2026-10-22T15:55:43Z  test: give the original App test a real assertion
+pqc-hw-bench           09e9cc22f1bcbba93615f60d8c56947062d1aa5b  2026-10-26T11:15:49Z  chore: make the license detectable and ship the full license texts (#7)
+lookingglass           9a87e8b703ead659264c9e56f14f79e373edaae0  2026-10-25T12:21:36Z  ci: add syntax and unit checks (#8)
+lookingglass-v2        7e1295a5bd1c995f22fce0c2ab8d8757191acdd8  2026-10-25T08:37:16Z  docs(readme): link the Keccak-f methodology report
+awesome-cbom           c0e0a258db7c3ce0a0a0c395a91fc4e05d8b9650  2026-10-25T12:20:28Z  ci: add a structural lint for the list README (#1)
+tool-center            9ca83d8fd0055ee004a6303269716aff25493107  2026-10-04T01:31:11Z  Add cbom-tools
+
+# Published artifacts (registry read at packaging time)
+npm   verifact                       0.2.4
+npm   cbom-tools                     0.2.6
+npm   crypto-hallucination-detector  0.1.2
+npm   fibemate-xdiff                 0.1.0
+pypi  crypto-time-machine            0.1.2

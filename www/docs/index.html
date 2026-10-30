@@ -52,6 +52,40 @@ nav ul a.active{color:var(--accent)}
  <p class="meta">后量子密码工程笔记 · 工具发布 · 技术方法论</p>
 </header>
 
+<h2 id="evidence">🔐 证据链（可点开核验）</h2>
+<ul class="post-list">
+ <li class="post-item">
+ <a class="post-title" href="/docs/TSR-MANIFEST-20261029.md">时间戳存证清单（2026-10-29 实测）</a>
+ <span class="post-meta">RFC 3161 · FreeTSA + DigiCert</span>
+ <div class="post-summary">267 份 <code>.tsr</code> 存证文件、260 个唯一令牌、<code>docs/tsa/</code> 下 103 条规范记录。每行给出令牌、序号与摘要，可逐条下载复核。</div>
+ </li>
+ <li class="post-item">
+ <a class="post-title" href="/docs/tsa/">全部时间戳文件（目录索引）</a>
+ <span class="post-meta">.tsr / .tsq / 摘要清单</span>
+ <div class="post-summary">按日期分目录的原始令牌与配套请求文件，直接可下载。</div>
+ </li>
+ <li class="post-item">
+ <a class="post-title" href="/docs/tsa/2026-10-28-interop-matrix/">互操作矩阵存证包（lg-116）</a>
+ <span class="post-meta">2026-10-28</span>
+ <div class="post-summary">62/62 检查的矩阵产物、摘要清单与 RFC 3161 令牌，可用于复算两个独立实现的字节一致性。</div>
+ </li>
+ <li class="post-item">
+ <a class="post-title" href="/docs/tsa/2026-10/">CycloneDX 数据丢失存证包（lg-111 / 113 / 114 / 115）</a>
+ <span class="post-meta">2026-10-28</span>
+ <div class="post-summary">上游 11.12.0 四路径迁移的静默丢字段证据、见证脚本与资产清单。</div>
+ </li>
+ <li class="post-item">
+ <a class="post-title" href="/docs/tsa/2026-10-28-retire-ml-kem-768-td/">ml-kem-768-td 退役存证包（lg-109 / 110）</a>
+ <span class="post-meta">2026-10-28</span>
+ <div class="post-summary">1,921 条全树快照，记录退役时刻的仓库状态。</div>
+ </li>
+ <li class="post-item">
+ <a class="post-title" href="/docs/tsa/DRIFT-20261029.md">2026-10-29 证据漂移说明</a>
+ <span class="post-meta">一条已知漂移</span>
+ <div class="post-summary">哪一份文件变了、为什么没重签、以及复算时应看到的确切结果。记录不改写历史。</div>
+ </li>
+</ul>
+
 <h2>📰 公告</h2>
 <ul class="post-list">
  <li class="post-item">
@@ -76,7 +110,7 @@ nav ul a.active{color:var(--accent)}
  <li class="post-item">
  <a class="post-title" href="/docs/crypto-time-ledger.html">密码学时间账本：给每份证据盖一个可验证的章</a>
  <span class="post-meta">2026-09-27</span>
- <div class="post-summary">哈希链 + RFC 3161 可信时间戳 + 浏览器可验的链条。260 份 TSR 已在主仓，工具已开源。</div>
+ <div class="post-summary">哈希链 + RFC 3161 可信时间戳 + 浏览器可验的链条。267 份 TSR 已在主仓，工具已开源。</div>
  </li>
  <li class="post-item">
  <a class="post-title" href="/docs/crypto-time-machine.html">密码时间机器：把 git 历史变成密码 API 的可查时间轴</a>
@@ -86,7 +120,7 @@ nav ul a.active{color:var(--accent)}
 </ul>
 
 <footer>
- <p>最后更新：2026-09-27 &middot; <a href="https://fibemate.net">返回首页</a></p>
+ <p>最后更新：2026-10-30 &middot; <a href="https://fibemate.net">返回首页</a></p>
  <p>FIBEMATE &mdash; Post-Quantum Cryptography Full-Stack Verification Platform</p>
 </footer>
 

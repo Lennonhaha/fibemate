@@ -7,6 +7,13 @@ name: "FIBEMATE CodeQL Config"
 # the shipping codebase only.
 paths-ignore:
   - security-assessment
+  # docs/tsa/** and www/docs/tsa/** are the published RFC 3161 archive: tokens,
+  # request files and point-in-time snapshots of the site. Their bytes are
+  # digested by timestamped manifests (docs/tsa/*/SHA256SUMS) and must never be
+  # edited, so scanning them yields findings that cannot be fixed without
+  # breaking the evidence. Excluded so analysis reflects maintained code.
+  - docs/tsa
+  - www/docs/tsa
 
 # Query exclusions migrated from .github/codeql/codeql-config.yml, which sat on
 # CodeQL's default config path but was never read: codeql-action loads a config

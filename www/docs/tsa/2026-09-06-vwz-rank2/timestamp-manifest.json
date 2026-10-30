@@ -1,0 +1,46 @@
+[
+  {
+    "file": "vwz_signature_bg.wasm",
+    "display": "vwz-rank2-wasm",
+    "size": 111459,
+    "sha256": "30c28dd81079d6200e73b9096517e8187c033ff7921286e81ca8cbc55e3c6058",
+    "tsr": "vwz-rank2-wasm.tsr",
+    "tsa": "FreeTSA",
+    "serial": "0x079EF5A7",
+    "timestamp": "2026-09-06 12:59:55 GMT",
+    "note": "VWZ rank-2 WASM (fix for rank-1 forgery disclosure), built from experimental/vwz-lg"
+  },
+  {
+    "file": "vwz_signature.js",
+    "display": "vwz-rank2-js",
+    "size": 16478,
+    "sha256": "cb035cd97433a2b6c77b602444a46bb264a70f7c9e1bbc05401ba1ac7ae3890f",
+    "tsr": "vwz-rank2-js.tsr",
+    "tsa": "FreeTSA",
+    "serial": "0x079EF5AE",
+    "timestamp": "2026-09-06 12:59:57 GMT",
+    "note": "VWZ rank-2 glue code (wasm-bindgen output)"
+  },
+  {
+    "file": "vwz_signature.d.ts",
+    "display": "vwz-rank2-dts",
+    "size": 4913,
+    "sha256": "69d0c9d8c6de665310e128c4c9658ce423b293d9bd16ba67f153e170f7d8f02d",
+    "tsr": "vwz-rank2-dts.tsr",
+    "tsa": "FreeTSA",
+    "serial": "0x079EF5BD",
+    "timestamp": "2026-09-06 12:59:58 GMT",
+    "note": "VWZ rank-2 TypeScript bindings"
+  },
+  {
+    "file": "vwz-kat.json",
+    "display": "vwz-rank2-kat",
+    "size": 301256,
+    "sha256": "de09ace174ab4e12706149e2edf5fcd9ed3416fece6809b46975eab7818104e2",
+    "tsr": "vwz-rank2-kat.tsr",
+    "tsa": "FreeTSA",
+    "serial": "0x079EF5C2",
+    "timestamp": "2026-09-06 12:59:59 GMT",
+    "note": "VWZ rank-2 KAT vectors (24/24 known-answer tests)"
+  }
+]

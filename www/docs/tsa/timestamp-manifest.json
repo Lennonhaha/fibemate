@@ -1,0 +1,1516 @@
+[
+  {
+    "tsr": "lg-058.tsr",
+    "sha256": "c090f5214678e2acd9413e94f7bb0963bbc3ff91745e7bd7c28f1d45b59fc8f2",
+    "dir": "www/docs/tsa/2026-07-09",
+    "size": 4632,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "index-fixes.tsr",
+    "sha256": "7141b577b7deccbc955e0623b5a6400de84d3fe23277059e93106fe0b82662af",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "index.tsr",
+    "sha256": "fcb1412e90a3273ca1551b5292d5ad0bd515eb7c94a3df00e5206ad2ca2086e3",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "pqc-hybrid-client.js.tsr",
+    "sha256": "4bf82387d5e3d6b9fce5d170c6450a883bce3e9256fe13232baaee7cb5e6c36c",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "pqc-hybrid-e2e.html.tsr",
+    "sha256": "7e63f0399ebaedeee0d72dc515639932b807fa0972a6c1a80cd4cd2e64920877",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "pqc-hybrid-server.js.tsr",
+    "sha256": "b948e1191f9715ec6a152461e196da8e311209e35261ae7814ce8fc6a32473b6",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "pqc-readiness.tsr",
+    "sha256": "7a4bb4c8d0d09fd01e85e20aea24bd4d07484a85f247bc7152931e95cf280a04",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "sm2-frontend-verification.tsr",
+    "sha256": "a1baea94d851eda4baf08f205bdeed5fb626a687f978f852248d1ee52e44c8e7",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 5995,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "sm2-optimization.tsr",
+    "sha256": "0f4674e22462026c2533b45d4978709ba434b526106adf918788f87bdade1b4e",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "sm2-tvla-analysis.tsr",
+    "sha256": "1bb0a00ba1003432bae05e1167b689baac7f252c1eff8eb11bf421f67e12fa4b",
+    "dir": "www/docs/tsa/2026-06-25",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-052-hybrid-kem-verification.tsr",
+    "sha256": "8e061576e46f2be4862d7d3666c1a9378bfbbd666c326783884ab45455ea15c4",
+    "dir": "www/docs/tsa/2026-07-06",
+    "size": 4644,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "lg-053-freetsa.tsr",
+    "sha256": "b8594c3ddb95e9322c61bf4e94dcacb4caa9cd8f4bbd03f98906a2428696a364",
+    "dir": "www/docs/tsa/2026-07-06",
+    "size": 943,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-v2.2-20260710.tsr",
+    "sha256": "35d75232025e20df099880f4c94053aa595e1389f6c850f532b86f0fff3c16a5",
+    "dir": "www/docs/tsa/2026-07-11",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ntt-bundle-tsr_digicert.tsr",
+    "sha256": "6419cbf1f864c418389ddcb7641d217590b2271779d19d7c5e72f9ce001eb8ad",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ntt-bundle-tsr_freetsa.tsr",
+    "sha256": "5dee39142bd02607811e814766278abc7f5dcf21ebb64ebed6014c0c6a173c24",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ntt-core-pipe-tsr_digicert.tsr",
+    "sha256": "8b72a5a56bbde2fcd75bc4b7cdf8e46401fcd195ff0f41d0e767c0154e4cbb33",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ntt-core-pipe-tsr_freetsa.tsr",
+    "sha256": "26dd8432088f30072fcfa2a58718502282e849e7a9a85f80fe6434e231b103ef",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "pkv3_digicert.tsr",
+    "sha256": "52babd2f9ff45f5e6b65bc8aa450190415f1a1e765ac1ede9918d614ccd30d39",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "pkv3_freetsa.tsr",
+    "sha256": "6cb88f6c9f28fd7b9e2754ce14527da77ecbd85836c6d257b3a97a13e7d262d8",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "src-index_digicert.tsr",
+    "sha256": "8c6b22c7a76084736778fd9c105e42370527af3b6fdf9fe03c90269c17c960fd",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "src-index_freetsa.tsr",
+    "sha256": "ff4b8e2689e35bd9f8d58957ac4b94269e1161afd7a75ab23addaab825ee3a9c",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-corrected-report_digicert.tsr",
+    "sha256": "517b0dee72d3cc15225ffb49cae30d454eb5137bf23a33487713178faebda55f",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-corrected-report_freetsa.tsr",
+    "sha256": "3ca22227dd8e975c58916233221998eed3d720aec7aa57041087a9749ef03843",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-corrected-tsq_digicert.tsr",
+    "sha256": "3e37c24f2efce6cb02bc524f1a6f327767ddb64224e310dc0662fde2d11994cd",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-corrected-tsq_freetsa.tsr",
+    "sha256": "b52457744206a772096a4da86327bb4461c223b85c616cb86092111c51051dea",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-corrected-tsr_digicert.tsr",
+    "sha256": "adee4293b7eb998eb8ff55033feae19bf0c5a2c45f9bb0ed47e783feebc48134",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-corrected-tsr_freetsa.tsr",
+    "sha256": "e835e39bd931bafe9c588f7244d88124557a4fdd5274bdaeb46cf78160fdc3ff",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-summary-tsq_digicert.tsr",
+    "sha256": "45bbe05421436b45b5f71648e349388ad13f903fc13ce6c0e3b50c46cf595e39",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-summary-tsq_freetsa.tsr",
+    "sha256": "53ddf41a57bad8fb83824cbdfa50a972e76390c775f8365d0f79a81649bb4063",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-summary-tsr_digicert.tsr",
+    "sha256": "ba9804c1758a2aeb1902430d916fcf7aa773bebf25d28b096d34efc72ccb8f00",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-summary-tsr_freetsa.tsr",
+    "sha256": "a11b4e081a9463ff248c713a3e33d8b9e18dc92edb3a130ae3965ca022edf0c8",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-defense-reviewers-tsq_digicert.tsr",
+    "sha256": "f80e8a509d322b7e64da4b922db5a15b8476e09d94e3fa3b8cc7f2b10a1b5e18",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-defense-reviewers-tsq_freetsa.tsr",
+    "sha256": "771665459bd7042a0cbb2c29525cc9d22fabcc682cbb35c59194cdb1b2144432",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-defense-reviewers-tsr_digicert.tsr",
+    "sha256": "1a472cb274ff9b97c9126ce685f53b58b18fc5ed9b2d2036a81e7be6784a48b2",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-defense-reviewers-tsr_freetsa.tsr",
+    "sha256": "0b7f78f4a632e547f4b54e39aa353ca09dfd5eced2f768c93f0fd1ce2e7d0411",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-defense-tsq_digicert.tsr",
+    "sha256": "4ec3aed9f259343fc363e5184b52058050e0c2de9f60b3a5fc8b0286ac2b1c49",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-defense-tsq_freetsa.tsr",
+    "sha256": "4e7169ad0af3cbdc345484b30fe68edcfc2488329f8f5f4e308bfaeae45794a8",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-exp5-tsq_digicert.tsr",
+    "sha256": "4c0c102e3cfc89a8fe90866b6da868c4229ab87b5a8d75bd014b9f0bd19003bc",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-exp5-tsq_freetsa.tsr",
+    "sha256": "783e669044ec17a9673290ecef3ac5edb35cf333bf8c6c7aaa24ad7c599ef2b0",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-exp5-tsr_digicert.tsr",
+    "sha256": "ff6c5a36e4a699618184aefda958f73129fc9934c4069b8b5c00dae98fb9085b",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-exp5-tsr_freetsa.tsr",
+    "sha256": "afdd114e57e8142f7cf9d03fdc2d6c349e2816037eedcfd3d96ac800b12f5265",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-final-tsq_digicert.tsr",
+    "sha256": "589a84b2c1d5f5fd0127f2153e2b01fc083141fbf7f2a326f2535a5230836e99",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-final-tsq_freetsa.tsr",
+    "sha256": "d05357a9b6922748a137a4d4afa860d463607d3646eeb1255aa75a69d8dffd54",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-mlkem-report-v2-final_digicert.tsr",
+    "sha256": "7d69ac0d54108fa3578cf2791abdc80797b6a5f720c814052500298c90e2bfee",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-mlkem-report-v2-final_freetsa.tsr",
+    "sha256": "9a63a64e6407239b83d58bf9633742c7749ba7622e66c6b35f7b16d5cdf74eec",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-mlkem-report-v2_digicert.tsr",
+    "sha256": "a76864921ca2686daeca05eaed0513f93443abc26a9e5ceaf284e022d4b650af",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-mlkem-report-v2_freetsa.tsr",
+    "sha256": "fde18146d82926f283953696602370fd5d008f4d2330f0e92eb62e2af207e4ed",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-mlkem-report_digicert.tsr",
+    "sha256": "854894d8f7c756421e2fc9f033dc43829e297161068bbb973f04e6617b5b4178",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-mlkem-report_freetsa.tsr",
+    "sha256": "fb5e4c0b9c2ab5d31a1297b9ab4fff49c882cbfdef550f7bacfba2a73e41981d",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-report-20260531_digicert.tsr",
+    "sha256": "21541d7539c8bcbecf345208bdb030c2752caa8e4fa19ef0944b5c0efacd4117",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-report-20260531_freetsa.tsr",
+    "sha256": "025af9ca278a680977400e3e80002186aa8ae4736efea393f58901a212ebc8d7",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-sm2-report_digicert.tsr",
+    "sha256": "0a8003ed78bf96a3131bf56f0e491bded391b6e66af173f4b78b5e2fb4747a8d",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-sm2-report_freetsa.tsr",
+    "sha256": "b305d96ca3490100a4f1feb3ed51fd048f64260cdbefa6bf97244c5d81faf1f5",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-wasm-report_digicert.tsr",
+    "sha256": "9c25a1bf7999e7307a7eb8004175f007fb526aea0db23cdd1ad011a65052a8d6",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-wasm-report_freetsa.tsr",
+    "sha256": "f2321e4bdcb3aa418c10c2d3b018dba96803b0f5a9b567af48f2b91716cef08b",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "vwz-bench-html_digicert.tsr",
+    "sha256": "3e96522a77b58094c427b6379d5703893192ba64ca6ca83a0b30d60a621802df",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "vwz-bench-html_freetsa.tsr",
+    "sha256": "c8e454ff3f427a3191c37e9e886f2ea2230d9a2b8aede6bcee46e70ae9488b99",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "vwz-bench-js_digicert.tsr",
+    "sha256": "3fdf5566c10b906f26ffe7ad672ef8cfba19c76780becf50457a5cea65cdb2f8",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "vwz-bench-js_freetsa.tsr",
+    "sha256": "e80c853847f735bbebaaf93c4e6098676646326564d76ea9e3248d1927b95510",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "vwz-research-api_digicert.tsr",
+    "sha256": "fbd16704da98e63d1272a7ba2ef714bea7d58c8a3e507d7d28d8047124e31e4b",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "vwz-research-api_freetsa.tsr",
+    "sha256": "b4425454c4c2cbb9d276e1cebe046d445e356c0a93640f1866a8b2a801543316",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-age-verification_digicert.tsr",
+    "sha256": "954aaed3e1bcc32145976c03feab1e6eeaa66dc2b92f30e60f1c047e127f6590",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-age-verification_freetsa.tsr",
+    "sha256": "7269e30bace277e5e8161def8ba418a7c21c15594cae2c444a91b76ad7f7d837",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-architecture_digicert.tsr",
+    "sha256": "c5c4041bf4a349d0deb3ceb4c38f390815c1467a40a8d7c21d159620496b0aab",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-architecture_freetsa.tsr",
+    "sha256": "ffebd089c760c6721d77ef4f9bdb811efc38abcb4d54f811e86bf18281141942",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-blog_digicert.tsr",
+    "sha256": "cbce440f3cd53e1fd777b6729d3ed8d3a4149eec668a11a486e3efeca59b91da",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-blog_freetsa.tsr",
+    "sha256": "f19924ab052f1714955dc82757d15461fcefc9130c2c251845541f8bb9050520",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-dev-portfolio_digicert.tsr",
+    "sha256": "122d8c862126bf1b84bd3b3a6361bfd71c3ad818a33269993935f9f553817b23",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-dev-portfolio_freetsa.tsr",
+    "sha256": "9d866a69da4b94a1a2a6f77c468b7ee5b4ad938639f9c23f53a8a8e727f2a8bf",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-diagnose-pq_digicert.tsr",
+    "sha256": "f4b154fe23af4e999f07e4b1175b559a937caa1a3a38f8d9287f1c3ade8a8287",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-diagnose-pq_freetsa.tsr",
+    "sha256": "c0db11c961914386ea6372cf029b4a05e751a8b70b45a83672ea17e262ab881b",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-disclaimer-cn_digicert.tsr",
+    "sha256": "a7b0defdb76d66f083e3f079247dcdb752f0fda2e8dbb1c8303b7cef4cebd79b",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-disclaimer-cn_freetsa.tsr",
+    "sha256": "a65e9a50ade453e5a9d07b77c8df8e1e34cf780b89469c7570f656feb53b43ae",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-disclaimer-en_digicert.tsr",
+    "sha256": "2ff3c825df999d9457b2db9cd289cee5888234dba63b834ad0c4942ab32cec44",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-disclaimer-en_freetsa.tsr",
+    "sha256": "e88bccb6329e7dc7c20824359db9668960c442c08cb7a77945f0b470bd52f2e6",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-dmth-explanation_digicert.tsr",
+    "sha256": "9df702c9347f8f5e81d96db54ad987e0ee9291f60a9e3e0bc9d05d4d8801aec1",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-dmth-explanation_freetsa.tsr",
+    "sha256": "e76c9611ad95a18cf7722f987f442138dd81194add161ec6cddadc73b08254ba",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-faq_digicert.tsr",
+    "sha256": "bd418b34c64e252548de7930633542f972e7b76559541cd1b2b3d6d9abc4c8c9",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-faq_freetsa.tsr",
+    "sha256": "8063f4f6642d7b5b272136938ac459ada7eb01c155ef4e65014a61f1bf27950d",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-index_digicert.tsr",
+    "sha256": "00c1b08044d0b9072198d06b05d1ae3b83b66d88c6b2a42f0deed393ed851203",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-index_freetsa.tsr",
+    "sha256": "3c926d4a7364b2215d83ed852524b07616300926d41b99e25a09f6eca29f1b54",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-landing-new_digicert.tsr",
+    "sha256": "bb30b4acca446e764e5dc0b1d459aa64baee45af1081b2b96158c5bcf5ff7f0c",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-landing-new_freetsa.tsr",
+    "sha256": "25251c26f953c26a9bfeacc58cc7c3db8fe5942cbd37377d2785d867b45e5a76",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-landing_digicert.tsr",
+    "sha256": "c453eb2f3cf0e9a4f23cb49c393e427f6f6a1bf899616ad16f9e7e98a27b207f",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-landing_freetsa.tsr",
+    "sha256": "c1e44a27a861cce512a377301a059c1d89072bb60b9925de2522512979c1a525",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-legal_digicert.tsr",
+    "sha256": "c49bea57af5c09fc76c61d104cb28472747fbff49c70b5adefb96c207a6ec091",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1137,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-legal_freetsa.tsr",
+    "sha256": "9020372d70a6a15a729cf566e4eb761b5f6d1a87556603d570948957705ef843",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-lg-security-en_digicert.tsr",
+    "sha256": "b8b5af01f21375c2cfdd8678a64338a19397f3ffd9258d462dc17be36b527af6",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-lg-security-en_freetsa.tsr",
+    "sha256": "cd4340dedfba05923827c797d900c1c2a3e1ca96a1daa7befc13bc8f8669d14a",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-m_digicert.tsr",
+    "sha256": "622388eda12fb270f33ffd4d4b41783db6348cf0c906a318f2d13e5695b744e9",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-m_freetsa.tsr",
+    "sha256": "b15d99ef7f709c87eecfd66dbf20ba22bd726a71fdb0c6f6a8ce09a31db45b57",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-pqc-readiness_digicert.tsr",
+    "sha256": "6e710aad19ee96325612e89b1c28f3cd18034f6edb278db30bb06f5eff219e40",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-pqc-readiness_freetsa.tsr",
+    "sha256": "4a19c6b779ceacfbf47a928d99bab4d9f98089fdfcbd9418717dd95345407f2a",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-security_digicert.tsr",
+    "sha256": "9ccfa1c6a29cac975a661ed62d045f3cfc511872beafac28f902929be0b27a54",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-security_freetsa.tsr",
+    "sha256": "6b0f9ec4234306a43bda4d504b41daca7869aa693897b655b5f7d0a14f6bcc38",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-terms_digicert.tsr",
+    "sha256": "5a7700577b22e75df600ceb62433a818b20273c76cdfca978fcafc6daad5091e",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-terms_freetsa.tsr",
+    "sha256": "33924f76c02a5b8ae0f279b93fec7c0644db5b05cbdf5e68475e165c7d10fa43",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-test-login_digicert.tsr",
+    "sha256": "8152862568f43b7ccb47e5b0644e07d6906a152b5f431261bb1fb0a54a0bb2cf",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-test-login_freetsa.tsr",
+    "sha256": "fed36107158dd0dbfc158447f7e04356a8008f80472d5968be238dd09a6edb90",
+    "dir": "www/docs/tsa/2026-07-01",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-072.tsr",
+    "sha256": "b88eaa83d45bb74d75b204efc7472f08ae2a3b5d3023008f003fcf6ce2640b89",
+    "dir": "www/docs/tsa/2026-07-17-lg-gen",
+    "size": 4644,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "lg-073.tsr",
+    "sha256": "33581255f1332e757f9bfb1a41db1d2d7d2dbc2a7360055856911d95d712a78f",
+    "dir": "www/docs/tsa/2026-07-17-lg-gen",
+    "size": 4643,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "lg-075.tsr",
+    "sha256": "abe851c5ecf5377e620c5f472f5e3b9ecef4d6e6d2493e25044f4221caef4156",
+    "dir": "www/docs/tsa/2026-07-17-lg-gen",
+    "size": 4643,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "lg-070-pqc-readiness-update-20260715.tsr",
+    "sha256": "b592c5008913975b7aec5832ad159681cf98289f66e9aab2e295f207dca4870d",
+    "dir": "www/docs/tsa/2026-07-15",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-071-readme-fpga-uart-20260715.tsr",
+    "sha256": "05f6bc774568f86ba1ba516d23e962df0b1b755062f04bbe3bd5927fc3cbd36b",
+    "dir": "www/docs/tsa/2026-07-15",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-051.tsr",
+    "sha256": "3ce4ce3141276e5b425cb6cd5a7c654c465017d4428e0546a76270de7504275e",
+    "dir": "www/docs/tsa/2026-06-30",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg047.tsr",
+    "sha256": "f6c836bae1db89ec9040114a1eb8c55c7926fc1ad9690bd4171eb8000878493e",
+    "dir": "www/docs/tsa/2026-06-30",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg048.tsr",
+    "sha256": "caa32f064d844e1759522a7dcb06282309702df402741b013cd948cd1496772c",
+    "dir": "www/docs/tsa/2026-06-30",
+    "size": 941,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg049.tsr",
+    "sha256": "b888b1d5d9429320a54adcdc73fc5fa8234730e39ee8656b1b61c928a3aa6a8a",
+    "dir": "www/docs/tsa/2026-06-30",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg050.tsr",
+    "sha256": "de37c3565b1054ac2884b8adfceaae3c7cdb714feb3b8ea39165483e3bdf2121",
+    "dir": "www/docs/tsa/2026-06-30",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-076-lgv2-defense-modules-20260716.tsr",
+    "sha256": "95111e7ecf30a91785069af4ca0b327d834e3c8f85e320767efa27c2267e5293",
+    "dir": "www/docs/tsa/2026-07-16",
+    "size": 4644,
+    "mtime": "2026-07-17T07:52:00"
+  },
+  {
+    "tsr": "lg-056_v5_3_20260707.tsr",
+    "sha256": "507c824fed7d8d9b854d2874a3f8779de380a379d07904e241a07d50446a623f",
+    "dir": "www/docs/tsa/2026-07-07",
+    "size": 4632,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-057_v5_3_lgv2_1_20260707.tsr",
+    "sha256": "6b5358c72aabddb229db11a612d2edd1bb1999046bead9189ab5a0619a73551e",
+    "dir": "www/docs/tsa/2026-07-07",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-v2-free-tsa.tsr",
+    "sha256": "9e3292c2ac4afdd6e5c6a8545b05cbb206cbc486d218d1261ecd877a049193c4",
+    "dir": "www/docs/tsa/2026-06-28",
+    "size": 943,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "vwz_digicert.tsr",
+    "sha256": "52359db32aa125b96c241d2f43da830a7da9179352857e6f8276d575864a4085",
+    "dir": "www/docs/tsa/2026-06-28",
+    "size": 1138,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "vwz_snapshot.tsr",
+    "sha256": "399a883f55650975d286c07e64d0ed968309314f329fb812102e5605815ab0d7",
+    "dir": "www/docs/tsa/2026-06-28",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-069-formal-verification-k3-20260714.tsr",
+    "sha256": "6aa8c02890bef6021bc1904d0310b02cd1faa8e38b80279f993f4bfc4fc21f4b",
+    "dir": "www/docs/tsa/2026-07-14",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-059.tsr",
+    "sha256": "be2518f7155901115e0e1a5d296bf3681b19344b95478e49586f746530550b13",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-060.tsr",
+    "sha256": "e7fcfe3c502ff9a5e40e16445e9e57d5ca5ff2a89b1e79ecd8b9870c3c6b79a1",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-061.tsr",
+    "sha256": "84dadb4dbd3884a0eedb656c4fa3ad022deefdf9eaa4c84c40f109a661fd5bb4",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-062.tsr",
+    "sha256": "588d7c9db8bff116dd00eb9a302816cf8b8098cdfd5d09e75471aa396069860d",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-063.tsr",
+    "sha256": "dbe1e97f1733a86f56053e0740ac8543a2110a5acc8776f8285d051600ab0fa7",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-064.tsr",
+    "sha256": "1068f4ab27c4d6dd3ebd9ddf0e8ac101bca9250fe043158c2efedbed67cbea70",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-065.tsr",
+    "sha256": "85c6c1444fda4913865c792da9b33e3f6c9997f08deb2c3a1dd1ff786f04b53c",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-066.tsr",
+    "sha256": "438f0fac69553e15202a46fa238db20a7dcb6ebd367fbbe4def94ca0474560df",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-067.tsr",
+    "sha256": "d14d251f4f1b8269f6393e5184dc104edc07e0ed2fdeae7961b2a8a96735dcd6",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-067b.tsr",
+    "sha256": "749ccaa69834d47592f064c3fd2a0b25c3a5ec46e8ccb16630352e2ad2babb6d",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-068.tsr",
+    "sha256": "d22317ea8299b968de259aa29ac6a7511c3825534b6f574189a08e88b66d636b",
+    "dir": "www/docs/tsa/2026-07-10",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "THREAT_MODEL_md.tsr",
+    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
+    "dir": "docs/tsa",
+    "size": 50,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "deploy_sh.tsr",
+    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
+    "dir": "docs/tsa",
+    "size": 50,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "security-block_html.tsr",
+    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
+    "dir": "docs/tsa",
+    "size": 50,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "security_html.tsr",
+    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
+    "dir": "docs/tsa",
+    "size": 50,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "traffic-shaping.js.tsr",
+    "sha256": "c093cf82b7087425be959334bc9fd2e4ad770e619556a47d3e7b1fd2c0d47932",
+    "dir": "docs/tsa",
+    "size": 5996,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "unified-traffic-obfuscator.js.tsr",
+    "sha256": "71cd2c248d93e9217d457e4cb8a903ea9610041f192caf5fe9e361aad4e66aa4",
+    "dir": "docs/tsa",
+    "size": 5995,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ws-padding.js.tsr",
+    "sha256": "8c3f163c338d6a9eb3106b42b3350770e2b535979f89950720994d635ce9a056",
+    "dir": "docs/tsa",
+    "size": 5996,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ntt_bundle.tsr",
+    "sha256": "a688a88bbc0a35062a2ccbf40ab284c725cbece00f9addbd77aa78bf59a80c8e",
+    "dir": "docs/tsa/2026-06-25/hardware",
+    "size": 943,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ntt_core_pipe.tsr",
+    "sha256": "e92abf01ce21ffef88d0a52cd9f9717dbc64702e3def869fc902ce31e1b182fc",
+    "dir": "docs/tsa/2026-06-25/hardware",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "Cargo.toml.tsr",
+    "sha256": "5c44b6fa2e1c0247e61cc23ee9b5454d6b272a90c3b53dd681f98ae924aef8a7",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "fibemate_pq_wasm.js.tsr",
+    "sha256": "e868cbd2f9232710476bf41b3af5eb37341f563e665f44c13636958a05af6f28",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "fibemate_pq_wasm_bg.wasm.tsr",
+    "sha256": "44463afeabe56bb979fc98bf56cc64547d307535fbad13cd6ac688859c69b1b9",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 941,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lib.rs.tsr",
+    "sha256": "313c656416162377ada9e15532691ef7446ea4ad032dbf767fb8f076118af7cf",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 941,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ml-kem-768-td.js.tsr",
+    "sha256": "d3074010dd43a191902ed9dbf8ef1756109a4bc19ba8eb9b85076e675cbb4a07",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "test-cross-lang-seeded.js.tsr",
+    "sha256": "225df1d7c295e31c02a3fe59d8d9938e62ad2dbe091c7fd76c1e00808d0787c5",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 941,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "test_INTEGRITY-MANIFEST.json.tsr",
+    "sha256": "7fc8ca5c0f891f432e6fe969f0858b86dc212031562b179b6d233412e61543d5",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "test_test-cross-lang.js.tsr",
+    "sha256": "a126d0b64087996f348513a5f765339df4c1535543b547e5ba2cf670cd206667",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "test_test-fibemate.js.tsr",
+    "sha256": "ab635013742d6f0ac5d328341b3ea675f203289ad8f62b93877db6edbb13772c",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_pqc-readiness.html.tsr",
+    "sha256": "5b66b496bbe12748781db10234d1918a3999ae31df2eefe5b26cb5069e24de9e",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_sm2-optimization.html.tsr",
+    "sha256": "41a7c17a956ec89a67d9529c192ac72fac27430d7aa9c55532d681f5a65214eb",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4634,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_sm2-tvla-analysis.html.tsr",
+    "sha256": "fb9a4f1d36fc475cb14d25246d0688308b1cf6057ef382a63e90bad9e511884c",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_tvla_hmac-sm3_tvla-hmac-sm3-v1-report.json.tsr",
+    "sha256": "2447bfe96290186dba560a0e268d4597be6e691b1298e31f20aa6e68a497a6da",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_tvla_hmac-sm3_tvla-hmac-sm3.js.tsr",
+    "sha256": "c4f102c5158db38c8100aa530b197ea9f7cb0cc61939d21f905129807c286427",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4632,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_tvla_index.html.tsr",
+    "sha256": "e8b99c31e415f7c02d1b4c0da56e35b7f7012c452b45a816bc669622f3a744ca",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_tvla_ml-kem-768_tvla-mlkem-report-v2-final.json.tsr",
+    "sha256": "72d059c3ad6bbffcb621cc59ccd352d0ad5b45a605c1ca33d8171341f3097448",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4632,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_tvla_sm2_tvla-sm2-v3-output.txt.tsr",
+    "sha256": "e39a0ff2952e8e5ab6fb754abaf3fab0cf2afa5c0f80a6e9f2e0b5a0dac48596",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_docs_tvla_sm2_tvla-sm2-v3-report.json.tsr",
+    "sha256": "f6a7b768163d3fd64c350513dbfdc48a659e69aa9e77e180d8178e13179637c7",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4634,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_security.html.tsr",
+    "sha256": "6ba3ccfd4b90718f8f385728c3cbb0c5c8e1c66787667987cc8414803191a3b2",
+    "dir": "docs/tsa/2026-06-08",
+    "size": 4633,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-054-freetsa.tsr",
+    "sha256": "93e6c96fe84120d1b27f00c935786844c78c2f850a558536888b5dcb794e35ac",
+    "dir": "docs/tsa/2026-07-06",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "docs_architecture.tsr",
+    "sha256": "a3e500e97784404031fdc066751f45cf2626ac3116738be5b9d5b1b0a95d1a66",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "index.tsr",
+    "sha256": "51f43da01005afbebaac530d14d9ccc5053d85982cefa3d6140aabd6ab9a32e1",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 941,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "main.tsr",
+    "sha256": "a4d75bd765c40882294bce05acbbcd0d73c513115572b0ea5f99fb9a21e0061d",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 943,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "src_crypto_bloom-filter.tsr",
+    "sha256": "11b1e3cb1d6cfe9d875e548eca13cbf034f3baf79bfe3c35ac726a113746c36c",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 941,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "src_crypto_distributed-mixnet.tsr",
+    "sha256": "c9028c729a36ede9f227b21d9725ca3b286c64473e8799890d3944723821e63c",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 943,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "src_crypto_mixnet-transport.tsr",
+    "sha256": "d82b81d473fa5bb846718ec0679fd62dc2c8d80e67eecd065ac61fd517e48e59",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 943,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "src_crypto_nym-mixnet.tsr",
+    "sha256": "923111d53d1791c5c1cfd35f8971de181cd4319c03a1d9523540157cf45020a9",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 941,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "src_crypto_traffic-shaping.tsr",
+    "sha256": "0241fc43dd706f27aa483a202d40199e070dd0a12b9da7a9ae0930cde0ec5841",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_privacy-layers_pir-search.tsr",
+    "sha256": "8a7a26d58b2b7953e4e9dfb74373393c6786ad17006e9b82078251b28af08d58",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www_privacy-layers_sphinx-packet.tsr",
+    "sha256": "35d18fcadf3ba9192ca052799e0ef791b16ed141b79d2c6d22a4de0616192328",
+    "dir": "docs/tsa/2026-05-25",
+    "size": 942,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "hybrid-kem-client.js.tsr",
+    "sha256": "4433b889a644a970c7800ff05a5806aedeb27ff3dab42c26b6c5f271059e40ff",
+    "dir": "docs/tsa/2026-07-15",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "reg-e2e-test.js.tsr",
+    "sha256": "7c071a9500d2a6db7924bd759d2b64ef7eaf1efcdf5e48617f3f7d4ffc4cc6b1",
+    "dir": "docs/tsa/2026-07-15",
+    "size": 1069,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "server.js.tsr",
+    "sha256": "43a22c6a8a3d4906e0aabcc1f8ef1a1799baa9393c31e60e8f9f28610a03264b",
+    "dir": "docs/tsa/2026-07-15",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "test-tls-hybrid-extension.js.tsr",
+    "sha256": "691530bf8fd70e5df6d0538a9342b71c1d1f08abb964e4f3ca2bc5429f1a31d0",
+    "dir": "docs/tsa/2026-07-15",
+    "size": 4634,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tls-hybrid-extension.js.tsr",
+    "sha256": "95796b86668a3d8399d13bfac5672690dc45a4ae02dc401e43c7604e5ec15b19",
+    "dir": "docs/tsa/2026-07-15",
+    "size": 4634,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "www-crypto-hybrid-kem-client.js.tsr",
+    "sha256": "757d9423b8e2c329b17150190f8205cd83469d8e3c8cded6773d8e0d18f26301",
+    "dir": "docs/tsa/2026-07-15",
+    "size": 1070,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-055-freetsa.tsr",
+    "sha256": "47918508d0bf3683ce7cbd2b7c6c22579dac7c9c98c86ad10ce4365520bbfd7c",
+    "dir": "docs/tsa/2026-07-07",
+    "size": 973,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "index.html.tsr",
+    "sha256": "c5249d8f88280e9eed5259934a29d37d4611d33fcfb1009d0394dcf55562c496",
+    "dir": "docs/tsa/2026-06-11",
+    "size": 4666,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ml-kem-768.js.tsr",
+    "sha256": "86ef38b4495bbd26abbd9d5045a3900fe37b3e7e424e339b7585caf990f45a2f",
+    "dir": "docs/tsa/2026-06-11",
+    "size": 4666,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "lg-074-l8l9-43-tests-20260715.tsr",
+    "sha256": "4559a2c8a9596c5b56dfc4c1f2a0945b357f6797b4981877d1869a7489ba15ff",
+    "dir": ".",
+    "size": 6006,
+    "mtime": "2026-07-15T17:55:06"
+  },
+  {
+    "tsr": "e2ee-display.js.tsr",
+    "sha256": "b1131f58d640d50cb941139faca41330f90f059baa9a2159c934fb72b5c4f1f6",
+    "dir": "www/timestamps/digicert/20260602",
+    "size": 5996,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "gm.js.tsr",
+    "sha256": "cb1d35bf83b36ef472bb207153b36e9fde3f83798e0845f1c2c733cc6f639ae9",
+    "dir": "www/timestamps/digicert/20260602",
+    "size": 5995,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "index.html.tsr",
+    "sha256": "e2f09e89b0b1b37f0344e90dcbafc0b3a0119257b6d1ef7ea3d14d5332b51426",
+    "dir": "www/timestamps/digicert/20260602",
+    "size": 5995,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "login.html.tsr",
+    "sha256": "dfb6198bf573ce047b29355b2293cc787c18bfbbb860bf2a9fce23317fe8e407",
+    "dir": "www/timestamps/digicert/20260602",
+    "size": 5996,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "main.html.tsr",
+    "sha256": "d7e3fd3c7027ac47716320bb97d3a6ed9cbca59cfb97407f1efa29dc25316790",
+    "dir": "www/timestamps/digicert/20260602",
+    "size": 5995,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "ml-kem-768.js.tsr",
+    "sha256": "51e6f5007a9b8dbad0360c3b6a838994a0a823e24d38aa9c8dd68a78fc7be66f",
+    "dir": "www/crypto/crypto",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "index.tsr",
+    "sha256": "b0eac58756ca465ca9234aab05ce24d6c93ca8eb370b0988a6675027778269be",
+    "dir": "www/docs/evidence",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "sm2-tvla-analysis.tsr",
+    "sha256": "602c732d2c94ccce09233e95330918d2495a7df000732b44ef2ae739f18e255a",
+    "dir": "www/docs/evidence",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-sm2-high-order-report.tsr",
+    "sha256": "956ee9c2b1cd25191cd206e36c79dd5c3c02ed0e3a4f494c644bbefe17b5b870",
+    "dir": "www/docs/evidence",
+    "size": 974,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla_n10000.tsr",
+    "sha256": "5b24c85e9f6a7599da1bc4295b1a1bbe4756cab920775e648ecc85f99437b5a3",
+    "dir": "www/docs/evidence",
+    "size": 975,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-corrected-report.json.tsr",
+    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
+    "dir": "www/docs/tvla/ml-kem-768",
+    "size": 259,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-9of9-summary.md.tsr",
+    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
+    "dir": "www/docs/tvla/ml-kem-768",
+    "size": 259,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-defense-for-reviewers.md.tsr",
+    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
+    "dir": "www/docs/tvla/ml-kem-768",
+    "size": 259,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "tvla-experiment-5-polyMul-attack-verification.json.tsr",
+    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
+    "dir": "www/docs/tvla/ml-kem-768",
+    "size": 259,
+    "mtime": "2026-07-16T13:27:58"
+  },
+  {
+    "tsr": "benchmark.test.tsr",
+    "sha256": "282d26ec835c35933237f178b6302223dc9f9a08bb03e5641056b68476d6b85b",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1070,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "ciphertext-malleability.test.tsr",
+    "sha256": "5c4f6fd2d8782b868f1df77304b2df3e719d26b38641ad36fa8929613d041dfc",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1069,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "concurrent.test.tsr",
+    "sha256": "96a58fe11adf2a47ad6256c18b1227813f1e5ad626df4300eb68fc5a5af86132",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1070,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "fo-transform.test.tsr",
+    "sha256": "e51a4a7d206627adf975f256c17c36f1ffe4331712d637b3f86f7adac793804f",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1070,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "invalid-input.test.tsr",
+    "sha256": "e4865106baebc826b53ef2a78c70c4be3b4a67adbbeed43a1ebcae1c9d217378",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1069,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "js-vs-native.test.tsr",
+    "sha256": "ccd5746e1611b5a0662ad8a42a4919184bd6e3a72fb2d9dec00343d6d04182f8",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1070,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "memory-leak.test.tsr",
+    "sha256": "23ba3c43778abf98600c428f9407c890ccfc1f56ee1d264e54dd3fad4bf1b69a",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1069,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "randomness.test.tsr",
+    "sha256": "b5dc6cafd3b00f1834a56b59afa9675bd86714d13535ee42f8fc97e980a7e921",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1069,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "state-recovery.test.tsr",
+    "sha256": "ceef9fff722cb960f052514fa0e3a086160bf17de83a5d7a6df2651f7e81ecf8",
+    "dir": "backend/timestamps/pqc_20260607",
+    "size": 1070,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "c_addon_kat_10000_20260604.tsr",
+    "sha256": "64e590e7afcf682d46fc7dccac79cd7943db6dd845f7127cbaf35435f9edde76",
+    "dir": "timestamps/addon",
+    "size": 5995,
+    "mtime": "2026-07-17T11:23:18"
+  },
+  {
+    "tsr": "c_addon_kat_100rounds_2026-06-04T10-54-52Z_20260604_105544Z.tsr",
+    "sha256": "17e060dd7d39a787addc9e30ccd96ab230a84f3bb6ab704f0b373a58b45b8017",
+    "dir": "timestamps/addon",
+    "size": 5996,
+    "mtime": "2026-07-17T11:23:18"
+  },
+  {
+    "tsr": "index_cAddonKAT_20260604_121531Z.tsr",
+    "sha256": "cdfa30ce866e173a87981f1744e550556645ce5872357771ee5a9239ff3ddb58",
+    "dir": "timestamps/addon",
+    "size": 5996,
+    "mtime": "2026-07-17T11:23:18"
+  },
+  {
+    "tsr": "mlkem_20260604_104151Z.tsr",
+    "sha256": "40faed69da48300b64fdd22c05f2bf8ed1cda7a6d91499cb59ec0009a85a7c8e",
+    "dir": "timestamps/addon",
+    "size": 5995,
+    "mtime": "2026-07-17T11:23:18"
+  },
+  {
+    "tsr": "mlkem_wrap_20260604_104151Z.tsr",
+    "sha256": "cb73cb676022b3135d0eeff41f9bdf2959c6bcf1cc62cfeff95b2f8b964d6052",
+    "dir": "timestamps/addon",
+    "size": 5996,
+    "mtime": "2026-07-17T11:23:18"
+  },
+  {
+    "tsr": "mlkem_wrap_20260604_105544Z.tsr",
+    "sha256": "518eb8d493b3769e0b9c087d81ab38b9a6500c5e3be03fa6c36cb23355f342f8",
+    "dir": "timestamps/addon",
+    "size": 5995,
+    "mtime": "2026-07-17T11:23:18"
+  },
+  {
+    "tsr": "randombytes_20260604_104151Z.tsr",
+    "sha256": "bc30adf14fd86f6d43be971b0ebf7dae04cccb7a111ffc6014c04a76f47e1452",
+    "dir": "timestamps/addon",
+    "size": 5996,
+    "mtime": "2026-07-17T11:23:18"
+  },
+  {
+    "tsr": "_bigint_sm2_digicert.tsr",
+    "sha256": "f2e09ddf3ea919e204ece42c7665f5aa6d9cd847d1bde2286ed9855ba395ccc5",
+    "dir": "experimental/sm2/tsa-20260616",
+    "size": 6007,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "_sm2_scalarmul.tsr",
+    "sha256": "15a28feae67e2d9972eb19677dd5959ca13ac254304a7904bdd0f8be49a6a373",
+    "dir": "experimental/sm2/tsa-20260616",
+    "size": 6007,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "benchmark_sm2.js.tsr",
+    "sha256": "48b14a89170d6c7898886219e400984236306dee533b8a0765f3ceb511932fca",
+    "dir": "experimental/sm2/tsa-20260615",
+    "size": 943,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "sm2-crypto.js.tsr",
+    "sha256": "5cb572fd37454326ba892bcf0dbd06cbb8c7b611c810cfbdbdfcab8885026129",
+    "dir": "experimental/sm2/tsa-20260615",
+    "size": 943,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "sm2-pretable.js.tsr",
+    "sha256": "733a0c8098a5431c0369403a7d5322362326b54ed27e20185dff8b487bbb38f8",
+    "dir": "experimental/sm2/tsa-20260615",
+    "size": 941,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "keccak.js.tsr",
+    "sha256": "5354a1dfd6dfaef9b9b076ad3bc838044905f75e0904f25ded8d0535d0992d0d",
+    "dir": "lib",
+    "size": 975,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "PQCsignKAT_64.rsp.tsr",
+    "sha256": "72d3c2753853f76d15ee45343ee641684bffcc0d31d624eb3279d360b36b0db5",
+    "dir": "fips205",
+    "size": 4665,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "TECHNICAL-VERIFICATION-v2.tsr",
+    "sha256": "bf451a74a544b8370c849cf8d3dbfba078badd3e150600227a475f7654a5bda1",
+    "dir": "docs",
+    "size": 4633,
+    "mtime": "2026-07-17T11:23:14"
+  },
+  {
+    "tsr": "ml-kem-768-td.js.tsr",
+    "sha256": "211f55c3d30b3a10013ef6b6b8f8476093ee971a08017064dab605e28bf2bbdb",
+    "dir": "public/crypto/crypto",
+    "size": 974,
+    "mtime": "2026-06-27T06:07:46"
+  },
+  {
+    "tsr": "lg-101-phase0-20260805.tsr",
+    "sha256": "d7385f2ee44c1d0a417a2c3df9ea27bedd53d2a52167c5cd05ca43687643132e",
+    "date": "2026-08-05",
+    "claim": "FIBEMATE SM2 WASM Phase 0 Verification — AssemblyScript 0.28 -> WASM 979B -> Node.js add(2,3)=5 mul(4,5)=20 PASS",
+    "dgst": "sha256",
+    "serial": "0x06C5F654",
+    "freetsa_time": "2026-08-05 10:39:59 GMT"
+  }
+]
