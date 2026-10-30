@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-06-08T06:45:49+08:00",
+  "milestone": "Deterministic Seed Injection + 800/800 Stability",
+  "files": [
+    { "file": "pq-wasm/src/lib.rs", "sha256": "275613c5f16babfc082e1ebbb58a17707613d9506dbca37734addfd433ae2750" }
+,
+    { "file": "pq-wasm/Cargo.toml", "sha256": "16fc18af71904f889dd7613b86ae6836cc24f4edef54fb53da00e308ce9a8a51" }
+,
+    { "file": "src/crypto/ml-kem-768-td.js", "sha256": "fc5c4cfb0a2ddddd25c10dc82c1ff440c8149ad3f35d12d81694d9779d9b9573" }
+,
+    { "file": "test/test-cross-lang-seeded.js", "sha256": "2962269300f179cf9b393cbd2d3e5d7ffab9fb441423ddf9ada1e976068bcec6" }
+,
+    { "file": "pq-wasm/pkg/fibemate_pq_wasm_bg.wasm", "sha256": "e9a92ae237da9943ae65e363bac0ca65092b09f6e585d128866ee04d196d4c8a" }
+,
+    { "file": "pq-wasm/pkg/fibemate_pq_wasm.js", "sha256": "94fb41a9b1604269817722e8b1e63c2a305f1d9977064ac8153f9058fa289c32" }
+  ]
+}

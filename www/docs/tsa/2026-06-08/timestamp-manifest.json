@@ -1,0 +1,112 @@
+[
+  {
+    "file": "test/test-fibemate.js",
+    "size": 19622,
+    "sha256": "b11fe714caf1c17f5b996ed2f8be619d8430aaa33b684ef20df42f2101c3bcd8",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-08T06:24:06+08:00"
+  },
+  {
+    "file": "test/test-cross-lang.js",
+    "size": 7708,
+    "sha256": "ea286a2943cec9d373b7219ff1938759b40521532ae26743f9cb845c32ab5298",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-08T06:24:14+08:00"
+  },
+  {
+    "file": "test/INTEGRITY-MANIFEST.json",
+    "size": 202,
+    "sha256": "835fa421119cb49166181c8f00fcb229abe8fba9d2acba1a536d67523c37e0b8",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-08T06:24:15+08:00"
+  }
+,
+  {
+    "file": "www/security.html",
+    "size": 39037,
+    "sha256": "dfa8282ec0f68f836084827be8c10d6c86222faf65828e804e2efce306a15639",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:08:27+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/tvla/index.html",
+    "size": 9469,
+    "sha256": "cdbbc6d6b16768a628c421b510ac1bbb49cf2976e21878d197638f53e32f92a7",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:08:28+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/sm2-tvla-analysis.html",
+    "size": 22966,
+    "sha256": "b15c1a6e47e6a48af44e567c1ae60cc79a0c6ba56b2e536a1884f129949bdfc8",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:08:30+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/tvla/sm2/tvla-sm2-v3-report.json",
+    "size": 3261,
+    "sha256": "991987252c764dc097a4076966b0edc12e8ac5f39026bc7ab32dd17b3e85e846",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:08:31+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3-v1-report.json",
+    "size": 1114,
+    "sha256": "2da907dd3682306e00ee42d62c0f9ac894071a2bfa9005d1e5a6f2f647223b70",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:08:54+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/tvla/sm2/tvla-sm2-v3-output.txt",
+    "size": 2264,
+    "sha256": "65cc6e302729954227692ea6f1abd8f4fcb4345b9f7c61e72a4cfd77b640d8c3",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:08:58+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/tvla/hmac-sm3/tvla-hmac-sm3.js",
+    "size": 8608,
+    "sha256": "59b4e87c42cd28b3af49ec14f575f4669b48ae6cebc825b9dcb605ff02ba0f83",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:08:59+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/tvla/ml-kem-768/tvla-mlkem-report-v2-final.json",
+    "size": 2442,
+    "sha256": "6ee24ce5abdc98fc9d0f6f8cb717dad61c433a09755bfc5e2d6632197e3743a1",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:09:02+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/pqc-readiness.html",
+    "size": 18671,
+    "sha256": "7bc6d22b44f6a394b55e9cff96a54a071bbf2ec5123210727e095212eeaac8e6",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:09:39+08:00"
+  }
+
+,
+  {
+    "file": "www/docs/sm2-optimization.html",
+    "size": 27513,
+    "sha256": "8980879e5d94af9f3428f2c9829cfd8dbb6c49aa8527155a28972e24e65604d7",
+    "tsa": "FreeTSA",
+    "timestamp": "2026-06-16T14:09:41+08:00"
+  }
+]

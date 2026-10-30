@@ -1,0 +1,11 @@
+FIBEMATE P0/P1 opensource fix — lg-054
+Date: 2026-07-06 12:55 CST
+Commit: 69b9a22c48385afc9f897a9a03d77c38ab4cc99c
+Event: .gitignore fix + restore www/index.html + clean profanity-bak/snapshots/fix_jwt_secret
+
+www/index.html    45fa957da1d71c23a12213588e2861d905eea1d5adb3aea24e862b51d91ac716
+.gitignore        9054e5d9843911bebbc5249fe5bebc0624b5cc1d3548de78d265664d82bb4337
+README.md         6d7dac774ffbf7890e74ed36e12456cf6df3527fffaeb0a42b1405f71b8112a5
+BUILD.md          9bb97bc7a6a49a0b4f76a48a5ef4fe8485130237860f07f08254bf252cadc21f
+CONTRIBUTING.md   f48692b4ea0e5a62c2d3c5bd27add2f6b58c371b8e834102d6015cf8d07f5b13
+LICENSE           b470eba8bb65e5c3b2788ef94cdea4cfeae593095ab7a211a2fa0bbe4f9122fe
