@@ -163,7 +163,8 @@ the manifest no longer described anything downloadable, and every check in the
 pipeline was green because every check compared text, or compared the working
 tree, which is a rendering of the commit rather than the commit. A failed deploy
 is repaired the same hour; a deploy that reports success while serving different
-bytes is discovered by a stranger with a hash.
+bytes is discovered by a stranger with a hash. A green pipeline is a statement
+about the tree; only a request to the wire is a statement about the wire.
 
 \begin{table}[t]
 \centering
