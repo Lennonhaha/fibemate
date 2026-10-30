@@ -38,7 +38,7 @@
 
 ---
 
-## 二、六条生产规则（R1–R6）
+## 二、七条生产规则（R1–R7）
 
 ### R1 — 生产环境只跑 Git 仓库代码（P0）
 
@@ -147,49 +147,67 @@ echo "脏工作区文件:  $(cd /opt/fibemate-repo && git status --porcelain | w
 
 纳入每月维护清单。
 
+### R7 — 部署以黑盒核验收尾（P0）
+
+“脚本跑完没报错”不是交付成功的证据。`scripts/check-live.cjs` 从公网侧断言三件事：
+
+| # | 断言 | 失败含义 |
+|:--|:---|:---|
+| 1 | `/docs/TSR-MANIFEST-20261029.md` 返回 200 且与仓库 committed blob 逐字节相同 | 清单没上站或版本落后 |
+| 2 | `/docs/tsa/2026-10-28-interop-matrix/lg-116-interop-matrix-SHA256SUMS.tsr` 返回 200 且逐字节相同 | 证据令牌没同步 |
+| 3 | `/docs/tsa/` 可浏览，且 `docs/tsa/` 下每个被跟踪文件在线上都逐字节命中 | 镜像漏文件 / 被 EOL 规范化改写 |
+
+三条判据的设计要点（踩过才知道）：
+
+- **比对基准是 `git cat-file` 的 blob，不是工作区文件**。Windows 检出会按
+  `.gitattributes` 改写换行，拿磁盘文件做基准会报出线上没有的“漂移”。
+- **第 3 条断言“不缺 + 逐字节相同”，不是“文件数相等”**。`www/docs/tsa` 按设计是
+  `docs/tsa` 的**超集**（线上另有直接签发进 www 的令牌），数量相等永远红且证明不了什么。
+- **`.sh` 等扩展名被 nginx 显式 `deny all`**，对这些文件要求的是 **403 而不是 200**；
+  若返回 200，说明 deny 规则失效，同样判红。
+
+配套：`docs/tsa/**` 与 `www/docs/tsa/**` 都必须在 `.gitattributes` 里 `-text`——
+证据是字节，不是文本；少了这条，镜像里的 Python 见证脚本被规范化成 LF，
+线上字节就和 `SHA256SUMS` 里封的摘要对不上（2026-10-30 由本门禁首次抓出）。
+
 ---
 
 ## 三、部署流程（deploy-fibemate.sh）
 
-服务器上执行（`/root/deploy-fibemate.sh`）：
+脚本随仓库走：`scripts/deploy-fibemate.sh`（`docs/deployment.md` 与 `/root/deploy-fibemate.sh`
+保持一致；以仓库版本为准）。默认只做 dry run，必须显式 `--apply` 才会改动生产。
 
 ```bash
+# 服务器上
+git -C /opt/fibemate-repo pull --ff-only 2>/dev/null || true   # 只为拿到最新脚本
+bash /opt/fibemate-repo/scripts/deploy-fibemate.sh            # 先看计划
+export BASE_URL=https://fibemate.net
+bash /opt/fibemate-repo/scripts/deploy-fibemate.sh --apply    # 真部署（末步：黑盒核验）
+```
+
+六步：检查干净 → 解锁 → fetch/reset → 回锁 → 重启 + 健康检查 → **黑盒交付核验**。
+第 [6/6] 步是硬门禁：`scripts/check-live.cjs` 从公网侧核验三件事，任一不达标即 `exit 1`，
+整个部署判红。
+
+```bash
+# 六步流程（伪代码，完整实现见 scripts/deploy-fibemate.sh）
 #!/bin/bash
 # FIBEMATE 生产部署 —— 三明治流程（检查干净 → 解锁 → pull → 恢复锁 → 验证）
 set -e
 REPO_DIR="/opt/fibemate-repo"
 LOCK_DIRS="www docs viz src packages"
 
-echo "[1/5] 检查工作区干净..."
-cd "$REPO_DIR"
-if [ -n "$(git status --porcelain)" ]; then
-  echo "❌ 工作区有未提交改动，先处理再部署" >&2
-  git status --porcelain
-  exit 1
-fi
-
-echo "[2/5] 解锁内容目录与文件..."
-for d in $LOCK_DIRS; do
-  find "$REPO_DIR/$d" -type d -exec chattr -i {} \; 2>/dev/null || true
-  find "$REPO_DIR/$d" -type f -exec chattr -i {} \; 2>/dev/null || true
-done
-
-echo "[3/5] 拉取最新代码..."
-git fetch origin main
-git reset --hard origin/main
-
-echo "[4/5] 恢复只读锁（目录 + 文件）..."
-for d in $LOCK_DIRS; do
-  find "$REPO_DIR/$d" -type d -exec chattr +i {} \; 2>/dev/null || true
-  find "$REPO_DIR/$d" -type f -exec chattr +i {} \; 2>/dev/null || true
-done
-
-echo "[5/5] 重启 API + 健康检查..."
-pm2 restart fibemate --update-env
-sleep 3
-code=$(curl -s -o /dev/null -w "%{http_code}" http://127.0.0.1:3001/api/mlkem/test)
-if [ "$code" = "200" ]; then echo "✅ 部署成功"; else echo "⚠️ /api/mlkem/test 返回 $code"; fi
+# [1/6] 检查工作区干净（R4）
+# [2/6] 解锁内容目录与文件（目录 + 文件两层）
+# [3/6] git fetch origin main && git reset --hard origin/main
+# [4/6] 重新上锁（目录 + 文件），核验 lsattr 未锁数 = 0
+# [5/6] pm2 restart fibemate --update-env；curl /api/mlkem/test 必须 200
+# [6/6] 黑盒交付核验（不可跳过）
+node "$REPO_DIR/scripts/check-live.cjs" --repo "$REPO_DIR" --base \
+  "${BASE_URL:-https://fibemate.net}"   # 非 0 即部署失败
 ```
+
+判据、三张断言与设计要点见 §二 R7。
 
 ---
 

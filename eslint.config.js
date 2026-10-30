@@ -25,6 +25,7 @@ module.exports = [
         WebAssembly: "readonly",
         window: "readonly",
         fetch: "readonly",
+        AbortSignal: "readonly",
         describe: "readonly",
         it: "readonly",
         path: "readonly",
