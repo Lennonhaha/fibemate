@@ -389,11 +389,15 @@ async function checkArchive(opts) {
     .slice(0, 12)
     .map((r) => '    ' + r.status + ' ' + r.rel + ' (' + r.detail + ')')
     .join('\n');
+  const tally =
+    served + '/' + perFile.length + ' identical' +
+    (denied ? ', ' + denied + ' denied by policy' : '') +
+    (bad.length ? ', ' + bad.length + ' not delivered' : '');
   let reason = '';
   if (!ok) {
     if (indexError) reason = 'archive index unreachable: ' + indexError + '; ';
     else if (indexStatus !== 200) reason = 'archive index HTTP ' + indexStatus + '; ';
-    reason += bad.length + ' of ' + perFile.length + ' tracked files not delivered as expected' + (detail ? '\n' + detail : '');
+    reason += tally + (detail ? '\n' + detail : '');
   }
   return {
     id: 'live:archive',
@@ -403,6 +407,7 @@ async function checkArchive(opts) {
     served,
     denied,
     missingOrWrong: bad.length,
+    tally,
     indexStatus,
     indexError,
     reason,
@@ -572,9 +577,7 @@ async function main() {
       if (c.ok) {
         const hash = c.sha256 ? ' sha256 ' + c.sha256.slice(0, 16) + ' (' + c.bytes + ' B)' : '';
         const counted =
-          c.id === 'live:archive'
-            ? ' ' + c.served + '/' + c.checked + ' files identical' + (c.denied ? ', ' + c.denied + ' denied by policy' : '')
-            : '';
+          c.id === 'live:archive' ? ' ' + c.tally : '';
         const cited = c.section
           ? c.skipped
             ? ' ' + c.onPage + '/' + c.checked + ' ledger rows present [' + c.skipped + ']'
