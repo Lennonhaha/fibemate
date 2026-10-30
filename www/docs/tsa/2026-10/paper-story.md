@@ -228,6 +228,93 @@ question — does the implementation match the standard on chosen inputs — and
 whether two implementations agree with each other on inputs neither chose. A project needs both,
 and the interesting finding is that the first is routinely mistaken for the second.
 
+## Evaluation: the deploy that returned 0
+
+The three contributions above are about evidence that is produced and read. This section is
+about a fourth place the same failure mode occurs, one layer below the document: the delivery
+path that puts the evidence on the network. It is included because it was measured in our own
+infrastructure, not inferred, and because the fix required no new cryptography — only an
+observation the pipeline was not making.
+
+**1. The pipeline's success signal was a return code.** `git reset --hard origin/main`
+returning 0 says the checkout moved to the commit that was reviewed. It says nothing about
+what nginx serves, whether the document root points at that checkout, or whether an `alias` or
+regex in the site config shadows the file. The deploy flow that preceded this work ended with a
+local health check (`GET 127.0.0.1:3001/api/mlkem/test` → 200), which proves the API process
+answers on the host and nothing about the artifact an outside reader downloads.
+
+**2. The first run of the replacement gate found a live defect.** The gate asserts three things
+from the public side: the TSR manifest is served with the exact committed bytes; the `lg-116`
+timestamp token is served with the exact committed bytes; and every file tracked under
+`docs/tsa/` is either served byte-identically or refused with 403 by the nginx deny rule that
+is supposed to cover its extension. On its first run against production:
+
+```
+[FAIL] live:archive: 1 of 266 tracked files not delivered as expected
+    mismatch docs/tsa/2026-10/verify_cyclonedx_data_loss.py
+             (94b28f6d2de183e6 != accd674461443e26)
+```
+
+The served file was 5,025 B; the committed one, 5,170 B. `docs/tsa/**` is marked `-text`
+precisely so a sealed artifact keeps its CRLF bytes; the mirror published under `www/` had been
+written through the default `* text=auto eol=lf` rule, so git normalised 145 carriage returns
+away. Same text. Different bytes. The digest in `docs/tsa/2026-10/SHA256SUMS` no longer matched
+anything downloadable — the evidence archive was one line ending away from being uncitable.
+`[measured, 2026-10-30, commit 6c05152]`
+
+**3. Every existing check was green, and one obvious way to write the new check was wrong in
+the same direction.** Three separate reasons, all generalisable:
+
+- *Text-level checks normalise before they compare.* Lint, encoding, BOM and SPDX checks all
+  passed on the normalised file; they ask whether the text is well-formed, not whether its
+  bytes are the ones a token was minted over.
+- *The intuitive baseline for a byte check is the working tree, and on Windows that baseline is
+  a rendering, not the artifact.* `.gitattributes` rewrites line endings at checkout, so hashing
+  the file on disk reports drift that production does not have. Our first draft did exactly
+  this and produced a false positive on the same `.py` witness before the baseline was moved to
+  `git cat-file blob`. The commit is the authority; the checkout is a rendering of it.
+- *Value-level verification cannot see it by construction.* This is the S2 row of the previous
+  table, one layer down: the checker was asked whether the document still says what it said,
+  and it does. The bytes changed underneath the statement, and a checker that compares values
+  reports success.
+
+**4. What the gate proves is narrow, and stated in its own output.** It proves that for every
+file tracked under `docs/tsa/`, the public site returns the committed blob byte for byte, or
+refuses it with the status the policy requires; and that the manifest and the token are served
+identically. It does not prove that the content is correct, that the archive is complete
+against the world, or that any third party has looked at it. In the words we use internally:
+**只证线上字节=提交字节，不证内容正确、不证第三方可信** — it proves live bytes equal committed
+bytes; nothing about correctness, nothing about independent trust.
+
+The credibility of that sentence depends on the gate being able to fail. Four paths are
+exercised rather than asserted:
+
+| scenario | expected | observed |
+|---|---|---|
+| mock nginx with files, autoindex and the deny list | pass | `DEPLOY VERIFY: PASS`, exit 0 |
+| same mock with the deny rule removed | 200 where 403 is required | `policy-regression`, exit 1 |
+| production before the byte fix | one mismatch | `1 of 266 … mismatch`, exit 1 |
+| repository without the artifacts | cannot verify | `cannot read the expected artifacts`, exit 2 |
+
+The second row is worth the space: a gate that only ever prints PASS is indistinguishable from
+a script that always exits 0. Exit 2 exists for the same reason as `unverifiable` in the record
+checker — "the inputs needed to decide were not present" must never render as "passed".
+
+**The repair is part of the finding.** The fix was a `.gitattributes` rule
+(`www/docs/tsa/** -text`) and a file restored from the sealed blob. The manifest was not
+regenerated and no token was re-minted: re-sealing would assert a new fact about a newer file
+and destroy the only thing the package proves — that on 2026-10-28 these were the digests. A
+timestamp cannot be back-dated, so the mismatch is documented in
+`docs/tsa/DRIFT-20261029.md` instead of erased. The deploy script now ends with the gate as
+step 6/6 and exits non-zero with `FAIL: deploy finished but the live site does not match the
+repo`; "the script ran" and "the site serves the commit" are different claims and now have
+different exit codes. `[measured, 2026-10-30]`
+
+The generalisation is the same one the paper opens with, moved down a layer: **a deploy that
+reports success is not evidence of delivery, in exactly the way a schema-valid CBOM is not
+evidence of completeness.** In both cases the tool answers the question it was asked, the
+answer is true, and the reader takes it as an answer to a different question.
+
 ## Limitations and threats to validity
 
 State them before a reviewer does.
