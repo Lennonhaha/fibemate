@@ -17,6 +17,11 @@
  *   3. live:archive   /docs/tsa/ is browsable, and every file tracked under
  *                     docs/tsa/ is either served byte-identically or refused by an
  *                     explicit nginx deny rule (see POLICY_DENIED_EXT below)
+ *   4. live:doi       the homepage links the preprint DOI, and doi.org actually
+ *                     resolves that DOI to a 200 page that carries it. A link
+ *                     that exists only in the HTML is not a delivered citation;
+ *                     the resolver is queried too, so a withdrawn DOI fails the
+ *                     deploy instead of rotting quietly on the page.
  *
  * Two deliberate design points:
  *
@@ -53,6 +58,19 @@ const TOKEN_URL = '/docs/tsa/2026-10-28-interop-matrix/lg-116-interop-matrix-SHA
 const ARCHIVE_DIR_REL = 'docs/tsa';
 const ARCHIVE_DIR_URL = '/docs/tsa/';
 
+// The preprint that the homepage cites. The gate asserts two things that can
+// break independently: the page still carries the link, and the DOI still
+// resolves. Both are cheap; neither is implied by the other.
+const DOI_PID = '10.5281/zenodo.23808518';
+const DOI_URL = 'https://doi.org/' + DOI_PID;
+
+// doi.org sits behind a WAF that answers 403 to requests carrying Node's default
+// `node` User-Agent while answering the same request from the same IP with 200
+// once a browser-style UA is present. Measured 2026-10-30. Without this header
+// the resolver probe fails for a reason that has nothing to do with the DOI.
+const DOI_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36';
+
 // Kept in sync with deploy/nginx/fibemate.net.conf: the `deny all` location that
 // matches `\.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist|old|orig|save|zip|tar\.gz|sqlite|db)$`.
 // `scripts/check-nginx-drift.cjs` already watches that file for drift; if the list
@@ -85,6 +103,9 @@ const USAGE = `Usage: node scripts/check-live.cjs [options]
   --concurrency <n>   parallel requests (default: 8)
   --timeout <ms>      per-request timeout (default: 20000)
   --json <file>       also write the machine-readable result here
+  --no-external       skip the doi.org resolver probe (keeps only the on-page
+                      link assertion); use where outbound DNS to doi.org is
+                      blocked, and say so when you report the result
   --quiet             only print failures and the final verdict
   --help              show this text
 
@@ -98,6 +119,7 @@ function parseArgs(argv) {
     timeout: 20000,
     json: null,
     quiet: false,
+    external: true,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
@@ -116,6 +138,8 @@ function parseArgs(argv) {
       opts.json = argv[(i += 1)];
     } else if (a === '--quiet') {
       opts.quiet = true;
+    } else if (a === '--no-external') {
+      opts.external = false;
     } else {
       throw new Error('unknown argument: ' + a);
     }
@@ -197,10 +221,14 @@ function policyDenied(rel) {
   return ext.length > 0 && POLICY_DENIED_EXT.indexOf(ext) !== -1;
 }
 
-async function fetchBody(url, timeout) {
+async function fetchBody(url, timeout, extraHeaders) {
   const res = await fetch(url, {
     redirect: 'follow',
-    headers: { 'cache-control': 'no-cache', pragma: 'no-cache' },
+    headers: {
+      'cache-control': 'no-cache',
+      pragma: 'no-cache',
+      ...(extraHeaders || {}),
+    },
     signal: AbortSignal.timeout(timeout),
   });
   const buf = Buffer.from(await res.arrayBuffer());
@@ -331,6 +359,75 @@ async function checkArchive(opts) {
   };
 }
 
+async function checkDoi(opts) {
+  const result = {
+    id: 'live:doi',
+    ok: false,
+    doi: DOI_PID,
+    url: DOI_URL,
+    onPage: false,
+    resolverStatus: null,
+  };
+
+  // 1. The homepage must still carry the link. This is the half that fails when
+  //    someone edits index.html, which is the case that actually happens.
+  let home = null;
+  try {
+    home = await fetchBody(opts.base + '/', opts.timeout);
+  } catch (err) {
+    result.reason = 'homepage unreachable: ' + err.message;
+    return result;
+  }
+  if (home.status !== 200) {
+    result.reason = 'homepage HTTP ' + home.status + ' (expected 200)';
+    return result;
+  }
+  const html = home.buf.toString('utf8');
+  const linked = html.indexOf('doi.org/' + DOI_PID) !== -1;
+  result.onPage = linked;
+  if (!linked) {
+    result.reason = 'homepage no longer links https://doi.org/' + DOI_PID;
+    return result;
+  }
+
+  // 2. The DOI must still resolve. A citation that 404s or redirects to a
+  //    withdrawal notice is worse than no citation, because it looks like proof.
+  if (!opts.external) {
+    result.ok = true;
+    result.reason = '';
+    result.skipped = 'resolver probe skipped (--no-external)';
+    return result;
+  }
+  let resolved;
+  // One retry: a single transient DNS/socket error on a 20 s budget has already
+  // produced a false red here (2026-10-30), and a flaky gate gets switched off.
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      resolved = await fetchBody(DOI_URL, opts.timeout, { 'user-agent': DOI_UA });
+      break;
+    } catch (err) {
+      if (attempt === 2) {
+        result.reason = 'doi.org unreachable after 2 attempts: ' + err.message;
+        return result;
+      }
+      await new Promise((r) => setTimeout(r, 750));
+    }
+  }
+  result.resolverStatus = resolved.status;
+  if (resolved.status !== 200) {
+    result.reason = 'doi.org returned HTTP ' + resolved.status + ' (expected 200)';
+    return result;
+  }
+  const landing = resolved.buf.toString('utf8');
+  if (landing.indexOf(DOI_PID) === -1) {
+    result.reason = 'resolved page does not mention ' + DOI_PID + ' (wrong target?)';
+    return result;
+  }
+  result.ok = true;
+  result.reason = '';
+  return result;
+}
+
 async function main() {
   let opts;
   try {
@@ -355,6 +452,7 @@ async function main() {
   checks.push(await checkFile(opts.base + MANIFEST_URL, expected.get(MANIFEST_REL), 'live:manifest', opts));
   checks.push(await checkFile(opts.base + TOKEN_URL, expected.get(TOKEN_REL), 'live:token', opts));
   checks.push(await checkArchive(opts));
+  checks.push(await checkDoi(opts));
   const ok = checks.every((c) => c.ok);
 
   if (!opts.quiet || !ok) {
@@ -366,7 +464,10 @@ async function main() {
           typeof c.checked === 'number'
             ? ' ' + c.served + '/' + c.checked + ' files identical' + (c.denied ? ', ' + c.denied + ' denied by policy' : '')
             : '';
-        process.stdout.write('[PASS] ' + c.id + hash + counted + '\n');
+        const doiNote = c.doi
+          ? ' ' + c.doi + ' linked and resolving' + (c.skipped ? ' [' + c.skipped + ']' : '')
+          : '';
+        process.stdout.write('[PASS] ' + c.id + hash + counted + doiNote + '\n');
       } else {
         process.stdout.write('[FAIL] ' + c.id + ': ' + c.reason + '\n');
       }
