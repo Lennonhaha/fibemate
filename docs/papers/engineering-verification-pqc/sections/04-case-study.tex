@@ -92,11 +92,15 @@ The project had 18 internal tests for the CBOM generator, all passing. The CBOM
 was, by that measure, correct.
 
 It was not valid CycloneDX 1.6. Validating against the official schema produced
-51 errors in 7 categories. The pre-repair BOM was generated rather than
-committed, so that count is a measurement and not something a reader can re-run
-from this repository; the artefact that \emph{is} committed,
-\texttt{tools/cbom-cyclonedx.json}, is the repaired one, and it validates clean
-against the vendored 1.6 schema at commit \texttt{4064ba8}.
+51 errors in 7 categories: three properties that each of the twelve components
+carries in the wrong place, one enumeration error on each component's
+\texttt{primitive}, and three document-level keys. The pre-repair BOM (twelve
+components, 102{,}895 bytes, serial number beginning
+\texttt{urn:uuid:a134990a}) was generated rather than committed, so that count is
+a measurement rather than something a reader can re-run from this repository; the
+artefact that \emph{is} committed, \texttt{tools/cbom-cyclonedx.json} (nine
+components, 63{,}485 bytes), is the repaired one and validates clean against the
+vendored 1.6 schema at commit \texttt{4064ba8}.
 
 \subsubsection{The root cause is the test, not the code}
 
