@@ -21,7 +21,9 @@ CBOM schema & CycloneDX 1.6, vendored & see below \\
 
 Both repositories are public. The commit column records the snapshot at
 submission; the commits measured on 2026-10-30 and reported in
-Section~\ref{sec:evaluation} are named in the provenance note there.
+Section~\ref{sec:evaluation} are named in the provenance note there. The corpus
+counts in that section are measured at \texttt{b2910d5} on clean checkouts; the
+CBOM figures are measured at \texttt{95056b4}.
 
 The formalization repository is deliberately
 separate from the product repository: research-line proofs do not ship in the
@@ -65,12 +67,13 @@ None is maintained by hand.
 \toprule
 Figure & Command \\
 \midrule
-Lemma / theorem / \texttt{sorry} counts & \texttt{node tools/count-obligations.cjs} \\
-CBOM regeneration & \texttt{node scripts/build-cbom.js} \\
-CBOM staleness check & \texttt{node scripts/build-cbom.js -{}-check} \\
-CBOM schema validation & \texttt{node scripts/validate-cbom.cjs} \\
-Corpus claim counts & \texttt{node bin/verifact.js verify -{}-config verifact/verifact.json} \\
-Delivery gate & \texttt{node scripts/check-live.cjs} \\
+Lemma / theorem / \texttt{sorry} counts & \texttt{node tools/count-obligations.cjs}\newline\textit{[repo: vwz-formalization]} \\
+CBOM regeneration & \texttt{node scripts/build-cbom.js}\newline\textit{[repo: fibemate]} \\
+CBOM staleness check & \texttt{node scripts/build-cbom.js -{}-check}\newline\textit{[repo: fibemate]} \\
+CBOM schema validation & \texttt{node tools/validate-cbom.cjs}\newline\textit{[repo: fibemate]} \\
+Corpus claim counts & \texttt{node verifact/bin/verifact.js verify}\newline\texttt{--config verifact/verifact.json}\newline\textit{[repo: fibemate-tools]} \\
+Disturbance matrix & \texttt{node scripts/claim-evidence/run-e2e.cjs}\newline\textit{[repo: fibemate-tools]} \\
+Delivery gate & \texttt{node scripts/check-live.cjs}\newline\textit{[repo: fibemate]} \\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -127,7 +130,9 @@ Total & 56 & 17 \\
 Repository totals: 185 lemmas, 1 theorem and 17 \texttt{sorry}, across 10 theory
 files totalling 125{,}165 bytes. The ledger accounts for every \texttt{sorry}
 in the repository; the counter reports zero outside it, so the agreement is
-enforced rather than merely observed.
+enforced rather than merely observed. The comment block at the head of the
+ledger still lists the counts from before \texttt{T2\_B2} was closed; the
+script's output, not that comment, is the authoritative count.
 
 \subsection{CBOM summary}
 

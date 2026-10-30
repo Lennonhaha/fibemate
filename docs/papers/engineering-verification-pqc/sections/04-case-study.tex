@@ -92,7 +92,11 @@ The project had 18 internal tests for the CBOM generator, all passing. The CBOM
 was, by that measure, correct.
 
 It was not valid CycloneDX 1.6. Validating against the official schema produced
-51 errors in 7 categories.
+51 errors in 7 categories. The pre-repair BOM was generated rather than
+committed, so that count is a measurement and not something a reader can re-run
+from this repository; the artefact that \emph{is} committed,
+\texttt{tools/cbom-cyclonedx.json}, is the repaired one, and it validates clean
+against the vendored 1.6 schema at commit \texttt{4064ba8}.
 
 \subsubsection{The root cause is the test, not the code}
 
@@ -278,8 +282,7 @@ implies the goal.
 Before attempting the proof we verified the statement numerically, by evaluating
 the determinant exactly as defined --- Laplace along the first row,
 \texttt{nat} subtraction, integer entries --- over every $(i,j)$ with
-$i \neq j$ for $m \in \{1,2,3,4,5\}$ and several values of $f$, 166 cases in
-total, all giving $\det = 1$. A control sweep with $i = j$ gives $\det = f$,
+$i \neq j$ for $m \in \{1,2,3,4,5\}$ and several values of $f$, all giving $\det = 1$. A control sweep with $i = j$ gives $\det = f$,
 which is what it must be, and which shows the sweep is not passing vacuously.
 
 So the mathematics was never in doubt and the missing piece was the proof. The

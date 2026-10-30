@@ -15,18 +15,21 @@ All figures were produced by the commands named in the reproduction appendix
 (\texttt{verifact verify} for the counts, \texttt{run-e2e.cjs} for the
 disturbance matrix, \texttt{check-live.cjs} for the delivery gate), each at
 the commit recorded in the provenance note to this section; none are quoted
-from an earlier revision of this paper.
+from an earlier revision of this paper. The corpus counts here are measured on
+clean checkouts at \texttt{b2910d5} (product repository) and \texttt{163efe3}
+(\texttt{verifact}); the CBOM figures in Section~\ref{sec:case-study-cbom} are
+measured at \texttt{95056b4}.
 
 \subsection{What the checker could resolve}
 
-The public corpus holds 2{,}345 statements that assert a property of a named
-artefact (a file, symbol, constant or derived parameter). Of these, 2{,}135 are
+The public corpus holds 2{,}337 statements that assert a property of a named
+artefact (a file, symbol, constant or derived parameter). Of these, 2{,}127 are
 claims about a code artefact the checker can locate. The other 210 fall outside
 that scope for five different reasons, and the table separates them rather than
 lumping them: standard references that are not artefact claims (25), a sealed
 evidence directory that must not be edited (84), claims ignored by configuration
 (21), claims dispositioned as narrative (72), and claims denied by policy (8).
-Of the 2{,}135, a binding could be attempted for 2{,}117: 136 verified, 1{,}767
+Of the 2{,}127, a binding could be attempted for 2{,}109: 136 verified, 1{,}759
 unbound and 214 ambiguous. The remaining 18 anchor to a standard reference
 rather than to an artefact, so they are locatable but not bindable.
 
@@ -37,10 +40,10 @@ rather than to an artefact, so they are locatable but not bindable.
 \toprule
 Measure & Count \\
 \midrule
-Declarations in the public corpus                     & 2{,}345 \\
-\quad claims about a locatable code artefact          & 2{,}135 \\
+Declarations in the public corpus                     & 2{,}337 \\
+\quad claims about a locatable code artefact          & 2{,}127 \\
 \qquad verified (binding found and consistent)        &   136 \\
-\qquad unbound (no binding found)                     & 1{,}767 \\
+\qquad unbound (no binding found)                     & 1{,}759 \\
 \qquad ambiguous (multiple candidate bindings)        &   214 \\
 \qquad anchor is a standard reference, not an artefact &    18 \\
 \quad claims outside artefact scope                   &   210 \\
@@ -55,23 +58,23 @@ Explicit exemptions, with author and expiry          &    19 \\
 \bottomrule
 \end{tabular}
 \caption{Corpus and verdict distribution. Every row closes against the rows
-beneath it: $136 + 1{,}767 + 214 + 18 = 2{,}135$, and $2{,}135 + 210 = 2{,}345$.
-The tool's own \texttt{allJudgedClaims} is 2{,}215, which is $2{,}135 + 72 + 8$;
+beneath it: $136 + 1{,}759 + 214 + 18 = 2{,}127$, and $2{,}127 + 210 = 2{,}337$.
+The tool's own \texttt{allJudgedClaims} is 2{,}207, which is $2{,}127 + 72 + 8$;
 it is not the number of verdicts, because 80 of those claims are dispositioned or
 denied rather than judged, so it is not used as a denominator here.}
 \label{tab:verdicts}
 \end{table}
 
 Three denominators can be defended, and the difference between them is smaller
-than it is usually made to sound. $136/2{,}135$ is the rate over claims the
-checker can locate; $136/2{,}117$ is the rate over claims whose binding it could
-attempt. Both are $6.4\%$. Quoting either alone would hide the 1{,}767, which is
+than it is usually made to sound. $136/2{,}127$ is the rate over claims the
+checker can locate; $136/2{,}109$ is the rate over claims whose binding it could
+attempt. Both are $6.4\%$. Quoting either alone would hide the 1{,}759, which is
 the number that says what the method does not cover; quoting the tool's
-$2{,}215$ would be worse, because it mixes judged and unjudged claims.
+$2{,}207$ would be worse, because it mixes judged and unjudged claims.
 
-The interesting number in Table~\ref{tab:verdicts} is not 136 but 1{,}767. A
+The interesting number in Table~\ref{tab:verdicts} is not 136 but 1{,}759. A
 checker that reported only ''136 verified'' would be read as a statement about
-the corpus; what it actually establishes is that for 1{,}767 declarations the
+the corpus; what it actually establishes is that for 1{,}759 declarations the
 corpus does not record enough to decide. Those are not failures of the
 declarations. Most are prose assertions whose binding was never written down.
 They are the boundary of what the method covers, and they are invisible in a
@@ -251,7 +254,7 @@ of writing no external party has reproduced it. Until one does, the agreement it
 records is evidence of two implementations agreeing, not evidence of
 independence from our own instrumentation.
 
-\emph{Coverage is bounded by what is written down.} 1{,}767 declarations could
+\emph{Coverage is bounded by what is written down.} 1{,}759 declarations could
 not be resolved because the corpus does not bind them. Increasing that number
 requires writing bindings, not improving the tool, and no amount of tooling
 converts an unstated claim into a checkable one.
@@ -265,19 +268,22 @@ after both have run.
 % Provenance notes (not for the paper). Every number above traces to a command;
 % if a number changes, the command is re-run rather than the sentence edited.
 %
-%   tab:verdicts       fibemate-tools: node bin/verifact.js verify
+%   tab:verdicts       fibemate-tools: node verifact/bin/verifact.js verify
 %                        --config verifact/verifact.json --format json
-%                      at fibemate-tools 163efe3 (PR #160; config excludes the untracked
-%                      internal note docs/whitepaper-risk.md) against fibemate
-%                      b2910d5, run 2026-10-30 18:1x:
-%                      claimsTotal 2345, codeArtifactClaims 2135,
-%                      allJudgedClaims 2215 (= 2135 + 72 dispositioned + 8 denied),
-%                      verified 136, unbound 1767, ambiguous 214, refFound 18,
+%                      at fibemate-tools 163efe3 against fibemate b2910d5, both
+%                      CLEAN checkouts (git worktree), run 2026-10-30 20:2x:
+%                      claimsTotal 2337, codeArtifactClaims 2127,
+%                      allJudgedClaims 2207 (= 2127 + 72 dispositioned + 8 denied),
+%                      verified 136, unbound 1759, ambiguous 214, refFound 18,
 %                      standardRefs 25, sealed 84, ignored 21, denied 8, drift 0,
 %                      exit 0; exemptions 19 (6 drift, 13 retained) measured
-%                      2026-10-30, base commit a643568. Without the config
-%                      exclusion the same tree yields 2348 / 2138 / 2218 / 137 /
-%                      1769, which is not reproducible from the public repo.
+%                      2026-10-30, base commit a643568.
+%                      The earlier figures 2345 / 2135 / 2215 came from a working
+%                      tree that carried untracked documents - the defect section
+%                      5.3 describes, occurring in this paper's own table. A clean
+%                      checkout of the CBOM commit 95056b4 yields 2203 / 2103 /
+%                      2112 with drift 15 and exit 1, so the counts are pinned to
+%                      b2910d5, the commit whose CBOM figures the paper reports.
 %   tab:s0s4           node scripts/claim-evidence/run-e2e.cjs (2026-10-30)
 %   tab:s0s4           fibemate-tools/docs/claim-evidence-e2e-2026-10-29.md
 %   tab:deploy         6c05152 -> b2910d5; check-live run 2026-10-30:
