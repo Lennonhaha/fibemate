@@ -450,7 +450,48 @@ async function fetchWithRetry(url, opts, label) {
  * ORCID deliberately uses 'url': the profile page is a JS app, and its body
  * intermittently does not contain the iD even at a constant byte size (measured
  * 2026-10-30), so body matching there would be a flaky assertion, not a stronger one.
+ *
+ * DOIs are checked at the registration agency instead of through the landing page.
+ * Measured 2026-10-30 from the deploy host: https://doi.org/api/handles/<pid> answers
+ * in 1-2 s with the registered URL, while the redirect chain into the Zenodo landing
+ * page did not finish inside 25 s. Following the redirect therefore made a healthy
+ * citation look broken; the handle record is the authoritative statement that the DOI
+ * exists and points where we say it does.
  */
+function isDoi(entry) {
+  return entry.token.indexOf('10.') === 0;
+}
+
+async function probeDoi(entry, opts) {
+  const api = 'https://doi.org/api/handles/' + entry.token;
+  let res;
+  try {
+    res = await fetchWithRetry(api, opts, api);
+  } catch (err) {
+    // Resolver unreachable is distinct from "DOI does not exist": fall back to the
+    // landing page once so a doi.org outage does not turn into a content verdict.
+    res = await fetchWithRetry(entry.url, opts, entry.url);
+    if (res.status !== 200) return { ok: false, stage: 'resolve', detail: 'HTTP ' + res.status + ' (expected 200)' };
+    return identityOk(entry, res)
+      ? { ok: true, target: res.url || entry.url }
+      : { ok: false, stage: 'identity', detail: 'landing page ' + (res.url || entry.url) + ' does not carry ' + entry.token };
+  }
+  if (res.status !== 200) return { ok: false, stage: 'resolve', detail: 'handle API HTTP ' + res.status };
+  let body;
+  try {
+    body = JSON.parse(res.buf.toString('utf8'));
+  } catch (err) {
+    return { ok: false, stage: 'resolve', detail: 'handle API returned non-JSON' };
+  }
+  if (body.responseCode !== 1) return { ok: false, stage: 'resolve', detail: 'handle API responseCode ' + body.responseCode };
+  if (body.handle !== entry.token) {
+    return { ok: false, stage: 'identity', detail: 'handle API answered for ' + body.handle };
+  }
+  const urlValue = (body.values || []).filter((v) => v && v.type === 'URL' && v.data && v.data.value)[0];
+  if (!urlValue) return { ok: false, stage: 'identity', detail: 'handle record has no registered URL' };
+  return { ok: true, target: urlValue.data.value };
+}
+
 function identityOk(entry, res) {
   const know = entry.identity || 'url';
   if (know === 'body') return res.buf.toString('utf8').indexOf(entry.token) !== -1;
@@ -510,6 +551,21 @@ async function checkCitations(opts) {
   // the row still looks like proof.
   if (opts.external) {
     for (const c of CITATIONS) {
+      if (isDoi(c)) {
+        let verdict;
+        try {
+          verdict = await probeDoi(c, opts);
+        } catch (err) {
+          result.failures.push({ id: c.id, stage: 'unreachable', detail: err.message });
+          continue;
+        }
+        if (!verdict.ok) {
+          result.failures.push({ id: c.id, stage: verdict.stage, detail: verdict.detail });
+          continue;
+        }
+        result.resolved += 1;
+        continue;
+      }
       let res;
       try {
         res = await fetchWithRetry(c.url, opts, c.url);
