@@ -1,0 +1,264 @@
+% SPDX-License-Identifier: Apache-2.0
+\section{Evaluation}
+\label{sec:evaluation}
+
+The preceding sections argue that three kinds of evidence --- machine-checked
+proofs, schema-validated bills of materials, and cross-implementation
+agreement --- each answer a question narrower than the one a reader takes them
+to answer. This section measures that claim on one project rather than
+illustrating it: how many declarations the checker could actually resolve, what
+each class of check can and cannot see when the same artefact is disturbed, and
+what happened when the same failure mode was looked for one layer below the
+document, in the delivery path that puts evidence on the network.
+
+All figures were produced by the commands listed in the reproduction appendix
+against the commits named in each table; none are quoted from an earlier
+revision of this paper.
+
+\subsection{What the checker could resolve}
+
+The archived corpus holds 2{,}347 statements that assert a property of a named
+artefact (a file, symbol, constant or derived parameter). Of these, 2{,}137 are
+claims about a code artefact that the checker can locate; the remaining 210
+describe configuration, process or external facts and are out of scope for
+mechanical resolution. Judgement is reported against both denominators, because
+the choice of denominator moves the headline number by an order of magnitude and
+papers in this area rarely state which one they used.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lr@{}}
+\toprule
+Measure & Value \\
+\midrule
+Declarations in the corpus                       & 2{,}347 \\
+Claims about a locatable code artefact           & 2{,}137 \\
+Claims for which a verdict was reached           & 2{,}217 \\
+\quad verified (binding found and consistent)    & 137 \\
+\quad unbound (no binding found)                 & 1{,}768 \\
+\quad ambiguous (multiple candidate bindings)    & 214 \\
+Drift between declaration and artefact           & 0 \\
+Explicit exemptions, with author and expiry      & 19 \\
+\bottomrule
+\end{tabular}
+\caption{Verdict distribution. The two denominators are not
+interchangeable: 137/2{,}137 is the rate over mechanically resolvable claims,
+137/2{,}217 over all claims that received a verdict. We report both and claim
+neither as ''the coverage''.}
+\label{tab:verdicts}
+\end{table}
+
+The interesting number in Table~\ref{tab:verdicts} is not 137 but 1{,}768. A
+checker that reported only ''137 verified'' would be read as a statement about
+the corpus; what it actually establishes is that for 1{,}768 declarations the
+corpus does not record enough to decide. Those are not failures of the
+declarations --- most are prose assertions whose binding was never written down
+--- but they are the boundary of what the method covers, and they are invisible
+in a green summary line.
+
+The 19 exemptions were re-tested by removing all of them and re-running the
+checker: 6 then appeared as drift, and 13 did not, because they describe a
+different measurement basis or a property that is not an artefact attribute.
+Reporting ''19 exemptions'' without that split would have overstated the residue
+by a factor of three.
+
+\subsection{What each class of evidence can see}
+\label{sec:eval-baseline}
+
+The same claim, the same artefact and the same four disturbances were presented
+to two checkers: a value-level checker that compares the numbers a document
+states against the numbers the artefact yields, and a byte-level checker that
+compares the artefact against a digest list sealed by a timestamp token.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}clll@{}}
+\toprule
+ & Disturbance & Value-level checker & Byte-level checker \\
+\midrule
+S0 & none                              & pass, exit 0        & pass, exit 0 \\
+S1 & one number changed (62 $\to$ 61)  & drift, exit 1       & drift, exit 1 \\
+S2 & one byte flipped, no number       & \textbf{pass, exit 0} & drift, exit 1 \\
+S3 & S2 + digest list rewritten        & pass, exit 0        & drift, exit 1 (imprint) \\
+S4 & signing CA omitted                & ---                 & unverifiable, exit 3 \\
+\bottomrule
+\end{tabular}
+\caption{Two checkers, four disturbances. S2 is the row that motivates this
+paper: the value-level checker does not warn, it reports success, because the
+document still says what it said. S3 shows why the digest list cannot be its own
+authority.}
+\label{tab:s0s4}
+\end{table}
+
+Row S2 is not a corner case. Editing bytes without editing statements is what a
+line-ending conversion, a re-encoding, a minifier or a packaging step does by
+default, and every one of those steps is routine. Row S3 is the reason the
+digest list is sealed rather than trusted: rewriting the list restores link one
+of the chain, and only the token's imprint over the original list catches it.
+Row S4 exists to keep ''could not decide'' from rendering as ''passed'' --- the
+byte-level checker returns a distinct exit code, not a warning on a success
+path.
+
+\subsection{The deploy that returned zero}
+\label{sec:eval-deploy}
+
+The three contributions above concern evidence that is produced and read. The
+same failure mode occurs one layer lower, in the path that publishes the
+evidence, and it is included here because it was measured in our own
+infrastructure rather than hypothesised.
+
+The deploy flow in use ended with \texttt{git reset -{}-hard origin/main} followed
+by a local health check on the application port. Both returned zero. Neither
+concerns the artifact a reader downloads: the first says the checkout moved to
+the reviewed commit, the second says the process answers on the host. Whether
+nginx serves that checkout, whether an \texttt{alias} or a regex location
+shadows the file, and whether the bytes on the wire equal the bytes in the commit
+are all outside what either check observes.
+
+The replacement gate asserts three things from the public side: that the archive
+manifest is served byte-identically to its committed blob; that the timestamp
+token over the interoperability record is served byte-identically; and that
+every file tracked under the sealed archive directory is either served
+byte-identically or refused with the status the access policy requires.
+
+Its first run against production failed:
+
+\begin{lstlisting}
+[FAIL] live:archive: 1 of 266 tracked files not delivered as expected
+    mismatch docs/tsa/2026-10/verify_cyclonedx_data_loss.py
+             (94b28f6d2de183e6 != accd674461443e26)
+\end{lstlisting}
+
+The served file was 5{,}025 bytes; the committed one 5{,}170. The archive
+directory is marked \texttt{-text} so that a sealed artefact keeps its line
+endings; the published mirror under the site tree was written through the
+default \texttt{* text=auto eol=lf} rule, which normalised 145 carriage returns
+away --- one byte per line. Same text, different bytes.
+
+This is not a cryptographic defect, and calling it one would be the error the
+paper is about. It is the same defect as S2 at the level of delivery: the hash in
+the manifest no longer described anything downloadable, and every check in the
+pipeline was green because every check compared text, or compared the working
+tree, which is a rendering of the commit rather than the commit. A failed deploy
+is repaired the same hour; a deploy that reports success while serving different
+bytes is discovered by a stranger with a hash.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}ll@{}}
+\toprule
+Status at the commit reviewed for release & Status after the fix \\
+\midrule
+commit \texttt{6c05152} & commit \texttt{b2910d5} \\
+served 5{,}025\,B, 0 CR & served 5{,}170\,B, 145 CR \\
+1 of 266 mismatched     & 264 of 266 identical, 2 denied by policy \\
+exit 0 (health check only) & exit 0 only after 3 public assertions pass \\
+\bottomrule
+\end{tabular}
+\caption{Delivery state before and after the gate. The two files that are not
+byte-identical are \texttt{.sh} artefacts that the access policy denies; for
+those the gate requires \emph{refusal}, so a 200 response would fail the deploy.}
+\label{tab:deploy}
+\end{table}
+
+The repair was a line in \texttt{.gitattributes} and the restoration of one file
+from its sealed blob. The manifest was deliberately not regenerated and no token
+was re-minted: re-sealing would assert a new fact about a newer file and destroy
+the only thing the package proves --- that on a given date, these were the
+digests. The mismatch is therefore recorded in a drift note rather than erased.
+
+\subsection{Can the gate fail?}
+\label{sec:eval-negative}
+
+A gate that only ever prints PASS is indistinguishable from a script that always
+exits zero, so four paths are exercised rather than asserted.
+
+\begin{table}[t]
+\centering
+\small
+\begin{tabular}{@{}lll@{}}
+\toprule
+Scenario & Expected & Observed \\
+\midrule
+mock server with files, autoindex, deny list & pass              & \texttt{PASS}, exit 0 \\
+same mock, deny rule removed                 & 200 where 403 due & \texttt{policy-regression}, exit 1 \\
+production before the byte fix               & one mismatch      & \texttt{1 of 266}, exit 1 \\
+repository without the sealed artefacts      & cannot decide     & \texttt{cannot read}, exit 2 \\
+\bottomrule
+\end{tabular}
+\caption{Negative controls for the delivery gate. The third row is the real
+defect; the other three exist so that the first row means something.}
+\label{tab:gate-controls}
+\end{table}
+
+The fourth row mirrors the \texttt{unverifiable} verdict of the record checker.
+In both cases the design rule is the same: absence of the inputs required to
+decide must produce a distinct, non-success outcome, never a warning attached to
+a success.
+
+What the gate proves is deliberately narrow, and its own output says so: for
+every file tracked under the sealed archive, the public site returns the
+committed blob byte for byte, or refuses it with the status the policy requires.
+It does not prove that the content is correct, that the archive is complete with
+respect to the world, or that any third party has examined it. The credibility
+of that sentence rests entirely on the table above.
+
+\subsection{Threats to these measurements}
+% NOTE: if Section~\ref{sec:limitations} keeps its own threats-to-validity
+% subsection, merge these five paragraphs there and drop the heading here;
+% they are scoped to the measurements, not to the method in general.
+
+\emph{Single project, single operator.} Every measurement comes from one
+repository maintained by one person. The failure modes are structural rather
+than idiosyncratic --- a schema that accepts a misplaced field, a conversion that
+normalises line endings, an exit code that reports the wrong thing --- but the
+frequencies are not transferable to other projects, and we do not report rates
+as if they were.
+
+\emph{The checker and the corpus share an author.} This is the circularity the
+paper is about, and it is not fully escaped: the claim extractor and the claims
+were written by the same person. Two things limit the damage. The oracle for
+values is external (an independent implementation and published test vectors),
+so ''verified'' never means ''the tool agrees with itself''; and the byte-level
+check is anchored to artifacts sealed before the check existed, which the
+operator cannot retroactively adjust.
+
+\emph{External review is pending.} The interoperability record has been offered
+to the upstream projects it concerns and to the standards community; at the time
+of writing no external party has reproduced it. Until one does, the agreement it
+records is evidence of two implementations agreeing, not evidence of
+independence from our own instrumentation.
+
+\emph{Coverage is bounded by what is written down.} 1{,}768 declarations could
+not be resolved because the corpus does not bind them. Increasing that number
+requires writing bindings, not improving the tool, and no amount of tooling
+converts an unstated claim into a checkable one.
+
+\emph{The delivery gate covers one directory.} It asserts bytes for the sealed
+archive, the manifest and one token. The HTML surface is covered by a separate
+drift check, and nothing in either gate survives an entity that can change files
+after both have run.
+
+% ---------------------------------------------------------------------------
+% Provenance notes (not for the paper). Every number above traces to a command;
+% if a number changes, the command is re-run rather than the sentence edited.
+%
+%   tab:verdicts       fibemate-tools: node scripts/claim-evidence/run-e2e.cjs
+%                      -> claimsTotal 2347, codeArtifactClaims 2137,
+%                         allJudged 2217, verified 137, unbound 1768,
+%                         ambiguous 214, drift 0; exemptions 19 (6 drift,
+%                         13 retained) measured 2026-10-30, base commit a643568
+%   tab:s0s4           fibemate-tools/docs/claim-evidence-e2e-2026-10-29.md
+%   tab:deploy         6c05152 -> b2910d5; check-live run 2026-10-30:
+%                      manifest 30238 B sha256 a6064635…, token 4643 B
+%                      sha256 7e3477b0…, archive 264/266 + 2 denied, exit 0
+%   tab:gate-controls  scripts/check-live.cjs exit codes: 0 / 1 / 2;
+%                      policy-regression path exercised against a mock server
+%   145 CR / 5170 B    git cat-file blob HEAD:docs/tsa/2026-10/verify_cyclonedx_data_loss.py
+%                      -> 5170 bytes, 145 CR, 145 LF
+%   182 KAT / 7-7      fibemate-tauri cargo test --all-features;
+%                      fibemate-mobile node --test test/kem-clean-break.node.cjs
+% ---------------------------------------------------------------------------
