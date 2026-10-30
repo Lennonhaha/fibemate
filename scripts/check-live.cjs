@@ -17,11 +17,14 @@
  *   3. live:archive   /docs/tsa/ is browsable, and every file tracked under
  *                     docs/tsa/ is either served byte-identically or refused by an
  *                     explicit nginx deny rule (see POLICY_DENIED_EXT below)
- *   4. live:doi       the homepage links the preprint DOI, and doi.org actually
- *                     resolves that DOI to a 200 page that carries it. A link
- *                     that exists only in the HTML is not a delivered citation;
- *                     the resolver is queried too, so a withdrawn DOI fails the
- *                     deploy instead of rotting quietly on the page.
+ *   4. live:citations the "archive and citation" ledger on the homepage lists every
+ *                     cited work, and each target still answers 200 and carries the
+ *                     identifier it is cited by (DOI landing pages carry their PID,
+ *                     repository pages carry their name, ORCID carries the iD).
+ *                     A link that exists only in the HTML is not a delivered
+ *                     citation, so the targets are queried too: a withdrawn DOI or
+ *                     a renamed repository fails the deploy instead of rotting
+ *                     quietly inside a list that looks like a record.
  *
  * Two deliberate design points:
  *
@@ -61,14 +64,55 @@ const ARCHIVE_DIR_URL = '/docs/tsa/';
 // The preprint that the homepage cites. The gate asserts two things that can
 // break independently: the page still carries the link, and the DOI still
 // resolves. Both are cheap; neither is implied by the other.
-const DOI_PID = '10.5281/zenodo.23808518';
-const DOI_URL = 'https://doi.org/' + DOI_PID;
+// The ledger at id="citation" is the record of everything this project cites.
+// Each entry is asserted twice: the homepage still carries the href inside that
+// section, and the target still resolves to a page that carries the identifier.
+// `anchor` is the text that proves the entry is the one we mean - without it a
+// page could keep the URL while citing something else entirely.
+const CITATION_SECTION_ID = 'id="citation"';
+const CITATIONS = [
+  {
+    id: 'preprint-engineering-verification',
+    url: 'https://doi.org/10.5281/zenodo.23808518',
+    token: '10.5281/zenodo.23808518',
+    identity: 'body',
+    anchor: 'Engineering Verification of PQC: A Case Study',
+  },
+  {
+    id: 'formalization-codebase',
+    url: 'https://doi.org/10.5281/zenodo.23622795',
+    token: '10.5281/zenodo.23622795',
+    identity: 'body',
+  },
+  {
+    id: 'technical-note-zh',
+    url: 'https://doi.org/10.5281/zenodo.23632173',
+    token: '10.5281/zenodo.23632173',
+    identity: 'body',
+  },
+  {
+    id: 'methodology-keccak',
+    url: 'https://doi.org/10.5281/zenodo.23637405',
+    token: '10.5281/zenodo.23637405',
+    identity: 'body',
+  },
+  {
+    id: 'negative-result-dmtc',
+    url: 'https://doi.org/10.5281/zenodo.23638522',
+    token: '10.5281/zenodo.23638522',
+    identity: 'body',
+  },
+  { id: 'repo-vwz-formalization', url: 'https://github.com/Lennonhaha/vwz-formalization', token: 'vwz-formalization' },
+  { id: 'repo-fibemate-core', url: 'https://github.com/Lennonhaha/fibemate-core', token: 'fibemate-core' },
+  { id: 'orcid', url: 'https://orcid.org/0009-0009-1407-686X', token: '0009-0009-1407-686X' },
+];
 
-// doi.org sits behind a WAF that answers 403 to requests carrying Node's default
-// `node` User-Agent while answering the same request from the same IP with 200
-// once a browser-style UA is present. Measured 2026-10-30. Without this header
-// the resolver probe fails for a reason that has nothing to do with the DOI.
-const DOI_UA =
+// doi.org and github.com sit behind WAFs that answer 403 to requests carrying
+// Node's default `node` User-Agent while answering the same request from the same
+// IP with 200 once a browser-style UA is present. Measured 2026-10-30 on
+// doi.org (403 vs 200, seconds apart, same IP). Without this header the probes
+// fail for a reason that has nothing to do with the citation.
+const PROBE_UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/149.0.0.0 Safari/537.36';
 
 // Kept in sync with deploy/nginx/fibemate.net.conf: the `deny all` location that
@@ -103,9 +147,13 @@ const USAGE = `Usage: node scripts/check-live.cjs [options]
   --concurrency <n>   parallel requests (default: 8)
   --timeout <ms>      per-request timeout (default: 20000)
   --json <file>       also write the machine-readable result here
-  --no-external       skip the doi.org resolver probe (keeps only the on-page
-                      link assertion); use where outbound DNS to doi.org is
-                      blocked, and say so when you report the result
+  --probe-only        assert only the outbound link probes, ignoring whether the
+                      homepage still carries the rows (for checking the resolver
+                      side before a deploy)
+  --no-external       skip the outbound link probes (keeps the on-page ledger
+                      assertions); use where outbound DNS to doi.org /
+                      github.com is blocked, and say so when you report the
+                      result
   --quiet             only print failures and the final verdict
   --help              show this text
 
@@ -120,6 +168,7 @@ function parseArgs(argv) {
     json: null,
     quiet: false,
     external: true,
+    probeOnly: false,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
@@ -140,6 +189,8 @@ function parseArgs(argv) {
       opts.quiet = true;
     } else if (a === '--no-external') {
       opts.external = false;
+    } else if (a === '--probe-only') {
+      opts.probeOnly = true;
     } else {
       throw new Error('unknown argument: ' + a);
     }
@@ -359,19 +410,62 @@ async function checkArchive(opts) {
   };
 }
 
-async function checkDoi(opts) {
+function sliceCitationSection(html, sectionId) {
+  const at = html.indexOf(sectionId);
+  if (at < 0) return null;
+  const open = html.lastIndexOf('<section', at);
+  const close = html.indexOf('</section>', at);
+  if (open < 0 || close < 0) return null;
+  return html.slice(open, close);
+}
+
+async function fetchWithRetry(url, opts, label) {
+  let lastErr = null;
+  // Two attempts: a single transient DNS/socket error already produced a false red
+  // here (2026-10-30) with identical inputs on the next attempt, and a gate that
+  // goes red on a socket hiccup gets switched off by its owner.
+  for (let attempt = 1; attempt <= 2; attempt += 1) {
+    try {
+      return await fetchBody(url, opts.timeout, { 'user-agent': PROBE_UA });
+    } catch (err) {
+      const code = err.cause && err.cause.code ? err.cause.code : '';
+      lastErr = new Error(err.message + (code ? ' [' + code + ']' : ''));
+      if (attempt === 1) await new Promise((r) => setTimeout(r, 900));
+    }
+  }
+  throw new Error(label + ' did not answer in 2 attempts: ' + lastErr.message);
+}
+
+/**
+ * Identity rules, chosen so that no assertion depends on JavaScript-rendered text:
+ *   body  - the resolved page carries this string (Zenodo/DOI landing pages are
+ *           server-rendered and carry their own PID; a withdrawn DOI 404s).
+ *   url   - the resolved URL still ends with this path (a renamed or transferred
+ *           repository redirects somewhere else, which is the breakage we want).
+ * ORCID deliberately uses 'url': the profile page is a JS app, and its body
+ * intermittently does not contain the iD even at a constant byte size (measured
+ * 2026-10-30), so body matching there would be a flaky assertion, not a stronger one.
+ */
+function identityOk(entry, res) {
+  const know = entry.identity || 'url';
+  if (know === 'body') return res.buf.toString('utf8').indexOf(entry.token) !== -1;
+  return String(res.url || entry.url)
+    .replace(/\/+$/, '')
+    .endsWith(entry.token);
+}
+
+async function checkCitations(opts) {
   const result = {
-    id: 'live:doi',
+    id: 'live:citations',
     ok: false,
-    doi: DOI_PID,
-    url: DOI_URL,
-    onPage: false,
-    resolverStatus: null,
+    section: CITATION_SECTION_ID,
+    checked: CITATIONS.length,
+    onPage: 0,
+    resolved: 0,
+    failures: [],
   };
 
-  // 1. The homepage must still carry the link. This is the half that fails when
-  //    someone edits index.html, which is the case that actually happens.
-  let home = null;
+  let home;
   try {
     home = await fetchBody(opts.base + '/', opts.timeout);
   } catch (err) {
@@ -382,49 +476,66 @@ async function checkDoi(opts) {
     result.reason = 'homepage HTTP ' + home.status + ' (expected 200)';
     return result;
   }
-  const html = home.buf.toString('utf8');
-  const linked = html.indexOf('doi.org/' + DOI_PID) !== -1;
-  result.onPage = linked;
-  if (!linked) {
-    result.reason = 'homepage no longer links https://doi.org/' + DOI_PID;
-    return result;
-  }
 
-  // 2. The DOI must still resolve. A citation that 404s or redirects to a
-  //    withdrawal notice is worse than no citation, because it looks like proof.
-  if (!opts.external) {
-    result.ok = true;
-    result.reason = '';
-    result.skipped = 'resolver probe skipped (--no-external)';
-    return result;
-  }
-  let resolved;
-  // One retry: a single transient DNS/socket error on a 20 s budget has already
-  // produced a false red here (2026-10-30), and a flaky gate gets switched off.
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
-    try {
-      resolved = await fetchBody(DOI_URL, opts.timeout, { 'user-agent': DOI_UA });
-      break;
-    } catch (err) {
-      if (attempt === 2) {
-        result.reason = 'doi.org unreachable after 2 attempts: ' + err.message;
-        return result;
+  // Half one: every row of the ledger is still there. This is the half that fails
+  // when someone edits index.html, which is the case that actually happens.
+  if (!opts.probeOnly) {
+    const section = sliceCitationSection(home.buf.toString('utf8'), CITATION_SECTION_ID);
+    if (!section) {
+      result.failures.push({ id: 'citation-section', stage: 'on-page', detail: 'no <section id="citation"> on the homepage' });
+    } else {
+      for (const c of CITATIONS) {
+        const hasHref = section.indexOf('href="' + c.url + '"') !== -1;
+        const hasAnchor = c.anchor ? section.indexOf(c.anchor) !== -1 : true;
+        if (hasHref && hasAnchor) {
+          result.onPage += 1;
+        } else {
+          result.failures.push({
+            id: c.id,
+            stage: 'on-page',
+            detail: !hasHref ? 'href missing from the citation ledger' : 'entry no longer names "' + c.anchor + '"',
+          });
+        }
       }
-      await new Promise((r) => setTimeout(r, 750));
     }
   }
-  result.resolverStatus = resolved.status;
-  if (resolved.status !== 200) {
-    result.reason = 'doi.org returned HTTP ' + resolved.status + ' (expected 200)';
-    return result;
+
+  // Half two: each target still resolves and still carries its identifier. A DOI
+  // that 404s or a repository that was renamed is worse than no citation, because
+  // the row still looks like proof.
+  if (opts.external) {
+    for (const c of CITATIONS) {
+      let res;
+      try {
+        res = await fetchWithRetry(c.url, opts, c.url);
+      } catch (err) {
+        result.failures.push({ id: c.id, stage: 'unreachable', detail: err.message });
+        continue;
+      }
+      if (res.status !== 200) {
+        result.failures.push({ id: c.id, stage: 'resolve', detail: 'HTTP ' + res.status + ' (expected 200)' });
+        continue;
+      }
+      if (!identityOk(c, res)) {
+        result.failures.push({
+          id: c.id,
+          stage: 'identity',
+          detail: 'resolved to ' + (res.url || c.url) + ' which does not carry ' + c.token,
+        });
+        continue;
+      }
+      result.resolved += 1;
+    }
+  } else {
+    result.skipped = 'link probes skipped (--no-external)';
   }
-  const landing = resolved.buf.toString('utf8');
-  if (landing.indexOf(DOI_PID) === -1) {
-    result.reason = 'resolved page does not mention ' + DOI_PID + ' (wrong target?)';
-    return result;
-  }
-  result.ok = true;
-  result.reason = '';
+
+  result.ok = result.failures.length === 0;
+  result.reason = result.ok
+    ? ''
+    : result.failures.length +
+      ' citation assertion(s) failed: ' +
+      result.failures.map((f) => f.id + ' [' + f.stage + '] ' + f.detail).join('; ');
   return result;
 }
 
@@ -452,7 +563,7 @@ async function main() {
   checks.push(await checkFile(opts.base + MANIFEST_URL, expected.get(MANIFEST_REL), 'live:manifest', opts));
   checks.push(await checkFile(opts.base + TOKEN_URL, expected.get(TOKEN_REL), 'live:token', opts));
   checks.push(await checkArchive(opts));
-  checks.push(await checkDoi(opts));
+  checks.push(await checkCitations(opts));
   const ok = checks.every((c) => c.ok);
 
   if (!opts.quiet || !ok) {
@@ -461,13 +572,15 @@ async function main() {
       if (c.ok) {
         const hash = c.sha256 ? ' sha256 ' + c.sha256.slice(0, 16) + ' (' + c.bytes + ' B)' : '';
         const counted =
-          typeof c.checked === 'number'
+          c.id === 'live:archive'
             ? ' ' + c.served + '/' + c.checked + ' files identical' + (c.denied ? ', ' + c.denied + ' denied by policy' : '')
             : '';
-        const doiNote = c.doi
-          ? ' ' + c.doi + ' linked and resolving' + (c.skipped ? ' [' + c.skipped + ']' : '')
+        const cited = c.section
+          ? c.skipped
+            ? ' ' + c.onPage + '/' + c.checked + ' ledger rows present [' + c.skipped + ']'
+            : ' ' + c.resolved + '/' + c.checked + ' citation links resolve'
           : '';
-        process.stdout.write('[PASS] ' + c.id + hash + counted + doiNote + '\n');
+        process.stdout.write('[PASS] ' + c.id + hash + counted + cited + '\n');
       } else {
         process.stdout.write('[FAIL] ' + c.id + ': ' + c.reason + '\n');
       }
