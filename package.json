@@ -12,6 +12,7 @@
     "test": "node test/test-all.js",
     "test:keccak": "node test/test-keccak.js",
     "test:wasm": "node --test test/mlkem-wasm-fips.test.cjs",
+  "check:live": "node scripts/check-live.cjs",
     "test:integrity": "node test/test-fibemate.js",
     "lint": "eslint packages/pqc-kem/src/ test/ --max-warnings 0",
     "lint:quiet": "eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 0",

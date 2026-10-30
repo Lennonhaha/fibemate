@@ -24,4 +24,11 @@
 # exact bytes, so EOL normalization on checkout would make openssl ts -verify fail
 # against the file the token was issued for. -text disables conversion for
 # everything under docs/tsa/ (including the .tsq/.tsr tokens themselves).
+#
+# The published mirror under www/docs/tsa/ inherits the same rule: it is a copy of
+# the sealed artifacts, not a rendering of them. Without -text here, git would
+# normalize the published copy to LF and the site would serve bytes that no longer
+# match the digest recorded in SHA256SUMS (caught by scripts/check-live.cjs on
+# verify_cyclonedx_data_loss.py, 2026-10-30).
 docs/tsa/** -text
+www/docs/tsa/** -text

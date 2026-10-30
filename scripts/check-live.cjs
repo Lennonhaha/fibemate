@@ -1,0 +1,399 @@
+#!/usr/bin/env node
+// SPDX-License-Identifier: GPL-3.0-only
+/**
+ * check-live.cjs - black-box delivery gate for fibemate.net.
+ *
+ * Purpose: a deploy is not done because `git reset --hard` succeeded. It is done
+ * when the public site actually serves the bytes the repo says it should. This
+ * script asserts that from the outside, so a silent 404 or a stale mirror fails
+ * the deploy instead of waiting for a human to click a link.
+ *
+ * Checks (all required):
+ *   1. live:manifest  GET /docs/TSR-MANIFEST-20261029.md -> 200 and byte-identical
+ *                     to the blob committed at docs/TSR-MANIFEST-20261029.md
+ *   2. live:token     GET /docs/tsa/2026-10-28-interop-matrix/
+ *                     lg-116-interop-matrix-SHA256SUMS.tsr -> 200 and byte-identical
+ *                     to the committed blob
+ *   3. live:archive   /docs/tsa/ is browsable, and every file tracked under
+ *                     docs/tsa/ is either served byte-identically or refused by an
+ *                     explicit nginx deny rule (see POLICY_DENIED_EXT below)
+ *
+ * Two deliberate design points:
+ *
+ *   - Expected bytes come from `git cat-file`, never from the working tree. On a
+ *     Windows checkout .gitattributes rewrites line endings on disk, so hashing
+ *     the file you can see reports drift that the deployed copy does not have.
+ *     The commit is the authority; the checkout is a rendering of it.
+ *
+ *   - The published tree (www/docs/tsa) is deliberately a SUPERSET of the repo
+ *     tree. Since PR #399 the site also carries tokens minted directly into www,
+ *     so "counts must be equal" would be red forever and would prove nothing.
+ *     The assertion used here is stronger where it matters: nothing from the repo
+ *     may be missing, and everything served must be byte-identical.
+ *
+ *   - `.sh` and friends are denied by nginx on purpose (see
+ *     deploy/nginx/fibemate.net.conf, the `deny all` location for
+ *     (bak|config|sql|...|sh|...)). For those the gate requires the refusal: a
+ *     200 would mean the deny rule stopped working.
+ *
+ * Exit codes: 0 = delivered, 1 = delivery failed, 2 = usage/config error.
+ */
+
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+const crypto = require('crypto');
+const { execFileSync } = require('child_process');
+
+const MANIFEST_REL = 'docs/TSR-MANIFEST-20261029.md';
+const MANIFEST_URL = '/docs/TSR-MANIFEST-20261029.md';
+const TOKEN_REL = 'docs/tsa/2026-10-28-interop-matrix/lg-116-interop-matrix-SHA256SUMS.tsr';
+const TOKEN_URL = '/docs/tsa/2026-10-28-interop-matrix/lg-116-interop-matrix-SHA256SUMS.tsr';
+const ARCHIVE_DIR_REL = 'docs/tsa';
+const ARCHIVE_DIR_URL = '/docs/tsa/';
+
+// Kept in sync with deploy/nginx/fibemate.net.conf: the `deny all` location that
+// matches `\.(bak|config|sql|fla|psd|ini|log|sh|inc|swp|dist|old|orig|save|zip|tar\.gz|sqlite|db)$`.
+// `scripts/check-nginx-drift.cjs` already watches that file for drift; if the list
+// there changes, change it here too or the gate will call a 403 a failure.
+const POLICY_DENIED_EXT = [
+  'bak',
+  'config',
+  'sql',
+  'fla',
+  'psd',
+  'ini',
+  'log',
+  'sh',
+  'inc',
+  'swp',
+  'dist',
+  'old',
+  'orig',
+  'save',
+  'zip',
+  'sqlite',
+  'db',
+];
+
+const USAGE = `Usage: node scripts/check-live.cjs [options]
+
+  --base <url>        site root to probe (default: https://fibemate.net)
+  --repo <dir>        repository working tree whose commits define the expected
+                      bytes (default: parent of this script's directory)
+  --concurrency <n>   parallel requests (default: 8)
+  --timeout <ms>      per-request timeout (default: 20000)
+  --json <file>       also write the machine-readable result here
+  --quiet             only print failures and the final verdict
+  --help              show this text
+
+Exit codes: 0 delivered, 1 delivery failed, 2 usage/config error.`;
+
+function parseArgs(argv) {
+  const opts = {
+    base: 'https://fibemate.net',
+    repo: path.resolve(__dirname, '..'),
+    concurrency: 8,
+    timeout: 20000,
+    json: null,
+    quiet: false,
+  };
+  for (let i = 0; i < argv.length; i += 1) {
+    const a = argv[i];
+    if (a === '--help' || a === '-h') {
+      process.stdout.write(USAGE + '\n');
+      process.exit(0);
+    } else if (a === '--base') {
+      opts.base = argv[(i += 1)];
+    } else if (a === '--repo') {
+      opts.repo = path.resolve(argv[(i += 1)]);
+    } else if (a === '--concurrency') {
+      opts.concurrency = Number(argv[(i += 1)]);
+    } else if (a === '--timeout') {
+      opts.timeout = Number(argv[(i += 1)]);
+    } else if (a === '--json') {
+      opts.json = argv[(i += 1)];
+    } else if (a === '--quiet') {
+      opts.quiet = true;
+    } else {
+      throw new Error('unknown argument: ' + a);
+    }
+  }
+  if (!Number.isFinite(opts.concurrency) || opts.concurrency < 1) {
+    throw new Error('--concurrency must be a positive integer');
+  }
+  if (!Number.isFinite(opts.timeout) || opts.timeout < 1) {
+    throw new Error('--timeout must be a positive integer');
+  }
+  opts.base = String(opts.base || '').replace(/\/+$/, '');
+  if (!/^https?:\/\//.test(opts.base)) {
+    throw new Error('--base must start with http:// or https://');
+  }
+  return opts;
+}
+
+function encodePath(relPath) {
+  return relPath.split('/').map(encodeURIComponent).join('/');
+}
+
+function sha256(buf) {
+  return crypto.createHash('sha256').update(buf).digest('hex');
+}
+
+function git(repo, args, input) {
+  return execFileSync('git', args, {
+    cwd: repo,
+    input,
+    maxBuffer: 64 * 1024 * 1024,
+  });
+}
+
+/**
+ * Read the committed bytes for the given repository-relative paths.
+ * Returns a Map of rel -> { sha, bytes }.
+ */
+function committedBlobs(repo, rels) {
+  const raw = git(repo, ['ls-files', '-s', '-z', '--'].concat(rels));
+  const wanted = new Set(rels);
+  const byPath = new Map();
+  for (const entry of raw.toString('utf8').split('\0')) {
+    if (!entry) continue;
+    const tab = entry.indexOf('\t');
+    const meta = entry.slice(0, tab).split(' ');
+    const rel = entry.slice(tab + 1);
+    if (!wanted.has(rel)) continue;
+    byPath.set(rel, { mode: meta[0], sha: meta[1], stage: meta[2] });
+  }
+  const missing = rels.filter((r) => !byPath.has(r));
+  if (missing.length) {
+    throw new Error('not tracked in this commit: ' + missing.join(', '));
+  }
+  const shas = rels.map((r) => byPath.get(r).sha);
+  const batch = git(repo, ['cat-file', '--batch'], shas.join('\n') + '\n');
+  const out = new Map();
+  let off = 0;
+  for (const rel of rels) {
+    const nl = batch.indexOf(0x0a, off);
+    if (nl < 0) throw new Error('git cat-file produced truncated output');
+    const header = batch.slice(off, nl).toString('utf8').split(' ');
+    if (header[1] !== 'blob') throw new Error('not a blob: ' + rel + ' (' + header[1] + ')');
+    const size = Number(header[2]);
+    const start = nl + 1;
+    const bytes = batch.slice(start, start + size);
+    off = start + size + 1;
+    out.set(rel, { sha: byPath.get(rel).sha, bytes });
+  }
+  return out;
+}
+
+function trackedUnder(repo, relDir) {
+  const raw = git(repo, ['ls-files', '-z', '--', relDir]);
+  return raw.toString('utf8').split('\0').filter(Boolean);
+}
+
+function policyDenied(rel) {
+  const ext = path.extname(rel).slice(1).toLowerCase();
+  return ext.length > 0 && POLICY_DENIED_EXT.indexOf(ext) !== -1;
+}
+
+async function fetchBody(url, timeout) {
+  const res = await fetch(url, {
+    redirect: 'follow',
+    headers: { 'cache-control': 'no-cache', pragma: 'no-cache' },
+    signal: AbortSignal.timeout(timeout),
+  });
+  const buf = Buffer.from(await res.arrayBuffer());
+  return { status: res.status, buf, type: res.headers.get('content-type') || '' };
+}
+
+async function checkFile(url, expected, label, opts) {
+  let remote;
+  try {
+    remote = await fetchBody(url, opts.timeout);
+  } catch (err) {
+    return { id: label, ok: false, reason: 'request failed: ' + err.message, url, expectedBytes: expected.bytes.length };
+  }
+  if (remote.status !== 200) {
+    return { id: label, ok: false, reason: 'HTTP ' + remote.status + ' (expected 200)', url, expectedBytes: expected.bytes.length };
+  }
+  if (sha256(expected.bytes) !== sha256(remote.buf)) {
+    return {
+      id: label,
+      ok: false,
+      reason:
+        'byte mismatch: live ' +
+        sha256(remote.buf).slice(0, 16) +
+        ' (' +
+        remote.buf.length +
+        ' B) vs committed ' +
+        sha256(expected.bytes).slice(0, 16) +
+        ' (' +
+        expected.bytes.length +
+        ' B)',
+      url,
+    };
+  }
+  return {
+    id: label,
+    ok: true,
+    url,
+    bytes: expected.bytes.length,
+    sha256: sha256(expected.bytes),
+    contentType: remote.type,
+  };
+}
+
+async function pool(items, limit, worker) {
+  const results = new Array(items.length);
+  let next = 0;
+  const runners = new Array(Math.min(limit, items.length || 1)).fill(null).map(async () => {
+    for (;;) {
+      const i = next;
+      next += 1;
+      if (i >= items.length) return;
+      results[i] = await worker(items[i]);
+    }
+  });
+  await Promise.all(runners);
+  return results;
+}
+
+async function checkArchive(opts) {
+  const files = trackedUnder(opts.repo, ARCHIVE_DIR_REL);
+  if (files.length === 0) {
+    return { id: 'live:archive', ok: false, reason: 'no tracked files under ' + ARCHIVE_DIR_REL };
+  }
+  const expected = committedBlobs(opts.repo, files);
+
+  let indexStatus = 0;
+  let indexError = '';
+  try {
+    const res = await fetchBody(opts.base + ARCHIVE_DIR_URL, opts.timeout);
+    indexStatus = res.status;
+  } catch (err) {
+    indexError = err.message;
+  }
+
+  const perFile = await pool(files, opts.concurrency, async (rel) => {
+    const want = expected.get(rel);
+    const url = opts.base + '/' + encodePath(rel);
+    const denied = policyDenied(rel);
+    let remote;
+    try {
+      remote = await fetchBody(url, opts.timeout);
+    } catch (err) {
+      return { rel, status: 'unreachable', detail: err.message };
+    }
+    if (denied) {
+      if (remote.status === 403) return { rel, status: 'denied', detail: '' };
+      if (remote.status === 404) return { rel, status: 'http-404', detail: 'deny rule should answer 403' };
+      if (remote.status === 200) return { rel, status: 'policy-regression', detail: '200 but nginx should deny this extension' };
+      return { rel, status: 'http-' + remote.status, detail: 'expected 403' };
+    }
+    if (remote.status !== 200) return { rel, status: 'http-' + remote.status, detail: 'expected 200' };
+    if (sha256(want.bytes) !== sha256(remote.buf)) {
+      return {
+        rel,
+        status: 'mismatch',
+        detail: sha256(remote.buf).slice(0, 16) + ' != ' + sha256(want.bytes).slice(0, 16),
+      };
+    }
+    return { rel, status: 'ok', detail: '' };
+  });
+
+  const bad = perFile.filter((r) => r.status !== 'ok' && r.status !== 'denied');
+  const served = perFile.filter((r) => r.status === 'ok').length;
+  const denied = perFile.filter((r) => r.status === 'denied').length;
+  const ok = indexStatus === 200 && bad.length === 0;
+  const detail = bad
+    .slice(0, 12)
+    .map((r) => '    ' + r.status + ' ' + r.rel + ' (' + r.detail + ')')
+    .join('\n');
+  let reason = '';
+  if (!ok) {
+    if (indexError) reason = 'archive index unreachable: ' + indexError + '; ';
+    else if (indexStatus !== 200) reason = 'archive index HTTP ' + indexStatus + '; ';
+    reason += bad.length + ' of ' + perFile.length + ' tracked files not delivered as expected' + (detail ? '\n' + detail : '');
+  }
+  return {
+    id: 'live:archive',
+    ok,
+    url: opts.base + ARCHIVE_DIR_URL,
+    checked: perFile.length,
+    served,
+    denied,
+    missingOrWrong: bad.length,
+    indexStatus,
+    indexError,
+    reason,
+    failures: bad.map((r) => ({ path: r.rel, status: r.status, detail: r.detail })),
+  };
+}
+
+async function main() {
+  let opts;
+  try {
+    opts = parseArgs(process.argv.slice(2));
+  } catch (err) {
+    process.stderr.write('check-live: ' + err.message + '\n\n' + USAGE + '\n');
+    process.exit(2);
+  }
+
+  let expected;
+  let head = '(unknown)';
+  try {
+    head = git(opts.repo, ['rev-parse', '--short', 'HEAD']).toString('utf8').trim();
+    expected = committedBlobs(opts.repo, [MANIFEST_REL, TOKEN_REL]);
+  } catch (err) {
+    process.stderr.write('check-live: cannot read the expected artifacts from git: ' + err.message + '\n');
+    process.exit(2);
+  }
+
+  const started = Date.now();
+  const checks = [];
+  checks.push(await checkFile(opts.base + MANIFEST_URL, expected.get(MANIFEST_REL), 'live:manifest', opts));
+  checks.push(await checkFile(opts.base + TOKEN_URL, expected.get(TOKEN_REL), 'live:token', opts));
+  checks.push(await checkArchive(opts));
+  const ok = checks.every((c) => c.ok);
+
+  if (!opts.quiet || !ok) {
+    process.stdout.write('check-live: ' + opts.base + ' (repo HEAD ' + head + ')\n');
+    for (const c of checks) {
+      if (c.ok) {
+        const hash = c.sha256 ? ' sha256 ' + c.sha256.slice(0, 16) + ' (' + c.bytes + ' B)' : '';
+        const counted =
+          typeof c.checked === 'number'
+            ? ' ' + c.served + '/' + c.checked + ' files identical' + (c.denied ? ', ' + c.denied + ' denied by policy' : '')
+            : '';
+        process.stdout.write('[PASS] ' + c.id + hash + counted + '\n');
+      } else {
+        process.stdout.write('[FAIL] ' + c.id + ': ' + c.reason + '\n');
+      }
+    }
+  }
+
+  const result = {
+    schema: 'fibemate.live-delivery/v1',
+    base: opts.base,
+    repo: opts.repo,
+    head,
+    checkedAt: new Date().toISOString(),
+    durationMs: Date.now() - started,
+    ok,
+    checks,
+  };
+  if (opts.json) {
+    fs.writeFileSync(opts.json, JSON.stringify(result, null, 2) + '\n', 'utf8');
+  }
+
+  process.stdout.write(
+    (ok ? 'DEPLOY VERIFY: PASS' : 'DEPLOY VERIFY: FAIL') + ' (' + checks.length + ' checks, ' + result.durationMs + ' ms)\n',
+  );
+  process.exit(ok ? 0 : 1);
+}
+
+main().catch((err) => {
+  process.stderr.write('check-live: unexpected error: ' + (err && err.stack ? err.stack : err) + '\n');
+  process.exit(1);
+});
