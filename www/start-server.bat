@@ -1,37 +1,20 @@
 @echo off
+REM SPDX-License-Identifier: GPL-3.0-only
+REM Local preview only. Production is nginx.
+REM This used to launch src/server-main.js, which no longer exists; the batch
+REM file kept pointing at it after the ZK auth server was retired.
 echo ==========================================
-echo FIBEMATE ZK-SNARKs Server
+echo FIBEMATE site preview (read-only)
 echo ==========================================
 echo.
 
-REM Check if Node.js is installed
 node --version >nul 2>&1
 if errorlevel 1 (
-    echo ERROR: Node.js is not installed!
-    echo Please install Node.js from https://nodejs.org/
-    pause
+    echo ERROR: Node.js is not installed.
     exit /b 1
 )
 
-echo Node.js version:
-node --version
+echo Open http://127.0.0.1:8080/ once the server prints its line.
 echo.
-
-REM Check if dependencies are installed
-if not exist "node_modules" (
-    echo Installing dependencies...
-    npm install express cors ws snarkjs
-    if errorlevel 1 (
-        echo ERROR: Failed to install dependencies!
-        pause
-        exit /b 1
-    )
-)
-
-echo.
-echo Starting server...
-echo.
-
-node src/server-main.js
-
+node "%~dp0..\scripts\preview-site.cjs" --root "%~dp0."
 pause

@@ -1,11 +1,12 @@
 {
-  "name": "fibemate-zk-server",
+  "name": "fibemate-www",
   "version": "2.0.0",
-  "description": "FIBEMATE ZK-SNARKs Authentication Server",
-  "main": "src/server-main.js",
+  "description": "FIBEMATE static site. Production is nginx; npm start serves this tree read-only for local preview.",
+  "private": true,
   "scripts": {
-    "start": "node src/server-main.js",
-    "dev": "node src/server-main.js"
+    "start": "node ../scripts/preview-site.cjs --root .",
+    "dev": "node ../scripts/preview-site.cjs --root .",
+    "check": "node ../scripts/preview-site.cjs --root . --selftest"
   },
   "dependencies": {
     "@noble/hashes": "2.2.0",
