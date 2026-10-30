@@ -1,21 +1,27 @@
-# AUDIT — 2026-10-29
+# AUDIT — 2026-10-30
 
 What this document is: the evidence behind the claim "the ML-KEM / ML-DSA paths and the
 evidence chain have been audited, not merely tested". Every number below was produced by a
-command in this repository or its siblings on 2026-10-29, and the raw logs are named next to
-each section.
+command in this repository or its siblings, and the raw logs are named next to each section.
 
 What it is not: a security proof, a third-party audit report, or a statement that ML-KEM-768
-is unbroken. Section 6 lists exactly what remains unproven.
+is unbroken. Section 7 lists exactly what remains unproven.
 
-Repositories at the time of the audit:
+Revised 2026-10-30. The 10-29 revision covered the code, the tests and the timestamps. This
+revision adds the delivery layer (§4), re-pins the commits below, and replaces the one-line
+claim about the WASM artifact (§7.6) with the consumer status as measured — the conclusion
+holds, the reason given for it was thin. Sections that were true yesterday and
+are still true are unchanged, including the failed check recorded in §3 — a document that only
+reports what went right is not an audit either.
+
+Repositories at the time of this revision:
 
 | Repository | Commit | Note |
 |---|---|---|
-| `fibemate` | `df985d0` + this document | site, WASM artifact, TSR packages |
+| `fibemate` | `a643568` + this document | site, WASM artifact, TSR packages, published PDFs |
 | `fibemate-tauri` | `fdf571a` | Rust backend, ACVP KATs |
 | `fibemate-mobile` | `557f172` | FIPS 203-only KEM boundary |
-| `fibemate-tools` | `49b2396` | verifact, claim-evidence, interop-matrix |
+| `fibemate-tools` | `c45fd8ee` | verifact, claim-evidence, interop-matrix, delivery gate |
 
 ---
 
@@ -145,7 +151,69 @@ verdict: verified
 The nonce check is not decoration: it binds the token to the request that produced it, so a
 token for a different request with the same imprint cannot be substituted.
 
-## 4. Meta level: the verifier is tested too
+## 4. Delivery level: the deploy was green and the bytes were wrong
+
+`git reset --hard` returning 0 means the working copy moved. It does not mean the site serves
+what the repository contains. On 2026-10-29 those two things disagreed and every existing
+check was green.
+
+**What was served, what was committed.**
+
+| | |
+|---|---|
+| Artifact | `docs/tsa/2026-10/verify_cyclonedx_data_loss.py` |
+| Committed blob (`git cat-file`) | 5,170 B, 145 CR / 145 LF |
+| Served by fibemate.net | 5,025 B, 0 CR |
+| Difference | 145 B — exactly one byte per line |
+
+The published mirror under `www/docs/tsa/` had been normalised to LF. `.gitattributes` carried
+`* text=auto eol=lf`, and while `docs/tsa/**` was excluded with `-text` — the sealed artifacts
+were never to be rewritten — the mirror under `www/docs/tsa/**` was not. Every text-level check
+in CI reads the working tree, where the normalisation is expected and harmless; nothing compared
+the served bytes to the committed blob.
+
+This is not a cryptographic finding. It is an evidence finding, and a worse class of failure
+than a red deploy: the hash in `SHA256SUMS` no longer described the file the site was handing
+out. A failed deploy gets fixed the same hour. A deploy that reports success while serving
+different bytes gets discovered by a stranger with a hash.
+
+**What changed.**
+
+1. `www/docs/tsa/** -text` added, so the mirror carries the sealed bytes rather than a
+   rendering of them.
+2. `scripts/check-live.cjs` — a black-box gate that fetches from `https://fibemate.net` and
+   compares against `git cat-file`, never against the working tree, because on a Windows
+   checkout `.gitattributes` rewrites line endings on disk and hashing the visible file
+   reports drift the deployed copy does not have.
+3. The deploy script runs the gate as step `[6/6]`, and a non-zero exit fails the deploy.
+   Delivery is considered complete only when `[6/6]` passes; a `git reset --hard` that returns
+   0 is not evidence of anything on its own.
+
+**The gate, run today against `a643568`:**
+
+```
+check-live: https://fibemate.net (repo HEAD a643568)
+[PASS] live:manifest sha256 a6064635af926432 (30238 B)
+[PASS] live:token sha256 7e3477b02accfb15 (4643 B)
+[PASS] live:archive 264/266 files identical, 2 denied by policy
+DEPLOY VERIFY: PASS (3 checks, 3431 ms)
+```
+
+The same file today: 200, `application/octet-stream`, 5,170 B, 145 CR — the blob, served.
+
+Three design points that make the gate able to fail:
+
+- **Every tracked file under `docs/tsa/` must be accounted for.** 264 of 266 match byte for
+  byte; the remaining 2 are `.sh` files that nginx denies on purpose, and for those the gate
+  requires a **403**. A 200 there would mean the deny rule stopped working, and would be red.
+- **`www/docs/tsa/` is deliberately a superset of `docs/tsa/`** (tokens minted directly into
+  `www` since PR #399), so "file counts must be equal" is not the assertion. The assertion is
+  stricter where it matters: nothing from the repo may be missing, and everything served must
+  be byte-identical.
+- **The expected bytes come from the commit, not the checkout.** The first version of this
+  check hashed the working tree and reported drift on files the site served correctly.
+
+## 5. Meta level: the verifier is tested too
 
 **Value comparison and byte comparison fail differently.** Same claim, same artifact, four
 scenarios (`fibemate-tools`, `docs/claim-evidence-e2e-2026-10-29.md`):
@@ -194,7 +262,7 @@ Two of the five failures are protocol-level tests that consume signature verific
 broken verifier propagates into X3DH acceptance, which is what a real regression would look
 like. The probe PR was closed without merging and its branch deleted.
 
-## 5. What the audit changed in the code and docs
+## 6. What this revision changed in the code and docs
 
 - `rustpq 0.3` (draft-era ML-KEM key generation, 3293-byte ML-DSA signatures) is gone from
   `fibemate-tauri`; both algorithms come from `libcrux-ml-kem 0.0.10` and
@@ -206,8 +274,17 @@ like. The probe PR was closed without merging and its branch deleted.
   longer ships a second implementation.
 - The claim-evidence experiment settled three spec questions and one negative result
   (`fibemate-tools/docs/claim-evidence-e2e-2026-10-29.md`).
+- `www/docs/tsa/**` is byte-exact (`-text`), and deployment is gated by `check-live.cjs` (§4).
 
-## 6. What this does not prove
+Published alongside this revision, with the bytes that are live:
+
+| Artifact | Bytes | sha256 |
+|---|---|---|
+| `www/docs/fibemate-whitepaper-20261030.pdf` | 628,933 | `481A84ABBD5931CC8AB53C17DC2EDC01C5DBC02029E8A0B027648745CC7170C8` |
+| `www/docs/verifact-sample-report-20261030.pdf` | 329,521 | `562197A9F00349FDE80E07346492120E9EE9E96D674A2953F3E9F1447D75C2F7` |
+| `www/docs/fibemate-intro-20261030.pdf` | 307,914 | `1D055A2C43F43CB44CB57F3FB65A1FC98897CA47383C25738C21D2950E3D7595` |
+
+## 7. What this does not prove
 
 1. **That the implementations are secure.** Byte-identity with `@noble` and agreement with
    ACVP vectors means "conforms to the standard as implemented by two independent parties".
@@ -219,12 +296,24 @@ like. The probe PR was closed without merging and its branch deleted.
    trustworthy. It is a chain-of-custody claim, not a correctness claim.
 4. **aarch64 was exercised in CI, not on hardware.** The cross-check runs on a native arm
    runner; NEON-specific behaviour on a physical device is not separately measured.
-5. **The WASM artifact has no site consumer yet.** It is built, tested and digest-pinned, but
-   nothing in `www/` loads it, so "shipped" overstates it.
-6. **Timestamps prove existence, not correctness.** A token over a wrong answer is still a
+5. **The delivery gate proves bytes, not correctness.** `[6/6]` passing means the site serves
+   what the commit contains; it does not mean the content is right, and it covers the manifest,
+   the `lg-116` token and `docs/tsa/**` — not the HTML pages, which are checked separately by
+   `check-nginx-drift.cjs` and the manifest, and not anything that changes after the check
+   runs.
+6. **The WASM artifact ships, but no page under `www/` imports it.** It is built, tested
+   (`test/mlkem-wasm-fips.test.cjs`) and digest-pinned. No page loads it — there is no
+   `<script>` tag or dynamic import pointing at `mlkem_fips.js`, so the loader inside it never
+   runs on the site (the CBOM viewer lists the file as an evidence occurrence, which is a
+   catalogue entry, not a consumer). `www/bench/wasm-bench.html` does fetch a WASM build, but `mlkem_ct_wasm`, a different
+   artifact. `www/index.html` lists mlkem-fips under shipped modules, which describes a file
+   in the tree, not a code path in use. The 10-29 text reached the right conclusion for the
+   wrong reason — "no site consumer" is accurate, but it read as if the artifact were idle by
+   accident, when in fact it is built, pinned and covered by a test.
+7. **Timestamps prove existence, not correctness.** A token over a wrong answer is still a
    token over a wrong answer.
 
-## 7. Reproduce
+## 8. Reproduce
 
 ```bash
 # Rust: 182 passed, 0 ignored, plus the ACVP KAT lines
@@ -238,6 +327,9 @@ cd fibemate-mobile && node --test test/kem-clean-break.node.cjs
 
 # npm provenance
 cd fibemate-tools && npm audit signatures
+
+# Delivery: live bytes against the commit (expects exit 0 and 3 PASS lines)
+cd fibemate && node scripts/check-live.cjs
 ```
 
 Two harnesses in this audit were local and are deliberately not committed: the three-way
