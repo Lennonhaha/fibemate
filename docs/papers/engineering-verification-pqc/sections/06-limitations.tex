@@ -86,3 +86,35 @@ that in each case the passing check was internal and the catching check external
 That is a claim about mechanism, not a statistical claim about frequency. We do
 not know how often this happens elsewhere; we suspect often, because the
 mechanism is not project-specific, but we have not measured it.
+
+\subsection{Threats to these measurements}
+\emph{Single project, single operator.} Every measurement comes from one
+repository maintained by one person. The failure modes are structural rather
+than idiosyncratic: a schema that accepts a misplaced field, a conversion that
+normalises line endings, an exit code that reports the wrong thing. The
+frequencies are not transferable to other projects, and we do not report rates
+as if they were.
+
+\emph{The checker and the corpus share an author.} This is the circularity the
+paper is about, and it is not fully escaped: the claim extractor and the claims
+were written by the same person. Two things limit the damage. The oracle for
+values is external (an independent implementation and published test vectors),
+so ''verified'' never means ''the tool agrees with itself''; and the byte-level
+check is anchored to artifacts sealed before the check existed, which the
+operator cannot retroactively adjust.
+
+\emph{External review is pending.} The interoperability record has been offered
+to the upstream projects it concerns and to the standards community; at the time
+of writing no external party has reproduced it. Until one does, the agreement it
+records is evidence of two implementations agreeing, not evidence of
+independence from our own instrumentation.
+
+\emph{Coverage is bounded by what is written down.} 1{,}759 declarations could
+not be resolved because the corpus does not bind them. Increasing that number
+requires writing bindings, not improving the tool, and no amount of tooling
+converts an unstated claim into a checkable one.
+
+\emph{The delivery gate covers one directory.} It asserts bytes for the sealed
+archive, the manifest and one token. The HTML surface is covered by a separate
+drift check, and nothing in either gate survives an entity that can change files
+after both have run.
