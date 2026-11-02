@@ -60,7 +60,7 @@
 | 路径 | 说明 | 状态 |
 |:---|:---|:---|
 | Path A (TLS 传输层) | X25519MLKEM768, IANA #4588 | 🔶 已完成但搁置 (浏览器生态) |
-| Path C-2 (应用层) | SM2+ML-KEM-768, IANA #4590 | ✅ 活跃, 5/5 E2E |
+| Path C-2 (应用层) | SM2+ML-KEM-768，对应 IANA 组 curveSM2MLKEM768 (4590) | ✅ 活跃, 5/5 E2E |
 
 ### 实验组件 (default-off, 无安全保证)
 

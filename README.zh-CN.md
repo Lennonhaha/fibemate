@@ -13,13 +13,13 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台,聚焦三条技术�
 | 线路 | 内容 | 状态 |
 |------|------|------|
 | **标准 PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT、WASM、TLS 1.3 混合握手 | ✅ 生产就绪 |
-| **国密混合** | SM2/SM3/SM4 + ML-KEM - IANA #4590 应用层验证 | ✅ 双轨道上线 |
+| **国密混合** | SM2/SM3/SM4 + ML-KEM — 对齐 IANA 注册组 curveSM2MLKEM768（值 4590）应用层验证 | ✅ 双轨道上线 |
 | **前沿研究** | LookingGlass v1/v2/v2.2 (群表示代数实验; v2.2 Rust源码重建可复现性闭环, 37/37+1000/1000 KAT), VWZ 格-张量签名 (归约证明: VMQ-SPARSE→EUF-CMA, 148/148), FPGA v5 硬件防护 (WNS 9.755ns, ILA+L4 确认) | 🔬 实验分支 |
 
 ### 生产环境
 
 - **TLS 1.3 混合后量子握手** - 路径 A (X25519MLKEM768, NamedGroup) 已于 2026-07-10 搁置(浏览器/nginx 技术阻断) · 路径 C-2 (SM2+ML-KEM-768) 应用层 ✅ 5/5, lg-053/lg-057
-- **路径 C-2** - SM2+ML-KEM-768 混合密钥交换 (IANA #4590 应用层验证)
+- **路径 C-2** - SM2+ML-KEM-768 混合密钥交换（对应 IANA 注册组 curveSM2MLKEM768，值 4590，应用层实现）
 - **双轨道互不干扰** - 普通客户端自动降级至经典 ECDH
 
 ---
@@ -153,9 +153,9 @@ FIBEMATE 遵循纵深防御 (defense-in-depth) 三层架构(不包含 LookingGla
 
 ---
 
-## IANA #4590
+## IANA Group 4590 — `curveSM2MLKEM768`
 
-FIBEMATE 完成了 SM2+ML-KEM-768 混合方案的工程验证:
+FIBEMATE 完成了 SM2+ML-KEM-768 混合方案的工程验证。该方案对应 IANA 注册的 TLS 组 `curveSM2MLKEM768`（值 **4590**，定义于 `draft-yang-tls-hybrid-sm2-mlkem-03`）。IANA 当前将该值标注为 `DTLS-OK = N`、`Recommended = N`，且定义文档是 Internet-Draft，**不是 RFC**；本项目的混合握手在应用层完成，不通过 TLS `supported_groups` 扩展协商。
 
 - **TLS 层** (路径 A): X25519MLKEM768 - 已于 2026-07-10 搁置(浏览器/nginx 技术阻断),编译产出保留供参考
 - **应用层** (路径 C-2): SM2+ML-KEM-768 - HTTP 层混合密钥交换,lg-053/lg-057 存证

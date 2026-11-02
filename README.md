@@ -98,7 +98,7 @@ FIBEMATE brings together several engineering dimensions that are typically addre
   The project constructs a "Web Frontend ↔ Node Server ↔ Artix-7 FPGA" cross-layer full-stack architecture. It is not merely a stack of algorithm libraries, but an **integrated engineering verification vehicle** that bridges endpoints, services, and hardware accelerators, addressing the long-standing gap between software implementation and hardware design within a single project.
 
 * **Dual-Standard Integration: PQC Standards and National Cryptography**
-  The platform natively integrates NIST FIPS 203/205 standard algorithms with China's SM2/SM3/SM4 commercial cryptographic suite, and implements an application-layer hybrid key exchange protocol based on **SM2+ML-KEM-768** (IANA #4590). This provides a genuine engineering reference for exploring **viable schemes where international PQC and national cryptographic algorithms work in concert**.
+  The platform natively integrates NIST FIPS 203/205 standard algorithms with China's SM2/SM3/SM4 commercial cryptographic suite, and implements an application-layer hybrid key exchange protocol based on **SM2+ML-KEM-768**, corresponding to the IANA-registered TLS group `curveSM2MLKEM768` (value 4590, defined in `draft-yang-tls-hybrid-sm2-mlkem-03`). The hybrid is performed at the application layer; it is not negotiated through the TLS `supported_groups` extension. This provides a genuine engineering reference for exploring **viable schemes where international PQC and national cryptographic algorithms work in concert**.
 
 * **Verifiable Systems Engineering**
   Beyond functional delivery, the project integrates **L4 formal verification (TLA+)** into the protocol design process, mathematically verifying core handshake logic. The project also establishes clear module boundaries, strictly distinguishing **engineering-verified standardized components** from **experimental research modules**, complemented by timestamp evidence (TSR, RFC 3161 records) for the trustworthiness and reproducibility of open-source cryptographic engineering.
@@ -111,7 +111,7 @@ FIBEMATE brings together several engineering dimensions that are typically addre
 - **Cryptographic Engineers & Security Architects:** Evaluating PQC migration strategies, TLS hybrid key exchange, and performance trade-offs.
 - **Hardware & Embedded Developers:** Exploring FPGA acceleration for lattice-based cryptography and NTT optimizations.
 - **Academic Researchers & Students:** A tangible platform for studying PQC integration, side-channel analysis, and formal verification.
-- **Compliance & Standards Bodies:** A reference implementation for evaluating hybrid schemes (e.g., SM2+ML-KEM, IANA #4590).
+- **Compliance & Standards Bodies:** A reference implementation for evaluating hybrid schemes (e.g., SM2+ML-KEM, aligned with IANA group `curveSM2MLKEM768`, value 4590).
 
 **Key Application Scenarios:**
 - **Educational Platform:** A demonstrative tool for teaching modern cryptography and hardware-software co-design.
@@ -170,7 +170,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 | Track | Content | Status |
 |-------|---------|--------|
 | **Standard PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT, WASM, TLS 1.3 Hybrid KEX | ✅ Engineering Ready (Audit Pending) |
-| **National Crypto Hybrid** | SM2/SM3/SM4 + ML-KEM - IANA #4590 Application-Layer Verification | ✅ Dual-Track Verified |
+| **National Crypto Hybrid** | SM2/SM3/SM4 + ML-KEM — aligned with IANA group `curveSM2MLKEM768` (4590), application-layer verification | ✅ Dual-Track Verified |
 | **Research** | LookingGlass v2 (algebraic group experiment), VWZ lattice-tensor signature, FPGA v5 hardware protection | 🔬 Experimental Branch |
 
 > **Note**: All research components (LookingGlass, VWZ) are **default-off** and do not provide cryptographic security guarantees. See [Security Model](#security-model) for details.
@@ -179,7 +179,7 @@ FIBEMATE is a full-stack post-quantum cryptography engineering platform covering
 
 This section states what has been verified and how to re-run it. It is **not** a claim of production readiness: FIBEMATE is an engineering-verification and evidence-generation project, not a hosted cryptographic service.
 
-- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, IANA #4590) ✅ 5/5 E2E, timestamped as lg-053/lg-057
+- **TLS 1.3 Hybrid PQC Handshake** - Path C-2 (SM2 + ML-KEM-768 application-layer hybrid KEX, aligned with IANA group `curveSM2MLKEM768` = 4590, from `draft-yang-tls-hybrid-sm2-mlkem-03`) ✅ 5/5 E2E, timestamped as lg-053/lg-057
 - **Dual-track graceful degradation** - verified behaviour: standard clients fall back to classical ECDH; tested, not operated as a production endpoint
 
 ---
@@ -533,9 +533,9 @@ A 16-to-8-bit nonce truncation in `samplePoly` caused the ML-KEM A matrix to deg
 
 ---
 
-## IANA #4590
+## IANA Group 4590 — `curveSM2MLKEM768`
 
-FIBEMATE implements engineering verification of the SM2+ML-KEM-768 hybrid scheme:
+FIBEMATE implements engineering verification of the SM2+ML-KEM-768 hybrid scheme, which corresponds to the IANA-registered TLS group `curveSM2MLKEM768` (value **4590**, defined in [`draft-yang-tls-hybrid-sm2-mlkem-03`](https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/)). At the time of writing the IANA registry lists this value with `DTLS-OK = N` and `Recommended = N`, and the defining document is an Internet-Draft, **not an RFC**. Our hybrid runs at the application layer and is not negotiated via the TLS `supported_groups` extension.
 
 - **TLS Layer** (Path A): X25519MLKEM768 — Active via OpenSSL 3.x provider; nginx native NamedGroup integration shelved due to browser/nginx technical blockers, build artifacts retained for reference
 - **Application Layer** (Path C-2): SM2+ML-KEM-768 HTTP-layer hybrid KEX, TSR lg-053/lg-057

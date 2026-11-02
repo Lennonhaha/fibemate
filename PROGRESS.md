@@ -93,7 +93,7 @@
 ### 7/25 ~ 7/27：性能门禁 + 外部审计 + 社区设施
 - [x] **性能门禁三件套**：`perf-gate.js`（p95/mean 门限）+ `bench-diff.js`（CI 回归检测）+ ESLint no-js-bigint-in-hotpath
 - [x] **ML-KEM-768 外部审计**：Issue #1-#6, #8 全部修复，JSDoc 覆盖率 30%→73%
-- [x] **Hybrid KEX 设计文档**：SM2+ML-KEM-768，IANA #4590
+- [x] **Hybrid KEX 设计文档**：SM2+ML-KEM-768，对应 IANA 组 curveSM2MLKEM768（值 4590，Internet-Draft）
 - [x] **人工审查模板**：`review-crypto-primitives.md` / `review-hybrid-kdf.md`
 - [x] **GitHub Issue 模板**：disclosure-audit / bug-report / ci-issue / rtl-repro
 - [x] **每日审计脚本**：`daily-audit.js`，7 项检查
