@@ -1,0 +1,37 @@
+(* ============================================================
+   hybrid-combiner.pv
+   Symbolic check of the FIBEMATE hybrid combiner, single-component
+   compromise case.
+
+   Claim under test:
+     k = HKDF(salt, label, ss_SM2 || ss_MLKEM)
+   is NOT derivable by the attacker when it knows at most ONE of the
+   two shared secrets.
+
+   Expected result:
+     RESULT not attacker(hkdf(lbl,cat(ssm2,ssmlkem))) is true.
+
+   Run:  proverif hybrid-combiner.pv
+   ============================================================ *)
+
+free c: channel.
+
+(* Two shared secrets. [private] = not initially known to the attacker. *)
+free ssm2:    bitstring [private].
+free ssmlkem: bitstring [private].
+
+const lbl: bitstring.
+
+(* Combiner and concatenation are public functions: the attacker may
+   apply them to anything it actually possesses. Security must come
+   from not possessing both secrets -- not from hiding the algorithm. *)
+fun cat(bitstring, bitstring): bitstring.
+fun hkdf(bitstring, bitstring): bitstring.
+
+query attacker(hkdf(lbl, cat(ssm2, ssmlkem))).
+
+process
+  (* Single-component compromise: the attacker learns the SM2 secret
+     only. The ML-KEM secret never leaves the private scope. *)
+  out(c, ssm2);
+  0

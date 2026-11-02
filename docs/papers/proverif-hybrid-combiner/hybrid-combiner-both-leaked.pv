@@ -1,0 +1,31 @@
+(* ============================================================
+   hybrid-combiner-both-leaked.pv
+   Boundary case for the same combiner: BOTH shared secrets leak.
+
+   Purpose: show that the script is not vacuously true. If the model
+   were wrong (e.g. the combiner hid a secret inside a private
+   constructor), this file would still report "true" and the first
+   file's result would be worthless.
+
+   Expected result:
+     RESULT not attacker(hkdf(lbl, cat(ssm2, ssmlkem))) is false.
+
+   Run:  proverif hybrid-combiner-both-leaked.pv
+   ============================================================ *)
+
+free c: channel.
+
+free ssm2:    bitstring [private].
+free ssmlkem: bitstring [private].
+
+const lbl: bitstring.
+
+fun cat(bitstring, bitstring): bitstring.
+fun hkdf(bitstring, bitstring): bitstring.
+
+query attacker(hkdf(lbl, cat(ssm2, ssmlkem))).
+
+process
+  out(c, ssm2);
+  out(c, ssmlkem);
+  0

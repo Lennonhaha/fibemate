@@ -1,0 +1,54 @@
+Process 0 (that is, the initial process):
+{1}out(c, ssm2);
+{2}out(c, ssmlkem)
+
+-- Query not attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))) in process 0.
+Translating the process into Horn clauses...
+Completing...
+Starting query not attacker(hkdf(lbl,cat(ssm2[],ssmlkem[])))
+goal reachable: attacker(hkdf(lbl,cat(ssm2[],ssmlkem[])))
+
+Derivation:
+
+1. The message ssmlkem[] may be sent to the attacker at output {2}.
+attacker(ssmlkem[]).
+
+2. The message ssm2[] may be sent to the attacker at output {1}.
+attacker(ssm2[]).
+
+3. By 2, the attacker may know ssm2[].
+By 1, the attacker may know ssmlkem[].
+Using the function cat the attacker may obtain cat(ssm2[],ssmlkem[]).
+attacker(cat(ssm2[],ssmlkem[])).
+
+4. Using the function lbl the attacker may obtain lbl.
+attacker(lbl).
+
+5. By 4, the attacker may know lbl.
+By 3, the attacker may know cat(ssm2[],ssmlkem[]).
+Using the function hkdf the attacker may obtain hkdf(lbl,cat(ssm2[],ssmlkem[])).
+attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))).
+
+6. By 5, attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))).
+The goal is reached, represented in the following fact:
+attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))).
+
+
+A more detailed output of the traces is available with
+  set traceDisplay = long.
+
+out(c, ~M) with ~M = ssm2 at {1}
+
+out(c, ~M_1) with ~M_1 = ssmlkem at {2}
+
+The attacker has the message hkdf(lbl,cat(~M,~M_1)) = hkdf(lbl,cat(ssm2,ssmlkem)).
+A trace has been found.
+RESULT not attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))) is false.
+
+--------------------------------------------------------------
+Verification summary:
+
+Query not attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))) is false.
+
+--------------------------------------------------------------
+

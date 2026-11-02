@@ -1,0 +1,16 @@
+Process 0 (that is, the initial process):
+{1}out(c, ssm2)
+
+-- Query not attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))) in process 0.
+Translating the process into Horn clauses...
+Completing...
+Starting query not attacker(hkdf(lbl,cat(ssm2[],ssmlkem[])))
+RESULT not attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))) is true.
+
+--------------------------------------------------------------
+Verification summary:
+
+Query not attacker(hkdf(lbl,cat(ssm2[],ssmlkem[]))) is true.
+
+--------------------------------------------------------------
+
