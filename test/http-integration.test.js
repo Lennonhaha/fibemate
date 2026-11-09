@@ -83,6 +83,7 @@ before(async () => {
   process.env.FIBEMATE_EXPERIMENTAL = '0';
   process.env.JWT_SECRET = 'integration-test-secret-0123456789abcdef0123456789abcdef';
   process.env.NODE_ENV = 'test';
+  process.env.BATCH_TEST_TOKEN = 'test-batch-token';
   require('../src/index.js');
 
   const up = await waitForServer(`${base}/health`);
@@ -445,4 +446,164 @@ test('account deletion requires the password and removes the account', async () 
     body: { username: users[1].username, password: 'correct horse battery' },
   });
   assert.equal(relogin.status, 401);
+});
+
+test('one-time pre-key routes cover upload, count, consume and expiry', async () => {
+  const token = users[0].token;
+
+  const before = await call('GET', '/api/keys/opk/count', { token });
+  assert.equal(before.status, 200);
+  assert.equal(before.json.available, 0);
+  assert.equal(before.json.needsRefill, true);
+
+  const empty = await call('POST', '/api/keys/opk/upload', { token, body: { oneTimePreKeys: [] } });
+  assert.equal(empty.status, 400);
+
+  const malformed = await call('POST', '/api/keys/opk/upload', {
+    token,
+    body: { oneTimePreKeys: [{ keyId: 'k', publicKey: 'short' }] },
+  });
+  assert.equal(malformed.status, 400);
+
+  const uploaded = await call('POST', '/api/keys/opk/upload', {
+    token,
+    body: { oneTimePreKeys: [{ keyId: 'k_0001', publicKey: 'ab'.repeat(40) }] },
+  });
+  assert.equal(uploaded.status, 200, uploaded.text);
+  assert.equal(uploaded.json.uploaded, 1);
+
+  const after = await call('GET', '/api/keys/opk/count', { token });
+  assert.equal(after.json.available, 1);
+
+  const missingPeer = await call('POST', '/api/keys/opk/consume', { token, body: {} });
+  assert.equal(missingPeer.status, 400);
+
+  const consumed = await call('POST', '/api/keys/opk/consume', {
+    token,
+    body: { peerUserId: users[0].userId },
+  });
+  assert.equal(consumed.status, 200, consumed.text);
+  assert.equal(consumed.json.available, true);
+  assert.equal(consumed.json.keyId, 'k_0001');
+
+  const emptyPool = await call('POST', '/api/keys/opk/consume', {
+    token,
+    body: { peerUserId: users[0].userId },
+  });
+  assert.equal(emptyPool.json.available, false);
+  assert.equal(emptyPool.json.reason, 'pool_empty');
+
+  const expiry = await call('GET', '/api/keys/opk/check-expiry', { token });
+  assert.equal(expiry.status, 200);
+});
+
+test('a2a endpoints answer and reject a malformed handshake', async () => {
+  const health = await call('GET', '/a2a/health');
+  assert.equal(health.status, 200);
+
+  const peers = await call('GET', '/a2a/peers');
+  assert.equal(peers.status, 200);
+
+  const bad = await call('POST', '/a2a/handshake', { body: {} });
+  assert.equal(bad.status >= 400 && bad.status < 500, true, bad.text);
+});
+
+test('sms routes validate their input before touching a provider', async () => {
+  const emptySend = await call('POST', '/api/sms/send', { body: {} });
+  assert.equal(emptySend.status, 400);
+
+  const emptyVerify = await call('POST', '/api/sms/verify', { body: {} });
+  assert.equal(emptyVerify.status, 400);
+
+  const wrongCode = await call('POST', '/api/sms/verify', {
+    body: { phone: '13800138000', code: '000000' },
+  });
+  assert.equal(wrongCode.status, 400);
+
+  const anonymousBind = await call('POST', '/api/sms/bind-phone', { body: {} });
+  assert.equal(anonymousBind.status, 401);
+
+  const noTempToken = await call('POST', '/api/sms/bind-phone', {
+    token: users[0].token,
+    body: {},
+  });
+  assert.equal(noTempToken.status, 400);
+
+  const badTempToken = await call('POST', '/api/sms/bind-phone', {
+    token: users[0].token,
+    body: { tempToken: 'not-a-token' },
+  });
+  assert.equal(badTempToken.status >= 400, true, badTempToken.text);
+});
+
+test('auxiliary endpoints answer without leaking internals', async () => {
+  const mixnet = await call('GET', '/api/mixnet/config', { token: users[0].token });
+  // The feature is flag-gated; either the config or a 404 is a valid answer.
+  assert.equal([200, 404].includes(mixnet.status), true, mixnet.text);
+
+  const selfTest = await call('GET', '/api/mlkem/test');
+  assert.equal(selfTest.status, 200, selfTest.text);
+  assert.equal(selfTest.json.status, 'ok');
+  assert.equal(selfTest.json.roundTrip, true);
+
+  const anonymousVoice = await call('GET', '/voice/does-not-exist');
+  assert.equal(anonymousVoice.status, 401);
+
+  const missingVoice = await call('GET', '/voice/does-not-exist', { token: users[0].token });
+  assert.equal(missingVoice.status, 404);
+
+  const traversal = await call('GET', '/voice/..%2F..%2Fetc%2Fpasswd', { token: users[0].token });
+  assert.equal(traversal.status >= 400, true, traversal.text);
+
+  const noUpload = await call('POST', '/api/upload/voice', { token: users[0].token });
+  assert.equal(noUpload.status >= 400, true, noUpload.text);
+
+  const unknownKeys = await call('GET', '/api/mlkem/public-key/no-such-user', {
+    token: users[0].token,
+  });
+  assert.equal(unknownKeys.status, 404);
+});
+
+test('a2a handshake registers a peer and creates a session', async () => {
+  const keygen = await call('POST', '/api/mlkem/keygen', { token: users[0].token });
+  assert.equal(keygen.status, 200, keygen.text);
+
+  const publicKey = Buffer.from(keygen.json.publicKey, 'hex').toString('base64');
+  const handshake = await call('POST', '/a2a/handshake', {
+    body: { publicKey, address: '127.0.0.1', peerId: 'test-peer' },
+  });
+  assert.equal(handshake.status, 200, handshake.text);
+  assert.equal(typeof handshake.json.sessionId, 'string');
+  assert.equal(typeof handshake.json.encapsCiphertext, 'string');
+  assert.equal(typeof handshake.json.nodePublicKey, 'string');
+
+  const shortKey = await call('POST', '/a2a/handshake', {
+    body: { publicKey: Buffer.alloc(16).toString('base64') },
+  });
+  assert.equal(shortKey.status, 400);
+
+  const peers = await call('GET', '/a2a/peers');
+  assert.equal(peers.status, 200);
+  assert.equal(peers.json.count >= 1, true);
+  assert.equal(peers.json.peers.some((p) => p.peerId === 'test-peer'), true);
+
+  const unknownSession = await call('POST', '/a2a/message', {
+    body: { sessionId: 'no-such-session', ciphertext: 'AAAA' },
+  });
+  assert.equal(unknownSession.status, 404);
+});
+
+test('batch ML-KEM endpoints require the batch token', async () => {
+  const denied = await call('GET', '/api/mlkem/test-batch?count=1');
+  assert.equal(denied.status, 401);
+
+  const single = await call('GET', '/api/mlkem/test-batch?count=1', {
+    headers: { 'x-batch-test-token': 'test-batch-token' },
+  });
+  assert.equal(single.status, 200, single.text);
+
+  const purejs = await call('GET', '/api/mlkem/test-batch-purejs?count=1', {
+    headers: { 'x-batch-test-token': 'test-batch-token' },
+  });
+  assert.equal(purejs.status, 200, purejs.text);
 });

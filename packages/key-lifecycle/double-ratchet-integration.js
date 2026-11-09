@@ -149,6 +149,12 @@ class KLSession extends PQRatchetSession {
     return JSON.stringify(base);
   }
 
+  async serializeAsync() {
+    const base = JSON.parse(await super.serializeAsync());
+    base.klState = this.kl.exportState();
+    return JSON.stringify(base);
+  }
+
   static async deserialize(jsonStr) {
     const data = JSON.parse(jsonStr);
     const sess = new KLSession();

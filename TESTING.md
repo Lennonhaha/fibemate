@@ -72,3 +72,24 @@ See [docs/INTEGRITY-MANIFEST.md](./docs/INTEGRITY-MANIFEST.md) for full details.
 | SM2 | GB/T 32918 | `scripts/ci-gm-sm2.cjs` (100 sign/verify + 100 encrypt/decrypt) |
 | SM3 | GB/T 32905 | `scripts/ci-gm-sm3.cjs` (30) |
 | SM4-GCM | GB/T 32907 | `scripts/ci-gm-sm4.cjs` (30) |
+
+## Statement coverage
+
+`npm run test:coverage` runs four suites in one V8 coverage session and fails
+below 80% statements:
+
+| Suite | What it covers |
+|:---|:---|
+| `test/test-all.js` | the eleven unit/interop suites the project already had |
+| `test/http-integration.test.js` | every HTTP route in `src/index.js`, against a throwaway data directory |
+| `test/crypto-boundaries.test.js` | ratchet state machine, SM2 field/point layer, hybrid PQ session |
+| `test/server-lib-boundaries.test.js` | constant-time comparison, WS padding, traffic shaping, OPK cache |
+
+Scope: files loaded by the tests, excluding `node_modules` and the vendored
+WebAssembly builds under `www/crypto/wasm`. The denominator therefore covers
+`src/`, `api/`, `packages/` and the hand-written files under `www/`.
+
+The threshold is enforced by `c8 --check-coverage --lines 80 --statements 80`,
+so a regression below the floor fails CI. Do not raise the number with
+`/* c8 ignore */` directives: they are reserved for branches that cannot be
+reached on any supported platform, and each one needs a comment explaining why.
