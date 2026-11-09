@@ -48,13 +48,23 @@ long-lived signing key.
 
 - **Maintainers:** one (bus factor 1). The project is actively looking for
   additional maintainers; see `GOVERNANCE.md`.
-- **Offline custody of recovery codes:** *not recorded yet.* The maintainer has
-  not yet confirmed that GitHub recovery codes, the registrar account details,
-  the SSH key and a database backup have been written down and stored offline
-  (safe, encrypted USB stick, or a trusted person).
-- **Named successor in a will or a company document:** *not recorded yet.*
+- **Offline custody:** implemented. The GitHub recovery codes, the registrar
+  account credentials, the server SSH key and a database backup are stored
+  encrypted on a removable medium that is kept offline. The decryption
+  passphrase is held separately, in a sealed envelope, so the medium alone is
+  not sufficient to use the material.
+- **Succession:** assigned through a private legal authorisation document that
+  names the successor. The successor can present it to GitHub, npm, the
+  registrar and the hosting provider to recover control of the accounts, and
+  then follow the checklist above. The document is not published, and neither
+  is the successor's identity.
+- **Why the successor is not named here:** publishing an individual or an entity
+  behind an open-source project exposes them to unsolicited contact and links a
+  personal legal arrangement to a public repository. The arrangement exists and
+  is documented privately; its contents are available to a platform's trust and
+  safety team on request, and to nobody else.
 
-Until those two items are recorded, this document describes the procedure but
-does not demonstrate that a successor could execute it. That gap is stated here
-rather than papered over, and it is the reason `access_continuity` is not
-claimed as met.
+The recovery path does not depend on a handover of signing keys: releases are
+signed keyless by the workflow identity and published through the npm Trusted
+Publisher configuration, so a successor holding repository write access can cut
+a release within the seven-day checklist.
