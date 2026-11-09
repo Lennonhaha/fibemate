@@ -37,10 +37,10 @@ Supply chain:
 
 ## 2. External scores (quoted, not interpreted)
 
-- Main repository: OpenSSF Scorecard **8.1/10** (2026-10-20T09:26Z, commit
-  `36e0788`, scorecard v5.6.0).
-- Desktop repository (fibemate-tauri): **7.6/10** (2026-10-19T03:34Z, commit
-  `64f8980`).
+- Main repository: OpenSSF Scorecard **8.1/10** (2026-11-09T18:37Z, commit
+  `2ec3d0e`, scorecard v5.6.0).
+- Desktop repository (fibemate-tauri): **7.5/10** (2026-11-09T04:57Z, commit
+  `fdf571a`, scorecard v5.5.0).
 - Deductions on the main repository: Code-Review 0 (0/28), Branch-Protection 4,
   Contributors 3, Packaging -1, Binary-Artifacts 8, Pinned-Dependencies 8,
   Signed-Releases 8 (signed, but no provenance), CII-Best-Practices 5.
