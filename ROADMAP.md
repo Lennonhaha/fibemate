@@ -49,7 +49,7 @@ FIBEMATE 是**后量子密码学全栈工程验证平台** (PQC executable textb
 - [ ] Python / Rust 原生绑定 (2027 Q1)
 - [ ] KMS / 证书管理 / 吊销轮换模块
 - [ ] FALCON / 其他 PQC 标准支持
-- [ ] OpenSSF Silver → Gold 升级 (当前 Bronze 5.2)
+- [ ] OpenSSF Silver → Gold 升级 (当前 Passing 100%, Silver in progress)
 
 ### 明确不做 (Won't do)
 
@@ -75,3 +75,19 @@ OpenSSF Silver 的多贡献者要求排除 AI, 短期无解。
 ---
 
 *本路线图是维护计划, 非承诺。所有时间节点可能因资源/优先级调整。*
+
+## Roadmap (English summary)
+
+Scope: the next twelve months, from November 2026.
+
+| Window | Milestone | Status |
+|:---|:---|:---|
+| 2026 Q4 | Physical side-channel audit (TVLA with ChipWhisperer hardware) | Planned |
+| 2027 Q1 | Cross-platform native bindings (Python / Rust) | Planned |
+| 2027 Q2 | Third-party security review | Planned |
+| 2027-2028 | Additional PQC standards support, community growth | Planned |
+
+Deliberately out of scope: experimental components (VWZ, LookingGlass) default-on or on
+any production path; SLA or commercial support; unqualified security claims before
+third-party review. The Chinese section above remains authoritative for dates and
+owners; docs/PRODUCT-ROADMAP.md covers productisation.
