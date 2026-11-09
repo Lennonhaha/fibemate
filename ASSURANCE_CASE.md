@@ -232,3 +232,32 @@ case.
 - A claim that can no longer be reproduced must be **removed or downgraded**,
   not left standing. The correction header in `docs/mlkem1024-kat-verified.md`
   is the model for how this is done.
+
+## 10. Credential and algorithm agility
+
+"Agility" here means a primitive or credential can be replaced without redesigning the
+protocol or rewriting the application.
+
+**Server credentials.** The JWT signing key resolves in the order: environment variable,
+on-disk file (`data/.jwt-secret`), generated value. Rotating it is an environment change
+plus a restart, with no code change, and it invalidates existing access tokens (2 h) and
+refresh tokens (7 d). TLS certificates are terminated at nginx and renewed through ACME,
+outside the application. Release signatures use cosign in keyless mode, so there is no
+long-lived signing key to rotate; the response to a compromise is to revoke trust in the
+OIDC identity and re-sign.
+
+**Algorithms.** Algorithm parameters are looked up at runtime from a registry rather than
+hardcoded: `www/crypto/algorithm-resolver.js` exposes per-algorithm key and ciphertext
+sizes and IANA group identifiers for ML-KEM-768/1024, SM2, P-256 and X25519, with a
+documented fallback. The ML-KEM implementation ships as JavaScript, WebAssembly and
+native variants behind one module interface (`packages/pqc-kem`), and the SM2/SM3/SM4
+primitives are separate modules under `www/crypto/`. Replacing an implementation is
+therefore a module swap plus a version bump.
+
+**Boundary.** This is agility of implementation, not transparent negotiation: key and
+ciphertext lengths are fixed per algorithm, so moving the wire protocol to a different
+algorithm requires a protocol version bump. The project does not claim that peers can
+negotiate arbitrary algorithms at runtime.
+
+Related: `docs/KEY-COMPROMISE-GUIDE.md` (key compromise playbook, levels 1-4) and
+`docs/crypto-module-checklist.md` (module inventory and exposed API).

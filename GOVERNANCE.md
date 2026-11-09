@@ -39,3 +39,19 @@ made by the Project Lead, as described in that document.
 ## Changes
 
 All governance changes are made via Pull Request and require Project Lead approval.
+
+## Maintenance and support
+
+FIBEMATE v3.x is actively maintained. The Project Lead triages issues and security
+reports continuously and targets a patch release within 30 days for security fixes
+(see SECURITY.md for the reporting process).
+
+- **Support window:** each major version line is supported for at least 24 months from
+  its first release. v3.3.0 was released on 2026-08-31, so v3.x is supported until at
+  least 2028-08-31.
+- **Upgrades:** releases are published on GitHub with a CHANGELOG entry describing
+  breaking changes; upgrading means checking out the new tag and running `npm ci`, or
+  installing the new package version.
+- **Deprecations:** announced at least one minor release before removal.
+- **No SLA:** this is a volunteer project. The support window describes intent, not a
+  contractual guarantee, and there is no paid support tier.
