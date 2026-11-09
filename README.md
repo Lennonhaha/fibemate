@@ -36,6 +36,7 @@
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
 > 🥈 **FIBEMATE has achieved the OpenSSF Best Practices Silver badge** — 44 of 44 MUST criteria, achieved 2026-11-09. Statement coverage is 81.3% and enforced at 80% in CI.
+> 📊 **OpenSSF Scorecard 8.1 / 10** — scorecard v5.6.0, measured 2026-11-09T18:37Z (UTC+8 2026-11-10 02:37) at commit `2ec3d0e`; desktop 7.5 / 10, tools 6.9 / 10. Scores move, so the timestamp is part of the claim.
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--1407--686X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-1407-686X)
 [![Zenodo](https://img.shields.io/badge/Zenodo-4%20records-1682D4)](https://zenodo.org/search?q=%220009-0009-1407-686X%22)
 [![CycloneDX](https://img.shields.io/badge/CycloneDX-spec%20PR%20%231176-informational)](https://github.com/CycloneDX/specification/pull/1176)

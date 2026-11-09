@@ -62,6 +62,18 @@ footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border)
   <p class="muted">复核：<code>curl -s https://www.bestpractices.dev/projects/13695.json</code>，看 <code>badge_level</code> 与 <code>badge_percentage_1</code>。</p>
 </div>
 
+<h3>外部评分（OpenSSF Scorecard）</h3>
+
+<table>
+<tr><th>仓库</th><th>分数</th><th>扫描时刻（UTC）</th><th>Scorecard 版本</th><th>被测 commit</th></tr>
+<tr><td>fibemate（主仓）</td><td class="green">8.1 / 10</td><td>2026-11-09T18:37:22Z<br>（UTC+8 11-10 02:37）</td><td>v5.6.0</td><td><code>2ec3d0e</code></td></tr>
+<tr><td>fibemate-tauri（桌面端）</td><td>7.5 / 10</td><td>2026-11-09T04:57:22Z<br>（UTC+8 11-09 12:57）</td><td>v5.5.0</td><td><code>fdf571a</code></td></tr>
+<tr><td>fibemate-tools（工具线）</td><td>6.9 / 10</td><td>2026-11-09T13:17:53Z<br>（UTC+8 11-09 21:17）</td><td>v5.3.0</td><td><code>ccf8c82</code></td></tr>
+</table>
+
+<p class="muted">复核：<code>curl -s https://api.securityscorecards.dev/projects/github.com/Lennonhaha/fibemate</code>，看 <code>score</code>、<code>date</code> 与 <code>scorecard.version</code>。</p>
+<p class="muted">三个仓各自每周独立排期扫描，所以扫描时刻不同。这里写每个仓的真实时刻，而不是统一成一个“看起来更新”的日期——分数与日期必须能对上，否则这个数字没有意义。失分项：主仓 Code-Review 0（0/28）、Branch-Protection 4；桌面端 Maintained 0、Code-Review 0；工具仓仓库年龄不足 90 天，Maintained 记 0。</p>
+
 <h2>二、测试与覆盖率</h2>
 
 <table>

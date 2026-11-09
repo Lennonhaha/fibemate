@@ -104,7 +104,7 @@ NIST 在 2024 年完成了后量子密码学标准化（FIPS 203/204/205）。�
 |:---|:---|
 | CI/CD | GitHub Actions · 24 jobs · 4 平台 · 全绿 |
 | 依赖 | npm audit · dependabot 自动更新 · 0 Ghost |
-| 安全 | CodeQL · OpenSSF Scorecard Passing · Repolinter |
+| 安全 | CodeQL · OpenSSF Scorecard · Repolinter |
 | 治理 | 11 份安全文档 (GDPR/LGPD/IRP/BCP/密码法) |
 | 可复现 | lockfiles · .nvmrc · reproduce-build.sh |
 | CBOM | CycloneDX 1.5 · 12 算法 · 370 文件依赖 |
