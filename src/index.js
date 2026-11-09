@@ -80,7 +80,12 @@ const helmet = require('helmet');
 // 配置
 // ========================
 // JWT_SECRET 持久化：环境变量 > 文件缓存 > 随机生成并写入文件
-const JWT_SECRET_FILE = path.join(__dirname, '..', 'data', '.jwt-secret');
+// Data directory override: integration tests point this at a throwaway directory so
+// they never touch a developer's local store. Default is unchanged.
+const DATA_DIR = process.env.FIBEMATE_DATA_DIR
+  ? path.resolve(process.env.FIBEMATE_DATA_DIR)
+  : path.join(__dirname, '..', 'data');
+const JWT_SECRET_FILE = path.join(DATA_DIR, '.jwt-secret');
 function resolveJwtSecret() {
   if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
   try {
@@ -106,7 +111,7 @@ const CONFIG = {
   JWT_SECRET: resolveJwtSecret(),
   JWT_EXPIRES: '2h',
   JWT_REFRESH_EXPIRES: '7d',
-  DB_PATH: path.join(__dirname, '..', 'data', 'noir-db.json'),
+  DB_PATH: path.join(DATA_DIR, 'noir-db.json'),
 };
 
 // 暴露 JWT_SECRET 给子模块
