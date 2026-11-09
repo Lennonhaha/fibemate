@@ -21,7 +21,8 @@ FIBEMATE follows a **Benevolent Dictator for Now (BDFN)** model.
 Mitigation:
 - Full source code, build scripts, and documentation are publicly available
 - Cryptographic primitives are independently reproducible from FIPS 203
-- Plan to recruit additional maintainers after the v3.4 open-source release (2026-08-31)
+- Ongoing effort: actively seeking additional maintainers through community channels and
+  university partnerships.
 
 ## Succession
 
@@ -31,8 +32,9 @@ support becomes the de facto successor.
 
 ## Code of Conduct
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) — contributors are expected to be respectful,
-constructive, and assume good faith.
+This project adopts the [Contributor Covenant v2.1](./CODE_OF_CONDUCT.md).
+Reports go to `security@fibemate.net` or `@Lennonhaha`; enforcement decisions are
+made by the Project Lead, as described in that document.
 
 ## Changes
 
