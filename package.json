@@ -10,6 +10,7 @@
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
     "test": "node test/test-all.js",
+    "test:http": "node test/http-integration.test.js",
     "test:keccak": "node test/test-keccak.js",
     "test:wasm": "node --test test/mlkem-wasm-fips.test.cjs",
   "check:live": "node scripts/check-live.cjs",
