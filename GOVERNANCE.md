@@ -21,7 +21,8 @@ FIBEMATE follows a **Benevolent Dictator for Now (BDFN)** model.
 Mitigation:
 - Full source code, build scripts, and documentation are publicly available
 - Cryptographic primitives are independently reproducible from FIPS 203
-- Plan to recruit additional maintainers after the v3.4 open-source release (2026-08-31)
+- Ongoing effort: actively seeking additional maintainers through community channels and
+  university partnerships.
 
 ## Succession
 
