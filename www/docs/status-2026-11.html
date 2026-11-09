@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>2026-11 工程状态：OpenSSF Silver 与它的证据 - FIBEMATE</title>
+<style>
+:root {
+  --bg:#0d1117; --card:#161b22; --border:#30363d; --text:#c9d1d9;
+  --muted:#8b949e; --accent:#00E5C3; --green:#22c55e; --amber:#f59e0b;
+  --red:#f87171; --blue:#58a6ff; --purple:#bc8cff; --silver:#c0c0c0;
+}
+* { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif; background:var(--bg); color:var(--text); line-height:1.75; padding:0 1rem 4rem; }
+.container { max-width:960px; margin:0 auto; }
+header { padding:3rem 0 2rem; border-bottom:1px solid var(--border); margin-bottom:2rem; }
+header h1 { font-size:2rem; color:#f0f6fc; }
+header h1 .gradient { background:linear-gradient(135deg,var(--silver),var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+header .meta { color:var(--muted); font-size:0.9rem; margin-top:0.5rem; }
+h2 { font-size:1.3rem; color:#f0f6fc; margin:2.5rem 0 1rem; padding-bottom:0.4rem; border-bottom:1px solid var(--border); }
+p { margin:0.8rem 0; }
+.card { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:1.2rem 1.5rem; margin:1rem 0; }
+.green { color:var(--green); }
+.amber { color:var(--amber); }
+.red { color:var(--red); }
+.blue { color:var(--blue); }
+.accent { color:var(--accent); }
+.muted { color:var(--muted); }
+code { background:rgba(110,118,129,0.2); padding:0.15em 0.4em; border-radius:4px; font-size:0.9em; font-family:"SF Mono",Consolas,monospace; }
+a { color:var(--accent); }
+table { width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.9rem; }
+th, td { text-align:left; padding:0.55rem 0.7rem; border-bottom:1px solid var(--border); vertical-align:top; }
+th { color:#f0f6fc; font-weight:600; }
+.metric { display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin:1.2rem 0; }
+.metric div { background:var(--card); border:1px solid var(--border); border-radius:8px; padding:14px 18px; }
+.metric .n { font-size:1.5rem; color:#f0f6fc; font-weight:700; display:block; }
+.metric .l { font-size:0.78rem; color:var(--muted); }
+footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border); color:var(--muted); font-size:0.85rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>2026-11 工程状态：<span class="gradient">OpenSSF Silver</span> 与它的证据</h1>
+  <div class="meta">测量时间 2026-11-10 &nbsp;·&nbsp; 版本 v3.3.2 &nbsp;·&nbsp; 许可 GPL-3.0 &nbsp;·&nbsp; 本页所有数字均可用文中命令重算</div>
+</header>
+
+<p>这一页只放可以复核的东西。每一项都给出取证方式，读者可以自己跑一遍；跑不出来，就说明这一项不该被相信。</p>
+
+<h2>一、认证状态</h2>
+
+<div class="metric">
+  <div><span class="n green">Silver</span><span class="l">OpenSSF Best Practices 徽章等级</span></div>
+  <div><span class="n green">44 / 44</span><span class="l">银牌层 MUST 准则</span></div>
+  <div><span class="n accent">239%</span><span class="l">tiered percentage（Silver 层 100%）</span></div>
+  <div><span class="n accent">2026-11-09</span><span class="l">Silver 达成时间（UTC 17:07）</span></div>
+</div>
+
+<div class="card">
+  <p><strong class="green">这是自认证，不是第三方审计。</strong>Best Practices 徽章证明的是工程卫生：文档、测试、构建、发布流程、漏洞响应、治理。它<strong>不</strong>证明密码学实现没有侧信道，也<strong>不</strong>等于商用密码产品资质或密评报告。</p>
+  <p class="muted">复核：<code>curl -s https://www.bestpractices.dev/projects/13695.json</code>，看 <code>badge_level</code> 与 <code>badge_percentage_1</code>。</p>
+</div>
+
+<h2>二、测试与覆盖率</h2>
+
+<table>
+  <tr><th>指标</th><th>数值</th><th>如何复核</th></tr>
+  <tr><td>语句覆盖率</td><td class="green">81.3%（6,990 / 8,597）</td><td><code>npm run test:coverage</code></td></tr>
+  <tr><td>分支覆盖率</td><td>70.4%</td><td>同上</td></tr>
+  <tr><td>CI 门禁</td><td class="green">lines ≥ 80%，statements ≥ 80%</td><td><code>.github/workflows/coverage.yml</code></td></tr>
+  <tr><td>测试套件</td><td>5 组（单元、HTTP 集成、密码学边界、服务端库边界、回归守卫）</td><td><code>scripts/coverage.cjs</code></td></tr>
+  <tr><td>历史缺陷回归覆盖</td><td class="green">57.5%（23 / 40）</td><td><code>docs/REGRESSION-TESTS.md</code></td></tr>
+</table>
+
+<p class="muted">统计口径：只算本仓代码，排除 <code>node_modules</code> 与 <code>www/crypto</code> 下 vendored 的 WASM；不使用 <code>/* c8 ignore */</code> 抬高数字。</p>
+
+<h2>三、供应链</h2>
+
+<table>
+  <tr><th>项目</th><th>状态</th><th>说明</th></tr>
+  <tr><td>Dependabot 告警</td><td class="green">0 条开启</td><td>复核：<code>gh api repos/Lennonhaha/fibemate/dependabot/alerts?state=open --jq length</code></td></tr>
+  <tr><td>依赖清单</td><td class="green">SBOM 漂移 0</td><td><code>node scripts/check-sbom-drift.cjs</code></td></tr>
+  <tr><td>发布签名</td><td class="green">cosign keyless</td><td>无长期私钥；签名绑定工作流身份</td></tr>
+  <tr><td>GitHub Actions</td><td class="green">全部按 commit SHA 固定</td><td>99 条 <code>uses:</code>，0 条浮动</td></tr>
+</table>
+
+<h2>四、文档体系</h2>
+
+<table>
+  <tr><th>文档</th><th>回答什么问题</th></tr>
+  <tr><td><a href="https://github.com/Lennonhaha/fibemate/blob/main/ASSURANCE_CASE.md">ASSURANCE_CASE.md</a></td><td>威胁模型是什么、信任边界在哪、哪些弱点有对策、还缺什么（G-1~G-7）</td></tr>
+  <tr><td><a href="https://github.com/Lennonhaha/fibemate/blob/main/docs/CONTINUITY.md">CONTINUITY.md</a></td><td>维护者失能后，谁在多长时间内、用什么凭据恢复项目</td></tr>
+  <tr><td><a href="https://github.com/Lennonhaha/fibemate/blob/main/docs/INPUT-VALIDATION.md">INPUT-VALIDATION.md</a></td><td>每个端点接受什么、拒绝什么、由哪个测试断言</td></tr>
+  <tr><td><a href="https://github.com/Lennonhaha/fibemate/blob/main/docs/REGRESSION-TESTS.md">REGRESSION-TESTS.md</a></td><td>近半年修过的缺陷，哪些有回归测试，没有的为什么没有</td></tr>
+  <tr><td><a href="https://github.com/Lennonhaha/fibemate/blob/main/SECURITY.md">SECURITY.md</a></td><td>怎么报漏洞、多久响应、如何披露与致谢</td></tr>
+</table>
+
+<h2>五、没有做到的部分</h2>
+
+<div class="card">
+  <p><strong class="amber">这些仍然是真的：</strong></p>
+  <p>· 没有第三方安全审计。所有"已验证"都指功能、KAT、测试向量与软件 TVLA，不含独立审计结论。<br>
+     · 形式化验证分两条线：TLA+ 模型在树内且由 CI 门控（7 条不变式、101,467 个状态、0 违规）；Isabelle/VWZ 属研究线，另有仓库，<strong>不</strong>声称构成生产代码的精化证明。<br>
+     · 维护者一人（bus factor 1），正在寻找更多维护者。<br>
+     · 输入校验逐 handler 手写，没有统一 schema 层。<br>
+     · TLS 在 nginx 终止，应用层不做证书校验（这是部署属性，已在保证案例的 B2 声明）。</p>
+</div>
+
+<h2>六、能力边界</h2>
+
+<div class="card">
+  <p><strong class="green">提供</strong>：PQC 迁移辅助、CBOM 盘点、供应链门禁、形式化验证工程能力、可复现的测试与证据链。</p>
+  <p><strong class="amber">不提供</strong>：商用密码产品资质、商用密码应用安全性评估（密评）报告、第三方审计结论。</p>
+  <p class="muted">本项目为集成商与测评机构提供工具与证据，不替代任何法定第三方检测。</p>
+</div>
+
+<footer>
+  © 2026 哈尔滨市翕赫科技有限责任公司 (Harbin Xihe Technology Co., Ltd.). All rights reserved.<br>
+  FIBEMATE is an open-source project licensed under GPL-3.0. &nbsp;·&nbsp; Contact: <a href="mailto:research@fibemate.net">research@fibemate.net</a>
+</footer>
+
+</div>
+</body>
+</html>
