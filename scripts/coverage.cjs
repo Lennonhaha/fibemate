@@ -23,6 +23,7 @@ const SUITES = [
   'http-integration.test.js',
   'crypto-boundaries.test.js',
   'server-lib-boundaries.test.js',
+  'regression-guards.test.js',
 ];
 
 const THRESHOLDS = ['--lines', '80', '--statements', '80'];
