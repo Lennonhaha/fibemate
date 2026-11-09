@@ -51,7 +51,12 @@
       "brace-expansion": "^1.1.21"
     },
     "moment": "^2.31.0",
-    "proxy-addr": "2.0.8"
+    "proxy-addr": "2.0.8",
+    "test-exclude": {
+      "minimatch": {
+        "brace-expansion": "^2.0.1"
+      }
+    }
   },
   "directories": {
     "doc": "docs",

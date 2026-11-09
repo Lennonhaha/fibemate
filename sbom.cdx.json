@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:61a790f7-7520-52ff-e8d9-b5d9ce472e41",
+  "serialNumber": "urn:uuid:a1b21d6f-6345-5bfa-5f5d-ae3755bfa13a",
   "version": 1,
   "metadata": {
     "timestamp": "1970-01-01T00:00:00.000Z",
@@ -4462,6 +4462,20 @@
         {
           "license": {
             "name": "ISC"
+          }
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "brace-expansion@2.1.7",
+      "name": "brace-expansion",
+      "version": "2.1.7",
+      "purl": "pkg:npm/brace-expansion@2.1.7",
+      "licenses": [
+        {
+          "license": {
+            "name": "MIT"
           }
         }
       ]
