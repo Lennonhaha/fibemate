@@ -52,16 +52,12 @@ for (const suite of SUITES) {
   }
 }
 
-let command = process.execPath;
-let args = [];
-let shell = false;
-try {
-  args = [require.resolve('c8/bin/c8.js', { paths: [root] })];
-} catch (_) {
-  command = 'npx';
-  args = ['--yes', 'c8'];
-  shell = true;
-}
+// c8 runs from its own install tree: adding it to this project's
+// node_modules makes npm hoist brace-expansion@1 under minimatch@10, which
+// crashes the reporter.
+const command = 'npx';
+const args = ['--yes', 'c8@10.1.3'];
+const shell = true;
 
 args.push(
   'report',
