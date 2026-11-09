@@ -340,7 +340,10 @@ class PQRatchetSession {
   /**
    * Handle incoming PQ re-key ciphertext.
    */
-  async handleRekeyResponse(peerNewPQPub, rekeyCt) {
+  async handleRekeyResponse(peerNewPQPub, rekeyCt, newSecretKey) {
+    // The side that called rekey_initiate holds the matching secret key; adopt it
+    // before decapsulating, otherwise the derived root keys diverge.
+    if (newSecretKey) this.mlkemSecretKey = newSecretKey;
     const pqSS = decapsulate(rekeyCt, this.mlkemSecretKey);
     this.rootKey = rekey_deriveRoot(this.rootKey, pqSS);
     this.sentCountSinceRekey = 0;
@@ -370,7 +373,9 @@ class PQRatchetSession {
    * Serialize session for persistence.
    */
   serialize() {
-    const ratchet = this.ratchetState ? DoubleRatchet.exportState(this.ratchetState) : null;
+    // Synchronous snapshot. The ratchet state cannot be exported synchronously:
+    // exportState uses WebCrypto. Use serializeAsync() when the ratchet must
+    // survive the round trip; storing a Promise here used to serialise to {}.
     return JSON.stringify({
       rootKey: this.rootKey ? Buffer.from(this.rootKey).toString('hex') : null,
       mlkemSK: this.mlkemSecretKey ? Buffer.from(this.mlkemSecretKey).toString('hex') : null,
@@ -378,8 +383,19 @@ class PQRatchetSession {
       peerMLKEMPK: this.peerMLKEMPublicKey ? Buffer.from(this.peerMLKEMPublicKey).toString('hex') : null,
       peerP256PK: this.peerP256PublicKey ? Buffer.from(this.peerP256PublicKey).toString('hex') : null,
       sentCount: this.sentCountSinceRekey,
-      ratchetState: ratchet
+      ratchetState: null,
+      ratchetStateOmitted: Boolean(this.ratchetState)
     });
+  }
+
+  /**
+   * Full snapshot including the ratchet state.
+   */
+  async serializeAsync() {
+    const data = JSON.parse(this.serialize());
+    data.ratchetState = this.ratchetState ? await DoubleRatchet.exportState(this.ratchetState) : null;
+    data.ratchetStateOmitted = false;
+    return JSON.stringify(data);
   }
 
   /**
