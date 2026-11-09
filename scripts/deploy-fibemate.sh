@@ -12,12 +12,17 @@
 # deploy that "succeeded" but serves an old manifest, a stale mirror or a 404 is a
 # failed deploy, and this script reports it as such instead of printing a green tick.
 #
-# Overridable: REPO_DIR, BASE_URL, LOCK_DIRS, PM2_APP, HEALTH_URL, SKIP_RESTART=1.
+# Overridable: REPO_DIR, BASE_URL, PM2_APP, HEALTH_URL, SKIP_RESTART=1, LOCK_RECORD.
+#
+# The immutable (+i) flags are NOT assumed to cover a fixed list of directories: they
+# are read from the checkout before the deploy and restored verbatim afterwards. Getting
+# this wrong is not cosmetic - `git reset --hard` dies halfway with "Operation not
+# permitted" and leaves the serving tree in a half-deployed state.
 set -euo pipefail
 
 REPO_DIR="${REPO_DIR:-/opt/fibemate-repo}"
 BASE_URL="${BASE_URL:-https://fibemate.net}"
-LOCK_DIRS="${LOCK_DIRS:-www docs viz src packages}"
+LOCK_RECORD="${LOCK_RECORD:-/tmp/fibemate-lock-set.txt}"
 PM2_APP="${PM2_APP:-fibemate}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3001/api/mlkem/test}"
 
@@ -40,7 +45,7 @@ done
 echo "=== FIBEMATE deploy ==="
 echo "repo:    $REPO_DIR"
 echo "site:    $BASE_URL"
-echo "locks:   $LOCK_DIRS"
+echo "locks:   measured from the checkout -> $LOCK_RECORD"
 if [ "$APPLY" -eq 0 ]; then
   echo "mode:    DRY RUN (nothing will be changed; add --apply to deploy)"
 fi
@@ -61,14 +66,17 @@ if [ "$APPLY" -eq 0 ]; then
   exit 0
 fi
 
-# [2/6] Unlock both layers. Directory-only is not enough: git has to unlink the old
-# inode, and a file-level +i makes that fail with "Operation not permitted".
-echo "[2/6] unlocking content directories and files..."
-for d in $LOCK_DIRS; do
-  [ -d "$REPO_DIR/$d" ] || continue
-  find "$REPO_DIR/$d" -type d -exec chattr -i {} \; 2>/dev/null || true
-  find "$REPO_DIR/$d" -type f -exec chattr -i {} \; 2>/dev/null || true
-done
+# [2/6] Record the real immutable set, then clear it. Directory-only is not enough:
+# git has to unlink the old inode, so a file-level +i fails with "Operation not permitted".
+# The set is measured, never assumed: production carries ~4.5k locked files spread over
+# api/, dist/, src/, www/, docs/ and the repo root.
+echo "[2/6] recording and clearing immutable flags..."
+lsattr -R . 2>/dev/null | grep -- '----i' | sed 's/^[^ ]* //' | sed 's/^\.\///' | sort > "$LOCK_RECORD"
+LOCK_COUNT="$(wc -l < "$LOCK_RECORD")"
+echo "      immutable entries before deploy: $LOCK_COUNT"
+while IFS= read -r f; do
+  [ -n "$f" ] && chattr -i "$f" 2>/dev/null || true
+done < "$LOCK_RECORD"
 
 # [3/6] Fetch the reviewed commit.
 echo "[3/6] fetching origin/main..."
@@ -77,18 +85,22 @@ git reset --hard origin/main
 NEW_HEAD="$(git rev-parse HEAD)"
 echo "      HEAD after deploy:  $NEW_HEAD"
 
-# [4/6] Restore the read-only lock, directories and files.
-echo "[4/6] relocking..."
-for d in $LOCK_DIRS; do
-  [ -d "$REPO_DIR/$d" ] || continue
-  find "$REPO_DIR/$d" -type d -exec chattr +i {} \; 2>/dev/null || true
-  find "$REPO_DIR/$d" -type f -exec chattr +i {} \; 2>/dev/null || true
-done
-UNLOCKED="$(for d in $LOCK_DIRS; do
-  [ -d "$REPO_DIR/$d" ] || continue
-  lsattr -R "$REPO_DIR/$d" 2>/dev/null | grep -v ':$' | grep -v '^$' | grep -v -- '----i' || true
-done | wc -l)"
-echo "      files still writable: $UNLOCKED (expected 0)"
+# [4/6] Restore exactly the flags that were there before. Anything else either
+# widens the locked surface (surprise for the next deploy) or narrows it.
+echo "[4/6] restoring immutable flags..."
+RESTORED=0
+while IFS= read -r f; do
+  [ -n "$f" ] && chattr +i "$f" 2>/dev/null && RESTORED=$((RESTORED + 1))
+done < "$LOCK_RECORD"
+echo "      immutable entries restored: $RESTORED (expected $LOCK_COUNT)"
+lsattr -R . 2>/dev/null | grep -- '----i' | sed 's/^[^ ]* //' | sed 's/^\.\///' | sort > "$LOCK_RECORD.after"
+if diff -q "$LOCK_RECORD" "$LOCK_RECORD.after" >/dev/null; then
+  echo "      lock set identical to before deploy"
+else
+  echo "FAIL: lock set changed; the next deploy may fail." >&2
+  diff "$LOCK_RECORD" "$LOCK_RECORD.after" | head -20 >&2
+  exit 1
+fi
 
 # [5/6] Restart the API and check it answers locally.
 if [ "${SKIP_RESTART:-0}" = "1" ]; then
