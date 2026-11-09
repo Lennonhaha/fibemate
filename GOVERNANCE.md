@@ -31,8 +31,9 @@ support becomes the de facto successor.
 
 ## Code of Conduct
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md) — contributors are expected to be respectful,
-constructive, and assume good faith.
+This project adopts the [Contributor Covenant v2.1](./CODE_OF_CONDUCT.md).
+Reports go to `security@fibemate.net` or `@Lennonhaha`; enforcement decisions are
+made by the Project Lead, as described in that document.
 
 ## Changes
 
