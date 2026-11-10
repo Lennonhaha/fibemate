@@ -171,13 +171,22 @@ mislead a reader.
 
 ### 6.2 VWZ — Isabelle/HOL research corpus (**not shipped**)
 
-- Location: separate repository `fibemate-vwz`; the VWZ construction is **not
-  present in any production path** of FIBEMATE (`docs/VWZ-STATUS.md`).
+- Location: separate repository `vwz-formalization` (the authoritative tree).
+  `fibemate-vwz` was a snapshot frozen on 2026-10-19 and is archived as of
+  2026-11-10; its figures are history, not status.  The VWZ construction is
+  **not present in any production path** of FIBEMATE (`docs/VWZ-STATUS.md`).
 - The ledger is machine-counted, not hand-counted:
   `node tools/count-obligations.cjs` →
-  **56 lemmas, 18 `sorry`** (T0 17/0, T1-A 16/0, T1-D 5/2, T2 10/8, T3 8/8),
-  plus **1 known open** lemma outside the ledger (`aux_el_det_elementary_i_gt_0`,
-  statement verified numerically, proof open).
+  **56 lemmas, 4 `sorry`** (T0 17/0, T1-A 16/0, T1-D 5/0, T2 10/2, T3 8/2),
+  with 0 `sorry` outside the ledger and 37 declared scaffolding steps.
+- The remaining four are definition debt, not missing algebra: `Sign`, `Eval`
+  and `Verify` are uninterpreted constants tagged `TODO(define)` (spec §4, §6,
+  §7), so T2-D5, T2-D1 and T3-E3b cannot be stated over a defined function yet.
+  T3-D8 is a typed stub that the ledger explicitly does not claim.
+- One statement was corrected rather than proved as written: T1-B4 asserts a
+  range for `x1_of sk`, which is false for an arbitrary `skey` (a plain record
+  with no invariant on `sk_x1`).  It now carries `sk = snd (KeyGen k seed)` —
+  the premise spec §3.4 supplies — and is proved from `draw_x1_range`.
 - **The session runs with `quick_and_dirty`.** A successful build therefore means
   "everything not marked `sorry` type-checks" — it is **not** a proof of the
   theorem. The `sorry` count is the progress metric; the exit code is not.
@@ -219,7 +228,7 @@ case.
 | G-3 | **Single maintainer, bus factor 1.** | Continuity risk; see `GOVERNANCE.md` §Bus Factor. | Open — succession and key-custody plan is being written |
 | G-4 | TLS terminates at nginx; the application performs **no certificate verification** and contains no `rejectUnauthorized` handling. | Application-level mitigation of a mis-issued certificate is absent; security depends on deployment configuration. | Documented; deployment guidance in `docs/deployment.md` |
 | G-5 | Input validation is **partial**: `express.json` size limits and per-route checks exist, but there is no schema-level allowlist across all endpoints. | Malformed-but-parseable payloads may reach handlers. | Open — targeted for the 80 % coverage work |
-| G-6 | VWZ formalisation has **18 open `sorry`** and 1 open auxiliary lemma; VWZ is not shipped. | No production impact; the research claim remains unproven. | Open, tracked by `count-obligations.cjs` |
+| G-6 | VWZ formalisation has **4 open `sorry`** across 56 ledger obligations (the other 37 `sorry` steps are declared scaffolding); VWZ is not shipped. | No production impact; the research claim remains unproven. | Open, tracked by `count-obligations.cjs` in `vwz-formalization` |
 | G-7 | Lockout and 2FA tickets are in-memory; a restart clears them. | Short window of reduced brute-force resistance after restart. | Accepted, documented |
 | G-8 | **Standalone ML-KEM does not provide perfect forward secrecy.** ePrint 2026/2787 (Jarali & Pandey, approved 2026-11-09) gives a ProVerif proof that static ML-KEM does not preserve PFS: repeated static encapsulation is vulnerable to retroactive decapsulation once the long-term private key leaks. | Any deployment that reuses one static ML-KEM key across sessions inherits that retroactive-decapsulation exposure. | **Mitigated by design, not proven in code.** Session keys advance through the PQ Double Ratchet (ML-KEM-768 + P-256, `packages/key-lifecycle/double-ratchet-integration.js`), and the same paper verifies that ephemeral rotation / ratcheting restores forward secrecy. But the ratchet is documented as an educational reference (`POSITION.md`) and is not formally verified, so the PFS claim rests on ratchet correctness that is not machine-checked. |
 | G-9 | **Composite ML-DSA (RFC 10073) is EUF-CMA but not SUF-CMA against a quantum adversary.** RFC 10073 §9.2.2 states that none of its combinations is SUF-CMA secure against a quantum adversary, and that applications where SUF-CMA is critical SHOULD NOT use Composite ML-DSA. | An EUF-CMA-only signature can be re-randomised on an already-signed message, which is not acceptable for audit-evidence or timestamp non-forgeability requirements. | **No current exposure:** the shipped signature path is standalone ML-DSA-65 (`packages/fml-dsa/`), not a composite construction. Recorded as a scope boundary so that any future signature-agility work does not offer Composite ML-DSA for SUF-CMA use cases. |
