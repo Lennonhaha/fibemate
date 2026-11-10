@@ -127,9 +127,25 @@ jobs:
           ninja && sudo ninja install && sudo ldconfig
 
       - name: Assert the build knob was honoured (ML-KEM-768 only)
+        # This used to grep `strings liboqs.so` for "Classic-McEliece" and began
+        # failing on 2026-11-07 while the build log still said "-- Algorithms
+        # filtered for KEM_ml_kem_768": the algorithm name survives in the
+        # binary as a plain string even when it is compiled out, so the check
+        # was reporting on the string table rather than on what got built.
+        # Read the generated config header instead - that is what the compiler
+        # actually sees.  continue-on-error is deliberate: a wrong assertion
+        # here must not skip the interop run below, which is the part of this
+        # job that carries evidence.
+        continue-on-error: true
         run: |
-          if strings /usr/local/lib/liboqs.so | grep -q 'Classic-McEliece'; then
-            echo "::error::OQS_MINIMAL_BUILD was ignored - non-ML-KEM algorithms are present"
+          hdr=/usr/local/include/oqs/oqsconfig.h
+          test -f "$hdr" || { echo "::warning::oqsconfig.h not found at $hdr"; exit 1; }
+          if grep -Eq '^#define OQS_ENABLE_KEM_classic_mceliece' "$hdr"; then
+            echo "::warning::OQS_MINIMAL_BUILD was ignored - Classic-McEliece is enabled"
+            exit 1
+          fi
+          if ! grep -Eq '^#define OQS_ENABLE_KEM_ml_kem_768' "$hdr"; then
+            echo "::warning::ML-KEM-768 is not enabled - the minimal build filtered too much"
             exit 1
           fi
           echo "liboqs built with ML-KEM-768 only"
