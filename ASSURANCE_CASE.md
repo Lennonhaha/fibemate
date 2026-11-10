@@ -3,7 +3,7 @@
 **Document version:** 1.0
 **Applies to:** FIBEMATE v3.3.2 (`github.com/Lennonhaha/fibemate`, GPL-3.0)
 **Owner:** Lennon (lennonhaha), sole maintainer
-**Last reviewed:** 2026-11-09
+**Last reviewed:** 2026-11-10
 
 This document is the project's assurance case in the sense used by the
 [OpenSSF Best Practices Badge](https://www.bestpractices.dev/) silver criterion
@@ -138,6 +138,7 @@ reviewer check the claim.
 |:---|:---|:---|:---|
 | Non-constant-time secret comparison | `timingSafeEqual` wrappers for secrets, hex, and record lookup; timing-equalised 404 | `src/lib/constant-time.js`, unit tests in `test/` | V8 may still optimise differently across versions |
 | Secret-dependent timing in ECC scalar multiply | Scalar masking (`k' = k + r·N`), Jacobian projective randomisation, verify-side scalar blinding | `docs/SM2_TVLA_STATUS.md`: masked v1.2 → 5/5 TVLA PASS (\|t\| 1.19 verify / 2.06 decrypt, N=5,000); ladder variant → 20/20 PASS at orders 1–4. **The unprotected baseline is kept as a negative control and FAILS (\|t\| 7.42 / 3.80)**, which is what makes the passing numbers meaningful. | JS engine-level leakage not controllable; no hardware TVLA on the C addon |
+| Compiler-optimised constant-time code | Side-channel claims are taken from the executing implementation, never from source-level `constant_time_*` helpers | CVE-2026-44519 (liboqs ≤ 0.15.x, **FrodoKEM** `ct_select`, Clang 17+ at `-Os`; GHSA-5c97-hp95-vg56, fixed in 0.16.0): a source-level constant-time select compiled into a secret-dependent `cmov`/`csel`, with the cache-residency difference confirmed by Flush+Reload. It is cited here as evidence that source-level assertions are not proof — **not** as an ML-KEM issue: the advisory states that liboqs' ML-KEM already ships an inline-assembly value barrier. | Backend code generation (V8, the C compiler) is not audited instruction-by-instruction; the C addon has no hardware-level TVLA |
 | KEM implementation drifting from the standard | NIST KAT vectors in-tree; cross-implementation differential tests against `@noble/post-quantum`; ACVP keyGen cases for the final FIPS 203 | `packages/pqc-kem/test/kat/mlkem-768-KAT.rsp`, `test/mlkem-wasm-fips.test.cjs` (byte-identical to noble on 3 seeds), `docs/mlkem1024-kat-verified.md` (records that the older "ALL MATCH" referenced the **draft** FIPS 203 and is *not* evidence for the final standard) | Test-vector coverage ≠ proof of correctness |
 | Malformed / adversarial input to parsers | 19 Jazzer harnesses, 10,000 runs each, `max_len=4096`, scheduled in CI | `.github/workflows/fuzz.yml`, `fuzz/` | Fuzzing finds, never proves absence |
 | Protocol state-machine bugs (premature session, key reuse) | TLA+ model of the C2 handshake and the OPK pre-key protocol, checked with TLC | `docs/tla/C2.tla` + `C2.cfg` (7 invariants: `TypeOK`, `K1`–`K5`, `K3_Strong`), 101,467 states, TLC exit 0, DigiCert TSR `lg-069`; nightly parity run in `.github/workflows/docs-tla-verify.yml` | Model ≠ code; the model is hand-written from the spec |
@@ -195,7 +196,7 @@ mislead a reader.
 | Evidence | Command / location | What it establishes |
 |:---|:---|:---|
 | Unit + integration suites (11 suites) | `npm test` | Functional correctness of primitives, 2FA, lockout, KEX peer resolution, WASM backend parity |
-| Statement coverage | `npx c8 node test/test-all.js` | Current baseline **52.16 %** (4,309/8,261), branches 82.07 % — see gap G-1 |
+| Statement coverage | `npm run test:coverage` (one merged V8 session over five suites) | **80.53 %** (6,924/8,597) on CI (run `42682613340`, 2026-11-10); **81.27 %** (6,987/8,597) in a local Windows run — the difference is platform-dependent code paths, and the 8,597 statement total agrees. CI enforces an 80 % floor on statements and lines (`.github/workflows/coverage.yml`). Branch coverage is 67.85 % (912/1,344) on CI and is **not** gated. |
 | KAT | `packages/pqc-kem/test/kat/`, `scripts/ci-mlkem-kat.cjs` | Conformance to NIST vectors |
 | TVLA | `docs/SM2_TVLA_STATUS.md` | Side-channel behaviour, with a failing negative control |
 | TLA+ | `docs/tla/`, `.github/workflows/docs-tla-verify.yml` | Protocol invariants |
@@ -213,13 +214,15 @@ case.
 
 | ID | Gap | Impact | Status |
 |:---|:---|:---|:---|
-| G-1 | Automated statement coverage is **52.16 %**, below the 80 % target. `src/index.js` (1,910 statements) is the largest untested surface. | Regressions in untested routes can ship undetected. | Open — raising coverage is active work; no `c8 ignore` suppressions are used to inflate the number |
+| G-1 | Statement coverage cleared the 80 % target on 2026-11-10: **80.53 %** (6,924/8,597) on CI, 81.27 % (6,987/8,597) locally. | Was: regressions in untested routes could ship undetected. | **Closed** — the floor is enforced at 80 % in `.github/workflows/coverage.yml`, and no `c8 ignore` suppressions are used. Residual: branch coverage is 67.85 % (912/1,344) on CI and is not gated. |
 | G-2 | **No independent third-party security audit.** All evidence above is self-produced. | Trust rests on reproducibility, not on external attestation. | Open (known, declared in `SECURITY.md`) |
 | G-3 | **Single maintainer, bus factor 1.** | Continuity risk; see `GOVERNANCE.md` §Bus Factor. | Open — succession and key-custody plan is being written |
 | G-4 | TLS terminates at nginx; the application performs **no certificate verification** and contains no `rejectUnauthorized` handling. | Application-level mitigation of a mis-issued certificate is absent; security depends on deployment configuration. | Documented; deployment guidance in `docs/deployment.md` |
 | G-5 | Input validation is **partial**: `express.json` size limits and per-route checks exist, but there is no schema-level allowlist across all endpoints. | Malformed-but-parseable payloads may reach handlers. | Open — targeted for the 80 % coverage work |
 | G-6 | VWZ formalisation has **18 open `sorry`** and 1 open auxiliary lemma; VWZ is not shipped. | No production impact; the research claim remains unproven. | Open, tracked by `count-obligations.cjs` |
 | G-7 | Lockout and 2FA tickets are in-memory; a restart clears them. | Short window of reduced brute-force resistance after restart. | Accepted, documented |
+| G-8 | **Standalone ML-KEM does not provide perfect forward secrecy.** ePrint 2026/2787 (Jarali & Pandey, approved 2026-11-09) gives a ProVerif proof that static ML-KEM does not preserve PFS: repeated static encapsulation is vulnerable to retroactive decapsulation once the long-term private key leaks. | Any deployment that reuses one static ML-KEM key across sessions inherits that retroactive-decapsulation exposure. | **Mitigated by design, not proven in code.** Session keys advance through the PQ Double Ratchet (ML-KEM-768 + P-256, `packages/key-lifecycle/double-ratchet-integration.js`), and the same paper verifies that ephemeral rotation / ratcheting restores forward secrecy. But the ratchet is documented as an educational reference (`POSITION.md`) and is not formally verified, so the PFS claim rests on ratchet correctness that is not machine-checked. |
+| G-9 | **Composite ML-DSA (RFC 10073) is EUF-CMA but not SUF-CMA against a quantum adversary.** RFC 10073 §9.2.2 states that none of its combinations is SUF-CMA secure against a quantum adversary, and that applications where SUF-CMA is critical SHOULD NOT use Composite ML-DSA. | An EUF-CMA-only signature can be re-randomised on an already-signed message, which is not acceptable for audit-evidence or timestamp non-forgeability requirements. | **No current exposure:** the shipped signature path is standalone ML-DSA-65 (`packages/fml-dsa/`), not a composite construction. Recorded as a scope boundary so that any future signature-agility work does not offer Composite ML-DSA for SUF-CMA use cases. |
 
 ---
 
