@@ -1,0 +1,94 @@
+name: cbom-scheduled-scan
+
+# Continuous crypto-asset inventory.
+#
+# The `cbom` job in ci.yml gates the CBOM artifact this repository commits
+# (tools/cbom-cyclonedx.json, CycloneDX 1.6, drift-checked against its generator).
+# This workflow is a different thing: it re-derives an inventory from the working
+# tree with the published `cbom-tools` (CycloneDX 1.7) and keeps the result as a
+# build artifact. Same repository, two questions — "did our own CBOM drift" versus
+# "what do the crypto APIs in this tree look like today".
+#
+# Scheduled rather than per-commit on purpose: a certificate or a dependency can
+# change what is in use without anything in this repository changing. An inventory
+# that only runs when we push is a project; one that runs every night is a monitor.
+#
+# This file is also the template we hand to integrators (see www/docs/PQC_MIGRATION_PLAN.md §6.3).
+
+on:
+  schedule:
+    # 02:00 UTC daily
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cbom-scheduled-scan-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  scan:
+    name: cbom-tools scan (CycloneDX 1.7)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+
+      # The version is pinned, not floating: an inventory that silently changes
+      # its own rules between runs cannot be compared with last week's.
+      - name: Scan the tree
+        run: npx --yes cbom-tools@0.2.6 scan --dir . --out cbom-report.json --spec 1.7
+
+      # A report that is written but empty (or shaped differently than expected)
+      # must fail here, not be uploaded and discovered later. cargo-deny has the
+      # same rule: a check that cannot fail is not a check.
+      - name: Validate the report
+        run: |
+          node -e '
+          const fs = require("fs");
+          let j;
+          try { j = JSON.parse(fs.readFileSync("cbom-report.json", "utf8")); }
+          catch (e) { console.error("cbom-report.json is not valid JSON: " + e.message); process.exit(1); }
+          if (j.specVersion !== "1.7") { console.error("expected specVersion 1.7, got " + j.specVersion); process.exit(1); }
+          const comps = j.components || [];
+          if (comps.length === 0) { console.error("report is empty: 0 components"); process.exit(1); }
+          const crypto = comps.filter(c => c.cryptoProperties);
+          if (crypto.length === 0) { console.error("report has no cryptoProperties on any component"); process.exit(1); }
+          const byType = {};
+          for (const c of crypto) {
+            const t = (c.cryptoProperties && c.cryptoProperties.assetType) || "unknown";
+            byType[t] = (byType[t] || 0) + 1;
+          }
+          console.log("components=" + comps.length + " withCryptoProperties=" + crypto.length);
+          for (const k of Object.keys(byType).sort()) console.log("  " + k + ": " + byType[k]);
+          '
+
+      # 30 days is the review window, not a backup policy: the artifact exists so
+      # that a change noticed in a nightly run can be compared with the previous
+      # week's inventory.
+      - name: Upload the inventory
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.1
+        with:
+          name: cbom-report
+          path: cbom-report.json
+          retention-days: 30
+          if-no-files-found: warn
+
+      - name: Summary
+        if: always()
+        run: |
+          {
+            echo "### CBOM scheduled scan"
+            echo ""
+            if [ -f cbom-report.json ]; then
+              node -e 'const j=require("./cbom-report.json");const c=j.components||[];const x=c.filter(v=>v.cryptoProperties);console.log("- CycloneDX: " + j.specVersion);console.log("- Components: " + c.length);console.log("- With cryptoProperties: " + x.length);'
+            else
+              echo "- No report produced. See the scan step."
+            fi
+            echo "- Tool: \`cbom-tools@0.2.6\` (pinned)"
+          } >> "$GITHUB_STEP_SUMMARY"
