@@ -150,17 +150,26 @@ class Aes256CtrDrbg {
 function usage(msg) {
   if (msg) console.error('error: ' + msg);
   console.error(
-    'usage: node scripts/cross-validate-pqclean.cjs --vectors <file> [--format acvp|pqclean-rsp] [--count N] [--json]'
+    'usage: node scripts/cross-validate-pqclean.cjs --vectors <file> [--expected <file>] [--format acvp|pqclean-rsp] [--parameter-set ML-KEM-768] [--count N] [--json]\n' +
+    '\n' +
+    '  --expected       NIST publishes inputs and outputs in two files (prompt.json and\n' +
+    '                   expectedResults.json). Pass the second one here and the entries\n' +
+    '                   are joined on tgId+tcId. One-file layouts still work without it.\n' +
+    '  --parameter-set  keep only groups for this parameter set. The implementation under\n' +
+    '                   test is ML-KEM-768, so the other two sets would fail for a reason\n' +
+    '                   that is not a defect. Default: no filter.'
   );
   process.exit(EXIT.USAGE);
 }
 
 function parseArgs(argv) {
-  const out = { format: 'acvp', count: Infinity, json: false, vectors: null };
+  const out = { format: 'acvp', count: Infinity, json: false, vectors: null, expected: null, parameterSet: null };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === '--vectors') out.vectors = argv[++i];
+    else if (a === '--expected') out.expected = argv[++i];
     else if (a === '--format') out.format = argv[++i];
+    else if (a === '--parameter-set') out.parameterSet = argv[++i];
     else if (a === '--count') out.count = Number(argv[++i]);
     else if (a === '--json') out.json = true;
     else if (a === '-h' || a === '--help') usage();
@@ -168,6 +177,7 @@ function parseArgs(argv) {
   }
   if (!out.vectors) usage('--vectors is required; an empty run is not a pass');
   if (!Number.isFinite(out.count) && out.count !== Infinity) usage('--count must be a number');
+  if (out.expected && out.format !== 'acvp') usage('--expected only applies to --format acvp');
   return out;
 }
 
@@ -199,35 +209,103 @@ function compare(actual, expected, label) {
  * Shapes differ slightly between ACVP revisions, so this accepts both the
  * "tests[]" layout and a flat array of objects with the same fields.
  */
-function loadAcvp(file) {
-  let doc;
+function readJson(file, what) {
   try {
-    doc = JSON.parse(fs.readFileSync(file, 'utf8'));
+    return JSON.parse(fs.readFileSync(file, 'utf8'));
   } catch (e) {
-    console.error('error: cannot read vectors as JSON: ' + e.message);
+    console.error('error: cannot read ' + what + ' as JSON: ' + e.message);
     process.exit(EXIT.VECTORS);
   }
+}
 
+/**
+ * Index an expectedResults.json by "tgId:tcId". NIST splits the inputs and the
+ * outputs into two files that carry the same identifiers and nothing else in
+ * common, so a join is the only way to get both halves into one case.
+ */
+function indexExpected(file) {
+  const doc = readJson(file, path.basename(file));
+  const groups = Array.isArray(doc) ? doc : doc.testGroups;
+  if (!Array.isArray(groups)) {
+    console.error('error: no testGroups[] in expected results ' + path.basename(file));
+    process.exit(EXIT.VECTORS);
+  }
+  const map = new Map();
+  for (const g of groups) {
+    for (const t of g.tests || []) {
+      map.set(`${g.tgId ?? g.groupId}:${t.tcId ?? t.id}`, t);
+    }
+  }
+  return map;
+}
+
+/**
+ * Load ACVP keyGen/encapDecap groups and flatten them into test cases.
+ * Shapes differ slightly between ACVP revisions, so this accepts both the
+ * "tests[]" layout and a flat array of objects with the same fields, and both
+ * the one-file (inputs and outputs together) and two-file (prompt plus
+ * expectedResults) layouts.
+ */
+function loadAcvp(file, opts = {}) {
+  const doc = readJson(file, path.basename(file));
   const groups = Array.isArray(doc) ? doc : doc.testGroups;
   if (!Array.isArray(groups)) {
     console.error('error: no testGroups[] in ' + path.basename(file));
     process.exit(EXIT.VECTORS);
   }
 
+  const expected = opts.expected ? indexExpected(opts.expected) : null;
+
   const cases = [];
+  let skippedParam = 0;
+  let skippedShape = 0;
+  let missingExpected = 0;
+
   for (const g of groups) {
+    if (opts.parameterSet && g.parameterSet && g.parameterSet !== opts.parameterSet) {
+      skippedParam++;
+      continue;
+    }
     const tests = Array.isArray(g.tests) ? g.tests : [g];
     for (const t of tests) {
-      const kind = t.d && t.z ? 'keygen' : t.m && t.c ? 'encap' : null;
-      if (!kind) continue;
-      cases.push({ group: g.tgId ?? g.groupId ?? null, tcId: t.tcId ?? t.id ?? null, kind, raw: t });
+      const key = `${g.tgId ?? g.groupId}:${t.tcId ?? t.id}`;
+      const exp = expected ? expected.get(key) : null;
+      if (expected && !exp) missingExpected++;
+      const merged = exp ? { ...t, ...exp } : t;
+      merged.function = g.function || merged.function;
+
+      let kind = null;
+      if (merged.d && merged.z && (merged.ek || merged.dk)) kind = 'keygen';
+      else if (merged.m && merged.ek && merged.c) kind = 'encap';
+      else if (merged.c && merged.dk && !merged.m) kind = 'decap';
+      else if (merged.c && merged.k) kind = 'decap';
+      if (!kind) {
+        skippedShape++;
+        continue;
+      }
+      cases.push({
+        group: g.tgId ?? g.groupId ?? null,
+        tcId: t.tcId ?? t.id ?? null,
+        kind,
+        raw: merged,
+      });
     }
   }
 
-  if (cases.length === 0) {
-    console.error('error: 0 usable test cases (expected d+z for keyGen, m+c for encapDecap)');
+  if (missingExpected > 0) {
+    console.error(`error: ${missingExpected} prompt case(s) have no entry in --expected; refusing a partial join`);
     process.exit(EXIT.VECTORS);
   }
+  if (cases.length === 0) {
+    console.error(
+      'error: 0 usable test cases (expected d+z for keyGen, m+c for encapDecap); ' +
+        `skipped ${skippedParam} by parameter set, ${skippedShape} by shape`
+    );
+    process.exit(EXIT.VECTORS);
+  }
+
+  cases.skippedParam = skippedParam;
+  cases.skippedShape = skippedShape;
   return cases;
 }
 
@@ -296,14 +374,18 @@ function loadRsp(file) {
 }
 
 function loadVectors(opts) {
+  if (opts.format === 'acvp') return loadAcvp(opts.vectors, opts);
   if (opts.format === 'rsp' || opts.format === 'pqclean-rsp') return loadRsp(opts.vectors);
-  if (opts.format !== 'acvp') usage('unknown --format: ' + opts.format);
-  return loadAcvp(opts.vectors);
+  return usage('unknown --format: ' + opts.format);
 }
 
 function main() {
   const opts = parseArgs(process.argv.slice(2));
-  const cases = loadVectors(opts).slice(0, opts.count);
+  const loaded = loadVectors(opts);
+  // slice() returns a bare array, so the tallies have to be read before it.
+  const skippedParam = loaded.skippedParam || 0;
+  const skippedShape = loaded.skippedShape || 0;
+  const cases = loaded.slice(0, opts.count);
 
   // Loaded after argument validation so that a usage error does not depend on the
   // implementation module being resolvable.
@@ -361,22 +443,25 @@ function main() {
         const m2 = compare(Buffer.from(secretKey), hexToBuf(t.dk ?? t.sk), 'dk');
         if (m) row.mismatches.push(m);
         if (m2) row.mismatches.push(m2);
+      } else if (c.kind === 'encap') {
+        // Encapsulation only: the vector supplies ek and m, and expects c and k.
+        // Nothing here can be satisfied by decapsulating our own output.
+        const re = encapsDerand(hexToBuf(t.ek ?? t.pk), hexToBuf(t.m));
+        const ctBuf = Buffer.from(re.ciphertext ?? re.ct ?? re[0]);
+        const ssBuf = Buffer.from(re.sharedSecret ?? re.ss ?? re[1]);
+        const mCt = compare(ctBuf, hexToBuf(t.c), 'c');
+        const mSs = compare(ssBuf, hexToBuf(t.k ?? t.ss), 'k');
+        if (mCt) row.mismatches.push(mCt);
+        if (mSs) row.mismatches.push(mSs);
       } else {
-        // encapDecap: derive the shared secret from the vector's ciphertext and
-        // the decapsulation key, then re-encapsulate with the vector's m.
+        // Decapsulation only: the vector supplies dk and c, and expects k. The
+        // ACVP decapsulation groups carry no message, so re-encapsulating here
+        // would be inventing an input the vector never had.
         const sk = hexToBuf(t.dk ?? t.sk);
         const ct = hexToBuf(t.c);
         const ssDecap = Buffer.from(kem.decapsulate(sk, ct));
-        const mSs = compare(ssDecap, hexToBuf(t.k ?? t.ss), 'ss(decap)');
-
-        const ek = hexToBuf(t.ek ?? t.pk);
-        const re = encapsDerand(ek, hexToBuf(t.m));
-        const ctBuf = Buffer.from(re.ciphertext ?? re.ct ?? re[0]);
-        const ssBuf = Buffer.from(re.sharedSecret ?? re.ss ?? re[1]);
-        const mCt = compare(ctBuf, ct, 'c(re-encap)');
-        const mSs2 = compare(ssBuf, hexToBuf(t.k ?? t.ss), 'ss(re-encap)');
-
-        for (const x of [mSs, mCt, mSs2]) if (x) row.mismatches.push(x);
+        const mSs = compare(ssDecap, hexToBuf(t.k ?? t.ss), 'k(decap)');
+        if (mSs) row.mismatches.push(mSs);
       }
     } catch (e) {
       row.error = e.message;
@@ -398,6 +483,8 @@ function main() {
   if (opts.json) {
     console.log(JSON.stringify({ summary, results }, null, 2));
   } else {
+    if (skippedParam) console.log('skipped ' + skippedParam + ' group(s) outside the requested parameter set');
+    if (skippedShape) console.log('skipped ' + skippedShape + ' test(s) whose shape this harness does not cover');
     for (const r of results) {
       if (r.ok) {
         console.log('ok   ' + r.kind + ' tcId=' + r.tcId);

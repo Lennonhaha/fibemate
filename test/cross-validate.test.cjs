@@ -176,6 +176,89 @@ test('usage errors and unreadable files have distinct exit codes', () => {
   assert.strictEqual(run(['--vectors', junk, '--format', 'rsp']).status, 3);
 });
 
+test('ACVP two-file layout joins prompt and expectedResults on tgId+tcId', () => {
+  const d = Buffer.alloc(32, 0x66);
+  const z = Buffer.alloc(32, 0x77);
+  const { publicKey, secretKey } = kem.generateKeypairDerand(d, z);
+  const prompt = {
+    testGroups: [
+      {
+        tgId: 7,
+        parameterSet: 'ML-KEM-768',
+        testType: 'AFT',
+        tests: [{ tcId: 3, d: d.toString('hex'), z: z.toString('hex') }],
+      },
+      {
+        tgId: 8,
+        parameterSet: 'ML-KEM-512',
+        testType: 'AFT',
+        tests: [{ tcId: 4, d: d.toString('hex'), z: z.toString('hex') }],
+      },
+    ],
+  };
+  const expected = {
+    testGroups: [
+      {
+        tgId: 7,
+        tests: [{ tcId: 3, ek: Buffer.from(publicKey).toString('hex'), dk: Buffer.from(secretKey).toString('hex') }],
+      },
+      {
+        tgId: 8,
+        tests: [{ tcId: 4, ek: Buffer.from(publicKey).toString('hex'), dk: Buffer.from(secretKey).toString('hex') }],
+      },
+    ],
+  };
+  const p = write('split-prompt.json', JSON.stringify(prompt));
+  const e = write('split-expected.json', JSON.stringify(expected));
+
+  const filtered = run(['--vectors', p, '--expected', e, '--parameter-set', 'ML-KEM-768']);
+  assert.strictEqual(filtered.status, 0, filtered.stdout + filtered.stderr);
+  assert.match(filtered.stdout, /1\/1 vectors match/);
+  assert.match(filtered.stdout, /skipped 1 group\(s\) outside the requested parameter set/);
+
+  const both = run(['--vectors', p, '--expected', e]);
+  assert.strictEqual(both.status, 0, both.stdout + both.stderr);
+  assert.match(both.stdout, /2\/2 vectors match/);
+});
+
+test('a prompt case with no expected entry is a hard error, not a skip', () => {
+  const prompt = {
+    testGroups: [{ tgId: 1, parameterSet: 'ML-KEM-768', tests: [{ tcId: 1, d: '00'.repeat(32), z: '11'.repeat(32) }] }],
+  };
+  const expected = { testGroups: [{ tgId: 99, tests: [{ tcId: 99, ek: '00', dk: '00' }] }] };
+  const p = write('orphan-prompt.json', JSON.stringify(prompt));
+  const e = write('orphan-expected.json', JSON.stringify(expected));
+  const r = run(['--vectors', p, '--expected', e]);
+  assert.strictEqual(r.status, 3, r.stdout + r.stderr);
+  assert.match(r.stderr, /no entry in --expected/);
+});
+
+test('a decapsulation vector is never re-encapsulated', () => {
+  // The decapsulation groups in NIST's file carry no m. A harness that tries to
+  // re-encapsulate fails with "m must be 32 bytes" instead of comparing k.
+  const d = Buffer.alloc(32, 0x21);
+  const z = Buffer.alloc(32, 0x22);
+  const m = Buffer.alloc(32, 0x23);
+  const { publicKey, secretKey } = kem.generateKeypairDerand(d, z);
+  const { ciphertext, sharedSecret } = kem.encapsulateDerand(Buffer.from(publicKey), m);
+  const prompt = {
+    testGroups: [
+      {
+        tgId: 4,
+        parameterSet: 'ML-KEM-768',
+        function: 'decapsulation',
+        tests: [{ tcId: 86, dk: Buffer.from(secretKey).toString('hex'), c: Buffer.from(ciphertext).toString('hex') }],
+      },
+    ],
+  };
+  const expected = { testGroups: [{ tgId: 4, tests: [{ tcId: 86, k: Buffer.from(sharedSecret).toString('hex') }] }] };
+  const p = write('decap-prompt.json', JSON.stringify(prompt));
+  const e = write('decap-expected.json', JSON.stringify(expected));
+  const r = run(['--vectors', p, '--expected', e]);
+  assert.strictEqual(r.status, 0, r.stdout + r.stderr);
+  assert.match(r.stdout, /1\/1 vectors match/);
+});
+
 test.after(() => {
   fs.rmSync(tmpdir, { recursive: true, force: true });
 });
