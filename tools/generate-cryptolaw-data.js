@@ -134,7 +134,7 @@ const CLAUSES = [
     evidence: [
       {
         file: 'docs/research/',
-        finding: 'FIBEMATE 定位为"PQC 可执行教科书"+"全栈工程验证平台"，未进行商业化销售',
+        finding: 'FIBEMATE 定位为"中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台"，未进行商业化销售',
         status: 'compliant'
       },
       {

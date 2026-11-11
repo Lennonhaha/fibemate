@@ -1,7 +1,7 @@
 # FIBEMATE 产品路线图（8/31 开源后衍生方向）
 
 > **用途**：8/31 开源后的产品化演进依据。冻结期（8/31 前）不触发任何动作，不触碰主分支代码。
-> **定位声明**：FIBEMATE 当前是后量子密码学全栈工程验证平台（PQC executable textbook，GPLv3）。以下为开源后**可能的衍生方向**，是规划而非当前承诺。
+> **定位声明**：FIBEMATE 当前是中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台（PQC executable textbook，GPLv3）。以下为开源后**可能的衍生方向**，是规划而非当前承诺。
 > **配套文档**：[`DEVELOPMENT-GAP-ANALYSIS.md`](DEVELOPMENT-GAP-ANALYSIS.md)（工程缺口）、[`NIST-CSF-GAP-ANALYSIS.md`](NIST-CSF-GAP-ANALYSIS.md)（框架合规差距）、[`CALL-FOR-COLLABORATORS.md`](CALL-FOR-COLLABORATORS.md)（招募降 Bus Factor）。
 
 ---

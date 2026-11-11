@@ -1,7 +1,7 @@
 # CARS (Crypto-Agility Readiness Score) — FIBEMATE v3.3.0 自评报告
 
 **评估日期**：2026-08-02（v3, 100% scanner coverage）  
-**评估对象**：FIBEMATE 后量子密码学全栈工程验证平台  
+**评估对象**：FIBEMATE 中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台  
 **评估方法**：CARS 五维度框架 + PQC 生态扫描器（`tools/pqc-ecosystem-scan.js`）自动化审计  
 **CARS 论文参考**：Krämer et al., "Crypto-Agility Readiness Score (CARS) — A Five-Dimensional Assessment Framework"
 
