@@ -15,9 +15,9 @@
 
 ---
 
-# FIBEMATE — 后量子密码学全栈工程验证平台 / Post-Quantum Cryptography Full-Stack Engineering Platform
+# FIBEMATE — 中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台 / A Chinese PQC Executable Textbook and SM × PQC Hybrid Verification Platform
 
-> **Math → Code → Hardware** — FIBEMATE is not a library. It's a full-stack validation platform that shows you *how* PQC works at every layer.
+> **Math → Code → Hardware** — FIBEMATE is not a library. It's an executable textbook and hybrid verification platform that shows you *how* PQC works at every layer.
 >
 > - 📐 **Math**: NTT butterfly, lattice topology, Kakeya sets — all 3D interactive
 > - 💻 **Code**: Pure JS reference + WASM + C Native — performance comparison at a glance
@@ -35,7 +35,7 @@
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
-> 🥈 **FIBEMATE has achieved the OpenSSF Best Practices Silver badge** — 44 of 44 MUST criteria, achieved 2026-11-09. Statement coverage is 81.3% and enforced at 80% in CI.
+> 🥈 **FIBEMATE has achieved the OpenSSF Best Practices Silver badge** — 44 of 44 MUST criteria, achieved 2026-11-09. Statement coverage is 80.53% on CI (run `42682613340`, measured 2026-11-10) and 81.27% in a local run; the CI floor is 80%.
 > 📊 **OpenSSF Scorecard 8.1 / 10** — scorecard v5.6.0, measured 2026-11-09T18:37Z (UTC+8 2026-11-10 02:37) at commit `2ec3d0e`; desktop 7.5 / 10, tools 6.9 / 10. Scores move, so the timestamp is part of the claim.
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--1407--686X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-1407-686X)
 [![Zenodo](https://img.shields.io/badge/Zenodo-4%20records-1682D4)](https://zenodo.org/search?q=%220009-0009-1407-686X%22)
