@@ -6,7 +6,7 @@
 
 ## 项目定位
 
-FIBEMATE 是**后量子密码学全栈工程验证平台** (PQC executable textbook, GPLv3)。
+FIBEMATE 是**中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台** (PQC executable textbook, GPLv3)。
 不是生产库, 不是商业产品 — 用于理解 PQC 如何工作。
 
 核心差异: NIST PQC + 国密 SM2/3/4 + 双棘轮 PQ + FPGA 源码 + 200+ TSR 证据链。

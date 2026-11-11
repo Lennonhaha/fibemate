@@ -1,7 +1,7 @@
 # IBM Research 2026 — Application-Level Crypto Agility 七维评估
 
 **评估日期**：2026-08-02  
-**评估对象**：FIBEMATE v3.3.0 — 后量子密码学全栈工程验证平台  
+**评估对象**：FIBEMATE v3.3.0 — 中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台  
 **评估框架**：IBM Research 2026 «Application-Level Crypto Agility» 七维框架  
 **评估方法**：源码级实证扫描（`www/crypto/*.js`、`packages/*`、`docs/tla/*`、`.github/workflows/*`）  
 **锁仓 commit**：`090a7b8`

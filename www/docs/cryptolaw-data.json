@@ -1,7 +1,7 @@
 {
   "version": "v1.0.0",
   "source": "@fibemate/cryptolaw-assessment",
-  "generatedAt": "2026-08-03T11:05:46.448Z",
+  "generatedAt": "2026-11-11T06:33:39.917Z",
   "legalBasis": "《中华人民共和国密码法》(2020年1月1日施行) · 5章44条",
   "scopeNote": "仅覆盖开源 PQC 教育/验证平台 FIBEMATE，不替代法律意见。",
   "stats": {
@@ -162,7 +162,7 @@
       "evidence": [
         {
           "file": "docs/research/",
-          "finding": "FIBEMATE 定位为\"PQC 可执行教科书\"+\"全栈工程验证平台\"，未进行商业化销售",
+          "finding": "FIBEMATE 定位为\"中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台\"，未进行商业化销售",
           "status": "compliant"
         },
         {
