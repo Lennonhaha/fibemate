@@ -10,7 +10,8 @@ authors:
 repository-code: 'https://github.com/Lennonhaha/fibemate'
 url: 'https://fibemate.net'
 abstract: >-
-  FIBEMATE is a post-quantum cryptography full-stack engineering verification platform.
+  FIBEMATE is a Chinese-language executable textbook for post-quantum cryptography
+  and an SM × PQC hybrid verification platform.
   It implements ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa native JS with proven Noble interop),
   SLH-DSA-128s (FIPS 205, WASM bridge), and Chinese national standards SM2/SM3/SM4,
   with application-layer ML-KEM-768 hybrid key exchange, FPGA hardware acceleration,
