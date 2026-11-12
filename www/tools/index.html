@@ -60,9 +60,10 @@
 
   <div class="tool">
     <h2><span class="num">1</span>cbom-tools · 物料清单生成器</h2>
-    <p class="meta">npm <code>cbom-tools@0.2.6</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/cbom-tools">源码</a></p>
+    <p class="meta">npm <code>cbom-tools@0.2.7</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/cbom-tools">源码</a></p>
     <p>扫描代码库，产出符合 OWASP CycloneDX 1.7 的 CBOM：算法、模式、曲线、密钥长度按官方 schema 校验，而不是按自己的解析器「能吃回去」。</p>
     <p><code>npx cbom-tools scan --dir ./project --out cbom.json --spec 1.7</code>（旧版可用 <code>--spec 1.6</code>）</p>
+    <p>v0.2.7 起：<code>cbom-scan --dir &lt;path&gt;</code> 路径不存在或不是目录时返回退出码 2；旧版输出空 BOM 并退出 0。</p>
   </div>
 
   <div class="tool">
