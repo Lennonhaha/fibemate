@@ -899,7 +899,7 @@
                     <img src="/img/badge-scorecard.svg" alt="OpenSSF Scorecard 8.1" width="136" height="20" style="height:28px;width:auto;vertical-align:middle;">
                 </a>
             </div>
-            <p class="hero-eyebrow" style="font-size:0.82rem;letter-spacing:0.04em;color:#8b949e;margin-bottom:0.7rem;">护航金融与关键行业 · 通过 OpenSSF Silver 认证（44/44 MUST）</p>
+            <p class="hero-eyebrow" style="font-size:0.82rem;letter-spacing:0.04em;color:#8b949e;margin-bottom:0.7rem;">护航金融与关键行业 · OpenSSF Best Practices Silver（自认证，44/44 MUST）</p>
             <h1 style="font-size:clamp(1.3rem, 2.7vw, 2rem);margin-bottom:0.9rem;">
                 <span class="gradient-text" style="display:inline-block;line-height:1.4;">FIBEMATE：中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台</span>
             </h1>
@@ -1281,7 +1281,7 @@
                 <div class="feature-title">标准化 · CycloneDX CBOM</div>
                 <div class="feature-desc">
                     原生输出符合 OWASP CycloneDX 规范的 CBOM，字段位置、枚举大小写与命名语义按官方 schema 校验，而不是按自己的解析器「能吃回去」。
-                    同时参与该规范中密码学属性语义的澄清（提交记录见上游规范仓库）。
+                    同时参与该规范中密码学属性语义的澄清（提交记录见上游规范仓库）。cbom-tools 已合并进 CycloneDX/tool-center 工具清单（PR #170，2026-11-05），可在上游仓库核验。
                 </div>
             </div>
 
@@ -1308,7 +1308,7 @@
             <!-- cbom-tools 版本号：发版时与 fibemate-tools/cbom-tools/package.json 同步（keep in sync with fibemate-tools/cbom-tools/package.json） -->
             <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,229,195,0.18);">
                 <a href="https://www.npmjs.com/package/cbom-tools" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">
-                    <span style="display:inline-flex;border-radius:4px;overflow:hidden;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1;vertical-align:middle;"><span style="background:#3d444d;color:#e6edf3;padding:5px 9px;">npm</span><span style="background:#00d4aa;color:#04120f;padding:5px 9px;font-weight:700;">v0.2.6</span></span>
+                    <span style="display:inline-flex;border-radius:4px;overflow:hidden;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1;vertical-align:middle;"><span style="background:#3d444d;color:#e6edf3;padding:5px 9px;">npm</span><span style="background:#00d4aa;color:#04120f;padding:5px 9px;font-weight:700;">v0.2.7</span></span>
                     <span style="color:#c9d1d9;font-size:0.92rem;font-weight:600;">cbom-tools &middot; 物料清单生成器</span>
                 </a>
                 <span style="color:#8b949e;font-size:0.85rem;">&mdash; <strong style="color:#c9d1d9;">① 生成 CBOM</strong>：扫描代码产出 CycloneDX 1.7 清单（旧版可用 <code style="background:none;border:0;padding:0;color:#8b949e;">--spec 1.6</code>），交给 verifact 核对</span>
@@ -1375,7 +1375,7 @@
         </div>
 
         <p class="section-subtitle" style="max-width:760px;margin:1.25rem auto 0;font-size:0.85rem;color:#8b949e;">
-            按 OpenSSF 最佳实践标准自评达 Silver 银牌（自认证，非第三方认证）· Scorecard 主仓 8.1 / 桌面端 7.5 / 工具仓 6.9（2026-11-10 复核）· 时间戳存证（TSR）链路持续运行
+            按 OpenSSF 最佳实践标准自评达 Silver 银牌（自认证，非第三方认证）· Scorecard 主仓 8.1（2026-11-12）/ 桌面端 7.5（2026-11-11）/ 工具仓 6.8（2026-11-12）· 时间戳存证（TSR）链路持续运行
         </p>
     </section>
 
@@ -2449,7 +2449,7 @@
           <h3>外部认证与评分</h3>
           <ul>
             <li>OpenSSF Best Practices · Silver（主仓，44/44 MUST）· Passing（桌面端）</li>
-            <li>OpenSSF Scorecard · fibemate 8.1 / tauri 7.5 / tools 6.9（v5.6.0 / v5.5.0 / v5.3.0，2026-11-10 复核）</li>
+            <li>OpenSSF Scorecard · fibemate 8.1（v5.6.0，2026-11-12）/ tauri 7.5（v5.5.0，2026-11-11）/ tools 6.8（v5.6.0，2026-11-12）</li>
             <li>CII Best Practices 项目号 13695 · 15379</li>
           </ul>
         </div>
@@ -2578,7 +2578,7 @@
             FIBEMATE is an open-source project licensed under GPL-3.0. &nbsp;·&nbsp; Contact: <a href="mailto:research@fibemate.net" style="color:#00d4aa;">research@fibemate.net</a>
         </p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-11-10 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 267 份 .tsr (lg-001~lg-116，空号不复用) ✓<br>
+            最后更新：2026-11-12 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 267 份 .tsr (lg-001~lg-116，空号不复用) ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · Phase 1 算法由 @noble/post-quantum 提供，双向验证通过)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
