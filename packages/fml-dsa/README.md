@@ -69,4 +69,10 @@ exact size for the parameter set throw `RangeError` naming the expected length.
 
 ## License
 
-GPL-3.0-only. See `LICENSE` in the repository root.
+GPL-3.0-only, and the full text ships in this package as `LICENSE`. See also
+`LICENSE` in the repository root.
+
+The two runtime dependencies are MIT-licensed. Their license text is not copied into
+this package's tarball because npm installs them as separate packages and their own
+`LICENSE` files travel with them; what this package distributes under GPL-3.0-only is
+its own source. Using them as libraries does not relicense them.
