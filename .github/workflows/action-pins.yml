@@ -1,0 +1,41 @@
+name: action-pins
+
+# A pin can look right in review and still name a commit that does not exist. That is
+# invisible to every local test (they run step bodies, not `uses:` lines) and to PR CI
+# (publish.yml does not run there). On 2026-11-15 one such pin failed at "Set up job"
+# on the first real execution of the publish workflow.
+#
+# This job therefore resolves every `uses:` reference through the API. It is deliberately
+# NOT part of the main CI matrix: it needs the network, and the only thing that can
+# invalidate a pin is a change under .github/, so it costs nothing to gate on paths.
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+      - 'scripts/check-action-pins.cjs'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+      - 'scripts/check-action-pins.cjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pins:
+    name: 'every uses: pin resolves'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Verify every pin against the API
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-action-pins.cjs
