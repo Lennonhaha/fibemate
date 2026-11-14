@@ -132,6 +132,14 @@ jobs:
           node test/lockout.test.js
           node test/smoke-backend.js
 
+      # The aggregator (test/test-all.js). The explicit list above exists so a
+      # failure points at one suite; this step exists so a suite added only to
+      # the aggregator still runs here, on all three OSes. Without it, a new
+      # suite is covered by the coverage job alone (ubuntu, single platform) and
+      # nobody notices that the matrix never ran it.
+      - name: Run aggregated suite (test/test-all.js)
+        run: node test/test-all.js
+
       # FIPS 204 byte-level gate: pk/sk must equal the @noble/post-quantum oracle on three
       # fixed seeds, and signatures must verify in both directions. See
       # packages/fml-dsa/src/core/README.md for the four gates this enforces.
