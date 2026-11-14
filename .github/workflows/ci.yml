@@ -146,6 +146,12 @@ jobs:
       - name: fml-dsa byte-level oracle comparison
         run: node packages/fml-dsa/test/interop-oracle.test.js
 
+      # FIPS 204 canonical encoding: the unused tail of the hint block must be zero.
+      # Before the decoder fix the same (pk, msg) had many accepted byte strings, so a
+      # signature could not be used as an identifier (#456). This gate asserts rejection.
+      - name: fml-dsa non-canonical signature gate
+        run: node packages/fml-dsa/test/verify-canonical-signature.test.js --strict
+
       # The committed WASM artifact, not a rebuild: deploys must not need a Rust
       # toolchain. Byte-compares against @noble/post-quantum on fixed seeds.
       - name: ML-KEM-768 WASM artifact is FIPS 203 (vs noble)

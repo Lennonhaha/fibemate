@@ -300,6 +300,19 @@ export function decodeSig(buf, paramSet) {
     h.push(hi);
   }
 
+  // FIPS 204 requires the unused tail of the hint block to be zero. The original
+  // decoder stopped reading at the last row pointer and ignored the rest, so a
+  // signature with flipped bytes in that tail still verified: the same (pk, msg)
+  // then had many accepted byte strings and a signature could not be used as an
+  // identifier. Reject instead of ignore. Issue #456.
+  for (let j = kIdx; j < omega; j++) {
+    if (buf[hStart + j] !== 0) {
+      throw new RangeError(
+        `decodeSig: non-canonical hint padding at h[${j}] = ${buf[hStart + j]} (expected 0)`,
+      );
+    }
+  }
+
   return { cTilde, z, h };
 }
 
