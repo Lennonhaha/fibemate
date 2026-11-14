@@ -18,8 +18,11 @@ name: publish
 # gone: there is one publishable package, and its path is written out literally.
 #
 # Required repository secret: NPM_TOKEN (automation token with publish rights).
-# Status 2026-11-15: NOT configured; `npm whoami` locally returns E401. Without the
-# secret this job fails at the auth step — deliberately, rather than silently skipping.
+# Status 2026-11-15: configured (secret present since 2026-11-14T16:15Z). That the
+# secret exists is not the same as the token being able to publish: the guard below
+# asks `npm view`, which is a public read and succeeds without any credential at all.
+# The step after it is therefore `npm whoami`, the cheapest question an expired,
+# revoked or wrong-account token answers with 401 before a tarball is ever built.
 #
 # Usage:
 #   git tag v0.1.0-fml-dsa && git push origin v0.1.0-fml-dsa
@@ -116,6 +119,29 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           else
             echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Verify the registry credential identifies a publisher
+        # An expired, revoked or wrong-account token answers 401 here, before anything
+        # is packed. Without this step the first place a bad token surfaces is
+        # `npm publish`, i.e. after a tag has already been pushed, which is the most
+        # expensive moment to discover it. A dry run executes this step, so the token
+        # can be proven before a tag exists.
+        if: steps.guard.outputs.skip != 'true'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          EXPECTED_NPM_USER: Lennonhaha
+        run: |
+          set -euo pipefail
+          if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+            echo "::error::NPM_TOKEN is empty — set it in repository secrets"
+            exit 1
+          fi
+          who=$(npm whoami)
+          echo "registry identity: $who (expected: $EXPECTED_NPM_USER)"
+          if [ "$who" != "$EXPECTED_NPM_USER" ]; then
+            echo "::error::token authenticates as '$who', not '$EXPECTED_NPM_USER'; refusing to publish under the wrong account"
+            exit 1
           fi
 
       - name: Preflight — licence and docs ship, tests do not
