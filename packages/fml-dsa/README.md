@@ -1,5 +1,13 @@
 # fml-dsa
 
+> **Reference implementation, not a production cryptography library.** It has not
+> been audited. The NTT and sampling primitives come from
+> `@noble/post-quantum/_crystals.js` and SHAKE/SHA-3 from `@noble/hashes` — that
+> arithmetic is noble's, not an independent implementation. The FIPS 204 layer on
+> top (keygen, sign, verify, encoding) is this repository's code, checked
+> byte-for-byte against the NIST ACVP vectors and against noble's own ML-DSA.
+> Use it to verify conformance, not to protect real secrets.
+
 ML-DSA (FIPS 204) in pure JavaScript. No native addon, no WebAssembly. The two runtime
 dependencies are `@noble/hashes` (SHAKE/SHA-3) and `@noble/post-quantum` (the NTT and
 sampling primitives, so the arithmetic is byte-identical to a second implementation rather
