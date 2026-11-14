@@ -49,26 +49,58 @@ jobs:
 
       - name: Resolve package and version
         id: target
+        # Nothing from an event payload is interpolated into this script. A
+        # `${{ ... }}` inside `run:` is substituted before the shell sees the
+        # file, so a branch named `v1.0.0-$(curl ...)` would execute. Passing the
+        # values through `env` makes them data; CodeQL's js/code-injection rule
+        # flagged exactly that on the first version of this file.
+        env:
+          EVENT: ${{ github.event_name }}
+          REF: ${{ github.event.workflow_run.head_branch }}
+          INPUT_PACKAGE: ${{ inputs.package }}
+          INPUT_VERSION: ${{ inputs.version }}
         # Tag-triggered publishes carry the tag name as workflow_run.head_branch,
         # e.g. v0.1.0-fml-dsa -> fml-dsa@0.1.0. A version cannot contain '-', so
         # the split is unambiguous.
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            pkg='${{ inputs.package }}'
-            ver='${{ inputs.version }}'
-          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
-            ref='${{ github.event.workflow_run.head_branch }}'
-            case "$ref" in
-              v*-*) ver="${ref#v}"; ver="${ver%%-*}"; pkg="${ref#v*-}" ;;
-              *) echo "::notice::publish run was not tag-triggered (ref=$ref); defaulting to fml-dsa"; pkg=fml-dsa; ver= ;;
-            esac
-          else
-            pkg=fml-dsa; ver=''
-          fi
-          if [ -z "${ver:-}" ]; then
+          pkg=''
+          ver=''
+          case "${EVENT:-}" in
+            workflow_dispatch)
+              pkg="${INPUT_PACKAGE:-}"
+              ver="${INPUT_VERSION:-}"
+              ;;
+            workflow_run)
+              ref="${REF:-}"
+              case "$ref" in
+                v*-*)
+                  ver="${ref#v}"
+                  ver="${ver%%-*}"
+                  pkg="${ref#v*-}"
+                  ;;
+                *)
+                  echo "::notice::publish run was not tag-triggered (ref=${ref:-empty}); defaulting to fml-dsa"
+                  pkg=fml-dsa
+                  ;;
+              esac
+              ;;
+            *)
+              pkg=fml-dsa
+              ;;
+          esac
+          if [ -z "$pkg" ]; then pkg=fml-dsa; fi
+          # A name or version that is not shaped like one is a bug upstream, not
+          # something to hand to the registry.
+          case "$pkg" in
+            *[!a-z0-9@/._-]*) echo "::error::refusing suspicious package name: $pkg"; exit 1 ;;
+          esac
+          if [ -z "$ver" ]; then
             ver=$(node -p "require('./packages/${pkg}/package.json').version")
           fi
+          case "$ver" in
+            *[!0-9A-Za-z.+-]*) echo "::error::refusing suspicious version: $ver"; exit 1 ;;
+          esac
           echo "package=$pkg version=$ver"
           echo "package=$pkg" >> "$GITHUB_OUTPUT"
           echo "version=$ver" >> "$GITHUB_OUTPUT"
@@ -76,27 +108,31 @@ jobs:
       - name: Verify the published bytes
         # Waits out the registry's processing window instead of failing at the
         # first 404 (see the comment block at the top of the script).
-        run: node scripts/verify-release.cjs --package '${{ steps.target.outputs.package }}' --version '${{ steps.target.outputs.version }}' --wait-seconds 300
+        env:
+          PKG: ${{ steps.target.outputs.package }}
+          VER: ${{ steps.target.outputs.version }}
+        run: node scripts/verify-release.cjs --package "$PKG" --version "$VER" --wait-seconds 300
 
       - name: Report the failure as an issue
         if: failure()
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
           PKG: ${{ steps.target.outputs.package }}
           VER: ${{ steps.target.outputs.version }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         # One issue per broken release, not one per weekly run: a search for an
         # open issue with the same title decides whether to create another.
         run: |
           set -euo pipefail
           title="release verification failed: ${PKG}@${VER}"
-          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$title in:title" --json number --jq 'length')
+          existing=$(gh issue list --repo "$REPO" --state open --search "$title in:title" --json number --jq 'length')
           if [ "$existing" -gt 0 ]; then
             echo "::notice::open issue already exists for ${title}"
           else
-            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
-              --body "The post-publish verification for \`${PKG}@${VER}\` failed.
+            gh issue create --repo "$REPO" --title "$title" --body "The post-publish verification for \`${PKG}@${VER}\` failed.
 
-          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          Run: ${RUN_URL}
 
           The checks, in order: packument exists, \`dist-tags.latest\`, version document,
           tarball download, sha512 of the downloaded tarball against \`dist.integrity\`,
