@@ -73,22 +73,6 @@ function node(cwd, scriptArgs, timeoutMs = 300000) {
   return { cmd: [process.execPath, ...scriptArgs].join(' '), cwd, spawn: () => spawnSync(process.execPath, scriptArgs, { cwd, encoding: 'utf8', timeout: timeoutMs, maxBuffer: 16 * 1024 * 1024 }) };
 }
 
-function npm(cwd, npmArgs, timeoutMs = 600000) {
-  return {
-    cmd: `${NPM} ${npmArgs.join(' ')}`,
-    cwd,
-    spawn: () =>
-      spawnSync(NPM, npmArgs, {
-        cwd,
-        encoding: 'utf8',
-        timeout: timeoutMs,
-        maxBuffer: 16 * 1024 * 1024,
-        // npm on Windows is a .cmd shim; spawn needs a shell to resolve it.
-        shell: process.platform === 'win32',
-      }),
-  };
-}
-
 // ---------------------------------------------------------------- step 9
 
 function tarballAudit() {
