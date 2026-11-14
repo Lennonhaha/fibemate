@@ -7,6 +7,65 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [v3.3.3] — 2026-11-14
+
+Patch release: delivery honesty. Nothing here changes an algorithm; everything here
+changes whether the project's own claims can be trusted without re-reading the code.
+
+### Fixed
+
+- **The live version header was lying.** `X-App-Version` was hard-coded in three
+  places and read `2238b36f` (PR #413) while the deployed tree was `5e72aa6`
+  (PR #448) — 35 commits behind the code it described. It is now rendered at deploy
+  time from `package.json` and `git rev-parse --short=8 HEAD`, and the deploy fails
+  if the rendered value cannot be verified over HTTPS. (#459)
+- **A gate that could not be trusted when it fired.** `check-live-version.sh`
+  compared the header without stripping the carriage return `curl` leaves behind, so
+  it printed two identical strings and failed anyway. (#460)
+- **An unreachable host was reported as a broken link.** The citation probe now
+  retries through `curl` when Node's `fetch` cannot connect, records a transport
+  failure as unresolved instead of failed, and still fails when nothing at all could
+  be verified. (#461, #462)
+- **A TLA+ property that could never hold.** `L_Handshake` was asserted as a
+  liveness property, but after a session closes its premise stays true forever while
+  the conclusion never arrives, so the formula is unsatisfiable — TLC said exit 13.
+  Replaced with `L_Reach`, which is the property the model actually supports.
+
+### Changed
+
+- Documentation no longer carries numbers from superseded models: `101,467` states →
+  `133,891 generated / 26,115 distinct` (2026-11-14), and the timestamp count is
+  stated as `372 files / 261 unique tokens / 111 byte-identical copies`. Historical
+  pages keep their dated figures on purpose — a number with a date is a record, a
+  number without one is a claim. (#454, #458)
+- `scripts/check-deps.cjs` replaces shell-specific `npm ls` preflight; `npm test`
+  runs the aggregate suite on Windows, macOS and Ubuntu in CI. (#455, #457)
+
+### Added
+
+- `evidence/` — raw logs, commands and environment for the TLA+ and FPGA numbers, so
+  "verified" can be re-run instead of believed.
+- `docs/ENGINEERING-DISCIPLINE.md` — the rules the numbers above are held to.
+- `packages/fml-dsa/test/verify-canonical-signature.test.js` — regression kit for
+  non-canonical ML-DSA signatures (#456). Audit mode today; it becomes a gate in the
+  same commit as the decoder fix, deliberately not before.
+
+### Known issues
+
+- ML-DSA decoders accept non-canonical hint tails: one `(pk, msg)` pair has many
+  accepted signature byte strings. No forgery and no key exposure; it breaks anything
+  that treats signature bytes as an identifier. Tracked as #456, target v2.4.
+- The citation probe depends on outbound access to `doi.org`; a blocked network now
+  produces "unresolved", not a false accusation against the link.
+
+### Verification
+
+- Production: `v3.3.2 (5f6f8ac6)` deployed 2026-11-14 20:52 GMT+8, delivery gate
+  4/4 PASS, 4,536 immutable entries restored byte-for-byte.
+- `npm test`, 43/43 checks on pull requests, OpenSSF Scorecard 8.1.
+
+---
+
 ## [v3.3.0] — 2026-08-03
 
 ### 🎯 Highlights
