@@ -123,6 +123,19 @@ export function encodeSK(sk, paramSet) {
   const totalBytes = 32 + 32 + 64 + s1Bytes + s2Bytes + t0Bytes;
   const buf = new Uint8Array(totalBytes);
 
+  // Reject out-of-range coefficients instead of wrapping them. t0 is the centred low
+  // part of Power2Round and lives in [-4095, 4096]; s1/s2 live in [-eta, eta]. Packing a
+  // negative value as 13 bits used to wrap modulo 8192 (t0=4107 decoded as -4085), which
+  // is how the self-test below printed FAIL on every run while the build stayed green.
+  const checkPoly = (poly, name, lo, hi, i) => {
+    for (let j = 0; j < 256; j++) {
+      const v = poly[j];
+      if (!Number.isInteger(v) || v < lo || v > hi) {
+        throw new RangeError(`encodeSK: ${name}[${i}][${j}] = ${v} outside [${lo}, ${hi}]`);
+      }
+    }
+  };
+
   // ρ ∥ K ∥ tr
   buf.set(sk.rho, 0);
   buf.set(sk.K, 32);
@@ -131,6 +144,7 @@ export function encodeSK(sk, paramSet) {
   // s1
   let bitPos = 128 * 8;
   for (let i = 0; i < l; i++) {
+    checkPoly(sk.s1[i], 's1', -eta, eta, i);
     // s1 signed [-η,η] → offset to [0, 2η]
     const offset = new Int32Array(256);
     for (let j = 0; j < 256; j++) offset[j] = eta - sk.s1[i][j];
@@ -139,6 +153,7 @@ export function encodeSK(sk, paramSet) {
 
   // s2
   for (let i = 0; i < k; i++) {
+    checkPoly(sk.s2[i], 's2', -eta, eta, i);
     const offset = new Int32Array(256);
     for (let j = 0; j < 256; j++) offset[j] = eta - sk.s2[i][j];
     bitPos = polyBitPack(offset, etaBits, buf, bitPos);
@@ -146,6 +161,7 @@ export function encodeSK(sk, paramSet) {
 
   // t0
   for (let i = 0; i < k; i++) {
+    checkPoly(sk.t0[i], 't0', -((1 << 12) - 1), 1 << 12, i);
     bitPos = polyBitPack(sk.t0[i].map((v) => (1 << 12) - v), 13, buf, bitPos);
   }
 
@@ -160,7 +176,7 @@ export function decodeSK(buf, paramSet) {
   const t0Bytes = (k * 256 * 13 + 7) >> 3;
   const totalBytes = 128 + s1Bytes + s2Bytes + t0Bytes;
 
-  if (buf.length < totalBytes) throw new RangeError(`decodeSK: expected ${totalBytes}B, got ${buf.length}B`);
+  if (buf.length !== totalBytes) throw new RangeError(`decodeSK: expected exactly ${totalBytes}B, got ${buf.length}B`);
 
   const rho = buf.slice(0, 32);
   const K = buf.slice(32, 64);
@@ -403,7 +419,9 @@ export function decodeSig(buf, paramSet) {
     const s2 = Array.from({ length: k }, () => new Int32Array(256).fill(0));
     const t0 = Array.from({ length: k }, () => {
       const p = new Int32Array(256);
-      for (let i = 0; i < 256; i++) p[i] = Math.floor(Math.random() * 8192);
+      // t0 is centred in [-4095, 4096]; the old 0..8191 range was itself invalid and
+      // only surfaced as a silent 8192-wrap inside encodeSK.
+      for (let i = 0; i < 256; i++) p[i] = Math.floor(Math.random() * 8192) - 4095;
       return p;
     });
     const sk = { rho, K, tr, s1, s2, t0 };
@@ -458,5 +476,7 @@ export function decodeSig(buf, paramSet) {
   }
 
   if (ok) console.log('✅ encode: self-tests passed');
-  else console.error('❌ encode: self-tests FAILED');
+  // Throw, not console.error: this block printed FAIL on every run since 2026-07 and no
+  // step ever went red, so the alarm became noise. A failing self-test must fail the build.
+  else throw new Error('encode: self-tests FAILED - see the FAIL lines above');
 })();
