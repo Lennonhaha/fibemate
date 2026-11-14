@@ -156,5 +156,5 @@ RN 适配: Web Crypto subtle + IndexedDB → 存储层替换
 - 所有浏览器模块路径: `/opt/fibemate-full/www/crypto/`
 - SM2EC 已通过 TVLA N=5,000/10,000, 1-4 阶矩全绿
 - SM3Hash 纯 JS 实现, SM4GCM 纯 JS 实现
-- PQC Hybrid 已在生产运行 (900/900 高压全绿)
+- PQC Hybrid 已在生产运行 (900/900 高压全绿，2026-07 实测)
 - 不建议在 RN 中引入 SLH-DSA WASM (平台限制), 签名改用 SM2 即可

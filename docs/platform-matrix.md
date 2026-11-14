@@ -49,7 +49,7 @@
 
 | Platform | Host OS | Runtime | KAT | TVLA | SM2 Hybrid | Status |
 |:---|:---|:---|:---|:---|:---|:---|
-| x86_64 ECS | Ubuntu 22.04 | Node.js v22 | ✅ | ✅ | ✅ (900/900) | ✅ |
+| x86_64 ECS | Ubuntu 22.04 | Node.js v22 | ✅ | ✅ | ✅ (900/900，2026-07 实测) | ✅ |
 | x86_64 local | Windows 11 | Node.js v22 | ✅ | ✅ | ✅ | ✅ |
 | x86_64 local | Windows 11 | Chrome 133+ | ⚠️ | — | ⚠️ | ⚠️ |
 | STM32F407 | bare metal | C framework | — | — | — | 🔬 |

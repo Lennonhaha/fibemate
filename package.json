@@ -9,6 +9,8 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "node --watch src/index.js",
+    "pretest": "node scripts/check-deps.cjs",
+    "pretest": "node scripts/check-deps.cjs",
     "test": "node test/test-all.js",
     "test:http": "node test/http-integration.test.js",
     "test:keccak": "node test/test-keccak.js",
@@ -22,6 +24,8 @@
     "audit": "node scripts/daily-audit.js",
     "audit:fix": "node scripts/daily-audit.js --fix",
     "audit:json": "node scripts/daily-audit.js --json",
+    "pretest:coverage": "node scripts/check-deps.cjs",
+    "pretest:coverage": "node scripts/check-deps.cjs",
     "test:coverage": "node scripts/coverage.cjs"
   },
   "dependencies": {

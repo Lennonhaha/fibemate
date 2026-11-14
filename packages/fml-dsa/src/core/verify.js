@@ -16,6 +16,28 @@ const D = 13;
 const _2D = BigInt(1 << D);
 
 /**
+ * Constant-time byte-array equality.
+ *
+ * The values compared here (c̃ and c̃') are public — they are part of the
+ * signature — so this is not a secret-dependent comparison. It is still done in
+ * constant time because this module is reused by callers that compare secrets
+ * with the same helper, and an early return on the first differing byte is a bad
+ * pattern to leave lying around.
+ *
+ * @param {Uint8Array} a
+ * @param {Uint8Array} b
+ * @returns {boolean}
+ */
+function constantTimeEqual(a, b) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) {
+    diff |= a[i] ^ b[i];
+  }
+  return diff === 0;
+}
+
+/**
  * ML-DSA.Verify(pk_raw, M, sig_raw) - FIPS 204 §4.3
  *
  * @param {Uint8Array} pk_raw  - encoded pk bytes from encodePK
@@ -118,14 +140,10 @@ export function verify(pk_raw, msg, sig_raw, ctx = new Uint8Array(0), paramSet =
   const w1Encoded = encodeW1(w1Recovered, MLDSA_PARAMS[paramSet].gamma2);
   const cTildePrime = shake256(new Uint8Array([...mu, ...w1Encoded]), cTildeBytes);
 
-  // Step 13: c̃' == c̃
-  // Step 13: c̃' == c̃. No debug output: expected rejections (flipped byte, wrong key)
-  // are normal outcomes, and printing them makes a green run look like a failing one.
-  for (let i = 0; i < cTildeBytes; i++) {
-    if (cTildePrime[i] !== cTilde[i]) return false;
-  }
-
-  return true;
+  // Step 13: c̃' == c̃ — compared over the full length in constant time.
+  // No debug output: expected rejections (flipped byte, wrong key) are normal
+  // outcomes, and printing them makes a green run look like a failing one.
+  return constantTimeEqual(cTildePrime, cTilde);
 }
 
 /** Bit-pack w1 for challenge hash (same as sign.js encodeW1) */
