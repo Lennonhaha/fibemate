@@ -62,7 +62,7 @@ for (const rel of tsrFiles) {
     const buf = fs.readFileSync(abs);
     size = buf.length;
     hash = crypto.createHash('sha256').update(buf).digest('hex');
-  } catch (e) {
+  } catch (_e) {
     hash = 'ERROR';
   }
   const stem = rel.replace(/\.tsr$/, '');
@@ -147,7 +147,7 @@ function gitHead() {
     return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
       cwd: REPO_ROOT, encoding: 'utf8',
     }).trim();
-  } catch (e) { return 'unknown'; }
+  } catch (_e) { return 'unknown'; }
 }
 
 console.log(JSON.stringify({

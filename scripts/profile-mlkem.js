@@ -24,7 +24,7 @@ const _samplePoly = core.samplePoly;
 const _shake128 = core.shake128;
 
 const kp = generateKeypair();
-const { ciphertext, sharedSecret } = encapsulate(kp.publicKey);
+const { ciphertext, _sharedSecret } = encapsulate(kp.publicKey);
 
 console.log('=== ML-KEM-768 Profile ===');
 console.log('Runs: %d per benchmark', RUNS);
@@ -37,7 +37,7 @@ bench('decapsulate',      () => decapsulate(kp.secretKey, ciphertext));
 bench('full roundtrip',   () => {
     const kp2 = generateKeypair();
     const enc = encapsulate(kp2.publicKey);
-    const ss = decapsulate(kp2.secretKey, enc.ciphertext);
+    const _ss = decapsulate(kp2.secretKey, enc.ciphertext);
 });
 
 console.log();

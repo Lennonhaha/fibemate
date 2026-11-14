@@ -136,7 +136,7 @@ function quickFunctionalTests() {
   
   // Compressed public key format (33 bytes starting with 02 or 03)
   const aliceCompressed = alice.getPublicKey(null, 'compressed');
-  const aliceSharedFromCompressed = alice.computeSecret(bob.getPublicKey());
+  const _aliceSharedFromCompressed = alice.computeSecret(bob.getPublicKey());
   console.log('Compressed pubkey supported: ' + (aliceCompressed.length === 33 ? 'YES' : 'NO'));
   
   return { functionalTests: 4, allPass: true };

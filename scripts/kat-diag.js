@@ -8,10 +8,10 @@
 const crypto = { getRandomValues: null };
 globalThis.crypto = crypto;
 
-const { generateKeypair, encapsulate, decapsulate,
-        PUBLIC_KEY_BYTES, SECRET_KEY_BYTES, CIPHERTEXT_BYTES, SHARED_SECRET_BYTES,
-        sha3_512, sha3_256, shake128, shake256, samplePoly, polyMul, matVecMul, vecAdd, modAdd,
-        byteEncode, cbd2 }
+const { generateKeypair, _encapsulate, _decapsulate,
+        _PUBLIC_KEY_BYTES, _SECRET_KEY_BYTES, _CIPHERTEXT_BYTES, _SHARED_SECRET_BYTES,
+        sha3_512, _sha3_256, _shake128, shake256, samplePoly, _polyMul, _matVecMul, _vecAdd, _modAdd,
+        _byteEncode, cbd2 }
     = require('../packages/pqc-kem');
 
 function hexToBytes(hex) {

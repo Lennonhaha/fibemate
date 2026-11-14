@@ -20,14 +20,12 @@
 
 'use strict';
 
-const crypto = require('crypto');
-const assert = require('assert');
 
 // ═══ GBT 32905-2016 Test Vectors (HMAC-SM3) ═══
 // Appendix A.1: HMAC-SM3 with key = SM3(""), data = "abc"
 // Appendix A.2: HMAC-SM3 with key = SM3("abc"), data = "abcd..." (64 bytes)
 
-const VECTORS = [
+const _VECTORS = [
   {
     id: 'GBT32905-A.1',
     desc: 'HMAC-SM3: key = SM3(""), data = "abc"',
@@ -48,17 +46,17 @@ const VECTORS = [
 let sm3;
 try {
   sm3 = require('sm-crypto').sm3;
-} catch (e) {
+} catch (_e) {
   console.log('Note: sm-crypto not installed. Using internal FIBEMATE SM3.');
   try {
     sm3 = require('../www/crypto/sm3-browser.js');
-  } catch (e2) {
+  } catch (_e2) {
     console.error('FATAL: Cannot load SM3 from sm-crypto or www/crypto/sm3-browser.js');
     process.exit(1);
   }
 }
 
-function sm3Hex(input) {
+function _sm3Hex(input) {
   // sm-crypto's sm3(str) hashes a hex string directly
   return sm3(input);
 }
@@ -182,7 +180,7 @@ function runTests() {
     } else {
       console.log(`❌ Test 6: sm-crypto HMAC-SM3 output wrong format`);
     }
-  } catch (e) {
+  } catch (_e) {
     console.log(`⊘ Test 6: sm-crypto not available, skipped`);
     total--; // don't count
   }

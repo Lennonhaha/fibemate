@@ -6,11 +6,10 @@ const m = require('../www/crypto/crypto/ml-kem-768.js');
 // (can't without internal access — so trace one roundtrip manually)
 
 const kp = m.generateKeypair();
-const pk = kp.publicKey;
-const sk = kp.secretKey;
+const _pk = kp.publicKey;
+const _sk = kp.secretKey;
 
 // Manual trace: writing the steps inline to check intermediate values
-const crypto = require('crypto');
 
 // =========================================
 // Read the source and add instrumentation

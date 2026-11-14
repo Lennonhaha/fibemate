@@ -24,7 +24,7 @@ else { console.log('  ' + rtPass + '/100 FAIL'); fail++; }
 
 // --- Tamper detection ---
 console.log('Tamper detection:');
-let tamperOk = true;
+let _tamperOk = true;
 const encRes = SM4.encrypt('secret message', KEY, { iv: IV });
 const parts = encRes.ciphertext.match(/.{1,2}/g) || [];
 parts[0] = (parseInt(parts[0], 16) ^ 0x01).toString(16).padStart(2, '0');

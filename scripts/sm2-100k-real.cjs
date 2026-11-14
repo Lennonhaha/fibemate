@@ -47,7 +47,7 @@ function flushLog() {
 async function run() {
   const start = Date.now();
   let failures = [];
-  let logLines = 0;
+  let _logLines = 0;
 
   // 预热：生成一轮确认基础功能
   const warmup = SM2.generateKeyPair();
@@ -102,7 +102,7 @@ async function run() {
         const elapsed = ((Date.now() - start) / 1000).toFixed(1);
         const rate = (i / elapsed).toFixed(1);
         log(`Round ${i}/${TOTAL} done — ${rate} rounds/sec`);
-        logLines++;
+        _logLines++;
       }
 
       // 每5千轮强制flush

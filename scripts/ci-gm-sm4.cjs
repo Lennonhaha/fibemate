@@ -13,7 +13,7 @@ let kat;
 try { kat = JSON.parse(fs.readFileSync(katPath, 'utf8')); }
 catch (e) { abort('Cannot load KAT: ' + e.message); }
 
-let pass = 0, errs = 0;
+let pass = 0, _errs = 0;
 const firstErrors = [];
 
 for (const v of kat) {
@@ -24,7 +24,7 @@ for (const v of kat) {
   if (dec === expected) {
     pass++;
   } else {
-    errs++;
+    _errs++;
     if (firstErrors.length < 3) {
       firstErrors.push({ count: v.count, got: dec });
     }

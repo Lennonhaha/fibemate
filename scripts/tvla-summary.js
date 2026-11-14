@@ -14,7 +14,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { _execSync } = require('child_process');
 
 const TVLA_DIR = path.join(__dirname, 'tvla');
 const TVLA_THRESHOLD = 4.5; // standard TVLA |t| threshold

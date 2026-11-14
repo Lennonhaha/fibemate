@@ -467,7 +467,7 @@ async function probeDoi(entry, opts) {
   let res;
   try {
     res = await fetchWithRetry(api, opts, api);
-  } catch (err) {
+  } catch (_err) {
     // Resolver unreachable is distinct from "DOI does not exist": fall back to the
     // landing page once so a doi.org outage does not turn into a content verdict.
     res = await fetchWithRetry(entry.url, opts, entry.url);
@@ -480,7 +480,7 @@ async function probeDoi(entry, opts) {
   let body;
   try {
     body = JSON.parse(res.buf.toString('utf8'));
-  } catch (err) {
+  } catch (_err) {
     return { ok: false, stage: 'resolve', detail: 'handle API returned non-JSON' };
   }
   if (body.responseCode !== 1) return { ok: false, stage: 'resolve', detail: 'handle API responseCode ' + body.responseCode };

@@ -79,7 +79,7 @@ async function main() {
   const kem = (() => {
     try {
       return require('../packages/pqc-kem');
-    } catch (e) {
+    } catch (_e) {
       return null;
     }
   })();
@@ -110,7 +110,7 @@ async function main() {
   try {
     const mod = await import('../packages/fml-dsa/src/index.js');
     dsa = mod.ml_dsa65;
-  } catch (e) {
+  } catch (_e) {
     dsa = null;
   }
 

@@ -31,7 +31,7 @@ console.log('Keygen x50:', (Date.now() - t2) + 'ms', '(' + ((Date.now() - t2) / 
 try {
   const noble = require('@noble/post-quantum/ml-kem');
   const kp = m.generateKeypair();
-  const { ciphertext, sharedSecret } = m.encapsulate(kp.publicKey);
+  const { ciphertext, _sharedSecret } = m.encapsulate(kp.publicKey);
   const ss = m.decapsulate(kp.secretKey, ciphertext);
   const dec = noble.decapsulate(ciphertext, kp.secretKey);
   let eq = 0;

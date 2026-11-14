@@ -95,7 +95,7 @@ class L9 {
     }
 }
 
-function tickN(l8, l9, n, nd, fa, ft, rst) {
+function _tickN(l8, l9, n, nd, fa, ft, rst) {
     for (let i = 0; i < n; i++) {
         l8.tick(nd, fa, ft, rst);
         l9.tick(l8, rst);

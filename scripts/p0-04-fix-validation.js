@@ -13,7 +13,6 @@
 //
 // Net: only the main production KEM file was affected. Fix is surgical.
 
-const crypto = require('crypto');
 const m = require('../www/crypto/crypto/ml-kem-768.js');
 
 console.log('=== P0-04 Fix Validation ===\n');

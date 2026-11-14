@@ -5,7 +5,7 @@
 const https = require('https');
 
 const BASE = 'https://fibemate.net';
-const EXPECTED_BRANCH = 'main';
+const _EXPECTED_BRANCH = 'main';
 
 // ─── Paths ───
 const PATHS = [
