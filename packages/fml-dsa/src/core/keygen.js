@@ -10,7 +10,7 @@ import { shake256 } from './shakestream.js';
 import { expandA, expandS } from './sampling.js';
 import { vecNtt, vecInvNtt, matVecMulNtt, vecAdd } from './polyvec.js';
 import { encodePK, encodeSK } from './encode.js';
-import { power2Round, decompose } from './reduce.js';
+import { power2Round } from './reduce.js';
 import { selftestConsole } from './selftest-log.js';
 
 /**
