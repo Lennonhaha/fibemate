@@ -1,0 +1,106 @@
+# SPDX-License-Identifier: GPL-3.0-only
+#
+# Post-publish verification. `publish.yml` ending green means npm accepted the
+# tarball; it does not mean a consumer can install it. For fml-dsa@0.1.0 the
+# registry showed three states in three minutes (absent, 0.0.0-stage
+# placeholder, real version), so "the publish job passed" and "the package is
+# installable" were briefly different facts.
+#
+# This workflow closes that gap: after a successful publish it pulls the bytes
+# back from the registry and compares the sha512 of what it downloaded with
+# dist.integrity, which is the only check that ties the public artifact to what
+# CI built. It also runs weekly, so a package that silently disappears (unpublish,
+# registry incident, tag rewrite) surfaces without waiting for a user report.
+name: release-verify
+
+on:
+  workflow_run:
+    workflows: [publish]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'npm package name'
+        required: true
+        default: fml-dsa
+      version:
+        description: 'exact version to verify'
+        required: true
+        default: 0.1.0
+  schedule:
+    # Mondays 06:00 UTC: catches unpublish/registry drift with nobody watching.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  verify:
+    # The publish run reports success or failure; verifying a failed publish is
+    # noise. workflow_dispatch and schedule have no workflow_run payload.
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+
+      - name: Resolve package and version
+        id: target
+        # Tag-triggered publishes carry the tag name as workflow_run.head_branch,
+        # e.g. v0.1.0-fml-dsa -> fml-dsa@0.1.0. A version cannot contain '-', so
+        # the split is unambiguous.
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            pkg='${{ inputs.package }}'
+            ver='${{ inputs.version }}'
+          elif [ "${{ github.event_name }}" = "workflow_run" ]; then
+            ref='${{ github.event.workflow_run.head_branch }}'
+            case "$ref" in
+              v*-*) ver="${ref#v}"; ver="${ver%%-*}"; pkg="${ref#v*-}" ;;
+              *) echo "::notice::publish run was not tag-triggered (ref=$ref); defaulting to fml-dsa"; pkg=fml-dsa; ver= ;;
+            esac
+          else
+            pkg=fml-dsa; ver=''
+          fi
+          if [ -z "${ver:-}" ]; then
+            ver=$(node -p "require('./packages/${pkg}/package.json').version")
+          fi
+          echo "package=$pkg version=$ver"
+          echo "package=$pkg" >> "$GITHUB_OUTPUT"
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
+
+      - name: Verify the published bytes
+        # Waits out the registry's processing window instead of failing at the
+        # first 404 (see the comment block at the top of the script).
+        run: node scripts/verify-release.cjs --package '${{ steps.target.outputs.package }}' --version '${{ steps.target.outputs.version }}' --wait-seconds 300
+
+      - name: Report the failure as an issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG: ${{ steps.target.outputs.package }}
+          VER: ${{ steps.target.outputs.version }}
+        # One issue per broken release, not one per weekly run: a search for an
+        # open issue with the same title decides whether to create another.
+        run: |
+          set -euo pipefail
+          title="release verification failed: ${PKG}@${VER}"
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$title in:title" --json number --jq 'length')
+          if [ "$existing" -gt 0 ]; then
+            echo "::notice::open issue already exists for ${title}"
+          else
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" \
+              --body "The post-publish verification for \`${PKG}@${VER}\` failed.
+
+          Run: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+
+          The checks, in order: packument exists, \`dist-tags.latest\`, version document,
+          tarball download, sha512 of the downloaded tarball against \`dist.integrity\`,
+          and SLSA attestations. A 404 that survives the retry window means consumers
+          cannot install this version; a failed integrity check means the published
+          bytes are not the bytes CI built, which is worse."
+          fi
