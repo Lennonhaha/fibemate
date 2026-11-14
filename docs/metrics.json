@@ -1,0 +1,71 @@
+{
+  "schemaVersion": 1,
+  "updated": "2026-11-14",
+  "policy": "N3 single source: external numbers must come from this file. Every entry carries value + scope + date + reproducible command. scripts/check-metrics.cjs recomputes the git-derived entries and fails on drift.",
+  "metrics": {
+    "tsr.files": {
+      "value": 372,
+      "unit": "files",
+      "scope": "tracked RFC 3161 .tsr files, git ls-files (no dedupe)",
+      "date": "2026-11-14",
+      "command": "git ls-files '*.tsr' | wc -l",
+      "recompute": "git"
+    },
+    "tsr.uniqueTokens": {
+      "value": 261,
+      "unit": "tokens",
+      "scope": "sha256 of each tracked .tsr blob, duplicates collapsed",
+      "date": "2026-11-14",
+      "command": "for f in $(git ls-files '*.tsr'); do git show HEAD:$f | sha256sum; done | sort -u | wc -l",
+      "recompute": "git"
+    },
+    "tsq.files": {
+      "value": 240,
+      "unit": "files",
+      "scope": "tracked RFC 3161 .tsq files, git ls-files (no dedupe)",
+      "date": "2026-11-14",
+      "command": "git ls-files '*.tsq' | wc -l",
+      "recompute": "git"
+    },
+    "tsq.uniqueTokens": {
+      "value": 133,
+      "unit": "tokens",
+      "scope": "sha256 of each tracked .tsq blob, duplicates collapsed",
+      "date": "2026-11-14",
+      "command": "for f in $(git ls-files '*.tsq'); do git show HEAD:$f | sha256sum; done | sort -u | wc -l",
+      "recompute": "git"
+    },
+    "tla.c2.generated": {
+      "value": 133891,
+      "unit": "states",
+      "scope": "TLC 2.19 / tla2tools v1.7.4, docs/tla/C2.cfg (7 invariants + L_Reach), depth 17, 2 branches, 0 violations",
+      "date": "2026-11-14",
+      "command": "java -jar tla2tools.jar -config docs/tla/C2.cfg docs/tla/C2.tla",
+      "recompute": "manual"
+    },
+    "tla.c2.distinct": {
+      "value": 26115,
+      "unit": "states",
+      "scope": "same run as tla.c2.generated; the pair must always be quoted together",
+      "date": "2026-11-14",
+      "command": "java -jar tla2tools.jar -config docs/tla/C2.cfg docs/tla/C2.tla",
+      "recompute": "manual"
+    },
+    "scorecard.score": {
+      "value": 8.1,
+      "unit": "score",
+      "scope": "OpenSSF Scorecard API, project github.com/Lennonhaha/fibemate",
+      "date": "2026-11-14",
+      "command": "curl -s https://api.securityscorecards.dev/projects/github.com/Lennonhaha/fibemate",
+      "recompute": "manual"
+    },
+    "openssf.silverMUST": {
+      "value": 44,
+      "unit": "criteria",
+      "scope": "OpenSSF Best Practices Silver, MUST criteria with evidence (self-certified, project 13695)",
+      "date": "2026-11-10",
+      "command": "curl -s https://bestpractices.dev/projects/13695.json",
+      "recompute": "manual"
+    }
+  }
+}
