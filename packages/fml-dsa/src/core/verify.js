@@ -84,14 +84,14 @@ export function verify(pk_raw, msg, sig_raw, ctx = new Uint8Array(0), paramSet =
   // Step 6: tr ← H(encodePK(pk), 64) - FIPS 204: full 64-byte hash of pk
   const tr = shake256(encodePK({ rho, t1 }, paramSet), 64);
 
-  // Step 7: μ ← H(tr ‖ M')  where M' = (0, ctx_len, ctx) ‖ M (FIPS 204 domain sep)
-  // Noble's getMessage prepends [0, ctx.length] before msg. With empty ctx (length 0),
-  // M' = [0x00, 0x00] || msg. This is required for cross-Noble interoperability.
-  const muInput = new Uint8Array(64 + 2 + msg.length);
+  // Step 7: μ ← H(tr ‖ M')  where M' = (0, ctx_len, ctx) ‖ M   (FIPS 204 §5.3 step 6)
+  // ctx bytes must be hashed, not just counted. See sign.js for the same fix.
+  const muInput = new Uint8Array(64 + 2 + ctx.length + msg.length);
   muInput.set(tr, 0);
-  muInput[64] = 0;        // domain sep byte 0
-  muInput[65] = 0;        // ctx length (0 = no context)
-  muInput.set(msg, 66);
+  muInput[64] = 0;        // domain separator
+  muInput[65] = ctx.length;
+  muInput.set(ctx, 66);
+  muInput.set(msg, 66 + ctx.length);
   const mu = shake256(muInput, 64);
 
   // Step 8: c ← SampleInBall(c̃); ĉ ← NTT(c)
@@ -227,5 +227,7 @@ function encodeW1(w1, gamma2) {
   }
 
   if (ok) console.log('✅ verify: self-tests passed');
-  else console.error('❌ verify: self-tests FAILED');
+  // Must throw, not log: a self-test that prints FAIL and returns normally cannot
+  // fail the build. encode/reduce/keygen/sign already throw; verify was the last one.
+  else throw new Error('verify: self-tests FAILED - see the FAIL lines above');
 })();

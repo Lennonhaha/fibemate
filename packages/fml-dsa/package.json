@@ -1,9 +1,38 @@
 {
   "name": "fml-dsa",
   "version": "0.1.0",
-  "description": "FIBEMATE ML-DSA (FIPS 204) — NTT-domain; Phase 1: algorithm provided by @noble/post-quantum",
+  "description": "ML-DSA (FIPS 204) in pure JavaScript: ML-DSA-44/65/87 keygen, sign and verify, byte-compatible with NIST ACVP KeyGen vectors.",
   "type": "module",
-  "exports": "./src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./core": "./src/core/all.js",
+    "./src/*": "./src/*",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "src/",
+    "README.md"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lennonhaha/fibemate.git",
+    "directory": "packages/fml-dsa"
+  },
+  "homepage": "https://fibemate.net",
+  "bugs": {
+    "url": "https://github.com/Lennonhaha/fibemate/issues"
+  },
+  "keywords": [
+    "ml-dsa",
+    "dilithium",
+    "post-quantum",
+    "fips-204",
+    "signature"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "sideEffects": false,
   "scripts": {
     "test": "node test/fml-dsa.test.js",
     "test:edge": "node test/edge.test.js",
@@ -12,9 +41,10 @@
     "test:kat": "node test/kat-verify.mjs",
     "test:input": "node test/input-validation.test.js",
     "test:tvla": "node test/tvla-timing.test.js",
-    "test:all": "node test/ntt.test.js && node test/noble-oracle.test.js && node test/fml-dsa.test.js && node test/edge.test.js && node test/input-validation.test.js && node test/context-passthrough.test.js && node test/interop-oracle.test.js && node test/verify-constant-time.test.js && node test/sk-encoding.test.js",
+    "test:all": "node test/ntt.test.js && node test/noble-oracle.test.js && node test/fml-dsa.test.js && node test/edge.test.js && node test/input-validation.test.js && node test/context-passthrough.test.js && node test/interop-oracle.test.js && node test/verify-constant-time.test.js && node test/sk-encoding.test.js && node test/sign-deterministic-parity.test.js",
     "test:interop": "node test/interop-oracle.test.js",
-    "test:sk": "node test/sk-encoding.test.js"
+    "test:sk": "node test/sk-encoding.test.js",
+    "test:det": "node test/sign-deterministic-parity.test.js"
   },
   "license": "GPL-3.0-only",
   "devDependencies": {

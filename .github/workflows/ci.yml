@@ -164,6 +164,12 @@ jobs:
       - name: ML-KEM-768 WASM artifact is FIPS 203 (vs noble)
         run: node --test test/mlkem-wasm-fips.test.cjs
 
+      # A self-test that prints "FAILED" and returns cannot fail a build. verify.js
+      # did exactly that until 2026-11-15, four months after its siblings were fixed.
+      # Static on purpose: no keys, no runtime, so it can gate every platform first.
+      - name: Self-tests fail loudly (no print-only FAIL)
+        run: node scripts/check-selftest-throws.cjs
+
   # ─── C 原生 addon：构建后与 JS 后端对拍 ───────────────────
   # index.js prefers the C addon whenever it is present, so this is the path
   # users actually execute in a native build. Nothing else in CI compiles it.

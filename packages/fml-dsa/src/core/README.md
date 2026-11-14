@@ -1,13 +1,30 @@
-# `fml-dsa/src/core` — Phase-1 pure-JS reference implementation
+# `fml-dsa/src/core` — pure-JS reference implementation
 
-This directory is a **reference implementation**, not part of the production path.
+As of 2026-11-15 this directory **is** the production path: `src/index.js` is a thin adapter
+over these modules. Read the status below before changing that, because the reasoning that
+kept it out of production for a month was sound and is now satisfied rather than ignored.
 
 ## Status
 
-- **Phase-1 pure-JS**: written to make the ML-DSA arithmetic readable and auditable, not to be fast or shipped.
-- **Not on the production path.** The published API enters at `packages/fml-dsa/src/index.js`, which imports `./core/native.js`; `native.js` is a Phase-1 wrapper that loads `www/noble-pq-bundle/ml-dsa.js` and exposes `ml_dsa44/65/87`. Nothing in the public API reaches the other modules here.
-- **Verified reference implementation (2026-10-28).** `pk` and `sk` are byte-identical to `@noble/post-quantum` 0.7.1 on three fixed seeds, and signatures verify in both directions; see `test/interop-oracle.test.js` (24 assertions, 0 warnings). Getting there required two FIPS 204 corrections: key generation now expands `H(\u03b6 \u2016 k \u2016 \u2113, 128)` instead of `H(\u03b6, 96)`, and the secret-key encoding now packs `\u03b7 \u2212 s` and `2^(d\u22121) \u2212 t0` instead of the raw values.
-- **Still not on the production path.** Byte equality with the oracle is evidence that the algorithm is right, not a reason to ship the slower implementation.
+- **Pure-JS**: written to make the ML-DSA arithmetic readable and auditable, not to be fast.
+- **On the production path since 2026-11-15.** `src/index.js` used to import `./core/native.js`,
+  which read `www/noble-pq-bundle/ml-dsa.js` with `fs` and `eval`'d it. A tarball installed
+  outside this repository therefore threw `ENOENT` on first import. `native.js` is deleted;
+  the adapter now imports `keygen`/`sign`/`verify`/`encode` from here directly, with no `fs`,
+  no `eval`, no network.
+- **Verified against the oracle: pk, sk *and signatures*.** `pk`/`sk` are byte-identical to
+  `@noble/post-quantum` 0.7.1 on three fixed seeds and signatures verify in both directions
+  (`test/interop-oracle.test.js`, 24 assertions, 0 warnings). Since 2026-11-15 the
+  deterministic signature is byte-identical too (`test/sign-deterministic-parity.test.js`,
+  33 assertions over ML-DSA-44/65/87). Getting there required six FIPS 204 corrections:
+  key generation expands `H(ζ ‖ k ‖ ℓ, 128)` instead of `H(ζ, 96)`;
+  secret-key encoding packs `η − s` and `2^(d−1) − t0` instead of the raw
+  values; `power2Round` uses the correct mod± bound; `ρ''` includes the 32-byte `rnd`
+  field; `κ` advances by `ℓ`; and `ExpandMask` hashes `ρ ‖ LE16(κ+r)`
+  and computes `γ₁ − t`. The last three were invisible to verification, which is
+  exactly why byte equality with an independent implementation is the gate.
+- **Cost is not measured.** This is still the slower implementation. If a performance budget
+  ever matters for ML-DSA, measure before assuming it is adequate.
 
 ## Reference-analysis summary (2026-10-28, code-level only)
 
@@ -15,11 +32,10 @@ This directory is a **reference implementation**, not part of the production pat
 
 | module | external refs |
 |---|---|
-| `native.js` | imported by `src/index.js` (the only entry) |
-| `all`, `encode`, `sign` | benchmark + cross-noble test only |
-| `ntt`, `params`, `modmul` | tests only |
-| `shakestream` | its own test only |
-| `keygen`, `polyvec`, `precomputed`, `reduce`, `sampling`, `verify` | none |
+| `all`, `keygen`, `sign`, `verify`, `encode` | `src/index.js` (the entry), tests, benchmark |
+| `ntt`, `params`, `modmul`, `polyvec`, `sampling`, `reduce` | `src/index.js` via `all`, tests |
+| `shakestream` | its own test and every module above |
+| `native.js` | **deleted 2026-11-15** (was the `fs` + `eval` wrapper) |
 
 Zero *external* refs does not mean removable: those modules are imported by other files **inside** `core/`, so moving them to `legacy/` would require rewiring imports. That is why this note exists instead of a move.
 
@@ -32,9 +48,14 @@ Zero *external* refs does not mean removable: those modules are imported by othe
 
 ## Why keep it at all
 
-The pure-JS version is the readable statement of what the algorithm does; `native.js` is the shipped one. When the two disagree, the readable one is how you find out which is wrong — but only if it still compiles and the disagreement is checked by a test, not by eye.
+The pure-JS version is the readable statement of what the algorithm does, and since
+2026-11-15 it is also the shipped one. That is a deliberate trade: an implementation whose
+reasoning can be read line by line is worth more here than a faster one nobody re-derives.
 
-As of 2026-10-28 it is also the second opinion: two independent ML-DSA implementations that agree byte-for-byte are stronger evidence than one implementation checked against itself.
+The second-opinion argument still stands, and it now cuts both ways: two independent ML-DSA
+implementations that agree byte-for-byte are stronger evidence than one implementation
+checked against itself — and the day they disagree, the readable one is how you find out
+which is wrong.
 
 ## What must pass before anything here is wired into production
 
@@ -42,7 +63,7 @@ The bar is stated once, here, so it cannot drift. A module in this directory may
 production path only after all four of the following hold.
 
 **Status of these four gates: all four pass as of 2026-10-28** (`test/interop-oracle.test.js`,
-ML-DSA-65, `@noble/post-quantum` 0.7.1, 24/24). The mutation check removes the `k \u2016 \u2113`
+ML-DSA-65, `@noble/post-quantum` 0.7.1, 24/24). The mutation check removes the `k ‖ ℓ`
 separator from key generation and the suite goes red (6 failed rows); restoring it returns 24/24.
 
 ### 1. Fixed-seed byte equality

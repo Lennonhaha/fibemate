@@ -116,54 +116,61 @@ function rejBoundedPoly(seed, eta) {
 // γ₁ = 2^17 (ML-DSA-44/65) or 2^19 (ML-DSA-65/87)
 // Read 18 or 20 bits per coeff, reject if ≥ 2γ₁-1
 // ══════════════════════════════════════════════
+/**
+ * ExpandMask(ρ, κ) — FIPS 204 Algorithm 34.
+ *
+ * For each of the ℓ polynomials the SHAKE input is exactly
+ *     ρ ‖ IntegerToBytes(κ + r, 2)        (16-bit little-endian nonce)
+ *
+ * It used to be ρ ‖ [κ_hi, κ_lo] ‖ [r_lo, r_hi]: four nonce bytes instead of two,
+ * with the high and low bytes of κ swapped. That yielded a different y stream, so
+ * signatures were valid (verification never calls ExpandMask) but did not match
+ * any other implementation's deterministic output.
+ */
 export function expandMask(mu, kappa, paramSet) {
   const { l, gamma1 } = MLDSA_PARAMS[paramSet];
-  const seed = new Uint8Array(mu.length + kappa.length);
-  seed.set(mu, 0);
-  seed.set(kappa, mu.length);
-
   const result = [];
   for (let veci = 0; veci < l; veci++) {
-    const s = new Uint8Array(seed.length + 2);
-    s.set(seed, 0);
-    s[seed.length] = veci & 0xFF;
-    s[seed.length + 1] = (veci >> 8) & 0xFF;
+    const nonce = (kappa + veci) & 0xFFFF;
+    const s = new Uint8Array(mu.length + 2);
+    s.set(mu, 0);
+    s[mu.length] = nonce & 0xFF;
+    s[mu.length + 1] = (nonce >> 8) & 0xFF;
 
     const poly = new Int32Array(N);
     // Determine bit-width: γ₁ = 2^17 → need 18-bit reads
     // γ₁ = 2^19 → need 20-bit reads
     const bits = gamma1 === (1 << 17) ? 18 : 20;
-    const limit = 2 * gamma1 - 1;
-    sampleMask(s, poly, bits, limit);
+    sampleMask(s, poly, bits, gamma1);
     result.push(poly);
   }
   return result;
 }
 
-function sampleMask(seed, dest, bits, limit) {
-  let idx = 0;
-  const bytesPerBatch = 256; // enough for many samples
-  while (idx < N) {
-    const buf = shake256(seed, bytesPerBatch);
-    let bitPos = 0;
-    for (let i = 0; i < buf.length - 3 && idx < N;) {
-      // Read `bits` consecutive bits from buf
-      const byteOff = bitPos >> 3;
-      if (byteOff + 3 >= buf.length) { bitPos = 0; break; }
-      // Quick: read 4 bytes, mask
-      let val = buf[byteOff] | (buf[byteOff + 1] << 8) | (buf[byteOff + 2] << 16) | (buf[byteOff + 3] << 24);
-      val = (val >> (bitPos & 7)) & ((1 << bits) - 1);
-      bitPos += bits;
-      if (val < limit) {
-        dest[idx++] = val - (gamma1ForBits(bits) - 1);
-      }
-      i++;
-    }
+/**
+ * BitUnpack(SHAKE256(seed), γ₁−1, γ₁) — FIPS 204 Algorithm 34 / Algorithm 14.
+ *
+ * Coefficients are read as `bits`-wide little-endian bit chunks of a single SHAKE
+ * stream, and each chunk becomes γ₁ − t, giving the range (−γ₁, γ₁]. No rejection:
+ * with γ₁ a power of two the chunk width is exactly 2γ₁−1, so every value is legal.
+ *
+ * Two bugs lived here: the coefficient was computed as t − (γ₁−1) instead of
+ * γ₁ − t (wrong set, shifted by one), and the stream was re-read in 256-byte
+ * batches with the same seed, so after the first batch the same 113 coefficients
+ * were appended over and over. Both were invisible to verification because
+ * verification never calls ExpandMask.
+ */
+function sampleMask(seed, dest, bits, gamma1) {
+  const need = Math.ceil((N * bits) / 8) + 4;
+  const buf = shake256(seed, need);
+  let bitPos = 0;
+  for (let i = 0; i < N; i++) {
+    const byteOff = bitPos >> 3;
+    const shift = bitPos & 7;
+    const val = ((buf[byteOff] | (buf[byteOff + 1] << 8) | (buf[byteOff + 2] << 16) | (buf[byteOff + 3] << 24)) >>> shift) & ((1 << bits) - 1);
+    dest[i] = gamma1 - val;
+    bitPos += bits;
   }
-}
-
-function gamma1ForBits(bits) {
-  return bits === 18 ? (1 << 17) : (1 << 19);
 }
 
 // ══════════════════════════════════════════════
