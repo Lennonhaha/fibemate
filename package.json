@@ -25,7 +25,8 @@
     "audit:json": "node scripts/daily-audit.js --json",
     "pretest:coverage": "node scripts/check-deps.cjs",
     "test:coverage": "node scripts/coverage.cjs",
-    "check:action-pins": "node scripts/check-action-pins.cjs"
+    "check:action-pins": "node scripts/check-action-pins.cjs",
+    "check:action-pins:self-test": "node scripts/check-action-pins.cjs --self-test"
   },
   "dependencies": {
     "@alicloud/dysmsapi20170525": "4.6.0",
