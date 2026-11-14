@@ -17,7 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   a signature could not be used as an identifier. `decodeSig` now rejects any non-zero
   byte in the unused tail of the hint block instead of skipping it, and rejects an
   out-of-range row pointer instead of returning an empty hint row - the same defect
-  one byte to the left (#456).
+  one byte to the left - and requires hint positions within a row to be strictly
+  increasing, so a duplicated index is no longer a silent no-op (#456).
 - The regression suite that proves it (`verify-canonical-signature.test.js --strict`)
   runs in CI. It was written on 2026-11-14 in audit mode precisely so it would not turn
   red before the fix existed; the fix and the gate land together.

@@ -293,8 +293,20 @@ export function decodeSig(buf, paramSet) {
       h.push(hi);
       continue;
     }
+    // Positions in a row must be strictly increasing (FIPS 204). Setting a bit twice
+    // is a no-op, so a duplicate index decoded to the same hint matrix and the signature
+    // still verified - the third way this decoder accepted a different byte string for
+    // the same signature. #456.
+    let prevPos = -1;
     for (let j = kIdx; j < rowEnd; j++) {
-      hi[buf[hStart + j]] = 1;
+      const pos = buf[hStart + j];
+      if (pos <= prevPos) {
+        throw new RangeError(
+          `decodeSig: non-canonical hint position at row ${i}: ${pos} after ${prevPos} (must be strictly increasing)`,
+        );
+      }
+      prevPos = pos;
+      hi[pos] = 1;
     }
     kIdx = rowEnd;
     h.push(hi);
