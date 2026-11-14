@@ -85,6 +85,33 @@ git reset --hard origin/main
 NEW_HEAD="$(git rev-parse HEAD)"
 echo "      HEAD after deploy:  $NEW_HEAD"
 
+# [3b/6] Stamp the version the site will report. The header used to be a literal
+# in the nginx config ("v3.3.2 (48fc029a)") and stayed there for months, so every
+# deploy served a version that no longer existed. It is now written from the commit
+# that was just checked out, validated with `nginx -t`, and rolled back on failure.
+NGINX_SNIPPET="${NGINX_SNIPPET:-/etc/nginx/snippets/x-app-version.conf}"
+if [ "${SKIP_NGINX_STAMP:-0}" = "1" ]; then
+  echo "[3b/6] version stamp skipped (SKIP_NGINX_STAMP=1)"
+elif ! command -v nginx >/dev/null 2>&1; then
+  echo "[3b/6] nginx not found on this host; skipping version stamp"
+else
+  APP_VERSION="$(node -p "require('$REPO_DIR/package.json').version")"
+  SHORT_SHA="$(git rev-parse --short=8 HEAD)"
+  echo "[3b/6] stamping X-App-Version: v$APP_VERSION ($SHORT_SHA)"
+  mkdir -p "$(dirname "$NGINX_SNIPPET")"
+  if [ -f "$NGINX_SNIPPET" ]; then cp "$NGINX_SNIPPET" "$NGINX_SNIPPET.bak"; fi
+  printf '%s\n' "add_header X-App-Version \"v$APP_VERSION ($SHORT_SHA)\" always;" > "$NGINX_SNIPPET"
+  if nginx -t >/dev/null 2>&1; then
+    nginx -s reload
+    echo "      nginx reloaded with the new stamp"
+  else
+    echo "FAIL: 'nginx -t' rejected the stamped config; restoring the previous snippet." >&2
+    if [ -f "$NGINX_SNIPPET.bak" ]; then mv "$NGINX_SNIPPET.bak" "$NGINX_SNIPPET"; else rm -f "$NGINX_SNIPPET"; fi
+    nginx -t >&2 || true
+    exit 1
+  fi
+fi
+
 # [4/6] Restore exactly the flags that were there before. Anything else either
 # widens the locked surface (surprise for the next deploy) or narrows it.
 echo "[4/6] restoring immutable flags..."
