@@ -1,0 +1,19 @@
+{
+  "claim": "FPGA L8 (runtime integrity detectors) + L9 cross-validation: 43 of 43 cases pass",
+  "command": "node scripts/fpga-l8l9-43-test.js",
+  "measured_at": "2026-11-14T09:15:45.433Z",
+  "commit": "1c0062f82ee1acf3fa8e90a1e4f08ff531146be5",
+  "environment": {
+    "node": "v22.22.3",
+    "os": "Windows_NT 10.0.26300",
+    "arch": "x64"
+  },
+  "exit_code": 0,
+  "result": {
+    "passed": 43,
+    "failed": 0,
+    "total": 43
+  },
+  "raw_log": "2026-11-14-run.txt",
+  "note": "Behavioural model of the RTL test set, not a bitstream run on hardware."
+}

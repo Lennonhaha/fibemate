@@ -1,0 +1,24 @@
+{
+  "claim": "TLA+ Path C-2 model: 7 invariants + 1 temporal property (L_Reach), zero violations",
+  "command": "java -cp tla2tools.jar tlc2.TLC -metadir <tmp> -config C2.cfg C2.tla",
+  "spec": [
+    "docs/tla/C2.tla",
+    "docs/tla/C2.cfg"
+  ],
+  "measured_at": "2026-11-14T09:15:45.433Z",
+  "commit": "1c0062f82ee1acf3fa8e90a1e4f08ff531146be5",
+  "environment": {
+    "java": "",
+    "os": "Windows_NT 10.0.26300"
+  },
+  "exit_code": 0,
+  "result": {
+    "generated": 133891,
+    "distinct": 26115,
+    "depth": 17,
+    "temporal_branches": 2,
+    "violations": 0
+  },
+  "raw_log": "2026-11-14-tlc.txt",
+  "note": "temporal_branches is the line CI greps for; a run that only checks invariants does not print it."
+}

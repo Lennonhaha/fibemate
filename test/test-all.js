@@ -31,6 +31,7 @@ const suites = [
   ['ML-KEM-768 oracle interop', ['node', '--test', 'test/ml-kem-768-oracle-interop.test.js']],
   ['ML-KEM-768 WASM artifact (FIPS 203 vs noble)', ['node', '--test', 'test/mlkem-wasm-fips.test.cjs']],
   ['Regression guards', ['node', '--test', 'test/regression-guards.test.js']],
+  ['ML-DSA verify constant-time', ['node', 'packages/fml-dsa/test/verify-constant-time.test.js']],
 ];
 
 let failed = 0;

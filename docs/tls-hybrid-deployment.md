@@ -48,7 +48,7 @@ FIBEMATE 在 TLS 1.3 传输层部署 X25519MLKEM768 混合密钥交换，实现�
 |----|------|------|
 | TLS 传输层 | 经典 ECDHE X25519 | ✅ 行业标准 |
 | TLS 混合握手 | Path A — X25519MLKEM768 NamedGroup | ⚠️ Shelved 2026-07-19（浏览器生态未就绪）|
-| 应用层 (E2E) | Path C-2 — SM2+ML-KEM-768 | ✅ 5/5, p95=78.5ms |
+| 应用层 (E2E) | Path C-2 — SM2+ML-KEM-768 | ✅ 5/5, p95=78.5ms（2026-07 实测） |
 
 ---
 
