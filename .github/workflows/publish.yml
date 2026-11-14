@@ -35,6 +35,11 @@ on:
         description: 'Package directory under packages/ (currently: fml-dsa)'
         required: true
         type: string
+      dry_run:
+        description: 'Run every preflight but skip npm publish'
+        required: false
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -192,7 +197,10 @@ jobs:
           "
 
       - name: Publish with provenance
-        if: steps.guard.outputs.skip != 'true'
+        # Tag pushes always publish. A manual dispatch publishes only when dry_run is
+        # explicitly false, so the safe way to try this workflow cannot release by
+        # accident. `inputs.dry_run` is empty on a tag push, hence the event check.
+        if: steps.guard.outputs.skip != 'true' && (github.event_name == 'push' || inputs.dry_run != true)
         working-directory: packages/fml-dsa
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
@@ -205,6 +213,8 @@ jobs:
             echo "### ${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}"
             echo ""
             echo "- tag: \`${GITHUB_REF_NAME}\`"
+            echo "- event: ${GITHUB_EVENT_NAME}"
+            echo "- dry run: ${{ inputs.dry_run }}"
             echo "- skipped (already on registry): ${{ steps.guard.outputs.skip }}"
             echo "- job status: ${{ job.status }}"
           } >> "$GITHUB_STEP_SUMMARY"
