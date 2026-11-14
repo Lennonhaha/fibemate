@@ -393,6 +393,21 @@ function decapsulate(secretKey,ciphertext){
     const K = KYBER_K, eta1 = _KYBER_ETA1, eta2 = _KYBER_ETA2;
     const duBytes = 32 * KYBER_DU;
 
+    // Explicit length checks. Without them, byteDecode() happily reads a short
+    // buffer as zeros and a long one as trailing garbage, so a 2399-byte sk or a
+    // sk with one extra byte decapsulated "successfully" into a wrong shared
+    // secret. Ciphertext mismatches used to surface as an internal
+    // `ctEqMask length mismatch` from deep inside the FO re-encryption instead of
+    // an error that names the parameter.
+    if(!(secretKey instanceof Uint8Array))
+        throw new TypeError(`decapsulate: secretKey must be a Uint8Array, got ${secretKey===null?'null':typeof secretKey}`);
+    if(!(ciphertext instanceof Uint8Array))
+        throw new TypeError(`decapsulate: ciphertext must be a Uint8Array, got ${ciphertext===null?'null':typeof ciphertext}`);
+    if(secretKey.length !== KYBER_SECRETKEYBYTES)
+        throw new RangeError(`decapsulate: secretKey must be ${KYBER_SECRETKEYBYTES} bytes, got ${secretKey.length}`);
+    if(ciphertext.length !== KYBER_CIPHERTEXTBYTES)
+        throw new RangeError(`decapsulate: ciphertext must be ${KYBER_CIPHERTEXTBYTES} bytes, got ${ciphertext.length}`);
+
     // sk = byteEncode₁₂(s_hat) || pk || H(pk) || z
     const s=[];
     let off=0;

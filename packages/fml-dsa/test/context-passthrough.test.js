@@ -14,14 +14,18 @@
 // had no effect.
 
 import { ml_dsa65 } from '../src/index.js';
+import { ml_dsa65 as noble } from '@noble/post-quantum/ml-dsa.js';
 
 let passed = 0, failed = 0;
 function assert(cond, msg) {
   if (cond) { passed++; console.log('  ✓', msg); } else { failed++; console.error('  ✗ FAIL:', msg); }
 }
 
-const noble = globalThis.__NOBLE_PQ__ && globalThis.__NOBLE_PQ__.ml_dsa65;
-if (!noble) throw new Error('noble bundle was not loaded by src/core/native.js');
+// Noble is a devDependency and is imported directly. It used to be read off
+// globalThis.__NOBLE_PQ__, which only existed because src/core/native.js eval()'d a
+// bundle copied into www/. That entry point is gone — the package must not depend
+// on files outside its own tarball.
+if (!noble) throw new Error('@noble/post-quantum did not export ml_dsa65');
 
 const hex = (u) => Buffer.from(u).toString('hex');
 const msg = new Uint8Array([70, 73, 66, 69, 77, 65, 84, 69]); // "FIBEMATE"

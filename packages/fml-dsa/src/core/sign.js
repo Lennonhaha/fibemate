@@ -15,7 +15,7 @@ import { keygen } from './keygen.js';
 const modAbs = v => v <= (Q >> 1) ? v : Q - v;
 const modQ = v => { v %= Q; return v < 0 ? v + Q : v; };
 
-export function sign(sk, msg, ctx = new Uint8Array(0), paramSet = 'ML-DSA-65') {
+export function sign(sk, msg, ctx = new Uint8Array(0), paramSet = 'ML-DSA-65', rnd = null) {
   const { k, l, gamma1, gamma2, tau, beta, omega, cTildeBytes } = MLDSA_PARAMS[paramSet];
   if (ctx.length > 255) throw new RangeError('ctx ≤ 255 bytes required');
 
@@ -23,18 +23,30 @@ export function sign(sk, msg, ctx = new Uint8Array(0), paramSet = 'ML-DSA-65') {
   // MultiplyNTTs (do not NTT-encode A).
   const A = expandA(sk.rho, paramSet);
 
-  // Step 2: μ ← H(tr ‖ M')  where M' = (0, ctx_len, ctx) ‖ M
-  // Noble's getMessage prepends [0, ctx.length] before msg; FIPS 204 §4 step 7.
-  const muInput = new Uint8Array(sk.tr.length + 2 + msg.length);
+  // Step 2: μ ← H(tr ‖ M')  where M' = (0, ctx_len, ctx) ‖ M   (FIPS 204 §5.2 step 6)
+  // The ctx bytes are part of the hash input. Dropping them (while still writing
+  // ctx_len = 0) made every context-bearing signature silently unverifiable, and
+  // made sign() ignore the caller's context entirely.
+  const muInput = new Uint8Array(sk.tr.length + 2 + ctx.length + msg.length);
   muInput.set(sk.tr, 0);
   muInput[sk.tr.length] = 0;
-  muInput[sk.tr.length + 1] = 0;
-  muInput.set(msg, sk.tr.length + 2);
+  muInput[sk.tr.length + 1] = ctx.length;
+  muInput.set(ctx, sk.tr.length + 2);
+  muInput.set(msg, sk.tr.length + 2 + ctx.length);
   const mu = shake256(muInput, 64);
 
-  // Step 3: ρ' ← H(K ‖ μ)
-  const rp = new Uint8Array(96);
-  rp.set(sk.K, 0); rp.set(mu, 32);
+  // Step 3: ρ'' ← H(K ‖ rnd ‖ μ, 64)   (FIPS 204 §6.1 Alg 7 step 4)
+  // rnd is 32 bytes. `null` selects the deterministic variant (rnd = 0^32); the
+  // caller may pass 32 bytes for hedged signing. Omitting rnd from the hash input
+  // produced signatures that were valid but not the deterministic signature for
+  // this key/message, so no implementation could reproduce them from a vector file.
+  if (rnd !== null && !(rnd instanceof Uint8Array && rnd.length === 32)) {
+    throw new TypeError('sign: rnd must be null or a 32-byte Uint8Array');
+  }
+  const rp = new Uint8Array(32 + 32 + mu.length);
+  rp.set(sk.K, 0);
+  if (rnd !== null) rp.set(rnd, 32);
+  rp.set(mu, 64);
   const rhoPrime = shake256(rp, 64);
 
   // Precompute NTT(s1), NTT(s2), NTT(t0)  — t0 is the Power2Round low 13-bit vector
@@ -43,16 +55,15 @@ export function sign(sk, msg, ctx = new Uint8Array(0), paramSet = 'ML-DSA-65') {
   for (let i = 0; i < k; i++)  s2Ntt.push(ntt(modCopy(sk.s2[i])));
   for (let i = 0; i < k; i++)  t0Ntt.push(ntt(modCopy(sk.t0[i])));
 
+  // Step 5: κ ← 0, and κ advances by ℓ after every attempt (FIPS 204 §6.1 Alg 7).
+  // It used to advance by 1 and start at 1, which produced valid-but-unreproducible
+  // signatures and used the wrong y stream.
   let kappa = 0;
-  const kap = new Uint8Array(2);
 
   LOOP: for (let iter = 0; iter < 1000; iter++) {
-    kappa++;
-    kap[0] = (kappa >> 8) & 0xFF;
-    kap[1] = kappa & 0xFF;
-
-    // Step 6: y ← ExpandMask(ρ' ‖ κ) — normalize y to [0, Q) for downstream polyAdd.
-    const y = expandMask(rhoPrime, kap, paramSet);
+    // Step 6: y ← ExpandMask(ρ'', κ), κ advances by ℓ per attempt (FIPS 204 Alg 7).
+    const y = expandMask(rhoPrime, kappa, paramSet);
+    kappa += l;
     for (const p of y) for (let j = 0; j < N; j++) if (p[j] < 0) p[j] += Q;
 
     // Step 7: w ← A·y  (NTT domain), then convert → normal

@@ -97,6 +97,22 @@ function encapsulate(publicKey) {
 }
 
 function decapsulate(secretKey, ciphertext) {
+    // Boundary validation, before either backend. The JS backend used to accept a
+    // secret key of any length (a 2399- or 2401-byte sk both "decapsulated" into a
+    // wrong 32-byte secret), and the native backend receives raw pointers — so a
+    // wrong length is not just a wrong answer there, it is out-of-bounds read.
+    if (!(secretKey instanceof Uint8Array)) {
+        throw new TypeError(`decapsulate: secretKey must be a Uint8Array, got ${secretKey === null ? 'null' : typeof secretKey}`);
+    }
+    if (!(ciphertext instanceof Uint8Array)) {
+        throw new TypeError(`decapsulate: ciphertext must be a Uint8Array, got ${ciphertext === null ? 'null' : typeof ciphertext}`);
+    }
+    if (secretKey.length !== JS.SECRET_KEY_BYTES) {
+        throw new RangeError(`decapsulate: secretKey must be ${JS.SECRET_KEY_BYTES} bytes, got ${secretKey.length}`);
+    }
+    if (ciphertext.length !== JS.CIPHERTEXT_BYTES) {
+        throw new RangeError(`decapsulate: ciphertext must be ${JS.CIPHERTEXT_BYTES} bytes, got ${ciphertext.length}`);
+    }
     if (!native) return JS.decapsulate(secretKey, ciphertext);
     const buf = native.decaps(ciphertext, secretKey);
     return new Uint8Array(buf.buffer, buf.byteOffset, buf.length);

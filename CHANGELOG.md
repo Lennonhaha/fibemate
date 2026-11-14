@@ -11,6 +11,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **Deterministic ML-DSA signatures are now byte-identical to FIPS 204.** Three
+  deviations in the signing path were invisible to verification, because verification
+  never recomputes `ρ''` and never calls `ExpandMask`: `ρ''` was `H(K ‖ μ)` instead of
+  `H(K ‖ rnd ‖ μ)` (the 32-byte `rnd` field was missing from the hash input), `κ`
+  started at 1 and advanced by 1 instead of by `ℓ`, and `ExpandMask` hashed
+  `ρ ‖ [κ_hi, κ_lo] ‖ [r_lo, r_hi]` instead of `ρ ‖ IntegerToBytes(κ+r, 2)`, with the
+  coefficient computed as `t − (γ₁−1)` instead of `γ₁ − t` (and re-read the same
+  256-byte buffer when the stream needed more). Every signature was accepted by every
+  implementation and none could be reproduced from a vector file. Signing now matches
+  `@noble/post-quantum` byte-for-byte for ML-DSA-44/65/87 on fixed seeds, and
+  `sign-deterministic-parity.test.js` pins that equality, including context separation
+  and a caller-supplied `rnd`.
+- **`sign()` now implements `rnd` instead of pretending it does not exist.** The
+  adapter rejected `extraEntropy:true` and always signed deterministically. Hedged
+  signing is now supported (`extraEntropy: true` draws 32 bytes from the CSPRNG, a
+  32-byte `Uint8Array` is used verbatim); omitting it stays deterministic so existing
+  callers do not change behaviour. Three further FIPS 204 deviations are gone: `ctx`
+  reached neither the `μ` hash nor the domain separator (context signatures verified
+  only through the noble entry point, which is why the test passed while the core
+  ignored the option), and `verify`'s self-test printed its verdict instead of throwing.
+- **`verify.js` self-test failures are fatal.** It was the last core module that
+  reported a failed self-test and returned; its siblings already threw. `scripts/check-selftest-throws.cjs`
+  now scans `packages/*/src` for that shape and runs in CI, so the next module cannot
+  reintroduce it.
+- **ML-KEM-768 `decapsulate` validates input lengths.** A secret key one byte short,
+  one byte long, empty or garbage returned a plausible 32-byte shared secret instead of
+  failing, and trailing bytes were silently ignored - the same non-canonical-encoding
+  leniency found in the ML-DSA decoder. Both the JS path (`packages/pqc-kem/index.js`,
+  which also sits in front of the native addon and would have read out of bounds) and
+  `ml-kem-768.js` now raise `RangeError` naming the expected size; `input-length.test.js`
+  covers ±1, ±100, empty, wrong-type and the implicit-rejection case that must not change.
+- **The package entry no longer reads a file from `www/` and `eval`s it.**
+  `packages/fml-dsa/src/index.js` loaded `../../../www/noble-pq-bundle/ml-dsa.js` at
+  runtime, so the tarball installed cleanly and threw `ENOENT` on first import - the
+  published package would have been a 200 that is worse than the 404. It is now a thin
+  adapter over `src/core`, with `exports`, `files`, `repository` and a README; the
+  publish workflow runs `npm pack` → install → import before any `npm publish`.
+
 - **ML-DSA signatures are now canonical by construction.** The decoder read the hint
   counters and ignored whatever followed, so a signature with flipped bytes in the
   unused tail still verified: one `(pk, msg)` pair had many accepted byte strings, and
@@ -40,6 +78,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   red before the fix existed; the fix and the gate land together.
 
 ### Note
+
+For anyone who signed with this implementation before 2026-11-15: those signatures
+still verify (the bugs were reproducibility defects, not verification defects), but they
+are not the FIPS 204 deterministic signature for that key and message, and they will not
+match another implementation's output for the same seed.
 
 - This changes verification behaviour for non-canonical inputs only. Signatures produced
   by this implementation, by @noble/post-quantum, and by the KAT vectors are unaffected:
