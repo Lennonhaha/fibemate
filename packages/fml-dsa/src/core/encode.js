@@ -325,6 +325,23 @@ export function decodeSig(buf, paramSet) {
     }
   }
 
+  // Canonical-form backstop. Re-encode what we just decoded and require the exact same
+  // bytes. Every non-canonical case found so far - ignored tail, out-of-range pointer,
+  // duplicate index, pointer split - is a string that decodes to a valid object but is
+  // not that object's unique encoding. Comparing bytes closes the class instead of
+  // chasing the next instance. #456.
+  const reencoded = encodeSig({ cTilde, z, h }, paramSet);
+  if (reencoded.length !== totalBytes) {
+    throw new RangeError(`decodeSig: re-encode length ${reencoded.length} != ${totalBytes}`);
+  }
+  for (let i = 0; i < totalBytes; i++) {
+    if (reencoded[i] !== buf[i]) {
+      throw new RangeError(
+        `decodeSig: non-canonical encoding at byte ${i}: ${buf[i]} != ${reencoded[i]}`,
+      );
+    }
+  }
+
   return { cTilde, z, h };
 }
 

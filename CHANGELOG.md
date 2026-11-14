@@ -19,6 +19,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   out-of-range row pointer instead of returning an empty hint row - the same defect
   one byte to the left - and requires hint positions within a row to be strictly
   increasing, so a duplicated index is no longer a silent no-op (#456).
+- **Canonical-form backstop.** `decodeSig` now re-encodes what it decoded and requires
+  the exact same bytes. Each of the cases above (ignored tail, out-of-range pointer,
+  duplicate index, pointer split) was a string that decoded to a valid object without
+  being that object's unique encoding; comparing bytes closes the class instead of
+  chasing the next instance (#456).
 - The regression suite that proves it (`verify-canonical-signature.test.js --strict`)
   runs in CI. It was written on 2026-11-14 in audit mode precisely so it would not turn
   red before the fix existed; the fix and the gate land together.
