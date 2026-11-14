@@ -1,0 +1,121 @@
+name: publish
+
+# Tag-driven npm release with Sigstore provenance.
+#
+# Why this exists: publishing by hand is how a package ends up half-released, and
+# `--provenance` cannot be produced outside CI (it needs an OIDC id-token). A tag is
+# the only human decision; everything after it is mechanical.
+#
+# Required repository secret: NPM_TOKEN (automation token, publish rights for the
+# @fibemate scope and the unscoped names below). Without it the job fails at the auth
+# step — deliberately, rather than silently skipping a release.
+#
+# Usage:
+#   git tag v0.1.0-fml-dsa && git push origin v0.1.0-fml-dsa
+#   gh workflow run publish --ref main -f package=fml-dsa
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package directory under packages/ (e.g. fml-dsa)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write # required for provenance (OIDC)
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Only packages that are publish-ready: they carry LICENSE, README and a
+        # "files" allowlist. Adding a name here is a promise that npm i <name> works.
+        package:
+          - fml-dsa
+          - pqc-kem
+          - sm2-ref
+          - sm3-ref
+          - sm4-ref
+          - sm2-multisig
+          - algorithm-registry
+          - key-lifecycle
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84c2dfa7cb0a0a8e1 # v4.4.0
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Resolve package identity
+        id: pkg
+        working-directory: packages/${{ matrix.package }}
+        run: |
+          node -e "
+            const p=require('./package.json');
+            console.log('name=' + p.name);
+            console.log('version=' + p.version);
+          " >> "$GITHUB_OUTPUT"
+
+      - name: Skip when this exact version is already on the registry
+        id: guard
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          set +e
+          npm view "${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}" version >/dev/null 2>&1
+          rc=$?
+          set -e
+          if [ $rc -eq 0 ]; then
+            echo "already published: ${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Preflight — the tarball must install and import in a clean directory
+        working-directory: packages/${{ matrix.package }}
+        run: |
+          set -euo pipefail
+          name="${{ steps.pkg.outputs.name }}"
+          tarball=$(npm pack --silent | tail -n 1)
+          echo "tarball: $tarball"
+          trap 'rm -f "$PWD/$tarball"' EXIT
+          work=$(mktemp -d)
+          cd "$work"
+          npm init -y >/dev/null
+          npm install "$GITHUB_WORKSPACE/packages/${{ matrix.package }}/$tarball" --no-audit --no-fund
+          node --input-type=module -e "
+            const m = await import('$name');
+            const keys = Object.keys(m);
+            if (keys.length === 0) throw new Error('package exports nothing');
+            console.log('import ok:', keys.length, 'exports');
+          "
+
+      - name: Publish with provenance
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: packages/${{ matrix.package }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --provenance --access public
+
+      - name: Record result
+        if: always()
+        run: |
+          {
+            echo "### ${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}"
+            echo ""
+            echo "- skipped (already on registry): ${{ steps.guard.outputs.skip }}"
+            echo "- job status: ${{ job.status }}"
+          } >> "$GITHUB_STEP_SUMMARY"

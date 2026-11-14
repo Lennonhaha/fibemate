@@ -2,6 +2,7 @@
 
 **类型**：npm 包（轻量）
 **状态**：设计阶段
+**发布状态**：**未发布**。registry 实测 `@fibemate/kat-verifier` = 404（2026-11-15）；当前实现只存在于本仓库 `tools/kat-verifier/`，下文 `npm install` 均为目标形态，不是现状。
 **优先级**：⭐⭐⭐⭐
 
 ---
