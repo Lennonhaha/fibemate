@@ -9,6 +9,16 @@
     "kem"
   ],
   "license": "Apache-2.0",
+  "author": "刘天赫 <research@fibemate.net>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Lennonhaha/fibemate.git",
+    "directory": "packages/pqc-kem"
+  },
+  "homepage": "https://fibemate.net",
+  "bugs": {
+    "url": "https://github.com/Lennonhaha/fibemate/issues"
+  },
   "main": "index.js",
   "files": [
     "index.js",
