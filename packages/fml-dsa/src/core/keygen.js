@@ -20,13 +20,23 @@ import { power2Round, decompose } from './reduce.js';
  * All internal polynomials work in normal (non-NTT) domain.
  * NTT transformation is applied only where FIPS 204 specifies it.
  */
-export function keygen(paramSet = 'ML-DSA-65') {
+export function keygen(paramSet = 'ML-DSA-65', zetaSeed) {
   const { k, l, eta } = MLDSA_PARAMS[paramSet];
   const D = 13;
   const gamma2 = 261888; // (Q-1)/32, valid for all ML-DSA parameter sets
 
   // Step 1: ζ ← {0,1}^{256} (seed for ExpandS)
-  const zeta = crypto.getRandomValues(new Uint8Array(32));
+  // An explicit ζ makes keygen reproducible, which is what lets us check our own output
+  // against NIST ACVP KeyGen vectors instead of only checking noble's (#470).
+  let zeta;
+  if (zetaSeed === undefined) {
+    zeta = crypto.getRandomValues(new Uint8Array(32));
+  } else {
+    if (!(zetaSeed instanceof Uint8Array) || zetaSeed.length !== 32) {
+      throw new RangeError('keygen: zetaSeed must be a 32-byte Uint8Array');
+    }
+    zeta = Uint8Array.from(zetaSeed);
+  }
 
   // Step 2: (ρ, ρ′, K) ← H(ζ ‖ k ‖ ℓ, 128) — FIPS 204 Algorithm 4 line 2
   // The k,ℓ domain separator is mandatory: without it, key generation is not injective

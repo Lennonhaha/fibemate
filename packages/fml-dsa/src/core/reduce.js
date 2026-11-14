@@ -8,16 +8,22 @@ import { Q } from './params.js';
 
 // ══════════════════════════════════════════════
 // Power2Round: r = r1·2^d + r0
-// FIPS 204 Algorithm 2 — r0 ∈ [-2^(d-1), 2^(d-1)-1] (centered mod±)
+// FIPS 204 Algorithm 2 — r0 ∈ (-2^(d-1), 2^(d-1)] = [-2^(d-1)+1, 2^(d-1)] (mod± rounding)
 // ══════════════════════════════════════════════
 export function power2Round(r, d) {
   const two_d = 1 << d;
   const half = two_d >> 1;
   const mask = two_d - 1;
   
-  // mod± 2^d: unsigned bits → centered
+  // mod± 2^d: unsigned bits → centered in (-2^(d-1), 2^(d-1)].
+  // The bound is r0 > half, not r0 > half - 1. With half - 1 the value 2^(d-1) itself
+  // was folded to -2^(d-1), which is outside the range mod± can produce: FIPS 204
+  // Algorithm 2 (and the Dilithium reference) keep t0 = +4096 and never emit -4096.
+  // -4096 is also unrepresentable in 13 bits, so encoding a keygen output that
+  // contained it wrapped modulo 8192 and decoded to a different coefficient.
+  // Found 2026-11-14 via the encodeSK self-test alarm (#470).
   let r0 = r & mask;
-  if (r0 > half - 1) r0 -= two_d;
+  if (r0 > half) r0 -= two_d;
   
   // r1 = (r - r0) / 2^d   (r0 is signed, r is unsigned mod-Q)
   const r1 = (r - r0) >> d;
@@ -146,11 +152,13 @@ export function vecInfNormLt(zVec, gamma1, beta) {
   const gamma2 = (Q - 1) / 32; // 261888
   const twoG2 = 2 * gamma2;
 
-  // 1. power2Round — centred r0 ∈ [-2^(d-1), 2^(d-1)-1]
+  // 1. power2Round — centred r0 ∈ (-2^(d-1), 2^(d-1)]. The bound below used to say
+  // r0 >= halfD, which is the same off-by-one that produced the -4096 above: the
+  // self-test asserted the bug, so the bug was never reported. #470
   const halfD = _2D >> 1;
   for (let r = 0; r < 10000; r++) {
     const [r1, r0] = power2Round(r, D);
-    if (r0 < -halfD || r0 >= halfD || r1 * _2D + r0 !== r) { ok = false; console.log(`FAIL power2Round: r=${r} r1=${r1} r0=${r0}`); break; }
+    if (r0 < -halfD + 1 || r0 > halfD || r1 * _2D + r0 !== r) { ok = false; console.log(`FAIL power2Round: r=${r} r1=${r1} r0=${r0}`); break; }
   }
   if (ok) console.log(`  PASS power2Round 10000x`);
 
@@ -199,7 +207,7 @@ export function vecInfNormLt(zVec, gamma1, beta) {
 
   // 6. Edge: Power2Round(Q-1)
   const [h1, l1] = power2Round(Q - 1, D);
-  if (l1 < -halfD || l1 >= halfD) { ok = false; console.log(`FAIL power2Round(Q-1): r1=${h1} r0=${l1}`); }
+  if (l1 < -halfD + 1 || l1 > halfD) { ok = false; console.log(`FAIL power2Round(Q-1): r1=${h1} r0=${l1}`); }
   if (ok) console.log(`  PASS power2Round(Q-1)`);
 
   if (ok) console.log(`✅ reduce: self-tests passed`);

@@ -19,6 +19,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   out-of-range row pointer instead of returning an empty hint row - the same defect
   one byte to the left - and requires hint positions within a row to be strictly
   increasing, so a duplicated index is no longer a silent no-op (#456).
+- **KeyGen `power2Round` had the mod± bound inverted, and now matches NIST ACVP.** The
+  `mod± 2^d` map is `(-2^(d-1), 2^(d-1)]`, so `t0 = +4096` is reachable and `-4096` is
+  not. The code used `r0 > half - 1`, folding `+4096` to `-4096`; that value does not fit
+  in 13 bits, so `encodeSK` wrapped it modulo 8192 and decoded to a different coefficient -
+  and the resulting `t1` was one higher than FIPS 204 for those coefficients. Its own
+  self-test asserted the same inverted bound, which is why it never fired. `encodeSK` now
+  also rejects out-of-range `s1`/`s2`/`t0` instead of wrapping them, and a failing module
+  self-test throws instead of printing (`scan: this block printed FAIL on every run since
+  2026-07 and no step ever went red`). New tests: NIST ACVP KeyGen vectors run through
+  **our** keygen (75/75 byte-identical), `sk-encoding.test.js` for the range contract
+  (#470).
 - **Canonical-form backstop.** `decodeSig` now re-encodes what it decoded and requires
   the exact same bytes. Each of the cases above (ignored tail, out-of-range pointer,
   duplicate index, pointer split) was a string that decoded to a valid object without
