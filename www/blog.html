@@ -642,7 +642,7 @@
 
         <div class="article-content-body">
             <h2>tl;dr</h2>
-            <p><strong>FIBEMATE 已于 2026 年 8 月 31 日正式开源</strong>，采用 GNU GPLv3 许可证。代码库包含一个完整的后量子密码学工程验证栈：ML-KEM-768 (FIPS 203)、SLH-DSA (FIPS 205)、SM2/SM3/SM4 国密算法、TLS 1.3 混合握手、OPK 预密钥协议、FPGA NTT 硬件加速、以及 LookingGlass 和 VWZ 两个前沿密码学研究分支。TSR 存证序列 lg-001~lg-108，260 份双源时间戳全程可验证。</p>
+            <p><strong>FIBEMATE 已于 2026 年 8 月 31 日正式开源</strong>，采用 GNU GPLv3 许可证。代码库包含一个完整的后量子密码学工程验证栈：ML-KEM-768 (FIPS 203)、SLH-DSA (FIPS 205)、SM2/SM3/SM4 国密算法、TLS 1.3 混合握手、OPK 预密钥协议、FPGA NTT 硬件加速、以及 LookingGlass 和 VWZ 两个前沿密码学研究分支。TSR 存证序列 lg-001~lg-108，372 份存证文件（261 个唯一令牌）双源时间戳全程可验证。</p>
 
             <h2>开源范围</h2>
             <table style="width:100%;border-collapse:collapse;margin:20px 0;font-size:0.9rem;">
@@ -662,7 +662,7 @@
             <p>密码学工程实践有一个独特困境：大量安全协议的正确实现停留在学术论文的附录里，而实际部署中因闭源而难以被独立审计。FIBEMATE 的核心决策是——<strong>让所有密码学代码成为可验证的公共资产</strong>。</p>
             <p>三个具体诉求：</p>
             <ul>
-                <li><strong>安全透明性</strong>：双源时间戳 (FreeTSA + DigiCert) 存证了全部 260 份里程碑，开源后任何人可以独立验证从代码到 KAT 到 TVLA 的完整证据链。</li>
+                <li><strong>安全透明性</strong>：双源时间戳 (FreeTSA + DigiCert) 存证了全部 372 份存证文件（261 个唯一令牌），开源后任何人可以独立验证从代码到 KAT 到 TVLA 的完整证据链。</li>
                 <li><strong>工程可重现性</strong>：ML-KEM-768 的 10,000 次 KAT、SM2 的 N=5,000 高阶 TVLA（20/20）、TLS 混合握手的 900/900 E2E，所有数字都可以在开源代码上重新跑通。</li>
                 <li><strong>生态桥接</strong>：IANA #4590 (SM2-MLKEM-768) 是 IANA 注册表中的国密+后量子混合命名组 — 开源降低国际社区对该方案的验证门槛。</li>
             </ul>
@@ -703,7 +703,7 @@
             <h2>参与方式</h2>
             <p>开源之后，你可以：</p>
             <ul>
-                <li><strong>访问官网</strong>：<a href="https://fibemate.net/docs/pqc-readiness.html" style="color:var(--accent);">PQC 就绪状态页面</a> — 260 份 TSR 存证的完整审计线索</li>
+                <li><strong>访问官网</strong>：<a href="https://fibemate.net/docs/pqc-readiness.html" style="color:var(--accent);">PQC 就绪状态页面</a> — 372 份 TSR 存证（261 个唯一令牌）的完整审计线索</li>
                 <li><strong>阅读安全评估</strong>：<a href="https://fibemate.net/docs/vwz-lwe-reduction-gaps.md" style="color:var(--accent);">LookingGlass & VWZ 安全评估</a> — DMTH 逆向混淆层 + VWZ 格-张量方案的独立安全分析</li>
                 <li><strong>关注 IETF</strong>：<a href="https://datatracker.ietf.org/doc/draft-yang-tls-hybrid-sm2-mlkem/" style="color:var(--accent);">draft-yang-tls-hybrid-sm2-mlkem</a> — IANA #4590 协议草案</li>
                 <li><strong>联系团队</strong>：<a href="mailto:opensource@fibemate.net" style="color:var(--accent);">opensource@fibemate.net</a></li>

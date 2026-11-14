@@ -1,6 +1,7 @@
 {
   "schema": "verifact-report/2",
   "generatedAt": "2026-10-29T13:47:51.479Z",
+  "captured": "2026-07-14",
   "durationMs": 3567,
   "counts": {
     "lint": 59,
