@@ -48,7 +48,7 @@ echo "✅ homepage: HTTP 200"
 
 # The stamp is the deploy's own claim about which commit is being served.
 curl -sSI $CURL_OPTS "$BASE_URL" > "$HEADERS" || true
-ACTUAL="$(grep -i '^x-app-version:' "$HEADERS" | head -1 | cut -d: -f2- | sed 's/^ *//; s/ *$//' || true)"
+ACTUAL="$(grep -i '^x-app-version:' "$HEADERS" | head -1 | tr -d '\r' | cut -d: -f2- | sed 's/^ *//; s/ *$//' || true)"
 
 if [ -z "$ACTUAL" ]; then
   echo "FAIL: X-App-Version header is missing — the site cannot say which commit it serves." >&2
