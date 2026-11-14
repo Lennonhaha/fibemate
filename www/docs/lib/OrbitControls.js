@@ -1,3 +1,6 @@
+// OrbitControls / EffectComposer — vendored from three.js (https://threejs.org).
+// SPDX-License-Identifier: MIT. Copyright © 2010-2021 three.js authors.
+// Full licence text: www/docs/vendor/THREE-LICENSE.txt — upstream is authoritative.
 ( function () {
 
 	// Unlike TrackballControls, it maintains the "up" direction object.up (+Y by default).
