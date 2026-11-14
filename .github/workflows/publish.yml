@@ -127,10 +127,16 @@ jobs:
         # `npm publish`, i.e. after a tag has already been pushed, which is the most
         # expensive moment to discover it. A dry run executes this step, so the token
         # can be proven before a tag exists.
+        #
+        # The comparison is case-insensitive on purpose. npm normalises usernames to
+        # lower case, so an exact comparison against "Lennonhaha" rejected a perfectly
+        # valid token on run 43628410303: the registry answered "lennonhaha" and the
+        # check called it the wrong account. A guard that fails on a correct input is
+        # worse than no guard, because the next person disables it.
         if: steps.guard.outputs.skip != 'true'
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          EXPECTED_NPM_USER: Lennonhaha
+          EXPECTED_NPM_USER: lennonhaha
         run: |
           set -euo pipefail
           if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
@@ -138,8 +144,10 @@ jobs:
             exit 1
           fi
           who=$(npm whoami)
-          echo "registry identity: $who (expected: $EXPECTED_NPM_USER)"
-          if [ "$who" != "$EXPECTED_NPM_USER" ]; then
+          echo "registry identity: $who (expected: $EXPECTED_NPM_USER, compared case-insensitively)"
+          who_lc=$(printf '%s' "$who" | tr '[:upper:]' '[:lower:]')
+          exp_lc=$(printf '%s' "$EXPECTED_NPM_USER" | tr '[:upper:]' '[:lower:]')
+          if [ "$who_lc" != "$exp_lc" ]; then
             echo "::error::token authenticates as '$who', not '$EXPECTED_NPM_USER'; refusing to publish under the wrong account"
             exit 1
           fi
