@@ -293,8 +293,20 @@ export function decodeSig(buf, paramSet) {
       h.push(hi);
       continue;
     }
+    // Positions in a row must be strictly increasing (FIPS 204). Setting a bit twice
+    // is a no-op, so a duplicate index decoded to the same hint matrix and the signature
+    // still verified - the third way this decoder accepted a different byte string for
+    // the same signature. #456.
+    let prevPos = -1;
     for (let j = kIdx; j < rowEnd; j++) {
-      hi[buf[hStart + j]] = 1;
+      const pos = buf[hStart + j];
+      if (pos <= prevPos) {
+        throw new RangeError(
+          `decodeSig: non-canonical hint position at row ${i}: ${pos} after ${prevPos} (must be strictly increasing)`,
+        );
+      }
+      prevPos = pos;
+      hi[pos] = 1;
     }
     kIdx = rowEnd;
     h.push(hi);
@@ -309,6 +321,23 @@ export function decodeSig(buf, paramSet) {
     if (buf[hStart + j] !== 0) {
       throw new RangeError(
         `decodeSig: non-canonical hint padding at h[${j}] = ${buf[hStart + j]} (expected 0)`,
+      );
+    }
+  }
+
+  // Canonical-form backstop. Re-encode what we just decoded and require the exact same
+  // bytes. Every non-canonical case found so far - ignored tail, out-of-range pointer,
+  // duplicate index, pointer split - is a string that decodes to a valid object but is
+  // not that object's unique encoding. Comparing bytes closes the class instead of
+  // chasing the next instance. #456.
+  const reencoded = encodeSig({ cTilde, z, h }, paramSet);
+  if (reencoded.length !== totalBytes) {
+    throw new RangeError(`decodeSig: re-encode length ${reencoded.length} != ${totalBytes}`);
+  }
+  for (let i = 0; i < totalBytes; i++) {
+    if (reencoded[i] !== buf[i]) {
+      throw new RangeError(
+        `decodeSig: non-canonical encoding at byte ${i}: ${buf[i]} != ${reencoded[i]}`,
       );
     }
   }
