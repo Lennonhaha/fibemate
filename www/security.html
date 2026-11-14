@@ -188,7 +188,7 @@
  <div class="security-card">
  <p>所有核心实现文件已通过 <strong>DigiCert</strong> 签发 RFC 3161 时间戳，确保代码在特定时间点的完整性可被第三方验证。</p>
  <ul>
- <li><strong>存证数量</strong>：260 份 RFC 3161 时间戳（DigiCert 签发，核心序列 lg-001~lg-108 + 独立模块存证）</li>
+ <li><strong>存证数量</strong>：372 份 RFC 3161 时间戳存证文件（261 个唯一令牌；DigiCert 签发，核心序列 lg-001~lg-108 + 独立模块存证）</li>
  <li><strong>存证位置</strong>：<code>/docs/tsa/</code>（按日期分子目录，覆盖 2026-06 至 2026-08，最新至 lg-108）</li>
  <li><strong>验证命令</strong>：<code>openssl ts -verify -in *.tsr -CAfile digicert.pem -untrusted chain.pem</code></li>
  </ul>
@@ -398,7 +398,7 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
   <p style="margin:0.5rem 0 0;color:#8b949e;">LookingGlass 是 FIBEMATE 的<strong>「默认关闭、按需开启」实验性模块</strong>。它独立于 SM2/ML-KEM/Cheshire Cat 底盘运行。DMTH 的负面结果已公开发布：<a href="https://doi.org/10.5281/zenodo.23638522" style="color:#00d4aa;">DOI 10.5281/zenodo.23638522</a>。</p>
 </div>
 
-<p style="font-size:0.85rem;color:#8b949e;">LookingGlass 全系列 38 份 DigiCert TSR（子系列计数，已含于全站 260 份总存证）· 2026-06-26 · 全部 Granted · 详见 <a href="/docs/pqc-readiness.html#7">抗量子就绪状态 §7</a></p>
+<p style="font-size:0.85rem;color:#8b949e;">LookingGlass 全系列 38 份 DigiCert TSR（子系列计数，已含于全站存证（现为 372 份文件 / 261 个唯一令牌，2026-11-14 实测））· 2026-06-26 · 全部 Granted · 详见 <a href="/docs/pqc-readiness.html#7">抗量子就绪状态 §7</a></p>
 
 
 </div>

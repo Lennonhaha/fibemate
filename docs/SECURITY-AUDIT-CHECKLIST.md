@@ -40,7 +40,7 @@
 
 | 模型 | 变更 | 状态 |
 |------|------|:---:|
-| C2.tla (Path C-2 混合 KEX) | 7 条不变式，201,467 states，26,115 distinct | ✅ 0 violations |
+| C2.tla (Path C-2 混合 KEX) | 7 条不变式 + 1 条时序性质（L_Reach），133,891 generated / 26,115 distinct（2026-11-14 实测） | ✅ 0 violations |
 | C2.cfg | TLAPS 配置 | ✅ |
 
 **缺口**：Path A (TLS X25519MLKEM768 NamedGroup) 未形式化 — 已 shelved
