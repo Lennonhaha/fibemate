@@ -55,3 +55,11 @@ reports continuously and targets a patch release within 30 days for security fix
 - **Deprecations:** announced at least one minor release before removal.
 - **No SLA:** this is a volunteer project. The support window describes intent, not a
   contractual guarantee, and there is no paid support tier.
+
+## Engineering discipline
+
+Day-to-day engineering and disclosure rules (anti-false-green, evidence-first claims,
+numeric conventions, dependency and SBOM handling) are normative in
+[docs/ENGINEERING-DISCIPLINE.md](./docs/ENGINEERING-DISCIPLINE.md).
+That annex governs commits, CI, dependency updates and external materials; this
+document remains normative for roles, decision-making and succession.
