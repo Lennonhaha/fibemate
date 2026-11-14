@@ -272,7 +272,7 @@ function policyDenied(rel) {
   return ext.length > 0 && POLICY_DENIED_EXT.indexOf(ext) !== -1;
 }
 
-async function fetchBody(url, timeout, extraHeaders) {
+async function fetchBodyNode(url, timeout, extraHeaders) {
   const res = await fetch(url, {
     redirect: 'follow',
     headers: {
@@ -284,6 +284,65 @@ async function fetchBody(url, timeout, extraHeaders) {
   });
   const buf = Buffer.from(await res.arrayBuffer());
   return { status: res.status, buf, type: res.headers.get('content-type') || '' };
+}
+
+// Every request goes through here: one transport, then the other. The caller never
+// sees which one answered, and a transport failure is only reported after both have
+// failed - which is the difference between "this link is broken" and "this runtime
+// cannot reach it".
+async function fetchBody(url, timeout, extraHeaders) {
+  try {
+    return await fetchBodyNode(url, timeout, extraHeaders);
+  } catch (err) {
+    if (!isTransportError(err)) throw err;
+    return fetchViaCurl(url, timeout, extraHeaders);
+  }
+}
+
+// Node's fetch (undici) cannot reach doi.org from some hosts while curl can: measured
+// 2026-11-14 on the deploy host, curl 5/5 answered 302 and fetch 0/3 answered
+// ETIMEDOUT after ~750 ms, with --dns-result-order=ipv4first changing nothing
+// (issue #461). When the transport fails, the honest verdict is "not checked", not
+// "the citation is broken" - so the probe is retried through curl before anyone
+// concludes anything about a link.
+const CURL_NET_EXIT = { 6: 'EAI_AGAIN', 7: 'ECONNREFUSED', 28: 'ETIMEDOUT', 35: 'ETIMEDOUT' };
+
+function fetchViaCurl(url, timeoutMs, extraHeaders) {
+  const seconds = String(Math.max(5, Math.ceil(timeoutMs / 1000)));
+  const args = ['-sS', '-L', '--max-time', seconds, '-A', PROBE_UA, '-o', '-',
+    '-w', '\n__CURL_META__%{http_code} %{url_effective}'];
+  for (const [k, v] of Object.entries(extraHeaders || {})) args.push('-H', k + ': ' + v);
+  args.push(url);
+  let out;
+  try {
+    out = execFileSync('curl', args, { maxBuffer: 64 * 1024 * 1024, timeout: timeoutMs + 5000 });
+  } catch (err) {
+    const code = CURL_NET_EXIT[err.status] || 'ECURL' + (err.status === null ? '' : err.status);
+    const e = new Error('curl failed [' + code + ']');
+    e.cause = { code };
+    throw e;
+  }
+  const at = out.lastIndexOf('\n__CURL_META__');
+  if (at < 0) {
+    const e = new Error('curl returned no metadata');
+    e.cause = { code: 'ETIMEDOUT' };
+    throw e;
+  }
+  const meta = out.slice(at + '\n__CURL_META__'.length).toString('utf8').trim().split(' ');
+  const status = Number(meta[0]);
+  if (!Number.isFinite(status) || status === 0) {
+    const e = new Error('curl returned no status');
+    e.cause = { code: 'ETIMEDOUT' };
+    throw e;
+  }
+  return { status, buf: out.slice(0, at), url: meta[1] || url, type: '', via: 'curl' };
+}
+
+const NET_CODES = ['ETIMEDOUT', 'ECONNRESET', 'EAI_AGAIN', 'ECONNREFUSED', 'ENOTFOUND', 'ECURL'];
+
+function isTransportError(err) {
+  const text = String((err && err.message) || '') + ' ' + String((err && err.cause && err.cause.code) || '');
+  return NET_CODES.some((c) => text.indexOf(c) !== -1);
 }
 
 async function checkFile(url, expected, label, opts) {
@@ -424,21 +483,26 @@ function sliceCitationSection(html, sectionId) {
   return html.slice(open, close);
 }
 
-async function fetchWithRetry(url, opts, label) {
+async function fetchWithRetry(url, opts, label, extraHeaders) {
+  const headers = { 'user-agent': PROBE_UA, ...(extraHeaders || {}) };
   let lastErr = null;
-  // Two attempts: a single transient DNS/socket error already produced a false red
-  // here (2026-10-30) with identical inputs on the next attempt, and a gate that
-  // goes red on a socket hiccup gets switched off by its owner.
-  for (let attempt = 1; attempt <= 2; attempt += 1) {
+  // Three attempts, then curl. A single transient DNS/socket error already produced
+  // a false red here (2026-10-30) with identical inputs on the next attempt, and a
+  // gate that goes red on a socket hiccup gets switched off by its owner.
+  for (let attempt = 1; attempt <= 3; attempt += 1) {
     try {
-      return await fetchBody(url, opts.timeout, { 'user-agent': PROBE_UA });
+      return await fetchBody(url, opts.timeout, headers);
     } catch (err) {
       const code = err.cause && err.cause.code ? err.cause.code : '';
       lastErr = new Error(err.message + (code ? ' [' + code + ']' : ''));
-      if (attempt === 1) await new Promise((r) => setTimeout(r, 900));
+      if (attempt < 3) await new Promise((r) => setTimeout(r, 600 * attempt));
     }
   }
-  throw new Error(label + ' did not answer in 2 attempts: ' + lastErr.message);
+  try {
+    return fetchViaCurl(url, opts.timeout, headers);
+  } catch (curlErr) {
+    throw new Error(label + ': fetch failed 3 attempts (' + lastErr.message + '), curl also failed (' + curlErr.message + ')');
+  }
 }
 
 /**
@@ -508,6 +572,7 @@ async function checkCitations(opts) {
     checked: CITATIONS.length,
     onPage: 0,
     resolved: 0,
+    unresolved: [],
     failures: [],
   };
 
@@ -556,7 +621,11 @@ async function checkCitations(opts) {
         try {
           verdict = await probeDoi(c, opts);
         } catch (err) {
-          result.failures.push({ id: c.id, stage: 'unreachable', detail: err.message });
+          if (isTransportError(err)) {
+            result.unresolved.push({ id: c.id, detail: err.message });
+          } else {
+            result.failures.push({ id: c.id, stage: 'unreachable', detail: err.message });
+          }
           continue;
         }
         if (!verdict.ok) {
@@ -570,7 +639,11 @@ async function checkCitations(opts) {
       try {
         res = await fetchWithRetry(c.url, opts, c.url);
       } catch (err) {
-        result.failures.push({ id: c.id, stage: 'unreachable', detail: err.message });
+        if (isTransportError(err)) {
+          result.unresolved.push({ id: c.id, detail: err.message });
+        } else {
+          result.failures.push({ id: c.id, stage: 'unreachable', detail: err.message });
+        }
         continue;
       }
       if (res.status !== 200) {
@@ -591,12 +664,26 @@ async function checkCitations(opts) {
     result.skipped = 'link probes skipped (--no-external)';
   }
 
-  result.ok = result.failures.length === 0;
-  result.reason = result.ok
-    ? ''
-    : result.failures.length +
+  // A transport failure is "not checked", not "broken" - but it may not be used to
+  // turn the check green either: if nothing at all could be verified, the gate says
+  // so instead of passing on an empty result.
+  const nothingVerified = result.resolved === 0 && result.unresolved.length > 0;
+  result.ok = result.failures.length === 0 && !nothingVerified;
+  if (result.ok) {
+    result.reason = '';
+  } else if (result.failures.length > 0) {
+    result.reason =
+      result.failures.length +
       ' citation assertion(s) failed: ' +
-      result.failures.map((f) => f.id + ' [' + f.stage + '] ' + f.detail).join('; ');
+      result.failures.map((f) => f.id + ' [' + f.stage + '] ' + f.detail).join('; ') +
+      (result.unresolved.length ? ' (' + result.unresolved.length + ' more could not be checked)' : '');
+  } else {
+    result.reason =
+      'no citation could be verified: all ' +
+      result.unresolved.length +
+      ' target(s) were unreachable from this host - ' +
+      result.unresolved.map((f) => f.id + ': ' + f.detail).join('; ');
+  }
   return result;
 }
 
@@ -637,7 +724,8 @@ async function main() {
         const cited = c.section
           ? c.skipped
             ? ' ' + c.onPage + '/' + c.checked + ' ledger rows present [' + c.skipped + ']'
-            : ' ' + c.resolved + '/' + c.checked + ' citation links resolve'
+            : ' ' + c.resolved + '/' + c.checked + ' citation links resolve' +
+              (c.unresolved && c.unresolved.length ? ', ' + c.unresolved.length + ' unreachable (not counted)' : '')
           : '';
         process.stdout.write('[PASS] ' + c.id + hash + counted + cited + '\n');
       } else {
