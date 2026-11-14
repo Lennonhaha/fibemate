@@ -21,7 +21,7 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform, not 
 - **SLH-DSA-128s** (FIPS 205): WASM bridge to NIST reference C, 5/5 smoke test
 - **SM2/SM3/SM4** (OSCCA): Pure JS, KAT verified, SM4-GCM cross-language validated
 - **Double Ratchet PQ**: ML-KEM-768 + P-256 hybrid, re-key every 100 messages
-- **TLA+ Formal Verification**: OPK pre-key protocol (7 invariants: O1–O6 + TypeOK) + C2 handshake (7 invariants, incl. K3 strong key independence), 101,467 states, 0 violations
+- **TLA+ Formal Verification**: C2 handshake — 7 invariants (incl. K3 strong key independence) + 1 liveness property (`L_Reach`), 26,115 distinct states (133,891 generated, measured 2026-11-14), 0 violations. The OPK pre-key model is exploratory and not gated (state space does not converge); see `ASSURANCE_CASE.md` §6.1.1.
 
 ### Assessment & Visualization Tools
 - **CARS Self-Assessment**: Interactive 15-question survey → 3D radar chart → exportable HTML report. FIBEMATE baseline: **67.0/100**.

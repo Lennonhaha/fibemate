@@ -3,8 +3,8 @@
 # 目的：补上 G3 的"早信号"半边。nightly 已保证"合入即下次重跑"（最迟 12h），
 # 本 workflow 让「改 docs/tla/** 的 PR」当场看到 TLC 结果，无需等 nightly。
 #
-# 门禁范围 = nightly 对齐：仅 C2（C2.cfg 的 7 条不变式）。
-# OPK 是 docs/tla/ 下第二个模型（OPK.cfg 有 O1-O6 + TypeOK），但当前 nightly 未跑它，
+# 门禁范围 = nightly 对齐：仅 C2（C2.cfg 的 7 条不变式 + 1 条时序性质 L_Reach）。
+# OPK 是 docs/tla/ 下第二个模型（OPK.cfg 有 O1-O6 + TypeOK），但状态空间无界、跑不穷尽，
 # 且 OPK.tla 的 \/ TRUE / Next== 缺陷仍在修；为避免误红 PR，OPK 默认关闭，
 # 需显式设仓库变量 TLA_OPK_GATE=true 才启用（且 continue-on-error）。
 

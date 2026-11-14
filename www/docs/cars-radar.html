@@ -305,8 +305,8 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
             evidence: [
                 {
                     file:'docs/tla/C2.tla', lines:'L1-L128',
-                    finding:'<strong>7 条不变量全部通过 TLC 模型检查：TypeOK、K1_NoPrematureActive、K2_ServerKeyPrecondition、K3_WeakKeyIndependence、K4、K5、K3_StrongKeyIndependence、K3p_Strong。101,467 states · 0 violations。',
-                    code:'(* K3 Strong Key Independence *)\nInvariant_K3_StrongKeyIndependence ==\n  \\A i,j \\in 1..MaxSessions:\n    (i /= j /\\ key[i] # 0 /\\ key[j] # 0\n     => key[i] # key[j])\n\n(* TLC: 101,467 states · 26,115 distinct · 0 violations *)',
+                    finding:'<strong>7 条不变量全部通过 TLC 模型检查：TypeOK、K1_NoPrematureActive、K2_ServerKeyPrecondition、K3_WeakKeyIndependence、K4、K5、K3_StrongKeyIndependence、K3p_Strong。26,115 distinct states（133,891 generated，2026-11-14 实测）· 0 violations。',
+                    code:'(* K3 Strong Key Independence *)\nInvariant_K3_StrongKeyIndependence ==\n  \\A i,j \\in 1..MaxSessions:\n    (i /= j /\\ key[i] # 0 /\\ key[j] # 0\n     => key[i] # key[j])\n\n(* TLC: 133,891 generated · 26,115 distinct · 0 violations, 2026-11-14 *)',
                     tags:['good','info']
                 },
                 {

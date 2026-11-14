@@ -119,7 +119,7 @@ FIBEMATE采用的X25519MLKEM768混合密钥交换满足组合安全性质：
 |TLS命名组|X25519MLKEM768 (0x11ec)|IANA TLS NamedGroup #4588|
 |KDF原语|HKDF-SHA256|RFC 8446 §7.1 TLS1.3标准KDF|
 |客户端降级策略|套件优先级 `X25519MLKEM768:prime256v1:x25519`|不支持PQC客户端自动回退传统ECDH|
-|TLA+协议验证|Path C-2状态机，7条不变式，101,467状态无违例|自研建模；TSR lg-069 / lg-078|
+|TLA+协议验证|Path C-2状态机，7条不变式+1条时序性质（L_Reach），26,115 distinct 状态（133,891 generated，2026-11-14 实测）无违例|自研建模；TSR lg-069 / lg-078|
 
 ### 2.5.3 威胁模型与安全边界
 |攻击者类型|能力描述|混合KEM安全性结论|
@@ -304,7 +304,7 @@ VWZ归约链路：`VMQ-SPARSE → OW-VWZ → EUF-CMA`；148/148测试套件全�
 |FPGA v5硬件防护集成|LFSR256、掩码NTT、故障监控；bitstream 618KB，WNS=9.755ns|✅ 合成通过|lg-047|
 |NTT掩码接线|ntt_masked_wrapper v2 + mask_ram双读口|✅ 接线完成|—|
 |REMO双蝶形实时比对|独立复算通路，逐拍校验，故障类型4bit编码|✅ 实现|—|
-|L4 TLA+ Path C-2验证|7条核心不变量；101,467状态无违例；局限：不覆盖Lossy网络死锁|✔ PASS|lg-069|
+|L4 TLA+ Path C-2验证|7条核心不变量+1条时序性质（L_Reach）；26,115 distinct 状态（133,891 generated，2026-11-14 实测）无违例；局限：不覆盖Lossy网络死锁；OPK模型为探索性、不纳门禁|✔ PASS|lg-069|
 |IANA#4590 reg-server E2E集成|5类握手消息，1253B公钥载荷；`HKDF(SM2_ECDH \|\| MLKEM_SS)`；10/10集成测试|✔ PASS|lg-070~lg-073|
 
 ## 7.4 DMTH安全模型 v2 修正声明（2026-06-26）

@@ -9,7 +9,8 @@
 #   - 从官方 Release 钉版本下载（v1.7.4，仓库 tlaplus/tlaplus），
 #     不用 latest（floating 引用会破坏"验证产物与代码事实绑定"
 #     的方法论纪律 —— 正是 C-2 门禁接缝的反例）
-#   - 只跑 C2.cfg 列出的 7 条不变式（TypeOK + K1~K5，含 K3/K3p 强形式）
+#   - 只跑 C2.cfg 列出的 7 条不变式 + 1 条时序性质（L_Reach）
+#     （TypeOK + K1~K5，含 K3/K3p 强形式；liveness 走 PROPERTY 行，同样一条命令）
 #   - 不碰 L_Handshake liveness（G2 留研究线，见 C2.tla 作者自注
 #     "Do not claim verified"）
 #   - G3（re-run 触发）由 nightly 每次 checkout 当前 HEAD 自动满足：

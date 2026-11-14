@@ -202,7 +202,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 | **TLS 1.3 Hybrid** | Path C-2 (SM2+ML-KEM-768) application-layer ✅ | Path C-2 5/5 |
 | **OPK Pre-Keys** | X3DH async handshake, 7/7 PASS | E2E closed |
 | **FPGA v5** | NTT pipeline + LFSR PRNG + fault protection | [43/43](scripts/fpga-l8l9-43-test.js) ✅ · WNS=9.755ns · ILA+L4 |
-| **L4 Formal Verification** | TLA+ state machine · Path C-2 (SM2+ML-KEM-768) · 7 invariants · 101,467 states · TLC EXIT 0 · DigiCert TSR lg-069 | ✅ Engineering validation |
+| **L4 Formal Verification** | TLA+ state machine · Path C-2 (SM2+ML-KEM-768) · 7 invariants + 1 liveness property · 26,115 distinct states (133,891 generated, measured 2026-11-14) · TLC EXIT 0 · DigiCert TSR lg-069 | ✅ Engineering validation |
 
 ---
 

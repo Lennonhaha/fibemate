@@ -44,7 +44,7 @@
 
 | 子项 | 外部人判断 | 实际情况 | 偏差根因 |
 |------|-----------|---------|---------|
-| 形式化验证 | "无"（0 分） | TLA+ 形式化验证：OPK 3 条不变量（O1/O2/O3）+ C2 握手 7 条不变量（含 K3 强密钥独立性），101,467 states, 0 violations | **关键文件 `docs/tla/C2.tla` 不会出现在 `ls` 里**——外部人看到的文件结构没有"形式化验证"标签 |
+| 形式化验证 | "无"（0 分） | TLA+ 形式化验证：C2 握手 7 条不变式（含 K3 强密钥独立性）+ 1 条时序性质（`L_Reach`），26,115 distinct states（133,891 generated，2026-11-14 实测），0 violations；OPK 模型为探索性、未纳入门禁（状态空间爆炸，见 ASSURANCE_CASE §6.1.1） | **关键文件 `docs/tla/C2.tla` 不会出现在 `ls` 里**——外部人看到的文件结构没有"形式化验证"标签 |
 | 密钥轮换 | "无轮换策略"（0 分） | Double Ratchet PQ_REKEY_INTERVAL=100, P-256 ECDH per-message ratchet, HKDF-SHA-256 派生 | 代码里有但问卷不会自动发现——需要读 `double-ratchet-pq.js` |
 | 密钥版本管理 | "无"（0 分） | OPK pre-key 一次性消费、消费即销毁、TLA+ 模型验证 | 同样不可见 |
 

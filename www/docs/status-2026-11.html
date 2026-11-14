@@ -113,7 +113,7 @@ footer { margin-top:3rem; padding-top:1.5rem; border-top:1px solid var(--border)
 <div class="card">
   <p><strong class="amber">这些仍然是真的：</strong></p>
   <p>· 没有第三方安全审计。所有"已验证"都指功能、KAT、测试向量与软件 TVLA，不含独立审计结论。<br>
-     · 形式化验证分两条线：TLA+ 模型在树内且由 CI 门控（7 条不变式、101,467 个状态、0 违规）；Isabelle/VWZ 属研究线，另有仓库，<strong>不</strong>声称构成生产代码的精化证明。<br>
+     · 形式化验证分两条线：TLA+ 模型在树内且由 CI 门控（7 条不变式 + 1 条时序性质 L_Reach、26,115 distinct / 133,891 generated 个状态、0 违规，2026-11-14 实测）；Isabelle/VWZ 属研究线，另有仓库，<strong>不</strong>声称构成生产代码的精化证明。<br>
      · 维护者一人（bus factor 1），正在寻找更多维护者。<br>
      · 输入校验逐 handler 手写，没有统一 schema 层。<br>
      · TLS 在 nginx 终止，应用层不做证书校验（这是部署属性，已在保证案例的 B2 声明）。</p>

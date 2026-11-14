@@ -464,7 +464,7 @@ const ALGORITHMS = {
       fpga: false
     },
     evidence: {
-      kat: '101,467 states, 7 invariants, 0 violations',
+      kat: '133,891 states generated (26,115 distinct), 7 invariants + 1 liveness property, 0 violations',
       tvla: null,
       tsr: 'TSR lg-069'
     }

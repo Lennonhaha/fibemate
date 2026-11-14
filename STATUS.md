@@ -18,7 +18,7 @@ FIBEMATE is a post-quantum cryptography full-stack engineering demonstration and
 | SM2 100k endurance | PASS | 100,000 rounds / 0 failures / 41.5 min |
 | ML-KEM-768 KAT | PASS | noble + liboqs 10,000-round cross-validation |
 | SM3/SM4-GCM KAT | PASS | 3-platform CI (Ubuntu/macOS/Windows) |
-| TLA+ protocol verification | PASS | 7 invariants / 101,467 states / EXIT 0 |
+| TLA+ protocol verification | PASS | C2: 7 invariants + 1 liveness (`L_Reach`) / 26,115 distinct (133,891 generated) / EXIT 0; OPK: exploratory, not gated |
 | TVLA side-channel (software) | PASS | N=10,000, 36/36 green |
 | CodeQL | 0 errors | SSRF fixed with explicit URL protocol whitelist (commit 4785b92c); 182 open alerts being triaged |
 | Dependabot | 0 open | 40 historical alerts dismissed (all fixed/upgraded) |
