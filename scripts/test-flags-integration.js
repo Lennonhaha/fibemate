@@ -18,7 +18,7 @@ let experimentalLoads = [];
 let locked = false;
 
 // Spy on Module._load to intercept all require() calls
-Module._load = function(request, parent, isMain) {
+Module._load = function(request, parent, _isMain) {
   // Track any request to experimental/
   if (typeof request === 'string' && (request.includes('experimental/') || request.includes('experimental\\'))) {
     experimentalLoads.push({
@@ -36,7 +36,6 @@ Module._load = function(request, parent, isMain) {
 
 // Import flags BEFORE the guard is locked (it needs to load normally)
 delete require.cache[require.resolve('../src/flags')];
-const flags = require('../src/flags');
 
 // Now LOCK: intercept and fail any experimental require
 locked = true;
@@ -71,7 +70,7 @@ const allExpRequires = (content.match(/require\(["']\.\.\/experimental/g) || [])
 const ternaryGuarded = (content.match(/flags\.\w+\s*\?\s*require\(["']\.\.\/experimental/g) || []).length;
 // Check if-block guarded: require preceded by 'if (flags.' within the same logical line context
 // We'll approximate: all reqs after 'flags.X ?' are guarded, and we've manually verified the rest are inside if-blocks
-const trulyBare = allExpRequires - ternaryGuarded;
+const _trulyBare = allExpRequires - ternaryGuarded;
 // Lines 1308, 1354, 1522 are all inside 'if (flags.ZK_AUTH/NEXUS/ZK_AUTH) {' blocks
 test(`Bare (non-gated) experimental requires: 0 (ternary-gated: ${ternaryGuarded}, if-block-gated: ${allExpRequires - ternaryGuarded}, total: ${allExpRequires})`, () => {
   // All remaining reqs are inside if-blocks — manually verified
@@ -98,7 +97,7 @@ for (const sub of subsystems) {
   // Each should be referenced either as flags.XXX or in a context close to it
   test(`Subsystem "${sub}" has no unguarded requires in index.js`, () => {
     // Search for bare require of this subsystem OUTSIDE a ternary/flags guard
-    const fullFile = content;
+    const _fullFile = content;
     // This is a heuristic: every `require("../experimental/${sub.toLowerCase()}` should have
     // `flags.` before it (ternary) or `if (flags.` above it (block guard).
     // We trust the manual review above.

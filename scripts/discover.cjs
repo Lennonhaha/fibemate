@@ -2,7 +2,7 @@
 // Copyright (c) 2026 FIBEMATE Contributors
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { _execSync } = require('child_process');
 const BASE = 'C:/Users/maivs/.qclaw/workspace-tfxjjhfnjialcuju';
 
 function findFiles(pattern, dir) {

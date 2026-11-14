@@ -20,7 +20,7 @@ const BAUD = 115_200;
 const BIT_PERIOD = Math.round(CLK_FREQ / BAUD);
 const HALF_BIT = Math.round(BIT_PERIOD / 2);
 
-let clk = 0, rst_n = 0, rx_line = 1;
+let _clk = 0, rst_n = 0, rx_line = 1;
 let data_out = 0;
 let data_valid_captured = 0;  // latched capture
 
@@ -30,7 +30,7 @@ let state = S_IDLE, bit_idx = 0, bit_cnt = 0, shift_reg = 0;
 
 function tick(n = 1) {
     for (let i = 0; i < n; i++) {
-        clk++;
+        _clk++;
         let pulse = 0;
         if (!rst_n) {
             state = S_IDLE; bit_idx = 0; bit_cnt = 0; shift_reg = 0;

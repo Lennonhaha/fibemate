@@ -37,9 +37,9 @@ console.log('sk first 32 bytes:', toHex(sk.slice(0, 32)));
 // or: sk = s_sk || pk || H(pk) || z (12*K*N bytes each)
 // 
 // Let's check if JS sk includes the pk bytes at the right position
-const SK_EXPECTED = 2400;
+const _SK_EXPECTED = 2400;
 const PK_BYTES = 1184;
-const KP = 12 * 256 * 3 / 8; // 3 * 32 * 12 = 1152? No...
+const _KP = 12 * 256 * 3 / 8; // 3 * 32 * 12 = 1152? No...
 // K=3, N=256, 12-bit encoding → 3*256*12/8 = 3*32*12 = 1152
 const S_BYTES = Math.ceil(256 * 12 / 8) * 3; // 384*3 = 1152
 

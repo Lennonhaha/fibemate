@@ -28,8 +28,8 @@ function checkFile(filePath, relPath) {
   const lines = content.split('\n');
 
   // 简单状态机：跟踪 if 块深度（只关心 flags 条件块）
-  let inConditionalBlock = false;
-  let conditionalDepth = 0;
+  let _inConditionalBlock = false;
+  let _conditionalDepth = 0;
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];

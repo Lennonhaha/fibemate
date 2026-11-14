@@ -71,7 +71,7 @@ function checkBom(file) {
         fs.closeSync(fd);
         if (bytesRead < 3) return false;
         return buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF;
-    } catch (e) {
+    } catch (_e) {
         if (fd) try { fs.closeSync(fd); } catch {}
         return false;
     }

@@ -9,7 +9,7 @@ const keys = ml_kem768.keygen();
 const enc = ml_kem768.encapsulate(keys.publicKey);
 
 // Use EXACTLY noble's keys (converted to Uint8Array)
-const pkN = keys.publicKey;
+const _pkN = keys.publicKey;
 const skN = keys.secretKey;
 const ctN = enc.cipherText;
 

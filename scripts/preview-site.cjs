@@ -76,7 +76,7 @@ function resolveInside(root, urlPath) {
   let decoded;
   try {
     decoded = decodeURIComponent(urlPath.split('?')[0]);
-  } catch (err) {
+  } catch (_err) {
     return null;
   }
   if (decoded.indexOf('\0') !== -1) return null;
@@ -107,7 +107,7 @@ function createServer(root) {
         target = path.join(target, 'index.html');
         stat = fs.statSync(target);
       }
-    } catch (err) {
+    } catch (_err) {
       res.writeHead(404);
       res.end('not found\n');
       return;

@@ -19,7 +19,7 @@ core.compress=(...a)=>{compress_ct++;return _compress(...a)};
 core.decompress=(...a)=>{decompress_ct++;return _decompress(...a)};
 
 const kp=core.generateKeypair();
-const enc=core.encapsulate(kp.publicKey);
+const _enc=core.encapsulate(kp.publicKey);
 
 core.NTT=origNTT;core.iNTT=origINTT;
 core.polyMul=_polyMul;core.samplePoly=_samplePoly;

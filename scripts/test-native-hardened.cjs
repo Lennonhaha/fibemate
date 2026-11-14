@@ -115,7 +115,7 @@ console.log('\n═══ 3. Batch consistency ═══');
   assert(batch_dec.count === N, 'batch decaps count');
 
   // Verify single-shot decaps matches batch
-  let batch_ok = 0, single_ok = 0;
+  let batch_ok = 0, _single_ok = 0;
   for (let i = 0; i < N; i++) {
     const ct_i = batch_enc.ct.subarray(i * CT_BYTES, (i + 1) * CT_BYTES);
     const ss_batch = batch_dec.ss.subarray(i * SS_BYTES, (i + 1) * SS_BYTES);
@@ -142,25 +142,25 @@ console.log('\n═══ 3. Batch consistency ═══');
 // ================================================================
 console.log('\n═══ 4. Input validation ═══');
 {
-  const [pk, sk] = addon.keygen();
+  const [_pk, sk] = addon.keygen();
 
   // Wrong length pk
   let threw = false;
-  try { addon.encaps(Buffer.alloc(PK_BYTES - 1)); } catch(e) { threw = true; }
+  try { addon.encaps(Buffer.alloc(PK_BYTES - 1)); } catch(_e) { threw = true; }
   assert(!threw, 'encaps(truncated pk): survives (no crash)');
 
   threw = false;
-  try { addon.encaps(Buffer.alloc(PK_BYTES + 1)); } catch(e) { threw = true; }
+  try { addon.encaps(Buffer.alloc(PK_BYTES + 1)); } catch(_e) { threw = true; }
   assert(!threw, 'encaps(oversized pk): survives (no crash)');
 
   // Wrong length sk
   threw = false;
-  try { addon.decaps(Buffer.alloc(CT_BYTES), Buffer.alloc(SK_BYTES - 1)); } catch(e) { threw = true; }
+  try { addon.decaps(Buffer.alloc(CT_BYTES), Buffer.alloc(SK_BYTES - 1)); } catch(_e) { threw = true; }
   assert(!threw, 'decaps(truncated sk): survives (no crash)');
 
   // Wrong length ct
   threw = false;
-  try { addon.decaps(Buffer.alloc(CT_BYTES - 1), sk); } catch(e) { threw = true; }
+  try { addon.decaps(Buffer.alloc(CT_BYTES - 1), sk); } catch(_e) { threw = true; }
   assert(!threw, 'decaps(truncated ct): survives (no crash)');
 
   // Empty buffer — KNOWN BUG: segfault (no length check in C get_buf)
@@ -188,16 +188,16 @@ console.log('\n═══ 5. Malformed input ═══');
     const ss_dec = addon.decaps(ct_zero, sk);
     // Should NOT match (different pk)
     assert(Buffer.compare(ss_zero, ss_dec) !== 0, 'all-zero pk: ss mismatch (expected)');
-  } catch(e) { threw = true; }
+  } catch(_e) { threw = true; }
   assert(!threw, 'all-zero pk: no crash');
 
   // All-zero ct
-  const [ct_real, ss_real] = addon.encaps(pk);
+  const [_ct_real, ss_real] = addon.encaps(pk);
   threw = false;
   try {
     const ss_dec_zero = addon.decaps(Buffer.alloc(CT_BYTES, 0), sk);
     assert(Buffer.compare(ss_real, ss_dec_zero) !== 0, 'all-zero ct: ss mismatch (expected)');
-  } catch(e) { threw = true; }
+  } catch(_e) { threw = true; }
   assert(!threw, 'all-zero ct: no crash');
 
   // Random garbage as pk
@@ -205,14 +205,14 @@ console.log('\n═══ 5. Malformed input ═══');
   try {
     const garbage_pk = crypto.randomBytes(PK_BYTES);
     addon.encaps(garbage_pk);
-  } catch(e) { threw = true; }
+  } catch(_e) { threw = true; }
   assert(!threw, 'random-garbage pk: no crash');
 
   // Random garbage as sk+ct pair
   threw = false;
   try {
     addon.decaps(crypto.randomBytes(CT_BYTES), crypto.randomBytes(SK_BYTES));
-  } catch(e) { threw = true; }
+  } catch(_e) { threw = true; }
   assert(!threw, 'random-garbage sk+ct: no crash');
 }
 
@@ -299,7 +299,7 @@ console.log('\n═══ 7. Memory stress (100k roundtrips) ═══');
 console.log('\n═══ 8. KAT cross-validation (native vs JS) ═══');
 {
   try {
-    const js_mlkem = require(path.join(__dirname, '..', 'packages', 'pqc-kem'));
+    const _js_mlkem = require(path.join(__dirname, '..', 'packages', 'pqc-kem'));
     // Generate 5 deterministic keypairs, compare native vs JS
     const seed = crypto.createHash('sha256').update('FIBEMATE native KAT v1').digest();
     for (let i = 0; i < 5; i++) {
