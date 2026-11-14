@@ -1,16 +1,16 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:cb427582-e499-59ae-2d1d-64dca8814f0c",
+  "serialNumber": "urn:uuid:7613c62d-0994-58c4-5f6d-4ab2451033cc",
   "version": 1,
   "metadata": {
     "timestamp": "1970-01-01T00:00:00.000Z",
     "component": {
       "type": "application",
-      "bom-ref": "fibemate@3.3.2",
+      "bom-ref": "fibemate@3.3.3",
       "name": "fibemate",
-      "version": "3.3.2",
-      "purl": "pkg:npm/fibemate@3.3.2",
+      "version": "3.3.3",
+      "purl": "pkg:npm/fibemate@3.3.3",
       "licenses": [
         {
           "license": {
