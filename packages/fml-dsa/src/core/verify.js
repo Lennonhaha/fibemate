@@ -11,6 +11,7 @@ import { expandA, sampleInBall } from './sampling.js';
 import { vecNtt } from './polyvec.js';
 import { useHint } from './reduce.js';
 import { decodePK, decodeSig, encodePK } from './encode.js';
+import { selftestConsole } from './selftest-log.js';
 
 const D = 13;
 const _2D = BigInt(1 << D);
@@ -172,6 +173,8 @@ function encodeW1(w1, gamma2) {
 
 // ══════ Self-tests ══════
 (async function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   let ok = true;
 
   // Dynamic imports to avoid circular deps from keygen/sign

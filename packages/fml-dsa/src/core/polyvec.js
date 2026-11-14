@@ -8,6 +8,7 @@
 import { Q, N } from './params.js';
 import { modMul, ctAdd, ctSub } from './modmul.js';
 import { ntt, invNtt } from './ntt.js';
+import { selftestConsole } from './selftest-log.js';
 
 // ══════════════════════════════════════════════
 // Single polynomial ops
@@ -154,6 +155,8 @@ export function computeT(A, s1, s2) {
 // Self-tests
 // ══════════════════════════════════════════════
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   let ok = true;
 
   // 1. polyAdd/polySub roundtrip

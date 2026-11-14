@@ -11,6 +11,7 @@ import { shake128, shake256, XofShake } from './shakestream.js';
 import { shake256 as rawShake256 } from '@noble/hashes/sha3.js';
 import { Q, N, MLDSA_PARAMS } from './params.js';
 import { XOF128, genCrystals } from '@noble/post-quantum/_crystals.js';
+import { selftestConsole } from './selftest-log.js';
 
 const N_Q = { N, Q, F: 8347681, ROOT_OF_UNITY: 1753, brvBits: 8, isKyber: false };
 const crystals = genCrystals({ newPoly: (n) => new Int32Array(n), ...N_Q });
@@ -230,6 +231,8 @@ export function challengeHash(tr, msg) {
 // Self-tests
 // ══════════════════════════════════════════════
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   let ok = true;
 
   // 1. ExpandA produces correct dimensions

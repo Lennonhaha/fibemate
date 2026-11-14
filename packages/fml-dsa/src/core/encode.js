@@ -6,6 +6,7 @@
 // 2026-07-29
 
 import { MLDSA_PARAMS, Q, T1_BITS } from './params.js';
+import { selftestConsole } from './selftest-log.js';
 
 // ══════════════════════════════════════════════
 // Low-level bit I/O on Uint8Array (MSB-first, per FIPS 204 §5.2)
@@ -365,6 +366,8 @@ export function decodeSig(buf, paramSet) {
 // Self-tests
 // ══════════════════════════════════════════════
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   let ok = true;
 
   // Test bit-packing primitives

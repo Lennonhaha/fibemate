@@ -6,6 +6,7 @@
 
 import { genCrystals } from '@noble/post-quantum/_crystals.js';
 import { Q, N } from './params.js';
+import { selftestConsole } from './selftest-log.js';
 
 // Noble's genCrystals creates NTT.encode (DIF+invert) and NTT.decode (DIT+invert+scale)
 // F = 8347681 = 256⁻¹ mod 8380417 (Dilithium inverse-NTT normalization)
@@ -57,6 +58,8 @@ export function invNtt(polyNtt) {
 // Self-test
 // ============================================================
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   const orig = new Int32Array(N);
   for (let i = 0; i < N; i++) orig[i] = (i * 12345 + 6789) % Q;
   const n = ntt(orig);
