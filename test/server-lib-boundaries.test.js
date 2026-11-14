@@ -156,28 +156,69 @@ test('cover traffic: intervals, cover messages and stats are bounded', () => {
 test('cover traffic: start and stop do not leave the timer running', async () => {
   const poisson = new PoissonCoverTraffic({ meanInterval: 5, minInterval: 1, maxInterval: 5 });
   let fired = 0;
-  poisson.start(() => { fired++; });
-  await new Promise((r) => setTimeout(r, 60));
+  // Same rule as the flow-correlation test below: wait for the first tick with a
+  // timeout, instead of sleeping a fixed 60ms and hoping the timer landed.
+  const firstTick = new Promise((resolve) => {
+    poisson.start(() => {
+      fired++;
+      resolve();
+    });
+  });
+  await Promise.race([
+    firstTick,
+    new Promise((_, reject) => setTimeout(() => reject(new Error('cover traffic did not tick within 2000ms')), 2000)),
+  ]);
   poisson.stop();
   assert.ok(fired >= 1, 'the cover callback should have fired at least once');
 });
 
 test('flow correlation: delivery is scheduled and can be cancelled', async () => {
   const fcr = new FlowCorrelationResistance({ dropProbability: 0, extraDelayMin: 1, extraDelayMax: 2 });
-  const delivered = [];
   const msg = { id: 'm1', payload: 'x' };
 
-  fcr.process(msg, (m) => delivered.push(m));
-  await new Promise((r) => setTimeout(r, 50));
-  assert.equal(delivered.length, 1);
-  assert.equal(delivered[0].id, 'm1');
+  // Wait for the callback, with a timeout as the failure mode. The previous
+  // version slept a fixed 50ms for a 1-2ms timer and flaked on a loaded runner:
+  // a fixed sleep is a bet on the scheduler, not a test of the code.
+  const delivered = await delivery(fcr, msg);
+  assert.equal(delivered.id, 'm1');
 
+  // cancel() takes the id that process() returns, not the message id. The old
+  // test passed 'm2' (the message id) and asserted only `typeof cancelled ===
+  // 'boolean'`, so it never checked that cancellation worked and could not fail.
   const pending = { id: 'm2', payload: 'y' };
-  fcr.process(pending, () => {});
-  const cancelled = fcr.cancel('m2');
-  assert.equal(typeof cancelled, 'boolean');
+  let fired = false;
+  const accepted = fcr.process(pending, () => { fired = true; });
+  assert.equal(accepted.accepted, true);
+  assert.equal(fcr.getStats().pendingCount, 1);
+
+  assert.equal(fcr.cancel(accepted.msgId), true, 'cancel must consume the pending entry');
+  assert.equal(fcr.cancel(accepted.msgId), false, 'cancel is not idempotent-success');
+  assert.equal(fcr.getStats().pendingCount, 0);
+
+  await new Promise((r) => setTimeout(r, 30));
+  assert.equal(fired, false, 'a cancelled message must never be delivered');
   assert.equal(typeof fcr.getStats(), 'object');
 });
+
+// Resolves when the callback fires, rejects on timeout. Tests that assert on a
+// scheduled delivery should fail with "not delivered in 2s", not by racing a
+// sleep against the event loop.
+function delivery(fcr, msg, timeoutMs = 2000) {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(
+      () => reject(new Error(`message ${msg.id} was not delivered within ${timeoutMs}ms`)),
+      timeoutMs,
+    );
+    const result = fcr.process(msg, (m) => {
+      clearTimeout(timer);
+      resolve(m);
+    });
+    if (result.accepted === false) {
+      clearTimeout(timer);
+      reject(new Error(`message ${msg.id} was dropped (dropProbability=${fcr.dropProbability})`));
+    }
+  });
+}
 
 test('traffic shaper: disabled passes through, enabled applies the pipeline', async () => {
   const shaper = new TrafficShaper();
