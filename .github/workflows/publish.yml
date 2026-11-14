@@ -6,9 +6,18 @@ name: publish
 # `--provenance` cannot be produced outside CI (it needs an OIDC id-token). A tag is
 # the only human decision; everything after it is mechanical.
 #
-# Required repository secret: NPM_TOKEN (automation token, publish rights for the
-# @fibemate scope and the unscoped names below). Without it the job fails at the auth
-# step — deliberately, rather than silently skipping a release.
+# One tag publishes exactly one package. The first version of this workflow fanned a
+# single `v*` tag out to eight packages. A pre-tag audit on 2026-11-15 (`npm pack
+# --dry-run --json` in every package directory) found six of those eight not
+# publishable: six had no LICENSE, four had no README, and three shipped
+# `python/__pycache__/*.pyc` plus their KAT files inside the tarball. A tag that
+# publishes seven surprises is worse than no automation, so the fan-out is gone.
+# Add a package to the allowlist only after `npm pack --dry-run` in its directory
+# shows LICENSE, README, and nothing test-only.
+#
+# Required repository secret: NPM_TOKEN (automation token with publish rights).
+# Status 2026-11-15: NOT configured; `npm whoami` locally returns E401. Without the
+# secret this job fails at the auth step — deliberately, rather than silently skipping.
 #
 # Usage:
 #   git tag v0.1.0-fml-dsa && git push origin v0.1.0-fml-dsa
@@ -21,7 +30,7 @@ on:
   workflow_dispatch:
     inputs:
       package:
-        description: 'Package directory under packages/ (e.g. fml-dsa)'
+        description: 'Package directory under packages/ (currently: fml-dsa)'
         required: true
         type: string
 
@@ -36,20 +45,8 @@ concurrency:
 jobs:
   publish:
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        # Only packages that are publish-ready: they carry LICENSE, README and a
-        # "files" allowlist. Adding a name here is a promise that npm i <name> works.
-        package:
-          - fml-dsa
-          - pqc-kem
-          - sm2-ref
-          - sm3-ref
-          - sm4-ref
-          - sm2-multisig
-          - algorithm-registry
-          - key-lifecycle
+    env:
+      PKG: ${{ inputs.package || 'fml-dsa' }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
@@ -58,12 +55,22 @@ jobs:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
 
+      - name: Refuse anything outside the publish allowlist
+        run: |
+          set -euo pipefail
+          case "$PKG" in
+            fml-dsa) echo "allowed: $PKG" ;;
+            *) echo "::error::$PKG is not in the publish allowlist"; exit 1 ;;
+          esac
+
       - name: Resolve package identity
         id: pkg
-        working-directory: packages/${{ matrix.package }}
+        working-directory: packages/${{ env.PKG }}
         run: |
           node -e "
-            const p=require('./package.json');
+            const p = require('./package.json');
+            if (p.private === true) { console.error('package is private'); process.exit(1); }
+            if (!p.version) { console.error('no version'); process.exit(1); }
             console.log('name=' + p.name);
             console.log('version=' + p.version);
           " >> "$GITHUB_OUTPUT"
@@ -84,8 +91,32 @@ jobs:
             echo "skip=false" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Preflight — licence and docs ship, tests do not
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: packages/${{ env.PKG }}
+        run: |
+          set -euo pipefail
+          for f in LICENSE README.md; do
+            [ -f "$f" ] || { echo "::error::$f missing from the package directory"; exit 1; }
+          done
+          tarball=$(npm pack --silent | tail -n 1)
+          echo "tarball: $tarball"
+          tar -tzf "$tarball" | sed 's/\r$//' > /tmp/entries.txt
+          grep -qx 'package/LICENSE' /tmp/entries.txt || { echo "::error::LICENSE not in tarball"; exit 1; }
+          grep -qx 'package/README.md' /tmp/entries.txt || { echo "::error::README.md not in tarball"; exit 1; }
+          for bad in '/test/' 'bench-' '__pycache__' '\.pyc$' '/kat-vectors/'; do
+            if grep -Eq "$bad" /tmp/entries.txt; then
+              echo "::error::tarball contains a test-only path matching $bad"
+              grep -E "$bad" /tmp/entries.txt
+              exit 1
+            fi
+          done
+          rm -f "$tarball"
+          echo "contents ok: $(wc -l < /tmp/entries.txt) entries"
+
       - name: Preflight — the tarball must install and import in a clean directory
-        working-directory: packages/${{ matrix.package }}
+        if: steps.guard.outputs.skip != 'true'
+        working-directory: packages/${{ env.PKG }}
         run: |
           set -euo pipefail
           name="${{ steps.pkg.outputs.name }}"
@@ -95,7 +126,7 @@ jobs:
           work=$(mktemp -d)
           cd "$work"
           npm init -y >/dev/null
-          npm install "$GITHUB_WORKSPACE/packages/${{ matrix.package }}/$tarball" --no-audit --no-fund
+          npm install "$GITHUB_WORKSPACE/packages/${{ env.PKG }}/$tarball" --no-audit --no-fund
           node --input-type=module -e "
             const m = await import('$name');
             const keys = Object.keys(m);
@@ -103,9 +134,41 @@ jobs:
             console.log('import ok:', keys.length, 'exports');
           "
 
+      - name: Preflight — sign and verify through the installed package
+        if: steps.guard.outputs.skip != 'true' && env.PKG == 'fml-dsa'
+        working-directory: packages/fml-dsa
+        run: |
+          set -euo pipefail
+          tarball=$(npm pack --silent | tail -n 1)
+          trap 'rm -f "$PWD/$tarball"' EXIT
+          work=$(mktemp -d)
+          cd "$work"
+          npm init -y >/dev/null
+          npm install "$GITHUB_WORKSPACE/packages/fml-dsa/$tarball" --no-audit --no-fund
+          node --input-type=module -e "
+            const show = console.log;
+            console.log = () => {};
+            const { ml_dsa44, ml_dsa65, ml_dsa87 } = await import('fml-dsa');
+            const rows = [];
+            for (const [tag, p] of [['44', ml_dsa44], ['65', ml_dsa65], ['87', ml_dsa87]]) {
+              const kp = p.keygen();
+              const msg = new TextEncoder().encode('publish preflight ' + tag);
+              const sig = p.sign(msg, kp.secretKey);
+              const ok = p.verify(sig, msg, kp.publicKey);
+              const tampered = p.verify(sig, new TextEncoder().encode('publish preflight X'), kp.publicKey);
+              const again = p.sign(msg, kp.secretKey);
+              rows.push([tag, ok, tampered, Buffer.compare(Buffer.from(sig), Buffer.from(again)) === 0]);
+            }
+            console.log = show;
+            for (const [tag, ok, tampered, deterministic] of rows) {
+              console.log('ML-DSA-' + tag, 'verify=' + ok, 'tampered=' + tampered, 'deterministic=' + deterministic);
+              if (!ok || tampered || !deterministic) throw new Error('ML-DSA-' + tag + ' preflight failed');
+            }
+          "
+
       - name: Publish with provenance
         if: steps.guard.outputs.skip != 'true'
-        working-directory: packages/${{ matrix.package }}
+        working-directory: packages/${{ env.PKG }}
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --provenance --access public
@@ -116,6 +179,7 @@ jobs:
           {
             echo "### ${{ steps.pkg.outputs.name }}@${{ steps.pkg.outputs.version }}"
             echo ""
+            echo "- package: \`$PKG\`"
             echo "- skipped (already on registry): ${{ steps.guard.outputs.skip }}"
             echo "- job status: ${{ job.status }}"
           } >> "$GITHUB_STEP_SUMMARY"
