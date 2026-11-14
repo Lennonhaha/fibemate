@@ -63,3 +63,17 @@ numeric conventions, dependency and SBOM handling) are normative in
 [docs/ENGINEERING-DISCIPLINE.md](./docs/ENGINEERING-DISCIPLINE.md).
 That annex governs commits, CI, dependency updates and external materials; this
 document remains normative for roles, decision-making and succession.
+
+### Discipline amendments N1–N5 (2026-11-14)
+
+These five rules are binding on all commits, CI gates and external materials. The
+rationale, counter-examples and full criteria live in the annex; the table is the
+short form used when reviewing a change.
+
+| Rule | Requirement | Gate |
+|:---|:---|:---|
+| **N1** Findings must be filed | A conclusion-level finding must have an issue number **or** a CI step. A log/chat note alone does not close it. | Cannot be cited as "known" without one of the two |
+| **N2** Official vectors test *this* implementation | Every cryptographic primitive needs a KAT that exercises our own code, with the object under test named in the test file. Third-party KATs are cross-checks only. | Missing KAT = red for that module |
+| **N3** Single source for numbers | External numbers come from `docs/metrics.json`, each entry carrying value + scope + date + reproducible command. Documents are generated from it or verified by `scripts/check-metrics.cjs`. | `node scripts/check-metrics.cjs` must exit 0 |
+| **N4** Check existence before writing | Before overwriting an existing file, check tracked status and diff. Creating a new file beats overwriting a same-named one. | Overwriting pre-existing content = incident |
+| **N5** Historical truncation disclosure | Claims about events earlier than the local git horizon must be written as "verifiable lower bound + inference". | Unbounded historical assertion = not publishable |

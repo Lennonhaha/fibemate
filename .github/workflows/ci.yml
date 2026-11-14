@@ -140,6 +140,13 @@ jobs:
       - name: Run aggregated suite (test/test-all.js)
         run: node test/test-all.js
 
+      # N3 single source: docs/metrics.json is the only place an external number may be
+      # written down. This recomputes the four git-derived counters and rejects the
+      # retired transposed figure named in the discipline annex, anywhere in the tree. Design: docs/ENGINEERING-DISCIPLINE.md
+      # N1-N5.
+      - name: Metrics registry is consistent (N3)
+        run: node scripts/check-metrics.cjs
+
       # FIPS 204 byte-level gate: pk/sk must equal the @noble/post-quantum oracle on three
       # fixed seeds, and signatures must verify in both directions. See
       # packages/fml-dsa/src/core/README.md for the four gates this enforces.
