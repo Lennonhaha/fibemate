@@ -328,7 +328,7 @@ npm run test:seeded # 800/800 reproducibility</code></pre>
  <p>📌 这是首个在纯 JavaScript 环境下通过 TVLA 时序验证的 SM2 / HMAC-SM3 公开实现。</p>
 
  <h3>9.10 形式化验证（TLA+）</h3>
- <p>混合握手协议 Path C-2 已通过 <strong>TLA+ 形式化验证</strong>（7 条不变量，101,467 状态，0 违例，0 死锁）：</p>
+ <p>混合握手协议 Path C-2 已通过 <strong>TLA+ 形式化验证</strong>（7 条不变量 + 1 条时序性质，26,115 distinct 状态 / 133,891 generated，0 违例，0 死锁，2026-11-14 实测）：</p>
  <ul>
  <li>TypeOK、K1~K5 不变量全部通过</li>
  <li><strong>K3 强形式</strong>：直接验证 <code>key[i] ≠ key[j]</code>（密钥间不可区分性）</li>

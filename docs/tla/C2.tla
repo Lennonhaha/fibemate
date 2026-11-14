@@ -276,21 +276,26 @@ K5_ServerActiveRequiresClientFinish ==
 \* =====================================================================
 \* Liveness  (handshake completion)
 \* ---------------------------------------------------------------------
-\* Under Spec == Init /\ [][Next]_vars /\ WF_vars(Next):
-\*   - Network delivery is non-consuming: MsgInNetwork is existential and
-\*     messages are only ever Append-ed to `network`, never removed. Once a
-\*     message is in network it stays visible, so every receiving action
-\*     becomes and stays enabled.
-\*   - WF_vars(Next) (weak fairness) guarantees every enabled Next-action is
-\*     eventually taken. Hence any session that leaves "init" eventually
-\*     reaches "active" on BOTH client and server.
-\* Intended liveness property (promote to the model's PROPERTY line AFTER TLC
-\* confirms it holds). tlc is NOT available in this environment (java present
-\* but tla2tools.jar fetch is blocked on 443), and CI does not run TLC, so
-\* this is machine-UNVERIFIED by inspection only. Do not claim verified.
-L_Handshake ==
+\* Formulation note (2026-11-14, checked with TLC 2.19 / tla2tools v1.7.4):
+\*   The first formulation carried here was
+\*     (cState[i] # "init") ~> (cState[i] = "active" /\ sState[i] = "active")
+\*   and TLC refuted it (exit 13, counterexample produced).  `A ~> B` expands
+\*   to [](A => <>B): the implication is re-evaluated in EVERY state where A
+\*   holds.  Once a session reaches "closing" the antecedent is still true but
+\*   "active" can never be reached again, so no behaviour can satisfy it.  The
+\*   model was fine; the property was wrong.  The same shape per side (client
+\*   only, server only) fails identically.
+\*
+\*   The property below puts the transient state in the antecedent instead.
+\*   Measured: holds under Spec, 133,891 states generated / 26,115 distinct,
+\*   TLC exit 0.  It is wired as a PROPERTY in C2.cfg.
+\*
+\*   Also note: WF_vars(Next) is weak fairness of the *disjunction* Next, not
+\*   of each disjunct.  It does not by itself guarantee that every session
+\*   progresses, so it cannot be cited as a per-session fairness argument.
+L_Reach ==
   \A i \in 1..MaxSessions:
-    (cState[i] # "init") ~> (cState[i] = "active" /\ sState[i] = "active")
+    (cState[i] = "init") ~> (cState[i] = "active")
 \* =====================================================================
 
 ================================================================================

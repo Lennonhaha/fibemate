@@ -55,7 +55,7 @@
 |------|------|
 | **范围** | Path C-2 SM2 + ML-KEM-768 混合握手（不含 TCP 重传） |
 | **不变量** | 7 条（TypeOK, K1-K5, K3_StrongKeyIndependence） |
-| **状态空间** | 101,467 states, 26,115 distinct |
+| **状态空间** | 133,891 states generated, 26,115 distinct (measured 2026-11-14) |
 | **死锁** | 0 deadlock |
 | **违反** | 0 violations |
 | **文件** | docs/tla/C2.tla + docs/tla/C2.cfg |

@@ -19,6 +19,19 @@
     O3_CountCorrect:     count of available OPKs equals the real count
   
   Extends the C2 handshake model with OPK-based key derivation.
+
+  STATUS: exploratory, NOT a verification gate (2026-11-14)
+  --------------------------------------------------------
+  This model is not part of the CI gate and must not be cited as proof.
+  Its state space is unbounded by construction (consumeLog is an unbounded
+  sequence, lastSessionId grows forever): a plain TLC run passes 119M
+  generated states in five minutes without converging, and a run with
+  CONSTRAINT Len(consumeLog) <= 6 still reached >163M generated states after
+  ten minutes with a 5.9M-state queue left.  O7_KeyIdMonotonic is defined but
+  absent from OPK.cfg, and T1_Progress / T2_UploadPhase have no PROPERTY line.
+  The behaviour that matters in production is covered by the unit tests for
+  pre-key storage and one-time consumption, not by this model.
+  See ASSURANCE_CASE.md section 6.1.1.
 *)
 EXTENDS Integers, FiniteSets, Sequences, TLC
 

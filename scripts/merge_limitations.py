@@ -51,7 +51,7 @@ appendix = """
 
 ### A.5 形式化验证 — 覆盖范围局限
 
-- TLA+ Path C-2 验证仅覆盖 **应用层握手核心不变量**（7 条 invariants / 101,467 states）
+- TLA+ Path C-2 验证仅覆盖 **应用层握手核心不变量**（7 条 invariants + 1 条时序性质 / 26,115 distinct, 133,891 generated）
 - **不覆盖**：Lossy 网络死锁、证书链验证、会话恢复、0-RTT 安全性
 - 完整 TLS 1.3 握手状态机形式化验证仍需持续研究
 - 混合 KEM IND-CCA2 的组合安全性证明依赖于至少一个组件安全的前提假设

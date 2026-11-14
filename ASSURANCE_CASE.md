@@ -141,7 +141,7 @@ reviewer check the claim.
 | Compiler-optimised constant-time code | Side-channel claims are taken from the executing implementation, never from source-level `constant_time_*` helpers | CVE-2026-44519 (liboqs ≤ 0.15.x, **FrodoKEM** `ct_select`, Clang 17+ at `-Os`; GHSA-5c97-hp95-vg56, fixed in 0.16.0): a source-level constant-time select compiled into a secret-dependent `cmov`/`csel`, with the cache-residency difference confirmed by Flush+Reload. It is cited here as evidence that source-level assertions are not proof — **not** as an ML-KEM issue: the advisory states that liboqs' ML-KEM already ships an inline-assembly value barrier. | Backend code generation (V8, the C compiler) is not audited instruction-by-instruction; the C addon has no hardware-level TVLA |
 | KEM implementation drifting from the standard | NIST KAT vectors in-tree; cross-implementation differential tests against `@noble/post-quantum`; ACVP keyGen cases for the final FIPS 203 | `packages/pqc-kem/test/kat/mlkem-768-KAT.rsp`, `test/mlkem-wasm-fips.test.cjs` (byte-identical to noble on 3 seeds), `docs/mlkem1024-kat-verified.md` (records that the older "ALL MATCH" referenced the **draft** FIPS 203 and is *not* evidence for the final standard) | Test-vector coverage ≠ proof of correctness |
 | Malformed / adversarial input to parsers | 19 Jazzer harnesses, 10,000 runs each, `max_len=4096`, scheduled in CI | `.github/workflows/fuzz.yml`, `fuzz/` | Fuzzing finds, never proves absence |
-| Protocol state-machine bugs (premature session, key reuse) | TLA+ model of the C2 handshake and the OPK pre-key protocol, checked with TLC | `docs/tla/C2.tla` + `C2.cfg` (7 invariants: `TypeOK`, `K1`–`K5`, `K3_Strong`), 101,467 states, TLC exit 0, DigiCert TSR `lg-069`; nightly parity run in `.github/workflows/docs-tla-verify.yml` | Model ≠ code; the model is hand-written from the spec |
+| Protocol state-machine bugs (premature session, key reuse) | TLA+ model of the C2 handshake, checked with TLC (invariants **and** liveness) | `docs/tla/C2.tla` + `C2.cfg`: 7 invariants (`TypeOK`, `K1`–`K5`, `K3_Strong`) + 1 liveness property (`L_Reach`); 26,115 distinct states (133,891 generated), TLC exit 0, measured 2026-11-14; DigiCert TSR `lg-069`; nightly parity run in `.github/workflows/docs-tla-verify.yml` | Model ≠ code; the model is hand-written from the spec. OPK model is exploratory and **not** gated — see §6.1.1 |
 | Credential attacks | bcrypt cost 12, ≥8-char password policy, 5 attempts / 15 min lockout, TOTP 2FA with recovery codes | `src/index.js` register/login, `src/lib/lockout.js`, `src/lib/totp.js`, `test/lockout.test.js` | In-memory lockout resets on restart |
 | Token forgery / replay | HS256 JWT with a 64-byte secret from env or a `0600` file, 2 h access / 7 d refresh, replay guard on `/api` | `src/index.js` `resolveJwtSecret`, `genToken`, `replayGuardMiddleware` | A single shared signing secret (no key rotation yet) |
 | Supply-chain substitution | `npm ci` lockfile-exact in CI, Dependabot, OSV scan, Scorecard, CycloneDX SBOM + drift check, cosign keyless signature over release checksums | `.github/workflows/{ci,osv-scan,scorecard,repro-build-check,release}.yml`, `RELEASE_CHECKSUMS.sig` on `v3.3.2` | Upstream maintainer compromise remains possible |
@@ -162,12 +162,63 @@ mislead a reader.
 - C2 is checked against 7 invariants (`TypeOK`, `K1_NoPrematureActive`,
   `K2_ServerKeyPrecondition`, `K3_StrongKeyIndependence`,
   `K3p_StrongKeyIndependence`, `K4_NoStateLeak`, `K5_ServerActiveRequiresClientFinish`).
-- Recorded run: **101,467 states, 0 violations, TLC exit 0**, timestamped with
-  DigiCert TSR `lg-069`. Re-runnable via `scripts/tla/c2-tlc-nightly.sh`
-  (nightly parity workflow `.github/workflows/docs-tla-verify.yml`).
+- Plus one liveness property, `L_Reach` (`cState[i] = "init" ~> cState[i] =
+  "active"`), wired as a `PROPERTY` in `C2.cfg` so it runs in the same TLC
+  invocation.
+- Recorded run (2026-07-14): **101,467 states generated, 26,115 distinct, 0
+  violations, TLC exit 0**, timestamped with DigiCert TSR `lg-069`.
+- Current re-run (2026-11-14, tla2tools v1.7.4 / Java 17): **133,891 generated,
+  26,115 distinct, 0 violations, exit 0**. The generated count grew as the model
+  was refined; the distinct-state count did not. Re-runnable via
+  `scripts/tla/c2-tlc-nightly.sh` (nightly parity workflow
+  `.github/workflows/docs-tla-verify.yml`).
 - Scope limit: this proves properties of a *hand-written model*. It does not
   prove the JavaScript implementation refines the model. Refinement is not
   claimed anywhere in this repository.
+
+### 6.1.1 OPK model: exploratory, not a gate
+
+`docs/tla/OPK.tla` is kept in-tree as an exploratory model. It is **not** part
+of the CI gate and must not be cited as verification evidence:
+
+- Its state space is unbounded by construction (`consumeLog` is an unbounded
+  sequence and `lastSessionId` increases forever). A local run passes
+  **119,275,736 generated / 33,819,339 distinct** states in five minutes
+  without converging; adding `CONSTRAINT Len(consumeLog) <= 6` still reached
+  **163,348,842 generated / 18,232,630 distinct** after ten minutes with a
+  5.9M-state queue remaining.
+- `.github/workflows/docs-tla-verify.yml` therefore keeps the OPK job behind
+  `vars.TLA_OPK_GATE` (default off, so the job is skipped) and sets
+  `continue-on-error: true`.
+- Two properties are defined but never checked: `O7_KeyIdMonotonic` is absent
+  from `OPK.cfg`, and `T1_Progress` / `T2_UploadPhase` have no `PROPERTY`
+  line. `O3_CountCorrect` is partially circular — the `ServerQueryCount`
+  action guards on the very equality the invariant asserts.
+- What protects this code path in practice is the unit-test suite for pre-key
+  storage and one-time consumption, not the model.
+
+### 6.1.2 A false invariant that we caught ourselves (2026-11-14)
+
+The model carried a liveness property `L_Handshake`:
+
+```
+\A i: (cState[i] # "init") ~> (cState[i] = "active" /\ sState[i] = "active")
+```
+
+It had never been machine-checked — the in-file comment said so ("Do not
+claim verified"). On 2026-11-14 it was checked for the first time and TLC
+refuted it (exit 13, counterexample produced). The cause was not the model but
+the formula: `A ~> B` expands to `[](A => <>B)`, so the implication is
+re-evaluated in every state where `A` holds. Once a session reaches `closing`,
+`cState[i] # "init"` is still true but `active` can never be reached again, so
+no behaviour satisfies it. A weaker per-side variant of the same shape fails
+identically.
+
+It was replaced by `L_Reach` (`init ~> active`), which is checked and passes
+(133,891 generated / 26,115 distinct, exit 0). `L_Reach` is now a `PROPERTY`
+in `C2.cfg`, so it runs with the nightly and per-PR TLA+ jobs. This episode is
+recorded rather than quietly edited because an unchecked claim and a wrong
+claim look identical until someone runs the checker.
 
 ### 6.2 VWZ — Isabelle/HOL research corpus (**not shipped**)
 

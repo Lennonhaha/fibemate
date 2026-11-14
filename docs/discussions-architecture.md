@@ -42,6 +42,6 @@ FPGA (Artix-7 35T FGG484)
 
 ## 形式化验证
 
-- L4 路径 C-2: TLA+ 7 不变式，101,467 states，TLC EXIT 0
+- L4 路径 C-2: TLA+ 7 不变式 + 1 条时序性质（`L_Reach`），26,115 distinct states（133,891 generated，2026-11-14 实测），TLC EXIT 0
 - K3 强形式: key[i] != key[j] 密码学独立验证
 - 局限性: lossy network deadlock 绕过（TCP 重传兜底），K3 基于 key=i 构造而非密码学独立采样
