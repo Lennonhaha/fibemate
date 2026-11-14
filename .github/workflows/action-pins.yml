@@ -39,3 +39,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node scripts/check-action-pins.cjs
+      # A checker that cannot say "fail" is decoration. These controls assert an
+      # invented SHA is missing, a real one is ok, a wrong tag is drift, and a dead
+      # API is unverifiable rather than green.
+      - name: Prove the checker can fail
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/check-action-pins.cjs --self-test
