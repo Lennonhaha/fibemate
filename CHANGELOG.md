@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Fixed
+
+- **ML-DSA signatures are now canonical by construction.** The decoder read the hint
+  counters and ignored whatever followed, so a signature with flipped bytes in the
+  unused tail still verified: one `(pk, msg)` pair had many accepted byte strings, and
+  a signature could not be used as an identifier. `decodeSig` now rejects any non-zero
+  byte in the unused tail of the hint block instead of skipping it, and rejects an
+  out-of-range row pointer instead of returning an empty hint row - the same defect
+  one byte to the left (#456).
+- The regression suite that proves it (`verify-canonical-signature.test.js --strict`)
+  runs in CI. It was written on 2026-11-14 in audit mode precisely so it would not turn
+  red before the fix existed; the fix and the gate land together.
+
+### Note
+
+- This changes verification behaviour for non-canonical inputs only. Signatures produced
+  by this implementation, by @noble/post-quantum, and by the KAT vectors are unaffected:
+  the encoder zero-fills the tail, so valid signatures already satisfied the rule.
+  Verified against the byte-level oracle (24/24), cross-Noble interop, and the 84-case
+  core suite.
+
 ## [v3.3.3] — 2026-11-14
 
 Patch release: delivery honesty. Nothing here changes an algorithm; everything here
