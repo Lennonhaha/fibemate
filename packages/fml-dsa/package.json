@@ -32,6 +32,10 @@
   "engines": {
     "node": ">=20"
   },
+  "dependencies": {
+    "@noble/hashes": "^2.4.0",
+    "@noble/post-quantum": "0.7.1"
+  },
   "sideEffects": false,
   "scripts": {
     "test": "node test/fml-dsa.test.js",
@@ -46,8 +50,5 @@
     "test:sk": "node test/sk-encoding.test.js",
     "test:det": "node test/sign-deterministic-parity.test.js"
   },
-  "license": "GPL-3.0-only",
-  "devDependencies": {
-    "@noble/post-quantum": "0.7.1"
-  }
+  "license": "GPL-3.0-only"
 }
