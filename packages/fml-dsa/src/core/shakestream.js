@@ -6,6 +6,7 @@
 // 2026-07-30 (rebuilt for Noble interop)
 
 import { shake128 as _nobleShake128, shake256 as _nobleShake256, sha3_256 as _nobleSha3_256 } from '@noble/hashes/sha3.js';
+import { selftestConsole } from './selftest-log.js';
 
 /**
  * SHAKE-128: extendable-output function (rate=168 bytes)
@@ -73,6 +74,8 @@ function hex(s) {
 }
 
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   let ok = true;
   const eq = (label, got, exp) => {
     const g = Buffer.from(got).toString('hex');

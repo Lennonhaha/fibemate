@@ -5,6 +5,7 @@
 // 2026-07-29
 
 import { Q } from './params.js';
+import { selftestConsole } from './selftest-log.js';
 
 // ══════════════════════════════════════════════
 // Power2Round: r = r1·2^d + r0
@@ -148,6 +149,8 @@ export function vecInfNormLt(zVec, gamma1, beta) {
 // Self-tests
 // ══════════════════════════════════════════════
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   let ok = true;
   const gamma2 = (Q - 1) / 32; // 261888
   const twoG2 = 2 * gamma2;

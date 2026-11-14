@@ -11,6 +11,7 @@ import { expandA, expandS } from './sampling.js';
 import { vecNtt, vecInvNtt, matVecMulNtt, vecAdd } from './polyvec.js';
 import { encodePK, encodeSK } from './encode.js';
 import { power2Round, decompose } from './reduce.js';
+import { selftestConsole } from './selftest-log.js';
 
 /**
  * ML-DSA.KeyGen() — FIPS 204 Algorithm 4
@@ -104,6 +105,8 @@ export function keygen(paramSet = 'ML-DSA-65', zetaSeed) {
 // Self-tests
 // ══════════════════════════════════════════════
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   let ok = true;
 
   // 1. KeyGen produces correct pk.sk structure

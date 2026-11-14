@@ -4,6 +4,7 @@
 // ZETA = 1753 (FIPS 204 §B.1 — 512-th primitive root in Z_q[x]/(x^256+1))
 
 import { Q, N, ZETA } from './params.js';
+import { selftestConsole } from './selftest-log.js';
 
 // --- bit-reversal table (N=256, 8 bits) ---
 export const bitRev = new Uint16Array(N);
@@ -44,6 +45,8 @@ for (let i = 0; i < N; i++) {
 
 // --- self-test ---
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   // ζ^256 ≡ -1 (Q-1) mod Q  (512-th root property)
   let pow = 1;
   for (let i = 0; i < 256; i++) pow = (pow * ZETA) % Q;

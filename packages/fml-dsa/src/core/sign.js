@@ -11,6 +11,7 @@ import { vecNtt, vecInvNtt, vecAdd, vecSub, matVecMulNtt, polyMul } from './poly
 import { highBits, lowBits, makeHint, makeHintDilithium } from './reduce.js';
 import { encodeSig } from './encode.js';
 import { keygen } from './keygen.js';
+import { selftestConsole } from './selftest-log.js';
 
 const modAbs = v => v <= (Q >> 1) ? v : Q - v;
 const modQ = v => { v %= Q; return v < 0 ? v + Q : v; };
@@ -186,6 +187,8 @@ function encodeW1(w1, gamma2) {
 
 // ══════ Self-tests ══════
 (function selfTest() {
+  // Quiet by default: success lines are opt-in, failure lines always print.
+  const console = selftestConsole();
   let ok = true;
 
   for (const ps of ['ML-DSA-44', 'ML-DSA-65', 'ML-DSA-87']) {
