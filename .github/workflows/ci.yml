@@ -319,6 +319,12 @@ jobs:
       - name: Check version consistency (VERSION.json is the single source)
         run: node scripts/check-version-consistency.cjs
 
+      # The TVLA gate shipped in #510 with no failing path ever executed, which is
+      # how it stayed green while the live test leaked. These fixtures drive both
+      # scripts through their real CLIs and assert the exit codes.
+      - name: "Gate self-test - TVLA summary and live gate"
+        run: node scripts/test-tvla-gates.cjs
+
   # ─── UTF-8 BOM check (single platform) ──────────────
   # 注意：这个 job 叫 bom-check，但它查的是 BOM（字节序标记）、编码损坏与实验代码隔离，
   # 与 CycloneDX CBOM 无关。CBOM 的漂移与 schema 校验在下面的 `cbom` job 里。

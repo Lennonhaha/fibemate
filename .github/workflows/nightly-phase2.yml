@@ -49,11 +49,22 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
+      # Runs the timing test against this checkout. An allowlist covers the
+      # documented pure-JS NTT leak; any other primitive leaking fails the job.
+      - name: TVLA live gate (current code)
+        shell: bash
+        run: |
+          set -o pipefail
+          node scripts/tvla-live-gate.cjs --json-out="$RUNNER_TEMP/live-tvla.json" 2>&1 | tee "$RUNNER_TEMP/tvla-live.log"
+
       - name: TVLA summary check
         shell: bash
         run: |
           set -o pipefail
-          node scripts/tvla-summary.js 2>&1 | tee "$RUNNER_TEMP/tvla.log"
+          node scripts/tvla-summary.js \
+            --min-samples=100 \
+            --allow-leak=NTT \
+            --include="$RUNNER_TEMP/live-tvla.json" 2>&1 | tee "$RUNNER_TEMP/tvla.log"
 
       - name: Attribute - TVLA digest
         if: always()
@@ -62,8 +73,11 @@ jobs:
           {
             echo "### TVLA - threshold |t| < 4.5"
             echo '```'
+            if [ -f "$RUNNER_TEMP/tvla-live.log" ]; then
+              grep -E 'OK|WARN|EXPECTED|FAIL|allowlist|samples:' "$RUNNER_TEMP/tvla-live.log" || echo '(no live TVLA lines)'
+            fi
             if [ -f "$RUNNER_TEMP/tvla.log" ]; then
-              grep -E 'max\|t\||Summary:|THRESHOLD BREACHED|TVLA SUMMARY' "$RUNNER_TEMP/tvla.log" || echo '(no TVLA digest lines)'
+              grep -E 'PASS|EXPECTED|FAIL|INSUFFICIENT|Summary:|TVLA SUMMARY' "$RUNNER_TEMP/tvla.log" || echo '(no TVLA digest lines)'
             else
               echo '(log missing - step did not run)'
             fi
