@@ -119,7 +119,7 @@ PR 落后 base 导致 `mergeable_state=behind` / required checks 无法落位时
 
 ---
 
-## 增补纪律 N6–N8（2026-11-15 生效）
+## 增补纪律 N6–N9（2026-11-15 生效）
 
 **N6【CI 红先定位步骤，再下结论】**
 报告"某个 job 红了"之前，必须先给出**红在第几步**与日志末行。同一个 job 里"测试会话死掉"与"覆盖率低于地板"是两种完全不同的事故，处置相反。
@@ -135,6 +135,14 @@ PR 落后 base 导致 `mergeable_state=behind` / required checks 无法落位时
 `check-runs` 与 `merge API` 是两套门禁，不能互相代证。合并被拒时**先读 API 正文**，不要只看计数。
 - 判据：`mergeable_state` 与 `check-runs` 双清 + 合并请求返回 2xx；405 正文含 `A conversation must be resolved` 时，走 GraphQL 查 `reviewThreads{isResolved}` 并逐条 resolve。
 - 反例：2026-11-15 PR #491 的 bad=0、状态 `clean`，首次合并仍 405；根因是 CodeQL bot 的 thread 未解决，**修掉告警不会自动 resolve**（thread 变 `outdated=true` 仍 `isResolved=false`）。
+
+**N9【Required check 不得配 `paths:` 过滤】**
+被设为必需的门禁，其 workflow **不得**在 `pull_request` 上加 `paths:` 过滤；并且它上报的 context 名必须是**这个 workflow 一定会在每个 PR 上产出的那个名字**。
+- 机制：`paths:` 不匹配 → workflow 不触发 → 必需检查永远 "expected" → 该仓库**所有** PR 永久 BLOCKED（merge API 返回 405 `Required status check "X" is expected.`）。
+- 正解：去掉过滤，新增一个**总是运行**的汇总 job（`if: always()`，`needs:` 全部重 job），由它在无密码学改动时直接报成功、有改动时汇总重 job 结果；scope job 无法判断时**必须报红**（fail-closed），不得升级为结果未知即放行。
+- 判据：`gh api repos/{o}/{r}/commits/{sha}/check-runs` 里能看到**该 context 本身**；且在一个只改 `docs/` 的 PR 上也在数十秒内出现且为绿。
+- context 名匹配规则：job 有 `name:` 则用 `name:`，无 `name:` 则用 job id；**顶层 `name:` 不会替四个子 job 生成同名 context**。
+- 反例：2026-11-15 把 `KAT-Regression` 设为必需，但 `kat-regression.yml` 的四个 job 分别叫 `mlkem-kat` / `fml-dsa-kat` / `gm-standards` / `integrity-and-keccak`，且带 `paths:` 过滤 → 文档 PR #496 被永久锁住（实测四个 commit 的 check-runs 均无此名）。
 
 ---
 
