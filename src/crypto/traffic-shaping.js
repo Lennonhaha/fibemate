@@ -225,9 +225,16 @@ class RateLimiter {
  */
 class FlowCorrelationResistance {
   constructor(config = {}) {
-    this.dropProbability = config.dropProbability || TRAFFIC_CONFIG.DROP_PROBABILITY;
-    this.extraDelayMin = config.extraDelayMin || TRAFFIC_CONFIG.EXTRA_DELAY_MIN;
-    this.extraDelayMax = config.extraDelayMax || TRAFFIC_CONFIG.EXTRA_DELAY_MAX;
+    // These used `||`, which silently replaced a deliberate 0 with the default:
+    // { dropProbability: 0 } became 0.02, so overriding the shaper to stop dropping
+    // messages instead dropped 1 in 50. A caller cannot express "never" with a
+    // falsy default operator, and the failure is invisible — the only symptom is
+    // that messages go missing at a rate nobody configured.
+    const num = (value, fallback) => (typeof value === 'number' && Number.isFinite(value) ? value : fallback);
+    const drop = num(config.dropProbability, TRAFFIC_CONFIG.DROP_PROBABILITY);
+    this.dropProbability = Math.min(1, Math.max(0, drop));
+    this.extraDelayMin = Math.max(0, num(config.extraDelayMin, TRAFFIC_CONFIG.EXTRA_DELAY_MIN));
+    this.extraDelayMax = Math.max(this.extraDelayMin, num(config.extraDelayMax, TRAFFIC_CONFIG.EXTRA_DELAY_MAX));
     this.pendingMessages = new Map();
   }
   
