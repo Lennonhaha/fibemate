@@ -58,6 +58,22 @@ if [ "$APPLY" -eq 0 ]; then
   echo "mode:    DRY RUN (nothing will be changed; add --apply to deploy)"
 fi
 
+# Where the script itself lives, resolved before any `cd`: bash reads a script
+# lazily, so when git reset replaces this file mid-run the process keeps executing
+# the OLD inode. That is how a deploy of a new deploy script ran the previous
+# logic and printed green (2026-11-15, #505): the sync step simply never existed
+# for that run. The sha of this file is captured here and compared after the
+# reset; a change triggers one re-exec so the new code actually runs.
+SELF_PATH="$0"
+case "$SELF_PATH" in
+  /*) ;;
+  *) SELF_PATH="$(cd "$(dirname "$SELF_PATH")" && pwd)/$(basename "$SELF_PATH")" ;;
+esac
+SELF_SHA_BEFORE=""
+if [ -f "$SELF_PATH" ]; then
+  SELF_SHA_BEFORE="$(sha256sum "$SELF_PATH" | cut -d' ' -f1)"
+fi
+
 # [1/6] The server must not carry local edits: production runs committed code only.
 echo "[1/6] checking the working tree is clean..."
 cd "$REPO_DIR"
@@ -80,12 +96,20 @@ fi
 # The set is measured, never assumed: production carries ~4.5k locked files spread over
 # api/, dist/, src/, www/, docs/ and the repo root.
 echo "[2/6] recording and clearing immutable flags..."
-lsattr -R . 2>/dev/null | grep -- '----i' | sed 's/^[^ ]* //' | sed 's/^\.\///' | sort > "$LOCK_RECORD"
-LOCK_COUNT="$(wc -l < "$LOCK_RECORD")"
-echo "      immutable entries before deploy: $LOCK_COUNT"
-while IFS= read -r f; do
-  [ -n "$f" ] && chattr -i "$f" 2>/dev/null || true
-done < "$LOCK_RECORD"
+if [ "${SKIP_UNLOCK:-0}" = "1" ]; then
+  # Re-exec path: the previous invocation already cleared the flags, so measuring
+  # now would record an empty set and"restore" nothing, silently leaving the
+  # whole tree writable. Reuse the record the first run made.
+  LOCK_COUNT="$(wc -l < "$LOCK_RECORD")"
+  echo "      lock set already recorded by the previous run: $LOCK_COUNT entries"
+else
+  lsattr -R . 2>/dev/null | grep -- '----i' | sed 's/^[^ ]* //' | sed 's/^\.\///' | sort > "$LOCK_RECORD"
+  LOCK_COUNT="$(wc -l < "$LOCK_RECORD")"
+  echo "      immutable entries before deploy: $LOCK_COUNT"
+  while IFS= read -r f; do
+    [ -n "$f" ] && chattr -i "$f" 2>/dev/null || true
+  done < "$LOCK_RECORD"
+fi
 
 # [3/6] Fetch the reviewed commit.
 echo "[3/6] fetching origin/main..."
@@ -93,6 +117,26 @@ git fetch origin main
 git reset --hard origin/main
 NEW_HEAD="$(git rev-parse HEAD)"
 echo "      HEAD after deploy:  $NEW_HEAD"
+
+# [3a/6] Did this commit change the deploy script itself? Bash is already running
+# the old bytes, so continuing would silently skip whatever the new version adds.
+# Re-exec once, keeping the argument list and the lock record. The guard env var
+# makes a second change impossible to loop on.
+SELF_SHA_AFTER=""
+if [ -f "$SELF_PATH" ]; then
+  SELF_SHA_AFTER="$(sha256sum "$SELF_PATH" | cut -d' ' -f1)"
+fi
+if [ -n "$SELF_SHA_BEFORE" ] && [ -n "$SELF_SHA_AFTER" ] && [ "$SELF_SHA_BEFORE" != "$SELF_SHA_AFTER" ]; then
+  if [ "${DEPLOY_REEXEC:-0}" = "1" ]; then
+    echo "      deploy script changed again during the re-exec; continuing with the loaded copy" >&2
+  else
+    echo "[3a/6] the deploy script changed in this commit (${SELF_SHA_BEFORE:0:12} -> ${SELF_SHA_AFTER:0:12})"
+    echo "      re-executing so the new logic runs, instead of finishing on the old code"
+    export DEPLOY_REEXEC=1
+    export SKIP_UNLOCK=1
+    exec bash "$SELF_PATH" "$@"
+  fi
+fi
 
 # [3b/6] Stamp the version the site will report. The header used to be a literal
 # in the nginx config ("v3.3.2 (48fc029a)") and stayed there for months, so every
