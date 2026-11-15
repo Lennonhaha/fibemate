@@ -90,19 +90,6 @@ function recordsFromJson(content, label) {
   }));
 }
 
-function collect(targets) {
-  const files = [];
-  for (const target of targets) {
-    if (!fs.existsSync(target)) {
-      files.push({ path: target, error: 'missing' });
-      continue;
-    }
-    const stat = fs.statSync(target);
-    if (stat.isFile()) files.push({ path: target });
-  }
-  return files;
-}
-
 function main() {
   const opts = parseArgs(process.argv.slice(2));
   if (opts.help) {
