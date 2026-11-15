@@ -75,7 +75,7 @@ function recordsFromJson(content, label) {
   let data;
   try {
     data = JSON.parse(content);
-  } catch (err) {
+  } catch {
     return null;
   }
   if (!data || !Array.isArray(data.tests)) return null;
@@ -123,7 +123,7 @@ function main() {
     const full = path.join(TVLA_DIR, entry);
     try {
       if (!fs.statSync(full).isFile()) continue;
-    } catch (err) {
+    } catch {
       continue;
     }
     // Only result-bearing files. .js files are sources and used to inflate the
