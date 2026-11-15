@@ -5,7 +5,8 @@
 #   usage: bash scripts/deploy-fibemate.sh            # dry run: print the plan only
 #          bash scripts/deploy-fibemate.sh --apply    # actually deploy
 #
-# Steps: check clean -> unlock -> fetch/reset -> relock -> restart -> verify delivery
+# Steps: check clean -> unlock -> fetch/reset -> stamp -> sync the API tree ->
+#        relock -> restart -> verify delivery
 #
 # The last step is not optional and is not cosmetic: scripts/check-live.cjs probes the
 # public site and exits non-zero when the deployed bytes disagree with the repo. A
@@ -25,6 +26,13 @@ BASE_URL="${BASE_URL:-https://fibemate.net}"
 LOCK_RECORD="${LOCK_RECORD:-/tmp/fibemate-lock-set.txt}"
 PM2_APP="${PM2_APP:-fibemate}"
 HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3001/api/mlkem/test}"
+# The site and the API are served from two different trees. nginx reads
+# $REPO_DIR/www; pm2 runs $RUNTIME_DIR/src/index.js. Resetting the checkout
+# alone leaves the API on the previous release - that is how a deploy reported
+# "OK" while /api/auth/verify still answered with the old rate limit and the
+# old code (issue #500).
+RUNTIME_DIR="${RUNTIME_DIR:-/opt/fibemate-full}"
+SYNC_TREES="${SYNC_TREES:-src}"
 
 APPLY=0
 for arg in "$@"; do
@@ -62,7 +70,8 @@ OLD_HEAD="$(git rev-parse HEAD)"
 echo "      HEAD before deploy: $OLD_HEAD"
 
 if [ "$APPLY" -eq 0 ]; then
-  echo "[dry-run] would unlock, fetch origin/main, reset --hard, relock, restart, verify"
+  echo "[dry-run] would unlock, fetch origin/main, reset --hard, stamp the version,"
+  echo "[dry-run] rsync $SYNC_TREES -> $RUNTIME_DIR/$SYNC_TREES, relock, restart, verify"
   exit 0
 fi
 
@@ -112,6 +121,89 @@ else
   fi
 fi
 
+# [3c/6] Sync the API tree, then prove it matches the commit that was just checked out.
+#
+# This step exists because "the deploy printed OK" and "the API runs the new code"
+# were allowed to be different statements. The reset above only moves the checkout;
+# pm2 keeps running whatever is in $RUNTIME_DIR. Everything below is measured: the
+# trees are compared file by file against the git tree, and the run fails if a single
+# tracked file differs or if pm2 is serving a path outside $RUNTIME_DIR.
+echo "[3c/6] syncing the API tree into $RUNTIME_DIR/$SYNC_TREES..."
+if [ ! -d "$RUNTIME_DIR/$SYNC_TREES" ]; then
+  echo "FAIL: $RUNTIME_DIR/$SYNC_TREES does not exist; refusing to guess where the API runs" >&2
+  exit 1
+fi
+
+# Where does pm2 actually run from? If this disagrees with RUNTIME_DIR, the sync
+# would update a tree nobody loads and the deploy would be green for no reason.
+PM2_EXEC="$(pm2 jlist 2>/dev/null | node -e '
+  let s = "";
+  process.stdin.on("data", (d) => { s += d; });
+  process.stdin.on("end", () => {
+    try {
+      const app = JSON.parse(s).find((p) => p.name === process.argv[1]);
+      process.stdout.write((app && app.pm2_env && app.pm2_env.pm_exec_path) || "");
+    } catch (e) { process.stdout.write(""); }
+  });
+' "$PM2_APP" || true)"
+if [ -z "$PM2_EXEC" ]; then
+  echo "FAIL: pm2 has no process named '$PM2_APP'; cannot verify where the API runs" >&2
+  exit 1
+fi
+case "$PM2_EXEC" in
+  "$RUNTIME_DIR"/*) echo "      pm2 exec: $PM2_EXEC" ;;
+  *)
+    echo "FAIL: pm2 runs $PM2_EXEC, which is outside $RUNTIME_DIR" >&2
+    echo "      syncing that tree would leave the loaded code untouched; aborting" >&2
+    exit 1
+    ;;
+esac
+
+BACKUP_DIR="$RUNTIME_DIR/.deploy-backup/$(date +%Y%m%d-%H%M%S)"
+mkdir -p "$BACKUP_DIR"
+for tree in $SYNC_TREES; do
+  tar -czf "$BACKUP_DIR/$tree.tar.gz" -C "$RUNTIME_DIR" "$tree"
+done
+echo "      runtime backup: $BACKUP_DIR"
+
+for tree in $SYNC_TREES; do
+  # --delete makes the tree identical instead of merely up to date: a module that
+  # no longer exists in the repo must not keep loading in production. Backup files
+  # and patch leftovers are excluded from the delete so they survive on purpose.
+  rsync -a --delete \
+    --exclude '*.bak' --exclude '*.bak.*' --exclude '*.orig' --exclude '*.rej' \
+    "$REPO_DIR/$tree/" "$RUNTIME_DIR/$tree/"
+  echo "      synced $tree"
+done
+
+# The gate. Every tracked file in every synced tree must be byte-identical to the
+# checkout, and no unexpected file may exist on the runtime side.
+MISMATCH=0
+CHECKED=0
+for tree in $SYNC_TREES; do
+  while IFS= read -r f; do
+    rel="${f#"$tree"/}"
+    CHECKED=$((CHECKED + 1))
+    if [ ! -f "$RUNTIME_DIR/$tree/$rel" ]; then
+      echo "      MISMATCH $tree/$rel (missing in the runtime tree)" >&2
+      MISMATCH=$((MISMATCH + 1))
+      continue
+    fi
+    repo_sha="$(sha256sum "$REPO_DIR/$f" | cut -d' ' -f1)"
+    run_sha="$(sha256sum "$RUNTIME_DIR/$tree/$rel" | cut -d' ' -f1)"
+    if [ "$repo_sha" != "$run_sha" ]; then
+      echo "      MISMATCH $tree/$rel (repo ${repo_sha:0:12} != runtime ${run_sha:0:12})" >&2
+      MISMATCH=$((MISMATCH + 1))
+    fi
+  done < <(git -C "$REPO_DIR" ls-tree -r --name-only HEAD "$tree")
+done
+if [ "$MISMATCH" -ne 0 ]; then
+  echo "FAIL: $MISMATCH of $CHECKED files still differ after the sync; the API would serve old code." >&2
+  echo "      runtime backup kept at $BACKUP_DIR" >&2
+  exit 1
+fi
+echo "      runtime tree matches $NEW_HEAD: $CHECKED files, sha256 identical"
+
 # [4/6] Restore exactly the flags that were there before. Anything else either
 # widens the locked surface (surprise for the next deploy) or narrows it.
 echo "[4/6] restoring immutable flags..."
@@ -143,6 +235,16 @@ else
     echo "FAIL: $HEALTH_URL returned $CODE" >&2
     exit 1
   fi
+  # Restarting does not change files, but it is the last moment where a stale tree
+  # could still be loaded (pm2 may have been pointed elsewhere by hand). Re-check the
+  # hash of the entry point after the restart rather than trusting the earlier pass.
+  LIVE_ENTRY_SHA="$(sha256sum "$RUNTIME_DIR/src/index.js" | cut -d' ' -f1)"
+  REPO_ENTRY_SHA="$(sha256sum "$REPO_DIR/src/index.js" | cut -d' ' -f1)"
+  if [ "$LIVE_ENTRY_SHA" != "$REPO_ENTRY_SHA" ]; then
+    echo "FAIL: $RUNTIME_DIR/src/index.js changed between the sync and the restart" >&2
+    exit 1
+  fi
+  echo "      loaded entry point matches the repo: ${LIVE_ENTRY_SHA:0:12}"
 fi
 
 # [6/6] Black-box delivery gate. This is the step that turns "I ran the script" into
