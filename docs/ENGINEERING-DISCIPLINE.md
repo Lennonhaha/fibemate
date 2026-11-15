@@ -119,6 +119,25 @@ PR 落后 base 导致 `mergeable_state=behind` / required checks 无法落位时
 
 ---
 
+## 增补纪律 N6–N8（2026-11-15 生效）
+
+**N6【CI 红先定位步骤，再下结论】**
+报告"某个 job 红了"之前，必须先给出**红在第几步**与日志末行。同一个 job 里"测试会话死掉"与"覆盖率低于地板"是两种完全不同的事故，处置相反。
+- 判据：结论中带 step 名 + 关键日志行；时长异常（远快于正常）本身即为线索。
+- 反例：2026-11-15 把 `coverage` 红读成"覆盖率跌了"，实际是第 5 步 `Run the merged coverage session` 失败（`no report written`），没走到阈值判定；同一 commit 的下一个 commit 反而绿，说明不是覆盖率问题。
+
+**N7【配置默认值不得吞掉显式零】**
+`x = cfg.x || DEFAULT` 会把 `0` / `''` / `false` 当"没传"，使配置**无法表达关闭**。默认值一律用 `??`，或 `typeof === 'number' && Number.isFinite(...)` 判型；概率夹紧 `[0,1]`，区间保证 `max >= min`。
+- 判据：新增回归测试必须能区分"传 0"与"不传"，且抽样次数足以暴露残留概率（例：残留 2% 时抽 500 次，期望失败约 10 次）。
+- 反例：`traffic-shaping.js` 传 `dropProbability: 0` 仍按 0.02 丢包，隐匿至 #493；暴露它的是错误信息里的 `0.02` 与构造参数 `0` 不一致。
+
+**N8【"检查项全绿"不等于"可合并"】**
+`check-runs` 与 `merge API` 是两套门禁，不能互相代证。合并被拒时**先读 API 正文**，不要只看计数。
+- 判据：`mergeable_state` 与 `check-runs` 双清 + 合并请求返回 2xx；405 正文含 `A conversation must be resolved` 时，走 GraphQL 查 `reviewThreads{isResolved}` 并逐条 resolve。
+- 反例：2026-11-15 PR #491 的 bad=0、状态 `clean`，首次合并仍 405；根因是 CodeQL bot 的 thread 未解决，**修掉告警不会自动 resolve**（thread 变 `outdated=true` 仍 `isResolved=false`）。
+
+---
+
 ## 罚则与纠错
 
 - **主动纠错豁免**：非主观造假，且 24 小时内自查并公开更正 → 不追责，记入案例库。
@@ -153,3 +172,24 @@ PR 落后 base 导致 `mergeable_state=behind` / required checks 无法落位时
 | `tla.c2.generated` / `tla.c2.distinct` | TLC 实跑状态数；两个数必须成对引用 |
 | `scorecard.score` | OpenSSF Scorecard 官方 API |
 | `openssf.silverMUST` | Best Practices Silver 已举证的 MUST 条数 |
+
+---
+
+## 附录 C：CodeQL 代码注入告警处置记录（2026-11-15）
+
+> 记录目的：证明"高危类别告警"在本仓是**修掉**而非 dismiss 掉的，且修法可复现。
+
+**告警**：`js/code-injection` @ `.github/workflows/release-verify.yml:61`（PR #488 引入时被 CodeQL 拦下，CI 显示 BLOCKED 而非 fail，需读 check-run annotations 才看到真因）。
+
+**形态**：`run:` 块内直接插值 `${{ github.event.workflow_run.head_branch }}`。该字段来自外部（分支名/tag 名可由任何有推送权的人构造），而该 job 持有 `issues: write`，等价于把外部字符串送进 shell。
+
+**修法（三层）**：
+1. 事件值一律经 `env:` 传入，在 bash 内以 `"$REF"` 引用，`run:` 块内 `${{` 命中数 **0**；
+2. `package` / `version` 再过字符集白名单（`^[a-z0-9][a-z0-9._-]*$` 一类），拒绝路径穿越与元字符；
+3. 解析逻辑抽成 `resolve.sh`，可脱离 Actions 单独跑。
+
+**验收（负向为主）**：`resolve.sh` 四场景 —— 正规 tag `v0.1.0-fml-dsa` → `fml-dsa/0.1.0`；非 tag ref（`main`）回落 `package.json` 版本；dispatch 显式输入；**恶意 ref 与恶意 version 均被拒（rc=1）且无注入产物**。另：YAML 用 js-yaml 解析通过、文件 5,977 B 无 BOM。
+
+**同批处置**：`js/unused-local-variable`（`keygen.js:13` 的 `decompose`）同样**直接删除**，不 dismiss；删除后 `origin/main` 上 `code-scanning/alerts?state=open` = **0**。
+
+**固化规则 R-CI-1**：`${{ }}` 只允许出现在 `env:` / `with:` / `if:`；**禁止出现在 `run:` 块内**。新增或修改 workflow 时必须人工核一次（`grep -n '\${{' <workflow> | grep -A0 'run:'` 不足以判，须按 step 逐块看）。
