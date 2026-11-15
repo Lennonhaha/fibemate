@@ -1,0 +1,57 @@
+# Ten checks that answer one question: is this repository's claim true right now?
+#
+# scripts/verify-all.cjs already knew how to run them (KAT, noble parity, canonical
+# signatures, input validation, core, edge cases, two gates, tarball contents and a
+# cold install). Running it by hand meant "the last person who remembered". This
+# runs it on every push and pull request, and keeps the report as an artifact.
+#
+# Not a replacement for ci.yml: that matrix covers three platforms and two Node
+# versions. This is one runner doing the end-to-end story in order, including the
+# parts a unit test cannot reach — what ships in the tarball, and whether it works
+# in a directory that has never seen this repository.
+name: verify-all
+permissions: read-all
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    # Mondays 05:00 UTC = 13:00 Asia/Shanghai. Catches drift that only appears
+    # when the registry or the runners change under us.
+    - cron: '0 5 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: verify-all-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify-all:
+    name: ten checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      # GITHUB_TOKEN is read, not required: step 8 asks the API whether the pinned
+      # action SHAs resolve. Without it the step reports SKIP rather than pretending
+      # the pins are fine, so this never turns "could not ask" into a green tick.
+      - name: Run the ten checks
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: node scripts/verify-all.cjs
+      - name: Upload the evidence report
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: evidence-report
+          path: evidence-report.json
+          if-no-files-found: warn
+          retention-days: 30
