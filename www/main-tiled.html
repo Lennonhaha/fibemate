@@ -1220,14 +1220,40 @@ async function api(path, opts = {}) {
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['Authorization'] = 'Bearer ' + token;
   const res = await fetch(API + path, { ...opts, headers: { ...headers, ...(opts.headers||{}) } });
+  // 429 必须单独区分：它既不是“登录失效”也不是“请求成功”，当成任一一种都会出事。
+  // 2026-11-15 事故：verify 返回 429 时被当成 401 处理 → 跳回 app.html → app.html 又跳回来，
+  // 形成无限重载环，反而持续把限流额度烧光（实测单分钟 130 次 /api/auth/verify）。
+  if (res.status === 429) {
+    const retryAfter = parseInt(res.headers.get('Retry-After') || '0', 10) || 0;
+    const err = new Error('RATE_LIMITED');
+    err.code = 'RATE_LIMITED';
+    err.retryAfter = retryAfter;
+    throw err;
+  }
   if (res.status === 401 || res.status === 403) {
     showToast('会话过期，请重新登录', 'error');
     setTimeout(() => { localStorage.clear(); window.location.href = 'app.html'; }, 1500);
     throw new Error('AUTH');
   }
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error || 'API error');
+  // nginx 的 429/5xx 是 HTML 页面，res.json() 会抛 SyntaxError（信息量为零）
+  const raw = await res.text();
+  let json = {};
+  try { json = raw ? JSON.parse(raw) : {}; } catch (_) { json = {}; }
+  if (!res.ok) throw new Error(json.error || `API error (${res.status})`);
   return json;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// 限流时给一个可读的等待提示，而不是把用户当成未登录踢回登录页。
+function showRateLimited(retryAfter) {
+  const secs = retryAfter > 0 ? retryAfter : 60;
+  showToast(`请求过于频繁，请 ${secs} 秒后刷新重试`, 'warn');
+  const idEl = $('identityKeyFingerprint');
+  const spkEl = $('signedPreKeyFingerprint');
+  const txt = `限流中，请 ${secs} 秒后刷新`;
+  if (idEl) idEl.textContent = txt;
+  if (spkEl) spkEl.textContent = txt;
 }
 
 // ─── Render helpers ───────────────────────────────────────
@@ -1248,7 +1274,7 @@ function timeAgo(ts) {
 
 // ─── Init ─────────────────────────────────────────────────
 
-async function loadMyKeys() {
+async function loadMyKeys(attempt = 0) {
   try {
     const data = await api(`/users/${userId}/keys`);
     // data: { identityKey, signedPrekey, signedPrekeySignature, oneTimePreKey, gmPublicKey, gmKeyFingerprint, isOnline }
@@ -1269,6 +1295,16 @@ async function loadMyKeys() {
       statsEl.innerHTML = `One-Time PreKeys: <b style="color:var(--accent)">${otpCount}</b><br>GM 指纹: <b style="font-family:monospace">${gmFp.substring(0,16)}...</b>`;
     }
   } catch(e) {
+    // 429 = 被限流，重试只会加重封锁；直接停下并告知用户等待。
+    if (e.code === 'RATE_LIMITED') {
+      showRateLimited(e.retryAfter);
+      return;
+    }
+    // 瞬时失败（网络抖动、后端重启中）退避重试 3 次：1s → 2s → 4s
+    if (attempt < 3) {
+      await sleep(1000 * Math.pow(2, attempt));
+      return loadMyKeys(attempt + 1);
+    }
     const idEl = $('identityKeyFingerprint');
     if (idEl) idEl.textContent = '加载失败';
     throw e;
@@ -1345,6 +1381,12 @@ async function init() {
   try {
     await api('/auth/verify');
   } catch(e) {
+    // 限流不是登录失效：跳回 app.html 会触发「app.html ↔ main-tiled.html」无限重载环，
+    // 每轮都再打一次 verify，把桶牢牢焊死。停在当前页并给等待提示。
+    if (e.code === 'RATE_LIMITED') {
+      showRateLimited(e.retryAfter);
+      return;
+    }
     window.location.href = 'app.html';
     return;
   }
