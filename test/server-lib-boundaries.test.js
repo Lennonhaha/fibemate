@@ -220,6 +220,34 @@ function delivery(fcr, msg, timeoutMs = 2000) {
   });
 }
 
+test('flow correlation: a configured zero is honoured, not replaced by the default', () => {
+  // The constructor used `config.dropProbability || DEFAULT`, so 0 became 0.02.
+  // That is not cosmetic: a caller who asked for no drops lost 1 message in 50,
+  // silently, and it is why the test above failed at random on CI (run 43654413201,
+  // "message m1 was dropped (dropProbability=0.02)") against a config asking for 0.
+  const noDrop = new FlowCorrelationResistance({ dropProbability: 0, extraDelayMin: 0, extraDelayMax: 0 });
+  assert.equal(noDrop.dropProbability, 0, 'dropProbability: 0 must not fall back to the default');
+  assert.equal(noDrop.extraDelayMin, 0, 'extraDelayMin: 0 must not fall back to the default');
+  assert.equal(noDrop.getStats().delayRange, '0-0ms');
+
+  // 500 draws would fail roughly ten times over if the value were 0.02 (1 - 0.98^500).
+  for (let i = 0; i < 500; i++) {
+    const r = noDrop.process({ id: `p${i}` }, () => {});
+    assert.equal(r.accepted, true, 'dropProbability 0 must never drop');
+    assert.equal(r.delay, 0, 'a 0-0 delay range must schedule immediately');
+    noDrop.cancel(r.msgId);
+  }
+
+  // Out-of-range and non-numeric values are clamped or ignored, not propagated.
+  assert.equal(new FlowCorrelationResistance({ dropProbability: -1 }).dropProbability, 0);
+  assert.equal(new FlowCorrelationResistance({ dropProbability: 7 }).dropProbability, 1);
+  assert.equal(
+    new FlowCorrelationResistance({ dropProbability: 'lots' }).dropProbability,
+    new FlowCorrelationResistance().dropProbability,
+    'a non-numeric probability must fall back to the documented default',
+  );
+});
+
 test('traffic shaper: disabled passes through, enabled applies the pipeline', async () => {
   const shaper = new TrafficShaper();
   const received = [];
