@@ -386,37 +386,24 @@ const genRefreshToken = (user) => jwt.sign(
 //   3) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
 // 内存计数器（单实例部署足够；多实例需外接 store，如 Redis）。
 // 注：限流按真实客户端 IP 计数。直接用 req.ip 会在反代下退化成同一个桶，
-// 故 keyGenerator 以 nginx 注入的 X-Real-IP（$remote_addr）为准；
-// 仅当该值本身是回环地址（前置转发层未透传真实 IP）时才回退到 XFF，见下方说明。
+// 故 keyGenerator 只认 nginx 注入的 X-Real-IP（$remote_addr），不信任 X-Forwarded-For。
 // ========================
 const rateLimit = require('express-rate-limit');
 const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（三档共用）
-// 真实客户端 IP：优先取 nginx 设置的 X-Real-IP（$remote_addr）。
+// 真实客户端 IP：只取 nginx 注入的 X-Real-IP（$remote_addr）。
 //
-// 2026-11-15 生产事故修正：站点前置了一层本地 TLS/边缘转发，nginx 记录的 $remote_addr
-// 对**所有**外部客户端都是 127.0.0.1（实测：公网 8.156.77.68 的请求在 access.log 里记作
-// 127.0.0.1）。原实现直接拿 X-Real-IP 当 key，等于把全部用户压进同一个桶——
-// 30 次/15 分钟的登录额度会被任意用户流量烧穿，正常用户被误判成攻击者。
-// 因此：X-Real-IP 是回环地址时，回退到 X-Forwarded-For 里**最右一个非回环地址**
-// （nginx 用 $proxy_add_x_forwarded_for 追加，最右段是直连 peer，最左段才是客户端自称）。
-// 该回退只用于限流分桶（不参与鉴权），伪造它的最坏后果只是绕过限流，不构成越权。
-function isLoopbackAddr(ip) {
-  if (!ip) return false;
-  const s = String(ip).trim();
-  return s === '::1' || /^127\./.test(s) || /^::ffff:127\./i.test(s);
-}
+// 2026-11-15 生产事故：nginx 的 stream(443) → http(8443) 两跳未开 PROXY protocol，
+// 导致 $remote_addr 对所有外部客户端恒为 127.0.0.1，全站共用一个限流桶；
+// 页面重载环把 30 次/15 分钟的额度烧穿后，正常用户被锁死。
+// 当时加过「X-Real-IP 是回环就回退 X-Forwarded-For」的止损补丁。现在 nginx 两跳都已
+// 启用 PROXY protocol（stream `proxy_protocol on` + `listen 8443 ssl proxy_protocol`
+// + `real_ip_header proxy_protocol`），$remote_addr 恒为真实客户端 IP，补丁已无必要。
+// X-Forwarded-For 客户端可任意伪造（实测伪造后能切到全新桶），保留回退等于给限流器
+// 留一个免检通道，故删除：不使用 req.ip（反代下退化为共桶），也不信任 XFF。
 function realClientKey(req) {
   const header = req.headers && req.headers['x-real-ip'];
   const xr = Array.isArray(header) ? header[header.length - 1] : header;
-  if (xr && !isLoopbackAddr(xr)) return xr;
-  const xff = req.headers && req.headers['x-forwarded-for'];
-  if (xff) {
-    const parts = String(xff).split(',').map((s) => s.trim()).filter(Boolean);
-    for (let i = parts.length - 1; i >= 0; i--) {
-      if (!isLoopbackAddr(parts[i])) return parts[i];
-    }
-  }
-  if (xr) return xr;
+  if (xr && String(xr).trim()) return String(xr).trim();
   return (req.socket && req.socket.remoteAddress) || 'unknown';
 }
 const rateLimitMiddleware = rateLimit({
