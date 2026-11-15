@@ -316,6 +316,9 @@ jobs:
         run: |
           npx --yes markdown-link-check@3.12.2 README.md docs/*.md 2>/dev/null || true
 
+      - name: Check version consistency (VERSION.json is the single source)
+        run: node scripts/check-version-consistency.cjs
+
   # ─── UTF-8 BOM check (single platform) ──────────────
   # 注意：这个 job 叫 bom-check，但它查的是 BOM（字节序标记）、编码损坏与实验代码隔离，
   # 与 CycloneDX CBOM 无关。CBOM 的漂移与 schema 校验在下面的 `cbom` job 里。
