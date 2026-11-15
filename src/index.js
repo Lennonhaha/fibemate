@@ -380,39 +380,72 @@ const genRefreshToken = (user) => jwt.sign(
 // ========================
 // 频率限制 — security 2026-08-13 / updated 2026-09-08 to express-rate-limit
 // 使用 express-rate-limit（CodeQL js/missing-rate-limiting 识别的规范化限流库）
-// 两档独立限流：
-//   1) 登录/注册/刷新 token：30 次 / 15 分钟（防爆破）
-//   2) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
+// 三档独立限流：
+//   1) 登录/注册/刷新 token：30 次 / 15 分钟（防爆破；成功请求不计数）
+//   2) 探活 /api/auth/verify：240 次 / 15 分钟（每次开页面都会调用，不能与登录共用桶）
+//   3) 全局 API：600 次 / 15 分钟（防滥用，不误伤正常流量）
 // 内存计数器（单实例部署足够；多实例需外接 store，如 Redis）。
-// 注：限流按真实客户端 IP 计数。nginx 反代下 req.ip 恒为 127.0.0.1（共享桶），
-// 故 keyGenerator 取 nginx 注入的 X-Real-IP（$remote_addr，来自直连 peer，客户端不可伪造，
-// spoof-proof），而非 req.ip / X-Forwarded-For（XFF 由 nginx append，攻击者可控 → 可绕过）。
+// 注：限流按真实客户端 IP 计数。直接用 req.ip 会在反代下退化成同一个桶，
+// 故 keyGenerator 以 nginx 注入的 X-Real-IP（$remote_addr）为准；
+// 仅当该值本身是回环地址（前置转发层未透传真实 IP）时才回退到 XFF，见下方说明。
 // ========================
 const rateLimit = require('express-rate-limit');
-const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（两档共用）
-// 真实客户端 IP：取 nginx 设置的 X-Real-IP（$remote_addr，直连 peer，不可客户端伪造）。
-// 忽略 X-Forwarded-For（客户端可控，nginx 会 append，用作 key 可被伪造绕过）。
-// 若无 X-Real-IP（直连场景）回退到 socket 地址。
+const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（三档共用）
+// 真实客户端 IP：优先取 nginx 设置的 X-Real-IP（$remote_addr）。
+//
+// 2026-11-15 生产事故修正：站点前置了一层本地 TLS/边缘转发，nginx 记录的 $remote_addr
+// 对**所有**外部客户端都是 127.0.0.1（实测：公网 8.156.77.68 的请求在 access.log 里记作
+// 127.0.0.1）。原实现直接拿 X-Real-IP 当 key，等于把全部用户压进同一个桶——
+// 30 次/15 分钟的登录额度会被任意用户流量烧穿，正常用户被误判成攻击者。
+// 因此：X-Real-IP 是回环地址时，回退到 X-Forwarded-For 里**最右一个非回环地址**
+// （nginx 用 $proxy_add_x_forwarded_for 追加，最右段是直连 peer，最左段才是客户端自称）。
+// 该回退只用于限流分桶（不参与鉴权），伪造它的最坏后果只是绕过限流，不构成越权。
+function isLoopbackAddr(ip) {
+  if (!ip) return false;
+  const s = String(ip).trim();
+  return s === '::1' || /^127\./.test(s) || /^::ffff:127\./i.test(s);
+}
 function realClientKey(req) {
-  const xr = req.headers && req.headers['x-real-ip'];
-  if (xr) return Array.isArray(xr) ? xr[xr.length - 1] : xr;
-  return req.socket && req.socket.remoteAddress;
+  const header = req.headers && req.headers['x-real-ip'];
+  const xr = Array.isArray(header) ? header[header.length - 1] : header;
+  if (xr && !isLoopbackAddr(xr)) return xr;
+  const xff = req.headers && req.headers['x-forwarded-for'];
+  if (xff) {
+    const parts = String(xff).split(',').map((s) => s.trim()).filter(Boolean);
+    for (let i = parts.length - 1; i >= 0; i--) {
+      if (!isLoopbackAddr(parts[i])) return parts[i];
+    }
+  }
+  if (xr) return xr;
+  return (req.socket && req.socket.remoteAddress) || 'unknown';
 }
 const rateLimitMiddleware = rateLimit({
   keyGenerator: realClientKey,
   windowMs: RATE_LIMIT_WINDOW,
-  max: 30,                                   // 登录/注册防爆破
+  limit: 30,                                 // 登录/注册防爆破
+  skipSuccessfulRequests: true,              // 登录成功不消耗额度：正常使用不该被锁
   standardHeaders: 'draft-7',               // 返回 RateLimit-* 头
   legacyHeaders: false,                     // 不返回 X-RateLimit-*（已弃用）
-  message: { error: '请求过于频繁，请稍后再试' },
+  message: { error: '请求过于频繁，请稍后再试', code: 'RATE_LIMITED' },
 });
 const globalRateLimitMiddleware = rateLimit({
   keyGenerator: realClientKey,
   windowMs: RATE_LIMIT_WINDOW,
-  max: 600,                                  // 全局 API 防滥用
+  limit: 600,                                // 全局 API 防滥用
   standardHeaders: 'draft-7',
   legacyHeaders: false,
-  message: { error: '请求过于频繁，请稍后再试' },
+  message: { error: '请求过于频繁，请稍后再试', code: 'RATE_LIMITED' },
+});
+// 探活档：GET /api/auth/verify 是「每次打开页面」都会调用的请求，与登录口令共用同一个桶时，
+// 多刷新几次页面就会把登录额度烧光（2026-11-15 实测：故障时单分钟 130 次 verify，
+// 160+ 次 429，用户被自己刷进 15 分钟封锁）。单独一档，只防滥用、不参与防爆破。
+const verifyRateLimitMiddleware = rateLimit({
+  keyGenerator: realClientKey,
+  windowMs: RATE_LIMIT_WINDOW,
+  limit: 240,
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试', code: 'RATE_LIMITED' },
 });
 
 // ========================
@@ -456,7 +489,7 @@ app.use('/api', replayGuardMiddleware);
 // GET /api/auth/verify — verify token validity (frontend init call)
 // 注：必须注册在 rateLimitMiddleware / globalRateLimitMiddleware 声明之后（TDZ 修复 2026-09-18）
 // ========================
-app.get('/api/auth/verify', rateLimitMiddleware, authMiddleware, (req, res) => {
+app.get('/api/auth/verify', verifyRateLimitMiddleware, authMiddleware, (req, res) => {
   res.json({ ok: true, userId: req.user.userId, username: req.user.username });
 });
 

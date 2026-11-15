@@ -930,7 +930,22 @@
 
     // Init: redirect if already logged in
     if (localStorage.getItem('fk_token') || sessionStorage.getItem('fk_token') || localStorage.getItem('fk_guest')) {
-      setTimeout(() => window.location.href = 'main-tiled.html', 100);
+      // 防重载环：main-tiled.html 在 /auth/verify 失败时会跳回本页，本页若无条件再跳回去，
+      // 就形成无限循环（2026-11-15 实测：单分钟 130 次 /api/auth/verify，把限流桶烧穿）。
+      // 30 秒窗口内最多允许 3 次往返；超过就不再自动跳转，留在登录页。
+      const BOUNCE_KEY = 'fk_bounce';
+      let bounce = { n: 0, t: Date.now() };
+      try { bounce = JSON.parse(sessionStorage.getItem(BOUNCE_KEY)) || bounce; } catch (_) {}
+      if (!bounce || typeof bounce.t !== 'number' || Date.now() - bounce.t > 30000) {
+        bounce = { n: 0, t: Date.now() };
+      }
+      if (bounce.n < 3) {
+        sessionStorage.setItem(BOUNCE_KEY, JSON.stringify({ n: bounce.n + 1, t: bounce.t }));
+        setTimeout(() => window.location.href = 'main-tiled.html', 100);
+      } else {
+        sessionStorage.removeItem(BOUNCE_KEY);
+        showToast('登录状态校验失败，请重新登录（如反复失败请稍后再试）', 'error');
+      }
     }
   </script>
 </body>
