@@ -362,20 +362,82 @@
         grid-column: 2;
         grid-row: 2 / 4;
       }
-      .sidebar-tile:nth-child(3) {
-        grid-column: 1;
-        grid-row: 3;
-      }
     }
     
+    /* ── 移动端（≤768px）：单列 + 侧栏抽屉（2026-11-15）────────────────
+       旧规则只在容器上把列数改成 1fr，但 ≤1200px 那条媒体查询仍给
+       .messages-tile 设了 grid-column: 2。两条查询在手机上同时命中，
+       单列网格里的 grid-column: 2 会生成隐式第二列，把聊天区顶出屏幕右侧，
+       body 又是 overflow: hidden —— 于是“横向溢出且拖不动”。
+       现在：状态栏 + 聊天区两行铺满，会话/联系人/密钥那栏变成左侧抽屉。 */
+    .mobile-menu-btn, .drawer-backdrop { display: none; }
+
     @media (max-width: 768px) {
+      body { overflow: hidden; }
+      /* 手机端彻底不用 grid：grid-column: 2 的遗留值会生成隐式列（实测 1fr 容器仍解析出
+         270/0/87 三条轨道，聊天区只拿到 270px）。flex column 不受这些遗留属性影响。 */
       .tiled-layout {
-        grid-template-columns: 1fr;
-        grid-template-rows: auto;
+        display: flex;
+        flex-direction: column;
+        grid-template-columns: none;
+        grid-template-rows: none;
+        gap: 8px;
+        padding: 8px;
+        height: 100dvh;
       }
-      .tile {
-        min-height: 300px;
+      .status-bar { flex: 0 0 auto; width: 100%; }
+      .status-brand { font-size: 13px; letter-spacing: 1.5px; gap: 8px; }
+      .status-brand svg { width: 20px; height: 20px; }
+      .status-name { font-size: 0.85rem; }
+      .status-text { display: none; }
+      .btn-exit { display: none; }   /* 手机端退出入口在抽屉底部，顶栏不再重复 */
+      .status-user { gap: 6px; }
+
+      .mobile-menu-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 34px; height: 34px; border-radius: 8px; flex-shrink: 0;
+        border: 1px solid var(--border-subtle); background: transparent;
+        color: var(--accent); font-size: 16px; line-height: 1; cursor: pointer;
       }
+      .mobile-menu-btn:active { background: var(--accent-dim); }
+
+      /* 左栏（会话/联系人/密钥）→ 抽屉 */
+      .sidebar-tile {
+        position: fixed; top: 0; left: 0; bottom: 0;
+        width: min(86vw, 340px); height: 100dvh; max-height: none;
+        z-index: 60; border-radius: 0 12px 12px 0;
+        transform: translateX(-102%);
+        transition: transform 0.22s ease;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.55);
+      }
+      .sidebar-tile.open { transform: translateX(0); }
+
+      .drawer-backdrop {
+        display: none; position: fixed; inset: 0; z-index: 55;
+        background: rgba(0, 0, 0, 0.55);
+      }
+      .drawer-backdrop.show { display: block; }
+
+      /* 右栏（Settings）→ 右侧抽屉 */
+      .settings-tile {
+        position: fixed; top: 0; right: 0; bottom: 0;
+        width: min(86vw, 340px); height: 100dvh; max-height: none;
+        z-index: 60; border-radius: 12px 0 0 12px;
+        transform: translateX(102%);
+        transition: transform 0.22s ease;
+        box-shadow: 0 0 40px rgba(0, 0, 0, 0.55);
+      }
+      .settings-tile.open { transform: translateX(0); }
+
+      /* 聊天区占满剩余高度；抽屉/设置面板已脱离文档流 */
+      .messages-tile {
+        flex: 1 1 auto; width: 100%; min-height: 0;
+        grid-column: auto; grid-row: auto;
+      }
+      .status-bar { padding: 0 12px; height: 52px; }
+      .tile { min-height: 0; }
+      .key-card-value { word-break: break-all; }
+      #inputBar { padding-bottom: max(env(safe-area-inset-bottom), 0px); }
     }
   
 /* ── Chat overrides for tiled layout ── */
@@ -469,9 +531,11 @@
   
   <div class="app-container">
     <div class="tiled-layout">
+      <div class="drawer-backdrop" id="drawerBackdrop"></div>
       <!-- 顶部状态栏 -->
       <div class="status-bar">
         <div class="status-brand">
+          <button class="mobile-menu-btn" id="btnMobileMenu" aria-label="会话列表" aria-expanded="false">☰</button>
           <svg viewBox="0 0 24 24" fill="none">
             <path d="M12 2L20 6V11C20 16 16 20 12 22C8 20 4 16 4 11V6L12 2Z"
                   stroke="currentColor" stroke-width="1.5" fill="none"/>
@@ -485,6 +549,7 @@
               <span style="color: var(--success);">●</span> Online
             </div>
           </div>
+          <button class="mobile-menu-btn" id="btnMobileSettings" aria-label="设置" aria-expanded="false">⚙</button>
           <div class="status-avatar" id="userAvatar">U</div>
           <button class="btn-exit" id="btnLogoutOld" onclick="if(confirm('退出登录？')){localStorage.clear();window.location.href='app.html';}">退出</button>
         </div>
@@ -2018,10 +2083,54 @@ document.addEventListener('DOMContentLoaded', () => {
   injectStyles();
   init();
 });
+
+// ─── 移动端抽屉 ────────────────────────────────────────────
+// ≤768px 时左栏变成抽屉，由状态栏的 ☰ 按钮开合；点遮罩、按 Esc、或选中会话后自动收起。
+// 桌面端不生效（按钮由 CSS 隐藏，drawer 类不会被触发）。
+(() => {
+  const btn = document.getElementById('btnMobileMenu');
+  const btnRight = document.getElementById('btnMobileSettings');
+  const left = document.querySelector('.tiled-layout > .sidebar-tile');
+  const right = document.querySelector('.tiled-layout > .settings-tile');
+  const backdrop = document.getElementById('drawerBackdrop');
+  if (!btn || !left || !backdrop) return;
+
+  const isMobile = () => window.innerWidth <= 768;
+  const close = () => {
+    [btn, btnRight].forEach(b => b && b.setAttribute('aria-expanded', 'false'));
+    [left, right].forEach(d => d && d.classList.remove('open'));
+    backdrop.classList.remove('show');
+  };
+  const open = (el, b) => {
+    close();
+    if (!el) return;
+    el.classList.add('open');
+    backdrop.classList.add('show');
+    if (b) b.setAttribute('aria-expanded', 'true');
+  };
+
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (left.classList.contains('open')) close(); else open(left, btn);
+  });
+  if (btnRight) {
+    btnRight.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (right && right.classList.contains('open')) close(); else open(right, btnRight);
+    });
+  }
+  backdrop.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+  // 选中会话/联系人后收起，免得手机上看不到聊天区
+  left.addEventListener('click', (e) => {
+    if (isMobile() && e.target.closest('#conversationList .list-item, #contactList .list-item')) close();
+  });
+  window.addEventListener('resize', () => { if (!isMobile()) close(); });
+})();
+
 })();
 
 </script>
-</body
       <!-- Vault + Settings 右列（对齐 Tauri）-->
       <div class="tile settings-tile" style="display: none;">
         <!-- Vault 面板 -->
@@ -2082,4 +2191,6 @@ document.addEventListener('DOMContentLoaded', () => {
             <button class="key-btn" onclick="window.open('https://github.com/Lennonhaha/fibemate/issues','_blank')">反馈</button>
           </div>
         </div>
-      </div>>
+      </div>
+</body>
+</html>
