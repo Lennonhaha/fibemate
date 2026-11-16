@@ -267,7 +267,7 @@ NEWEST_NATIVE_TS="${NEWEST_NATIVE_TS:-0}"
 if [ -f "$NATIVE_NODE" ]; then
   NATIVE_SHA="$(sha256sum "$NATIVE_NODE" | cut -d' ' -f1)"
   NATIVE_MTIME="$(stat -c %Y "$NATIVE_NODE")"
-  echo "      addon present: ${NATIVE_SHA:0:12} ($(stat -c %s "$NATIVE_NODE") B, built $(date -u -d @\"$NATIVE_MTIME\" +%Y-%m-%dT%H:%M:%SZ))"
+  echo "      addon present: ${NATIVE_SHA:0:12} ($(stat -c %s "$NATIVE_NODE") B, built $(date -u -d "@$NATIVE_MTIME" +%Y-%m-%dT%H:%M:%SZ))"
   if [ -f "$NATIVE_MANIFEST" ]; then
     EXPECTED_NATIVE_SHA="$(head -1 "$NATIVE_MANIFEST" | awk '{print $1}')"
     if [ "$EXPECTED_NATIVE_SHA" = "$NATIVE_SHA" ]; then
@@ -281,7 +281,7 @@ if [ -f "$NATIVE_NODE" ]; then
     echo "      WARN: no build manifest at $NATIVE_MANIFEST; the addon cannot be traced to a build" >&2
   fi
   if [ "$NEWEST_NATIVE_TS" -gt 0 ] && [ "$NATIVE_MTIME" -lt "$NEWEST_NATIVE_TS" ]; then
-    echo "      WARN: addon mtime is older than the newest native source commit ($(date -u -d @\"$NEWEST_NATIVE_TS\" +%Y-%m-%dT%H:%M:%SZ))" >&2
+    echo "      WARN: addon mtime is older than the newest native source commit ($(date -u -d "@$NEWEST_NATIVE_TS" +%Y-%m-%dT%H:%M:%SZ))" >&2
     echo "      WARN: rebuild it before trusting native parity" >&2
   fi
 else
