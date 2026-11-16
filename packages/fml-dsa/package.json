@@ -2,6 +2,7 @@
   "name": "fml-dsa",
   "version": "0.1.0",
   "description": "ML-DSA (FIPS 204) in pure JavaScript: ML-DSA-44/65/87 keygen, sign and verify, byte-compatible with NIST ACVP KeyGen vectors.",
+  "author": "刘天赫 <research@fibemate.net>",
   "type": "module",
   "exports": {
     ".": "./src/index.js",
