@@ -100,9 +100,12 @@ Thumbs.db
 Desktop.ini
 
 # Build artifacts
+# `*.wasm` has to come first: git applies the last matching pattern, so the two
+# negations below were dead while they sat above it (found 2026-11-16 - the site
+# served a wasm that the repository could not reproduce).
+*.wasm
 !www/crypto/lgv2/*.wasm
 !www/crypto/vwz/*.wasm
-*.wasm
 *.woff2
 
 # Test/Hack files
@@ -192,6 +195,19 @@ memory/
 *.tsq
 *.tsr
 *.sha256
+# ...except the timestamp receipts the site actually links to. .tsr files are the
+# evidence, not scratch: lg-080 is linked from www/index.html, lg-082 from
+# TSR-MANIFEST-20261029.md and pqc-readiness.html, lg-101 from
+# docs/tsa/timestamp-manifest.json. They were served for months while being
+# unreproducible from the repository (issue #507 family).
+!www/docs/tsa/lg-080.tsq
+!www/docs/tsa/lg-080.tsr
+!www/docs/tsa/lg-080.sha256
+!www/docs/tsa/lg-082.tsq
+!www/docs/tsa/lg-082.tsr
+!www/docs/tsa/lg-082.sha256
+!www/docs/tsa/lg-101-phase0-20260805.tsq
+!www/docs/tsa/lg-101-phase0-20260805.sha256
 _tmp_*
 OPK.*
 
@@ -558,7 +574,9 @@ www/docs/docs
 .branch-switch-backup/
 # 放错位置（GitHub 只认 .github/FUNDING.yml）
 www/FUNDING.yml
-# CBOM 符号链接（build-cbom.js 输出到 tools/，且路径写死 Windows 本地）
+# CBOM 符号链接：服务器上是写死 /opt/fibemate-repo/tools/ 的绝对路径，提交会破坏跨机部署。
+# 改为由 scripts/build-release.sh 在构建期生成相对软链 ../../tools/cbom-cyclonedx.json，
+# 因此这条忽略规则仍然有效（路径是产物，不是源文件）。
 www/docs/cbom-cyclonedx.json
 
 # --- 研究线/调试页面（服务器本地研究产物，勿提交混入生产线） ---
