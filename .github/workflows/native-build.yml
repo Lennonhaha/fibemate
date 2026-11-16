@@ -42,6 +42,40 @@ jobs:
         working-directory: packages/pqc-kem
         run: npx node-gyp rebuild -C native --release
 
+      # The addon is deployed to hosts whose CPU we do not know at build time, so
+      # the instruction set has to be pinned by us. -march=native made the binary
+      # depend on the build machine: #535 shipped AVX512_VBMI (vpermt2b) to a host
+      # without vbmi and the process died with SIGILL on the first ML-KEM call,
+      # and #533 is the same flag producing different bytes on different runners.
+      - name: Assert a portable ISA baseline
+        run: |
+          # Comments mention -march=native on purpose (they explain why it must not
+          # come back), so the check has to look at the live flags only.
+          flags=$(grep -v '^[[:space:]]*#' packages/pqc-kem/native/binding.gyp)
+          if printf '%s\n' "$flags" | grep -q -- '-march=native'; then
+            echo "FATAL: -march=native ties the artifact to the build CPU (issues #533, #535)" >&2
+            exit 1
+          fi
+          if ! printf '%s\n' "$flags" | grep -q -- '-march=x86-64-v3'; then
+            echo "FATAL: the documented baseline -march=x86-64-v3 is missing" >&2
+            exit 1
+          fi
+          echo "baseline: x86-64-v3 (AVX2/BMI2/FMA)"
+
+      # x86-64-v3 tops out at 256-bit vectors, so a zmm register can only come
+      # from an AVX-512 target - exactly the defect class of #535. Fail here, on
+      # the builder, rather than on the deploy host with SIGILL.
+      - name: Assert the artifact contains no AVX-512
+        working-directory: packages/pqc-kem/native/build/Release
+        run: |
+          zmm=$(objdump -d mlkem.node | grep -c 'zmm' || true)
+          echo "zmm references: $zmm"
+          if [ "$zmm" != "0" ]; then
+            objdump -d mlkem.node | grep -m5 -B1 'zmm' || true
+            echo "FATAL: the artifact uses AVX-512, above the documented x86-64-v3 baseline" >&2
+            exit 1
+          fi
+
       # The commit/ref values are passed through env, never interpolated into the
       # script body: a branch name is attacker-controlled on a fork PR, and
       # inserting it into a shell line is code injection (CodeQL, this PR).
@@ -64,6 +98,8 @@ jobs:
             echo "gcc: $(cc --version | head -1)"
             echo "glibc: $(ldd --version | head -1)"
             echo "runner: ${{ matrix.os }}"
+            echo "march: $(grep -v '^[[:space:]]*#' ../../binding.gyp | grep -o -- '-march=[a-z0-9-]*' | head -1)"
+            echo "avx512_zmm_refs: $(objdump -d mlkem.node | grep -c 'zmm' || true)"
           } > build-info.txt
           cat mlkem.node.sha256
           cat build-info.txt
