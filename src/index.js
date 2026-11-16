@@ -190,6 +190,44 @@ let phase4Transport = null;
 // Express
 // ========================
 const app = express();
+
+// --- Build identity ---------------------------------------------------------
+// This header has to name the code that is actually answering. Until 2026-11-16 it
+// was emitted by the nginx side and kept reporting the previous deploy ("v3.3.3
+// (331e1a10)" while the process ran 54f7bad) - a version header served by a
+// different component than the code it describes is decoration, not a version.
+// Resolution order: the build manifest written into an immutable release, then an
+// explicit override, then package.json alone (a source checkout has no manifest).
+const BUILD_IDENTITY = (() => {
+  const fsp = require('fs');
+  const p = require('path');
+  try {
+    const m = JSON.parse(fsp.readFileSync(p.join(__dirname, '..', 'BUILD-MANIFEST.json'), 'utf8'));
+    if (m && typeof m.commitShort === 'string' && /^[0-9a-f]{7,40}$/.test(m.commitShort)) {
+      return { commit: m.commitShort, source: 'build-manifest' };
+    }
+  } catch (_) {
+    // No manifest: normal when running straight from a git checkout.
+  }
+  const fromEnv = process.env.FIBEMATE_BUILD_COMMIT;
+  if (fromEnv && /^[0-9a-f]{7,40}$/.test(fromEnv)) return { commit: fromEnv, source: 'env' };
+  return { commit: 'unknown', source: 'none' };
+})();
+// The version itself stays the single-source file from #501; package.json is the fallback
+// for a checkout where VERSION.json has not been generated yet.
+const APP_VERSION = (() => {
+  try {
+    const v = JSON.parse(require('fs').readFileSync(require('path').join(__dirname, '..', 'VERSION.json'), 'utf8')).version;
+    if (typeof v === 'string' && v) return v;
+  } catch (_) { /* fall through */ }
+  return require('../package.json').version;
+})();
+const APP_VERSION_HEADER = 'v' + APP_VERSION + ' (' + BUILD_IDENTITY.commit + ')';
+app.use((req, res, next) => {
+  res.setHeader('X-App-Version', APP_VERSION_HEADER);
+  if (BUILD_IDENTITY.source !== 'build-manifest') res.setHeader('X-Build-Manifest', 'absent');
+  next();
+});
 // --- FIBEMATE Static Frontend ---
 var staticPath = require("path").join(__dirname, "..", "www");
 app.use(require("express").static(staticPath));

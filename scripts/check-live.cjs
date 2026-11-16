@@ -53,6 +53,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
+const { openSource } = require('./lib/expected-source.cjs');
 
 const MANIFEST_REL = 'docs/TSR-MANIFEST-20261029.md';
 const MANIFEST_URL = '/docs/TSR-MANIFEST-20261029.md';
@@ -142,8 +143,15 @@ const POLICY_DENIED_EXT = [
 const USAGE = `Usage: node scripts/check-live.cjs [options]
 
   --base <url>        site root to probe (default: https://fibemate.net)
-  --repo <dir>        repository working tree whose commits define the expected
-                      bytes (default: parent of this script's directory)
+  --repo <dir>        tree whose files define the expected bytes (default: parent of
+                      this script's directory). If it has .git the commit is the
+                      authority; otherwise the build manifest is, and every file is
+                      re-hashed against it.
+  --build-manifest <f> name of the manifest inside --repo (default: BUILD-MANIFEST.json,
+                      deliberately not VERSION.json - that file is the version
+                      single-source from #501 and the build must not overwrite it)
+  --expect-commit <sha> fail unless --repo is that commit (guard against deploying
+                      a release tree that is not the one just built)
   --concurrency <n>   parallel requests (default: 8)
   --timeout <ms>      per-request timeout (default: 20000)
   --json <file>       also write the machine-readable result here
@@ -169,6 +177,8 @@ function parseArgs(argv) {
     quiet: false,
     external: true,
     probeOnly: false,
+    buildManifest: 'BUILD-MANIFEST.json',
+    expectCommit: null,
   };
   for (let i = 0; i < argv.length; i += 1) {
     const a = argv[i];
@@ -191,6 +201,10 @@ function parseArgs(argv) {
       opts.external = false;
     } else if (a === '--probe-only') {
       opts.probeOnly = true;
+    } else if (a === '--build-manifest') {
+      opts.buildManifest = argv[(i += 1)];
+    } else if (a === '--expect-commit') {
+      opts.expectCommit = argv[(i += 1)];
     } else {
       throw new Error('unknown argument: ' + a);
     }
@@ -216,55 +230,16 @@ function sha256(buf) {
   return crypto.createHash('sha256').update(buf).digest('hex');
 }
 
-function git(repo, args, input) {
-  return execFileSync('git', args, {
-    cwd: repo,
-    input,
-    maxBuffer: 64 * 1024 * 1024,
-  });
+// Expected bytes come from lib/expected-source.cjs: a checkout is authoritative by
+// commit, an immutable release directory by its build manifest (files re-hashed).
+// Both used to be git calls here, which is exactly what stopped working the moment
+// deploys became `git archive` output with no .git to interrogate.
+function committedBlobs(source, rels) {
+  return source.blobs(rels);
 }
 
-/**
- * Read the committed bytes for the given repository-relative paths.
- * Returns a Map of rel -> { sha, bytes }.
- */
-function committedBlobs(repo, rels) {
-  const raw = git(repo, ['ls-files', '-s', '-z', '--'].concat(rels));
-  const wanted = new Set(rels);
-  const byPath = new Map();
-  for (const entry of raw.toString('utf8').split('\0')) {
-    if (!entry) continue;
-    const tab = entry.indexOf('\t');
-    const meta = entry.slice(0, tab).split(' ');
-    const rel = entry.slice(tab + 1);
-    if (!wanted.has(rel)) continue;
-    byPath.set(rel, { mode: meta[0], sha: meta[1], stage: meta[2] });
-  }
-  const missing = rels.filter((r) => !byPath.has(r));
-  if (missing.length) {
-    throw new Error('not tracked in this commit: ' + missing.join(', '));
-  }
-  const shas = rels.map((r) => byPath.get(r).sha);
-  const batch = git(repo, ['cat-file', '--batch'], shas.join('\n') + '\n');
-  const out = new Map();
-  let off = 0;
-  for (const rel of rels) {
-    const nl = batch.indexOf(0x0a, off);
-    if (nl < 0) throw new Error('git cat-file produced truncated output');
-    const header = batch.slice(off, nl).toString('utf8').split(' ');
-    if (header[1] !== 'blob') throw new Error('not a blob: ' + rel + ' (' + header[1] + ')');
-    const size = Number(header[2]);
-    const start = nl + 1;
-    const bytes = batch.slice(start, start + size);
-    off = start + size + 1;
-    out.set(rel, { sha: byPath.get(rel).sha, bytes });
-  }
-  return out;
-}
-
-function trackedUnder(repo, relDir) {
-  const raw = git(repo, ['ls-files', '-z', '--', relDir]);
-  return raw.toString('utf8').split('\0').filter(Boolean);
+function trackedUnder(source, relDir) {
+  return source.under(relDir);
 }
 
 function policyDenied(rel) {
@@ -398,11 +373,11 @@ async function pool(items, limit, worker) {
 }
 
 async function checkArchive(opts) {
-  const files = trackedUnder(opts.repo, ARCHIVE_DIR_REL);
+  const files = trackedUnder(opts.source, ARCHIVE_DIR_REL);
   if (files.length === 0) {
     return { id: 'live:archive', ok: false, reason: 'no tracked files under ' + ARCHIVE_DIR_REL };
   }
-  const expected = committedBlobs(opts.repo, files);
+  const expected = committedBlobs(opts.source, files);
 
   let indexStatus = 0;
   let indexError = '';
@@ -698,11 +673,14 @@ async function main() {
 
   let expected;
   let head = '(unknown)';
+  let sourceKind = 'unknown';
   try {
-    head = git(opts.repo, ['rev-parse', '--short', 'HEAD']).toString('utf8').trim();
-    expected = committedBlobs(opts.repo, [MANIFEST_REL, TOKEN_REL]);
+    opts.source = openSource(opts.repo, { manifest: opts.buildManifest, expectCommit: opts.expectCommit });
+    head = opts.source.short;
+    sourceKind = opts.source.kind;
+    expected = committedBlobs(opts.source, [MANIFEST_REL, TOKEN_REL]);
   } catch (err) {
-    process.stderr.write('check-live: cannot read the expected artifacts from git: ' + err.message + '\n');
+    process.stderr.write('check-live: cannot establish the expected bytes: ' + err.message + '\n');
     process.exit(2);
   }
 
@@ -715,7 +693,7 @@ async function main() {
   const ok = checks.every((c) => c.ok);
 
   if (!opts.quiet || !ok) {
-    process.stdout.write('check-live: ' + opts.base + ' (repo HEAD ' + head + ')\n');
+    process.stdout.write('check-live: ' + opts.base + ' (expected ' + head + ' via ' + sourceKind + ')\n');
     for (const c of checks) {
       if (c.ok) {
         const hash = c.sha256 ? ' sha256 ' + c.sha256.slice(0, 16) + ' (' + c.bytes + ' B)' : '';
@@ -738,6 +716,7 @@ async function main() {
     schema: 'fibemate.live-delivery/v1',
     base: opts.base,
     repo: opts.repo,
+    expectedSource: sourceKind,
     head,
     checkedAt: new Date().toISOString(),
     durationMs: Date.now() - started,
