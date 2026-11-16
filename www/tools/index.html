@@ -60,15 +60,16 @@
 
   <div class="tool">
     <h2><span class="num">1</span>cbom-tools · 物料清单生成器</h2>
-    <p class="meta">npm <code>cbom-tools@0.2.7</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/cbom-tools">源码</a></p>
+    <p class="meta">npm <code>cbom-tools@0.3.0</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/cbom-tools">源码</a></p>
     <p>扫描代码库，产出符合 OWASP CycloneDX 1.7 的 CBOM：算法、模式、曲线、密钥长度按官方 schema 校验，而不是按自己的解析器「能吃回去」。</p>
     <p><code>npx cbom-tools scan --dir ./project --out cbom.json --spec 1.7</code>（旧版可用 <code>--spec 1.6</code>）</p>
     <p>v0.2.7 起：<code>cbom-scan --dir &lt;path&gt;</code> 路径不存在或不是目录时返回退出码 2；旧版输出空 BOM 并退出 0。</p>
+    <p>v0.3.0 起：置信度按证据技术给分——源码命中 0.9，仅在依赖清单出现 0.7，不再取决于算法名是否带参数族。</p>
   </div>
 
   <div class="tool">
     <h2><span class="num">2</span>verifact · 事实哨兵</h2>
-    <p class="meta">npm <code>verifact@0.2.4</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/verifact">源码</a></p>
+    <p class="meta">npm <code>verifact@0.2.5</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/verifact">源码</a></p>
     <a class="cta" href="/tools/verifact-demo/">查看演示 →</a>
     <p>把文档里的声明和制品里的数字对上：逐条抽 claim，找到候选证据就判 verified，对不上就 drift。漂移即红，可作 CI 门禁（<code>--fail-on drift</code>）。</p>
     <p>只做值级比对。它不校验字节完整性——那需要摘要 + 时间戳，见 <code>scripts/claim-evidence/verify-evidence.cjs</code>。</p>
@@ -76,7 +77,7 @@
 
   <div class="tool">
     <h2><span class="num">3</span>密码幻觉检测器 <span class="ci">CI 13s</span></h2>
-    <p class="meta">npm <code>crypto-hallucination-detector@0.1.2</code> · Node.js · 零依赖 · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/hallucination-detector">源码</a></p>
+    <p class="meta">npm <code>crypto-hallucination-detector@0.1.3</code> · Node.js · 零依赖 · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/hallucination-detector">源码</a></p>
     <a class="cta" href="/tools/detector/">查看演示 →</a>
     <p>扫描 JS/TS 代码里 AI 容易编出来的写法：声称常数时间却按秘密分支、用数组下标索引秘密、调用不存在的加密 API。</p>
     <p>输出 <code>needs-human-review</code>，不宣判漏洞。样本测试全过，已在真实代码上验证过误报。</p>
