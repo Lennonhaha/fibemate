@@ -193,7 +193,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 | Module | Description | Verification |
 |--------|-------------|-------------|
-| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | [KAT 10,000](scripts/kat-quick.js) ✅ |
+| **ML-KEM-768** | C Native + WASM dual implementation, FIPS 203 compliant | 100-vector KAT (`packages/pqc-kem/test/kat/mlkem-768-KAT.rsp`) + 10,000-round round-trip (`scripts/kat-quick.js`) ✅ |
 | **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205), signature 7,856B | WASM integration |
 | **fml-dsa** | FIPS 204 (ML-DSA-44/65/87) · **Phase 1 @noble backend**, cross-Noble interop verified | [bench/BENCHMARK-2026-07-31.md](packages/fml-dsa/bench/BENCHMARK-2026-07-31.md) · p50 within 30% of @noble/post-quantum |
 | **SM2 ECDH** | BigInt scalar masking + projective randomization · **⚠️ JS BigInt not constant-time (platform limit)** | TVLA 5/5 PASS (statistical, N=10,000) · see [Security Model](#security-model) |
@@ -221,7 +221,7 @@ These components form the **trusted security foundation** of FIBEMATE. All claim
 
 | Level | Status | Detail |
 |-------|--------|--------|
-| Software TVLA | ✅ Complete | 36/36 green (N=5,000, \|t\|<2.06) |
+| Software TVLA | ⚠️ 3 of 9 PASS | core ops (keygen/encapsulate/decapsulate) PASS at N=5,000, threshold \|t\|<4.5; 6 non-core ops exceed it and are argued non-exploitable — [evidence](evidence/tvla/tvla-mlkem-9ops-3pass-6fail.json) |
 | SM2 BigInt Masking | ✅ Complete | N=10,000 PASS, \|t\|<2.06 |
 | FPGA ILA+L4 Timing | ✅ Complete | WNS=9.755ns |
 | Hardware ChipWhisperer | ⚠️ Pending | CH340G 5V level mismatch; pending CP2102/FT232 replacement |
@@ -375,7 +375,7 @@ All claims in Core Features are backed by runnable test scripts in `scripts/`:
 node test/test-fibemate.js
 
 # Per-module tests
-node test/test-fibemate.js       # ML-KEM KAT 10,000
+node test/test-fibemate.js       # ML-KEM KAT (fixed-seed + vector + round-trip)
 node scripts/kat-diag.js         # KAT diagnostic
 node test/test-cross-lang.js     # Cross-language verification
 ```
@@ -514,7 +514,7 @@ FIBEMATE's ML-KEM-768 implementation uses **NTT-domain** coefficient representat
 - ✅ NIST FIPS 203 compatible (NTT domain)
 - ✅ Cross-validated with independent implementations: 200/200 both directions
 - ✅ Cross-validated against FIPS 203 reference: 10,000/10,000 both directions
-- ✅ KAT 10,000 roundtrips passed
+- ✅ 10,000-round encaps→decaps round-trip consistency passed (not a NIST vector comparison)
 - ✅ KEM 1,000 stress: 1,000/1,000 (8.9s)
 - ✅ All primitives byte-level verified
 

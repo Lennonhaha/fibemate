@@ -215,17 +215,17 @@ function runAlgebraCheck() {
 runAlgebraCheck();
 
 // ============================================================
-// Track 1c: 正式验证 — 确定性 KAT 向量对比
+// Track 1c: ML-KEM-768 随机性与 IND-CPA 冒烟（**不**是向量比对）
 // ============================================================
-group('Track 1c: NIST ML-KEM-768 已知答案测试');
+// 历史注记：本组曾命名为 "NIST 已知答案测试"并引用 NIST Kyber-Round3 向量，
+// 但实际断言只检查：两次 keygen 不同、密钥非全零、同一 pk 两次 encaps 密文不同。
+// 不存在任何与答案文件的逐字节比对，因此不得称为 KAT。
+// 真实向量比对在 packages/pqc-kem/test/kat/mlkem-768-KAT.rsp（由 native-build.yml 的
+// "NIST KAT (100)" 步骤执行）以及 test/kat-full/ 下的全量套件。
+group('Track 1c: ML-KEM-768 随机性与 IND-CPA 冒烟（非 NIST 向量比对）');
 
 function runNISTKAT() {
-    // NIST ML-KEM-768 test vectors from:
-    // https://csrc.nist.gov/CSRC/media/Projects/post-quantum-cryptography/documents/round-3/submissions/Kyber-Round3.zip
-    // These are generated from the reference implementation
-
-    // Verify deterministic behavior within our implementation
-    // by generating multiple keypairs and verifying they're different
+    // 不加载任何 NIST 向量文件：只断言实现层面的随机性与非退化。
     const kp1 = mlkemTD.generateKeypair();
     const kp2 = mlkemTD.generateKeypair();
 

@@ -4,7 +4,7 @@
 
 ## Pre-Release
 
-- [x] All core tests passing (KAT 10,000 / VWZ 148/148 / FPGA 43/43)
+- [x] All core tests passing (10,000-round round-trip / VWZ 148/148 / FPGA 43/43)
 - [x] TSR cumulative 131 (lg-001~lg-100), DigiCert + FreeTSA dual-source
 - [x] Performance benchmarks documented
 - [x] README / CONTRIBUTING / SECURITY / CODE_OF_CONDUCT / CHANGELOG reviewed
@@ -34,7 +34,7 @@
 
 | Domain | Status |
 |--------|--------|
-| ML-KEM-768 | KAT 10,000/10,000 ✅ |
+| ML-KEM-768 | 100-vector KAT + 10,000-round round-trip ✅ |
 | SM2 | 11/11 tests (v1.3) ✅ |
 | SM4 | Bit-sliced constant-time S-box ✅ |
 | SLH-DSA-128s | WASM bridge (FIPS 205) ✅ |

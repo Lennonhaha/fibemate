@@ -19,7 +19,7 @@ FIBEMATE is a post-quantum cryptography full-stack engineering demonstration and
 | ML-KEM-768 KAT | PASS | noble + liboqs 10,000-round cross-validation |
 | SM3/SM4-GCM KAT | PASS | 3-platform CI (Ubuntu/macOS/Windows) |
 | TLA+ protocol verification | PASS | C2: 7 invariants + 1 liveness (`L_Reach`) / 26,115 distinct (133,891 generated) / EXIT 0; OPK: exploratory, not gated |
-| TVLA side-channel (software) | PASS | N=10,000, 36/36 green |
+| TVLA side-channel (software) | ⚠️ 3/9 PASS | N=5,000, \|t\|<4.5: keygen/encapsulate/decapsulate PASS; 6 non-core ops FAIL, argued non-exploitable — `evidence/tvla/tvla-mlkem-9ops-3pass-6fail.json` |
 | CodeQL | 0 errors | SSRF fixed with explicit URL protocol whitelist (commit 4785b92c); 182 open alerts being triaged |
 | Dependabot | 0 open | 40 historical alerts dismissed (all fixed/upgraded) |
 | ESLint (CI scope) | 0 errors | `packages/pqc-kem/src/ + test/ --max-warnings 0` green |

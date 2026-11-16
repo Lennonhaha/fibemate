@@ -70,7 +70,7 @@
 | `tvla-experiment-3-improved-tvla-report.json` | TVLA #3 改进方法 | `/opt/fibemate-full/` |
 | `tvla-experiment-4-simple-timing-attack.json` | 实验 #4 简单时序攻击 | `/opt/fibemate-full/` |
 | `tvla-experiment-5-polyMul-attack-verification.json` | **攻击验证（核心）** | `/opt/fibemate-full/` |
-| `tvla-9of9-corrected-report.json` | **TVLA 9/9 完整报告** | `/opt/fibemate-full/` |
+| `tvla-mlkem-9ops-3pass-6fail.json` | **TVLA 9/9 完整报告** | `/opt/fibemate-full/` |
 
 ### 3.2 文档
 
@@ -106,7 +106,7 @@
 
 | 文件 | TSA 时间戳 | 备份位置 |
 |------|------------|----------|
-| `tvla-9of9-corrected-report.json` | ✅ 已打 | 本地 + 云端 |
+| `tvla-mlkem-9ops-3pass-6fail.json` | ✅ 已打 | 本地 + 云端 |
 | `tvla-experiment-5-polyMul-attack-verification.json` | ✅ 已打 | 本地 + 云端 |
 | `docs/tvla-defense-for-reviewers.md` | ✅ 已打 | 本地 + 云端 |
 | `tvla-9of9-summary.md` (本文档) | ✅ 已打 | 本地 + Git |
