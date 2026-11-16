@@ -40,8 +40,17 @@ jobs:
 
       # The version is pinned, not floating: an inventory that silently changes
       # its own rules between runs cannot be compared with last week's.
+      #
+      # 2026-11-16: bumped 0.2.6 -> 0.3.0. The component count in this scan grows
+      # 19 -> 37 because 0.2.6 carried a much smaller rule set; 0.3.0 adds legacy
+      # hashes and ciphers (MD5, SHA-1, 3DES, Blowfish, RSA, DSA, ECDSA, ECDH,
+      # X25519, AES-GCM) and the Kyber / Falcon / Dilithium spellings. That is
+      # wider detection, not a regression: comparing the two reports on the same
+      # tree removes nothing and leaves every primitive and quantum-security
+      # level unchanged. Expect one step change in the 30-day artifact history
+      # and a new baseline after it. See reports/2026-11-16/pin-0.2.6-to-0.3.0.md.
       - name: Scan the tree
-        run: npx --yes cbom-tools@0.2.6 scan --dir . --out cbom-report.json --spec 1.7
+        run: npx --yes cbom-tools@0.3.0 scan --dir . --out cbom-report.json --spec 1.7
 
       # A report that is written but empty (or shaped differently than expected)
       # must fail here, not be uploaded and discovered later. cargo-deny has the
@@ -90,5 +99,5 @@ jobs:
             else
               echo "- No report produced. See the scan step."
             fi
-            echo "- Tool: \`cbom-tools@0.2.6\` (pinned)"
+            echo "- Tool: \`cbom-tools@0.3.0\` (pinned)"
           } >> "$GITHUB_STEP_SUMMARY"
