@@ -50,6 +50,23 @@ module.exports = [
     }
   },
 
+  // ===== scripts/ scope (added 2026-11-16) =====
+  // `npm run lint:quiet` lints scripts/ with --max-warnings 0, but the shared
+  // globals above omit three Node built-ins, so every use of them read as
+  // no-undef and the script could never pass its own gate: URL and TextEncoder
+  // (Node 10+), performance (Node 16+). Scoped to scripts/ rather than added
+  // globally so browser code cannot lean on them by accident.
+  {
+    files: ["scripts/**/*.js", "scripts/**/*.cjs"],
+    languageOptions: {
+      globals: {
+        URL: "readonly",
+        TextEncoder: "readonly",
+        performance: "readonly"
+      }
+    }
+  },
+
   // ===== src/ scope (added 2026-09-18) =====
   // 目的：把 src/ 纳入 CI lint，靠 no-use-before-define 兜住 TDZ 类运行时崩溃
   // （2026-09-18 生产事故根因：rateLimitMiddleware 先用后声明）。

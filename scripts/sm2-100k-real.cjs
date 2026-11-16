@@ -5,7 +5,7 @@
  *
  * 归档输出:
  *   sm2-100k-result.md  — 测试结论报告
- *   sm2-100k-log.txt    — 每千轮实时进度日志
+ *   evidence/sm2-100k-log.txt    — 每千轮实时进度日志
  *
  * P0 验收标准:
  *   sign()    → {r, s}  非零 r/s
@@ -27,7 +27,7 @@ const TOTAL = 100_000;
 const LOG_INTERVAL = 1_000; // 每1000轮写一次日志
 const FLUSH_ROUNDS = 5_000;  // 每5000轮强制flush
 
-const LOG_FILE = path.join(__dirname, '..', 'sm2-100k-log.txt');
+const LOG_FILE = path.join(__dirname, '..', 'evidence', 'sm2-100k-log.txt');
 const RESULT_FILE = path.join(__dirname, '..', 'sm2-100k-result.md');
 
 // 初始化日志
@@ -164,7 +164,7 @@ ${failures.length > 0 ? '## 失败详情\n\n' + failures.map(f => `- Round ${f.r
 
 - 实现文件: sm2-bigint-ec.js
 - 测试脚本: scripts/sm2-100k-real.cjs
-- 结果日志: sm2-100k-log.txt
+- 结果日志: evidence/sm2-100k-log.txt
 - 测试时间: ${new Date().toISOString()}
 `;
 
