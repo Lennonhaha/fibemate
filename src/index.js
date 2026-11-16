@@ -5,9 +5,12 @@
 // Development:     FIBEMATE_EXPERIMENTAL=1  node src/index.js
 // Subsystem off:   FIBEMATE_EXPERIMENTAL=1 FIBEMATE_NO_MIXNET=1 node src/index.js
 // Load .env into process.env (zero-dependency; PM2 ecosystem.config.js does not auto-load .env)
+// FIBEMATE_ENV_FILE optionally points at a different file; default stays <repo>/.env.
 (function loadDotenv() {
   const envFs = require("fs");
-  const envPath = require("path").join(__dirname, "..", ".env");
+  const envPath = process.env.FIBEMATE_ENV_FILE
+    ? require("path").resolve(process.env.FIBEMATE_ENV_FILE)
+    : require("path").join(__dirname, "..", ".env");
   if (!envFs.existsSync(envPath)) return;
   const raw = envFs.readFileSync(envPath, "utf8");
   for (const line of raw.split("\n")) {
@@ -128,7 +131,18 @@ const DATA_DIR = process.env.FIBEMATE_DATA_DIR
   : path.join(__dirname, '..', 'data');
 const JWT_SECRET_FILE = path.join(DATA_DIR, '.jwt-secret');
 function resolveJwtSecret() {
-  if (process.env.JWT_SECRET) return process.env.JWT_SECRET;
+  if (process.env.JWT_SECRET) {
+    // The file path below enforces >= 32 chars; the env path used to skip that check
+    // entirely, which is how a 10-character production secret went unnoticed (#527).
+    const fromEnv = String(process.env.JWT_SECRET).trim();
+    if (fromEnv.length < 32) {
+      throw new Error(
+        '[JWT] JWT_SECRET is only ' + fromEnv.length + ' characters; at least 32 required. ' +
+        'Set a 64-hex value in .env (or the environment) before starting.',
+      );
+    }
+    return fromEnv;
+  }
   try {
     if (fs.existsSync(JWT_SECRET_FILE)) {
       const secret = fs.readFileSync(JWT_SECRET_FILE, 'utf-8').trim();
