@@ -1,37 +1,37 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-11-14",
+  "updated": "2026-11-16",
   "policy": "N3 single source: external numbers must come from this file. Every entry carries value + scope + date + reproducible command. scripts/check-metrics.cjs recomputes the git-derived entries and fails on drift.",
   "metrics": {
     "tsr.files": {
-      "value": 372,
+      "value": 374,
       "unit": "files",
       "scope": "tracked RFC 3161 .tsr files, git ls-files (no dedupe)",
-      "date": "2026-11-14",
+      "date": "2026-11-16",
       "command": "git ls-files '*.tsr' | wc -l",
       "recompute": "git"
     },
     "tsr.uniqueTokens": {
-      "value": 261,
+      "value": 263,
       "unit": "tokens",
       "scope": "sha256 of each tracked .tsr blob, duplicates collapsed",
-      "date": "2026-11-14",
+      "date": "2026-11-16",
       "command": "for f in $(git ls-files '*.tsr'); do git show HEAD:$f | sha256sum; done | sort -u | wc -l",
       "recompute": "git"
     },
     "tsq.files": {
-      "value": 240,
+      "value": 243,
       "unit": "files",
       "scope": "tracked RFC 3161 .tsq files, git ls-files (no dedupe)",
-      "date": "2026-11-14",
+      "date": "2026-11-16",
       "command": "git ls-files '*.tsq' | wc -l",
       "recompute": "git"
     },
     "tsq.uniqueTokens": {
-      "value": 133,
+      "value": 136,
       "unit": "tokens",
       "scope": "sha256 of each tracked .tsq blob, duplicates collapsed",
-      "date": "2026-11-14",
+      "date": "2026-11-16",
       "command": "for f in $(git ls-files '*.tsq'); do git show HEAD:$f | sha256sum; done | sort -u | wc -l",
       "recompute": "git"
     },
