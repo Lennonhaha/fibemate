@@ -12,7 +12,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台,聚焦三条技术�
 
 | 线路 | 内容 | 状态 |
 |------|------|------|
-| **标准 PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT、WASM、TLS 1.3 混合握手 | ✅ 生产就绪 |
+| **标准 PQC** | ML-KEM-768 (FIPS 203) + SLH-DSA (FIPS 205) - KAT、WASM、TLS 1.3 混合握手 | ⚠️ 工程验证/演示平台，非生产就绪 |
 | **国密混合** | SM2/SM3/SM4 + ML-KEM - IANA #4590 应用层验证 | ✅ 双轨道上线 |
 | **前沿研究** | LookingGlass v1/v2/v2.2 (群表示代数实验; v2.2 Rust源码重建可复现性闭环, 37/37+1000/1000 KAT), VWZ 格-张量签名 (归约证明: VMQ-SPARSE→EUF-CMA, 148/148), FPGA v5 硬件防护 (WNS 9.755ns, ILA+L4 确认) | 🔬 实验分支 |
 
@@ -28,7 +28,7 @@ FIBEMATE 是一个全栈后量子密码学工程验证平台,聚焦三条技术�
 
 | 模块 | 说明 | 验证 |
 |------|------|------|
-| **ML-KEM-768** | C Native + WASM 双实现,FIPS 203 合规 | KAT 10,000/10,000 |
+| **ML-KEM-768** | C Native + WASM 双实现,FIPS 203 合规 | 100 向量 KAT + 10,000 轮往返一致性 |
 | **SLH-DSA** | pqc_sphincsplus WASM (FIPS 205),签名 7,856B | WASM 集成 |
 | **SM2 ECDH** | BigInt 标量掩码 + 射影随机化,常量时间 | TVLA N=10,000 20/20 |
 | **SM4-αGCM** | α=7.5 认证加密,自动选择 λ2C 或 SM4 | 10/10 PASS |
