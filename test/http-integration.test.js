@@ -105,9 +105,14 @@ after(() => {
 test('health endpoints answer without auth', async () => {
   const health = await call('GET', '/health');
   assert.equal(health.status, 200);
+  // The ML-KEM backend must be visible, not inferred (#520: production ran the
+  // pure-JS fallback for ~75 days while /health reported a bare "ok").
+  assert.ok(health.json.mlkem, '/health must expose mlkem.backend');
+  assert.ok(['native', 'pure-js'].includes(health.json.mlkem.backend), 'unexpected backend: ' + JSON.stringify(health.json.mlkem));
 
   const apiHealth = await call('GET', '/api/health');
   assert.equal(apiHealth.status, 200);
+  assert.equal(apiHealth.json.mlkem.backend, health.json.mlkem.backend);
 });
 
 test('static frontend is served at /', async () => {
@@ -577,6 +582,8 @@ test('auxiliary endpoints answer without leaking internals', async () => {
   assert.equal(selfTest.status, 200, selfTest.text);
   assert.equal(selfTest.json.status, 'ok');
   assert.equal(selfTest.json.roundTrip, true);
+  const backendHealth = await call('GET', '/health');
+  assert.equal(selfTest.json.backend, backendHealth.json.mlkem.backend, 'self-test must report the backend it actually used');
 
   const anonymousVoice = await call('GET', '/voice/does-not-exist');
   assert.equal(anonymousVoice.status, 401);

@@ -46,14 +46,24 @@ const fs = require('fs');
 // Fix 2026-09-02: previously required the JS source file (which exports MLKEM768 and has
 // NO keygen/encaps/decaps) as the "C addon", causing "mlkem.keygen is not a function".
 // Now loads native/build/Release/mlkem.node and falls back through packages/pqc-kem (bridged API).
+//
+// 2026-11-16 (#520): the fallback used to be silent. One console.warn in error.log was
+// the only trace, /health said "ok", and production ran pure JS for ~75 days while the
+// addon directory did not even exist. The backend is now a named state: printed as a
+// banner on every boot, exposed at /health, and fatal when MLKEM_REQUIRE_NATIVE=1.
+const MLKEM_ADDON_PATH = '../packages/pqc-kem/native/build/Release/mlkem.node';
 let mlkem;
+let mlkemBackend = 'native';
+let mlkemBackendDetail = '';
 try {
-  mlkem = require('../packages/pqc-kem/native/build/Release/mlkem.node');
+  mlkem = require(MLKEM_ADDON_PATH);
   mlkem.keygen(); // self-test: verify the addon actually works
-} catch (_) {
+} catch (err) {
   mlkem = null;
+  mlkemBackendDetail = (err && (err.code || err.message)) || String(err);
 }
 if (!mlkem || typeof mlkem.keygen !== 'function') {
+  mlkemBackend = 'pure-js';
   const PQC = require('../packages/pqc-kem'); // bridged API: generateKeypair/encapsulate/decapsulate
   mlkem = {
     keygen: () => {
@@ -66,7 +76,19 @@ if (!mlkem || typeof mlkem.keygen !== 'function') {
     },
     decaps: (ct, sk) => Buffer.from(PQC.decapsulate(sk, ct)),
   };
-  console.warn('[mlkem] C addon unavailable, using bridged JS fallback');
+  console.warn('====================================================================');
+  console.warn('[mlkem] WARNING: C addon unavailable, running the bridged JS backend');
+  console.warn('[mlkem] addon path: ' + MLKEM_ADDON_PATH);
+  console.warn('[mlkem] reason:     ' + (mlkemBackendDetail || 'unknown'));
+  console.warn('[mlkem] /health will report mlkem.backend = "pure-js"');
+  console.warn('====================================================================');
+  if (process.env.MLKEM_REQUIRE_NATIVE === '1') {
+    console.error('[mlkem] FATAL: MLKEM_REQUIRE_NATIVE=1 but the native addon is not loadable');
+    console.error('[mlkem] build it with: cd packages/pqc-kem/native && node-gyp rebuild');
+    process.exit(1);
+  }
+} else {
+  console.log('[mlkem] backend: native (' + require.resolve(MLKEM_ADDON_PATH) + ')');
 }
 const mlkemPureJS = require('../packages/pqc-kem/src/ml-kem-768.js');
 
@@ -965,6 +987,7 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'ok', service: 'Noir E2E Backend',
     version: '1.0.0', architecture: 'zero-knowledge',
+    mlkem: { backend: mlkemBackend, detail: mlkemBackendDetail || undefined },
     phases: { p1: 'zk-identity', p2: 'pir-search', p3: 'mixnet', p4: 'sphinx-nym' },
     uptime: Math.floor(process.uptime())
   });
@@ -975,6 +998,7 @@ app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok', service: 'Noir E2E Backend',
     version: '1.0.0', timestamp: new Date().toISOString(),
+    mlkem: { backend: mlkemBackend, detail: mlkemBackendDetail || undefined },
     uptime: Math.floor(process.uptime())
   });
 });
@@ -1854,6 +1878,7 @@ app.get('/api/mlkem/test', (req, res) => {
       sk_bytes: sk.length,
       ct_bytes: ct.length,
       ss_bytes: ss1.length,
+      backend: mlkemBackend,
       roundTrip: Buffer.compare(ss1, ss2) === 0
     });
   } catch (err) {

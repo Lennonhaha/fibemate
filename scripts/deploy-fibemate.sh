@@ -13,7 +13,10 @@
 # deploy that "succeeded" but serves an old manifest, a stale mirror or a 404 is a
 # failed deploy, and this script reports it as such instead of printing a green tick.
 #
-# Overridable: REPO_DIR, BASE_URL, PM2_APP, HEALTH_URL, SKIP_RESTART=1, LOCK_RECORD.
+# Overridable: REPO_DIR, BASE_URL, PM2_APP, HEALTH_URL, SKIP_RESTART=1, LOCK_RECORD,
+#             PACKAGES_SYNC=1 (copy packages/ without --delete),
+#             REQUIRE_PACKAGES_MATCH=1 (fail instead of warn on packages/ drift),
+#             MLKEM_REQUIRE_NATIVE=1 (fail when the native addon is not deployed).
 #
 # The immutable (+i) flags are NOT assumed to cover a fixed list of directories: they
 # are read from the checkout before the deploy and restored verbatim afterwards. Getting
@@ -247,6 +250,80 @@ if [ "$MISMATCH" -ne 0 ]; then
   exit 1
 fi
 echo "      runtime tree matches $NEW_HEAD: $CHECKED files, sha256 identical"
+
+# [3d/6] Native ML-KEM addon: prove it is there, and that it is the build we think.
+#
+# The addon is a binary that no `git checkout` produces. Until the deploy builds it
+# itself, this step can only measure: present/absent, sha against a build manifest,
+# and mtime against the newest native source commit. A missing addon is a WARN by
+# default, because today's deploy does not build one - making that a hard failure
+# would block every deploy until CI builds it (#520 follow-up).
+echo "[3d/6] checking the native ML-KEM addon..."
+NATIVE_REL="packages/pqc-kem/native/build/Release/mlkem.node"
+NATIVE_NODE="$RUNTIME_DIR/$NATIVE_REL"
+NATIVE_MANIFEST="$NATIVE_NODE.sha256"
+NEWEST_NATIVE_TS="$(git -C "$REPO_DIR" log -1 --format=%ct -- 'packages/pqc-kem/native/*.c' 'packages/pqc-kem/native/*.h' 2>/dev/null || echo 0)"
+NEWEST_NATIVE_TS="${NEWEST_NATIVE_TS:-0}"
+if [ -f "$NATIVE_NODE" ]; then
+  NATIVE_SHA="$(sha256sum "$NATIVE_NODE" | cut -d' ' -f1)"
+  NATIVE_MTIME="$(stat -c %Y "$NATIVE_NODE")"
+  echo "      addon present: ${NATIVE_SHA:0:12} ($(stat -c %s "$NATIVE_NODE") B, built $(date -u -d @\"$NATIVE_MTIME\" +%Y-%m-%dT%H:%M:%SZ))"
+  if [ -f "$NATIVE_MANIFEST" ]; then
+    EXPECTED_NATIVE_SHA="$(head -1 "$NATIVE_MANIFEST" | awk '{print $1}')"
+    if [ "$EXPECTED_NATIVE_SHA" = "$NATIVE_SHA" ]; then
+      echo "      build manifest matches"
+    else
+      echo "FAIL: $NATIVE_REL does not match its build manifest" >&2
+      echo "      manifest: ${EXPECTED_NATIVE_SHA:0:12}  deployed: ${NATIVE_SHA:0:12}" >&2
+      exit 1
+    fi
+  else
+    echo "      WARN: no build manifest at $NATIVE_MANIFEST; the addon cannot be traced to a build" >&2
+  fi
+  if [ "$NEWEST_NATIVE_TS" -gt 0 ] && [ "$NATIVE_MTIME" -lt "$NEWEST_NATIVE_TS" ]; then
+    echo "      WARN: addon mtime is older than the newest native source commit ($(date -u -d @\"$NEWEST_NATIVE_TS\" +%Y-%m-%dT%H:%M:%SZ))" >&2
+    echo "      WARN: rebuild it before trusting native parity" >&2
+  fi
+else
+  echo "      WARN: $NATIVE_REL is missing; the API will run the pure-JS backend" >&2
+  if [ "${MLKEM_REQUIRE_NATIVE:-0}" = "1" ]; then
+    echo "FAIL: MLKEM_REQUIRE_NATIVE=1 but the addon is not deployed" >&2
+    exit 1
+  fi
+fi
+
+# [3e/6] packages/ is deliberately not in SYNC_TREES: `rsync --delete` over it would
+# remove the runtime-only node_modules the API actually loads (#507). Report the drift
+# instead of hiding it, and make it blocking only when asked.
+echo "[3e/6] comparing packages/ against $NEW_HEAD..."
+if [ "${PACKAGES_SYNC:-0}" = "1" ]; then
+  rsync -a --exclude 'node_modules/' --exclude 'build/' \
+    "$REPO_DIR/packages/" "$RUNTIME_DIR/packages/"
+  echo "      copied packages/ without --delete (runtime node_modules preserved)"
+fi
+PK_SAME=0
+PK_DIFF=0
+PK_MISSING=0
+while IFS= read -r f; do
+  rel="${f#packages/}"
+  if [ ! -f "$RUNTIME_DIR/packages/$rel" ]; then
+    PK_MISSING=$((PK_MISSING + 1))
+    continue
+  fi
+  if [ "$(sha256sum "$REPO_DIR/$f" | cut -d' ' -f1)" = "$(sha256sum "$RUNTIME_DIR/packages/$rel" | cut -d' ' -f1)" ]; then
+    PK_SAME=$((PK_SAME + 1))
+  else
+    PK_DIFF=$((PK_DIFF + 1))
+  fi
+done < <(git -C "$REPO_DIR" ls-tree -r --name-only HEAD packages | grep -v '/native/build/' | grep -v '/node_modules/' || true)
+echo "      tracked files: same=$PK_SAME differ=$PK_DIFF missing=$PK_MISSING"
+if [ "$PK_DIFF" -ne 0 ] || [ "$PK_MISSING" -ne 0 ]; then
+  echo "      WARN: runtime packages/ does not match the checkout (see #507); run with PACKAGES_SYNC=1 to copy" >&2
+  if [ "${REQUIRE_PACKAGES_MATCH:-0}" = "1" ]; then
+    echo "FAIL: REQUIRE_PACKAGES_MATCH=1 and $PK_DIFF files differ, $PK_MISSING are missing" >&2
+    exit 1
+  fi
+fi
 
 # [4/6] Restore exactly the flags that were there before. Anything else either
 # widens the locked surface (surprise for the next deploy) or narrows it.
