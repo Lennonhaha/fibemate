@@ -34,5 +34,5 @@
 
 - 实现文件: sm2-bigint-ec.js
 - 测试脚本: scripts/sm2-100k-real.cjs
-- 结果日志: sm2-100k-log.txt
+- 结果日志: evidence/sm2-100k-log.txt
 - 测试时间: 2026-08-24T17:10:19.007Z
