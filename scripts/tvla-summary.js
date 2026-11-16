@@ -2,90 +2,230 @@
 // SPDX-License-Identifier: GPL-3.0-only
 // Copyright (c) 2026 FIBEMATE Contributors
 /**
- * TVLA Summary — validate existing TVLA reports against thresholds
+ * TVLA summary - validate TVLA measurements against the 4.5 threshold.
  *
- * Scans scripts/tvla/ for gradient results and checks |t| < 4.5 threshold.
- * Nightly Phase 2: strict mode (fail if any test exceeds threshold).
+ * History: before 2026-11-15 this script scanned scripts/tvla/*.{txt,log,md,js}
+ * for "|t| = N" and passed on a single archived sample sitting exactly on the
+ * 4.5 line, while the live timing test leaked at |t| = 58-86 (issue #510). Two
+ * things were wrong and are fixed here:
+ *
+ *   1. a file with too few samples cannot pass - it has to be INSUFFICIENT
+ *   2. the scanned set is reported honestly: skipped files and total samples
+ *
+ * Live measurements are fed in with --include (see scripts/tvla-live-gate.cjs),
+ * so the gate always sees the code in this checkout, not just old text files.
  *
  * Usage:
- *   node scripts/tvla-summary.js       # strict (exit 1 on threshold breach)
- *   node scripts/tvla-summary.js --warn # warn only (always exit 0)
+ *   node scripts/tvla-summary.js
+ *   node scripts/tvla-summary.js --warn
+ *   node scripts/tvla-summary.js --min-samples=100 --allow-leak=NTT \
+ *        --include="$RUNNER_TEMP/live-tvla.json"
+ *
+ * Exit codes: 0 all good / 1 threshold breach or insufficient evidence / 2 usage
  */
+
+'use strict';
 
 const fs = require('fs');
 const path = require('path');
-const { _execSync } = require('child_process');
 
 const TVLA_DIR = path.join(__dirname, 'tvla');
-const TVLA_THRESHOLD = 4.5; // standard TVLA |t| threshold
-const STRICT = !process.argv.includes('--warn');
+const THRESHOLD = 4.5;
 
-let filesChecked = 0;
-let testsPassed = 0;
-let testsWarned = 0;
-let testsFailed = 0;
-
-function checkFile(filePath) {
-  const content = fs.readFileSync(filePath, 'utf8');
-  const name = path.basename(filePath);
-  filesChecked++;
-
-  // Extract |t| values from gradient results
-  const tValues = [];
-  const matches = content.matchAll(/\|t\|\s*=\s*([\d.]+)/gi);
-  for (const m of matches) {
-    const val = parseFloat(m[1]);
-    if (!isNaN(val)) tValues.push(val);
+function parseArgs(argv) {
+  const opts = {
+    strict: !argv.includes('--warn'),
+    minSamples: 10,
+    allow: ['NTT'],
+    include: [],
+    help: false,
+  };
+  for (const arg of argv) {
+    if (arg === '--warn') opts.strict = false;
+    else if (arg === '--help' || arg === '-h') opts.help = true;
+    else if (arg.startsWith('--min-samples=')) opts.minSamples = Number(arg.slice('--min-samples='.length));
+    else if (arg.startsWith('--allow-leak=')) {
+      opts.allow = arg.slice('--allow-leak='.length).split(',').map((s) => s.trim()).filter(Boolean);
+    } else if (arg.startsWith('--include=')) opts.include.push(arg.slice('--include='.length));
+    else {
+      console.error(`unknown argument: ${arg}`);
+      process.exit(2);
+    }
   }
-
-  if (tValues.length === 0) {
-    // No |t| values found — might be a raw data file
-    console.log(`  SKIP ${name}: no |t| values found`);
-    return;
+  if (!Number.isFinite(opts.minSamples) || opts.minSamples < 1) {
+    console.error('--min-samples must be a positive number');
+    process.exit(2);
   }
-
-  const maxT = Math.max(...tValues);
-  const status = maxT > TVLA_THRESHOLD ? 'FAIL' : 'PASS';
-
-  console.log(`  ${status === 'PASS' ? '✓' : '✗'} ${name}: max|t|= ${maxT.toFixed(2)} (threshold=${TVLA_THRESHOLD}, ${tValues.length} samples)`);
-
-  if (maxT > TVLA_THRESHOLD) {
-    if (STRICT) testsFailed++;
-    else testsWarned++;
-  } else {
-    testsPassed++;
-  }
+  return opts;
 }
 
-function scan() {
-  console.log('TVLA Summary Check\n');
-  console.log(`  Directory: ${TVLA_DIR}`);
-  console.log(`  Threshold: |t| < ${TVLA_THRESHOLD}`);
-  console.log(`  Mode: ${STRICT ? 'STRICT (fail on breach)' : 'WARN (report only)'}\n`);
+function recordsFromText(content) {
+  const out = [];
+  for (const m of content.matchAll(/\|t\|\s*=\s*([\d.]+)/gi)) {
+    const t = parseFloat(m[1]);
+    if (!Number.isNaN(t)) out.push({ name: null, t, samples: null });
+  }
+  // A text scan cannot know the sample count. Treat the number of extracted
+  // values as the evidence count: one number in a file is one number.
+  for (const rec of out) rec.samples = out.length;
+  return out;
+}
 
+function recordsFromJson(content, label) {
+  let data;
   try {
-    const entries = fs.readdirSync(TVLA_DIR);
-    for (const entry of entries.sort()) {
-      const fullPath = path.join(TVLA_DIR, entry);
-      const stat = fs.statSync(fullPath);
-      if (stat.isFile() && /\.(txt|log|md|js)$/i.test(entry)) {
-        checkFile(fullPath);
-      }
-    }
-  } catch (err) {
-    console.error(`  Error reading TVLA directory: ${err.message}`);
-    if (STRICT) process.exit(1);
-    return;
+    data = JSON.parse(content);
+  } catch {
+    return null;
+  }
+  if (!data || !Array.isArray(data.tests)) return null;
+  return data.tests.map((t) => ({
+    name: t.name ? `${label}:${t.name}` : label,
+    t: Number(t.t),
+    samples: Number.isFinite(Number(t.samples)) ? Number(t.samples) : null,
+    // tvla-live-gate reports already carry a verdict (they know about the
+    // allowlist and the noise band). Trust it instead of re-judging at 4.5,
+    // otherwise the summary turns every gate WARN into a FAIL.
+    status: t.status || null,
+  }));
+}
+
+function main() {
+  const opts = parseArgs(process.argv.slice(2));
+  if (opts.help) {
+    console.log('node scripts/tvla-summary.js [--warn] [--min-samples=N] [--allow-leak=NAME,...] [--include=<file>]');
+    return 0;
   }
 
-  console.log(`\n  Summary: ${testsPassed} passed, ${testsWarned} warned, ${testsFailed} failed (${filesChecked} files checked)`);
+  const allow = new Set(opts.allow);
+  const records = [];
+  let filesChecked = 0;
+  let skipped = 0;
 
-  if (testsFailed > 0) {
-    console.error('\nTVLA SUMMARY: THRESHOLD BREACHED');
-    process.exit(1);
+  console.log('TVLA Summary Check\n');
+  console.log(`  Directory: ${TVLA_DIR}`);
+  console.log(`  Threshold: |t| < ${THRESHOLD}`);
+  console.log(`  Min samples per file: ${opts.minSamples}`);
+  console.log(`  Allowlisted leaks: ${opts.allow.length ? opts.allow.join(', ') : '(none)'}`);
+  console.log(`  Mode: ${opts.strict ? 'STRICT (fail on breach or thin evidence)' : 'WARN (report only)'}\n`);
+
+  let entries = [];
+  try {
+    entries = fs.readdirSync(TVLA_DIR).sort();
+  } catch (err) {
+    console.error(`  Error reading TVLA directory: ${err.message}`);
+    if (opts.strict) process.exit(1);
+    return 0;
+  }
+
+  const scanned = [];
+  for (const entry of entries) {
+    const full = path.join(TVLA_DIR, entry);
+    try {
+      if (!fs.statSync(full).isFile()) continue;
+    } catch {
+      continue;
+    }
+    // Only result-bearing files. .js files are sources and used to inflate the
+    // "files checked" count while contributing nothing.
+    if (!/\.(txt|log|md)$/i.test(entry)) continue;
+    scanned.push(full);
+  }
+
+  for (const file of scanned) {
+    const name = path.basename(file);
+    const recs = recordsFromText(fs.readFileSync(file, 'utf8'));
+    if (recs.length === 0) {
+      console.log(`  SKIP ${name}: no |t| values found`);
+      skipped++;
+      continue;
+    }
+    filesChecked++;
+    console.log(`  ${name}: ${recs.length} sample(s)`);
+    for (const rec of recs) records.push({ label: name, ...rec });
+  }
+
+  for (const file of opts.include) {
+    const name = path.basename(file);
+    if (!fs.existsSync(file)) {
+      console.log(`  MISSING ${file}`);
+      records.push({ label: file, name: null, t: NaN, samples: 0, missing: true });
+      continue;
+    }
+    const content = fs.readFileSync(file, 'utf8');
+    const recs = /\.json$/i.test(file) ? recordsFromJson(content, name) : recordsFromText(content);
+    if (recs === null) {
+      console.log(`  SKIP ${name}: not a TVLA report`);
+      skipped++;
+      continue;
+    }
+    if (recs.length === 0) {
+      console.log(`  SKIP ${name}: no |t| values found`);
+      skipped++;
+      continue;
+    }
+    filesChecked++;
+    console.log(`  ${name}: ${recs.length} test(s) [included]`);
+    for (const rec of recs) records.push({ label: name, ...rec });
+  }
+
+  let passed = 0;
+  let expected = 0;
+  let warned = 0;
+  let failed = 0;
+  let insufficient = 0;
+  let totalSamples = 0;
+
+  for (const rec of records) {
+    const label = rec.name || rec.label;
+    if (rec.missing || Number.isNaN(rec.t)) {
+      console.log(`  FAIL ${label}: unreadable report`);
+      failed++;
+      continue;
+    }
+    const samples = rec.samples === null ? 0 : rec.samples;
+    totalSamples += samples;
+    if (samples < opts.minSamples) {
+      console.log(`  INSUFFICIENT ${label}: ${samples} sample(s), need >= ${opts.minSamples} (a thin sample cannot clear a gate)`);
+      insufficient++;
+      continue;
+    }
+    const breaches = rec.t > THRESHOLD;
+    const allowlisted = allow.has(label) || allow.has(String(label).split(':').pop());
+    if (rec.status === 'new-leak') {
+      console.log(`  FAIL ${label}: |t|= ${rec.t.toFixed(2)} > ${THRESHOLD} (${samples} samples)`);
+      failed++;
+    } else if (rec.status === 'expected-leak' || (rec.status === null && breaches && allowlisted)) {
+      console.log(`  EXPECTED ${label}: |t|= ${rec.t.toFixed(2)} (${samples} samples) - declared in docs/security-limitations.md`);
+      expected++;
+    } else if (rec.status === 'warn' || rec.status === 'ok-improved') {
+      console.log(`  WARN ${label}: |t|= ${rec.t.toFixed(2)} (${samples} samples) - reported by the live gate, not failing`);
+      warned++;
+    } else if (!breaches) {
+      console.log(`  PASS ${label}: |t|= ${rec.t.toFixed(2)} (${samples} samples)`);
+      passed++;
+    } else {
+      console.log(`  FAIL ${label}: |t|= ${rec.t.toFixed(2)} > ${THRESHOLD} (${samples} samples)`);
+      failed++;
+    }
+  }
+
+  console.log(`\n  Summary: ${passed} passed, ${expected} expected, ${warned} warned, ${failed} failed, ${insufficient} insufficient (${filesChecked} files checked, ${skipped} skipped, ${totalSamples} samples)`);
+
+  if (filesChecked === 0) {
+    console.error('\nTVLA SUMMARY: NO EVIDENCE - nothing measured. Pass --include=<live report>.');
+    return opts.strict ? 1 : 0;
+  }
+
+  if (failed > 0 || insufficient > 0) {
+    console.error(`\nTVLA SUMMARY: ${failed > 0 ? 'THRESHOLD BREACHED' : ''}${failed > 0 && insufficient > 0 ? ' AND ' : ''}${insufficient > 0 ? 'INSUFFICIENT EVIDENCE' : ''}`);
+    return opts.strict ? 1 : 0;
   }
 
   console.log('TVLA SUMMARY PASSED');
+  return 0;
 }
 
-scan();
+if (require.main === module) process.exit(main());
+
+module.exports = { parseArgs, recordsFromText, recordsFromJson };

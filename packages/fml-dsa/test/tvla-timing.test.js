@@ -162,6 +162,29 @@ async function main() {
   } else {
     console.log(`\n⚠️  ${leaks.length} leaks (non-JIT). Investigate.`);
   }
+  const jsonFlag = process.argv.find((a) => a.startsWith('--json='));
+  if (jsonFlag) {
+    const outPath = jsonFlag.slice('--json='.length);
+    const payload = {
+      schema: 'tvla-timing/v1',
+      node: process.version,
+      platform: process.platform,
+      threshold: 4.5,
+      samples_per_test: 5000,
+      tests: results.map((r) => ({
+        name: r.name,
+        samples: 5000,
+        t: Number(r.t.toFixed(4)),
+        leak: r.leak,
+        delta_mean_ns: Number(Math.abs(r.meanA - r.meanB).toFixed(1)),
+      })),
+      leaks: leaks.map((r) => r.name),
+    };
+    const fsm = await import('node:fs');
+    fsm.writeFileSync(outPath, JSON.stringify(payload, null, 2) + '\n', 'utf8');
+    console.log('\nJSON report written to ' + outPath);
+  }
+
   process.exit(leaks.length > 0 ? 1 : 0);
 }
 
