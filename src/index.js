@@ -69,6 +69,25 @@ if (!mlkem || typeof mlkem.keygen !== 'function') {
   console.warn('[mlkem] C addon unavailable, using bridged JS fallback');
 }
 const mlkemPureJS = require('../packages/pqc-kem/src/ml-kem-768.js');
+
+// ---- ML-KEM-768 request validation (FIPS 203, Table 2) --------------------
+// Buffer.from(x, 'hex') never throws: it stops at the first non-hex nibble and
+// truncates, so a 4-byte "ciphertext" became a decapsulation against zero
+// padding that returned 200 with a shared secret nobody else could reproduce.
+// The library-level guard added in 2026-11 only helps when the pure-JS backend
+// runs; the native addon's own guard only fires after it is loaded. Refuse the
+// request here, where the parameter set is known (#520, #503).
+const MLKEM768_BYTES = Object.freeze({
+  publicKey: 1184,
+  secretKey: 2400,
+  ciphertext: 1088,
+});
+
+function parseHexBytes(value) {
+  if (typeof value !== 'string' || value.length === 0 || value.length % 2 !== 0) return null;
+  if (!/^[0-9a-fA-F]+$/.test(value)) return null;
+  return Buffer.from(value, 'hex');
+}
 const PQRatchet = require('../double-ratchet-pq');
 const pqSessions = new Map();
 
@@ -1773,7 +1792,11 @@ app.post('/api/mlkem/encaps', authMiddleware, (req, res) => {
   try {
     const { publicKey } = req.body;
     if (!publicKey) return res.status(400).json({ error: 'missing publicKey' });
-    const pk = Buffer.from(publicKey, 'hex');
+    const pk = parseHexBytes(publicKey);
+    if (!pk) return res.status(400).json({ error: 'publicKey must be a hex string' });
+    if (pk.length !== MLKEM768_BYTES.publicKey) {
+      return res.status(400).json({ error: `publicKey must be ${MLKEM768_BYTES.publicKey} bytes, got ${pk.length}` });
+    }
     const [ct, ss] = mlkem.encaps(pk);
     res.json({ ciphertext: ct.toString('hex'), sharedSecret: ss.toString('hex') });
   } catch (err) {
@@ -1785,8 +1808,16 @@ app.post('/api/mlkem/decaps', authMiddleware, (req, res) => {
   try {
     const { ciphertext, secretKey } = req.body;
     if (!ciphertext || !secretKey) return res.status(400).json({ error: 'missing ciphertext or secretKey' });
-    const ct = Buffer.from(ciphertext, 'hex');
-    const sk = Buffer.from(secretKey, 'hex');
+    const ct = parseHexBytes(ciphertext);
+    if (!ct) return res.status(400).json({ error: 'ciphertext must be a hex string' });
+    if (ct.length !== MLKEM768_BYTES.ciphertext) {
+      return res.status(400).json({ error: `ciphertext must be ${MLKEM768_BYTES.ciphertext} bytes, got ${ct.length}` });
+    }
+    const sk = parseHexBytes(secretKey);
+    if (!sk) return res.status(400).json({ error: 'secretKey must be a hex string' });
+    if (sk.length !== MLKEM768_BYTES.secretKey) {
+      return res.status(400).json({ error: `secretKey must be ${MLKEM768_BYTES.secretKey} bytes, got ${sk.length}` });
+    }
     const ss = mlkem.decaps(ct, sk);
     res.json({ sharedSecret: ss.toString('hex') });
   } catch (err) {

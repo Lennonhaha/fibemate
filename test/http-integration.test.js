@@ -345,6 +345,38 @@ test('ML-KEM round-trip over HTTP', async () => {
   assert.equal(decaps.status, 200, decaps.text);
   assert.equal(decaps.json.sharedSecret, encaps.json.sharedSecret);
 
+  // A malformed length must be refused, not decapsulated against zero padding.
+  // Before the guard, each of these answered 200 with an unreproducible secret.
+  const shortCt = await call('POST', '/api/mlkem/decaps', {
+    token: users[0].token,
+    body: { ciphertext: 'abcd', secretKey },
+  });
+  assert.equal(shortCt.status, 400, shortCt.text);
+
+  const longCt = await call('POST', '/api/mlkem/decaps', {
+    token: users[0].token,
+    body: { ciphertext: encaps.json.ciphertext + '00', secretKey },
+  });
+  assert.equal(longCt.status, 400, longCt.text);
+
+  const shortSk = await call('POST', '/api/mlkem/decaps', {
+    token: users[0].token,
+    body: { ciphertext: encaps.json.ciphertext, secretKey: secretKey.slice(0, 100) },
+  });
+  assert.equal(shortSk.status, 400, shortSk.text);
+
+  const notHex = await call('POST', '/api/mlkem/decaps', {
+    token: users[0].token,
+    body: { ciphertext: 'zz'.repeat(1088), secretKey },
+  });
+  assert.equal(notHex.status, 400, notHex.text);
+
+  const shortPk = await call('POST', '/api/mlkem/encaps', {
+    token: users[0].token,
+    body: { publicKey: publicKey.slice(0, 100) },
+  });
+  assert.equal(shortPk.status, 400, shortPk.text);
+
   const missing = await call('POST', '/api/mlkem/encaps', { token: users[0].token, body: {} });
   assert.equal(missing.status, 400);
 
