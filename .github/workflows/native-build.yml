@@ -13,6 +13,7 @@ on:
   pull_request:
     paths:
       - 'packages/pqc-kem/native/**'
+      - '.github/workflows/native-build.yml'
   workflow_dispatch:
 
 jobs:
@@ -41,11 +42,58 @@ jobs:
         working-directory: packages/pqc-kem
         run: npx node-gyp rebuild -C native --release
 
+      # The commit/ref values are passed through env, never interpolated into the
+      # script body: a branch name is attacker-controlled on a fork PR, and
+      # inserting it into a shell line is code injection (CodeQL, this PR).
+      - name: Record build provenance
+        working-directory: packages/pqc-kem/native/build/Release
+        env:
+          SRC_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          SRC_REF: ${{ github.event.pull_request.head.ref || github.ref }}
+          WORKFLOW_REF: ${{ github.ref }}
+        run: |
+          sha256sum mlkem.node > mlkem.node.sha256
+          sha256sum -c mlkem.node.sha256
+          {
+            echo "file: mlkem.node"
+            echo "bytes: $(stat -c %s mlkem.node)"
+            echo "commit: $SRC_SHA"
+            echo "ref: $SRC_REF"
+            echo "workflow_ref: $WORKFLOW_REF"
+            echo "node: $(node -v)"
+            echo "gcc: $(cc --version | head -1)"
+            echo "glibc: $(ldd --version | head -1)"
+            echo "runner: ${{ matrix.os }}"
+          } > build-info.txt
+          cat mlkem.node.sha256
+          cat build-info.txt
+
+      # The deploy host verifies the runtime addon against mlkem.node.sha256
+      # (scripts/deploy-fibemate.sh, step [3d]). Without this artifact the
+      # manifest could only come from whoever built the addon by hand.
+      - name: Upload addon and its manifest
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: mlkem-node-${{ matrix.os }}-node${{ matrix.node }}
+          path: |
+            packages/pqc-kem/native/build/Release/mlkem.node
+            packages/pqc-kem/native/build/Release/mlkem.node.sha256
+            packages/pqc-kem/native/build/Release/build-info.txt
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Verify native addon loads
         run: |
           node -e "
           const pk = require('./packages/pqc-kem');
           console.log('Backend:', pk.usingNative ? 'C NATIVE' : 'JS (no addon)');
+          // A missing addon would otherwise still pass the roundtrip below on
+          // the JS fallback - the same silent degradation that ran in
+          // production for ~75 days (issue #520).
+          if (!pk.usingNative) {
+            console.error('FATAL: the addon did not load; the roundtrip would only prove the JS path');
+            process.exit(2);
+          }
           const k = pk.generateKeypair();
           console.log('pk bytes:', k.publicKey.length);
           const e = pk.encapsulate(k.publicKey);
