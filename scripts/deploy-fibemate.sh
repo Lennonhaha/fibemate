@@ -16,7 +16,9 @@
 # Overridable: REPO_DIR, BASE_URL, PM2_APP, HEALTH_URL, SKIP_RESTART=1, LOCK_RECORD,
 #             PACKAGES_SYNC=1 (copy packages/ without --delete),
 #             REQUIRE_PACKAGES_MATCH=1 (fail instead of warn on packages/ drift),
-#             MLKEM_REQUIRE_NATIVE=1 (fail when the native addon is not deployed).
+#             MLKEM_REQUIRE_NATIVE=1 (fail when the native addon is not deployed),
+#             ENV_PERM_STRICT=1 (fail instead of warn when the runtime .env is readable
+#                                by group/other - see issue #529).
 #
 # The immutable (+i) flags are NOT assumed to cover a fixed list of directories: they
 # are read from the checkout before the deploy and restored verbatim afterwards. Getting
@@ -323,6 +325,36 @@ if [ "$PK_DIFF" -ne 0 ] || [ "$PK_MISSING" -ne 0 ]; then
     echo "FAIL: REQUIRE_PACKAGES_MATCH=1 and $PK_DIFF files differ, $PK_MISSING are missing" >&2
     exit 1
   fi
+fi
+
+# [3f/6] The runtime .env is where the JWT signing secret, the admin invite code and
+# the webhook URL live. It shipped as mode 644 root:root and stayed that way until a
+# second instance inherited the production secret over it (#527, #529). Nothing in the
+# deploy path noticed, because nothing looked. Permissions are the whole defence for a
+# file like this, so measure them: WARN by default (a deploy must not fail over a mode
+# bit), FAIL when ENV_PERM_STRICT=1 so this can be tightened once every host complies.
+echo "[3f/6] checking runtime secret file permissions..."
+ENV_FILE="$RUNTIME_DIR/.env"
+if [ -f "$ENV_FILE" ]; then
+  ENV_MODE="$(stat -c %a "$ENV_FILE")"
+  ENV_OWNER="$(stat -c '%U:%G' "$ENV_FILE")"
+  case "$ENV_MODE" in
+    600|400)
+      echo "      $ENV_FILE mode $ENV_MODE ($ENV_OWNER)"
+      ;;
+    *)
+      echo "      WARN: $ENV_FILE is mode $ENV_MODE ($ENV_OWNER)" >&2
+      echo "      WARN: it holds JWT_SECRET, ADMIN_INVITE_CODE and webhook URLs" >&2
+      echo "      WARN: fix with: chmod 600 $ENV_FILE   (issue #529)" >&2
+      if [ "${ENV_PERM_STRICT:-0}" = "1" ]; then
+        echo "FAIL: ENV_PERM_STRICT=1 and $ENV_FILE is mode $ENV_MODE" >&2
+        exit 1
+      fi
+      ;;
+  esac
+else
+  echo "      WARN: $ENV_FILE not found; the API will generate a JWT secret at boot" >&2
+  echo "      WARN: sessions will not survive a restart (see #527)" >&2
 fi
 
 # [4/6] Restore exactly the flags that were there before. Anything else either
