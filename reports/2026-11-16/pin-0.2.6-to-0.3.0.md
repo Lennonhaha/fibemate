@@ -79,16 +79,19 @@ This is ADR-0001: confidence is a property of the evidence technique
 Before 0.3.0 every technique scored 0.7, which made "found in source" and "only seen in
 a manifest" indistinguishable.
 
-The method-level record says the same, and shows one case where the number stays put
-while its meaning changes:
+The method-level record shows the split:
 
 ```
 ML-KEM     manifest-analysis=0.7, source-code-analysis=0.7  ->  0.7, 0.9
-Keccak     manifest-analysis=0.7                            ->  0.7
+Keccak     manifest-analysis=0.7, source-code-analysis=0.7  ->  0.7, 0.9
 ```
 
-Keccak is manifest-only, so its identity confidence is still 0.7 — correct under the
-new model, and no longer evidence that the tool treats all findings alike.
+> **Correction (2026-11-16, written after the first live run).** An earlier version of this
+> note said Keccak stays at 0.7 because it is manifest-only. That is wrong for this tree.
+> Keccak also matches source (`package.json`, `fips205/fips202.c`), so its identity
+> confidence is 0.9 like everything else: in run 43836660718 all 37 components carry
+> `source-code-analysis`, and the histogram is 37 x 0.9 with no 0.7. Manifest-only
+> findings would still score 0.7 under ADR-0001 — this tree simply contains none.
 
 ## 4. Occurrences: four components gained references
 
