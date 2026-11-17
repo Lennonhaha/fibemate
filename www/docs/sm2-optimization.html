@@ -322,7 +322,7 @@ const T = getGTable();  // O(1) 缓存命中
 <h3>5.1 关键决策</h3>
 <ol>
   <li><strong>先换引擎再上层</strong>：Native BigInt 的 7.3× 是全局乘数。在 jsbn 架构上做任何上层优化都是低效的——先切换底层，再逐级加速。</li>
-  <li><strong>预计算表投入产出比极高</strong>：16 KB 的一次性内存开销换 2.6× 固定基点加速。对于 TLS 握手场景（大量密钥生成），这是完美的 tradeoff。</li>
+  <li><strong>预计算表投入产出比很高</strong>：16 KB 的一次性内存开销换 2.6× 固定基点加速。对于 TLS 握手场景（大量密钥生成），这是一个合理的折衷。</li>
   <li><strong>wNAF 的 JS 现实</strong>：理论加速 1.3×，实测 1.16×。JS 引擎的 BigInt 临时对象分配和 GC 压力抵消了部分收益。WASM 移植可避免此问题。</li>
   <li><strong>互操作性不可忽视</strong>：跨库兼容性（KDF 计数器格式、哈希输入类型）往往是最耗时的调试环节，建议早期建立双向验证。</li>
 </ol>
