@@ -152,7 +152,7 @@
   <blockquote style="border-left:3px solid var(--accent);padding-left:1rem;margin:1rem 0;color:var(--accent);">
     <strong>只要 X25519（经典 ECDH）或 ML-KEM-768（后量子 KEM）中任意一个基础算法是 IND-CCA2 安全的，整个混合方案就是 IND-CCA2 安全的。</strong>
   </blockquote>
-  <p>这意味着：即使 Shor 算法在未来攻破了 X25519，ML-KEM-768 仍能保护会话密钥；反之，即使 ML-KEM-768 被新型密码分析突破，X25519 的经典安全性依然有效。混合方案的安全性 <strong>不低于其最强组件</strong>。</p>
+  <p>这意味着：即使 Shor 算法在未来攻破了 X25519，ML-KEM-768 仍能保护会话密钥；反之，即使 ML-KEM-768 被新型密码分析突破，X25519 的经典安全性依然有效。混合方案的安全性 <strong>不低于其中任一组件单独提供的安全强度</strong>。</p>
 </div>
 
 <h3>2.5.1 安全模型扩展：经典 ROM → 量子 ROM (QROM)</h3>
