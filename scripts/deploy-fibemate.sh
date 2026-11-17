@@ -8,6 +8,12 @@
 # Steps: check clean -> unlock -> fetch/reset -> stamp -> sync the API tree ->
 #        relock -> restart -> verify delivery
 #
+# LEGACY (2026-11-17): production serves /opt/fibemate/current/www and runs
+# /opt/fibemate/releases/<sha>/src/index.js. This script syncs $RUNTIME_DIR, which
+# nothing serves, so it refuses to run unless --legacy-allow is given; the fail-loud
+# behaviour it added in #539 therefore applies to the in-place tree only, not to
+# production. Use scripts/deploy-release.sh for the live layout.
+#
 # The last step is not optional and is not cosmetic: scripts/check-live.cjs probes the
 # public site and exits non-zero when the deployed bytes disagree with the repo. A
 # deploy that "succeeded" but serves an old manifest, a stale mirror or a 404 is a
@@ -46,17 +52,31 @@ APPLY=0
 for arg in "$@"; do
   case "$arg" in
     --apply) APPLY=1 ;;
+    --legacy-allow) LEGACY_ALLOW=1 ;;
     -h|--help)
       sed -n '3,20p' "$0"
       exit 0
       ;;
     *)
       echo "unknown argument: $arg" >&2
-      echo "usage: bash scripts/deploy-fibemate.sh [--apply]" >&2
+      echo "usage: bash scripts/deploy-fibemate.sh [--apply] [--legacy-allow]" >&2
       exit 2
       ;;
   esac
 done
+
+# Production moved to the release layout on 2026-11-17: pm2 runs
+# /opt/fibemate/releases/<sha>/src/index.js and nginx serves /opt/fibemate/current/www.
+# This script only syncs $RUNTIME_DIR, which nothing serves any more, and then restarts
+# the app - which keeps running its own release. The result is a deploy that prints OK
+# while the live code does not change, so it refuses unless the operator says otherwise.
+if [ -e "${CURRENT_MARKER:-/opt/fibemate/current}" ] && [ "${LEGACY_ALLOW:-0}" != "1" ]; then
+  echo "FAIL: production uses the release layout (${CURRENT_MARKER:-/opt/fibemate/current} -> $(readlink -f "${CURRENT_MARKER:-/opt/fibemate/current}" 2>/dev/null))" >&2
+  echo "      this script syncs $RUNTIME_DIR, which the API no longer serves" >&2
+  echo "      use: bash scripts/deploy-release.sh --sha <commit>" >&2
+  echo "      to deploy the in-place tree anyway: --legacy-allow (it will not change the live API)" >&2
+  exit 2
+fi
 
 echo "=== FIBEMATE deploy ==="
 echo "repo:    $REPO_DIR"
