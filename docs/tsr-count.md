@@ -26,7 +26,7 @@ without token   222   (basenames that are not lg-NNN, e.g. docs_architecture)
 
 The site says, in the meta/description block of `www/index.html`:
 
-> 372 份 .tsr 存证（**261** 个唯一令牌，2026-11-14 实测）
+> 372 份 .tsr 存证（**261** 个唯一令牌，2026-11-14 实测） <!-- tsr-count-exempt: quotes the site copy that was wrong on 2026-11-16 -->
 
 - `372` is correct.
 - `261` is **not reproducible by any definition**. Distinct basenames are 260,
@@ -46,7 +46,7 @@ artefact either.
 
 Re-run the script on the day of the change and use that day's numbers:
 
-> 372 份 .tsr 存证（260 个唯一存证对象，<当天> 实测）
+> 372 份 .tsr 存证（260 个唯一存证对象，<当天> 实测） <!-- tsr-count-exempt: template measured 260 that same day -->
 
 Two rules that keep this from rotting again:
 
@@ -74,3 +74,30 @@ Exit codes: `0` ok, `2` `git ls-files` failed (not a repository, or git missing)
 - `packages/fml-dsa/package.json` now carries `author`, but npm does not rewrite
   published metadata; the field takes effect on the next publish, not on
   `fml-dsa@0.1.0` already on the registry.
+
+## Addendum 2026-11-17: the same digits, a different meaning
+
+The measurement above was taken on 2026-11-16 at `2bac9661`: 372 files, 260
+basenames, 92 tokens. On that day the site line using 261 for distinct tokens was
+genuinely wrong, because no definition produced 261.
+
+A day later the numbers moved for a boring reason: commit `4b3892d` (#538) added
+two tracked files, `www/docs/tsa/lg-080.tsr` and `www/docs/tsa/lg-082.tsr`. At
+`ef6e327` the counter reports:
+
+```
+files           374
+basenames       261
+tokens           93
+duplicates      113
+without token   222
+```
+
+So 261 is now the correct basename count, while the old sentence used the same
+digits to mean distinct tokens. Both statements were true about different
+quantities a day apart. That is the trap this document exists to close: a number
+without its unit and its measurement date is not a fact, it is a coincidence
+waiting to be quoted.
+
+Rule unchanged: run `node scripts/count-tsr.cjs` on the day of the edit, paste its
+output, keep the unit in the sentence, and write the date next to it.
