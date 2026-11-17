@@ -21,6 +21,7 @@ let failed = 0;
 
 const EMDASH_MOJI = String.fromCodePoint(0x9225) + '?'; // "?" for an em dash
 const ARROW_MOJI = String.fromCodePoint(0x922b) + '?'; // "?" for an arrow
+const RHO_MOJI = String.fromCodePoint(0x87fb); // rho, read as GBK from CE C1
 
 function check(label, expected, file) {
   const r = spawnSync(process.execPath, [gate, file], { encoding: 'utf8' });
@@ -44,6 +45,9 @@ check('em dash mojibake is rejected', 1, write('emdash.js', '// kem ' + EMDASH_M
 
 // the fingerprint that was already present, kept so a refactor cannot drop it
 check('arrow mojibake is rejected', 1, write('arrow.js', '// next ' + ARROW_MOJI + 'step\n'));
+
+// rho survived the first pass on main: present in params.js, absent from the table
+check('rho mojibake is rejected', 1, write('rho.js', '// incl. 32B ' + RHO_MOJI + ')\n'));
 
 // the classes that were already covered
 check('U+FFFD is rejected', 1, write('fffd.js', '// broken \uFFFD\uFFFD text\n'));

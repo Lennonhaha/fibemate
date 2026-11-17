@@ -34,6 +34,7 @@ const GBK_MOJIBAKE_HANZI = [
   '\u9239', // 鈹 — "##" heading marker
   '\u951B', // 锛 — "，" fullwidth comma
   '\u922B', // 鈫 — "→" arrow
+  '\u87FB', // rho (U+03C1) read as GBK: CE C1 decoded as one hanzi, invisible to the list above
   '\u9225', // 鈥 — "—" em dash; E2 80 94 read as GBK leaves 鈥 plus a bare "?"
   '\u9359', // 鍙 — "号"
   '\u9428', // 鐨 — "的"
