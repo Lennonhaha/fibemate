@@ -18,8 +18,8 @@ const SS_BYTES = 32;        // shared secret output length
  *   ML-KEM-1024 -> Category 5 (AES-256 equivalent)
  *
  * Key/CT sizes include the implicit rejection hash:
- *   ek  = 384k + 32     (encapsulation key, incl. 32B 蟻)
- *   dk  = 768k + 96     (decapsulation key, incl. 32B z + 32B ek_hash + 32B 蟻)
+ *   ek  = 384k + 32     (encapsulation key, incl. 32B ρ)
+ *   dk  = 768k + 96     (decapsulation key, incl. 32B z + 32B ek_hash + 32B ρ)
  *   c   = 32(du*k + dv*k) + 32  (ciphertext, incl. 32B commitment hash)
  */
 const MLKEM_PARAMS = {
