@@ -1,31 +1,31 @@
-> **本仓库是 FIBEMATE PQC 密码学工程验证平台。** 同名社交软件（Rust · 端到端加密 · 独立项目）→ [fibemate.net](https://fibemate.net)
+# FIBEMATE — PQC 工程验证平台 · 可执行教科书 / A PQC Engineering Verification Platform
+
+> **一句话定位 / One line.** FIBEMATE 把 FIPS 203/204/205 与 SM2/SM3/SM4 的数学、参考实现、硬件加速和证据链放进同一棵可复现的树 —— 它不是密码库，是"能被第三方重跑"的公开验证平台。同名端到端加密聊天软件是另一个项目 → [fibemate.net](https://fibemate.net)
 >
-> **This repo is the FIBEMATE PQC cryptography engineering verification platform.** The chat app of the same name (Rust · E2E encrypted · separate project) lives elsewhere. This platform covers ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204, fml-dsa — Phase 1 @noble backend, Noble cross-validated), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, application-layer hybrid KEX, TLA+ formal verification, and 372 .tsr evidence files (261 unique tokens; 104 canonical records under `docs/tsa/`; measured 2026-11-14).
+> **This repo is the FIBEMATE PQC engineering verification platform.** The math, the reference code, the FPGA accelerator and a timestamped evidence chain live in one reproducible tree: not a crypto library, a platform you can re-run. The chat app of the same name is a separate project.
+
+## 三个锚点 / Three anchors
+
+Every number below can be re-measured with the command next to it. If it does not reproduce, that is our bug.
+
+| 锚点 | 值 | 测量时间 | 复核命令 |
+| :-- | :-- | :-- | :-- |
+| ML-KEM-768 KAT | **100/100 向量（500 断言）** | 2026-11-17 | `node scripts/ci-mlkem-kat.cjs` |
+| 时间戳证据链 | **374 个 `.tsr`**（261 个不同 basename，93 个 `lg-NNN` 令牌） | 2026-11-17 · main `c422464` | `node scripts/count-tsr.cjs` |
+| 文档-证据一致 | **drift 0**（denied 9） | 2026-11-17 · fibemate-tools `bb7ced4` | `verifact verify --no-cache` |
+
+> 第三个锚点的意思：仓库里 2,241 条"文档声称的数字"被逐条绑定到真实产物，漂移 0 条。被拒绑的 9 条不是"关掉了"，每条的"真值在哪、候选为什么不算"都写在 `verifact.json` 的 `note` 里。
+>
+> **核验率按真实口径写**：verified 136 / code-artifact 2,241 = **6.07%**（对全部受判 2,322 条为 5.86%）。剩下的 220 ambiguous + 1,867 unbound 是**待补的工作量**，不当作已完成，也不靠换分母把它做高。
 
 > ⚠️ **安全声明 / Security Notice**
 >
-> **FIBEMATE is an engineering demonstration platform, not a certified product.**
+> - **工程验证组件**（ML-KEM-768、SLH-DSA、SM2/SM3/SM4）通过了功能验证、KAT 与软件 TVLA，**尚未经过第三方安全审计**。
+> - **实验组件**（VWZ、LookingGlass）**不提供任何密码学安全保证**，默认关闭，需手动启用；源码已迁至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支，main 只保留文档引用。
+> - 威胁模型与已知边界见 [SECURITY.md](SECURITY.md)、[Security Model](#security-model)、[Known Limitations](#known-limitations)。
+> - **FIBEMATE is an engineering demonstration platform, not a certified product.** Full assessment: [SECURITY.md](SECURITY.md).
 >
-> - **Engineering-verified components** (ML-KEM-768, SLH-DSA, SM2/SM3/SM4) have passed functional verification, KAT, and software TVLA side-channel testing, but **have not undergone third-party security audit**.
-> - **Experimental components** (VWZ, LookingGlass) **provide no cryptographic security guarantees**, are default-off, require manual activation.
-> - VWZ / LookingGlass 实验组件已于 2026-07-24 迁移至 [experimental/vwz-lg](https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg) 分支。主分支保留文档引用，源代码不再维护于 main。
-> - Full security assessment: see [Security Model](#security-model) and [Known Limitations](#known-limitations).
 > **Status, known gaps, and how to contribute:** [English announcement](docs/ANNOUNCEMENT-EN.md) · [Contributor guide](docs/CONTRIBUTORS-GUIDE.md)
-
-
----
-
-# FIBEMATE — 中文 PQC 可执行教科书 · 国密 × PQC 混合验证平台 / A Chinese PQC Executable Textbook and SM × PQC Hybrid Verification Platform
-
-> **Math → Code → Hardware** — FIBEMATE is not a library. It's an executable textbook and hybrid verification platform that shows you *how* PQC works at every layer.
->
-> - 📐 **Math**: NTT butterfly, lattice topology, Kakeya sets — all 3D interactive
-> - 💻 **Code**: Pure JS reference + WASM + C Native — performance comparison at a glance
-> - 🔧 **Hardware**: FPGA synthesis + ILA verification — resource heatmap and timing
->
-> You can read the FIPS 203/204/205 specs. You can read the liboqs C code. If you want to *see* how ML-KEM works — polynomial arithmetic, side-channel leakage via TVLA, 10,000-round KAT zero bias — **that's what FIBEMATE is for.**
->
-> **26 interactive visualizations** · 12 algorithms · 11 security governance docs · 372 timestamped evidence files (261 unique tokens; lg-001~lg-116, gaps never reused; measured 2026-11-14) · [Live Dashboard →](https://fibemate.net/docs/pqc-dashboard.html)
 
 [![CI](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/ci.yml)
 [![Nightly](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml/badge.svg)](https://github.com/Lennonhaha/fibemate/actions/workflows/nightly-phase1.yml)
@@ -35,20 +35,21 @@
 [![CITATION.cff](https://img.shields.io/badge/cite-CITATION.cff-orange.svg)](./CITATION.cff)
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
-> 🥈 **FIBEMATE has achieved the OpenSSF Best Practices Silver badge** — 44 of 44 MUST criteria, achieved 2026-11-09. Statement coverage is 80.53% on CI (run `42682613340`, measured 2026-11-10) and 81.27% in a local run; the CI floor is 80%.
-> 📊 **OpenSSF Scorecard 8.1 / 10** — scorecard v5.6.0, measured 2026-11-09T18:37Z (UTC+8 2026-11-10 02:37) at commit `2ec3d0e`; desktop 7.5 / 10, tools 6.9 / 10. Scores move, so the timestamp is part of the claim.
+> 🥈 **OpenSSF Best Practices Silver** — 44/44 MUST criteria, achieved 2026-11-09. Statement coverage 80.53% on CI (run `42682613340`, measured 2026-11-10), 81.27% locally; the CI floor is 80%.
+> 📊 **OpenSSF Scorecard 8.1 / 10** — scorecard v5.6.0, measured 2026-11-09T18:37Z at commit `2ec3d0e`. The 2026-11-17 run produced its SARIF but the upstream webapp returned HTTP 500, so the public badge still shows the 2026-11-09 value: the score was not changed, the publisher failed.
+> ⚠️ **Silver is a self-certification of engineering hygiene (CI, docs, licence, release process, governance), not cryptographic correctness or a security audit.**
+
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--1407--686X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-1407-686X)
 [![Zenodo](https://img.shields.io/badge/Zenodo-4%20records-1682D4)](https://zenodo.org/search?q=%220009-0009-1407-686X%22)
 [![CycloneDX](https://img.shields.io/badge/CycloneDX-spec%20PR%20%231176-informational)](https://github.com/CycloneDX/specification/pull/1176)
+
 > **五条设计原则** → [不假装完整 · 证据链优先 · 边界公开 · 发布前预检 · 诚实纠错](PRINCIPLES.md)
 
-> ⚠️ **OpenSSF Silver is a self-certification of engineering hygiene (CI, docs, licence, release process, governance), not cryptographic correctness or a security audit. See [SECURITY.md](SECURITY.md) for threat model and limitations.**
-
-**v3.3.0** · 2026-08-03 · TSR: lg-001~lg-116 (372 .tsr files repo-wide, 261 unique tokens as of 2026-11-14, gaps never reused; see [TSR Manifest 2026-10-29](docs/TSR-MANIFEST-20261029.md) for the frozen 267-file snapshot; the older `docs/TSR-MANIFEST.md` is a frozen 2026-09-04 snapshot whose digest sits inside a sealed timestamp package) · [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html)
+**v3.3.3** · 2026-11-14 · TSR 令牌 `lg-001`~`lg-116`（空号不回收；93 个令牌、261 个 basename，口径见 `scripts/count-tsr.cjs`）· [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html) · [TSR Manifest 2026-10-29](docs/TSR-MANIFEST-20261029.md)（冻结快照；更早的 [TSR-MANIFEST.md](docs/TSR-MANIFEST.md) 是 2026-09-04 快照，其摘要被封存在时间戳包内）
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
-> **Cite this work**: [CITATION.cff](./CITATION.cff) — Liu, T. *FIBEMATE: Post-Quantum Cryptography Full-Stack Engineering Platform*. v3.3.0, 2026.
+> **Cite this work**: [CITATION.cff](./CITATION.cff) — Liu, T. *FIBEMATE: Post-Quantum Cryptography Full-Stack Engineering Platform*. v3.3.3, 2026.
 
 ---
 
