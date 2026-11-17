@@ -295,6 +295,11 @@ jobs:
       - name: Check SPDX headers
         run: node tools/add-spdx-headers.cjs check --root .
 
+      # Public TSR numbers were typed by hand for two weeks and drifted. The gate
+      # reads the canonical counter and fails when any public sentence disagrees.
+      - name: Check public TSR numbers against the counter
+        run: node scripts/check-tsr-copy.cjs
+
       # The deploy gate is only worth its exit code if it has been shown to fail.
       # This is the negative suite: one flipped byte, a missing file, a directory in
       # place of a file. It builds its own repository, so it needs no fixtures.
