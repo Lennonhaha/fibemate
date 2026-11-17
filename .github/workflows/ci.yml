@@ -295,6 +295,12 @@ jobs:
       - name: Check SPDX headers
         run: node tools/add-spdx-headers.cjs check --root .
 
+      # The deploy gate is only worth its exit code if it has been shown to fail.
+      # This is the negative suite: one flipped byte, a missing file, a directory in
+      # place of a file. It builds its own repository, so it needs no fixtures.
+      - name: Test the deploy tree gate
+        run: node scripts/test-verify-tree-sha.cjs
+
   # ─── 文档检查 (single platform) ─────────────────────
   docs-check:
     runs-on: ubuntu-latest

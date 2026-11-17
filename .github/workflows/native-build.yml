@@ -34,6 +34,19 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
 
+      # The key is the identity of the build inputs: the native source tree and the
+      # workflow that holds the flags. Keying by commit would leave every deploy of a
+      # non-native commit without an artifact, and "keep whatever is on disk" is how
+      # packages/ drifted (#507). Same key means the artifact can be reused as-is.
+      - name: Compute the artifact key
+        id: key
+        run: |
+          node scripts/native-artifact-key.cjs --repo . --commit HEAD --json > native-key.json
+          echo "key=$(node -p "require('./native-key.json').key")" >> "$GITHUB_OUTPUT"
+          echo "native_tree=$(node -p "require('./native-key.json').nativeTree")" >> "$GITHUB_OUTPUT"
+          echo "workflow_sha=$(node -p "require('./native-key.json').workflowSha")" >> "$GITHUB_OUTPUT"
+          rm -f native-key.json
+
       - name: Install npm dependencies
         working-directory: packages/pqc-kem
         run: npm install
@@ -85,6 +98,9 @@ jobs:
           SRC_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           SRC_REF: ${{ github.event.pull_request.head.ref || github.ref }}
           WORKFLOW_REF: ${{ github.ref }}
+          ARTIFACT_KEY: ${{ steps.key.outputs.key }}
+          NATIVE_TREE: ${{ steps.key.outputs.native_tree }}
+          WORKFLOW_SHA: ${{ steps.key.outputs.workflow_sha }}
         run: |
           sha256sum mlkem.node > mlkem.node.sha256
           sha256sum -c mlkem.node.sha256
@@ -94,6 +110,9 @@ jobs:
             echo "commit: $SRC_SHA"
             echo "ref: $SRC_REF"
             echo "workflow_ref: $WORKFLOW_REF"
+            echo "native_tree: $NATIVE_TREE"
+            echo "workflow_sha: $WORKFLOW_SHA"
+            echo "artifact_key: $ARTIFACT_KEY"
             echo "node: $(node -v)"
             echo "gcc: $(cc --version | head -1)"
             echo "glibc: $(ldd --version | head -1)"
@@ -110,7 +129,7 @@ jobs:
       - name: Upload addon and its manifest
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: mlkem-node-${{ matrix.os }}-node${{ matrix.node }}
+          name: mlkem-node-${{ matrix.os }}-node${{ matrix.node }}-${{ steps.key.outputs.key }}
           path: |
             packages/pqc-kem/native/build/Release/mlkem.node
             packages/pqc-kem/native/build/Release/mlkem.node.sha256
