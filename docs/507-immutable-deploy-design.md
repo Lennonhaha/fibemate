@@ -203,3 +203,30 @@ true and unrelated.
 P1 is already drafted. P2 ~half a day (build script + manifest + a dry run against a temp port). P3 ~1
 hour with a rollback rehearsal. P4 is cleanup plus a week of observation. The expensive part is not
 writing it, it is the first cutover where the old and new trees disagree — which is the point.
+
+## 10. Status, 2026-11-17 (measured on the host)
+
+Option A is live. pm2 runs `/opt/fibemate/releases/4b3892d.../src/index.js` with that directory as cwd,
+`/opt/fibemate/current` points at it, and every nginx `root` is `/opt/fibemate/current/www`.
+
+- The serving tree matches its commit: `src` 18 + `packages` 133 + `www` 947 = 1098/1098 tracked files
+  identical to `4b3892d`, 0 missing (scripts/verify-tree-sha.cjs).
+- The addon in the release is the CI artifact: 83,384 B, sha256 `7ca31cbacd57`, `march=x86-64-v3`,
+  `avx512_zmm_refs: 0`. `require()` of the release's `packages/pqc-kem` reports `usingNative=true`.
+- `/opt/fibemate-full` is still updated by scripts/deploy-fibemate.sh but nothing serves it. That is why
+  the script now refuses to run when `/opt/fibemate/current` exists, and why its #539 fail-loud
+  behaviour is described there as legacy-only.
+
+Two gaps this measurement exposed:
+
+1. **BUILD-MANIFEST.json has no entry for the addon.** It is written from git objects, and the addon is
+   not tracked, so `manifest.files['packages/pqc-kem/native/build/Release/mlkem.node']` does not exist.
+   Addon provenance is therefore `mlkem.node.sha256` alone; scripts/deploy-release.sh now also writes
+   `BUILD-NATIVE.json` (sha256 + commit + build key + native tree + march) so one file answers "which
+   build is this?".
+2. **Artifacts built before #539 carry no `artifact_key`/`native_tree`.** The live 4b3892d addon predates
+   the keyed naming, so its provenance stops at `commit:`. Artifacts built after #539 include both fields.
+
+`deploy-release.sh` and `rollback-release.sh` implement P2/P3. They read the repository with
+`git archive` only, so the 4,535 `chattr +i` flags never leave the tree: there is nothing to unlock and
+nothing that a failed run can leave unlocked.

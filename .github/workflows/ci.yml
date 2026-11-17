@@ -301,6 +301,20 @@ jobs:
       - name: Test the deploy tree gate
         run: node scripts/test-verify-tree-sha.cjs
 
+      - name: Install shellcheck
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
+
+      - name: Shellcheck the release deploy scripts
+        run: >
+          shellcheck -S error scripts/deploy-release.sh scripts/rollback-release.sh
+          scripts/lib/release-common.sh scripts/test-deploy-release.sh
+
+      # Sandbox only: throwaway git repo, fake pm2, local health server. Proves the
+      # post-switch health failure rolls back and the legacy in-place script refuses
+      # to run when the release layout is present.
+      - name: Test the release deploy and rollback
+        run: bash scripts/test-deploy-release.sh
+
   # ─── 文档检查 (single platform) ─────────────────────
   docs-check:
     runs-on: ubuntu-latest
