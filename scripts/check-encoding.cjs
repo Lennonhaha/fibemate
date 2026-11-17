@@ -34,6 +34,7 @@ const GBK_MOJIBAKE_HANZI = [
   '\u9239', // 鈹 — "##" heading marker
   '\u951B', // 锛 — "，" fullwidth comma
   '\u922B', // 鈫 — "→" arrow
+  '\u9225', // 鈥 — "—" em dash; E2 80 94 read as GBK leaves 鈥 plus a bare "?"
   '\u9359', // 鍙 — "号"
   '\u9428', // 鐨 — "的"
   '\u93C3', // 鏃 — "时"
@@ -151,9 +152,30 @@ const SELF_SCRIPTS = new Set([
   'scripts/health-check.js',
 ]);
 
+// Files that quote the fingerprint table on purpose: the audit logs of the
+// 2026-08-14 corruption and the scripts that detect it. Whole-file exemption,
+// because rewriting the surrounding prose would otherwise silently re-arm them
+// and turn CI red for a file whose job is to show what corruption looks like.
+// This list is deliberately explicit: every entry switches the gate off for a
+// whole file, so each one carries its reason. Do not add paths here to make a
+// build pass.
+const DOCUMENTED_SAMPLES = new Set([
+  'docs/audit-log/2026-09-14-pr48-fixes-landed-elsewhere.md', // quotes the hasGarbage regex
+  'docs/audit-log/encoding-repair_2026-08-14.md', // records the repair and the regex
+  'docs/audit-log/gbk-double-misdecode-fix_2026-08-14.md', // documents the 鈥? class
+  'docs/audit-log/gbk-fix-status_2026-08-14.md', // shows the scan command verbatim
+  'docs/audit-log/gbk-fix-verify-cleanup_2026-08-14.md', // before/after of the same scan
+  'docs/audit-log/github-repo-triple-audit_20260815.md', // quotes the detector output
+  'docs/audit-log/memory-history-restore_2026-08-14.md', // notes the intentional regex
+  'scripts/scan-corrupted.sh', // documents the detect regex
+]);
+
+let documentedSamples = 0;
+
 for (const f of files) {
   if (!fs.existsSync(f)) continue;
   if (SELF_SCRIPTS.has(f)) continue;
+  if (DOCUMENTED_SAMPLES.has(f)) { documentedSamples += 1; continue; }
   let buf;
   try { buf = fs.readFileSync(f); } catch (e) { issues.push({ file: f, kind: `unreadable: ${e.message}` }); continue; }
 
@@ -205,28 +227,18 @@ for (const f of files) {
     continue;
   }
   // 5. GBK mojibake fingerprints (legal UTF-8 but semantically garbled)
-  //    Exempt lines that deliberately document the corruption class
-  //    (audit logs / this script itself), same convention as U+FFFD above.
+  //    No line-level heuristic here: the earlier one exempted any line matching
+  //    /鈥\?|鈫\?|锛\?/, i.e. exactly the corruption it was meant to catch, so a
+  //    corrupted line carried its own exemption. Files whose job is to quote the
+  //    table are exempt by path instead (SELF_SCRIPTS, DOCUMENTED_SAMPLES).
   const s5 = buf.toString('utf8');
   const puaChar = hasPuaChar(s5);
   const mojiChar = findMojibakeHanzi(s5);
   if (puaChar || mojiChar) {
-    // Determine whether every offending line is an intentional sample
-    let allIntentional = true;
-    for (const line of s5.split('\n')) {
-      const hasPua = hasPuaChar(line) !== null;
-      const hasMoji = findMojibakeHanzi(line) !== null;
-      if ((hasPua || hasMoji) && !/(hasGarbage|锟斤拷|garbled|乱码|mojibake|detect.*corrupt|misdecode|GBK|\uFFFD|鈥\?|鈫\?|锛\?|→)/.test(line)) {
-        allIntentional = false;
-        break;
-      }
-    }
-    if (!allIntentional) {
-      const kind = puaChar
-        ? `GBK mojibake (PUA U+${puaChar.codePointAt(0).toString(16).toUpperCase()})`
-        : `GBK mojibake (hanzi ${JSON.stringify(mojiChar)})`;
-      issues.push({ file: f, kind });
-    }
+    const kind = puaChar
+      ? `GBK mojibake (PUA U+${puaChar.codePointAt(0).toString(16).toUpperCase()})`
+      : `GBK mojibake (hanzi ${JSON.stringify(mojiChar)})`;
+    issues.push({ file: f, kind });
   }
 }
 
@@ -240,5 +252,6 @@ if (issues.length > 0) {
   process.exit(1);
 }
 
-console.log(`OK: no encoding corruption in ${files.length} checked file(s)`);
+console.log(`OK: no encoding corruption in ${files.length} checked file(s)` +
+  (documentedSamples > 0 ? ` (${documentedSamples} documented sample(s) exempt)` : ''));
 process.exit(0);
