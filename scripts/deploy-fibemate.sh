@@ -13,10 +13,13 @@
 # deploy that "succeeded" but serves an old manifest, a stale mirror or a 404 is a
 # failed deploy, and this script reports it as such instead of printing a green tick.
 #
-# Overridable: REPO_DIR, BASE_URL, PM2_APP, HEALTH_URL, SKIP_RESTART=1, LOCK_RECORD,
-#             PACKAGES_SYNC=1 (copy packages/ without --delete),
-#             REQUIRE_PACKAGES_MATCH=1 (fail instead of warn on packages/ drift),
-#             MLKEM_REQUIRE_NATIVE=1 (fail when the native addon is not deployed),
+# Overridable: REPO_DIR, BASE_URL, PM2_APP, HEALTH_URL, HEALTH_JSON_URL, SKIP_RESTART=1, LOCK_RECORD,
+#             SYNC_TREES (default: "src packages"),
+#             PACKAGES_SYNC=1 (copy packages/ when it is not in SYNC_TREES),
+#             REQUIRE_PACKAGES_MATCH=1 (fail instead of warn on packages/ drift when
+#                                       packages/ is not synced),
+#             NATIVE_FETCH=0 (never download the CI-built addon),
+#             MLKEM_REQUIRE_NATIVE=0 (allow the pure-JS backend; default is 1),
 #             ENV_PERM_STRICT=1 (fail instead of warn when the runtime .env is readable
 #                                by group/other - see issue #529).
 #
@@ -37,7 +40,7 @@ HEALTH_URL="${HEALTH_URL:-http://127.0.0.1:3001/api/mlkem/test}"
 # "OK" while /api/auth/verify still answered with the old rate limit and the
 # old code (issue #500).
 RUNTIME_DIR="${RUNTIME_DIR:-/opt/fibemate-full}"
-SYNC_TREES="${SYNC_TREES:-src}"
+SYNC_TREES="${SYNC_TREES:-src packages}"
 
 APPLY=0
 for arg in "$@"; do
@@ -211,7 +214,15 @@ esac
 BACKUP_DIR="$RUNTIME_DIR/.deploy-backup/$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$BACKUP_DIR"
 for tree in $SYNC_TREES; do
-  tar -czf "$BACKUP_DIR/$tree.tar.gz" -C "$RUNTIME_DIR" "$tree"
+  if [ "$tree" = "packages" ]; then
+    # node_modules/ and native/build/ are runtime state, not repository content; a
+    # backup that copies them is slower and larger without being restorable on its own.
+    tar -czf "$BACKUP_DIR/$tree.tar.gz" -C "$RUNTIME_DIR" \
+      --exclude="$tree/node_modules" --exclude="$tree/*/node_modules" \
+      --exclude="$tree/*/native/build" "$tree"
+  else
+    tar -czf "$BACKUP_DIR/$tree.tar.gz" -C "$RUNTIME_DIR" "$tree"
+  fi
 done
 echo "      runtime backup: $BACKUP_DIR"
 
@@ -219,53 +230,80 @@ for tree in $SYNC_TREES; do
   # --delete makes the tree identical instead of merely up to date: a module that
   # no longer exists in the repo must not keep loading in production. Backup files
   # and patch leftovers are excluded from the delete so they survive on purpose.
-  rsync -a --delete \
-    --exclude '*.bak' --exclude '*.bak.*' --exclude '*.orig' --exclude '*.rej' \
-    "$REPO_DIR/$tree/" "$RUNTIME_DIR/$tree/"
+  if [ "$tree" = "packages" ]; then
+    # node_modules/ is installed on the host and exists nowhere in git; --exclude
+    # protects it from --delete. native/build/ holds the addon, which is placed by
+    # fetch-native-artifact.sh, not by a checkout (#507, #520).
+    rsync -a --delete \
+      --exclude 'node_modules/' --exclude '*/node_modules/' --exclude '*/native/build/' \
+      --exclude '*.bak' --exclude '*.bak.*' --exclude '*.orig' --exclude '*.rej' \
+      "$REPO_DIR/$tree/" "$RUNTIME_DIR/$tree/"
+  else
+    rsync -a --delete \
+      --exclude '*.bak' --exclude '*.bak.*' --exclude '*.orig' --exclude '*.rej' \
+      "$REPO_DIR/$tree/" "$RUNTIME_DIR/$tree/"
+  fi
   echo "      synced $tree"
 done
 
 # The gate. Every tracked file in every synced tree must be byte-identical to the
-# checkout, and no unexpected file may exist on the runtime side.
+# commit, read from git objects rather than the checkout: a Windows checkout rewrites
+# line endings, and hashing that certifies bytes the commit does not contain.
 MISMATCH=0
-CHECKED=0
 for tree in $SYNC_TREES; do
-  while IFS= read -r f; do
-    rel="${f#"$tree"/}"
-    CHECKED=$((CHECKED + 1))
-    if [ ! -f "$RUNTIME_DIR/$tree/$rel" ]; then
-      echo "      MISMATCH $tree/$rel (missing in the runtime tree)" >&2
-      MISMATCH=$((MISMATCH + 1))
-      continue
-    fi
-    repo_sha="$(sha256sum "$REPO_DIR/$f" | cut -d' ' -f1)"
-    run_sha="$(sha256sum "$RUNTIME_DIR/$tree/$rel" | cut -d' ' -f1)"
-    if [ "$repo_sha" != "$run_sha" ]; then
-      echo "      MISMATCH $tree/$rel (repo ${repo_sha:0:12} != runtime ${run_sha:0:12})" >&2
-      MISMATCH=$((MISMATCH + 1))
-    fi
-  done < <(git -C "$REPO_DIR" ls-tree -r --name-only HEAD "$tree")
+  if ! node "$REPO_DIR/scripts/verify-tree-sha.cjs" \
+      --repo "$REPO_DIR" --commit "$NEW_HEAD" --tree "$tree" --target "$RUNTIME_DIR"; then
+    MISMATCH=$((MISMATCH + 1))
+  fi
 done
 if [ "$MISMATCH" -ne 0 ]; then
-  echo "FAIL: $MISMATCH of $CHECKED files still differ after the sync; the API would serve old code." >&2
+  echo "FAIL: the runtime tree does not match $NEW_HEAD; the API would serve old code." >&2
   echo "      runtime backup kept at $BACKUP_DIR" >&2
   exit 1
 fi
-echo "      runtime tree matches $NEW_HEAD: $CHECKED files, sha256 identical"
+echo "      runtime tree matches $NEW_HEAD"
 
-# [3d/6] Native ML-KEM addon: prove it is there, and that it is the build we think.
+# [3d/6] Native ML-KEM addon: the bytes come from CI, they verify against their
+# manifest, and they actually load in the runtime tree.
 #
-# The addon is a binary that no `git checkout` produces. Until the deploy builds it
-# itself, this step can only measure: present/absent, sha against a build manifest,
-# and mtime against the newest native source commit. A missing addon is a WARN by
-# default, because today's deploy does not build one - making that a hard failure
-# would block every deploy until CI builds it (#520 follow-up).
-echo "[3d/6] checking the native ML-KEM addon..."
+# The addon is a binary that no `git checkout` produces. Fetching it by build key
+# (native sources + the workflow that holds the flags) means a deploy of a commit that
+# never touched native code still gets the artifact matching the native tree it ships,
+# instead of keeping whatever happens to be on disk. That is how the pure-JS fallback
+# survived for ~75 days (#507, #520).
+echo "[3d/6] provisioning the native ML-KEM addon..."
 NATIVE_REL="packages/pqc-kem/native/build/Release/mlkem.node"
 NATIVE_NODE="$RUNTIME_DIR/$NATIVE_REL"
 NATIVE_MANIFEST="$NATIVE_NODE.sha256"
 NEWEST_NATIVE_TS="$(git -C "$REPO_DIR" log -1 --format=%ct -- 'packages/pqc-kem/native/*.c' 'packages/pqc-kem/native/*.h' 2>/dev/null || echo 0)"
 NEWEST_NATIVE_TS="${NEWEST_NATIVE_TS:-0}"
+MLKEM_REQUIRE_NATIVE="${MLKEM_REQUIRE_NATIVE:-1}"
+NATIVE_KEY="$(node "$REPO_DIR/scripts/native-artifact-key.cjs" --repo "$REPO_DIR" --commit "$NEW_HEAD" 2>/dev/null || true)"
+echo "      build key: ${NATIVE_KEY:-<unavailable>}"
+
+NATIVE_NEEDS_FETCH=0
+if [ ! -f "$NATIVE_NODE" ]; then
+  NATIVE_NEEDS_FETCH=1
+elif [ ! -f "$NATIVE_MANIFEST" ]; then
+  NATIVE_NEEDS_FETCH=1
+elif [ "$(head -1 "$NATIVE_MANIFEST" | awk '{print $1}')" != "$(sha256sum "$NATIVE_NODE" | cut -d' ' -f1)" ]; then
+  NATIVE_NEEDS_FETCH=1
+fi
+
+if [ "$NATIVE_NEEDS_FETCH" = "1" ] && [ "${NATIVE_FETCH:-auto}" != "0" ]; then
+  if [ -z "$NATIVE_KEY" ]; then
+    echo "      WARN: cannot compute the build key; skipping the artifact fetch" >&2
+  else
+    echo "      fetching the CI-built addon for key $NATIVE_KEY"
+    if bash "$REPO_DIR/scripts/fetch-native-artifact.sh" --key "$NATIVE_KEY" --dest "$RUNTIME_DIR"; then
+      echo "      artifact placed"
+    else
+      FETCH_RC=$?
+      echo "      WARN: fetch-native-artifact.sh exited $FETCH_RC" >&2
+    fi
+  fi
+fi
+
 if [ -f "$NATIVE_NODE" ]; then
   NATIVE_SHA="$(sha256sum "$NATIVE_NODE" | cut -d' ' -f1)"
   NATIVE_MTIME="$(stat -c %Y "$NATIVE_NODE")"
@@ -284,46 +322,72 @@ if [ -f "$NATIVE_NODE" ]; then
   fi
   if [ "$NEWEST_NATIVE_TS" -gt 0 ] && [ "$NATIVE_MTIME" -lt "$NEWEST_NATIVE_TS" ]; then
     echo "      WARN: addon mtime is older than the newest native source commit ($(date -u -d "@$NEWEST_NATIVE_TS" +%Y-%m-%dT%H:%M:%SZ))" >&2
-    echo "      WARN: rebuild it before trusting native parity" >&2
+  fi
+
+  # Loading it is the only proof that the ABI matches this host's Node. A binary that
+  # passes a sha256 check and then fails to dlopen is exactly the failure the manifest
+  # cannot see.
+  echo "      loading the addon from the runtime tree..."
+  LOAD_RC=0
+  LOAD_OUT="$(node -e '
+const dir = process.argv[1];
+const pk = require(dir);
+if (!pk.usingNative) { console.error("usingNative=false (JS fallback)"); process.exit(2); }
+const k = pk.generateKeypair();
+const e = pk.encapsulate(k.publicKey);
+const d = pk.decapsulate(k.secretKey, e.ciphertext);
+if (!Buffer.from(e.sharedSecret).equals(Buffer.from(d))) { console.error("roundtrip failed"); process.exit(3); }
+console.log("usingNative=true, roundtrip PASS");
+' "$RUNTIME_DIR/packages/pqc-kem" 2>&1)" || LOAD_RC=$?
+  printf '%s\n' "$LOAD_OUT" | sed 's/^/      /'
+  if [ "$LOAD_RC" -ne 0 ]; then
+    if [ "$MLKEM_REQUIRE_NATIVE" = "1" ]; then
+      echo "FAIL: the addon did not load (rc=$LOAD_RC) and MLKEM_REQUIRE_NATIVE=1" >&2
+      echo "      set MLKEM_REQUIRE_NATIVE=0 only to accept the JS fallback deliberately" >&2
+      exit 1
+    fi
+    echo "      WARN: the addon did not load (rc=$LOAD_RC); the API will run the pure-JS backend" >&2
   fi
 else
-  echo "      WARN: $NATIVE_REL is missing; the API will run the pure-JS backend" >&2
-  if [ "${MLKEM_REQUIRE_NATIVE:-0}" = "1" ]; then
+  echo "      WARN: $NATIVE_REL is missing; the API would run the pure-JS backend" >&2
+  if [ "$MLKEM_REQUIRE_NATIVE" = "1" ]; then
     echo "FAIL: MLKEM_REQUIRE_NATIVE=1 but the addon is not deployed" >&2
     exit 1
   fi
 fi
 
-# [3e/6] packages/ is deliberately not in SYNC_TREES: `rsync --delete` over it would
-# remove the runtime-only node_modules the API actually loads (#507). Report the drift
-# instead of hiding it, and make it blocking only when asked.
+# [3e/6] packages/ is in SYNC_TREES by default, so [3c] already proved it. When a
+# caller narrows SYNC_TREES (SYNC_TREES=src), still measure the drift, copy only on
+# request, and never --delete: that would remove the runtime-only node_modules the API
+# loads (#507).
 echo "[3e/6] comparing packages/ against $NEW_HEAD..."
-if [ "${PACKAGES_SYNC:-0}" = "1" ]; then
-  rsync -a --exclude 'node_modules/' --exclude 'build/' \
-    "$REPO_DIR/packages/" "$RUNTIME_DIR/packages/"
-  echo "      copied packages/ without --delete (runtime node_modules preserved)"
-fi
-PK_SAME=0
-PK_DIFF=0
-PK_MISSING=0
-while IFS= read -r f; do
-  rel="${f#packages/}"
-  if [ ! -f "$RUNTIME_DIR/packages/$rel" ]; then
-    PK_MISSING=$((PK_MISSING + 1))
-    continue
+PACKAGES_SYNCED=0
+for t in $SYNC_TREES; do [ "$t" = "packages" ] && PACKAGES_SYNCED=1; done
+if [ "$PACKAGES_SYNCED" = "1" ]; then
+  echo "      packages/ is in SYNC_TREES; [3c] verified every tracked file"
+else
+  if [ "${PACKAGES_SYNC:-0}" = "1" ]; then
+    rsync -a --exclude 'node_modules/' --exclude '*/node_modules/' --exclude '*/native/build/' \
+      "$REPO_DIR/packages/" "$RUNTIME_DIR/packages/"
+    echo "      copied packages/ without --delete (runtime node_modules preserved)"
   fi
-  if [ "$(sha256sum "$REPO_DIR/$f" | cut -d' ' -f1)" = "$(sha256sum "$RUNTIME_DIR/packages/$rel" | cut -d' ' -f1)" ]; then
-    PK_SAME=$((PK_SAME + 1))
-  else
-    PK_DIFF=$((PK_DIFF + 1))
-  fi
-done < <(git -C "$REPO_DIR" ls-tree -r --name-only HEAD packages | grep -v '/native/build/' | grep -v '/node_modules/' || true)
-echo "      tracked files: same=$PK_SAME differ=$PK_DIFF missing=$PK_MISSING"
-if [ "$PK_DIFF" -ne 0 ] || [ "$PK_MISSING" -ne 0 ]; then
-  echo "      WARN: runtime packages/ does not match the checkout (see #507); run with PACKAGES_SYNC=1 to copy" >&2
-  if [ "${REQUIRE_PACKAGES_MATCH:-0}" = "1" ]; then
-    echo "FAIL: REQUIRE_PACKAGES_MATCH=1 and $PK_DIFF files differ, $PK_MISSING are missing" >&2
-    exit 1
+  PK_JSON="$(mktemp)"
+  node "$REPO_DIR/scripts/verify-tree-sha.cjs" --repo "$REPO_DIR" --commit "$NEW_HEAD" \
+    --tree packages --target "$RUNTIME_DIR" --report --json > "$PK_JSON" 2>/dev/null || true
+  pk_field() {
+    node -e 'const fs=require("fs");const j=JSON.parse(fs.readFileSync(process.argv[1],"utf8"));const v=j[process.argv[2]];console.log(v===undefined?"":v)' "$PK_JSON" "$1"
+  }
+  PK_SAME="$(pk_field same)"
+  PK_DIFF="$(pk_field different)"
+  PK_MISSING="$(pk_field missing)"
+  rm -f "$PK_JSON"
+  echo "      tracked files: same=$PK_SAME differ=$PK_DIFF missing=$PK_MISSING"
+  if [ "$PK_DIFF" -ne 0 ] || [ "$PK_MISSING" -ne 0 ]; then
+    echo "      WARN: runtime packages/ does not match the checkout (see #507); add packages to SYNC_TREES or run with PACKAGES_SYNC=1" >&2
+    if [ "${REQUIRE_PACKAGES_MATCH:-0}" = "1" ]; then
+      echo "FAIL: REQUIRE_PACKAGES_MATCH=1 and $PK_DIFF files differ, $PK_MISSING are missing" >&2
+      exit 1
+    fi
   fi
 fi
 
@@ -398,6 +462,29 @@ else
     exit 1
   fi
   echo "      loaded entry point matches the repo: ${LIVE_ENTRY_SHA:0:12}"
+
+  # /health reports which backend the process actually loaded. A deploy that shipped
+  # .node bytes but booted the JS fallback (stale pm2 env, dlopen failure caught and
+  # swallowed) is the failure this line exists to catch, from outside the process.
+  HEALTH_JSON_URL="${HEALTH_JSON_URL:-http://127.0.0.1:3001/health}"
+  BACKEND="$(curl -fsS "$HEALTH_JSON_URL" 2>/dev/null | node -e '
+let d="";process.stdin.on("data",(c)=>{d+=c});process.stdin.on("end",()=>{
+  try { const j=JSON.parse(d); process.stdout.write((j.mlkem && j.mlkem.backend) || ""); } catch (e) {}
+});' 2>/dev/null || true)"
+  if [ -n "$BACKEND" ]; then
+    echo "      mlkem.backend: $BACKEND"
+    if [ "$BACKEND" != "native" ] && [ "$MLKEM_REQUIRE_NATIVE" = "1" ]; then
+      echo "FAIL: the API reports mlkem.backend=$BACKEND, but MLKEM_REQUIRE_NATIVE=1" >&2
+      echo "      the addon is on disk but not loaded; check the pm2 log for a dlopen error" >&2
+      exit 1
+    fi
+  else
+    echo "      WARN: $HEALTH_JSON_URL did not report mlkem.backend" >&2
+    if [ "$MLKEM_REQUIRE_NATIVE" = "1" ]; then
+      echo "FAIL: MLKEM_REQUIRE_NATIVE=1 but the backend cannot be verified" >&2
+      exit 1
+    fi
+  fi
 fi
 
 # [6/6] Black-box delivery gate. This is the step that turns "I ran the script" into
