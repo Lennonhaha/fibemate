@@ -11,6 +11,9 @@
 #   2. a post-switch health failure rolls `current` back and exits non-zero
 #   3. a successful deploy replaces the pointer and leaves no .tmp directories
 #   4. rollback --to restores the earlier release and reports its elapsed time
+#   5. a rollback whose target does not start puts the original release back
+#   6. rollback --dry-run changes nothing
+#   7. the legacy in-place script refuses to run once a release is serving
 #
 # Exit: 0 all cases passed, 1 a case failed.
 set -uo pipefail
@@ -22,6 +25,10 @@ FAIL=0
 
 cleanup() {
   [ -n "${HEALTH_PID:-}" ] && kill "$HEALTH_PID" 2>/dev/null
+  if [ "${KEEP_SANDBOX:-0}" = "1" ]; then
+    echo "sandbox kept at $SANDBOX"
+    return 0
+  fi
   rm -rf "$SANDBOX"
 }
 trap cleanup EXIT
@@ -45,7 +52,7 @@ check() {
 # ---------------------------------------------------------------- sandbox fixtures
 mkdir -p "$SANDBOX/repo/src" "$SANDBOX/fibemate/releases" "$SANDBOX/fibemate/shared" "$SANDBOX/bin" "$SANDBOX/health"
 printf 'JWT_SECRET=%s\n' "$(printf 'x%.0s' $(seq 1 40))" > "$SANDBOX/fibemate/shared/.env"
-printf '#!/bin/bash\necho "pm2 $*" >> "$PM2_LOG"\nexit 0\n' > "$SANDBOX/bin/pm2"
+printf '#!/bin/bash\necho "pm2 $*" >> "$PM2_LOG"\nif [ -n "${PM2_FAIL_PATTERN:-}" ] && printf %s "$*" | grep -q -- "$PM2_FAIL_PATTERN"; then\n  echo "pm2: simulated start failure" >&2\n  exit 1\nfi\nexit 0\n' > "$SANDBOX/bin/pm2"
 chmod +x "$SANDBOX/bin/pm2"
 
 cat > "$SANDBOX/health/server.cjs" <<'NODE'
@@ -131,13 +138,21 @@ rc=$?
 check "rollback --to restores the earlier release" "$?"
 
 # ---------------------------------------------------------------- case 5
+MLKEM_REQUIRE_NATIVE=0 PM2_FAIL_PATTERN="releases/$B" \
+  bash "$HERE/rollback-release.sh" --to "$B" >"$SANDBOX/rb-fail.log" 2>&1
+rc=$?
+printf '      rc=%s current=%s (expected %s)\n' "$rc" "$(readlink -f "$SANDBOX/fibemate/current")" "$SANDBOX/fibemate/releases/$A"
+[ "$rc" -ne 0 ] && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$A" ]
+check "rollback restores the original when the target does not start" "$?"
+
+# ---------------------------------------------------------------- case 6
 MLKEM_REQUIRE_NATIVE=0 bash "$HERE/rollback-release.sh" --dry-run >"$SANDBOX/dry.log" 2>&1
 rc=$?
 [ "$rc" -eq 0 ] && grep -q "would switch" "$SANDBOX/dry.log" \
   && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$A" ]
 check "rollback --dry-run changes nothing" "$?"
 
-# ---------------------------------------------------------------- case 6
+# ---------------------------------------------------------------- case 7
 CURRENT_MARKER="$SANDBOX/fibemate/current" REPO_DIR="$SANDBOX/repo" \
   RUNTIME_DIR="$SANDBOX/nowhere" bash "$HERE/deploy-fibemate.sh" >"$SANDBOX/legacy.log" 2>&1
 rc=$?

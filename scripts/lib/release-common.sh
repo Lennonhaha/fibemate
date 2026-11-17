@@ -78,9 +78,14 @@ switch_current() {
 # pm2 cannot retarget a running app at a new script path, so the app is recreated.
 # That is also why the release directory must be final (renamed into place) before
 # this runs: pm2 records the absolute path.
+#
+# The exit status of `pm2 start` is returned, not `pm2 save`'s: a start that fails
+# must reach the caller, or a rollback would report success for a process that is
+# not running.
 start_app() {
   local dir="$1"
   "$PM2_CMD" delete "$PM2_APP" >/dev/null 2>&1 || true
-  "$PM2_CMD" start "$dir/src/index.js" --name "$PM2_APP" --cwd "$dir" >/dev/null
-  "$PM2_CMD" save >/dev/null 2>&1 || true
+  "$PM2_CMD" start "$dir/src/index.js" --name "$PM2_APP" --cwd "$dir" >/dev/null || return 1
+  "$PM2_CMD" save >/dev/null 2>&1 || printf 'WARN: pm2 save failed; the started process is not persisted\n' >&2
+  return 0
 }

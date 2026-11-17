@@ -7,9 +7,9 @@
 # Default target is the most recent release directory that is not the current one.
 # --to accepts a full or abbreviated sha (it must match exactly one release).
 #
-# The switch is one rename(2). If the restored release does not come up healthy,
-# the script switches back to the release it started from, so a rollback cannot
-# leave the site on a third, unintended tree.
+# The switch is one rename(2). If the restored release does not come up healthy, or
+# does not start at all, the script switches back to the release it started from, so
+# a rollback cannot leave the site on a third, unintended tree.
 #
 # Overridable: FIBEMATE_ROOT, PM2_APP, PM2_CMD, HEALTH_JSON_URL,
 #              MLKEM_REQUIRE_NATIVE (default 1).
@@ -93,16 +93,27 @@ if [ -z "$EXPECT_BACKEND" ]; then
 fi
 
 START_TS="$(date +%s)"
-switch_current "$TARGET"
+
+# Any failure after this point has already moved the pointer, so every path has to put
+# ORIGINAL back before exiting: a rollback must not strand the site on a release that
+# is not running.
+restore_original() {
+  local reason="$1"
+  printf 'FAIL: %s\n' "$reason" >&2
+  printf 'FAIL: switching back to %s\n' "$ORIGINAL" >&2
+  switch_current "$ORIGINAL" || printf 'FAIL: could not point current back at %s\n' "$ORIGINAL" >&2
+  start_app "$ORIGINAL" || printf 'FAIL: could not restart %s from %s\n' "$PM2_APP" "$ORIGINAL" >&2
+  wait_for_health "$EXPECT_BACKEND" "$HEALTH_TIMEOUT" >/dev/null \
+    || printf 'FAIL: the original release does not report %s either\n' "$EXPECT_BACKEND" >&2
+  exit 1
+}
+
+switch_current "$TARGET" || restore_original "could not switch current to $TARGET"
 log "current -> $TARGET"
-start_app "$TARGET"
+start_app "$TARGET" || restore_original "could not start $PM2_APP from $TARGET"
 
 if ! SEEN="$(wait_for_health "$EXPECT_BACKEND" "$HEALTH_TIMEOUT")"; then
-  printf 'FAIL: %s reports %s, expected %s; restoring %s\n' "$HEALTH_JSON_URL" "$SEEN" "$EXPECT_BACKEND" "$ORIGINAL" >&2
-  switch_current "$ORIGINAL"
-  start_app "$ORIGINAL"
-  wait_for_health "$EXPECT_BACKEND" "$HEALTH_TIMEOUT" >/dev/null || printf 'FAIL: the original release is not healthy either\n' >&2
-  exit 1
+  restore_original "$HEALTH_JSON_URL reports $SEEN, expected $EXPECT_BACKEND"
 fi
 
 ELAPSED=$(( $(date +%s) - START_TS ))

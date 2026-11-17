@@ -87,13 +87,11 @@ if [ "$CURRENT_BEFORE" = "$TARGET" ] && [ -f "$TARGET/BUILD-MANIFEST.json" ]; th
   exit 0
 fi
 
-# A release directory is only trusted if it carries its manifest. Anything else is
-# a half-finished build from an interrupted run and is rebuilt from scratch.
+# A release directory is only trusted if it carries its manifest. A directory without
+# one is an interrupted build; refuse instead of renaming it aside, because a failed
+# rename would leave the release path missing rather than stale.
 if [ -d "$TARGET" ] && [ ! -f "$TARGET/BUILD-MANIFEST.json" ]; then
-  echo "WARN: $TARGET exists without BUILD-MANIFEST.json; it will be rebuilt" >&2
-  TARGET_REUSABLE=0
-else
-  TARGET_REUSABLE=1
+  die "$TARGET exists without BUILD-MANIFEST.json (interrupted build); remove it and rerun"
 fi
 
 if [ "$DRY_RUN" -eq 1 ]; then
@@ -103,6 +101,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
   [ "$SKIP_NPM" -eq 1 ] || echo "  3. npm ci --omit=dev in the release tree"
   if [ -n "$ARTIFACT_DIR" ]; then
     echo "  4. place mlkem.node from $ARTIFACT_DIR (offline, verified against its manifest)"
+    echo "     the directory must contain mlkem.node, mlkem.node.sha256 and build-info.txt"
   else
     echo "  4. place mlkem.node by build key via scripts/fetch-native-artifact.sh (needs gh auth)"
   fi
@@ -112,12 +111,19 @@ if [ "$DRY_RUN" -eq 1 ]; then
   echo "  8. wait for $HEALTH_JSON_URL to report mlkem.backend=native"
   echo "     on failure: switch back to ${CURRENT_BEFORE:-<none>} and restart"
   if [ -n "$ARTIFACT_DIR" ]; then
-    if [ -f "$ARTIFACT_DIR/mlkem.node" ] && [ -f "$ARTIFACT_DIR/mlkem.node.sha256" ]; then
-      echo "artifact dir: present (mlkem.node + manifest)"
+    missing=""
+    for f in mlkem.node mlkem.node.sha256 build-info.txt; do
+      [ -f "$ARTIFACT_DIR/$f" ] || missing="$missing $f"
+    done
+    if [ -z "$missing" ]; then
+      echo "artifact dir: present (mlkem.node + sha256 + build-info)"
     else
-      echo "artifact dir: INCOMPLETE (needs mlkem.node and mlkem.node.sha256)" >&2
+      echo "artifact dir: INCOMPLETE, missing:$missing" >&2
       exit 1
     fi
+  fi
+  if [ -d "$TARGET" ]; then
+    echo "target dir: already built; the existing tree will be verified and reused"
   fi
   exit 0
 fi
@@ -140,8 +146,11 @@ restore_previous() {
     return 1
   }
   log "restoring $CURRENT_BEFORE"
-  switch_current "$CURRENT_BEFORE"
-  start_app "$CURRENT_BEFORE"
+  switch_current "$CURRENT_BEFORE" || printf 'FAIL: could not point current back at %s\n' "$CURRENT_BEFORE" >&2
+  start_app "$CURRENT_BEFORE" || {
+    printf 'FAIL: could not restart %s from %s\n' "$PM2_APP" "$CURRENT_BEFORE" >&2
+    return 1
+  }
   local seen
   seen="$(wait_for_health "${EXPECT_BACKEND:-native}" "$HEALTH_TIMEOUT")" || {
     printf 'FAIL: restored release does not report %s (saw %s)\n' "${EXPECT_BACKEND:-native}" "$seen" >&2
@@ -165,7 +174,7 @@ on_error() {
 trap on_error ERR
 
 # ---------------------------------------------------------------- build the tree
-if [ "$TARGET_REUSABLE" -eq 1 ] && [ -d "$TARGET" ]; then
+if [ -d "$TARGET" ]; then
   echo "[1/8] reusing the existing release tree"
   NEW_DIR="$TARGET"
 else
@@ -238,7 +247,7 @@ node "$SCRIPT_DIR/write-build-manifest.cjs" --repo "$REPO_DIR" --commit "$FULL_S
 
 echo "[6/8] verifying every tracked file against $FULL_SHA"
 node "$SCRIPT_DIR/verify-tree-sha.cjs" --repo "$REPO_DIR" --commit "$FULL_SHA" \
-  --tree src --tree packages --target "$NEW_DIR"
+  --tree src --tree packages --tree www --target "$NEW_DIR"
 
 echo "[7/8] loading the addon from the new tree"
 if [ "$MLKEM_REQUIRE_NATIVE" = "1" ]; then
@@ -258,16 +267,8 @@ fi
 
 # ---------------------------------------------------------------- make it current
 if [ "$NEW_DIR" = "$TMP" ]; then
-  if [ -d "$TARGET" ]; then
-    OLD="$RELEASES/.$FULL_SHA.old.$$"
-    mv "$TARGET" "$OLD"
-    mv "$TMP" "$TARGET"
-    CLEANED=1
-    rm -rf "$OLD"
-  else
-    mv "$TMP" "$TARGET"
-    CLEANED=1
-  fi
+  mv "$TMP" "$TARGET"
+  CLEANED=1
 fi
 
 echo "[8/8] switching current and restarting $PM2_APP"
@@ -275,7 +276,8 @@ switch_current "$TARGET"
 log "current -> $TARGET"
 
 if [ "$NO_RESTART" -eq 1 ]; then
-  log "--no-restart: the running process still serves the previous release"
+  echo "WARNING: --no-restart leaves the API on the previous release while nginx serves" >&2
+  echo "WARNING: the new www. Debugging only; run rollback-release.sh or restart pm2." >&2
   exit 0
 fi
 
