@@ -15,6 +15,8 @@ Every number below can be re-measured with the command next to it. If it does no
 | 文档-证据一致 | **drift 0**（denied 9） | 2026-11-17 · fibemate-tools `bb7ced4` | `verifact verify --no-cache` |
 
 > 第三个锚点的意思：仓库里 2,241 条"文档声称的数字"被逐条绑定到真实产物，漂移 0 条。被拒绑的 9 条不是"关掉了"，每条的"真值在哪、候选为什么不算"都写在 `verifact.json` 的 `note` 里。
+>
+> **核验率按真实口径写**：verified 136 / code-artifact 2,241 = **6.07%**（对全部受判 2,322 条为 5.86%）。剩下的 220 ambiguous + 1,867 unbound 是**待补的工作量**，不当作已完成，也不靠换分母把它做高。
 
 > ⚠️ **安全声明 / Security Notice**
 >
