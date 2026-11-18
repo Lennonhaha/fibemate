@@ -23,7 +23,8 @@ jobs:
     # Needed only by the publish step below. Pull requests from forks never reach it
     # (the step is gated on the event), so a fork gets read-only permissions as usual.
     permissions:
-      contents: write
+      contents: write   # publish the release assets below
+      id-token: write   # keyless cosign: Fulcio trades this OIDC token for a short-lived cert
     strategy:
       fail-fast: false
       matrix:
@@ -187,6 +188,75 @@ jobs:
           fi
           gh release upload "$tag" mlkem.node mlkem.node.sha256 build-info.txt
           echo "published $tag: ${new:0:12}"
+
+      # A release asset that nobody can check is a download, not evidence. The signing
+      # below is what the OpenSSF Scorecard "Signed-Releases" probe reads: it looks for
+      # an asset whose name ends in .asc/.minisig/.sig/.sign/.sigstore/.sigstore.json
+      # (probes/releasesAreSigned), and .intoto.jsonl for the provenance probe. So the
+      # signature has to be an uploaded asset, not a local file -- and .sig is what the
+      # existing backfill workflow already produces, so both paths agree.
+      #
+      # Keyless (Fulcio + Rekor) keeps the private key out of this repo entirely; the
+      # identity in the certificate is this workflow file, which is why the verification
+      # below pins the identity rather than trusting any valid cert.
+      - name: Install cosign
+        if: github.event_name != 'pull_request'
+        uses: sigstore/cosign-installer@756fe2d284c7292c4e9b62c8a28f1e5629c59532 # v4.1.3
+
+      - name: Sign the published assets (keyless)
+        if: github.event_name != 'pull_request'
+        working-directory: packages/pqc-kem/native/build/Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_KEY: ${{ steps.key.outputs.key }}
+          NODE_MAJOR_FOR_TAG: ${{ matrix.node }}
+        run: |
+          set -euo pipefail
+          tag="native-node${NODE_MAJOR_FOR_TAG}-${ARTIFACT_KEY}"
+
+          # Capture first, grep second: `gh ... | grep -q` would let grep exit early,
+          # SIGPIPE the pipe, and turn a hit into a pipefail error (notes, section 14).
+          assets="$(gh release view "$tag" --json assets --jq '.assets[].name')"
+          if printf '%s\n' "$assets" | grep -qx 'mlkem.node.sig'; then
+            echo "already signed: $tag"
+            exit 0
+          fi
+
+          for f in mlkem.node mlkem.node.sha256 build-info.txt; do
+            [ -f "$f" ] || continue
+            echo "signing: $f"
+            cosign sign-blob --yes \
+              --new-bundle-format=false \
+              --use-signing-config=false \
+              --output-signature "$f.sig" --output-certificate "$f.pem" "$f"
+          done
+
+          # Verify before publishing: a signature that was never checked is half a gate.
+          for f in mlkem.node mlkem.node.sha256 build-info.txt; do
+            [ -f "$f.sig" ] || continue
+            cosign verify-blob \
+              --signature "$f.sig" --certificate "$f.pem" \
+              --certificate-identity-regexp "^https://github\\.com/${GITHUB_REPOSITORY}/" \
+              --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+              "$f"
+          done
+
+          # Reverse check: verification must be able to fail on this exact artifact,
+          # otherwise "verified" only proves that cosign exits 0.
+          cp mlkem.node "$RUNNER_TEMP/tampered.node"
+          printf 'x' >> "$RUNNER_TEMP/tampered.node"
+          if cosign verify-blob \
+               --signature mlkem.node.sig --certificate mlkem.node.pem \
+               --certificate-identity-regexp "^https://github\\.com/${GITHUB_REPOSITORY}/" \
+               --certificate-oidc-issuer https://token.actions.githubusercontent.com \
+               "$RUNNER_TEMP/tampered.node" >/dev/null 2>&1; then
+            echo "FATAL: the signature verified a modified copy of mlkem.node" >&2
+            exit 1
+          fi
+          echo "negative control: a modified copy is rejected"
+
+          gh release upload "$tag" ./*.sig ./*.pem --clobber
+          gh release view "$tag" --json assets --jq '.assets[] | "\(.name) \(.size)"'
 
       - name: Verify native addon loads
         run: |
