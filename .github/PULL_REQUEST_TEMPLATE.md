@@ -55,3 +55,4 @@ body:
         - label: 代码不含硬编码密钥/路径
         - label: 测试已更新/新增
         - label: 若为性能改动，已附 before/after 基准数据（scripts/bench-pqc.js）
+        - label: 文档类改动已跑 `node scripts/check-encoding.cjs`，且禁用字面量 grep 为 0 命中

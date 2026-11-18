@@ -86,6 +86,32 @@ and require a security reasoning section in the PR (see [Code Review](#code-revi
    ```
 7. Submit the PR against `main` (not `master`)
 
+### Pre-submit self-checks (recommended)
+
+Two failures keep showing up in documentation PRs, and both take seconds to catch locally.
+
+**1. Encoding damage.** PowerShell redirection and editor saves have both produced GBK mojibake and U+FFFD replacement characters in this repository.
+
+```bash
+node scripts/check-encoding.cjs                  # all tracked text files
+node scripts/check-encoding.cjs docs/x.md        # or just what you touched
+```
+
+**2. A forbidden phrase written inside the rule that forbids it.** If a rule says "do not publish X", the sentence explaining the rule must not contain X either, or the grep that proves compliance still hits the rule document.
+
+```bash
+git grep -n -E "<pattern>" -- README.md docs www tools
+```
+
+To automate both, enable the optional hook (not required, not enforced for contributors):
+
+```bash
+git config core.hooksPath scripts/hooks
+```
+
+It runs the encoding check on staged text files and the patterns listed in `scripts/hooks/forbidden-literals.txt`. Skip it for a single commit with `git commit --no-verify`.
+
+
 ### Commit Style
 
 - Write in English
