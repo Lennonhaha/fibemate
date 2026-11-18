@@ -2475,7 +2475,7 @@
       </div>
 
       <div class="verification-footer">
-        <a href="/docs/timestamp-manifest.json" class="btn-secondary">📥 下载存证清单 (JSON)</a>
+        <a href="/docs/tsa/timestamp-manifest.json" class="btn-secondary">📥 下载存证清单 (JSON)</a>
       </div>
 
       <div class="verification-note">
@@ -2908,7 +2908,7 @@
         </details>
         <p style="margin:1rem 0 0;font-size:0.72rem;color:#646c78;line-height:1.6;">
         <small>验证: <code style="font-size:0.7rem;">openssl ts -verify -data [file] -in [file].tsr -CAfile cacert.pem</code></small><br>
-        <small>完整清单: <code style="font-size:0.7rem;">docs/timestamp-manifest.json</code> | 共 374 份 .tsr 文件（2026-11-17 实测；计数口径：<code>git ls-files '*.tsr'</code> 全仓已追踪文件 —— 其中 261 个不同 basename、93 个 lg-NNN 令牌、222 个不带 lg 编号的 basename、113 份为逐字节副本；逐条清单见 <code>docs/tsa/timestamp-manifest.json</code>（逐条 374 行，与本节同口径，CI 对账）） | 联合信任 tsa.cn (付费) + DigiCert 双源存证</small>
+        <small>完整清单（逐条 374 行，与本节同口径，CI 对账）: <code style="font-size:0.7rem;">docs/tsa/timestamp-manifest.json</code> | 共 374 份 .tsr 文件（2026-11-17 实测；计数口径：<code>git ls-files '*.tsr'</code> 全仓已追踪文件 —— 其中 261 个不同 basename、93 个 lg-NNN 令牌、222 个不带 lg 编号的 basename、113 份为逐字节副本） | 联合信任 tsa.cn (付费) + DigiCert 双源存证</small>
         </p>
         <p style="margin: 0.8rem 0 0; font-size: 0.8rem; color: #646c78;">GPLv3 已开源 (2026-08-31) · 独立技术研究项目 · 非商业运营 · <a href="/docs/security-limitations.html" style="color:#f59e0b;text-decoration:underline;">⚠ 安全限制声明</a></p>
 

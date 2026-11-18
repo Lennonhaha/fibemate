@@ -68,6 +68,7 @@ const manifestWith = (rows) => JSON.stringify(rows, null, 2) + '\n';
   const r = run(BUILD, ['--check', '--root', dir], { cwd: dir });
   caseRun('manifest missing a row is rejected', 1, r);
   console.log(`      ${/missing rows\s*: 1/.test(r.out) ? 'reported missing rows: 1' : 'DID NOT report the missing row'}`);
+  console.log(`      ${/coverage\s*: 1\/2/.test(r.out) ? 'reported coverage 1/2' : 'DID NOT report coverage'}`);
 }
 
 // 2. manifest names a file that is not in the tree -> drift
@@ -112,6 +113,45 @@ const manifestWith = (rows) => JSON.stringify(rows, null, 2) + '\n';
 {
   const dir = makeRepo({ 'README.md': 'no evidence here' });
   caseRun('empty evidence tree is rejected', 2, run(BUILD, ['--check', '--root', dir], { cwd: dir }));
+}
+
+// 5b. evidence exists, manifest describes a different tree -> "covers nothing" (exit 2),
+// not a partial gap. This is the 2/241 shape: the scan sees the wrong tree entirely.
+{
+  const dir = makeRepo({
+    'docs/tsa/2026-01-01/lg-001.tsr': 'one',
+    'docs/tsa/timestamp-manifest.json': manifestWith([{ tsr: 'lg-099.tsr', dir: 'elsewhere' }]),
+  });
+  const r = run(BUILD, ['--check', '--root', dir], { cwd: dir });
+  caseRun('manifest matching nothing is "cannot measure"', 2, r);
+  console.log(`      ${/matches none/.test(r.out) ? 'said it matches none' : 'DID NOT say it matches none'}`);
+}
+
+// 5c. a served copy that no longer equals the canonical file is drift
+{
+  const dir = makeRepo({
+    'docs/tsa/2026-01-01/lg-001.tsr': 'one',
+    'docs/tsa/timestamp-manifest.json': manifestWith([{ tsr: 'lg-001.tsr', dir: 'docs/tsa/2026-01-01' }]),
+  });
+  run(BUILD, ['--write', '--root', dir], { cwd: dir });
+  caseRun('synced served copies pass', 0, run(BUILD, ['--check', '--root', dir], { cwd: dir }));
+  fs.writeFileSync(path.join(dir, 'www/docs/timestamp-manifest.json'), '[]\n');
+  caseRun('a stale served copy is rejected', 1, run(BUILD, ['--check', '--root', dir], { cwd: dir }));
+}
+
+// 5d. the stamp scripts must record the .tsr they produce, not only the display name,
+// and must not hard-code a date directory. This is the upstream of the dead rows.
+{
+  const bad = [];
+  for (const rel of ['docs/tsa/tsa_stamp.sh', 'docs/tsa/tsa_stamp_lg_v24.sh']) {
+    const t = fs.readFileSync(path.join(repo, rel), 'utf8');
+    if (!/"tsr":/.test(t)) bad.push(`${rel} does not write a tsr field`);
+    if (!/"dir":/.test(t)) bad.push(`${rel} does not write a dir field`);
+    if (/DIR="\/opt\/fibemate-full\/docs\/tsa\/\d{4}-/.test(t)) bad.push(`${rel} hard-codes a dated directory`);
+  }
+  if (bad.length > 0) failures += 1;
+  console.log(`${bad.length === 0 ? 'PASS' : 'FAIL'} stamp scripts record tsr+dir and take a target dir`);
+  for (const b of bad) console.log(`      ${b}`);
 }
 
 // 6. the copy gate's own matcher: legacy and corrected phrasings

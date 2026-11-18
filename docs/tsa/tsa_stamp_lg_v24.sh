@@ -2,11 +2,16 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # LG v2.4 看门狗 TSR 存证脚本 v2（2026-08-17）
 # 重新编号 lg-105 ~ lg-108（lg-101 已被 phase0 txt 占用，跳过）
+#
+# target dir 默认当前目录（原写死 /opt/.../2026-08-17-...，重跑会往旧日期目录写）。
+# 行内新增 tsr / dir：存证行必须能直接读出 .tsr 文件名，否则汇总清单只能靠猜。
 set -u
 
-DIR="/opt/fibemate-full/docs/tsa/2026-08-17-lg-v24-watchdog"
+DIR="${1:-$PWD}"
 mkdir -p "$DIR"
-cd "$DIR"
+cd "$DIR" || exit 1
+
+echo "target dir: $DIR"
 
 MANIFEST="$DIR/timestamp-manifest.json"
 
@@ -48,6 +53,8 @@ for item in "${ITEMS[@]}"; do
   cat >> "$MANIFEST" <<EOF
   {
     "file": "$NAME",
+    "tsr": "${SAFE_NAME}.tsr",
+    "dir": "$DIR",
     "size": $SIZE,
     "sha256": "$SHA256",
     "tsa": "FreeTSA",
