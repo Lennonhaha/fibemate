@@ -178,5 +178,28 @@ const HEADER = '# header\n';
   expect('path traversal does not resolve', r.code === 1, `code=${r.code} ${r.out}`);
 }
 
+// 13. allowlist entry for a url the sitemap no longer advertises -> 1 (orphan)
+{
+  const d = fixture({
+    locs: [`${HOST}/docs/a.html`],
+    files: ['docs/a.html'],
+    allow: `${HEADER}${HOST}/docs/dropped.html\twas a gap before the sitemap changed`,
+  });
+  const r = run(d);
+  expect('orphaned allowlist entry -> 1', r.code === 1, `code=${r.code}`);
+  expect('orphan entry is named', r.out.includes('ORPHAN'), r.out);
+}
+
+// 14. allowlist entry for an advertised but missing url -> 0 (the normal case)
+{
+  const d = fixture({
+    locs: [`${HOST}/docs/a.html`, `${HOST}/docs/gone.html`],
+    files: ['docs/a.html'],
+    allow: `${HEADER}${HOST}/docs/gone.html\tnot written yet`,
+  });
+  const r = run(d);
+  expect('advertised + allowlisted gap is not an orphan', r.code === 0, `code=${r.code} ${r.out}`);
+}
+
 process.stdout.write(`\n${pass} passed, ${fail} failed\n`);
 if (fail > 0) process.exitCode = 1;

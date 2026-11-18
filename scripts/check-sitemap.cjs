@@ -16,6 +16,8 @@
  *   - a missing path is a failure UNLESS it is listed in the allowlist
  *   - an allowlist entry that now resolves is also a failure: the list can only
  *     shrink, never quietly stay stale
+ *   - an allowlist entry for a url the sitemap no longer advertises is also a
+ *     failure: it would linger forever and look like a tracked gap
  *
  * The allowlist is a list of named gaps, not a pass count. The output says so.
  *
@@ -160,6 +162,12 @@ function main() {
     if (r.kind === 'local' && resolves(wwwRoot, r.path)) stale.push(loc);
   }
 
+  const advertised = new Set(all);
+  const orphans = [];
+  for (const [loc] of allow) {
+    if (!advertised.has(loc)) orphans.push(loc);
+  }
+
   if (opts.update) {
     const header = [
       '# Known gaps: urls advertised in www/sitemap.xml that do not resolve in www/.',
@@ -175,7 +183,7 @@ function main() {
   }
 
   const unlisted = missing.filter((m) => !allow.has(m.loc));
-  const drift = unlisted.length > 0 || stale.length > 0;
+  const drift = unlisted.length > 0 || stale.length > 0 || orphans.length > 0;
 
   const summary = {
     urls: all.length,
@@ -185,18 +193,20 @@ function main() {
     allowlisted: missing.filter((m) => allow.has(m.loc)).length,
     unlisted: unlisted.length,
     stale: stale.length,
+    orphan: orphans.length,
   };
 
   if (opts.json) {
-    process.stdout.write(`${JSON.stringify({ summary, unlisted, stale, allowlist: [...allow.keys()] }, null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify({ summary, unlisted, stale, orphans, allowlist: [...allow.keys()] }, null, 2)}\n`);
   } else {
     process.stdout.write(
       `sitemap: ${summary.urls} urls (local ${summary.local}, external ${summary.external}); ` +
         `missing ${summary.missing}, allowlisted ${summary.allowlisted} known gaps (not a pass count), ` +
-        `unlisted ${summary.unlisted}, stale entries ${summary.stale}\n`,
+        `unlisted ${summary.unlisted}, stale entries ${summary.stale}, orphan entries ${summary.orphan}\n`,
     );
     for (const m of unlisted) process.stdout.write(`  UNLISTED  ${m.loc}\n`);
     for (const s of stale) process.stdout.write(`  STALE     ${s} (now resolves; drop it from the allowlist)\n`);
+    for (const o of orphans) process.stdout.write(`  ORPHAN    ${o} (not advertised in the sitemap; drop it from the allowlist)\n`);
     if (summary.allowlisted > 0 && !drift) {
       process.stdout.write('  note: the advertised pages above are missing and named in the allowlist;\n');
       process.stdout.write('        they are still 404s until the pages exist or the sitemap drops them.\n');
