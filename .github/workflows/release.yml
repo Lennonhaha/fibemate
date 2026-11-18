@@ -73,7 +73,7 @@ jobs:
             ! -path './target/*' \
             ! -name '*.tsr' \
             | sort | xargs sha256sum > RELEASE_CHECKSUMS.txt 2>/dev/null
-          cat RELEASE_CHECKSUMS.txt | head -5
+          head -5 RELEASE_CHECKSUMS.txt
           echo "... $(wc -l < RELEASE_CHECKSUMS.txt) files checksummed"
 
       - name: Install cosign

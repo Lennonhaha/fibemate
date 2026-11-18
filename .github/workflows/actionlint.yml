@@ -1,0 +1,84 @@
+name: actionlint
+
+# The escaped-paren defect that broke the native publish step was valid YAML and
+# invalid shell. Nothing in CI read the shell inside `run:` blocks, so a step that
+# could never execute merged, and only a manual dispatch found it.
+#
+# Note on shellcheck: actionlint delegates shell parsing to shellcheck and stays
+# silent about unparseable scripts when shellcheck is absent. A missing shellcheck
+# would therefore turn this gate into a decoration, so its presence is asserted.
+
+on:
+  push:
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - '.github/actions/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  actionlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Install actionlint from a pinned release and verify its checksum
+        run: |
+          set -euo pipefail
+          version=1.7.12
+          sha256=8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
+          url="https://github.com/rhysd/actionlint/releases/download/v${version}/actionlint_${version}_linux_amd64.tar.gz"
+          curl -fsSL -o /tmp/actionlint.tgz "$url"
+          echo "${sha256}  /tmp/actionlint.tgz" | sha256sum -c -
+          mkdir -p "$RUNNER_TEMP/bin"
+          tar -xzf /tmp/actionlint.tgz -C "$RUNNER_TEMP/bin" actionlint
+          "$RUNNER_TEMP/bin/actionlint" --version
+
+      - name: Require shellcheck, or fail rather than look clean
+        run: |
+          set -euo pipefail
+          if ! command -v shellcheck >/dev/null 2>&1; then
+            echo "FAIL: shellcheck is not installed, so actionlint cannot parse run blocks." >&2
+            echo "      Without it this job would pass on workflows whose shell is broken." >&2
+            exit 1
+          fi
+          shellcheck --version | head -2
+
+      - name: Lint the workflows
+        run: |
+          set -euo pipefail
+          "$RUNNER_TEMP/bin/actionlint" -color
+
+      # A gate that has never failed is a decoration. This feeds actionlint the exact
+      # defect that shipped and requires a rejection.
+      - name: Prove the gate rejects an escaped paren in a run block
+        run: |
+          set -euo pipefail
+          fixture="$RUNNER_TEMP/fixture"
+          mkdir -p "$fixture"
+          {
+            echo 'name: fixture'
+            echo 'on: workflow_dispatch'
+            echo 'jobs:'
+            echo '  build:'
+            echo '    runs-on: ubuntu-latest'
+            echo '    steps:'
+            echo '      - name: step'
+            echo '        run: |'
+            echo '          set -euo pipefail'
+            echo '          if true; then'
+            echo '            \( echo hi ) || true'
+            echo '          fi'
+          } > "$fixture/bad.yml"
+          if "$RUNNER_TEMP/bin/actionlint" "$fixture/bad.yml"; then
+            echo "FAIL: actionlint accepted a run block with an escaped paren." >&2
+            echo "      The gate cannot see the defect it exists to catch." >&2
+            exit 1
+          fi
+          echo "OK: the escaped-paren defect is rejected"
