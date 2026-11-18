@@ -1,0 +1,8 @@
+# Known gaps: urls advertised in www/sitemap.xml that do not resolve in www/.
+# This is a list of named gaps, not a pass count. It may only shrink.
+# Remove an entry once the page exists; the checker fails if an entry resolves.
+# path	why-it-is-still-here
+https://fibemate.net/docs/cars-bias-analysis.html	page not in www/ (never committed)
+https://fibemate.net/docs/changelog.html	page not in www/ (never committed)
+https://fibemate.net/docs/hardware.html	page not in www/ (never committed)
+https://fibemate.net/docs/openssf-roadmap.html	page not in www/ (never committed)

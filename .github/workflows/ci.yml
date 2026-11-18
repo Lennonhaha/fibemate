@@ -385,6 +385,16 @@ jobs:
       - name: Check version consistency (VERSION.json is the single source)
         run: node scripts/check-version-consistency.cjs
 
+
+      # The sitemap advertised four pages that were never in the tree, and the only
+      # link step in this file ends in "|| true", so nothing could notice. This gate
+      # fails on a new unlisted gap and on an allowlist entry that starts resolving.
+      - name: "Gate self-test - sitemap resolves, and the gate can fail"
+        run: node scripts/test-check-sitemap.cjs
+
+      - name: Check that every sitemap url resolves in www/
+        run: node scripts/check-sitemap.cjs
+
       # The TVLA gate shipped in #510 with no failing path ever executed, which is
       # how it stayed green while the live test leaked. These fixtures drive both
       # scripts through their real CLIs and assert the exit codes.
