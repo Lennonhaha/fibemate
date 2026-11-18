@@ -221,6 +221,34 @@ done | grep <路径>
 
 ---
 
+## 9. gate 的射程由授权方式决定，不是由脚本写的决定
+
+**怎么发生的（2026-11-18）**
+`check-nginx-drift.cjs` 看上去能「校验线上 nginx」，实际上它只做一件事：ssh 取 `/etc/nginx/sites-enabled/fibemate.net`，逐行比文本。CI 用的那把 key 在服务器上被限定为 `command="cat /etc/nginx/sites-enabled/fibemate.net"` —— 它**只能读这一个文件**。于是「脚本能做什么」被「钥匙允许做什么」封死了：解析层（`nginx -T`）和响应层（HTTP）都在射程外。
+
+**当时的误判**
+把「有这个 workflow」当成「这一层有覆盖」。工具的名字和它的权限范围是两件事；权限范围写在钥匙上，不在脚本里。
+
+**另一个洞：沉睡窗口**
+这个 gate 是 path-filter 的，只在 `deploy/nginx/**`、checker、workflow 自身变化时醒来。今天的事故是**在服务器上手工改配置**——不产生任何 commit，因此永远不会触发它。也就是说：恰好最需要它的那类事故，它永远看不到。补 `schedule` 是为了让陈旧自己浮出来，而不依赖「有人碰了仓库」。
+
+**响应层必须正反双向**
+- 正面：`/` 与 `/health` 是 200，`/mixnet/`、`/mixnet/foo` 是 410。这只证明「现在对」。
+- 反向：`/mixnet/` 不得带 `Location`、不得出现 `x-powered-by` / `via` 之类代理头、`server` 必须是 nginx、响应体不得出现 `Cannot GET` / `Bad Gateway` / `ECONNREFUSED` / 上游框架名。这一半才抓得住「某天悄悄退回 502/302/200 代理」。
+- 只有正面断言 = 半闭合的探针。而半闭合的探针在事故发生后也会是绿的（它只记得期望的那个状态）。
+
+**边界（写明，不顺手扩）**
+解析层（`nginx -T` 是否真的加载了这段配置）仍无自动覆盖。补它的正路不是放宽那把 key 的权限，而是单独立项（例如受限命令里再加一条只读的 `nginx -T`，或由部署脚本在本地做解析层断言）。在此之前，解析层的证据只能人工取。
+
+**风险登记：`server` 白名单与架构演进**
+探针断言 `server` 头必须是 `nginx`（或缺失）。一旦在 nginx 前面加一层 CDN 或反向代理，这个头会变成 `cloudflare` 之类，探针就会红——而那属于**架构演进，不是生产漂移**。
+
+- 这不是假设：用 `--base https://example.com` 做真实世界负向验证时，`/mixnet/foo` 的 `server: cloudflare` 就被判红；同一断言在那种拓扑下是假阳性。
+- 规则：增加 CDN / 前置代理时**必须同步改**这条白名单（连同反向头清单），并在 PR 里写明「这是架构变更，不是漂移修复」。
+- 反过来也成立：如果没有人明确做过这次架构变更，那么 `server` 变了就是真信号，不能拿「反正可能是 CDN」去解释。
+
+---
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
