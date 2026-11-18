@@ -512,10 +512,10 @@ const csfData = [
   // ─── DETECT (DE) ───
   {func:"DETECT", funcId:"DE", cat:"DE.CM", name:"Continuous Monitoring",
    score:2, pqc:true,
-   summary:"Strong: CI 24-matrix all green, TVLA 36/36 passed (Welch's t-test), Nightly CI, active TSR monitoring. Automated test suite with 10,000-round KAT verification.",
+   summary:"Strong: CI 24-matrix all green, TVLA 逐项结果（Welch t 检验，见 docs/tvla-dashboard.html）, Nightly CI, active TSR monitoring. Automated test suite with 10,000-round KAT verification.",
    evidence:[
      {type:"file", text:"CI: 24-matrix (ubuntu/macos/windows × node 18/22), 100% passing"},
-     {type:"file", text:"TVLA: 36/36 Welch's t-test passed — software timing side-channel detection"},
+     {type:"file", text:"TVLA: per-op results (see docs/tvla-dashboard.html) — software timing side-channel detection"},
      {type:"file", text:"Nightly CI with full test suite"},
      {type:"file", text:"TSR: 131 timestamp records with active monitoring"},
      {type:"file", text:"10,000-round KAT verification for ML-KEM-768"}
@@ -609,7 +609,7 @@ const sp800Data = [
   {id:"AC-2",title:"Account Management",csf:"PR.AA",status:1,evidence:"Standard GitHub access controls, no formal IAM policy"},
   {id:"AC-3",title:"Access Enforcement",csf:"PR.AA",status:1,evidence:"GitHub branch protection, no RBAC documentation"},
   {id:"CA-2",title:"Security Assessments",csf:"DE.AE",status:1,evidence:"No formal security assessment program; ad-hoc review"},
-  {id:"CA-7",title:"Continuous Monitoring",csf:"DE.CM",status:2,evidence:"CI 24-matrix all green, TVLA 36/36, Nightly CI, TSR active"},
+  {id:"CA-7",title:"Continuous Monitoring",csf:"DE.CM",status:2,evidence:"CI 24-matrix all green, TVLA 逐项结果, Nightly CI, TSR active"},
   {id:"CM-2",title:"Baseline Configuration",csf:"PR.PS",status:1,evidence:"No documented platform security baseline"},
   {id:"CM-4",title:"Security Impact Analysis",csf:"PR.PS / ID.IM",status:1,evidence:"Ad-hoc analysis; no formal change impact assessment"},
   {id:"CM-8",title:"System Component Inventory",csf:"ID.AM",status:1,evidence:"crypto-audit-scan 370+ files, CBOM, but no formal CMDB — PQC-critical gap"},
@@ -620,7 +620,7 @@ const sp800Data = [
   {id:"RA-2",title:"Security Categorization",csf:"ID.AM",status:1,evidence:"P0/P1/P2 risk inventory; no formal FIPS 199 categorization"},
   {id:"RA-5",title:"Vulnerability Scanning",csf:"ID.RA",status:1,evidence:"Bloom-risk identifies P-256 blast radius; no automated vulnerability scanning pipeline"},
   {id:"SA-10",title:"Developer Config Mgmt",csf:"PR.PS",status:1,evidence:"CI GitHub Actions; no formal dev environment config policy"},
-  {id:"SA-11",title:"Developer Testing",csf:"PR.AT / PR.DS",status:2,evidence:"24-matrix CI, 10,000-round KAT, TLA+ formal verification, TVLA 36/36"},
+  {id:"SA-11",title:"Developer Testing",csf:"PR.AT / PR.DS",status:2,evidence:"24-matrix CI, 10,000-round KAT, TLA+ formal verification, TVLA 逐项结果"},
   {id:"SC-7",title:"Boundary Protection",csf:"PR.PS",status:1,evidence:"Standard GitHub perimeter; no network-level boundary protection documented"},
   {id:"SC-8",title:"Transmission Confidentiality",csf:"PR.DS",status:2,evidence:"PQC algorithms implemented for key establishment (ML-KEM) — no deployed TLS"},
   {id:"SC-12",title:"Cryptographic Key Management",csf:"PR.DS",status:1,evidence:"ML-KEM KEM keys, fml-dsa keygen; no formal KMS or key lifecycle policy"},
@@ -731,7 +731,7 @@ function buildGapSummary() {
   html += `<div class="gap-card strength">
     <h4>✅ FIBEMATE Unique Strengths</h4>
     <ul>
-      <li><strong>DE.CM — Continuous Monitoring:</strong> CI 24-matrix all green, TVLA 36/36 Welch's t-test, Nightly CI — exceeds typical open-source monitoring practices.</li>
+      <li><strong>DE.CM — Continuous Monitoring:</strong> CI 24-matrix all green, TVLA 逐项结果（Welch t 检验）, Nightly CI — exceeds typical open-source monitoring practices.</li>
       <li><strong>RC.CO — Evidence Integrity Chain:</strong> TSR 374 tracked .tsr files (261 distinct basenames, 93 lg-NNN tokens), DigiCert + FreeTSA dual authority, manifest v3 with complete chain of custody within the scope this project claims.</li>
       <li><strong>PR.AT — Cryptographic Technology:</strong> Triple FIPS algorithm suite (ML-KEM-768, fml-dsa, SLH-DSA-128s) plus Chinese national crypto, FPGA NTT core, TLA+ formal verification.</li>
       <li><strong>GV.SC — Supply Chain Visibility:</strong> 147 npm dependencies 100% classified with CBOM generation — rare for open-source projects.</li>

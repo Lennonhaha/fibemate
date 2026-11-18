@@ -912,6 +912,7 @@
                 工程验证与证据生成 &middot; 374 份 RFC 3161 时间戳存证（261 个不同 basename、93 个 lg-NNN 令牌，2026-11-17 实测）
             </p>
             <div class="hero-badge" style="margin:1rem auto 0;">🔒 v3.3.3 · 代码自 2026-08-31 起公开</div>
+            <div class="hero-badge" id="live-run-badge" style="margin-top:8px;display:none;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.22);">🛰 线上运行：<strong id="live-app-version">—</strong>（读自 <code>/health</code> 的 <code>X-App-Version</code> 响应头）</div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.22);">🔬 引擎：<strong>libcrux</strong>（hax/F* 形式化验证，未验证的 <code>kyber</code> 变体未启用）· 互操作参照 <strong>@noble/post-quantum</strong></div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.22);">✅ <strong>182</strong> 项 Rust 测试全过，<strong>0</strong> 项 <code>#[ignore]</code> · NIST ACVP KAT（ML-KEM-768 / ML-DSA-65 keygen·siggen·sigver）真实执行</div>
             <div class="hero-buttons">
@@ -1310,7 +1311,7 @@
             <!-- cbom-tools 版本号：发版时与 fibemate-tools/cbom-tools/package.json 同步（keep in sync with fibemate-tools/cbom-tools/package.json） -->
             <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(0,229,195,0.18);">
                 <a href="https://www.npmjs.com/package/cbom-tools" style="display:inline-flex;align-items:center;gap:10px;text-decoration:none;">
-                    <span style="display:inline-flex;border-radius:4px;overflow:hidden;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1;vertical-align:middle;"><span style="background:#3d444d;color:#e6edf3;padding:5px 9px;">npm</span><span style="background:#00d4aa;color:#04120f;padding:5px 9px;font-weight:700;">v0.3.0</span></span>
+                    <span style="display:inline-flex;border-radius:4px;overflow:hidden;font-family:Consolas,'Courier New',monospace;font-size:12px;line-height:1;vertical-align:middle;"><span style="background:#3d444d;color:#e6edf3;padding:5px 9px;">npm</span><span style="background:#00d4aa;color:#04120f;padding:5px 9px;font-weight:700;">v0.3.1</span></span>
                     <span style="color:#c9d1d9;font-size:0.92rem;font-weight:600;">cbom-tools &middot; 物料清单生成器</span>
                 </a>
                 <span style="color:#8b949e;font-size:0.85rem;">&mdash; <strong style="color:#c9d1d9;">① 生成 CBOM</strong>：扫描代码产出 CycloneDX 1.7 清单（旧版可用 <code style="background:none;border:0;padding:0;color:#8b949e;">--spec 1.6</code>），交给 verifact 核对</span>
@@ -1777,7 +1778,7 @@
         <div class="feature-card" style="border-top: 3px solid #c792ea;">
           <div class="feature-icon">🛡</div>
           <div class="feature-title">TVLA 侧信道看板</div>
-          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">5 算法 31/36 PASS · t-test 阈值 4.5<br>ML-KEM · SM2 · HMAC-SM3 · 硬件故障检测</div>
+          <div class="feature-desc" style="font-size: 0.82rem; line-height: 1.6;">5 算法 逐项结果 · t-test 阈值 4.5<br>ML-KEM · SM2 · HMAC-SM3 · 硬件故障检测</div>
           <a href="/docs/tvla-dashboard.html" class="proof-link"
              style="display: inline-block; margin-top: 0.5rem; font-size: 0.82rem; color: #c792ea; text-decoration: underline;">打开可视化 &#8594;</a>
         </div>
@@ -3134,5 +3135,18 @@ const canvas = document.getElementById('particles-canvas');
 </script>
 
 </main>
+<script>
+(function () {
+  // 展示线上实际运行的版本（取自 /health 响应头），而不是把 commit 写死在页面里。
+  fetch('/health', { method: 'HEAD', cache: 'no-store' })
+    .then(function (r) {
+      var v = r.headers.get('X-App-Version');
+      if (!v) throw new Error('no header');
+      document.getElementById('live-app-version').textContent = v;
+      document.getElementById('live-run-badge').style.display = '';
+    })
+    .catch(function () {});
+})();
+</script>
 </body>
 </html>

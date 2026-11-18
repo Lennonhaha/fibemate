@@ -96,6 +96,7 @@ async function benchMLKEMNative(count) {
   log('正在加载 ML-KEM WASM 模块...');
   try {
     const r = await fetch('/crypto/wasm/mlkem_ct_wasm_bg.wasm');
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' - 该 .wasm 未随仓库发布（需先构建）');
     const buf = await r.arrayBuffer();
     const wasm = await WebAssembly.instantiate(buf, {});
     const { memory, mlkem_keygen, mlkem_encaps, mlkem_decaps } = wasm.instance.exports;
@@ -230,6 +231,7 @@ async function benchLGV2(count) {
   log('正在加载 LG v2.2 WASM 模块...');
   try {
     const r = await fetch('/crypto/lgv2/lookingglass_v2_bg.wasm');
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' - 该 .wasm 未随仓库发布（需先构建）');
     const buf = await r.arrayBuffer();
     log('LG v2.2 WASM 大小: ' + (buf.byteLength/1024).toFixed(1) + ' KB');
     
@@ -263,6 +265,7 @@ async function benchVWZ(count) {
   log('正在加载 VWZ WASM 模块...');
   try {
     const r = await fetch('/crypto/vwz/vwz_signature_bg.wasm');
+    if (!r.ok) throw new Error('HTTP ' + r.status + ' - 该 .wasm 未随仓库发布（需先构建）');
     const buf = await r.arrayBuffer();
     const wasm = await WebAssembly.instantiate(buf, {});
     log('VWZ WASM loaded, size=' + (buf.byteLength/1024).toFixed(1) + ' KB');
