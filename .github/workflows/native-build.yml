@@ -163,7 +163,7 @@ jobs:
           tag="native-node${NODE_MAJOR_FOR_TAG}-${ARTIFACT_KEY}"
           new="$(awk '{print $1}' mlkem.node.sha256)"
           if gh release view "$tag" >/dev/null 2>&1; then
-            \( gh release download "$tag" -p mlkem.node.sha256 -D "$RUNNER_TEMP/existing" ) || true
+            ( gh release download "$tag" -p mlkem.node.sha256 -D "$RUNNER_TEMP/existing" ) || true
             if [ -s "$RUNNER_TEMP/existing/mlkem.node.sha256" ]; then
               old="$(awk '{print $1}' "$RUNNER_TEMP/existing/mlkem.node.sha256")"
               if [ "$old" != "$new" ]; then
