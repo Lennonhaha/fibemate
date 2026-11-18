@@ -384,6 +384,36 @@ allowlist 不是「已修好」，是「已点名」。它一旦被当成绿灯�
 
 ---
 
+## 16. 查必需检查要查 rulesets，旧端点给的不是错数据，是不完整数据
+
+**怎么发生的**：同一天，两份材料对同一个仓库分别给出「5 个必需检查」和「9 个必需检查」。前者来自 `GET /branches/main/protection`，后者来自 `GET /rulesets`。
+
+**当时的误判**：把两个数字当成「其中一个是错的」，于是准备按「5」去补齐检查。补完只会得到重复项，真正的缺口仍然空着——因为缺口不在数量上，在名单里有没有那一项。
+
+**判据**：
+
+```
+gh api repos/<owner>/<repo>/rulesets --jq '.[].id'
+gh api repos/<owner>/<repo>/rulesets/<id> \
+  --jq '[.rules[] | select(.type=="required_status_checks")
+         | .parameters.required_status_checks[].context]'
+```
+
+本仓实测（2026-11-19）：ruleset `24591608`（name=main, enforcement=active, target=branch）给出 9 个 context —— lint / bom-check / bench / sbom / docs-check / dco / interop / ten checks / KAT-Regression；旧端点给出 5 个，正好是前五项。
+
+规则：两个机制并存时**规则集优先**，旧端点是**子集**，不是错误值。只查旧端点会漏掉 dco、interop、ten checks、KAT-Regression，从而把「已经被门禁拦住」误读成「没有门禁」。
+
+**正解**：
+
+1. 报「必需检查有几个」时必须写清查的是哪个端点，数字要带端点名。只写数字的结论，换个人复核就会得出另一个数字。
+2. 多个 ruleset 会叠加（含 organization 级），判据是**把所有 applicable ruleset 的 context 取并集**，不是只看第一条。
+3. 端点口径之外还有一类真缺口：**检查存在，但不阻断**。本仓 CodeQL 的 check-run 名为 `CodeQL`、`Analyze (actions)`、`Analyze (javascript-typescript)`、`Analyze (python)`，全部能跑、能给结论，但都不在那 9 个 context 里——安全扫描红了也不阻断合并。这是「必要条件缺失」，与端点问题无关，不能因为「规则集已经有 9 个」就当成已覆盖。
+4. 同一批材料里「通知说 failed，而列出的 job 全是 Succeeded」也是同一族：`cancelled`（macOS runner 排队被取消）会被计入 not successful，真正的失败 job 落在折叠区；而且通知里的 SHA 可能已被 force-update 取代。**通知不是状态**，状态只能来自 `commits/<sha>/check-runs`，并且要区分 `failure` 与 `cancelled`：前者要修，后者只需重跑。
+
+同族：#12（数字必须带适用范围）。本次的错误形态是「查了一个端点就当全集」，与「只数命中数不看分母」是同一个动作。
+
+---
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
