@@ -1,0 +1,16 @@
+# Forbidden literals for scripts/hooks/pre-commit, one rule per line:
+#
+#   <extended regex><TAB><pathspec...>
+#
+# Lines starting with # are ignored. An empty pathspec means the whole tree.
+# Pathspecs may use git exclusion syntax, e.g. ':(exclude)docs/audit-log'.
+#
+# Keep this list short and keep every rule falsifiable: a rule that needs an
+# allowlist is usually worse than no rule. Three paths are excluded on purpose:
+#   docs/audit-log and www/docs/tsa  quote the old wording to record the correction
+#   this file itself                 has to contain the patterns it bans
+# Exclusions are declared here, in the open, rather than left to memory.
+
+TVLA 36/36	. :(exclude)docs/audit-log :(exclude)www/docs/tsa :(exclude)scripts/hooks/forbidden-literals.txt
+3 implementations x 12	. :(exclude)docs/audit-log :(exclude)scripts/hooks/forbidden-literals.txt
+3 实现 × 12	. :(exclude)docs/audit-log :(exclude)scripts/hooks/forbidden-literals.txt

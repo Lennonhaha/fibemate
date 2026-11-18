@@ -1,0 +1,63 @@
+#!/bin/sh
+# SPDX-License-Identifier: GPL-3.0-only
+#
+# Optional pre-commit guard for documentation work.
+#
+# Enable with:
+#   git config core.hooksPath scripts/hooks
+# Disable for one commit with:
+#   git commit --no-verify
+#
+# It runs two checks on staged text files:
+#   1. scripts/check-encoding.cjs  -- catches U+FFFD, GBK mojibake, NUL bytes, BOM
+#   2. the patterns in scripts/hooks/forbidden-literals.txt
+#
+# This is a convenience, not a gate. CI remains the authority.
+
+set -u
+
+repo_root=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+cd "$repo_root" || exit 0
+
+staged=$(git diff --cached --name-only --diff-filter=ACM -z | tr '\0' '\n')
+[ -z "$staged" ] && exit 0
+
+text_files=$(printf '%s\n' "$staged" \
+  | grep -Ev '\.(png|jpe?g|gif|webp|ico|bmp|wasm|pdf|gz|tgz|zip|tar|tsr|tsq|woff2?|ttf|otf|mp4|webm|bin|so|dylib|dll|exe|node|onnx|rsp)$' \
+  || true)
+
+if [ -n "$text_files" ]; then
+  # shellcheck disable=SC2086
+  if ! node scripts/check-encoding.cjs $text_files; then
+    echo "" >&2
+    echo "pre-commit: encoding check failed; fix the file or use 'git commit --no-verify'" >&2
+    exit 1
+  fi
+fi
+
+config="scripts/hooks/forbidden-literals.txt"
+[ -f "$config" ] || exit 0
+
+tab=$(printf '\t')
+failed=0
+while IFS="$tab" read -r pattern pathspec; do
+  case "$pattern" in
+    ''|'#'*) continue ;;
+  esac
+  [ -z "$pathspec" ] && pathspec="."
+  # shellcheck disable=SC2086
+  hits=$(git grep -n -E -- "$pattern" -- $pathspec 2>/dev/null || true)
+  if [ -n "$hits" ]; then
+    echo "pre-commit: forbidden literal [$pattern] found in:" >&2
+    printf '%s\n' "$hits" >&2
+    failed=1
+  fi
+done < "$config"
+
+if [ "$failed" -ne 0 ]; then
+  echo "" >&2
+  echo "pre-commit: remove the literal or narrow the rule in scripts/hooks/forbidden-literals.txt" >&2
+  exit 1
+fi
+
+exit 0
