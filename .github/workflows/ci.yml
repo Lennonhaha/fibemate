@@ -361,6 +361,14 @@ jobs:
       - name: Test the credential-free artifact channel
         run: bash scripts/test-fetch-native-artifact.sh
 
+      # Signing is a workflow edit away from disappearing silently. This asserts the
+      # publish job keeps the four properties Scorecard's Signed-Releases probe depends
+      # on, and that each of them can be shown to fail when removed (--self-test).
+      - name: Check that the published native assets are signed
+        run: |
+          node scripts/test-native-signing.cjs
+          node scripts/test-native-signing.cjs --self-test
+
   # ─── 文档检查 (single platform) ─────────────────────
   docs-check:
     runs-on: ubuntu-latest

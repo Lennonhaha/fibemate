@@ -439,6 +439,53 @@ Two rules follow, and they are cheap to keep:
 
 The `\|\| true` in the dead-link step stays for now: it needs the network, and a flaky red would be worse than a known advisory. What makes it acceptable is that it is now named as advisory in the notes rather than counted as coverage.
 
+## 18. A signature counts only if it is an asset somebody else can fetch
+
+OpenSSF Scorecard's `Signed-Releases` probe does not open the artifact and check bytes. It lists
+the release's assets and looks at their **names**:
+
+```go
+// probes/releasesAreSigned/impl.go (ossf/scorecard, main, 2026-11-19)
+var signatureExtensions = []string{".asc", ".minisig", ".sig", ".sign", ".sigstore", ".sigstore.json"}
+// probes/releasesHaveProvenance/impl.go
+var provenanceExtensions = []string{".intoto.jsonl"}
+```
+
+Two consequences, both of which bit this repo:
+
+- The four native addon releases scored zero not because they were unsigned but because the
+  signature pipeline did not exist when they were published. `backfill-sign.yml` already knows how
+  to fix that: keyless `cosign sign-blob` per asset, uploaded as `<asset>.sig` + `<asset>.pem`.
+- A signature produced and then discarded on the runner is worth exactly nothing here. So
+  `native-build.yml` now signs *after* publishing and uploads `*.sig` / `*.pem` back to the same
+  release. `.sig` is in the list; that is the whole reason for the suffix.
+
+Keyless (Fulcio + Rekor) rather than a long-lived key: the identity in the certificate is the
+workflow file, so there is no secret to rotate and nothing in the repo to leak. That only works
+with `id-token: write` on the job -- without it cosign has no OIDC token and the step fails. Note
+that this is a *read* of the token service, not a write permission, which is why it does not cost
+anything on the Token-Permissions check the way an unused `attestations: write` would.
+
+### The signature needs a control, not just a check
+
+`cosign verify-blob` exits 0 when the signature matches. If the verification is never shown to
+fail, "verified" means "cosign ran", which is the same shape as every false green in section 17.
+So the step appends a byte to a copy of the artifact and requires the verification to reject it.
+If that copy ever verifies, the job fails with `the signature verified a modified copy`.
+
+The static guard (`scripts/test-native-signing.cjs`) exists because the signing step is one
+refactor away from being deleted without anyone noticing, and it runs its own `--self-test`
+against mutated copies of the workflow: remove `id-token`, remove the upload, unpin the identity,
+delete the negative control -- each mutation has to make the check red, or the check is decoration.
+
+### Known gap, recorded rather than silently fixed
+
+The release is published (and now signed) at step 10-12, while the load test, self-KAT and NIST
+KAT run at steps 13-16. If those fail, a signed release for a broken artifact stays published.
+The honest fix is to move publishing after the checks; that is a separate change, because it also
+changes what "publish failed" means for the deploy hosts. Until then, the signature means "this is
+what CI built from this key", not "this artifact passed the tests".
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
