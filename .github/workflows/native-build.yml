@@ -46,9 +46,11 @@ jobs:
         id: key
         run: |
           node scripts/native-artifact-key.cjs --repo . --commit HEAD --json > native-key.json
-          echo "key=$(node -p "require('./native-key.json').key")" >> "$GITHUB_OUTPUT"
-          echo "native_tree=$(node -p "require('./native-key.json').nativeTree")" >> "$GITHUB_OUTPUT"
-          echo "workflow_sha=$(node -p "require('./native-key.json').workflowSha")" >> "$GITHUB_OUTPUT"
+          {
+            echo "key=$(node -p "require('./native-key.json').key")"
+            echo "native_tree=$(node -p "require('./native-key.json').nativeTree")"
+            echo "workflow_sha=$(node -p "require('./native-key.json').workflowSha")"
+          } >> "$GITHUB_OUTPUT"
           rm -f native-key.json
 
       - name: Install npm dependencies
@@ -224,7 +226,7 @@ jobs:
           "
 
       - name: Verify NIST KAT (100 vectors, spot-check)
-        if: false  # TODO: replace with ACVP-based KAT for C addon
+        if: vars.ENABLE_NIST_KAT == 'true'  # off by default; TODO: replace with ACVP-based KAT for C addon
         run: |
           node -e "
           const fs = require('fs');
