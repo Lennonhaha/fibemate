@@ -230,3 +230,49 @@ Two gaps this measurement exposed:
 `deploy-release.sh` and `rollback-release.sh` implement P2/P3. They read the repository with
 `git archive` only, so the 4,535 `chattr +i` flags never leave the tree: there is nothing to unlock and
 nothing that a failed run can leave unlocked.
+
+## 11. Status, 2026-11-18 — measurements that close the original question
+
+Deployed release `0539fc1` was re-measured on the host, file by file, against the commit object
+(`git cat-file` at that revision, not the working tree):
+
+| measurement | value |
+| --- | --- |
+| tracked files under `packages/` | 133 |
+| byte-identical to the commit | **133** |
+| different | 0 |
+| missing | 0 |
+| whole served tree (`src` + `packages` + `www`) | 1098/1098, 0 missing |
+| addon | 83,384 B, `sha256 7ca31cbacd57…`, loaded from the release, roundtrip PASS |
+| `/health` | `mlkem.backend = native` |
+
+So the original question — "how do 65 of 133 files drift and nobody notices?" — has a structural
+answer rather than a patched one: the served tree is now produced by `git archive` from one commit and
+verified per file before the symlink moves. The old in-place tree cannot drift into production because
+it is no longer production.
+
+**What was still missing, and what this round adds.** Every existing check looked at `www/` and `src/`
+from the outside. `packages/` was verified once, at deploy time, and then never again: a file edited in
+`current/` after the build would have stayed invisible until the next deploy. This round closes that:
+
+- the process reads its own `BUILD-MANIFEST.json` at boot and publishes one digest for `packages/`
+  (`/health` → `build.packages.hash`, plus `count` and `malformed`) — `src/lib/tree-hash.js`;
+- `scripts/check-live.cjs` gains `live:tree`, which recomputes the same digest from the source being
+  checked and fails on a wrong commit, a wrong digest, a malformed manifest, or a process that cannot
+  state its build at all — the last case is a failure rather than a skip, because "I do not know what I
+  am running" is the condition this issue was filed about;
+- the digest is stable against `readdir` order and changes on a rename even when content does not;
+- `scripts/test-tree-hash.cjs` drives the gate against a stub `/health` and asserts the four failure
+  modes. Measured on `0539fc1`: `packages/` digest `c8807401aec7c8a6…` (133 files), identical whether
+  computed from git objects or from the release manifest.
+
+**Still open (P4 remainder), deliberately not in this PR:**
+
+1. `reg-server` still runs from `/opt/fibemate-full/reg-server` — the last live consumer of the mutable
+   tree. Its tracked files are byte-identical to the commit (11/11) and it has logged no traffic since
+   2026-08-11, but it is a pm2 process and moving it is a production change with its own verification.
+2. `/opt/fibemate-full/packages` still holds the historical drift (64 identical / 54 different / 15
+   missing at `0539fc1`). It is evidence, not runtime; keep it until (1) is done, then archive the tree.
+3. The 4,535 `chattr +i` flags on `/opt/fibemate-repo` are now protecting nothing that is served.
+   They do not block `git archive`, but they do block a `git reset --hard` during recovery. Retire them
+   after (1).

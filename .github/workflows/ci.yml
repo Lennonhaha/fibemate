@@ -317,6 +317,12 @@ jobs:
       - name: Test the deploy tree gate
         run: node scripts/test-verify-tree-sha.cjs
 
+      # #507: the packages/ digest is only useful if the live check can say no.
+      # This suite stubs /health and asserts FAIL on a wrong commit, a wrong digest,
+      # a malformed manifest and a missing build block - the four ways it can rot.
+      - name: Test the packages tree digest and its live check
+        run: node scripts/test-tree-hash.cjs
+
       - name: Install shellcheck
         run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
 
