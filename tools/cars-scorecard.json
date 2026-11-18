@@ -41,7 +41,7 @@
           "sm2": {
             "standard": "GB/T 32918",
             "impl": "Pure JS (BigInt + jsbn dual-track)",
-            "verification": "KAT 100/100, TVLA 36/36 (3 impls × 12 tests)"
+            "verification": "KAT 100/100, TVLA detailed in docs/SM2_TVLA_STATUS.md (masked v1.2 5/5 at N=5000; ladder v1.3 high-order 20/20 at N=10000; v1.4 verify-blinding post-fix report missing)"
           },
           "sm3": {
             "standard": "GB/T 32905",
