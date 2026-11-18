@@ -321,6 +321,13 @@ jobs:
       - name: Check the TSR gates can fail
         run: node scripts/test-tsr-gates.cjs
 
+      # The daily verifier classifies every token and compares that against a measured
+      # allowlist. Its own tests drive a stub openssl, so they assert that the gate
+      # objects (new unverifiable file, class change, stale entry) rather than that it
+      # prints something.
+      - name: Check the TSR verifier can fail
+        run: node scripts/test-tsr-verify.cjs
+
       # The deploy gate is only worth its exit code if it has been shown to fail.
       # This is the negative suite: one flipped byte, a missing file, a directory in
       # place of a file. It builds its own repository, so it needs no fixtures.

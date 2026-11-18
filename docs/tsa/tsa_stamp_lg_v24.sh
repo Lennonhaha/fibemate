@@ -4,7 +4,8 @@
 # 重新编号 lg-105 ~ lg-108（lg-101 已被 phase0 txt 占用，跳过）
 #
 # target dir 默认当前目录（原写死 /opt/.../2026-08-17-...，重跑会往旧日期目录写）。
-# 行内新增 tsr / dir：存证行必须能直接读出 .tsr 文件名，否则汇总清单只能靠猜。
+# 行内新增 tsr / dir / artifact_sha256 / commit：存证行必须能直接读出 .tsr 文件名与
+# 被盖章的产物（及其提交），否则汇总清单只能靠猜。
 set -u
 
 DIR="${1:-$PWD}"
@@ -23,6 +24,7 @@ ITEMS=(
 )
 
 TS="$(date -Iseconds)"
+COMMIT="$(git -C "$DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
 echo "[" > "$MANIFEST"
 
 IDX=0
@@ -55,9 +57,11 @@ for item in "${ITEMS[@]}"; do
     "file": "$NAME",
     "tsr": "${SAFE_NAME}.tsr",
     "dir": "$DIR",
+    "artifact_sha256": "$SHA256",
     "size": $SIZE,
     "sha256": "$SHA256",
     "tsa": "FreeTSA",
+    "commit": "$COMMIT",
     "timestamp": "$TS"
   }
 EOF
