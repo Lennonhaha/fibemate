@@ -1,7 +1,7 @@
 #!/bin/bash
 # SPDX-License-Identifier: GPL-3.0-only
 #
-# Usage: tsa_stamp.sh <display_name> <sha256_hex> <size_bytes> [target_dir]
+# Usage: tsa_stamp.sh <display_name> <sha256_hex> <size_bytes> [target_dir] [artifact_path]
 #
 # Writes the .tsq/.tsr pair and appends a row to <target_dir>/timestamp-manifest.json.
 #
@@ -28,6 +28,8 @@ SHA256="$2"
 SIZE="$3"
 TS="$(date -Iseconds)"
 SAFE_NAME="$(echo "$NAME" | tr '/:' '__')"
+ARTIFACT_PATH="${5:-}"
+COMMIT="$(git -C "$DIR" rev-parse HEAD 2>/dev/null || echo unknown)"
 
 echo "$SHA256" | xxd -r -p > /tmp/tsa_digest.bin
 openssl ts -query -data /tmp/tsa_digest.bin -no_nonce -sha256 -cert -out "${SAFE_NAME}.tsq"
@@ -65,9 +67,12 @@ cat >> "$MANIFEST" <<EOF
     "file": "$NAME",
     "tsr": "${SAFE_NAME}.tsr",
     "dir": "$DIR",
+    "artifact_path": "$ARTIFACT_PATH",
+    "artifact_sha256": "$SHA256",
     "size": $SIZE,
     "sha256": "$SHA256",
     "tsa": "FreeTSA",
+    "commit": "$COMMIT",
     "timestamp": "$TS"
   }
 ]
