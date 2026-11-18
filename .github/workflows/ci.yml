@@ -311,6 +311,16 @@ jobs:
       - name: Check public TSR numbers against the counter
         run: node scripts/check-tsr-copy.cjs
 
+      # The same claim also promises an itemised list. A list covering half the
+      # files is not a weaker proof, it is a different one.
+      - name: Check the TSR manifest covers every tracked .tsr
+        run: node scripts/build-tsr-manifest.cjs --check
+
+      # Both gates above are only worth their exit codes if they have been seen to
+      # fail. These cases feed them trees and sentences that must be rejected.
+      - name: Check the TSR gates can fail
+        run: node scripts/test-tsr-gates.cjs
+
       # The deploy gate is only worth its exit code if it has been shown to fail.
       # This is the negative suite: one flipped byte, a missing file, a directory in
       # place of a file. It builds its own repository, so it needs no fixtures.

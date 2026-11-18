@@ -15,6 +15,17 @@
 //   "<N> 个不同 basename"   -> basenames
 //   "<N> 个 lg-NNN 令牌"    -> tokens
 //   "<N> 份为逐字节副本"     -> duplicates
+//   "<N> 个不带 lg 编号"     -> untokened
+//   "<N> timestamped evidence files" / "<N> distinct basenames" / "<N> lg-NNN tokens"
+//   "<N> byte-identical copies" / "<N> without an lg number"     (English mirror)
+//   "<N> unique tokens" / "<N> 个唯一令牌"                        (legacy phrasing)
+//
+// The legacy rules exist because the fix for the first drift missed one line: the
+// English JSON-LD still read "372 ... 261 unique tokens" while every Chinese line
+// had been corrected, and this gate passed it -- the rules only knew the new
+// wording, so the old wording was invisible. A gate that only recognises the
+// phrasing you just adopted protects the copy you just wrote, not the copy you
+// forgot. Both spellings now resolve to the same counter.
 //
 // Usage: node scripts/check-tsr-copy.cjs [--json]
 // Exit:  0 consistent, 1 drift found, 2 cannot measure.
@@ -55,17 +66,90 @@ const TARGETS = [
 
 const RULES = [
   { name: 'files', re: /(\d+)\s*份[^。\n]{0,16}\.tsr/g, expect: counter.files },
+  // The same count is printed without the .tsr suffix, as "374 份 RFC 3161 时间戳存证".
+  { name: 'files-zh-alt', re: /(\d+)\s*份[^。\n]{0,16}时间戳存证/g, expect: counter.files },
   { name: 'files-en', re: /(\d+)\s+tracked\s+\.tsr\s+files/gi, expect: counter.files },
   { name: 'basenames', re: /(\d+)\s*个\s*不同\s*basename/g, expect: counter.basenames },
   { name: 'basenames-en', re: /(\d+)\s+distinct\s+basenames/gi, expect: counter.basenames },
   { name: 'tokens', re: /(\d+)\s*个\s*lg-NNN\s*令牌/g, expect: counter.tokens },
   { name: 'tokens-en', re: /(\d+)\s+lg-NNN\s+tokens/gi, expect: counter.tokens },
   { name: 'duplicates', re: /(\d+)\s*份为逐字节副本/g, expect: counter.duplicates },
+  { name: 'untokened', re: /(\d+)\s*个不带\s*lg\s*编号/g, expect: counter.untokened },
+  { name: 'files-en-alt', re: /(\d+)\s+timestamped\s+evidence\s+files/gi, expect: counter.files },
+  { name: 'duplicates-en', re: /(\d+)\s+byte-identical\s+copies/gi, expect: counter.duplicates },
+  { name: 'untokened-en', re: /(\d+)\s+without\s+an\s+lg\s+number/gi, expect: counter.untokened },
+  // Legacy wording. These should never match again; if one does, the number it
+  // carries is a basename count wearing a token's name.
+  { name: 'tokens-legacy', re: /(\d+)\s+unique\s+tokens/gi, expect: counter.tokens },
+  { name: 'tokens-legacy-zh', re: /(\d+)\s*个唯一令牌/g, expect: counter.tokens },
 ];
 
 const findings = [];
 let checkedLines = 0;
 let exemptLines = 0;
+
+// One line at a time, so the negative test can feed synthetic sentences through the
+// same matcher the public files go through. A rule that is only exercised by the
+// copy it was written for has not been tested at all.
+function findingsForLine(line, file, lineNo) {
+  const hits = [];
+  for (const rule of RULES) {
+    rule.re.lastIndex = 0;
+    let m;
+    while ((m = rule.re.exec(line)) !== null) {
+      const found = Number(m[1]);
+      if (found !== rule.expect) {
+        hits.push({ file, line: lineNo, rule: rule.name, found, expected: rule.expect, text: line.trim().slice(0, 160) });
+      }
+    }
+  }
+  return hits;
+}
+
+if (process.argv.includes('--self-test')) {
+  const cases = [
+    {
+      name: 'legacy English phrasing (the line #546 missed)',
+      line: '372 timestamped evidence files (261 unique tokens; measured 2026-11-14)',
+      rules: ['files-en-alt', 'tokens-legacy'],
+    },
+    {
+      name: 'legacy Chinese phrasing',
+      line: '372 份 RFC 3161 时间戳存证（261 个唯一令牌）',
+      rules: ['files-zh-alt', 'tokens-legacy-zh'],
+    },
+    {
+      name: 'correct English phrasing',
+      line: '374 timestamped evidence files (261 distinct basenames, 93 lg-NNN tokens, 113 byte-identical copies, 222 without an lg number)',
+      rules: [],
+    },
+    {
+      name: 'correct Chinese phrasing',
+      line: '共 374 份 .tsr 文件，其中 261 个不同 basename、93 个 lg-NNN 令牌、222 个不带 lg 编号的 basename、113 份为逐字节副本',
+      rules: [],
+    },
+    {
+      name: 'basename count wearing the token label',
+      line: '共 261 个 lg-NNN 令牌',
+      rules: ['tokens'],
+    },
+    {
+      name: 'duplicate count without the unit',
+      line: '111 byte-identical copies',
+      rules: ['duplicates-en'],
+    },
+  ];
+  let bad = 0;
+  for (const c of cases) {
+    const got = findingsForLine(c.line, '<case>', 0).map((f) => f.rule).sort();
+    const want = c.rules.slice().sort();
+    const ok = got.length === want.length && got.every((r, i) => r === want[i]);
+    if (!ok) bad += 1;
+    console.log(`${ok ? 'PASS' : 'FAIL'} ${c.name}: expected [${want.join(',') || 'none'}] got [${got.join(',') || 'none'}]`);
+  }
+  console.log(`${cases.length - bad}/${cases.length} behaved as expected`);
+  process.exit(bad === 0 ? 0 : 1);
+}
 
 // A quoted historical claim is evidence, not copy. Lines carrying this marker are
 // skipped, and the count is printed so the exemption cannot grow silently.
@@ -84,23 +168,7 @@ for (const rel of TARGETS) {
       exemptLines += 1;
       return;
     }
-    for (const rule of RULES) {
-      rule.re.lastIndex = 0;
-      let m;
-      while ((m = rule.re.exec(line)) !== null) {
-        const found = Number(m[1]);
-        if (found !== rule.expect) {
-          findings.push({
-            file: rel,
-            line: i + 1,
-            rule: rule.name,
-            found,
-            expected: rule.expect,
-            text: line.trim().slice(0, 160),
-          });
-        }
-      }
-    }
+    for (const f of findingsForLine(line, rel, i + 1)) findings.push(f);
   });
 }
 
@@ -109,7 +177,8 @@ if (json) {
 } else if (findings.length === 0) {
   console.log(
     `OK: ${TARGETS.length} public files, ${checkedLines} lines (${exemptLines} exempt), numbers match ` +
-      `files=${counter.files} basenames=${counter.basenames} tokens=${counter.tokens} duplicates=${counter.duplicates}`,
+      `files=${counter.files} basenames=${counter.basenames} tokens=${counter.tokens} ` +
+      `duplicates=${counter.duplicates} untokened=${counter.untokened}`,
   );
 } else {
   console.error(`DRIFT: ${findings.length} mismatch(es) against scripts/count-tsr.cjs`);

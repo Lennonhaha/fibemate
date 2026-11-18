@@ -889,28 +889,7 @@
     "mtime": "2026-07-16T13:27:58"
   },
   {
-    "tsr": "THREAT_MODEL_md.tsr",
-    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
-    "dir": "docs/tsa",
-    "size": 50,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
     "tsr": "deploy_sh.tsr",
-    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
-    "dir": "docs/tsa",
-    "size": 50,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
-    "tsr": "security-block_html.tsr",
-    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
-    "dir": "docs/tsa",
-    "size": 50,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
-    "tsr": "security_html.tsr",
     "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
     "dir": "docs/tsa",
     "size": 50,
@@ -1225,13 +1204,6 @@
     "mtime": "2026-07-16T13:27:58"
   },
   {
-    "tsr": "lg-074-l8l9-43-tests-20260715.tsr",
-    "sha256": "4559a2c8a9596c5b56dfc4c1f2a0945b357f6797b4981877d1869a7489ba15ff",
-    "dir": ".",
-    "size": 6006,
-    "mtime": "2026-07-15T17:55:06"
-  },
-  {
     "tsr": "e2ee-display.js.tsr",
     "sha256": "b1131f58d640d50cb941139faca41330f90f059baa9a2159c934fb72b5c4f1f6",
     "dir": "www/timestamps/digicert/20260602",
@@ -1264,13 +1236,6 @@
     "sha256": "d7e3fd3c7027ac47716320bb97d3a6ed9cbca59cfb97407f1efa29dc25316790",
     "dir": "www/timestamps/digicert/20260602",
     "size": 5995,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
-    "tsr": "ml-kem-768.js.tsr",
-    "sha256": "51e6f5007a9b8dbad0360c3b6a838994a0a823e24d38aa9c8dd68a78fc7be66f",
-    "dir": "www/crypto/crypto",
-    "size": 974,
     "mtime": "2026-07-16T13:27:58"
   },
   {
@@ -1393,90 +1358,6 @@
     "mtime": "2026-06-27T06:07:46"
   },
   {
-    "tsr": "c_addon_kat_10000_20260604.tsr",
-    "sha256": "64e590e7afcf682d46fc7dccac79cd7943db6dd845f7127cbaf35435f9edde76",
-    "dir": "timestamps/addon",
-    "size": 5995,
-    "mtime": "2026-07-17T11:23:18"
-  },
-  {
-    "tsr": "c_addon_kat_100rounds_2026-06-04T10-54-52Z_20260604_105544Z.tsr",
-    "sha256": "17e060dd7d39a787addc9e30ccd96ab230a84f3bb6ab704f0b373a58b45b8017",
-    "dir": "timestamps/addon",
-    "size": 5996,
-    "mtime": "2026-07-17T11:23:18"
-  },
-  {
-    "tsr": "index_cAddonKAT_20260604_121531Z.tsr",
-    "sha256": "cdfa30ce866e173a87981f1744e550556645ce5872357771ee5a9239ff3ddb58",
-    "dir": "timestamps/addon",
-    "size": 5996,
-    "mtime": "2026-07-17T11:23:18"
-  },
-  {
-    "tsr": "mlkem_20260604_104151Z.tsr",
-    "sha256": "40faed69da48300b64fdd22c05f2bf8ed1cda7a6d91499cb59ec0009a85a7c8e",
-    "dir": "timestamps/addon",
-    "size": 5995,
-    "mtime": "2026-07-17T11:23:18"
-  },
-  {
-    "tsr": "mlkem_wrap_20260604_104151Z.tsr",
-    "sha256": "cb73cb676022b3135d0eeff41f9bdf2959c6bcf1cc62cfeff95b2f8b964d6052",
-    "dir": "timestamps/addon",
-    "size": 5996,
-    "mtime": "2026-07-17T11:23:18"
-  },
-  {
-    "tsr": "mlkem_wrap_20260604_105544Z.tsr",
-    "sha256": "518eb8d493b3769e0b9c087d81ab38b9a6500c5e3be03fa6c36cb23355f342f8",
-    "dir": "timestamps/addon",
-    "size": 5995,
-    "mtime": "2026-07-17T11:23:18"
-  },
-  {
-    "tsr": "randombytes_20260604_104151Z.tsr",
-    "sha256": "bc30adf14fd86f6d43be971b0ebf7dae04cccb7a111ffc6014c04a76f47e1452",
-    "dir": "timestamps/addon",
-    "size": 5996,
-    "mtime": "2026-07-17T11:23:18"
-  },
-  {
-    "tsr": "_bigint_sm2_digicert.tsr",
-    "sha256": "f2e09ddf3ea919e204ece42c7665f5aa6d9cd847d1bde2286ed9855ba395ccc5",
-    "dir": "experimental/sm2/tsa-20260616",
-    "size": 6007,
-    "mtime": "2026-07-17T11:23:14"
-  },
-  {
-    "tsr": "_sm2_scalarmul.tsr",
-    "sha256": "15a28feae67e2d9972eb19677dd5959ca13ac254304a7904bdd0f8be49a6a373",
-    "dir": "experimental/sm2/tsa-20260616",
-    "size": 6007,
-    "mtime": "2026-07-17T11:23:14"
-  },
-  {
-    "tsr": "benchmark_sm2.js.tsr",
-    "sha256": "48b14a89170d6c7898886219e400984236306dee533b8a0765f3ceb511932fca",
-    "dir": "experimental/sm2/tsa-20260615",
-    "size": 943,
-    "mtime": "2026-07-17T11:23:14"
-  },
-  {
-    "tsr": "sm2-crypto.js.tsr",
-    "sha256": "5cb572fd37454326ba892bcf0dbd06cbb8c7b611c810cfbdbdfcab8885026129",
-    "dir": "experimental/sm2/tsa-20260615",
-    "size": 943,
-    "mtime": "2026-07-17T11:23:14"
-  },
-  {
-    "tsr": "sm2-pretable.js.tsr",
-    "sha256": "733a0c8098a5431c0369403a7d5322362326b54ed27e20185dff8b487bbb38f8",
-    "dir": "experimental/sm2/tsa-20260615",
-    "size": 941,
-    "mtime": "2026-07-17T11:23:14"
-  },
-  {
     "tsr": "keccak.js.tsr",
     "sha256": "5354a1dfd6dfaef9b9b076ad3bc838044905f75e0904f25ded8d0535d0992d0d",
     "dir": "lib",
@@ -1491,26 +1372,1071 @@
     "mtime": "2026-06-27T06:07:46"
   },
   {
-    "tsr": "TECHNICAL-VERIFICATION-v2.tsr",
-    "sha256": "bf451a74a544b8370c849cf8d3dbfba078badd3e150600227a475f7654a5bda1",
-    "dir": "docs",
-    "size": 4633,
-    "mtime": "2026-07-17T11:23:14"
+    "tsr": "lg-001.tsr",
+    "sha256": "789bb50ba07485b08f5c25d77ee2d7516c9d51fe6e509319cff4993a9533b1d1",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
   },
   {
-    "tsr": "ml-kem-768-td.js.tsr",
-    "sha256": "211f55c3d30b3a10013ef6b6b8f8476093ee971a08017064dab605e28bf2bbdb",
-    "dir": "public/crypto/crypto",
-    "size": 974,
-    "mtime": "2026-06-27T06:07:46"
+    "tsr": "lg-002.tsr",
+    "sha256": "d14492912574bd0ff13275973fc882c402ffa1bba7e19d172e0f8ea1c1f70a09",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-003.tsr",
+    "sha256": "8bbb5b5e652f2fac6245f8524038ced7bca0c1923d9c5cf19597f2094c3a1853",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-004.tsr",
+    "sha256": "26f2c87a2eac2007e56baba5bcdc26f822317e69ce0737fd552e8415c3875cce",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-005.tsr",
+    "sha256": "27b04b9615a0fa9977c55247b377e5dbf954ca122cc206eae2f6ea8b0d41a25b",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-006.tsr",
+    "sha256": "956569a7371c4369db3c1efd9b5e8385a50e9cb0d3e8309e3f7935dffe0dcbb0",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1068
+  },
+  {
+    "tsr": "lg-007.tsr",
+    "sha256": "57c716b11bff750d741fa6bd9d3cb415f32eb8c6064a611020301a376090e179",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-008.tsr",
+    "sha256": "c94577ec365d77f1bf0d5aa553efe6f2362fe29dcd0126c1b8d3945e34957cff",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-009.tsr",
+    "sha256": "36d345520a54f91c76c48f715b24876ad30f319d84fa5aad84057fe3fbe8905c",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-010.tsr",
+    "sha256": "9badabef24e79a6dc9465be7d154439bf9761810e8aee563c943fb41f61a706b",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-011.tsr",
+    "sha256": "b0d87ed9dd6966ce8e316435f74b553380b9fbb592bd167ba223d3570dae5506",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-012.tsr",
+    "sha256": "016da21ec01b97860fe0e2a27cee983c60701c53ab6bdfd3df916e22995a2491",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-013.tsr",
+    "sha256": "80a225195285d550a3491156bca0b4fd7eee334311a0fec32a5b1b22953a67be",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-014.tsr",
+    "sha256": "ee6ded5dd0e6f85a99b1d3aecb3f08233221eec4596f7989000ab08d08b08a92",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-015.tsr",
+    "sha256": "7f9e3667143e880d2f1bf53ac909a6b6c358085ea7334144efd64232cbd0e971",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-016.tsr",
+    "sha256": "fa2a382e7670dfc9b5a77f987b123f12adb90a23b1e34561fb98f88e4ff4ad8b",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-017.tsr",
+    "sha256": "925e089427041d53dca7a7f0bd1caaa5f1b73e8805abbd0c1b7355e7b95139d7",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-018.tsr",
+    "sha256": "84b0c20bba3ac12451801d6f584dc4acf07ecf063fd667b44a6f0b5c6b8dceaa",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-019.tsr",
+    "sha256": "5287a3086bbcdc502f911e8c5860d3a3a53ca5106a2b818ea698c0b3a4595f45",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-020.tsr",
+    "sha256": "b1383124ce5e2e580b615a1b6ba1528d51465ee8436b361bf99e660c0e029fd0",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-021.tsr",
+    "sha256": "90c53951240770b915748f40efbaf49c8b24f4661df6671f901473528565ec0d",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-022.tsr",
+    "sha256": "2616fe81ef171a94d56a12a435c5fba5e8ea2963157092191169a31f238e9310",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-023.tsr",
+    "sha256": "a3e87c38ce74df178f37d87a7c31589c4c39f6c941295b0efcc66042419cdf60",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-024.tsr",
+    "sha256": "ee7cec419cf9162b16fa029914e8e50ba94432003ccaebc1b4a04c7147e438c7",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-025.tsr",
+    "sha256": "fd76fcce48c0e9460e9ccb46948ab981d0dd69ac85fffc01ce63f386a7a7d7d2",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-026.tsr",
+    "sha256": "26fa020d3eb6fe9221e8094041c5e939b926aa7ea3ec882fa89dbbf476c04c3c",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-027.tsr",
+    "sha256": "4733d18b9863d4a07dd44a9ec8f904e50040ff61ec1bc0256c2acb9d6bfa8004",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-028.tsr",
+    "sha256": "762423cdabe5dd5edcc2b8a680ac5f29b1f2225966cc28fb9e1575b3c3090cf9",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-029.tsr",
+    "sha256": "ba21088af8763da94d380564bc65fb8b7b3af07675ff217c1b3dc99d568d47b4",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-030.tsr",
+    "sha256": "6bbcd5d7ed763abbb78268bb3007a7c06001f254e9521f3088ca65468bd9b324",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-031.tsr",
+    "sha256": "f94b0e341ffc20fef0ca3c500efae7cde0389997614077a95711f6e4ab09a5a6",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-032.tsr",
+    "sha256": "093d6574be09f32ccad98c34c4f903a35fdc6d03b39274febdd086370f92223c",
+    "dir": "docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-082.tsr",
+    "sha256": "75c7e10342f4298012e3871b2869e373be70034a4a713ecb565e2980af45cc95",
+    "dir": "docs/tsa/2026-07-18",
+    "size": 942
+  },
+  {
+    "tsr": "lg-086.tsr",
+    "sha256": "1e8de40fa8199f27fc9855a66b2f2e09718907a6879b34ccb7c555453c4fc31f",
+    "dir": "docs/tsa/2026-07-21",
+    "size": 941
+  },
+  {
+    "tsr": "lg-087.tsr",
+    "sha256": "be27d03ba1b8db3ace00ee46be4c1a252f2b4f35a91d8745cdaca44eaf2cfe08",
+    "dir": "docs/tsa/2026-07-21",
+    "size": 943
+  },
+  {
+    "tsr": "lg-088.tsr",
+    "sha256": "5b6db8608e0a0e4ea07b0bb8b4001a0bb5cff23e15500f4c2367953d42bbc8ab",
+    "dir": "docs/tsa/2026-07-21",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-089.tsr",
+    "sha256": "4d41f78a7c650d0a0b79e7f78bc09f6e0b6412045dd275796586a372f99a3037",
+    "dir": "docs/tsa/2026-07-21",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-090.tsr",
+    "sha256": "9a2d0a1412809100a727b9f8ec3e1b784c6d9e1f3746a1a8a26c00025b8891d3",
+    "dir": "docs/tsa/2026-07-22",
+    "size": 5995
+  },
+  {
+    "tsr": "lg-091.tsr",
+    "sha256": "7b6a9de00c1415b24c13db5f36a4df1cff1025cbcb6919a59c33324ad9ef00fa",
+    "dir": "docs/tsa/2026-07-22",
+    "size": 5995
+  },
+  {
+    "tsr": "lg-092.tsr",
+    "sha256": "cf5970e00ab12b11193855929cd6fd7a3879801aeb3f855e93c3a7e582f15dad",
+    "dir": "docs/tsa/2026-07-22",
+    "size": 4633
+  },
+  {
+    "tsr": "lg-093.tsr",
+    "sha256": "9d1aed5dd78421f96d90ed8cdeea24fa8dff5345b41774779e88c15d97b79fa5",
+    "dir": "docs/tsa/2026-07-22",
+    "size": 4633
+  },
+  {
+    "tsr": "lg-094.tsr",
+    "sha256": "e8d6d27a6a513bd5b5e36af740fbf83ab203785e2a6039f7ce8ded954ed18b54",
+    "dir": "docs/tsa/2026-07-22",
+    "size": 4632
+  },
+  {
+    "tsr": "lg-095.tsr",
+    "sha256": "adc5a8f1672e7a8ccffc8692406e7aa6dff155072cb2891c135dcde2438e66ad",
+    "dir": "docs/tsa/2026-07-22",
+    "size": 973
+  },
+  {
+    "tsr": "lg-105-defense.rs.tsr",
+    "sha256": "bb122b2b7c40d2392ca6aeb208314722740c1fb1fc15a03445ca6a87ec354f59",
+    "dir": "docs/tsa/2026-08-17-lg-v24-watchdog",
+    "size": 4634
+  },
+  {
+    "tsr": "lg-106-vm.rs.tsr",
+    "sha256": "30ee8e550b7a668a6709635a5eadd49dfc8ce440fad7cdb26f6a296d85865086",
+    "dir": "docs/tsa/2026-08-17-lg-v24-watchdog",
+    "size": 4633
+  },
+  {
+    "tsr": "lg-107-lgv2_3.wasm.tsr",
+    "sha256": "b377641c13ff0caa4d6231b873e8f8639348f3038ebc3f9a1b28dbce879e6e0f",
+    "dir": "docs/tsa/2026-08-17-lg-v24-watchdog",
+    "size": 4634
+  },
+  {
+    "tsr": "lg-108-watchdog-wasm-verify.md.tsr",
+    "sha256": "4095c1f6d8bb2e324388b3bae805277ff4ac096c33870ea3efbbc157ac0b011e",
+    "dir": "docs/tsa/2026-08-17-lg-v24-watchdog",
+    "size": 4634
+  },
+  {
+    "tsr": "vwz-rank2-dts.tsr",
+    "sha256": "d270358bcad3235b7cecaccc1e25b516139b616edbb0c9113499b12efd2e84c3",
+    "dir": "docs/tsa/2026-09-06-vwz-rank2",
+    "size": 4632
+  },
+  {
+    "tsr": "vwz-rank2-js.tsr",
+    "sha256": "16fdc0a0bd2300514556ba4eaadec8be6f1e98a4265f84cc8d287d0d2afa3950",
+    "dir": "docs/tsa/2026-09-06-vwz-rank2",
+    "size": 4632
+  },
+  {
+    "tsr": "vwz-rank2-kat.tsr",
+    "sha256": "4cbf998aaa47aa145460c933a6313dad875a7812f62226cb2a6701643b9bf460",
+    "dir": "docs/tsa/2026-09-06-vwz-rank2",
+    "size": 4633
+  },
+  {
+    "tsr": "vwz-rank2-wasm.tsr",
+    "sha256": "37b293109e3ac5fd03c134babda182a3968c9f71aabdd75f24bb32b12d26953f",
+    "dir": "docs/tsa/2026-09-06-vwz-rank2",
+    "size": 4634
+  },
+  {
+    "tsr": "lg-116-interop-matrix-SHA256SUMS.tsr",
+    "sha256": "7e3477b02accfb15c0b8c35219863208e9a7c2d84e4a4c0002469b7723fcaccd",
+    "dir": "docs/tsa/2026-10-28-interop-matrix",
+    "size": 4643
+  },
+  {
+    "tsr": "lg-109-ml-kem-768-td-retirement.tsr",
+    "sha256": "5cceec699fa8c5427511ca0e9b2bb8217f92d62462f0a102f54a24139fcf939d",
+    "dir": "docs/tsa/2026-10-28-retire-ml-kem-768-td",
+    "size": 4633
+  },
+  {
+    "tsr": "lg-110-ml-kem-768-td-SHA256SUMS.tsr",
+    "sha256": "f9cf6e15df99f78b1407c99cd780e1bdd706a8f85e69bfa230199b419e4fe4d0",
+    "dir": "docs/tsa/2026-10-28-retire-ml-kem-768-td",
+    "size": 4632
+  },
+  {
+    "tsr": "lg-111-cyclonedx-data-loss-proof.tsr",
+    "sha256": "df96a9d6e9390184b01c204c5351fe8d5a00f6f6806945b60e32d89fe2180a88",
+    "dir": "docs/tsa/2026-10",
+    "size": 4643
+  },
+  {
+    "tsr": "lg-113-repo-commits.tsr",
+    "sha256": "019067f50ed078e34d002047db6b4e970667b40df6ddb1b6153e3cac730c8ce9",
+    "dir": "docs/tsa/2026-10",
+    "size": 4644
+  },
+  {
+    "tsr": "lg-114-cyclonedx-data-loss-witness.tsr",
+    "sha256": "bd20a0cf2e43856e81862350ea5351e4952f9401c23652ec1f5ac08d4f47d747",
+    "dir": "docs/tsa/2026-10",
+    "size": 4644
+  },
+  {
+    "tsr": "lg-115-asset-manifest.tsr",
+    "sha256": "f36fa617ecc6cb2ba19168dbc09f648b1d49d2f56facff6cfd294f5fe723f1bc",
+    "dir": "docs/tsa/2026-10",
+    "size": 4645
   },
   {
     "tsr": "lg-101-phase0-20260805.tsr",
-    "sha256": "d7385f2ee44c1d0a417a2c3df9ea27bedd53d2a52167c5cd05ca43687643132e",
-    "date": "2026-08-05",
-    "claim": "FIBEMATE SM2 WASM Phase 0 Verification — AssemblyScript 0.28 -> WASM 979B -> Node.js add(2,3)=5 mul(4,5)=20 PASS",
-    "dgst": "sha256",
-    "serial": "0x06C5F654",
-    "freetsa_time": "2026-08-05 10:39:59 GMT"
+    "sha256": "963ccc9e8c897858fe715982e2d1a4a897321f050cd2db8588f5f546c338de69",
+    "dir": "docs/tsa",
+    "size": 943
+  },
+  {
+    "tsr": "tvla-9of9-corrected-report.json.tsr",
+    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
+    "dir": "evidence/tvla",
+    "size": 259
+  },
+  {
+    "tsr": "tvla-9of9-summary.md.tsr",
+    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
+    "dir": "evidence/tvla",
+    "size": 259
+  },
+  {
+    "tsr": "tvla-defense-for-reviewers.md.tsr",
+    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
+    "dir": "evidence/tvla",
+    "size": 259
+  },
+  {
+    "tsr": "tvla-experiment-5-polyMul-attack-verification.json.tsr",
+    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
+    "dir": "evidence/tvla",
+    "size": 259
+  },
+  {
+    "tsr": "vwz-076-main-20260717.tsr",
+    "sha256": "378f1c8efce3ae083d0c30ecca66ce37d8459cf88df96c39b0e254650c73705f",
+    "dir": "papers",
+    "size": 4632
+  },
+  {
+    "tsr": "docs_architecture.tsr",
+    "sha256": "a3e500e97784404031fdc066751f45cf2626ac3116738be5b9d5b1b0a95d1a66",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 942
+  },
+  {
+    "tsr": "index.tsr",
+    "sha256": "51f43da01005afbebaac530d14d9ccc5053d85982cefa3d6140aabd6ab9a32e1",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 941
+  },
+  {
+    "tsr": "main.tsr",
+    "sha256": "a4d75bd765c40882294bce05acbbcd0d73c513115572b0ea5f99fb9a21e0061d",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 943
+  },
+  {
+    "tsr": "src_crypto_bloom-filter.tsr",
+    "sha256": "11b1e3cb1d6cfe9d875e548eca13cbf034f3baf79bfe3c35ac726a113746c36c",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 941
+  },
+  {
+    "tsr": "src_crypto_distributed-mixnet.tsr",
+    "sha256": "c9028c729a36ede9f227b21d9725ca3b286c64473e8799890d3944723821e63c",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 943
+  },
+  {
+    "tsr": "src_crypto_mixnet-transport.tsr",
+    "sha256": "d82b81d473fa5bb846718ec0679fd62dc2c8d80e67eecd065ac61fd517e48e59",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 943
+  },
+  {
+    "tsr": "src_crypto_nym-mixnet.tsr",
+    "sha256": "923111d53d1791c5c1cfd35f8971de181cd4319c03a1d9523540157cf45020a9",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 941
+  },
+  {
+    "tsr": "src_crypto_traffic-shaping.tsr",
+    "sha256": "0241fc43dd706f27aa483a202d40199e070dd0a12b9da7a9ae0930cde0ec5841",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 942
+  },
+  {
+    "tsr": "www_privacy-layers_pir-search.tsr",
+    "sha256": "8a7a26d58b2b7953e4e9dfb74373393c6786ad17006e9b82078251b28af08d58",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 942
+  },
+  {
+    "tsr": "www_privacy-layers_sphinx-packet.tsr",
+    "sha256": "35d18fcadf3ba9192ca052799e0ef791b16ed141b79d2c6d22a4de0616192328",
+    "dir": "www/docs/tsa/2026-05-25",
+    "size": 942
+  },
+  {
+    "tsr": "Cargo.toml.tsr",
+    "sha256": "5c44b6fa2e1c0247e61cc23ee9b5454d6b272a90c3b53dd681f98ae924aef8a7",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 942
+  },
+  {
+    "tsr": "fibemate_pq_wasm.js.tsr",
+    "sha256": "e868cbd2f9232710476bf41b3af5eb37341f563e665f44c13636958a05af6f28",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 942
+  },
+  {
+    "tsr": "fibemate_pq_wasm_bg.wasm.tsr",
+    "sha256": "44463afeabe56bb979fc98bf56cc64547d307535fbad13cd6ac688859c69b1b9",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 941
+  },
+  {
+    "tsr": "lib.rs.tsr",
+    "sha256": "313c656416162377ada9e15532691ef7446ea4ad032dbf767fb8f076118af7cf",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 941
+  },
+  {
+    "tsr": "ml-kem-768-td.js.tsr",
+    "sha256": "d3074010dd43a191902ed9dbf8ef1756109a4bc19ba8eb9b85076e675cbb4a07",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 942
+  },
+  {
+    "tsr": "test-cross-lang-seeded.js.tsr",
+    "sha256": "225df1d7c295e31c02a3fe59d8d9938e62ad2dbe091c7fd76c1e00808d0787c5",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 941
+  },
+  {
+    "tsr": "test_INTEGRITY-MANIFEST.json.tsr",
+    "sha256": "7fc8ca5c0f891f432e6fe969f0858b86dc212031562b179b6d233412e61543d5",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "test_test-cross-lang.js.tsr",
+    "sha256": "a126d0b64087996f348513a5f765339df4c1535543b547e5ba2cf670cd206667",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "test_test-fibemate.js.tsr",
+    "sha256": "ab635013742d6f0ac5d328341b3ea675f203289ad8f62b93877db6edbb13772c",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "www_docs_pqc-readiness.html.tsr",
+    "sha256": "5b66b496bbe12748781db10234d1918a3999ae31df2eefe5b26cb5069e24de9e",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "www_docs_sm2-optimization.html.tsr",
+    "sha256": "41a7c17a956ec89a67d9529c192ac72fac27430d7aa9c55532d681f5a65214eb",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4634
+  },
+  {
+    "tsr": "www_docs_sm2-tvla-analysis.html.tsr",
+    "sha256": "fb9a4f1d36fc475cb14d25246d0688308b1cf6057ef382a63e90bad9e511884c",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "www_docs_tvla_hmac-sm3_tvla-hmac-sm3-v1-report.json.tsr",
+    "sha256": "2447bfe96290186dba560a0e268d4597be6e691b1298e31f20aa6e68a497a6da",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "www_docs_tvla_hmac-sm3_tvla-hmac-sm3.js.tsr",
+    "sha256": "c4f102c5158db38c8100aa530b197ea9f7cb0cc61939d21f905129807c286427",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4632
+  },
+  {
+    "tsr": "www_docs_tvla_index.html.tsr",
+    "sha256": "e8b99c31e415f7c02d1b4c0da56e35b7f7012c452b45a816bc669622f3a744ca",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "www_docs_tvla_ml-kem-768_tvla-mlkem-report-v2-final.json.tsr",
+    "sha256": "72d059c3ad6bbffcb621cc59ccd352d0ad5b45a605c1ca33d8171341f3097448",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4632
+  },
+  {
+    "tsr": "www_docs_tvla_sm2_tvla-sm2-v3-output.txt.tsr",
+    "sha256": "e39a0ff2952e8e5ab6fb754abaf3fab0cf2afa5c0f80a6e9f2e0b5a0dac48596",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "www_docs_tvla_sm2_tvla-sm2-v3-report.json.tsr",
+    "sha256": "f6a7b768163d3fd64c350513dbfdc48a659e69aa9e77e180d8178e13179637c7",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4634
+  },
+  {
+    "tsr": "www_security.html.tsr",
+    "sha256": "6ba3ccfd4b90718f8f385728c3cbb0c5c8e1c66787667987cc8414803191a3b2",
+    "dir": "www/docs/tsa/2026-06-08",
+    "size": 4633
+  },
+  {
+    "tsr": "index.html.tsr",
+    "sha256": "c5249d8f88280e9eed5259934a29d37d4611d33fcfb1009d0394dcf55562c496",
+    "dir": "www/docs/tsa/2026-06-11",
+    "size": 4666
+  },
+  {
+    "tsr": "ml-kem-768.js.tsr",
+    "sha256": "86ef38b4495bbd26abbd9d5045a3900fe37b3e7e424e339b7585caf990f45a2f",
+    "dir": "www/docs/tsa/2026-06-11",
+    "size": 4666
+  },
+  {
+    "tsr": "ntt_bundle.tsr",
+    "sha256": "a688a88bbc0a35062a2ccbf40ab284c725cbece00f9addbd77aa78bf59a80c8e",
+    "dir": "www/docs/tsa/2026-06-25/hardware",
+    "size": 943
+  },
+  {
+    "tsr": "ntt_core_pipe.tsr",
+    "sha256": "e92abf01ce21ffef88d0a52cd9f9717dbc64702e3def869fc902ce31e1b182fc",
+    "dir": "www/docs/tsa/2026-06-25/hardware",
+    "size": 942
+  },
+  {
+    "tsr": "lg-001.tsr",
+    "sha256": "789bb50ba07485b08f5c25d77ee2d7516c9d51fe6e509319cff4993a9533b1d1",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-002.tsr",
+    "sha256": "d14492912574bd0ff13275973fc882c402ffa1bba7e19d172e0f8ea1c1f70a09",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-003.tsr",
+    "sha256": "8bbb5b5e652f2fac6245f8524038ced7bca0c1923d9c5cf19597f2094c3a1853",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-004.tsr",
+    "sha256": "26f2c87a2eac2007e56baba5bcdc26f822317e69ce0737fd552e8415c3875cce",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-005.tsr",
+    "sha256": "27b04b9615a0fa9977c55247b377e5dbf954ca122cc206eae2f6ea8b0d41a25b",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-006.tsr",
+    "sha256": "956569a7371c4369db3c1efd9b5e8385a50e9cb0d3e8309e3f7935dffe0dcbb0",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1068
+  },
+  {
+    "tsr": "lg-007.tsr",
+    "sha256": "57c716b11bff750d741fa6bd9d3cb415f32eb8c6064a611020301a376090e179",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-008.tsr",
+    "sha256": "c94577ec365d77f1bf0d5aa553efe6f2362fe29dcd0126c1b8d3945e34957cff",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-009.tsr",
+    "sha256": "36d345520a54f91c76c48f715b24876ad30f319d84fa5aad84057fe3fbe8905c",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-010.tsr",
+    "sha256": "9badabef24e79a6dc9465be7d154439bf9761810e8aee563c943fb41f61a706b",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-011.tsr",
+    "sha256": "b0d87ed9dd6966ce8e316435f74b553380b9fbb592bd167ba223d3570dae5506",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-012.tsr",
+    "sha256": "016da21ec01b97860fe0e2a27cee983c60701c53ab6bdfd3df916e22995a2491",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-013.tsr",
+    "sha256": "80a225195285d550a3491156bca0b4fd7eee334311a0fec32a5b1b22953a67be",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-014.tsr",
+    "sha256": "ee6ded5dd0e6f85a99b1d3aecb3f08233221eec4596f7989000ab08d08b08a92",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-015.tsr",
+    "sha256": "7f9e3667143e880d2f1bf53ac909a6b6c358085ea7334144efd64232cbd0e971",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-016.tsr",
+    "sha256": "fa2a382e7670dfc9b5a77f987b123f12adb90a23b1e34561fb98f88e4ff4ad8b",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-017.tsr",
+    "sha256": "925e089427041d53dca7a7f0bd1caaa5f1b73e8805abbd0c1b7355e7b95139d7",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-018.tsr",
+    "sha256": "84b0c20bba3ac12451801d6f584dc4acf07ecf063fd667b44a6f0b5c6b8dceaa",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-019.tsr",
+    "sha256": "5287a3086bbcdc502f911e8c5860d3a3a53ca5106a2b818ea698c0b3a4595f45",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-020.tsr",
+    "sha256": "b1383124ce5e2e580b615a1b6ba1528d51465ee8436b361bf99e660c0e029fd0",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-021.tsr",
+    "sha256": "90c53951240770b915748f40efbaf49c8b24f4661df6671f901473528565ec0d",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-022.tsr",
+    "sha256": "2616fe81ef171a94d56a12a435c5fba5e8ea2963157092191169a31f238e9310",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-023.tsr",
+    "sha256": "a3e87c38ce74df178f37d87a7c31589c4c39f6c941295b0efcc66042419cdf60",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-024.tsr",
+    "sha256": "ee7cec419cf9162b16fa029914e8e50ba94432003ccaebc1b4a04c7147e438c7",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-025.tsr",
+    "sha256": "fd76fcce48c0e9460e9ccb46948ab981d0dd69ac85fffc01ce63f386a7a7d7d2",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-026.tsr",
+    "sha256": "26fa020d3eb6fe9221e8094041c5e939b926aa7ea3ec882fa89dbbf476c04c3c",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-027.tsr",
+    "sha256": "4733d18b9863d4a07dd44a9ec8f904e50040ff61ec1bc0256c2acb9d6bfa8004",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-028.tsr",
+    "sha256": "762423cdabe5dd5edcc2b8a680ac5f29b1f2225966cc28fb9e1575b3c3090cf9",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-029.tsr",
+    "sha256": "ba21088af8763da94d380564bc65fb8b7b3af07675ff217c1b3dc99d568d47b4",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-030.tsr",
+    "sha256": "6bbcd5d7ed763abbb78268bb3007a7c06001f254e9521f3088ca65468bd9b324",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-031.tsr",
+    "sha256": "f94b0e341ffc20fef0ca3c500efae7cde0389997614077a95711f6e4ab09a5a6",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1069
+  },
+  {
+    "tsr": "lg-032.tsr",
+    "sha256": "093d6574be09f32ccad98c34c4f903a35fdc6d03b39274febdd086370f92223c",
+    "dir": "www/docs/tsa/2026-06-26",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-054-freetsa.tsr",
+    "sha256": "93e6c96fe84120d1b27f00c935786844c78c2f850a558536888b5dcb794e35ac",
+    "dir": "www/docs/tsa/2026-07-06",
+    "size": 942
+  },
+  {
+    "tsr": "lg-055-freetsa.tsr",
+    "sha256": "47918508d0bf3683ce7cbd2b7c6c22579dac7c9c98c86ad10ce4365520bbfd7c",
+    "dir": "www/docs/tsa/2026-07-07",
+    "size": 973
+  },
+  {
+    "tsr": "hybrid-kem-client.js.tsr",
+    "sha256": "4433b889a644a970c7800ff05a5806aedeb27ff3dab42c26b6c5f271059e40ff",
+    "dir": "www/docs/tsa/2026-07-15",
+    "size": 1069
+  },
+  {
+    "tsr": "reg-e2e-test.js.tsr",
+    "sha256": "7c071a9500d2a6db7924bd759d2b64ef7eaf1efcdf5e48617f3f7d4ffc4cc6b1",
+    "dir": "www/docs/tsa/2026-07-15",
+    "size": 1069
+  },
+  {
+    "tsr": "server.js.tsr",
+    "sha256": "43a22c6a8a3d4906e0aabcc1f8ef1a1799baa9393c31e60e8f9f28610a03264b",
+    "dir": "www/docs/tsa/2026-07-15",
+    "size": 1070
+  },
+  {
+    "tsr": "test-tls-hybrid-extension.js.tsr",
+    "sha256": "691530bf8fd70e5df6d0538a9342b71c1d1f08abb964e4f3ca2bc5429f1a31d0",
+    "dir": "www/docs/tsa/2026-07-15",
+    "size": 4634
+  },
+  {
+    "tsr": "tls-hybrid-extension.js.tsr",
+    "sha256": "95796b86668a3d8399d13bfac5672690dc45a4ae02dc401e43c7604e5ec15b19",
+    "dir": "www/docs/tsa/2026-07-15",
+    "size": 4634
+  },
+  {
+    "tsr": "www-crypto-hybrid-kem-client.js.tsr",
+    "sha256": "757d9423b8e2c329b17150190f8205cd83469d8e3c8cded6773d8e0d18f26301",
+    "dir": "www/docs/tsa/2026-07-15",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-082.tsr",
+    "sha256": "75c7e10342f4298012e3871b2869e373be70034a4a713ecb565e2980af45cc95",
+    "dir": "www/docs/tsa/2026-07-18",
+    "size": 942
+  },
+  {
+    "tsr": "lg-083-vwz-148-suite-20260718.tsr",
+    "sha256": "0d835038139a63c4636203d67459833da407fc6d427b8526c6238fcec57f61dd",
+    "dir": "www/docs/tsa/2026-07-18",
+    "size": 6063
+  },
+  {
+    "tsr": "lg-084.tsr",
+    "sha256": "fa4561584e67d8feada5b119453c62686f7cbd36b2348f7dde7ba42647a775cd",
+    "dir": "www/docs/tsa/2026-07-18",
+    "size": 943
+  },
+  {
+    "tsr": "lg-085-kat-10000-20260718.tsr",
+    "sha256": "bc80727ed83447fc161966946118b849568da9f385eb76861cb63a083d87091b",
+    "dir": "www/docs/tsa/2026-07-18",
+    "size": 6064
+  },
+  {
+    "tsr": "lg-086.tsr",
+    "sha256": "1e8de40fa8199f27fc9855a66b2f2e09718907a6879b34ccb7c555453c4fc31f",
+    "dir": "www/docs/tsa/2026-07-21",
+    "size": 941
+  },
+  {
+    "tsr": "lg-087.tsr",
+    "sha256": "be27d03ba1b8db3ace00ee46be4c1a252f2b4f35a91d8745cdaca44eaf2cfe08",
+    "dir": "www/docs/tsa/2026-07-21",
+    "size": 943
+  },
+  {
+    "tsr": "lg-088.tsr",
+    "sha256": "5b6db8608e0a0e4ea07b0bb8b4001a0bb5cff23e15500f4c2367953d42bbc8ab",
+    "dir": "www/docs/tsa/2026-07-21",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-089.tsr",
+    "sha256": "4d41f78a7c650d0a0b79e7f78bc09f6e0b6412045dd275796586a372f99a3037",
+    "dir": "www/docs/tsa/2026-07-21",
+    "size": 1070
+  },
+  {
+    "tsr": "lg-096-ci-milestone.tsr",
+    "sha256": "d3e143186978dfc71499ec1b9bf66975892bd538ca9af93f1724177cca8f1625",
+    "dir": "www/docs/tsa/2026-07-22-ci-milestone",
+    "size": 4666
+  },
+  {
+    "tsr": "lg-090.tsr",
+    "sha256": "9a2d0a1412809100a727b9f8ec3e1b784c6d9e1f3746a1a8a26c00025b8891d3",
+    "dir": "www/docs/tsa/2026-07-22",
+    "size": 5995
+  },
+  {
+    "tsr": "lg-091.tsr",
+    "sha256": "7b6a9de00c1415b24c13db5f36a4df1cff1025cbcb6919a59c33324ad9ef00fa",
+    "dir": "www/docs/tsa/2026-07-22",
+    "size": 5995
+  },
+  {
+    "tsr": "lg-092.tsr",
+    "sha256": "cf5970e00ab12b11193855929cd6fd7a3879801aeb3f855e93c3a7e582f15dad",
+    "dir": "www/docs/tsa/2026-07-22",
+    "size": 4633
+  },
+  {
+    "tsr": "lg-093.tsr",
+    "sha256": "9d1aed5dd78421f96d90ed8cdeea24fa8dff5345b41774779e88c15d97b79fa5",
+    "dir": "www/docs/tsa/2026-07-22",
+    "size": 4633
+  },
+  {
+    "tsr": "lg-094.tsr",
+    "sha256": "e8d6d27a6a513bd5b5e36af740fbf83ab203785e2a6039f7ce8ded954ed18b54",
+    "dir": "www/docs/tsa/2026-07-22",
+    "size": 4632
+  },
+  {
+    "tsr": "lg-095.tsr",
+    "sha256": "adc5a8f1672e7a8ccffc8692406e7aa6dff155072cb2891c135dcde2438e66ad",
+    "dir": "www/docs/tsa/2026-07-22",
+    "size": 973
+  },
+  {
+    "tsr": "lg-097-tvla-gradient.tsr",
+    "sha256": "80aa8391657b4bac8c45ec5ce93dfb49d338e6748a5803fc763cdf7bb73428a9",
+    "dir": "www/docs/tsa/2026-07-23-tvla-gradient",
+    "size": 974
+  },
+  {
+    "tsr": "lg-098-verify-fix.tsr",
+    "sha256": "aacea2ce4bc4de4ba0019287aea5ed6446eb7c7e0ab8ad7c42d09d5428a81c7d",
+    "dir": "www/docs/tsa/2026-07-23-verify-fix",
+    "size": 974
+  },
+  {
+    "tsr": "lg-099.tsr",
+    "sha256": "5129ec9e434e93bf07427c9d039b418411aacc9f44dd4b88c1b8178cb871abc3",
+    "dir": "www/docs/tsa/2026-07-23",
+    "size": 941
+  },
+  {
+    "tsr": "lg-100.tsr",
+    "sha256": "1d12086cc744e4d25816d2e8884425cd9b0ddf3fde8262e954f3b5977dec3167",
+    "dir": "www/docs/tsa/2026-07-24-fpga-milestone",
+    "size": 973
+  },
+  {
+    "tsr": "lg-105-defense.rs.tsr",
+    "sha256": "bb122b2b7c40d2392ca6aeb208314722740c1fb1fc15a03445ca6a87ec354f59",
+    "dir": "www/docs/tsa/2026-08-17-lg-v24-watchdog",
+    "size": 4634
+  },
+  {
+    "tsr": "lg-106-vm.rs.tsr",
+    "sha256": "30ee8e550b7a668a6709635a5eadd49dfc8ce440fad7cdb26f6a296d85865086",
+    "dir": "www/docs/tsa/2026-08-17-lg-v24-watchdog",
+    "size": 4633
+  },
+  {
+    "tsr": "lg-107-lgv2_3.wasm.tsr",
+    "sha256": "b377641c13ff0caa4d6231b873e8f8639348f3038ebc3f9a1b28dbce879e6e0f",
+    "dir": "www/docs/tsa/2026-08-17-lg-v24-watchdog",
+    "size": 4634
+  },
+  {
+    "tsr": "lg-108-watchdog-wasm-verify.md.tsr",
+    "sha256": "4095c1f6d8bb2e324388b3bae805277ff4ac096c33870ea3efbbc157ac0b011e",
+    "dir": "www/docs/tsa/2026-08-17-lg-v24-watchdog",
+    "size": 4634
+  },
+  {
+    "tsr": "vwz-rank2-dts.tsr",
+    "sha256": "d270358bcad3235b7cecaccc1e25b516139b616edbb0c9113499b12efd2e84c3",
+    "dir": "www/docs/tsa/2026-09-06-vwz-rank2",
+    "size": 4632
+  },
+  {
+    "tsr": "vwz-rank2-js.tsr",
+    "sha256": "16fdc0a0bd2300514556ba4eaadec8be6f1e98a4265f84cc8d287d0d2afa3950",
+    "dir": "www/docs/tsa/2026-09-06-vwz-rank2",
+    "size": 4632
+  },
+  {
+    "tsr": "vwz-rank2-kat.tsr",
+    "sha256": "4cbf998aaa47aa145460c933a6313dad875a7812f62226cb2a6701643b9bf460",
+    "dir": "www/docs/tsa/2026-09-06-vwz-rank2",
+    "size": 4633
+  },
+  {
+    "tsr": "vwz-rank2-wasm.tsr",
+    "sha256": "37b293109e3ac5fd03c134babda182a3968c9f71aabdd75f24bb32b12d26953f",
+    "dir": "www/docs/tsa/2026-09-06-vwz-rank2",
+    "size": 4634
+  },
+  {
+    "tsr": "lg-116-interop-matrix-SHA256SUMS.tsr",
+    "sha256": "7e3477b02accfb15c0b8c35219863208e9a7c2d84e4a4c0002469b7723fcaccd",
+    "dir": "www/docs/tsa/2026-10-28-interop-matrix",
+    "size": 4643
+  },
+  {
+    "tsr": "lg-109-ml-kem-768-td-retirement.tsr",
+    "sha256": "5cceec699fa8c5427511ca0e9b2bb8217f92d62462f0a102f54a24139fcf939d",
+    "dir": "www/docs/tsa/2026-10-28-retire-ml-kem-768-td",
+    "size": 4633
+  },
+  {
+    "tsr": "lg-110-ml-kem-768-td-SHA256SUMS.tsr",
+    "sha256": "f9cf6e15df99f78b1407c99cd780e1bdd706a8f85e69bfa230199b419e4fe4d0",
+    "dir": "www/docs/tsa/2026-10-28-retire-ml-kem-768-td",
+    "size": 4632
+  },
+  {
+    "tsr": "lg-111-cyclonedx-data-loss-proof.tsr",
+    "sha256": "df96a9d6e9390184b01c204c5351fe8d5a00f6f6806945b60e32d89fe2180a88",
+    "dir": "www/docs/tsa/2026-10",
+    "size": 4643
+  },
+  {
+    "tsr": "lg-113-repo-commits.tsr",
+    "sha256": "019067f50ed078e34d002047db6b4e970667b40df6ddb1b6153e3cac730c8ce9",
+    "dir": "www/docs/tsa/2026-10",
+    "size": 4644
+  },
+  {
+    "tsr": "lg-114-cyclonedx-data-loss-witness.tsr",
+    "sha256": "bd20a0cf2e43856e81862350ea5351e4952f9401c23652ec1f5ac08d4f47d747",
+    "dir": "www/docs/tsa/2026-10",
+    "size": 4644
+  },
+  {
+    "tsr": "lg-115-asset-manifest.tsr",
+    "sha256": "f36fa617ecc6cb2ba19168dbc09f648b1d49d2f56facff6cfd294f5fe723f1bc",
+    "dir": "www/docs/tsa/2026-10",
+    "size": 4645
+  },
+  {
+    "tsr": "deploy_sh.tsr",
+    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
+    "dir": "www/docs/tsa",
+    "size": 50
+  },
+  {
+    "tsr": "lg-080.tsr",
+    "sha256": "163858aadde8d33e1ab84f58872630090a01b886f8d092573bcd52d53e767828",
+    "dir": "www/docs/tsa",
+    "size": 943
+  },
+  {
+    "tsr": "lg-082.tsr",
+    "sha256": "f33dbe86ff5a9ae26d60fb711a295704be2ee4e56278c54a57fa3f13a6493ae9",
+    "dir": "www/docs/tsa",
+    "size": 942
+  },
+  {
+    "tsr": "lg-101-phase0-20260805.tsr",
+    "sha256": "963ccc9e8c897858fe715982e2d1a4a897321f050cd2db8588f5f546c338de69",
+    "dir": "www/docs/tsa",
+    "size": 943
+  },
+  {
+    "tsr": "traffic-shaping.js.tsr",
+    "sha256": "c093cf82b7087425be959334bc9fd2e4ad770e619556a47d3e7b1fd2c0d47932",
+    "dir": "www/docs/tsa",
+    "size": 5996
+  },
+  {
+    "tsr": "unified-traffic-obfuscator.js.tsr",
+    "sha256": "71cd2c248d93e9217d457e4cb8a903ea9610041f192caf5fe9e361aad4e66aa4",
+    "dir": "www/docs/tsa",
+    "size": 5995
+  },
+  {
+    "tsr": "ws-padding.js.tsr",
+    "sha256": "8c3f163c338d6a9eb3106b42b3350770e2b535979f89950720994d635ce9a056",
+    "dir": "www/docs/tsa",
+    "size": 5996
   }
 ]
