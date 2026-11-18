@@ -131,6 +131,9 @@ const writeAllow = (root, lines) => {
     r.status === 0 && /IMPRINT_OK=1/.test(r.stdout) && /allowlist=2 known gaps/.test(r.stdout) && /verified=1/.test(r.stdout),
     r.stdout.trim(),
   );
+  // The count must be enumerable in the same log block, or a positive `verified` becomes
+  // the next number that looks like a pass count.
+  check('verified token is named next to the count', /verified\s+www\/docs\/tsa\/sub\/ok-003\.tsr/.test(r.stdout), r.stdout.trim());
 }
 
 // 7b. a verifiable token still on the allowlist: the list did not shrink
@@ -171,12 +174,18 @@ const writeAllow = (root, lines) => {
 
 // 9. json mode reports the same verdict, for logs that are parsed rather than read
 {
-  const root = makeTree({ 'nocert-001.tsr': 'nocert' });
+  const root = makeTree({ 'nocert-001.tsr': 'nocert', 'ok-002.tsr': 'ok' });
   const allow = writeAllow(root, ['www/docs/tsa/nocert-001.tsr\tNO_CERT']);
   const r = runV(root, allow, ['--json']);
   let parsed = null;
   try { parsed = JSON.parse(r.stdout); } catch (e) { /* handled below */ }
-  check('--json emits a parseable verdict', r.status === 0 && parsed && parsed.summary.verdict === 'OK', r.stdout.slice(0, 80));
+  check(
+    '--json emits a parseable verdict with the verified list',
+    r.status === 0 && parsed && parsed.summary.verdict === 'OK' &&
+      parsed.summary.verified === 1 &&
+      Array.isArray(parsed.summary.verifiedFiles) && parsed.summary.verifiedFiles.length === 1,
+    r.stdout.slice(0, 120),
+  );
 }
 
 fs.rmSync(stubDir, { recursive: true, force: true });

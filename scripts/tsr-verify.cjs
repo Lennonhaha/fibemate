@@ -143,11 +143,13 @@ for (const file of allowed.keys()) {
 }
 
 const verified = counts.IMPRINT_OK || 0;
+const verifiedFiles = [...computed.entries()].filter(([, r]) => r === 'IMPRINT_OK').map(([f]) => f);
 
 const summary = {
   total: computed.size,
   counts,
   verified,
+  verifiedFiles,
   allowlist: allowed.size,
   drift: drift.length,
   verdict: drift.length === 0 ? 'OK' : 'DRIFT',
@@ -167,6 +169,13 @@ else {
       '  note: no token records the digest of what it covers, so no imprint could be checked;' +
         ' the allowlist entries above are known gaps, not passes',
     );
+  } else {
+    // The count must never travel alone. The moment a stamp starts recording
+    // artifact_sha256, `verified` becomes a positive number that looks exactly like a pass
+    // count -- and a count you cannot enumerate is the next false green. So every verified
+    // token is named here, in the same log block as the number.
+    for (const f of verifiedFiles.slice(0, 50)) console.log(`  verified     ${f}`);
+    if (verifiedFiles.length > 50) console.log(`  ... ${verifiedFiles.length - 50} more verified`);
   }
   for (const d of drift.slice(0, 20)) {    if (d.kind === 'unlisted') console.log(`  unlisted     ${d.file} (${d.reason})`);
     else if (d.kind === 'class-changed') console.log(`  class-changed ${d.file} ${d.was} -> ${d.now}`);
