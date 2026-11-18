@@ -3,6 +3,13 @@
 # ═══════════════════════════════════════════════════════════════════════════
 # check-encoding-cron.sh — server-side every-3-hour encoding scan
 #
+# RETIRED 2026-11-18 (issue #559). This wrapper scanned /opt/fibemate-repo, a
+# checkout that stopped serving traffic once deploys moved to
+# /opt/fibemate/releases/<sha>; it was reporting on files nobody downloads, and
+# for three months it did not even run (mode 100644, 732 "Permission denied").
+# The check now runs inside scripts/deploy-release.sh, against the tree that is
+# about to become current. Kept only for manual runs; nothing invokes it.
+#
 # 每 3 小时运行一次：检测 U+FFFD / GBK mojibake / 控制字符 / BOM / NUL。
 # 发现乱码时写入 /var/log/fibemate-encoding-check.log。
 #

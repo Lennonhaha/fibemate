@@ -106,6 +106,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
     echo "  4. place mlkem.node by build key via scripts/fetch-native-artifact.sh (needs gh auth)"
   fi
   echo "  5. write BUILD-MANIFEST.json and verify every tracked file against $FULL_SHA"
+  echo "  5b. check encoding of every tracked file in the new tree (fails the deploy)"
   echo "  6. require() the addon from the new tree and run a KEM roundtrip"
   echo "  7. rename into $TARGET, switch $CURRENT_LINK, restart $PM2_APP"
   echo "  8. wait for $HEALTH_JSON_URL to report mlkem.backend=native"
@@ -248,6 +249,22 @@ node "$SCRIPT_DIR/write-build-manifest.cjs" --repo "$REPO_DIR" --commit "$FULL_S
 echo "[6/8] verifying every tracked file against $FULL_SHA"
 node "$SCRIPT_DIR/verify-tree-sha.cjs" --repo "$REPO_DIR" --commit "$FULL_SHA" \
   --tree src --tree packages --tree www --target "$NEW_DIR"
+
+# Encoding is checked on the tree that is about to become current, not on the
+# repository checkout. The old cron job scanned /opt/fibemate-repo every three
+# hours: a checkout that stopped serving traffic (nginx root and pm2 cwd moved
+# to /opt/fibemate/releases/<sha>), so it reported on files nobody downloads.
+# The file list comes from the commit itself, which is the same source of truth
+# as the build manifest; the scanner raises if the list is empty.
+echo "[6b/8] checking encoding in the new tree"
+ENC_LIST="$NEW_DIR/.encoding-filelist.$$"
+git -C "$REPO_DIR" ls-tree -r -z --name-only "$FULL_SHA" | tr '\0' '\n' > "$ENC_LIST"
+mapfile -t ENC_FILES < "$ENC_LIST"
+rm -f "$ENC_LIST"
+[ "${#ENC_FILES[@]}" -gt 0 ] || die "no tracked files for $FULL_SHA; refusing to deploy an unverified tree"
+ENC_OUT="$(cd "$NEW_DIR" && node "$SCRIPT_DIR/check-encoding.cjs" "${ENC_FILES[@]}" 2>&1)" \
+  || die "encoding check failed in the new tree: $ENC_OUT"
+log "$ENC_OUT"
 
 echo "[7/8] loading the addon from the new tree"
 if [ "$MLKEM_REQUIRE_NATIVE" = "1" ]; then
