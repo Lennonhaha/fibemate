@@ -103,7 +103,7 @@ if [ "$DRY_RUN" -eq 1 ]; then
     echo "  4. place mlkem.node from $ARTIFACT_DIR (offline, verified against its manifest)"
     echo "     the directory must contain mlkem.node, mlkem.node.sha256 and build-info.txt"
   else
-    echo "  4. place mlkem.node by build key via scripts/fetch-native-artifact.sh (needs gh auth)"
+    echo "  4. place mlkem.node from the published release asset for its build key (no credentials)"
   fi
   echo "  5. write BUILD-MANIFEST.json and verify every tracked file against $FULL_SHA"
   echo "  5b. check encoding of every tracked file in the new tree (fails the deploy)"
@@ -208,11 +208,15 @@ NATIVE_REL="packages/pqc-kem/native/build/Release"
 if [ "$MLKEM_REQUIRE_NATIVE" = "1" ]; then
   if [ ! -f "$NEW_DIR/$NATIVE_REL/mlkem.node" ]; then
     if [ -n "$ARTIFACT_DIR" ]; then
+      log "native channel: operator cache $ARTIFACT_DIR (explicit, and only as good as the last human who filled it)"
       bash "$SCRIPT_DIR/fetch-native-artifact.sh" --artifact-dir "$ARTIFACT_DIR" --dest "$NEW_DIR"
     else
       BUILD_KEY="$(node "$SCRIPT_DIR/native-artifact-key.cjs" --repo "$REPO_DIR" --commit "$FULL_SHA")"
       log "build key: $BUILD_KEY"
-      bash "$SCRIPT_DIR/fetch-native-artifact.sh" --key "$BUILD_KEY" --dest "$NEW_DIR"
+      # Issue #570: the key is the address. It is printed here and again by the fetch, so a
+      # reader can see the key that was computed and the artifact that was actually used.
+      log "native channel: release asset (no credential on this host)"
+      bash "$SCRIPT_DIR/fetch-native-artifact.sh" --release --key "$BUILD_KEY" --dest "$NEW_DIR"
     fi
   else
     log "addon already present in the tree"

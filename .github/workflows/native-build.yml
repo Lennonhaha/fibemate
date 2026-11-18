@@ -20,6 +20,10 @@ jobs:
   build:
     name: Build (${{ matrix.os }}, Node ${{ matrix.node }})
     runs-on: ${{ matrix.os }}
+    # Needed only by the publish step below. Pull requests from forks never reach it
+    # (the step is gated on the event), so a fork gets read-only permissions as usual.
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -136,6 +140,51 @@ jobs:
             packages/pqc-kem/native/build/Release/build-info.txt
           if-no-files-found: error
           retention-days: 14
+
+      # Issue #570: the deploy host must not hold a credential that expires. Actions
+      # artifacts need an authenticated API call and are deleted after 14 days, so the
+      # host could only ever consume them through a token, or through a hand-filled local
+      # cache whose freshness nobody checks. A public release asset is fetched with plain
+      # HTTPS: no token on the host, no expiry date, and "not published" is a 404 that the
+      # deploy reports as such instead of falling back to whatever is lying around.
+      #
+      # The tag carries the build key and the Node major. The key names the inputs, so the
+      # same key must always yield the same bytes; if it does not, the publish fails rather
+      # than replacing an asset that consumers resolve by key (issue #533).
+      - name: Publish the addon as a release asset
+        if: github.event_name != 'pull_request'
+        working-directory: packages/pqc-kem/native/build/Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ARTIFACT_KEY: ${{ steps.key.outputs.key }}
+          NODE_MAJOR_FOR_TAG: ${{ matrix.node }}
+        run: |
+          set -euo pipefail
+          tag="native-node${NODE_MAJOR_FOR_TAG}-${ARTIFACT_KEY}"
+          new="$(awk '{print $1}' mlkem.node.sha256)"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            \( gh release download "$tag" -p mlkem.node.sha256 -D "$RUNNER_TEMP/existing" ) || true
+            if [ -s "$RUNNER_TEMP/existing/mlkem.node.sha256" ]; then
+              old="$(awk '{print $1}' "$RUNNER_TEMP/existing/mlkem.node.sha256")"
+              if [ "$old" != "$new" ]; then
+                echo "FATAL: build key $ARTIFACT_KEY produced different bytes than the published asset" >&2
+                echo "       published ${old:0:12}  this build ${new:0:12}" >&2
+                echo "       the key names the inputs, so identical inputs must give identical bytes" >&2
+                echo "       (issue #533). Refusing to overwrite an asset consumers resolve by key." >&2
+                exit 1
+              fi
+              echo "already published with identical bytes: ${new:0:12}"
+              exit 0
+            fi
+            echo "release $tag exists but has no sidecar yet; uploading"
+          else
+            gh release create "$tag" \
+              --title "Native addon node${NODE_MAJOR_FOR_TAG} ${ARTIFACT_KEY}" \
+              --notes "CI-built ML-KEM addon. Deploy hosts fetch these assets over HTTPS and verify mlkem.node.sha256 before use. Key: ${ARTIFACT_KEY} (native tree + workflow). This release is a build cache, not a supported download." \
+              --latest=false
+          fi
+          gh release upload "$tag" mlkem.node mlkem.node.sha256 build-info.txt
+          echo "published $tag: ${new:0:12}"
 
       - name: Verify native addon loads
         run: |
