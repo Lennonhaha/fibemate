@@ -4,7 +4,10 @@
 # Run: daily via cron
 set -e
 
-TSA_DIR="/opt/fibemate-full/www/docs/tsa"
+# Default to the served tree. /opt/fibemate/current is the release symlink, so this
+# follows the deploy instead of naming one snapshot. Override with TSA_DIR=... to
+# verify a different tree.
+TSA_DIR="${TSA_DIR:-/opt/fibemate/current/www/docs/tsa}"
 BACKUP_DIR="/opt/fibemate-backup/tsr"
 LOG_DIR="/var/log/fibemate"
 CA_FILE="/tmp/freetsa-ca.pem"
@@ -55,6 +58,15 @@ for tsr in "$TSA_DIR"/lg-*.tsr; do
 done
 
 log "TOTAL=$total PASS=$passed FAIL=$failed"
+
+# Zero coverage is a failure, not a pass. If the tree moves (or is retired) the glob
+# above matches nothing, and the old script logged TOTAL=0 and exited 0 -- a green
+# report over zero files. Keep this guard in future rewrites.
+if [ "$total" -eq 0 ]; then
+  echo "FAIL: no TSR files matched $TSA_DIR/lg-*.tsr -- zero coverage" >&2
+  log "FAIL zero coverage (TSA_DIR=$TSA_DIR)"
+  exit 1
+fi
 
 # Weekly backup (Sunday)
 if [ "$(date +%u)" = "7" ]; then
