@@ -71,6 +71,21 @@ check(
   write('sample.js', '// detect mojibake: /' + EMDASH_MOJI + '/ flags an em dash read as GBK\n'),
 );
 
+// Zero coverage must not look like success. The gate lists files with
+// `git ls-files`; in an empty repository (or from the wrong working directory)
+// that list is empty and the old code printed "0 checked" and exited 0 -- the
+// same shape as every fake-green gate in this repo's history.
+const emptyRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'encgate-empty-'));
+spawnSync('git', ['init', '-q', emptyRepo], { encoding: 'utf8' });
+const noFiles = spawnSync(process.execPath, [gate], { cwd: emptyRepo, encoding: 'utf8' });
+const noFilesOk = noFiles.status === 2;
+if (!noFilesOk) failed += 1;
+console.log(
+  `${noFilesOk ? 'PASS' : 'FAIL'} empty tree fails instead of reporting 0 files clean` +
+    (noFilesOk ? '' : ` (got ${noFiles.status})`),
+);
+fs.rmSync(emptyRepo, { recursive: true, force: true });
+
 // the whole repository must stay clean under the stricter table
 const repo = path.join(__dirname, '..');
 const all = spawnSync(process.execPath, [path.join(repo, 'scripts', 'check-encoding.cjs')], {

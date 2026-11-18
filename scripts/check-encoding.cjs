@@ -14,7 +14,8 @@
 //   node scripts/check-encoding.cjs                     # scan all tracked text files
 //   node scripts/check-encoding.cjs file1.js file2.md   # scan specific files
 //
-// Exit code: 0 = clean, 1 = corruption found, 2 = internal error.
+// Exit code: 0 = clean, 1 = corruption found, 2 = internal error (including
+// "nothing to scan": an empty file list must never look like a clean tree).
 
 const { execSync } = require('child_process');
 const fs = require('fs');
@@ -143,6 +144,16 @@ function listFiles(args) {
 }
 
 const files = listFiles(process.argv.slice(2));
+
+// Zero coverage is not success. `git ls-files` returns nothing in an empty
+// repository, a broken index, or the wrong working directory; printing
+// "0 checked" with exit 0 is indistinguishable from a clean scan and is how a
+// gate quietly stops verifying anything (issue #559).
+if (files.length === 0) {
+  console.error('FAIL: no text files to check -- refusing to report success');
+  console.error('Hint: run from the repository root, or pass explicit paths.');
+  process.exit(2);
+}
 const issues = []; // { file, kind }
 
 // Self-exemption: the detector scripts define the mojibake fingerprint tables,
