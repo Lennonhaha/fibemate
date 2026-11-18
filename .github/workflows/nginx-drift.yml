@@ -21,12 +21,18 @@ on:
     paths:
       - 'deploy/nginx/**'
       - 'scripts/check-nginx-drift.cjs'
+      - 'scripts/probe-live-http.cjs'
       - '.github/workflows/nginx-drift.yml'
   pull_request:
     paths:
       - 'deploy/nginx/**'
       - 'scripts/check-nginx-drift.cjs'
+      - 'scripts/probe-live-http.cjs'
       - '.github/workflows/nginx-drift.yml'
+  schedule:
+    # 03:17 UTC = 11:17 Asia/Shanghai. The path filter above means this gate only
+    # woke up when someone edited nginx; the schedule makes rot surface on its own.
+    - cron: '17 3 * * *'
   workflow_dispatch:
 
 jobs:
@@ -72,3 +78,22 @@ jobs:
       - name: Tracked copy matches the live file
         if: env.NGINX_SSH_KEY != '' && env.NGINX_HOST != ''
         run: node scripts/check-nginx-drift.cjs --host "$NGINX_HOST" --user "$NGINX_USER" --port "$NGINX_PORT"
+
+  http:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+
+      # Negative E2E: the assertion function must reject each known-bad shape.
+      - name: Assertions reject bad responses (self-test)
+        run: node scripts/probe-live-http.cjs --self-test
+
+      # The response layer needs no ssh and no secret. Skipped on pull_request so
+      # a production hiccup cannot red a docs-only PR; push/schedule/dispatch run it.
+      - name: Live responses match the retired-route contract
+        if: github.event_name != 'pull_request'
+        run: node scripts/probe-live-http.cjs --base https://fibemate.net
