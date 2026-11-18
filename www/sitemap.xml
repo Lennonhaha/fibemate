@@ -38,22 +38,10 @@
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
-  <url>
-    <loc>https://fibemate.net/docs/changelog.html</loc>
-    <lastmod>2026-08-01</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.5</priority>
-  </url>
   <!-- Security & Hardware -->
   <url>
     <loc>https://fibemate.net/docs/security-limitations.html</loc>
     <lastmod>2026-07-22</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://fibemate.net/docs/hardware.html</loc>
-    <lastmod>2026-07-24</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
@@ -107,12 +95,6 @@
     <lastmod>2026-08-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://fibemate.net/docs/cars-bias-analysis.html</loc>
-    <lastmod>2026-08-02</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
   </url>
   <url>
     <loc>https://fibemate.net/docs/crypto-audit.html</loc>
@@ -182,10 +164,4 @@
     <priority>0.6</priority>
   </url>
   <!-- OpenSSF & Governance -->
-  <url>
-    <loc>https://fibemate.net/docs/openssf-roadmap.html</loc>
-    <lastmod>2026-07-29</lastmod>
-    <changefreq>monthly</changefreq>
-    <priority>0.5</priority>
-  </url>
 </urlset>

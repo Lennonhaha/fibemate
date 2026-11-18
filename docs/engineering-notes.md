@@ -414,6 +414,31 @@ gh api repos/<owner>/<repo>/rulesets/<id> \
 
 ---
 
+## 17. Three shapes of a false green, and the one thing a gate owes you
+
+A gate that cannot fail is not a gate. Three shapes turned up in this repository in one week:
+
+| shape | looks like | real case here |
+| --- | --- | --- |
+| zero coverage, exit 0 | the command runs and reports success over an empty set | `check-encoding.cjs` printed `OK: no encoding corruption in 0 checked file(s)` when `git ls-files` returned nothing |
+| wrong denominator | a correct pass rate over a fraction of the target | the TSR cron globbed `lg-*.tsr` at the top level only: `TOTAL=2 PASS=2` over 241 tokens (0.8%) |
+| swallowed error | the step cannot report failure by construction | `markdown-link-check ... \|\| true` in `ci.yml`; the encoding cron's wrapper ended in `exit 0` |
+
+They share nothing at the level of code and everything at the level of evidence: the exit code was fine and the output was empty, partial, or meaningless. So the property to test is not "does the gate pass", it is "does the gate fail when the target error is present".
+
+That is why every gate added since has a negative-first suite that drives the real CLI and asserts the exit code, and why the pull request carries a run against real data:
+
+- sitemap gate: injecting a fifth url into the real `www/sitemap.xml` gives `unlisted 1` and exit 1, and the url is named;
+- TSR verifier: deleting one allowlist line gives `DRIFT drift=1` and names the token;
+- encoding gate: an empty fixture tree exits 2 instead of reporting `OK`.
+
+Two rules follow, and they are cheap to keep:
+
+1. A gate ships with a case that must go red, and the output names the offending item. A count without a list is unreadable (see 12).
+2. A gate that cannot be made to fail is labelled as advisory in its own name or comment, so the next person does not cite it as evidence.
+
+The `\|\| true` in the dead-link step stays for now: it needs the network, and a flaky red would be worse than a known advisory. What makes it acceptable is that it is now named as advisory in the notes rather than counted as coverage.
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
