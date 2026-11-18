@@ -49,8 +49,9 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
       - run: npm ci
-      # Runs the timing test against this checkout. An allowlist covers the
-      # documented pure-JS NTT leak; any other primitive leaking fails the job.
+      # Runs the timing test against this checkout. The allowlist covers the two
+      # documented pure-JS leaks (NTT and invNTT, both measured and recorded in
+      # docs/security-limitations.md 3.5); any other primitive leaking fails.
       - name: TVLA live gate (current code)
         shell: bash
         run: |
@@ -63,7 +64,7 @@ jobs:
           set -o pipefail
           node scripts/tvla-summary.js \
             --min-samples=100 \
-            --allow-leak=NTT \
+            --allow-leak=NTT,invNTT \
             --include="$RUNNER_TEMP/live-tvla.json" 2>&1 | tee "$RUNNER_TEMP/tvla.log"
 
       - name: Attribute - TVLA digest
