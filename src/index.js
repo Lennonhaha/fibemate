@@ -198,21 +198,48 @@ const app = express();
 // different component than the code it describes is decoration, not a version.
 // Resolution order: the build manifest written into an immutable release, then an
 // explicit override, then package.json alone (a source checkout has no manifest).
+//
+// #507: the manifest also carries a sha256 for every tracked file, so the process can
+// state one digest for `packages/` and let a black-box check compare it to the commit.
+// That is the only way drift becomes visible without ssh: a deploy verifies the tree
+// once, and after that nobody looks.
+const { treeHash } = require('./lib/tree-hash');
 const BUILD_IDENTITY = (() => {
   const fsp = require('fs');
   const p = require('path');
   try {
     const m = JSON.parse(fsp.readFileSync(p.join(__dirname, '..', 'BUILD-MANIFEST.json'), 'utf8'));
     if (m && typeof m.commitShort === 'string' && /^[0-9a-f]{7,40}$/.test(m.commitShort)) {
-      return { commit: m.commitShort, source: 'build-manifest' };
+      const packages = treeHash(m.files, 'packages');
+      return {
+        commit: m.commitShort,
+        source: 'build-manifest',
+        files: typeof m.fileCount === 'number' ? m.fileCount : Object.keys(m.files || {}).length,
+        packages,
+      };
     }
   } catch (_) {
     // No manifest: normal when running straight from a git checkout.
   }
   const fromEnv = process.env.FIBEMATE_BUILD_COMMIT;
-  if (fromEnv && /^[0-9a-f]{7,40}$/.test(fromEnv)) return { commit: fromEnv, source: 'env' };
-  return { commit: 'unknown', source: 'none' };
+  if (fromEnv && /^[0-9a-f]{7,40}$/.test(fromEnv)) {
+    return { commit: fromEnv, source: 'env', packages: { hash: null, count: 0, skipped: [] } };
+  }
+  return { commit: 'unknown', source: 'none', packages: { hash: null, count: 0, skipped: [] } };
 })();
+// One shape for /health and /api/health: a monitor that has to read two endpoints
+// differently will read neither. `packages.hash` is null when no manifest exists,
+// which is a fact the caller must be able to see, not an omitted field.
+const BUILD_REPORT = {
+  commit: BUILD_IDENTITY.commit,
+  source: BUILD_IDENTITY.source,
+  files: BUILD_IDENTITY.files,
+  packages: {
+    hash: BUILD_IDENTITY.packages.hash,
+    count: BUILD_IDENTITY.packages.count,
+    malformed: BUILD_IDENTITY.packages.skipped.length,
+  },
+};
 // The version itself stays the single-source file from #501; package.json is the fallback
 // for a checkout where VERSION.json has not been generated yet.
 const APP_VERSION = (() => {
@@ -1040,6 +1067,7 @@ app.get('/health', (req, res) => {
     status: 'ok', service: 'Noir E2E Backend',
     version: '1.0.0', architecture: 'zero-knowledge',
     mlkem: { backend: mlkemBackend, detail: mlkemBackendDetail || undefined },
+    build: BUILD_REPORT,
     phases: { p1: 'zk-identity', p2: 'pir-search', p3: 'mixnet', p4: 'sphinx-nym' },
     uptime: Math.floor(process.uptime())
   });
@@ -1051,6 +1079,7 @@ app.get('/api/health', (req, res) => {
     status: 'ok', service: 'Noir E2E Backend',
     version: '1.0.0', timestamp: new Date().toISOString(),
     mlkem: { backend: mlkemBackend, detail: mlkemBackendDetail || undefined },
+    build: BUILD_REPORT,
     uptime: Math.floor(process.uptime())
   });
 });

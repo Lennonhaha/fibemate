@@ -25,6 +25,12 @@
  *                     citation, so the targets are queried too: a withdrawn DOI or
  *                     a renamed repository fails the deploy instead of rotting
  *                     quietly inside a list that looks like a record.
+ *   5. live:tree      the running process reports the commit it booted from and a
+ *                     digest of `packages/` taken from its build manifest, and both
+ *                     match the source being checked. #507: `packages/` drifted from
+ *                     the repository for months and every existing check was blind
+ *                     to it, because they only looked at `www/` and `src/` from the
+ *                     outside. A deploy proves a tree once; this keeps proving it.
  *
  * Two deliberate design points:
  *
@@ -54,6 +60,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { execFileSync } = require('child_process');
 const { openSource } = require('./lib/expected-source.cjs');
+const { treeHash } = require('../src/lib/tree-hash');
 
 const MANIFEST_REL = 'docs/TSR-MANIFEST-20261029.md';
 const MANIFEST_URL = '/docs/TSR-MANIFEST-20261029.md';
@@ -662,6 +669,91 @@ async function checkCitations(opts) {
   return result;
 }
 
+/**
+ * live:tree - is the process serving the packages/ tree of the commit we checked?
+ *
+ * The process answers this itself: at boot it reads the BUILD-MANIFEST.json written
+ * by the deploy and publishes one digest for `packages/` at /health. The expected
+ * value here is computed from the same rule over the source being checked, so this
+ * compares a claim against a measurement rather than two claims.
+ *
+ * Missing `build` is a failure, not a skip: a process that cannot state which bytes
+ * it runs is the exact condition #507 was about, and treating it as "not applicable"
+ * is how the drift survived for months.
+ */
+async function checkTree(opts) {
+  const url = opts.base + '/health';
+  const result = { id: 'live:tree', ok: false, url, commit: null, expected: null, actual: null };
+
+  let res;
+  try {
+    res = await fetchBody(url, opts.timeout);
+  } catch (err) {
+    result.reason = 'health unreachable: ' + err.message;
+    return result;
+  }
+  if (res.status !== 200) {
+    result.reason = 'health HTTP ' + res.status + ' (expected 200)';
+    return result;
+  }
+
+  let health;
+  try {
+    health = JSON.parse(res.buf.toString('utf8'));
+  } catch (_err) {
+    result.reason = 'health is not JSON';
+    return result;
+  }
+
+  const build = health && health.build;
+  if (!build || typeof build !== 'object') {
+    result.reason = 'health has no build block - the running code predates #507 or has no build manifest';
+    return result;
+  }
+
+  let expected;
+  try {
+    const rels = opts.source.under('packages');
+    if (rels.length === 0) throw new Error('the source tracks no files under packages/');
+    const blobs = opts.source.blobs(rels);
+    const map = {};
+    for (const [rel, entry] of blobs) map[rel] = sha256(entry.bytes);
+    expected = treeHash(map, 'packages');
+    if (expected.skipped.length) throw new Error('malformed manifest entries: ' + expected.skipped.slice(0, 3).join(', '));
+  } catch (err) {
+    result.reason = 'cannot compute the expected packages digest: ' + err.message;
+    return result;
+  }
+
+  const wantCommit = opts.source.commit;
+  const gotCommit = String(build.commit || '');
+  const gotPackages = build.packages || {};
+  result.commit = gotCommit;
+  result.expected = { commit: wantCommit, hash: expected.hash, count: expected.count };
+  result.actual = { commit: gotCommit, hash: gotPackages.hash || null, count: gotPackages.count || 0, source: build.source };
+
+  const problems = [];
+  // The process reports the 7-char short id; comparing a prefix avoids calling a
+  // correct answer wrong because of a display convention.
+  if (!gotCommit || wantCommit.indexOf(gotCommit) !== 0) {
+    problems.push('commit ' + (gotCommit || '(none)') + ' != ' + wantCommit.slice(0, 7));
+  }
+  if (gotPackages.malformed) {
+    problems.push(gotPackages.malformed + ' malformed manifest entries');
+  }
+  if (gotPackages.hash !== expected.hash) {
+    problems.push(
+      'packages/ ' + String(gotPackages.hash || 'null').slice(0, 16) +
+        ' != ' + expected.hash.slice(0, 16) +
+        ' (' + (gotPackages.count || 0) + ' files vs ' + expected.count + ')',
+    );
+  }
+
+  result.ok = problems.length === 0;
+  if (!result.ok) result.reason = problems.join('; ') + ' - the running tree is not the source being checked';
+  return result;
+}
+
 async function main() {
   let opts;
   try {
@@ -690,6 +782,7 @@ async function main() {
   checks.push(await checkFile(opts.base + TOKEN_URL, expected.get(TOKEN_REL), 'live:token', opts));
   checks.push(await checkArchive(opts));
   checks.push(await checkCitations(opts));
+  checks.push(await checkTree(opts));
   const ok = checks.every((c) => c.ok);
 
   if (!opts.quiet || !ok) {
@@ -699,13 +792,17 @@ async function main() {
         const hash = c.sha256 ? ' sha256 ' + c.sha256.slice(0, 16) + ' (' + c.bytes + ' B)' : '';
         const counted =
           c.id === 'live:archive' ? ' ' + c.tally : '';
+        const tree =
+          c.id === 'live:tree'
+            ? ' commit ' + c.actual.commit + ' packages/ ' + String(c.actual.hash || '').slice(0, 16) + ' (' + c.actual.count + ' files)'
+            : '';
         const cited = c.section
           ? c.skipped
             ? ' ' + c.onPage + '/' + c.checked + ' ledger rows present [' + c.skipped + ']'
             : ' ' + c.resolved + '/' + c.checked + ' citation links resolve' +
               (c.unresolved && c.unresolved.length ? ', ' + c.unresolved.length + ' unreachable (not counted)' : '')
           : '';
-        process.stdout.write('[PASS] ' + c.id + hash + counted + cited + '\n');
+        process.stdout.write('[PASS] ' + c.id + hash + counted + tree + cited + '\n');
       } else {
         process.stdout.write('[FAIL] ' + c.id + ': ' + c.reason + '\n');
       }
@@ -733,7 +830,14 @@ async function main() {
   process.exit(ok ? 0 : 1);
 }
 
-main().catch((err) => {
-  process.stderr.write('check-live: unexpected error: ' + (err && err.stack ? err.stack : err) + '\n');
-  process.exit(1);
-});
+// Exported so the live:tree check can be exercised against a stub server in CI
+// (scripts/test-tree-hash.cjs). A gate whose failing path was never executed is a
+// gate nobody can trust - the same lesson as scripts/test-verify-tree-sha.cjs.
+module.exports = { checkTree, treeHash };
+
+if (require.main === module) {
+  main().catch((err) => {
+    process.stderr.write('check-live: unexpected error: ' + (err && err.stack ? err.stack : err) + '\n');
+    process.exit(1);
+  });
+}
