@@ -11,7 +11,8 @@
  * This gate runs packages/fml-dsa/test/tvla-timing.test.js and applies an
  * expectation allowlist:
  *
- *   - leaks that are documented (default: NTT, pure JS) pass, and say so
+ *   - leaks that are documented (default: NTT and invNTT, both pure JS) pass,
+ *     and say so
  *   - leaks not on the allowlist fail
  *   - a harness that produces no report fails
  *
@@ -19,8 +20,9 @@
  *   --warn-t  4.5  the published TVLA threshold; a crossing is reported loudly
  *   --fail-t  10   a crossing this far above is treated as a real regression
  * A single 5,000-sample run moves by a few units between machines (the same NTT
- * measured 58.12, 78.07 and 85.65 on three runs/two hosts), so failing at the
- * exact 4.5 line would produce false reds on unrelated primitives.
+ * measured 58.12, 78.07 and 85.65 on three runs/two hosts, and 51.68-63.77 on
+ * 2026-11-18), so failing at the exact 4.5 line would produce false reds on
+ * unrelated primitives.
  *
  * Usage:
  *   node scripts/tvla-live-gate.cjs                        # run and judge
@@ -42,7 +44,7 @@ const TEST = path.join(ROOT, 'packages', 'fml-dsa', 'test', 'tvla-timing.test.js
 const DEFAULTS = {
   threshold: 4.5,
   failT: 10,
-  allow: ['NTT'],
+  allow: ['NTT', 'invNTT'],
 };
 
 function parseArgs(argv) {
