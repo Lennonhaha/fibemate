@@ -136,7 +136,7 @@ FIBEMATE 是一个后量子密码学（PQC）工程验证平台，而非生产�
 - ✅ ML-DSA-65 实现（FIPS 204，fml-dsa）
 - ✅ SLH-DSA-128s WASM 桥接（FIPS 205）
 - ✅ 国密三件套（SM2/SM3/SM4）
-- ✅ TVLA 时序测试（36/36 PASS）
+- ✅ TVLA 时序测试（逐项记录，含 6 项未通过，见 docs/tvla-dashboard.html）
 - ✅ 跨库互操作验证（Noble/liboqs）
 - ✅ 五层评估体系交付
 
@@ -264,7 +264,7 @@ FIBEMATE 是一个后量子密码学（PQC）工程验证平台，而非生产�
 | 测试类型 | 覆盖率 | 状态 | 工具 |
 |----------|--------|------|------|
 | KAT 向量测试 | 100% | ✅ | FIPS 203/204/205 官方向量 |
-| TVLA 时序测试 | 36/36 | ✅ | 自研 TVLA 框架 |
+| TVLA 时序测试 | 逐项见仪表盘 | ✅ | 自研 TVLA 框架 |
 | 跨库互操作 | 100% | ✅ | Noble/liboqs/OpenSSL |
 | 性能基准 | ✅ | ✅ | 自研 benchmark 套件 |
 | 侧信道测试 | 物理 | ⏳ | ChipWhisperer（计划中） |
@@ -342,7 +342,7 @@ FIBEMATE 是一个后量子密码学（PQC）工程验证平台，而非生产�
 |------|--------|--------|----------|
 | ML-KEM-768 keygen | 103µs (Native) | <200µs | ✅ 已达成 | <!-- verifact: disposition=narrative why="Linux 主机 C addon 单次实测（2026-07），原始输出未留存，无法独立复核" -->
 | ML-KEM-768 keygen (JS) | 1.19ms | <2ms | ✅ 已达成 |
-| TVLA 通过率 | 36/36 | 100% | ✅ 已达成 |
+| TVLA 通过率 | 不再汇总 | — | ✅ 已达成 |
 | 跨库互操作 | 100% | 100% | ✅ 已达成 |
 | 侧信道测试 | 软件仿真 | 物理测试 | 2027 Q1 |
 

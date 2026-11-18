@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FIBEMATE · 安全限制声明</title>
-<meta name="description" content="FIBEMATE v3.3.2 安全限制、边界与未解决问题诚实披露">
+<meta name="description" content="FIBEMATE v3.3.3 安全限制、边界与未解决问题诚实披露">
 <style>
 :root { --bg:#0a0a1a; --card:#111128; --border:#1e1e3f; --text:#e0e0f0; --muted:#8888aa; --accent:#f59e0b; --accent2:#10b981; --warn:#ef4444; }
 * { margin:0; padding:0; box-sizing:border-box; }
@@ -29,14 +29,14 @@ footer a { color:var(--accent2); }
 <body>
 <h1>&#x26A0; FIBEMATE 安全限制声明</h1>
 <div class="banner">
-<strong>诚实原则</strong>：本文档详尽列出 FIBEMATE v3.3.2 的安全限制、未解决问题与适用边界。
+<strong>诚实原则</strong>：本文档详尽列出 FIBEMATE v3.3.3 的安全限制、未解决问题与适用边界。
 <br>阅读这些限制比阅读能力声明更重要。FIBEMATE 是<strong>工程验证平台</strong>，不是生产加密产品。
 <br>开源不替代独立第三方审计。商用密码产品需通过商用密码认证。
 </div>
 
 <h1>FIBEMATE 安全限制与诚实声明</h1>
 
-<blockquote>版本: v3.3.2 | 最后更新: 2026-09-23</blockquote>
+<blockquote>版本: v3.3.3 | 最后更新: 2026-11-18</blockquote>
 
 <h2 id='本文目的'>本文目的</h2>
 
@@ -89,7 +89,7 @@ footer a { color:var(--accent2); }
 
 <p>### 3.2 软硬件安全防护不统一</p>
 
-<p>软件层 SM2、ML-KEM 已完成掩码随机化、常量时间运算、TVLA 侧信道防护（N=5,000，7/7 一阶 + 20/20 高阶全绿），但 FPGA 硬件 NTT、椭圆运算模块未同步实现同等防护逻辑，硬件层存在独立侧信道攻击面，软硬件安全防护体系不一致。</p>
+<p>软件层 SM2、ML-KEM 已完成掩码随机化与常量时间运算（SM2 的 TVLA 记录见 <a href="/docs/sm2-tvla-analysis.html">SM2 TVLA 分析</a>）。<strong>纯 JS 路径的 NTT 与 invNTT 实测存在间歇性时序差异</strong>：invNTT |t| 0.92–25.12、NTT 16–86（5,000 样本，阈值 4.5 报警、10 判失败），同一份代码多次运行量级不稳定，因此本节不使用「全部通过」这类汇总说法。nightly 门禁目前对这两项显式放行（<code>--allow-leak=NTT,invNTT</code>），跟踪于 Issue #547，计划 Q1 2027 以无数据分支的逆 NTT 修复。与此并存的是：FPGA 硬件 NTT、椭圆运算模块未同步实现同等防护逻辑，硬件层存在独立侧信道攻击面，软硬件安全防护体系不一致。</p>
 
 <blockquote>当前硬件仅完成逻辑时序验证（WNS=+9.755ns），物理侧信道测试（ChipWhisperer）待 Q4 2026 补齐。</blockquote>
 
@@ -282,7 +282,7 @@ footer a { color:var(--accent2); }
 
 <hr>
 <footer>
-<p>FIBEMATE v3.3.2 · GPL-3.0-only · <a href="https://fibemate.net">fibemate.net</a> · <a href="https://github.com/Lennonhaha/fibemate">GitHub</a></p>
+<p>FIBEMATE v3.3.3 · GPL-3.0-only · <a href="https://fibemate.net">fibemate.net</a> · <a href="https://github.com/Lennonhaha/fibemate">GitHub</a></p>
 <p>文档最后更新: 2026-09-23 · <a href="/docs/documentation.html">返回文档中心</a></p>
 </footer>
 </body>

@@ -63,7 +63,7 @@
       },
       "evidence": {
         "kat": "10000 rounds, 100% pass",
-        "tvla": "36/36 pass (timing side-channel)",
+        "tvla": "see docs/tvla-dashboard.html (per-op results)",
         "tsr": "TSR lg-001~099"
       },
       "icon": "🔑",
