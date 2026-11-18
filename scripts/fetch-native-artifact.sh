@@ -4,7 +4,17 @@
 #
 #   bash scripts/fetch-native-artifact.sh --sha <commit> --dest <release-dir> \
 #        [--run-id <id>] [--artifact-dir <dir>] [--node-major 22] [--artifact-commit <sha>] \
-#        [--key <12hex>] [--native-tree <sha>] [--artifact-name <name>]
+#        [--key <12hex>] [--native-tree <sha>] [--artifact-name <name>] [--release]
+#
+# Channels, in order of preference:
+#   --release       a published GitHub release asset, fetched over plain HTTPS. No token,
+#                   no gh CLI, no credential on the deploy host (#570). A public release
+#                   asset needs no authentication, so the host holds nothing that expires.
+#   --artifact-dir  an operator-supplied directory. Kept for offline recovery, but it is a
+#                   hand-maintained cache: it only works if a human remembered to fill it,
+#                   which is the same shape as a credential that only works until it is
+#                   forgotten. Deploys must not depend on it by default.
+#   (default)       the Actions artifact API. Needs gh auth or GH_TOKEN.
 #
 # --key selects the artifact by build inputs (native tree + workflow), not by commit:
 # two commits that agree on both must accept the same bytes, and a deploy of a commit
@@ -38,6 +48,8 @@ KEY=""
 NATIVE_TREE_EXPECT=""
 ARTIFACT_NAME=""
 REPO="${REPO:-Lennonhaha/fibemate}"
+RELEASE=0
+RELEASE_BASE="${FIBEMATE_RELEASE_BASE:-https://github.com/$REPO/releases/download}"
 
 usage() {
   sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
@@ -55,12 +67,19 @@ while [ $# -gt 0 ]; do
     --key) KEY="${2:-}"; shift 2 ;;
     --native-tree) NATIVE_TREE_EXPECT="${2:-}"; shift 2 ;;
     --artifact-name) ARTIFACT_NAME="${2:-}"; shift 2 ;;
+    --release) RELEASE=1; shift ;;
     -h|--help) usage ;;
     *) echo "unknown argument: $1" >&2; exit 1 ;;
   esac
 done
 
 [ -n "$DEST" ] || { echo "FAIL: --dest is required" >&2; exit 1; }
+# Checked before the generic selection guard so the message names the missing piece
+# instead of listing four options, one of which the caller already chose.
+if [ "$RELEASE" = "1" ] && [ -z "$KEY" ]; then
+  echo "FAIL: --release needs --key (the asset lives under a tag named after the build key)" >&2
+  exit 1
+fi
 if [ -z "$SHA" ] && [ -z "$KEY" ] && [ -z "$ARTIFACT_NAME" ] && [ -z "$ARTIFACT_DIR" ]; then
   echo "FAIL: one of --sha, --key, --artifact-name or --artifact-dir is required" >&2
   exit 1
@@ -90,7 +109,36 @@ api() {
 }
 
 echo "[1/5] resolving the artifact (node$NODE_MAJOR${KEY:+, key $KEY}${SHA:+, sha $SHA})"
-if [ -n "$ARTIFACT_DIR" ]; then
+if [ "$RELEASE" = "1" ]; then
+  # A release asset is fetched with curl and nothing else: no Authorization header, because
+  # a credential on the host is a thing that expires quietly (the GH_TOKEN gap in #570).
+  # The key is in the tag, so "not found" is a single unambiguous 404 rather than an empty
+  # query result that could be mistaken for "nothing to do".
+  TAG="native-node${NODE_MAJOR}-$KEY"
+  URL="$RELEASE_BASE/$TAG"
+  echo "      channel: release $TAG (no credentials used)"
+  mkdir -p "$WORK/artifact"
+  for f in mlkem.node mlkem.node.sha256 build-info.txt; do
+    if curl -fsSL "$URL/$f" -o "$WORK/artifact/$f"; then
+      :
+    else
+      rc=$?
+      # 22 = HTTP error (asset absent on a real release); 37 = a file:// path that does not
+      # exist, which is how the tests stand in for a 404 without touching the network.
+      if [ "$rc" = "22" ] || [ "$rc" = "37" ]; then
+        echo "FAIL: no published artifact at $URL" >&2
+        echo "      nothing was placed and no stale copy was substituted" >&2
+        echo "      the native-build workflow publishes one release per build key; if this key" >&2
+        echo "      has never been published, push a commit that runs it, or pass --artifact-dir" >&2
+        echo "      explicitly to say out loud that an operator cache is being used" >&2
+        exit 2
+      fi
+      echo "FAIL: could not fetch $URL/$f (curl exit $rc)" >&2
+      exit 2
+    fi
+  done
+  echo "      fetched 3 assets from $TAG"
+elif [ -n "$ARTIFACT_DIR" ]; then
   echo "      offline mode: reading $ARTIFACT_DIR"
   mkdir -p "$WORK/artifact"
   cp -a "$ARTIFACT_DIR"/. "$WORK/artifact/"

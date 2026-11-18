@@ -354,6 +354,13 @@ jobs:
       - name: Test the release deploy and rollback
         run: bash scripts/test-deploy-release.sh
 
+      # Issue #570: the deploy host holds no credential, so the artifact has to arrive
+      # over plain HTTPS or the deploy has to say it cannot. Six cases, five of them
+      # failures the fetch must produce on purpose (absent, tampered, wrong key, missing
+      # --key), using a file:// tree in place of the release assets.
+      - name: Test the credential-free artifact channel
+        run: bash scripts/test-fetch-native-artifact.sh
+
   # ─── 文档检查 (single platform) ─────────────────────
   docs-check:
     runs-on: ubuntu-latest
