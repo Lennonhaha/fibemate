@@ -727,7 +727,7 @@ async function checkTree(opts) {
 
   const wantCommit = opts.source.commit;
   const gotCommit = String(build.commit || '');
-  const gotPackages = (build.packages && build.packages) || {};
+  const gotPackages = build.packages || {};
   result.commit = gotCommit;
   result.expected = { commit: wantCommit, hash: expected.hash, count: expected.count };
   result.actual = { commit: gotCommit, hash: gotPackages.hash || null, count: gotPackages.count || 0, source: build.source };

@@ -21,7 +21,6 @@
 
 const http = require('http');
 const crypto = require('crypto');
-const path = require('path');
 
 const { treeHash } = require('../src/lib/tree-hash');
 const { checkTree } = require('./check-live.cjs');
