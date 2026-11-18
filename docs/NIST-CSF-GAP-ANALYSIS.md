@@ -42,7 +42,7 @@
 
 | 维度 | 说明 |
 |------|------|
-| **DE.CM** — 持续监控 | CI 24/24 全绿，TVLA 36/36，Nightly CI 常态化 |
+| **DE.CM** — 持续监控 | CI 全绿；TVLA 逐项结果见 `docs/SM2_TVLA_STATUS.md` 与 `docs/security-limitations.md`（不使用汇总通过率）；Nightly CI 常态化 |
 | **RC.CO** — 证据链 | TSR **216 条 manifest / 225 个 `.tsr` 文件**（lg-001~101），DigiCert + FreeTSA 双源 RFC 3161 存证 |
 | **PR.AT** — 密码技术 | ML-KEM-768 (FIPS 203) / fml-dsa ML-DSA-65 (FIPS 204) / SLH-DSA-128s (FIPS 205) / 国密 SM2·SM3·SM4 + FPGA NTT + TLA+ 形式化验证 |
 | **GV.SC** — 供应链可见性 | 147 npm 依赖 100% 分类，CBOM 已生成 |

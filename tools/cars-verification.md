@@ -50,7 +50,7 @@ PQC 生态扫描器（`tools/pqc-ecosystem-scan.js`）提供了完整的机器�
 
 | 算法 | 标准 | 实现方式 | 验证状态 |
 |------|------|----------|----------|
-| SM2 | GB/T 32918 | 纯 JS（BigInt + jsbn 双轨） | KAT 100/100、TVLA 36/36（3 实现×12 项）、0.2% 故障已修复 |
+| SM2 | GB/T 32918 | 纯 JS（BigInt + jsbn 双轨） | KAT 100/100；TVLA 明细见 `docs/SM2_TVLA_STATUS.md`（masked v1.2 5/5 @ N=5,000；Montgomery Ladder v1.3 高阶 20/20 @ N=10,000；v1.4 verify blinding 修复后无正式报告）、0.2% 故障已修复 |
 | SM3 | GB/T 32905 | 纯 JS | KAT 30/30 跨语言验证、bench ~5KB/s |
 | SM4-GCM | GB/T 32907 | 纯 JS | KAT 30/30、bench ~230KB/s |
 
