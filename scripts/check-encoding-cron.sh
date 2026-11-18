@@ -11,7 +11,8 @@
 #   TOOLS.md 约定：拉取前先 fetch 对比，确认磁盘 == main 后再操作。
 #
 # Crontab（每 3 小时，0:00/3:00/6:00/...）：
-#   0 */3 * * * /opt/fibemate-repo/scripts/check-encoding-cron.sh >> /var/log/fibemate/encoding-cron.log 2>&1
+#   0 */3 * * * bash /opt/fibemate-repo/scripts/check-encoding-cron.sh >> /var/log/fibemate/encoding-cron.log 2>&1
+# 注意：必须经 `bash` 调用。scp 部署不保留文件模式，仅靠 100755 会在下次部署后再次失效（issue #559）。
 # ═══════════════════════════════════════════════════════════════════════════
 LOG_FILE="/var/log/fibemate-encoding-check.log"
 REPO_DIR="/opt/fibemate-repo"
@@ -36,4 +37,5 @@ else
 fi
 
 rm -f "$TMP"
-exit 0
+# 退出码必须是扫描结果，否则 cron 里永远是「成功」（issue #559）
+exit "$rc"
