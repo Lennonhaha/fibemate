@@ -25,6 +25,7 @@ jobs:
     permissions:
       contents: write   # publish the release assets below
       id-token: write   # keyless cosign: Fulcio trades this OIDC token for a short-lived cert
+      attestations: write   # SLSA provenance for the addon that is published below
     strategy:
       fail-fast: false
       matrix:
@@ -144,6 +145,87 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+      - name: Verify native addon loads
+        run: |
+          node -e "
+          const pk = require('./packages/pqc-kem');
+          console.log('Backend:', pk.usingNative ? 'C NATIVE' : 'JS (no addon)');
+          // A missing addon would otherwise still pass the roundtrip below on
+          // the JS fallback - the same silent degradation that ran in
+          // production for ~75 days (issue #520).
+          if (!pk.usingNative) {
+            console.error('FATAL: the addon did not load; the roundtrip would only prove the JS path');
+            process.exit(2);
+          }
+          const k = pk.generateKeypair();
+          console.log('pk bytes:', k.publicKey.length);
+          const e = pk.encapsulate(k.publicKey);
+          console.log('ct bytes:', e.ciphertext.length);
+          const d = pk.decapsulate(k.secretKey, e.ciphertext);
+          const ok = Buffer.from(e.sharedSecret).equals(Buffer.from(d));
+          console.log('roundtrip:', ok ? 'PASS' : 'FAIL');
+          process.exit(ok ? 0 : 1);
+          "
+
+      - name: Self-KAT (100 rounds)
+        run: |
+          node -e "
+          const pk = require('./packages/pqc-kem');
+          let pass = 0;
+          for (let i = 0; i < 100; i++) {
+            const k = pk.generateKeypair();
+            const e = pk.encapsulate(k.publicKey);
+            const d = pk.decapsulate(k.secretKey, e.ciphertext);
+            if (Buffer.from(e.sharedSecret).equals(Buffer.from(d))) pass++;
+          }
+          console.log('Self-KAT 100:', pass + '/100');
+          process.exit(pass === 100 ? 0 : 1);
+          "
+
+      - name: Verify NIST KAT (100 vectors, spot-check)
+        if: vars.ENABLE_NIST_KAT == 'true'  # off by default; TODO: replace with ACVP-based KAT for C addon
+        run: |
+          node -e "
+          const fs = require('fs');
+          const pk = require('./packages/pqc-kem');
+          const ref = fs.readFileSync('packages/pqc-kem/test/kat/mlkem-768-KAT.rsp', 'utf8');
+          var count = 0, pass = 0;
+          var seed = '', dk = '', c = '', k = '';
+          for (const line of ref.split('\n')) {
+            if (line.startsWith('count =')) { count++; continue; }
+            if (line.startsWith('dk =')) dk = line.slice(5);
+            else if (line.startsWith('c =')) c = line.slice(4);
+            else if (line.startsWith('k =')) k = line.slice(4);
+            if (dk && c && k) {
+              try {
+                const sk = Buffer.from(dk.substring(0,4800), 'hex');
+                const ct = Buffer.from(c, 'hex');
+                const d = pk.decapsulate(sk, ct);
+                if (Buffer.from(d).toString('hex') === k) pass++;
+                else process.stderr.write('KAT #' + count + ' mismatch\n');
+              } catch(e) { process.stderr.write('KAT #' + count + ' error: ' + e.message + '\n'); }
+              dk = ''; c = ''; k = '';
+            }
+          }
+          console.log('KAT verify:', pass + '/' + count);
+          process.exit(pass === count ? 0 : 1);
+          "
+
+      # Provenance, and deliberately placed after the KATs: an attestation says "these
+      # exact bytes passed these checks", so attesting before the checks would assert
+      # something that was never tested. This action publishes to the attestations API
+      # (verify with `gh attestation verify`); it does not create a release asset by
+      # itself, so the Scorecard ".intoto.jsonl in the assets" probe is not satisfied
+      # by this step alone.
+      - name: Attest build provenance
+        if: github.event_name != 'pull_request'
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
+        with:
+          subject-path: |
+            packages/pqc-kem/native/build/Release/mlkem.node
+            packages/pqc-kem/native/build/Release/mlkem.node.sha256
+            packages/pqc-kem/native/build/Release/build-info.txt
+
       # Issue #570: the deploy host must not hold a credential that expires. Actions
       # artifacts need an authenticated API call and are deleted after 14 days, so the
       # host could only ever consume them through a token, or through a hand-filled local
@@ -257,72 +339,6 @@ jobs:
 
           gh release upload "$tag" ./*.sig ./*.pem --clobber
           gh release view "$tag" --json assets --jq '.assets[] | "\(.name) \(.size)"'
-
-      - name: Verify native addon loads
-        run: |
-          node -e "
-          const pk = require('./packages/pqc-kem');
-          console.log('Backend:', pk.usingNative ? 'C NATIVE' : 'JS (no addon)');
-          // A missing addon would otherwise still pass the roundtrip below on
-          // the JS fallback - the same silent degradation that ran in
-          // production for ~75 days (issue #520).
-          if (!pk.usingNative) {
-            console.error('FATAL: the addon did not load; the roundtrip would only prove the JS path');
-            process.exit(2);
-          }
-          const k = pk.generateKeypair();
-          console.log('pk bytes:', k.publicKey.length);
-          const e = pk.encapsulate(k.publicKey);
-          console.log('ct bytes:', e.ciphertext.length);
-          const d = pk.decapsulate(k.secretKey, e.ciphertext);
-          const ok = Buffer.from(e.sharedSecret).equals(Buffer.from(d));
-          console.log('roundtrip:', ok ? 'PASS' : 'FAIL');
-          process.exit(ok ? 0 : 1);
-          "
-
-      - name: Self-KAT (100 rounds)
-        run: |
-          node -e "
-          const pk = require('./packages/pqc-kem');
-          let pass = 0;
-          for (let i = 0; i < 100; i++) {
-            const k = pk.generateKeypair();
-            const e = pk.encapsulate(k.publicKey);
-            const d = pk.decapsulate(k.secretKey, e.ciphertext);
-            if (Buffer.from(e.sharedSecret).equals(Buffer.from(d))) pass++;
-          }
-          console.log('Self-KAT 100:', pass + '/100');
-          process.exit(pass === 100 ? 0 : 1);
-          "
-
-      - name: Verify NIST KAT (100 vectors, spot-check)
-        if: vars.ENABLE_NIST_KAT == 'true'  # off by default; TODO: replace with ACVP-based KAT for C addon
-        run: |
-          node -e "
-          const fs = require('fs');
-          const pk = require('./packages/pqc-kem');
-          const ref = fs.readFileSync('packages/pqc-kem/test/kat/mlkem-768-KAT.rsp', 'utf8');
-          var count = 0, pass = 0;
-          var seed = '', dk = '', c = '', k = '';
-          for (const line of ref.split('\n')) {
-            if (line.startsWith('count =')) { count++; continue; }
-            if (line.startsWith('dk =')) dk = line.slice(5);
-            else if (line.startsWith('c =')) c = line.slice(4);
-            else if (line.startsWith('k =')) k = line.slice(4);
-            if (dk && c && k) {
-              try {
-                const sk = Buffer.from(dk.substring(0,4800), 'hex');
-                const ct = Buffer.from(c, 'hex');
-                const d = pk.decapsulate(sk, ct);
-                if (Buffer.from(d).toString('hex') === k) pass++;
-                else process.stderr.write('KAT #' + count + ' mismatch\n');
-              } catch(e) { process.stderr.write('KAT #' + count + ' error: ' + e.message + '\n'); }
-              dk = ''; c = ''; k = '';
-            }
-          }
-          console.log('KAT verify:', pass + '/' + count);
-          process.exit(pass === count ? 0 : 1);
-          "
 
       - name: Compat fixtures test
         continue-on-error: true  # golden JSON sk format not aligned with C addon yet
