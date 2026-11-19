@@ -17,7 +17,7 @@
 | 🇨🇳 国密 | SM2 全栈性能 | 2.1×–8.4× 加速 | [SM2 优化报告](https://fibemate.net/docs/sm2-optimization.html) |
 | 🇨🇳 国密 | SM2 TVLA 侧信道 (v1.3, 1-4阶) | N=5,000 20/20 ✅ | [TVLA 分析](https://fibemate.net/docs/sm2-tvla-analysis.html) |
 | 🇨🇳 国密 | sm-crypto 互操作 | 100% 兼容 ✅ | [SM2 优化报告](https://fibemate.net/docs/sm2-optimization.html) |
-| 🛡️ 完整性 | RFC 3161 时间戳存证 | 138 份 TSR (联合信任 + DigiCert) | `/docs/tsa/` |
+| 🛡️ 完整性 | RFC 3161 时间戳存证 | 138 份 TSR（签发机构逐文件见 /docs/TIMESTAMP-ISSUERS.md） | `/docs/tsa/` |
 
 ---
 

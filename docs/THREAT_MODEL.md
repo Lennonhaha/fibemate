@@ -181,7 +181,7 @@
 | 服务端无私钥存储 | 检查服务端数据库 schema，无 `private_key` 字段 |
 | 端到端加密 | 浏览器 console 抓取 `encaps()` 输出 → 对比 Network 面板 payload → 应只有 `ciphertext` |
 | 常量时间实现 | 运行 `tvla_9of9_corrected.js`（含在仓库中） |
-| 代码完整性 | 验证 DigiCert / 联合信任 TSA 时间戳（仓库内提供验证脚本） |
+| 代码完整性 | 验证 FreeTSA / DigiCert TSA 时间戳（证书链由 scripts/tsr-verify.cjs 用仓库内 CA bundle 校验） |
 | 会话隔离 | 页面刷新 → Network 面板出现新 `encaps()` → 证明新密钥对已生成 |
 | ZK 证明确保不传密码 | 抓取 `/auth` 请求 body → 应只含 `proof` 字段，无 `password` |
 

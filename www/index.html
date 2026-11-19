@@ -1004,7 +1004,7 @@
                     <div class="layer-number">2</div>
                     <div class="layer-title">后量子密钥交换</div>
                 </div>
-                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：按 FIPS 203 规范实现，纯 JavaScript，FIPS 203 官方 KAT 参照向量 9/9 通过 · 自跑 10,000 轮 roundtrip 一致性 10,000/10,000（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 存证签发者：FreeTSA 197 份、DigiCert 167 份（全仓 364 份；10 份不是有效 token）<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
+                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：按 FIPS 203 规范实现，纯 JavaScript，FIPS 203 官方 KAT 参照向量 9/9 通过 · 自跑 10,000 轮 roundtrip 一致性 10,000/10,000（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
             </div>
 
             <div class="layer-card">
@@ -1207,7 +1207,7 @@
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <div class="feature-title">PQC 工程验证</div>
-                <div class="feature-desc">ML-KEM-768/1024 参考实现，按 FIPS 203 规范实现 · 官方 KAT 9/9；self-consistency roundtrip 10,000/10,000 通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 存证签发者：FreeTSA 197 份、DigiCert 167 份（全仓 364 份；10 份不是有效 token） · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
+                <div class="feature-desc">ML-KEM-768/1024 参考实现，按 FIPS 203 规范实现 · 官方 KAT 9/9；self-consistency roundtrip 10,000/10,000 通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>） · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
             </div>
 
             <div class="feature-card">
@@ -2791,12 +2791,12 @@
             <a href="mailto:support@fibemate.net">support@fibemate.net</a>
             <div class="timestamp-proof" style="max-width: 900px; margin: 2rem auto 0; padding: 1.5rem 2rem; background: rgba(0,212,170,0.05); border: 1px solid rgba(0,212,170,0.2); border-radius: 8px; text-align: left;">
         <h4 id="ts-proof" style="margin:0 0 0.5rem;font-size:1rem;color:#00d4aa;">&#x1F4DC; 可信时间戳存证 (RFC 3161)</h4>
-        <p style="margin:0 0 1rem;font-size:0.85rem;color:#c9d1d9;"><strong>可信时间戳存证（RFC 3161）· 签发者：FreeTSA 197 份、DigiCert 167 份（全仓 364 份；10 份不是有效 token）</strong></p>
+        <p style="margin:0 0 1rem;font-size:0.85rem;color:#c9d1d9;"><strong>可信时间戳存证（RFC 3161）· 全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）</strong></p>
         <details style="cursor:pointer;">
         <summary style="color:#00d4aa;font-size:0.85rem;margin-bottom:0.8rem;">&#x1F4CB; 查看存证清单 (SHA-256)</summary>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:0.8rem 0;">
         <div>
-        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,212,170,0.25);padding-bottom:0.3rem;">&#x1F510; 核心加密 (13) <span style="font-size:0.6rem;color:#00d4aa;">tsa.cn</span></h5>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(0,212,170,0.25);padding-bottom:0.3rem;">&#x1F510; 核心加密 (13) <span style="font-size:0.6rem;color:#8b949e;">逐文件归属</span></h5>
         <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
         <li><span style="color:#c9d1d9;">message-crypto-v2.js</span> &mdash; 4e2f4bef...</li>
         <li><span style="color:#c9d1d9;">sm2-browser.js</span> &mdash; 5df29703...</li>
@@ -2804,7 +2804,7 @@
         <li><span style="color:#c9d1d9;">ml-kem-768.js</span> &mdash; 4ee3d9b3... <span style="font-size:0.6rem;color:#00d4aa;">KAT 10,000/10,000 ✓ + TVLA v2 (N=10K) 核心操作恒定时间 ✓ · FreeTSA ✓ + DigiCert ✓ 双源</span></li>
         <li><span style="color:#c9d1d9;">sm2-browser.esm.js</span> &mdash; 6563d887...</li>
         <li><span style="color:#c9d1d9;">sm2-browser.cjs.js</span> &mdash; de058788...</li>
-        <li><span style="color:#c9d1d9;">sm3_implementation.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="tsa.cn TSA 2026-05-25">TSA&#x2713;</span> &mdash; 1aad0720...</li>
+        <li><span style="color:#c9d1d9;">sm3_implementation.js</span> <span style="font-size:0.55rem;color:#00d4aa;" title="2026-05-25 批次：令牌内未内嵌签名证书，签发者无法判定">TSA 存证</span> &mdash; 1aad0720...</li>
         <li style="font-size:0.65rem;color:#646c78;">fibemate-algoreg-v3.0.0.tar.gz &mdash; 5f07de2b...</li>
         <li><span style="color:#c9d1d9;">bulletproofs.js</span> &mdash; 5a3c0fb5...</li>
         <li><span style="color:#c9d1d9;">session-manager.js</span> &mdash; 00c9c720...</li>
@@ -2815,7 +2815,7 @@
         </div>
         <div>
                 <div>
-        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(255,140,0,0.25);padding-bottom:0.3rem;">&#x2699; 后端 + KAT (11) <span style="font-size:0.6rem;color:#ff8c00;">tsa.cn</span></h5>
+        <h5 style="color:#e8f0f8;font-size:0.8rem;margin:0 0 0.4rem;border-bottom:1px solid rgba(255,140,0,0.25);padding-bottom:0.3rem;">&#x2699; 后端 + KAT (11) <span style="font-size:0.6rem;color:#8b949e;">逐文件归属</span></h5>
         <ul style="list-style:none;padding:0;margin:0;font-size:0.7rem;color:#8b949e;line-height:1.7;">
         <li style="font-size:0.6rem;color:#646c78;margin-top:0.15rem;">&mdash; 2026-05-19 &mdash;</li>
         <li><span style="color:#c9d1d9;">test_1024.c</span> &mdash; d6a70f9b...</li>
@@ -2918,12 +2918,12 @@
         <p style="margin: 0 0 0.8rem; font-size: 0.75rem; color: #646c78;">从数学底层实现 ML-KEM-768，逐项对齐 NIST Known Answer Test 向量。NTT 往返验证 → basemul zeta 表修复 → 全流程 FIPS 203 KAT 通过。</p>
         <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#ff8c00;">2026-05-18</strong> &mdash; 验证框架 + NTT/basemul 修复</p>
         <table style="margin: 0 0 0.6rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
-            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:200px;">kat_fips.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">FIPS 203 KAT 解析框架 — 7ef6e8e6...9718d52d <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
-            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">verify_final.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">NTT &#x2194; invNTT 往返 PASS，basemul zeta[64..127] 修复 — e1c9dec5...c77aaf6e <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:200px;">kat_fips.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">FIPS 203 KAT 解析框架 — 7ef6e8e6...9718d52d <span style="color:#00d4aa;font-size:0.65rem;" title="2026-05-23 03:12 CST 批次：签发者见归属表">TSA&#x2713;</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">verify_final.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">NTT &#x2194; invNTT 往返 PASS，basemul zeta[64..127] 修复 — e1c9dec5...c77aaf6e <span style="color:#00d4aa;font-size:0.65rem;" title="2026-05-23 03:12 CST 批次：签发者见归属表">TSA&#x2713;</span></td></tr>
         </table>
         <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#ff8c00;">2026-05-19</strong> &mdash; 全流程 FIPS 203 KAT 通过 &#x2705;</p>
         <table style="margin: 0 0 0.3rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
-            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:200px;">fips203_verify.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">KeyGen + Encaps + Decaps 全流程 KAT 匹配 — f970adc5...10026857 <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:200px;">fips203_verify.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">KeyGen + Encaps + Decaps 全流程 KAT 匹配 — f970adc5...10026857 <span style="color:#00d4aa;font-size:0.65rem;" title="2026-05-23 03:12 CST 批次：签发者见归属表">TSA&#x2713;</span></td></tr>
         </table>
                                       <!-- FIPS 205 / 2026-05-23 -->
                                       <tr style="border-top: 1px solid #ff8c0044;">
@@ -2967,7 +2967,7 @@
             <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:200px;">kyber_nt_v3.js (740 lines)</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">ac92a76981e5119611abeda19f854ebc9a6c3c24412c4597acdd82ec24cb374e</td></tr>
         </table>
 
-<p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #646c78;">纯 JavaScript 参考实现 | 无第三方 PQC 库依赖 | NIST KAT 20/20 + KAT 10,000 浏览器端全量一致性 ✓ <span style="color:#00d4aa;font-size:0.7rem;">| TSA tsa.cn 2026-05-23 03:12 CST</span></p>
+<p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #646c78;">纯 JavaScript 参考实现 | 无第三方 PQC 库依赖 | NIST KAT 20/20 + KAT 10,000 浏览器端全量一致性 ✓ <span style="color:#00d4aa;font-size:0.7rem;">| TSA 令牌 2026-05-23 03:12 CST（签发者见归属表）</span></p>
     </div>
 
 
@@ -2979,14 +2979,14 @@
         <p style="margin: 0 0 0.8rem; font-size: 0.75rem; color: #646c78;">SM2 密钥协商 + SM4-αGCM 加密栈完整集成，ML-KEM-768 后量子增强。</p>
         <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#7c8aff;">2026-05-20</strong> &mdash; PQ Double Ratchet</p>
         <table style="margin: 0 0 0.6rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
-            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">double-ratchet-pq.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">ML-KEM-768 &#x2192; X3DH/PQ &#x2192; Double Ratchet &#x2192; AES-256-GCM — dd526c81...60cb6233 <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">double-ratchet-pq.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">ML-KEM-768 &#x2192; X3DH/PQ &#x2192; Double Ratchet &#x2192; AES-256-GCM — dd526c81...60cb6233 <span style="color:#00d4aa;font-size:0.65rem;" title="2026-05-23 03:12 CST 批次：签发者见归属表">TSA&#x2713;</span></td></tr>
         </table>
         <p style="margin: 0 0 0.3rem; font-size: 0.85rem; color: #e8f0f8;"><strong style="color:#7c8aff;">2026-05-21</strong> &mdash; SM2 &Iota;&Rho; &ang;</p>
         <table style="margin: 0 0 0.3rem 0; font-size: 0.75rem; color: #8b949e; border-collapse: collapse; width: 100%;">
-            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">test_sm2.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">SM2 keygen/encrypt/decrypt/sign/verify &#x2014; 1217dd38...1291f08a <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
-            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">test_sm2_module.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">SM2 browser ESM &#x2192; esbuild IIFE bundle selftest &#x2014; dff62334...bb3694fa <span style="color:#00d4aa;font-size:0.65rem;" title="tsa.cn TSA 2026-05-23 03:12 CST">TSA&#x2713;</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">test_sm2.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">SM2 keygen/encrypt/decrypt/sign/verify &#x2014; 1217dd38...1291f08a <span style="color:#00d4aa;font-size:0.65rem;" title="2026-05-23 03:12 CST 批次：签发者见归属表">TSA&#x2713;</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap; width:230px;">test_sm2_module.js</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem;">SM2 browser ESM &#x2192; esbuild IIFE bundle selftest &#x2014; dff62334...bb3694fa <span style="color:#00d4aa;font-size:0.65rem;" title="2026-05-23 03:12 CST 批次：签发者见归属表">TSA&#x2713;</span></td></tr>
         </table>
-        <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #646c78;">sm-crypto | @noble/curves | esbuild | IIFE browser bundle <span style="color:#00d4aa;font-size:0.7rem;">| TSA tsa.cn 2026-05-23 03:12 CST</span></p>
+        <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #646c78;">sm-crypto | @noble/curves | esbuild | IIFE browser bundle <span style="color:#00d4aa;font-size:0.7rem;">| TSA 令牌 2026-05-23 03:12 CST（签发者见归属表）</span></p>
     </div>
 
     <!-- TVLA v2 Enhanced N=10,000 — 时序侧信道验证里程碑 -->
@@ -3000,7 +3000,7 @@
             <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">控制组</td><td style="padding:1px 0; color:#e8f0f8;">Fixed-vs-Fixed 测量系统稳定性验证 ✓</td></tr>
             <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;vertical-align:top;">核心操作</td><td style="padding:1px 0; color:#e8f0f8;"><strong style="color:#00d4aa;">C Native Addon 核心操作恒定时间通过</strong>：keygen &#x2705; encaps &#x2705; decaps &#x2705; SampleNTT &#x2705; NTT &#x2705; ByteEncode &#x2705; ByteDecode &#x2705;<br><span style="color:#f97316;">compress 存在微弱时序差异（|t|=23.93 — 仅操作公开数据，Encaps 阶段，无安全影响）</span></td></tr>
             <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">学术意义</td><td style="padding:1px 0; color:#646c78;">N=10,000 暴露 N=3,000 时的 3 个方法学假阴性（内存分配计入计时、工作量不对等、缺控制组）</td></tr>
-            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">报告文件</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem; color:#8b949e;">tvla-mlkem-report-v2-n10000.json <span style="color:#00d4aa;font-size:0.65rem;" title="DigiCert TSR 2026-06-03">TSA&#x2714; DigiCert</span> &mdash; 6EE24CE5...E3743A1 <span style="color:#00a0ff;font-size:0.65rem;" title="联合信任 tsa.cn 待提交">联合信任 ✓</span></td></tr>
+            <tr><td style="padding:1px 8px 1px 0; white-space:nowrap;">报告文件</td><td style="padding:1px 0; font-family:monospace; font-size:0.65rem; color:#8b949e;">tvla-mlkem-report-v2-n10000.json <span style="color:#00d4aa;font-size:0.65rem;" title="DigiCert TSR 2026-06-03">TSA&#x2714; DigiCert</span> &mdash; 6EE24CE5...E3743A1 <span style="color:#8b949e;font-size:0.65rem;" title="未提交：无对应令牌">未提交</span></td></tr>
         </table>
         <p style="margin: 0.5rem 0 0; font-size: 0.8rem; color: #646c78;">FIBEMATE 成为<strong style="color:#00d4aa;">C Native Addon 通过 TVLA v2 Enhanced (N=10,000) 恒定时间验证 · 纯 JS 参考实现通过 KAT 10,000/10,000</strong></p>
     </div>
