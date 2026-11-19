@@ -363,7 +363,7 @@ OpenSSF Scorecard 徽章地址 `https://api.securityscorecards.dev/projects/gith
 
 ### 20.12 对外文案不得硬编码易腐字段（D25，2026-11-19）
 
-README、站点与 PR 描述里的"published 2026-11-17T10:33Z at commit `ef6e327`"每 push 一次就漂移一次。它不是证据，是负债：读者无法判断它对应哪一版树，维护者每次改动都要记得同步。
+README、站点与 PR 描述里的"published <timestamp> at commit <sha>"每 push 一次就漂移一次。它不是证据，是负债：读者无法判断它对应哪一版树，维护者每次改动都要记得同步。
 
 **判据**：对外文案只写相对表述（例如 `as of the latest published record`），或由 CI 从 `docs/metrics.json` / 上游 API 动态渲染；确需引用某一次具体测量时，把时间与 SHA 放进证据文件或 CI 产物，正文只链接它。
 
