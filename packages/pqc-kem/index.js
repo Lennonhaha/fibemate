@@ -19,6 +19,12 @@ const JS = require('./src/ml-kem-768');
 const NATIVE_ADDON_PATH = './native/build/Release/mlkem.node';
 const NATIVE_ADDON_FILE = path.join(__dirname, 'native', 'build', 'Release', 'mlkem.node');
 
+// Opt-in: the operator asked for the native backend and must not silently get
+// the JS one. Default stays permissive on purpose -- Windows and JS-only
+// installs are supported configurations, and their silence is asserted by
+// test/fallback-logging.test.js.
+const REQUIRE_NATIVE = process.env.MLKEM_REQUIRE_NATIVE === '1';
+
 function nativeSelfTest(addon) {
     const k = addon.keygen();
     const e = addon.encaps(k[0]);
@@ -47,8 +53,11 @@ function detectNative(opts) {
         native = requireAddon(NATIVE_ADDON_PATH);
     } catch (err) {
         // A missing addon is a supported configuration (Windows, JS-only
-        // installs). An addon that is present but cannot be loaded is not.
-        if (addonExists()) fallback = Object.assign({ stage: 'load' }, describe(err));
+        // installs), so it stays silent by default. It is not silent under
+        // MLKEM_REQUIRE_NATIVE=1: an absent file and an unloadable file are the
+        // same failure to the caller who required the native backend.
+        const stage = addonExists() ? 'load' : 'missing';
+        if (stage === 'load' || REQUIRE_NATIVE) fallback = Object.assign({ stage }, describe(err));
     }
 
     if (native) {
@@ -66,6 +75,18 @@ function detectNative(opts) {
 const detected = detectNative();
 const native = detected.native;
 const nativeFallback = detected.fallback;
+
+if (nativeFallback && REQUIRE_NATIVE) {
+    // Fail closed at load time. A warning is the right signal for a default
+    // install; it is the wrong signal for a host that asked for native, where
+    // the JS backend is a silent downgrade of the security-relevant path.
+    const err = new Error(
+        'native ML-KEM addon required (MLKEM_REQUIRE_NATIVE=1) but unavailable (' +
+        nativeFallback.stage + ': ' + (nativeFallback.code || nativeFallback.message) + ')'
+    );
+    err.code = 'FIBEMATE_PQC_KEM_NATIVE_REQUIRED';
+    throw err;
+}
 
 if (nativeFallback) {
     process.emitWarning(
