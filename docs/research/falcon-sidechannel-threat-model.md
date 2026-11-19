@@ -2,7 +2,7 @@
 
 - 状态：初稿（2026-11-18）；文献复核（2026-11-19）；对应 Issue #541，依据件 `falcon-scope-draft.md`（rev2 + §10 已确认设计原则）
 - 事实基线：本仓 `main` 的 `7accf47`（2026-11-18 09:0x 实测）
-- 文献基线：R1–R10 于 2026-11-19 逐条复核，作者/出处/核对方式见 §11；R2 按预印本（to appear）引用
+- 文献基线：R1–R12 于 2026-11-19 逐条复核，作者/出处/核对方式见 §11；R2 按预印本（to appear）引用
 - 目标读者：实现者（写移植的人）、评审者（签核 T1 泄漏界的人）、对外声明作者
 
 ## 0. 三条规定
@@ -115,6 +115,11 @@ FIPS 206（FN-DSA）**尚未发布**（2026-11-19 复核，结论与 11-17 一�
 - 判据：① 每个部署目标（Node 进程、WASM、原生 addon）分别写明内存完整性假设——**这是假设，不是测量**；② 把「拒绝异常短签名」这条缓解在验证端**测出来**（构造短签名，断言拒绝），在签名端明确**不做**过滤（过滤会破坏采样分布，§9 第 5 条）；③ API 暴露严格验证模式；④ 互操作核对交集成方，并写进集成文档。
 - 如果我们无法在某个目标上施加缓解，**记录决策与理由**，不写「已处理」。
 
+### 5.3 两条边界引用（各一句，不展开）
+
+- **R11（ML-KEM 密钥重用审计）**：R11 的 signal leakage 攻击在专用加固之后仍然成立，所以本文涉及密钥重用的边界（T6 的 salt 与密钥隔离、T9 的共享依赖）以这类攻击为审计参照系——**参照系，不是本仓结论**；本仓的密钥重用策略尚未评估。
+- **R12（格签名第三条路线）**：R12 用高斯卷积替代 flooding 与拒绝采样、无 abort，是 Falcon 类格签名之外的第三条路线。本文的 T1/T3 只覆盖拒绝采样采样器，**不覆盖 R12 的证明结构**，也不对其安全性作任何陈述。
+
 ## 6. 评估计划
 
 ### 6.1 测量协议（所有威胁共用）
@@ -164,7 +169,7 @@ R6 给出的是**成本模型**，不是任何实现泄漏的测量：Falcon-512
 
 | 项 | 现状 | 处理时点 |
 | --- | --- | --- |
-| R1–R10 的作者/venue/年份 | **已复核（2026-11-19）**，逐条见 §11；R3/R4 以 Springer/IEEE 记录为准——ePrint 页标注 Preprint 不等于见刊 | 完成 |
+| R1–R12 的作者/venue/年份 | **已复核（2026-11-19）**，逐条见 §11；R3/R4 以 Springer/IEEE 记录为准——ePrint 页标注 Preprint 不等于见刊 | 完成 |
 | R2（One Fell Swoop, ePrint 2025/2159）是否已在 TCHES 2027 正式见刊 | **未正式见刊**；TCHES 2027(1) 已接收，最新修订 2026-11-16；按预印本 + to appear 引用 | 交稿前重核一次 |
 | 2025-11 之后是否有新文献推翻 T2 / T11 | **已查（2026-11-19）**：T2 未被推翻，反被 R8 量化强化；T11 未发现新文献。检索范围：ePrint「Falcon」2026 年条目、IACR News 2026-09/10、RCDT/Rowhammer/持久故障定向检索 | 完成 |
 | 「Every Signing Leaks」（Zhou 等，2026-09） | 二手线索，**未定位到论文页**，故未写入正文与参考文献 | 找到页面后再补 |
@@ -201,3 +206,5 @@ R6 给出的是**成本模型**，不是任何实现泄漏的测量：Falcon-512
 | R8 | Flying, Not Floating（定点 Falcon） | Stef Halmans, Amit Kumar, Tim Güneysu（ePrint 页） | ePrint 2026/2431（2026-10-09） | ePrint 页标题与署名已核；T2 的查询预算取自该文 |
 | R9 | Falcon Key Recovery from Joint Sampler Leakages | Youngchang Kim, Yongseong Park, Jaeho Jeon, Young-Sik Kim（ePrint 页） | ePrint 2026/2656 | ePrint 页标题与署名已核；T3 的样本量下界取自该文摘要 |
 | R10 | 64.64 定点 Falcon-512 | De Almeida Braga 等 | CRYPTO 2026 | **转引**：作者与结论见 R8 摘要；未定位到论文页，本稿只作转引，不单独引用其数字 |
+| R11 | eCK Security of MQV-Style LWE-Based AKE | Ruoyu Ding, Tianrun Yu, Yanbin Pan, Chi Cheng, Jian Weng（ePrint 页） | ePrint 2026/2017（rev 2026-11-18） | ePrint 页标题与署名已核；仅作密钥重用审计的参照系引用 |
+| R12 | G+G（卷积高斯 FS 签名） | Julien Devevey, Alain Passelègue, Damien Stehlé（ePrint 页） | ePrint 2023/1477（ASIACRYPT 2023 的 minor revision，rev 2026-11-18） | ePrint 页标题、署名与 publication info 已核；仅作路线对照引用 |
