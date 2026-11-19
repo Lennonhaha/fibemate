@@ -13,6 +13,8 @@
 //   - upload .sig              a signature nobody can download is not evidence
 //   - verify-blob + identity   an unpinned identity accepts any valid cert
 //   - tampered-copy control    without it, "verified" only proves cosign exits 0
+//   - publish after the KATs   a signed release for a build that failed its checks is worse than no release
+//   - attestation wired up     attestations: write + a pinned attest-build-provenance step
 'use strict';
 
 const fs = require('fs');
@@ -62,6 +64,28 @@ const RULES = [
     test: (s) => /tampered\.node/.test(s) && /signature verified a modified copy/.test(s),
     expect: 'a negative control that expects a modified copy to be rejected',
   },
+  {
+    id: 'kat-before-publish',
+    why: 'publish/sign before the KATs leaves a signed release behind for a build that failed its checks (#586)',
+    test: (s) => {
+      const kat = s.indexOf('Self-KAT (100 rounds)');
+      const pub = s.indexOf('Publish the addon as a release asset');
+      return kat >= 0 && pub >= 0 && kat < pub;
+    },
+    expect: 'the Self-KAT step to run before the publish step',
+  },
+  {
+    id: 'attestations-permission',
+    why: 'actions/attest-build-provenance cannot write an attestation without attestations: write',
+    test: (s) => /attestations:\s*write/.test(s),
+    expect: 'attestations: write on the build job',
+  },
+  {
+    id: 'attest-provenance-pinned',
+    why: 'the published artifact must carry provenance, and the action must be pinned to a commit',
+    test: (s) => /actions\/attest-build-provenance@[0-9a-f]{40}\b/.test(s),
+    expect: 'actions/attest-build-provenance pinned by a 40-hex commit SHA',
+  },
 ];
 
 function findings(text) {
@@ -91,6 +115,9 @@ function selfTest() {
     ['no upload of .sig', real.replace(/gh release upload "\$tag" \.\/\*\.sig \.\/\*\.pem --clobber/, 'echo not-uploaded'), 1],
     ['no identity pin', real.replace(/--certificate-identity-regexp/g, '--accept-anything'), 1],
     ['no negative control', real.replace(/tampered\.node/g, 'untouched.node'), 1],
+    ['kat after publish', real.replace('Self-KAT (100 rounds)', 'Self-KAT (somewhere later)'), 1],
+    ['no attestations permission', real.replace(/\n\s*attestations: write[^\n]*/, ''), 1],
+    ['no attest step', real.replace(/actions\/attest-build-provenance@/g, 'actions/attest-placeholder@'), 1],
   ];
   let pass = 0;
   for (const [name, text, want] of cases) {
