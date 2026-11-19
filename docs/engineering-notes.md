@@ -486,6 +486,49 @@ The honest fix is to move publishing after the checks; that is a separate change
 changes what "publish failed" means for the deploy hosts. Until then, the signature means "this is
 what CI built from this key", not "this artifact passed the tests".
 
+## 19. 配置 reload 是异步的，验证必须轮询
+
+**怎么发生的。** 2026-11-19 修 `fibemate.link` 的 `:8443` 端口泄漏：`nginx -t` 通过，`systemctl reload nginx` 返回 0，
+紧接着的 `curl -D - https://fibemate.link/docs` 仍然返回 `location: https://fibemate.link:8443/docs/`。
+几秒后重跑同一条命令，Location 已经干净。同一天收尾（去掉 vhost 里无效的 `www.fibemate.link`）时，
+reload 后的三次采样则从第一次就一致。
+
+**当时的误判。** 把「reload 返回 0」加「一条响应」当成「新配置已生效」，于是第一反应是「修复没生效，准备回滚」。
+返回 0 只证明信号送到了 master，不证明新配置已经在服务请求：信号送达与 worker 切换之间有窗口，
+窗口里外部能观测到的只有旧行为；旧 worker 在 graceful shutdown 期间也会把手上的连接处理完。
+
+**判据。** reload 之后的**单次采样不是判据**，只有稳定复现的结果才是。要区分「窗口还没过」和「配置真的没生效」，
+靠的是时间序列，不是一次请求。这条与 §17 同源：一次成功无法证明机制正确，一次失败也无法证明机制错误。
+
+**正解。** 验证段轮询到稳定，并记录收敛用了几轮；每轮结果都要打出来，只打最后一行等于没有时间序列。
+
+```bash
+for i in 1 2 3; do
+  loc=$(curl -s -o /dev/null -D - --resolve fibemate.link:443:127.0.0.1 https://fibemate.link/docs \
+    | tr -d '\r' | awk 'tolower($1)=="location:"{print $2}')
+  echo "try=$i location=$loc"
+  sleep 1
+done
+```
+
+本次收尾实测（`server_name` 去掉 `www` 之后）：
+
+```
+try=1 apex_code=200 docs_location=https://fibemate.link/docs/
+try=2 apex_code=200 docs_location=https://fibemate.link/docs/
+try=3 apex_code=200 docs_location=https://fibemate.link/docs/
+```
+
+配套两条：部署脚本里「reload 成功」不等于「部署成功」，后面必须跟验证段；验证脚本必须输出每一轮的结果，
+否则「等了 3 秒」和「只跑了一次」在日志上长得一样。
+
+### 同批的第二个坑：`cp -a` 保留 mtime，`ls -t` 会选错备份
+
+备份文件名带时间戳是对的，但用 `cp -a` 复制会保留源文件的 mtime，于是 `ls -t | head -1` 选中的是**内容最旧**的那份。
+本次比对因此一度对着错误的备份做 diff，差点得出「备份里也是这样」的错误结论。
+判据：备份的定位标识必须是**文件名里的时间戳**，或者脚本自己打印出来的路径（`BACKUP=/root/fibemate.link.bak-<epoch>`），
+不是 mtime。凡是「按最新」取文件的地方，都要先问一句：这个时间是谁的时间。
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
