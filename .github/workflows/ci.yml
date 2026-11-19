@@ -348,6 +348,12 @@ jobs:
       - name: Test the packages tree digest and its live check
         run: node scripts/test-tree-hash.cjs
 
+      # #603: /health states both the process build and the served static tree. The block is
+      # only worth reading if a missing, malformed or unreadable manifest produces a
+      # distinguishable answer instead of a silent null.
+      - name: Test the served-tree report
+        run: node scripts/test-served-tree.cjs
+
       - name: Install shellcheck
         run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck
 
