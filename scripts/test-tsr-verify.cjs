@@ -26,13 +26,25 @@ const path = require('path');
 const args = process.argv.slice(2);
 const file = args[args.indexOf('-in') + 1] || '';
 const name = path.basename(file);
-const say = (s) => { process.stderr.write(s + '\\n'); process.exit(0); };
+const caIndex = args.indexOf('-CAfile');
+const caArg = caIndex >= 0 ? path.basename(args[caIndex + 1] || '') : '';
+// No backslash escapes inside this template: an escape that survives one level of
+// template evaluation turns into a real newline in the generated file and the stub
+// stops parsing. Joining is boring and cannot be mis-escaped.
+const NL = String.fromCharCode(10);
+const say = (s) => { require('fs').writeSync(2, s + NL); process.exit(0); };
 if (name.startsWith('ok-')) say('Verification: OK');
 if (name.startsWith('nocert-')) say('PKCS7 routines:PKCS7_get0_signers:signer certificate not found');
-if (name.startsWith('nodata-')) say('Verification: FAILED\\nmessage imprint mismatch');
-if (name.startsWith('badchain-')) say('Verification: FAILED\\nts_verify_cert:certificate verify error');
+if (name.startsWith('nodata-')) say('Verification: FAILED' + NL + 'message imprint mismatch');
+if (name.startsWith('badchain-')) say('Verification: FAILED' + NL + 'ts_verify_cert:certificate verify error');
 if (name.startsWith('notoken-')) say('ts_check_status_info:no timestamp token info');
-say('Verification: FAILED\\nunclassified');
+// A token whose signer chains to DigiCert: untrusted under a FreeTSA-only bundle,
+// trusted but data-missing once the DigiCert root is present.
+if (name.startsWith('chaindep-')) {
+  if (caArg.includes('freetsa-only')) say('Verification: FAILED' + NL + 'ts_verify_cert:certificate verify error');
+  say('Verification: FAILED' + NL + 'message imprint mismatch');
+}
+say('Verification: FAILED' + NL + 'unclassified');
 `,
 );
 fs.chmodSync(stub, 0o755);
@@ -185,6 +197,63 @@ const writeAllow = (root, lines) => {
       parsed.summary.verified === 1 &&
       Array.isArray(parsed.summary.verifiedFiles) && parsed.summary.verifiedFiles.length === 1,
     r.stdout.slice(0, 120),
+  );
+}
+
+// 10. the CA bundle is what changes the answer (#569): the same token is CHAIN_UNTRUSTED
+// under a FreeTSA-only bundle and NO_DATA once the DigiCert root is in the bundle.
+// Without this pair, "we fixed the CA" is an assertion, not a measurement.
+{
+  const root = makeTree({ 'chaindep-001.tsr': 'chaindep' });
+  const freeCa = path.join(root, 'freetsa-only.pem');
+  const fullCa = path.join(root, 'tsa-roots.pem');
+  // The verifier refuses a bundle with no certificate in it, so the fixture has to
+  // look like a bundle even though the stub never parses it.
+  const fakeCert = '-----BEGIN CERTIFICATE-----' + String.fromCharCode(10) + 'stub' + String.fromCharCode(10) + '-----END CERTIFICATE-----' + String.fromCharCode(10);
+  fs.writeFileSync(freeCa, fakeCert);
+  fs.writeFileSync(fullCa, fakeCert + fakeCert);
+
+  const allowFree = writeAllow(root, ['www/docs/tsa/chaindep-001.tsr\tBAD_CHAIN']);
+  const rFree = runV(root, allowFree, ['--ca', freeCa]);
+  check(
+    'a DigiCert token is untrusted under a FreeTSA-only bundle',
+    rFree.status === 0 && /BAD_CHAIN=1/.test(rFree.stdout),
+    rFree.stdout.trim(),
+  );
+
+  const allowFull = writeAllow(root, ['www/docs/tsa/chaindep-001.tsr\tNO_DATA']);
+  const rFull = runV(root, allowFull, ['--ca', fullCa]);
+  check(
+    'the same token becomes data-missing (not verified) once the root is present',
+    rFull.status === 0 && /NO_DATA=1/.test(rFull.stdout) && !/BAD_CHAIN/.test(rFull.stdout),
+    rFull.stdout.trim(),
+  );
+}
+
+// 11. a missing bundle is "cannot measure", not "every token is untrusted". The second
+// reading is the tempting one and it would turn a config mistake into 240 findings.
+{
+  const root = makeTree({ 'nocert-001.tsr': 'nocert' });
+  const allow = writeAllow(root, ['www/docs/tsa/nocert-001.tsr\tNO_CERT']);
+  const r = runV(root, allow, ['--ca', path.join(root, 'does-not-exist.pem')]);
+  check(
+    'missing CA bundle exits 2',
+    r.status === 2 && /no CA bundle/.test(r.stderr),
+    r.stderr.trim(),
+  );
+}
+
+// 12. an empty bundle is also "cannot measure": openssl would call every chain untrusted
+{
+  const root = makeTree({ 'nocert-001.tsr': 'nocert' });
+  const allow = writeAllow(root, ['www/docs/tsa/nocert-001.tsr\tNO_CERT']);
+  const emptyCa = path.join(root, 'empty.pem');
+  fs.writeFileSync(emptyCa, '# no certificates here\n');
+  const r = runV(root, allow, ['--ca', emptyCa]);
+  check(
+    'empty CA bundle exits 2',
+    r.status === 2 && /contains no certificate/.test(r.stderr),
+    r.stderr.trim(),
   );
 }
 
