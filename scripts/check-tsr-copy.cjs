@@ -47,22 +47,11 @@ const counter = JSON.parse(
   }),
 );
 
-// Public copy, not archives and not historical change logs.
-const TARGETS = [
-  'README.md',
-  'PRINCIPLES.md',
-  'docs/ENGINEERING-DISCIPLINE.md',
-  'docs/tsr-count.md',
-  'www/index.html',
-  'www/blog.html',
-  'www/security.html',
-  'www/docs/index.html',
-  'www/docs/architecture.html',
-  'www/docs/crypto-time-ledger.html',
-  'www/docs/nist-csf-gap.html',
-  'www/docs/PQC_MIGRATION_PLAN.md',
-  'www/docs/INCIDENT_RESPONSE_PLAN.md',
-];
+// Public copy, not archives and not historical change logs. The list lives in
+// lib/public-targets.cjs because check-measured-date.cjs must scan the same files:
+// two copies drift, and a gate that scans a different set reports "all clear" over
+// documents it never opened.
+const TARGETS = require('./lib/public-targets.cjs');
 
 const RULES = [
   { name: 'files', re: /(\d+)\s*份[^。\n]{0,16}\.tsr/g, expect: counter.files },
