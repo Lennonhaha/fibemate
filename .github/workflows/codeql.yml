@@ -45,3 +45,27 @@ jobs:
         uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
         with:
           category: "/language:${{ matrix.language }}"
+
+  # Issue #582: a required check that stops running turns green. The ruleset accepts
+  # `skipped` and `neutral` for a required context, so requiring `Analyze (...)` directly
+  # means a paths filter, a job-level `if`, or a deleted matrix entry silently satisfies the
+  # gate. This job is the only CodeQL context that belongs in the required set: it has no
+  # paths filter, it runs even when the matrix fails, and it fails unless the analysis
+  # actually completed.
+  #
+  # Scope, stated so it is not overread: this gate enforces that the scan ran. It does not
+  # make findings block a merge. CodeQL uploads SARIF and exits 0 regardless of alerts, so
+  # blocking on severity is a separate ruleset rule (`code_scanning`), not something a job
+  # conclusion can express.
+  codeql-gate:
+    name: codeql-gate
+    runs-on: ubuntu-latest
+    needs: analyze
+    if: always()
+    permissions:
+      contents: read
+    steps:
+      - name: Fail unless the analysis ran and completed
+        env:
+          ANALYZE_RESULT: ${{ needs.analyze.result }}
+        run: node scripts/codeql-gate.cjs "$ANALYZE_RESULT"

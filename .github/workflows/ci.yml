@@ -369,6 +369,15 @@ jobs:
           node scripts/test-native-signing.cjs
           node scripts/test-native-signing.cjs --self-test
 
+      # #582: the CodeQL gate is a summary job, and its verdict script is the part that can
+      # be wrong. Both are tested: the workflow structure (with a mutation per rule) and the
+      # verdict itself (skipped/cancelled/failure/neutral/empty must all exit 1).
+      - name: Check that the CodeQL gate can fail
+        run: |
+          node scripts/test-codeql-gate.cjs
+          node scripts/test-codeql-gate.cjs --self-test
+          node scripts/codeql-gate.cjs --self-test
+
   # ─── 文档检查 (single platform) ─────────────────────
   docs-check:
     runs-on: ubuntu-latest
