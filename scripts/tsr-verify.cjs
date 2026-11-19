@@ -14,11 +14,17 @@
 //               records the digest of what it covers. The class stays so a fixture can
 //               exercise the pass path, and so the day a stamp records artifact_sha256
 //               the count moves on its own
-//   NO_DATA     certificate present, signature checkable, but the covered bytes were
-//               never recorded (the manifest stores sha256(.tsr), not the artifact)
+//   NO_DATA     DATA_MISSING: the chain is trusted and the signature is checkable, but
+//               the covered bytes were never recorded (the manifest stores sha256(.tsr),
+//               not the artifact). This is the honest answer for most of this tree, and
+//               it must never be reported as "unverified token": the token may be fine,
+//               we simply do not hold what it covers
 //   NO_CERT     the token carries no signer certificate: offline verification cannot
 //               start, regardless of data
-//   BAD_CHAIN   certificate present, chain does not validate against the bundled CA
+//   BAD_CHAIN   CHAIN_UNTRUSTED: certificate present, no path to a root in the bundle.
+//               Distinct from NO_DATA on purpose: an untrusted chain is a trust-store
+//               question, a missing artifact is an evidence question. Collapsing them
+//               is how "we fixed the CA" turns into "the tokens now pass"
 //   NOT_A_TOKEN response without a timestamp token
 //   ERROR       openssl could not classify the file
 //
@@ -56,7 +62,7 @@ const has = (name) => argv.includes(name);
 const ROOT = arg('--root', '/opt/fibemate/current');
 const TSA = arg('--dir', path.join(ROOT, 'www/docs/tsa'));
 const ALLOW = arg('--allowlist', path.join(__dirname, 'tsr-verify-allowlist.txt'));
-const CA = arg('--ca', '/tmp/freetsa-ca.pem');
+const CA = arg('--ca', path.join(__dirname, 'ca', 'tsa-roots.pem'));
 const UPDATE = has('--update');
 const JSON_OUT = has('--json');
 const RAW_OPENSSL = process.env.TSR_VERIFY_OPENSSL || 'openssl';
@@ -68,6 +74,10 @@ const fail = (msg, code) => {
 };
 
 if (!fs.existsSync(TSA)) fail(`FAIL: no such TSA directory: ${TSA}`, 2);
+if (!fs.existsSync(CA)) fail(`FAIL: no CA bundle at ${CA} (pass --ca, or restore scripts/ca/tsa-roots.pem)`, 2);
+const caText = fs.readFileSync(CA, 'utf8');
+const caCertCount = (caText.match(/-----BEGIN CERTIFICATE-----/g) || []).length;
+if (caCertCount === 0) fail(`FAIL: ${CA} contains no certificate; refusing to classify every token as untrusted`, 2);
 if (!UPDATE && !fs.existsSync(ALLOW)) fail(`FAIL: no allowlist at ${ALLOW} (run --update to create one)`, 2);
 
 const files = [];
@@ -95,6 +105,7 @@ const classify = (file) => {
 
 const key = (f) => path.relative(ROOT, f).split(path.sep).join('/');
 
+if (!JSON_OUT) console.log(`CA bundle: ${CA} (${caCertCount} root(s))`);
 const computed = new Map();
 for (const f of files) computed.set(key(f), classify(f));
 
@@ -164,6 +175,12 @@ else {
   console.log(
     `${summary.verdict}: ${computed.size} tokens (${parts}); allowlist=${allowed.size} known gaps (not a pass count); verified=${verified}; drift=${drift.length}`,
   );
+  if (counts.BAD_CHAIN) {
+    console.log(
+      `  chain-untrusted ${counts.BAD_CHAIN}: no path to a root in ${CA}.` +
+        ' This is a trust-store gap, not a statement about the token',
+    );
+  }
   if (verified === 0) {
     console.log(
       '  note: no token records the digest of what it covers, so no imprint could be checked;' +
