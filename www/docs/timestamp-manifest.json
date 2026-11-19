@@ -889,13 +889,6 @@
     "mtime": "2026-07-16T13:27:58"
   },
   {
-    "tsr": "deploy_sh.tsr",
-    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
-    "dir": "docs/tsa",
-    "size": 50,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
     "tsr": "traffic-shaping.js.tsr",
     "sha256": "c093cf82b7087425be959334bc9fd2e4ad770e619556a47d3e7b1fd2c0d47932",
     "dir": "docs/tsa",
@@ -1264,34 +1257,6 @@
     "sha256": "5b24c85e9f6a7599da1bc4295b1a1bbe4756cab920775e648ecc85f99437b5a3",
     "dir": "www/docs/evidence",
     "size": 975,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
-    "tsr": "tvla-9of9-corrected-report.json.tsr",
-    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
-    "dir": "www/docs/tvla/ml-kem-768",
-    "size": 259,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
-    "tsr": "tvla-9of9-summary.md.tsr",
-    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
-    "dir": "www/docs/tvla/ml-kem-768",
-    "size": 259,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
-    "tsr": "tvla-defense-for-reviewers.md.tsr",
-    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
-    "dir": "www/docs/tvla/ml-kem-768",
-    "size": 259,
-    "mtime": "2026-07-16T13:27:58"
-  },
-  {
-    "tsr": "tvla-experiment-5-polyMul-attack-verification.json.tsr",
-    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
-    "dir": "www/docs/tvla/ml-kem-768",
-    "size": 259,
     "mtime": "2026-07-16T13:27:58"
   },
   {
@@ -1724,30 +1689,6 @@
     "sha256": "963ccc9e8c897858fe715982e2d1a4a897321f050cd2db8588f5f546c338de69",
     "dir": "docs/tsa",
     "size": 943
-  },
-  {
-    "tsr": "tvla-9of9-corrected-report.json.tsr",
-    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
-    "dir": "evidence/tvla",
-    "size": 259
-  },
-  {
-    "tsr": "tvla-9of9-summary.md.tsr",
-    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
-    "dir": "evidence/tvla",
-    "size": 259
-  },
-  {
-    "tsr": "tvla-defense-for-reviewers.md.tsr",
-    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
-    "dir": "evidence/tvla",
-    "size": 259
-  },
-  {
-    "tsr": "tvla-experiment-5-polyMul-attack-verification.json.tsr",
-    "sha256": "e65b5da9019cdd5a37250d5b88795c56b60eb048daa18dff27fd12601584fb6a",
-    "dir": "evidence/tvla",
-    "size": 259
   },
   {
     "tsr": "vwz-076-main-20260717.tsr",
@@ -2396,12 +2337,6 @@
     "sha256": "f36fa617ecc6cb2ba19168dbc09f648b1d49d2f56facff6cfd294f5fe723f1bc",
     "dir": "www/docs/tsa/2026-10",
     "size": 4645
-  },
-  {
-    "tsr": "deploy_sh.tsr",
-    "sha256": "d9f478941f72c1d6592254f9104939814bf5a2a7ebceced013e1d749a4612b0a",
-    "dir": "www/docs/tsa",
-    "size": 50
   },
   {
     "tsr": "lg-080.tsr",
