@@ -38,6 +38,15 @@ const RULES = [
     expect: 'a job named ' + GATE_JOB + ' in codeql.yml',
   },
   {
+    id: 'gate-checks-out-repo',
+    why: 'the verdict lives in scripts/, so a job without checkout fails with MODULE_NOT_FOUND -- red for the wrong reason, and easy to mistake for the gate working',
+    test: (s) => {
+      const b = gateBlock(s);
+      return b !== null && /uses:\s*actions\/checkout@[0-9a-f]{40}/.test(b);
+    },
+    expect: 'the gate job to check out the repository before running scripts/codeql-gate.cjs',
+  },
+  {
     id: 'gate-needs-analyze',
     why: 'needs.analyze.result is empty without the edge, so the verdict would read an empty string',
     test: (s) => {
@@ -95,6 +104,7 @@ function selfTest() {
   const real = fs.readFileSync(WORKFLOW, 'utf8');
   const cases = [
     ['baseline', real, 0],
+    ['no checkout', real.replace(/\n {6}- uses: actions\/checkout@[^\n]*\n/g, '\n'), 1],
     ['no needs edge', real.replace(/^(\s+)needs:\s*analyze\s*$/m, '$1needs: []'), 1],
     ['no always()', real.replace(/^(\s+)if:\s*always\(\)\s*$/m, '$1if: success()'), 1],
     ['verdict not invoked', real.replace(/node scripts\/codeql-gate\.cjs/g, 'echo gate-skipped'), 1],

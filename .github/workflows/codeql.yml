@@ -65,6 +65,12 @@ jobs:
     permissions:
       contents: read
     steps:
+      # Without this the job runs in an empty directory and looks for the verdict script in
+      # a tree that was never checked out -- which fails, but for the wrong reason, and would
+      # read as "the gate works" to anyone not opening the log. The structural guard checks
+      # for this line for the same reason.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
       - name: Fail unless the analysis ran and completed
         env:
           ANALYZE_RESULT: ${{ needs.analyze.result }}
