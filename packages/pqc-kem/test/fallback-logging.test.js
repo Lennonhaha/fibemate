@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: Apache-2.0
-// Controls for #348: a rejected native addon must leave a trace, and a missing
-// addon must stay quiet (Windows and JS-only installs are supported setups).
+// Controls for #348 and the strict-mode follow-up: a rejected native addon must leave a
+// trace, a missing addon stays quiet by default (Windows and JS-only installs are supported
+// setups), and MLKEM_REQUIRE_NATIVE=1 turns that silence into a load-time failure.
 const assert = require('assert');
 const Module = require('module');
 const path = require('path');
@@ -52,7 +53,38 @@ function rngError() {
     console.log('PASS  load failure is reported');
 }
 
-// 4. End to end: requiring the module emits one FIBEMATE_PQC_KEM_JS_FALLBACK warning.
+// 4. MLKEM_REQUIRE_NATIVE=1: an absent addon is fatal, not silent.
+//    Both runs use the same interception; only the environment differs, so the
+//    throw can only come from the gate and not from the missing file.
+{
+    const { execFileSync } = require('child_process');
+    const script = `
+        const Module = require('module');
+        const original = Module.prototype.require;
+        Module.prototype.require = function (request) {
+            if (typeof request === 'string' && request.endsWith('mlkem.node')) {
+                const e = new Error('Cannot find module'); e.code = 'MODULE_NOT_FOUND'; throw e;
+            }
+            return original.apply(this, arguments);
+        };
+        try { require(${JSON.stringify(indexPath)}); console.log('NO_THROW'); }
+        catch (e) { console.log('THREW ' + e.code); }
+    `;
+    const run = (env) => execFileSync(process.execPath, ['-e', script], {
+        encoding: 'utf8',
+        env: Object.assign({}, process.env, env),
+    }).trim();
+
+    const permissive = run({ MLKEM_REQUIRE_NATIVE: '0' });
+    assert.strictEqual(permissive, 'NO_THROW', 'default install must stay permissive, got: ' + permissive);
+
+    const strict = run({ MLKEM_REQUIRE_NATIVE: '1' });
+    assert.strictEqual(strict, 'THREW FIBEMATE_PQC_KEM_NATIVE_REQUIRED',
+        'MLKEM_REQUIRE_NATIVE=1 with no addon must throw, got: ' + strict);
+    console.log('PASS  MLKEM_REQUIRE_NATIVE=1 fails closed; the default stays permissive');
+}
+
+// 5. End to end: requiring the module emits one FIBEMATE_PQC_KEM_JS_FALLBACK warning.
 {
     const warnings = [];
     const onWarning = (w) => warnings.push(w);
