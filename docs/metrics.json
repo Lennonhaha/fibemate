@@ -1,21 +1,21 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-11-16",
+  "updated": "2026-11-19",
   "policy": "N3 single source: external numbers must come from this file. Every entry carries value + scope + date + reproducible command. scripts/check-metrics.cjs recomputes the git-derived entries and fails on drift.",
   "metrics": {
     "tsr.files": {
-      "value": 374,
+      "value": 364,
       "unit": "files",
-      "scope": "tracked RFC 3161 .tsr files, git ls-files (no dedupe)",
-      "date": "2026-11-16",
+      "scope": "tracked RFC 3161 .tsr files, git ls-files (no dedupe); ten saved error pages removed 2026-11-19 (issue #579), every remaining file classified valid by scripts/count-tsr.cjs",
+      "date": "2026-11-19",
       "command": "git ls-files '*.tsr' | wc -l",
       "recompute": "git"
     },
     "tsr.uniqueTokens": {
-      "value": 263,
+      "value": 261,
       "unit": "tokens",
       "scope": "sha256 of each tracked .tsr blob, duplicates collapsed",
-      "date": "2026-11-16",
+      "date": "2026-11-19",
       "command": "for f in $(git ls-files '*.tsr'); do git show HEAD:$f | sha256sum; done | sort -u | wc -l",
       "recompute": "git"
     },

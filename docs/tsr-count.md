@@ -26,7 +26,7 @@ without token   222   (basenames that are not lg-NNN, e.g. docs_architecture)
 
 The site says, in the meta/description block of `www/index.html`:
 
-> 372 份 .tsr 存证（**261** 个唯一令牌，2026-11-14 实测） <!-- tsr-count-exempt: quotes the site copy that was wrong on 2026-11-16 -->
+> 364 份 .tsr 存证（**261** 个唯一令牌，2026-11-14 实测） <!-- tsr-count-exempt: quotes the site copy that was wrong on 2026-11-16 -->
 
 - `372` is correct.
 - `261` is **not reproducible by any definition**. Distinct basenames are 260,
@@ -46,7 +46,7 @@ artefact either.
 
 Re-run the script on the day of the change and use that day's numbers:
 
-> 372 份 .tsr 存证（260 个唯一存证对象，<当天> 实测） <!-- tsr-count-exempt: template measured 260 that same day -->
+> 364 份 .tsr 存证（260 个唯一存证对象，<当天> 实测） <!-- tsr-count-exempt: template measured 260 that same day -->
 
 Two rules that keep this from rotting again:
 
@@ -86,7 +86,7 @@ two tracked files, `www/docs/tsa/lg-080.tsr` and `www/docs/tsa/lg-082.tsr`. At
 `ef6e327` the counter reports:
 
 ```
-files           374
+files           364
 basenames       261
 tokens           93
 duplicates      113

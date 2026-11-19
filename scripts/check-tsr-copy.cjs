@@ -67,8 +67,15 @@ const TARGETS = [
 const RULES = [
   { name: 'files', re: /(\d+)\s*份[^。\n]{0,16}\.tsr/g, expect: counter.files },
   // The same count is printed without the .tsr suffix, as "374 份 RFC 3161 时间戳存证".
-  { name: 'files-zh-alt', re: /(\d+)\s*份[^。\n]{0,16}时间戳存证/g, expect: counter.files },
+  { name: 'files-zh-alt', re: /(\d+)\s*份[^。\n]{0,24}时间戳存证?/g, expect: counter.files },
   { name: 'files-en', re: /(\d+)\s+tracked\s+\.tsr\s+files/gi, expect: counter.files },
+  // Phrasings added 2026-11-19: the gate passed while six spots still said 374,
+  // because it only knew 份 + .tsr. Each rule below is a shape that really shipped.
+  { name: 'files-zh-个-dot-tsr', re: /(\d+)\s*个\s*`?\.tsr/g, expect: counter.files },
+  { name: 'files-zh-fen-tsr', re: /(\d+)\s*份\s*TSR/g, expect: counter.files },
+  { name: 'files-zh-fen-cunzheng', re: /(\d+)\s*份存证文件/g, expect: counter.files },
+  { name: 'files-zh-fen-paren', re: /(\d+)\s*份\s*（\s*\d+\s*个不同/g, expect: counter.files },
+  { name: 'files-zh-rows', re: /(\d+)\s*行，与本节同口径/g, expect: counter.files },
   { name: 'basenames', re: /(\d+)\s*个\s*不同\s*basename/g, expect: counter.basenames },
   { name: 'basenames-en', re: /(\d+)\s+distinct\s+basenames/gi, expect: counter.basenames },
   { name: 'tokens', re: /(\d+)\s*个\s*lg-NNN\s*令牌/g, expect: counter.tokens },
@@ -107,36 +114,53 @@ function findingsForLine(line, file, lineNo) {
 }
 
 if (process.argv.includes('--self-test')) {
+  const n = counter;
   const cases = [
     {
       name: 'legacy English phrasing (the line #546 missed)',
-      line: '372 timestamped evidence files (261 unique tokens; measured 2026-11-14)',
+      line: `${n.files - 2} timestamped evidence files (${n.basenames} unique tokens; measured 2026-11-14)`,
       rules: ['files-en-alt', 'tokens-legacy'],
     },
     {
       name: 'legacy Chinese phrasing',
-      line: '372 份 RFC 3161 时间戳存证（261 个唯一令牌）',
+      line: `共 ${n.files - 2} 份 RFC 3161 时间戳存证（${n.basenames} 个唯一令牌）`,
       rules: ['files-zh-alt', 'tokens-legacy-zh'],
     },
     {
       name: 'correct English phrasing',
-      line: '374 timestamped evidence files (261 distinct basenames, 93 lg-NNN tokens, 113 byte-identical copies, 222 without an lg number)',
+      line:
+        `${n.files} timestamped evidence files (${n.basenames} distinct basenames, ` +
+        `${n.tokens} lg-NNN tokens, ${n.duplicates} byte-identical copies, ` +
+        `${n.untokened} without an lg number)`,
       rules: [],
     },
     {
       name: 'correct Chinese phrasing',
-      line: '共 374 份 .tsr 文件，其中 261 个不同 basename、93 个 lg-NNN 令牌、222 个不带 lg 编号的 basename、113 份为逐字节副本',
+      line:
+        `共 ${n.files} 份 .tsr 文件，其中 ${n.basenames} 个不同 basename、` +
+        `${n.tokens} 个 lg-NNN 令牌、${n.untokened} 个不带 lg 编号的 basename、` +
+        `${n.duplicates} 件为逐字节副本`,
       rules: [],
     },
     {
       name: 'basename count wearing the token label',
-      line: '共 261 个 lg-NNN 令牌',
+      line: `共 ${n.basenames} 个 lg-NNN 令牌`,
       rules: ['tokens'],
     },
     {
       name: 'duplicate count without the unit',
-      line: '111 byte-identical copies',
+      line: `${n.duplicates + 3} byte-identical copies`,
       rules: ['duplicates-en'],
+    },
+    {
+      name: 'file count in the 个 form (added 2026-11-19)',
+      line: `共 ${n.files} 个 \`.tsr\` 文件`,
+      rules: [],
+    },
+    {
+      name: 'stale file count in the 个 form',
+      line: `共 ${n.files - 1} 个 \`.tsr\` 文件`,
+      rules: ['files-zh-个-dot-tsr'],
     },
   ];
   let bad = 0;
