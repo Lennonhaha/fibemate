@@ -38,11 +38,11 @@
         
         <div class="intro">
             <p><strong>什么是可信时间戳？</strong></p>
-            <p>本项目使用<strong>联合信任时间戳服务中心 (tsa.cn)</strong> 提供的可信时间戳服务，为核心代码文件提供<strong>法律效力的时间证明</strong>。</p>
-            <p>时间戳遵循 <strong>RFC 3161</strong> 标准，服务器端补充 <strong>DigiCert TSA</strong> 作为辅助存证。符合《电子签名法》第 5 条。</p>
-            <p>📜 <strong>法律效力</strong>：可作为软件著作权、代码原创性的法律证据。</p>
-            <p>🔗 <strong>在线验证</strong>：<a href="https://www.tsa.cn/verify" target="_blank" rel="noopener">tsa.cn/verify</a>（联合信任官方验证平台）</p>
-            <p>⚠️ <strong>说明</strong>：联合信任 (tsa.cn) 与 CFCA（中国金融认证中心）为不同机构。本项目使用前者。</p>
+            <p>本项目为核心代码文件申请 <strong>RFC 3161 可信时间戳</strong>，用于证明文件在某一时刻已经存在。签发机构为 <strong>FreeTSA</strong> 与 <strong>DigiCert</strong>；令牌内是否内嵌签名证书逐文件不同，见 <a href="/docs/TIMESTAMP-ISSUERS.md">归属表</a>。</p>
+            <p>时间戳遵循 <strong>RFC 3161</strong> 标准。全仓 364 份令牌中，内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，另有 263 份不内嵌签名证书（2026-11-19 实测）。</p>
+            <p>📜 <strong>作用边界</strong>：时间戳只证明"某文件在某时刻已存在"，可作为存在性的辅助证据，不证明权利归属，也不构成对代码安全性的背书。</p>
+            <p>🔗 <strong>校验方式</strong>：仓库脚本 <code>node scripts/tsr-verify.cjs</code>（解包 TimeStampResp、校验证书链、比对摘要）。</p>
+            <p>⚠️ <strong>说明</strong>：263 份令牌不含签名证书，只能说明请求已提交，无法仅凭令牌判定签发机构；对外不将它们归入任何 TSA。</p>
         </div>
 
         <div class="file-list">
@@ -121,24 +121,24 @@
         <div class="warning">
             <h3>⚠️ 重要提示</h3>
             <p>1. <strong>.tsa 文件是 PKCS#7/CMS 封装的时间戳令牌</strong>，含 TSA 签名，需使用验证工具解析。</p>
-            <p>2. 在线验证请访问 <a href="https://www.tsa.cn/verify" target="_blank" rel="noopener">tsa.cn/verify</a> 上传 .tsa 文件。</p>
+            <p>2. 本地校验：<code>node scripts/tsr-verify.cjs --root . --dir &lt;目录&gt;</code>。</p>
             <p>3. 时间戳仅证明"某文件在某时刻已存在"，<strong>不证明代码质量或安全性</strong>。</p>
 <p>4. 上述 .tsa 存证文件当前<strong>不公开提供</strong>；如需查阅（核验、司法/合规用途），可通过项目官方邮箱申请。</p>
         </div>
 
         <div class="verify-section">
             <h2>🔍 如何验证时间戳？</h2>
-            <p><strong>方法1：tsa.cn 在线验证（推荐）</strong></p>
-            <p>访问 <a href="https://www.tsa.cn/verify" target="_blank" rel="noopener">https://www.tsa.cn/verify</a>，上传 .tsa 文件即可查看完整时间戳信息。</p>
+            <p><strong>方法1：仓库校验脚本（推荐）</strong></p>
+            <p>脚本会解包 TimeStampResp、取出 TimeStampToken、校验证书链并比对被签名覆盖的摘要，输出每个令牌的判定类别。</p>
             
             <p style="margin-top: 20px;"><strong>方法2：使用 OpenSSL（命令行）</strong></p>
             <code-block><code>openssl ts -reply -in 文件名.tsa -text</code></code-block>
             <p>输出将显示：</p>
             <ul style="margin-left: 20px; margin-top: 10px;">
-                <li>时间戳权威机构（TSA）: 联合信任时间戳服务中心 (tsa.cn)</li>
+                <li>时间戳签发机构: FreeTSA 或 DigiCert（取自令牌内嵌签名证书；不含证书的令牌无法判定）</li>
                 <li>时间戳创建时间: 2026-05-23 12:34:56 CST</li>
                 <li>消息摘要算法: SHA-256</li>
-                <li>签名算法: SM2 + SM3（国密）</li>
+                <li>签名算法: 随签发机构而定（FreeTSA 与 DigiCert 均为 RSA + SHA-256）</li>
             </ul>
             
             <p style="margin-top: 20px;"><strong>方法3：DigiCert 辅助存证</strong></p>
@@ -146,8 +146,8 @@
         </div>
 
         <div class="footer">
-            <p>FIBEMATE v3.0-preview | 可信时间戳服务提供方：联合信任时间戳服务中心 (tsa.cn)</p>
-            <p>辅助存证：DigiCert TSA | 在线验证：<a href="https://www.tsa.cn/verify" target="_blank" rel="noopener">tsa.cn/verify</a></p>
+            <p>FIBEMATE | 可信时间戳签发机构：FreeTSA 与 DigiCert（逐文件见归属表）</p>
+            <p>辅助存证：DigiCert TSA | 校验：<code>node scripts/tsr-verify.cjs</code></p>
             <p>问题反馈：<a href="mailto:timestamp@fibemate.net">timestamp@fibemate.net</a></p>
             <p><a href="../index.html">← 返回首页</a></p>
         </div>

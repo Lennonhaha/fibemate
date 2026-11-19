@@ -191,7 +191,7 @@ sha256sum src-tauri/target/release/fibemate-tauri.exe</pre>
 
   <li><strong>非商密认证说明</strong>：本项目中 SM2/SM3/SM4 国密算法的实现仅为技术研究与验证目的，<strong>未经过国家密码管理局商用密码产品认证</strong>，不适用于需要国密认证的商业或政务场景。</li>
 
-  <li><strong>第三方存证声明</strong>：代码已通过 DigiCert 与联合信任（tsa.cn）进行时间戳存证。存证仅用于记录代码在特定时间点的完整性，<strong>不构成对代码安全性的第三方背书或担保</strong>。</li>
+  <li><strong>第三方存证声明</strong>：代码已申请 FreeTSA 与 DigiCert 的 RFC 3161 时间戳（部分历史令牌不含签名证书，无法从文件判定签发者）。存证仅用于记录代码在特定时间点的完整性，<strong>不构成对代码安全性的第三方背书或担保</strong>。</li>
 
   <li><strong>参考文献与攻击论文的区别</strong>：本文档中引用的参考文献均为 TVLA 方法论和侧信道工程实践的基础文献。密码学文献中存在大量针对 ECDSA/SM2 的理论攻击论文（如格攻击、模板攻击、故障注入攻击），这些攻击方法与 TVLA 验证属于不同的威胁模型和安全评估范畴，不应混为一谈，也不宜作为 TVLA 验证的佐证引用。</li>
 </ol>
