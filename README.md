@@ -36,7 +36,7 @@ Every number below can be re-measured with the command next to it. If it does no
 [![OpenSSF Best Practices](https://www.bestpractices.dev/projects/13695/badge)](https://www.bestpractices.dev/projects/13695)
 
 > 🥈 **OpenSSF Best Practices Silver** — 44/44 MUST criteria, achieved 2026-11-09. Statement coverage 80.53% on CI (run `42682613340`, measured 2026-11-10), 81.27% locally; the CI floor is 80%.
-> 📊 **OpenSSF Scorecard 8.1 / 10** — scorecard v5.6.0, published 2026-11-17T10:33Z at commit `ef6e327` (18 checks; source: `https://api.securityscorecards.dev/projects/github.com/Lennonhaha/fibemate`). The badge endpoint itself is the flaky part: repeated probes time out about one run in five while the underlying JSON keeps answering. A blank badge therefore means the CDN missed, not that the repo path is invalid.
+> 📊 **OpenSSF Scorecard 8.1 / 10** across 18 checks, as of the latest published record (source: `https://api.securityscorecards.dev/projects/github.com/Lennonhaha/fibemate`). The badge endpoint itself is the flaky part: repeated probes time out about one run in five while the underlying JSON keeps answering. A blank badge usually means the CDN missed. A red "invalid repo path" badge usually means the CDN cached an outdated negative lookup, not necessarily that the repo path is invalid; confirm the URL in the source link and append a cache-busting query parameter (for example `?v=<timestamp>`) before concluding anything.
 > ⚠️ **Silver is a self-certification of engineering hygiene (CI, docs, licence, release process, governance), not cryptographic correctness or a security audit.**
 
 [![ORCID](https://img.shields.io/badge/ORCID-0009--0009--1407--686X-a6ce39?logo=orcid&logoColor=white)](https://orcid.org/0009-0009-1407-686X)
