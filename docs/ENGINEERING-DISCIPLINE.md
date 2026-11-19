@@ -201,3 +201,77 @@ PR 落后 base 导致 `mergeable_state=behind` / required checks 无法落位时
 **同批处置**：`js/unused-local-variable`（`keygen.js:13` 的 `decompose`）同样**直接删除**，不 dismiss；删除后 `origin/main` 上 `code-scanning/alerts?state=open` = **0**。
 
 **固化规则 R-CI-1**：`${{ }}` 只允许出现在 `env:` / `with:` / `if:`；**禁止出现在 `run:` 块内**。新增或修改 workflow 时必须人工核一次（`grep -n '\${{' <workflow> | grep -A0 'run:'` 不足以判，须按 step 逐块看）。
+
+---
+
+## 20. 平台开关、门禁契约与生成物（2026-11-19）
+
+这一节是一次结算：一小时内连续出现「API 显示已开、行为没有」「门禁全绿、文案还错」「生成物说 374、树里 364」。共同点不是谁不仔细，而是**把"读到的东西"当成了"发生的事"**。
+
+### 20.1 开关显示 enabled 不等于生效
+
+`fibemate-core` 的 `secret_scanning` 与 `secret_scanning_push_protection` 回读均为 `enabled`，open alerts 为 0。随后三次真实推送全部成功、未产生任何 alert：
+
+| 探针 | 内容 | 结果 |
+|:---|:---|:---|
+| 1 | `AKIA` 形态假 AWS key | 推送成功 |
+| 2 | 手写 `-----BEGIN RSA PRIVATE KEY-----` 块 | 推送成功 |
+| 3 | `crypto.generateKeyPairSync` 生成的结构合法 RSA-2048 PKCS#1 | 推送成功 |
+
+**判据**：安全开关必须做**行为验证**，回读字段只能证明"设置被保存"，不能证明"策略被执行"。
+
+**反向教训同样重要**：探针本身必须可被检出。前两次的假 key 校验和/结构不合法，即使 push protection 正常工作也不会拦——若只用它们就下结论，会得出错误的"未生效"。所以第三次换成结构合法的私钥。**测试无效与功能无效必须分开证明。**
+
+现状记 `unbound (behaviour not confirmed)`：public 仓、无 GHAS 门槛、开关为 enabled，但既不拦也不告警，根因未定位。
+
+### 20.2 HTTP 200 可能是空操作
+
+对 8 个仓 PATCH `secret_scanning_validity_checks` 与 `secret_scanning_non_provider_patterns`：**HTTP 200**，回读仍为 `disabled`；换成完整 JSON body 复测，结果相同。
+
+**纪律**：写操作一律"写后回读断言"，不一致即 `NOT IN EFFECT`，不得以状态码当成功。这与「部署假绿」同族——脚本 PASS 不等于新代码生效。
+
+### 20.3 计数器输出的字段名是下游门禁的契约
+
+给 `count-tsr.cjs` 增加内容分类时，把 `files` 改名为 `raw`。结果 `check-tsr-copy.cjs` 报 17 条 `DRIFT: found 374, expected undefined`——**门禁没坏，契约被破坏了**。
+
+**纪律**：改输出 schema 前先跑依赖它的门禁，并确认它**仍能点名报错**；保留旧字段作为别名比"改干净"安全。
+
+### 20.4 门禁通过不等于覆盖完整
+
+删掉 10 个非令牌、数字全部改成 364 之后，文案门禁是绿的；但 `git grep` 还有 **6 处**仍在用旧数字：
+
+```
+N 个 `.tsr` / N 份</strong> RFC 3161 / <strong>N</strong> 份 RFC 3161
+N 份 TSR / N 份存证文件 / N 行，与本节同口径
+```
+
+原规则只认"份 + .tsr"一种形态。补 8 条规则后，负向控制是把 README 改回 374，门禁必须变红并点名 `files-zh-个-dot-tsr`。
+
+**纪律**：数字门禁要按**文案形态**而非"数字本身"建规则；新增规则必须附一次必红的负向控制。
+
+### 20.5 门禁自测的 fixture 不得硬编码被测数值
+
+`check-tsr-copy.cjs --self-test` 的 fixture 写着 374/261/113/222：数字一改，**改对了反而红**，此时最容易发生的事就是为了消红去放宽断言。
+
+**修法**：fixture 从计数器取值；legacy 用例**故意**用 basename 数冒充令牌数（那正是它要模拟的 bug）。
+
+### 20.6 生成物必须对"树"校验
+
+`docs/tsa/timestamp-manifest.json` 自 2026-09-04 起冻结在 256 行，无人发现；删掉 10 个文件后门禁才报 `dead rows: 10`。
+
+**纪律**：删除或新增 tracked 文件后必须重生成 manifest；门禁要断言 `rows == tracked`，而不是只断言"文件存在"。
+
+### 20.7 先定位"哪一层拦的"，再改那一层
+
+`fibemate.link` 的 443 被重置，第一假设是 stream 的 SNI map 缺条目。实测推翻：
+
+```
+nginx -T             → map 中有 fibemate.link → 127.0.0.1:8443
+服务器本机 :443       → 证书链完整、TLS1.3 建立
+服务器 → 公网 IP:443  → 同样正常
+客户端 HTTP :80       → 403, Server: Beaver, title: Non-compliance ICP Filing
+```
+
+**结论**：阿里云备案拦截，不是 nginx。`.link` 不在可备案后缀范围内，改 map 永远不会修好——正解是换域、前置 CDN，或迁出大陆节点。
+
+**纪律**：跨越"客户端 / 中间设备 / 服务端"三段取证，禁止用一端的证据给另一端定性；先证明在哪一层被拦，再动那一层的配置。
