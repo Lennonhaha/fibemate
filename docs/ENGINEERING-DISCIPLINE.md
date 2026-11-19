@@ -355,3 +355,16 @@ openssl pkcs7 -inform DER -in token.der -print_certs -noout
 
 **同族**：分母错觉（20.2）、门禁零覆盖 exit 0、`git grep` 不搜 untracked、
 PowerShell 显示层判乱码。共同点是：**工具的输出被当成了事实，而不是被当成了工具的输出**。
+
+**同族判例（HTTP 层，2026-11-19）：缓存过的负响应不是事实。**
+OpenSSF Scorecard 徽章地址 `https://api.securityscorecards.dev/projects/github.com/Lennonhaha/fibemate/badge` 在浏览器里显示红色 `invalid repo path`。直接 `curl -I` 得到 **HTTP 404**，但响应头同时是 `X-Cache: HIT` / `Age: 21461`；同一地址加一个破缓存参数（`?v=<timestamp>`）后返回 **200**。仓库没有消失，URL 也没有写错，是 CDN 把此前的一次负查询缓存了六个小时。
+
+**判据**：同一输入在不同时间或不同缓存键下给出相反答案时，先怀疑缓存层，而不是被测量对象。取证要带上 `X-Cache` / `Age` / `ETag`，并用查询参数破缓存复测；只报"404"会把缓存命中写成事实。与 20.11 同族：这一次工具的输出（404）被当成了仓库的状态。
+
+### 20.12 对外文案不得硬编码易腐字段（D25，2026-11-19）
+
+README、站点与 PR 描述里的"published 2026-11-17T10:33Z at commit `ef6e327`"每 push 一次就漂移一次。它不是证据，是负债：读者无法判断它对应哪一版树，维护者每次改动都要记得同步。
+
+**判据**：对外文案只写相对表述（例如 `as of the latest published record`），或由 CI 从 `docs/metrics.json` / 上游 API 动态渲染；确需引用某一次具体测量时，把时间与 SHA 放进证据文件或 CI 产物，正文只链接它。
+
+**自检**：`git grep -nE 'published 20[0-9]{2}-[0-9]{2}-[0-9]{2}T|at commit [0-9a-f]{7,40}' -- README.md 'docs/*.md'` 应为 0 命中；历史归档与变更日志需显式 allowlist，且 allowlist 要打印命中数，防止静默增长。
