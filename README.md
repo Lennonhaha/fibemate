@@ -18,6 +18,8 @@ Every number below can be re-measured with the command next to it. If it does no
 >
 > **核验率按真实口径写**：verified 136 / code-artifact 2,241 = **6.07%**（对全部受判 2,322 条为 5.86%）。剩下的 220 ambiguous + 1,867 unbound 是**待补的工作量**，不当作已完成，也不靠换分母把它做高。
 
+> 🧭 **安全左移 / Shift-left security.** 侧信道威胁模型不是"以后补"的文档，是架构资产：[Falcon 侧信道威胁模型](docs/research/falcon-sidechannel-threat-model.md)。每条威胁都带可复现的判据与测量记录；测不出的写 `unquantified`，不写"安全"。
+
 > ⚠️ **安全声明 / Security Notice**
 >
 > - **工程验证组件**（ML-KEM-768、SLH-DSA、SM2/SM3/SM4）通过了功能验证、KAT 与软件 TVLA，**尚未经过第三方安全审计**。
