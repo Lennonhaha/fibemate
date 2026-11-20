@@ -13,6 +13,11 @@
 //                  behind a shell that would run them, are still a violation.
 //                  One narrow exception: the deployer itself may be *executed* only
 //                  with --dry-run on the same line, never with --apply.
+//   --allow-live   intent, plus the two things a workflow that really deploys must
+//                  have: the production environment, and an ancestry check. It still
+//                  may not name --apply anywhere but in printed text - the workflow
+//                  asks the host to `deploy <sha>`, and the root-owned wrapper is the
+//                  only place that decides to apply.
 // Day 3 is the first workflow that has to *name* the deployer without publishing,
 // so "the words are text, not a command" has to be checkable rather than promised.
 //
@@ -46,6 +51,10 @@ const REQUIRED = ['workflow_dispatch:', 'DRY_RUN: "true"'];
 // promise that this particular file happens not to be the one that runs it.
 const INTENT_REQUIRED = ['--dry-run', '"$DRY_RUN" != "true"', 'environment: production'];
 
+// A live workflow has no DRY_RUN latch, so it proves itself differently: the gate and
+// the ancestry check are the two things standing between a dispatch and a restart.
+const LIVE_REQUIRED = ['environment: production', 'merge-base --is-ancestor'];
+
 const OTHER_TRIGGERS = ['push:', 'pull_request:', 'schedule:', 'workflow_run:', 'release:'];
 
 // The only marker-free reading of a line: strip what an echo prints, then ask
@@ -59,7 +68,8 @@ function inertLine(line) {
 }
 
 function inspect(text, opts) {
-  const intent = Boolean(opts && opts.allowIntent);
+  const live = Boolean(opts && opts.allowLive);
+  const intent = Boolean(opts && opts.allowIntent) || live;
   const problems = [];
   for (const marker of WRITE_MARKERS) {
     if (!text.includes(marker)) continue;
@@ -76,11 +86,16 @@ function inspect(text, opts) {
       problems.push('write marker outside a printed string or a dry-run preview: ' + marker + ' -> ' + offenders[0].trim().slice(0, 100));
     }
   }
-  for (const need of REQUIRED) {
-    if (!text.includes(need)) problems.push('missing required latch: ' + need);
+  // The DRY_RUN latch is what makes a read-only workflow auditable. A live workflow
+  // has no such latch by definition, so it is held to the two structural requirements
+  // below instead - and it still may not carry --apply in an executed line.
+  if (!live) {
+    for (const need of REQUIRED) {
+      if (!text.includes(need)) problems.push('missing required latch: ' + need);
+    }
   }
   if (intent) {
-    for (const need of INTENT_REQUIRED) {
+    for (const need of live ? LIVE_REQUIRED : INTENT_REQUIRED) {
       if (!text.includes(need)) problems.push('missing intent requirement: ' + need);
     }
     const onBlock = /^on:\s*$([\s\S]*?)^[a-zA-Z]/m.exec(text);
@@ -113,6 +128,10 @@ function selfTest() {
     { name: 'intent: dry-run and apply on one line is rejected', body: intentBase.replace('--sha x --dry-run', '--sha x --dry-run --apply'), allowIntent: true, wantExit: 1 },
     { name: 'intent: a marker outside the quotes is rejected', body: intentBase.replace('bash scripts/deploy-release.sh --sha x --dry-run', 'echo "x"; --apply'), allowIntent: true, wantExit: 1 },
     { name: 'intent: a comment passes', body: intentBase.replace('bash scripts/deploy-release.sh', '# never call deploy-release.sh'), wantExit: 0, allowIntent: true },
+    // live mode: the workflow asks the host to deploy, and cannot apply by itself
+    { name: 'live: an ssh deploy with a gate and an ancestry check passes', body: 'on:\n  workflow_dispatch:\njobs:\n  d:\n    environment: production\n    steps:\n      - run: |\n          git merge-base --is-ancestor "$SHA" origin/main\n          ssh host "deploy $SHA"\n', wantExit: 0, allowLive: true },
+    { name: 'live: no ancestry check is rejected', body: 'on:\n  workflow_dispatch:\njobs:\n  d:\n    environment: production\n    steps:\n      - run: ssh host "deploy $SHA"\n', wantExit: 1, allowLive: true },
+    { name: 'live: an apply flag in a command is rejected', body: 'on:\n  workflow_dispatch:\njobs:\n  d:\n    environment: production\n    steps:\n      - run: |\n          git merge-base --is-ancestor "$SHA" origin/main\n          ssh host "bash scripts/deploy-release.sh --sha $SHA --apply"\n', wantExit: 1, allowLive: true },
   ];
 
   let failed = 0;
@@ -120,7 +139,7 @@ function selfTest() {
     const c = cases[i];
     const p = path.join(dir, 'case' + i + '.yml');
     fs.writeFileSync(p, c.body, 'utf8');
-    const problems = inspect(fs.readFileSync(p, 'utf8'), { allowIntent: Boolean(c.allowIntent) });
+    const problems = inspect(fs.readFileSync(p, 'utf8'), { allowIntent: Boolean(c.allowIntent), allowLive: Boolean(c.allowLive) });
     const got = problems.length ? 1 : 0;
     const ok = got === c.wantExit;
     if (!ok) failed++;
@@ -137,6 +156,7 @@ function main(argv) {
   const i = args.indexOf('--file');
   const file = i !== -1 ? args[i + 1] : null;
   const allowIntent = args.includes('--allow-intent');
+  const allowLive = args.includes('--allow-live');
 
   if (args.includes('--self-test')) return selfTest();
   if (args.includes('--help') || args.includes('-h')) {
@@ -152,14 +172,14 @@ function main(argv) {
     return 2;
   }
 
-  const problems = inspect(fs.readFileSync(file, 'utf8'), { allowIntent });
+  const problems = inspect(fs.readFileSync(file, 'utf8'), { allowIntent, allowLive });
   if (problems.length) {
     for (const p of problems) console.error('VIOLATION ' + file + ': ' + p);
     return 1;
   }
-  console.log('OK ' + file + (allowIntent ? ' names the deployer only in printed strings' : ' can only read') + ': no executed write marker, DRY_RUN latch present');
+  console.log('OK ' + file + (allowLive ? ' may ask the host to deploy, but cannot apply by itself' : allowIntent ? ' names the deployer only in printed strings' : ' can only read') + ': no executed write marker, latch present');
   return 0;
 }
 
 if (require.main === module) process.exit(main(process.argv));
-module.exports = { inspect, inertLine, WRITE_MARKERS, REQUIRED, INTENT_REQUIRED };
+module.exports = { inspect, inertLine, WRITE_MARKERS, REQUIRED, INTENT_REQUIRED, LIVE_REQUIRED };

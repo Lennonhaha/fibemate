@@ -1,0 +1,204 @@
+name: deploy-apply
+
+# Issue #617, day 4: the first workflow that can really publish a release.
+#
+# It never names --apply. It asks the host to `deploy <sha>` over a key whose forced
+# command is /usr/local/bin/fibemate-deploy-forced, and that script - root-owned,
+# reviewed, and the only writer in the system - adds --apply after validating the sha.
+# So the workflow cannot choose the command, cannot pass a flag, and cannot run anything
+# else with that key.
+#
+# Everything the earlier days built stays in place: the production environment gate,
+# the ancestry check (never deploy something that is not on main), the read-only key's
+# negative control, and the post-deploy assertion that /health and the disk manifest
+# agree on the commit that was just deployed.
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit to deploy (must be on origin/main). Empty means this run's commit.
+        required: false
+        default: ""
+      max_debt:
+        description: Alignment debt budget for the post-deploy check.
+        required: false
+        default: "0"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-apply
+  cancel-in-progress: false
+
+env:
+  ALLOW_LIVE_DEPLOY: "true"
+
+jobs:
+  guard:
+    name: Only a validated sha can reach the host
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Guard self-test
+        run: node scripts/check-dry-run-guard.cjs --self-test
+
+      - name: This file may ask for a deploy, but cannot apply by itself
+        run: node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-apply.yml --allow-live
+
+      - name: The read-only workflows are still read-only
+        run: |
+          node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-dry-run.yml
+          node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-rehearsal.yml
+
+  deploy:
+    name: Deploy, then prove /health and the disk agree
+    needs: guard
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 25
+    steps:
+      - name: "Interlock: this job is the live one, and it says so out loud"
+        run: |
+          if [ "${ALLOW_LIVE_DEPLOY}" != "true" ]; then
+            echo "::error::This workflow deploys. It only runs when ALLOW_LIVE_DEPLOY is true."
+            exit 1
+          fi
+          echo "ALLOW_LIVE_DEPLOY=true: this run will deploy."
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the commit and refuse anything that is not on main
+        id: target
+        run: |
+          set -eu
+          raw="${{ inputs.sha }}"
+          [ -n "$raw" ] || raw="${{ github.sha }}"
+          sha=$(git rev-parse --verify --quiet "${raw}^{commit}") || { echo "::error::$raw is not a commit"; exit 1; }
+          git fetch --no-tags origin main
+          if ! git merge-base --is-ancestor "$sha" origin/main; then
+            echo "::error::$sha is not an ancestor of origin/main; refusing to deploy it"
+            exit 1
+          fi
+          echo "target=$sha" >> "$GITHUB_OUTPUT"
+          echo "short=$(git rev-parse --short=8 "$sha")" >> "$GITHUB_OUTPUT"
+
+      - name: Say what is about to change, and what is current now
+        run: |
+          set -eu
+          target="${{ steps.target.outputs.target }}"
+          r=$(git log -1 --format=%H origin/main -- src packages www)
+          debt=$(git rev-list --count "$target".."$r" -- src packages www 2>/dev/null || echo unknown)
+          echo "target:  $target"
+          echo "R:       $r"
+          echo "runtime commits in R but not in target: $debt"
+          {
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| target | \`$target\` |"
+            echo "| R (last runtime commit on main) | \`$r\` |"
+            echo "| runtime commits target is missing | $debt |"
+            echo "| environment | production (required reviewer) |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Ask the host to deploy this commit
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_APPLY_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST || vars.NGINX_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER || vars.NGINX_USER || 'root' }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+          TARGET: ${{ steps.target.outputs.target }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DEPLOY_KEY:-}" ]; then
+            echo "::error::DEPLOY_APPLY_KEY is not set; nothing was deployed"
+            exit 1
+          fi
+          mkdir -p "$HOME/.ssh"
+          install -m 600 /dev/null "$HOME/.ssh/id_ed25519_deploy"
+          printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/id_ed25519_deploy"
+          ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null
+          ssh -i "$HOME/.ssh/id_ed25519_deploy" -p "$DEPLOY_PORT" \
+              -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+              "$DEPLOY_USER@$DEPLOY_HOST" "deploy $TARGET" 2>&1 | tee deploy.log
+          if ! grep -q "DEPLOY OK" deploy.log; then
+            echo "::error::no DEPLOY OK in the deployer output"
+            exit 1
+          fi
+
+      - name: /health must report the commit that was just deployed
+        env:
+          TARGET: ${{ steps.target.outputs.target }}
+          SHORT: ${{ steps.target.outputs.short }}
+        run: |
+          set -eu
+          for i in $(seq 1 30); do
+            body=$(curl -fsS "https://fibemate.net/health?v=$(date +%s%N)" || true)
+            if [ -n "$body" ]; then
+              echo "$body" | node -e '
+                let s = "";
+                process.stdin.on("data", (d) => (s += d)).on("end", () => {
+                  const o = JSON.parse(s);
+                  const b = o.build && o.build.commit;
+                  const v = o.served && o.served.commit;
+                  console.log("build=" + (b || "").slice(0, 8), "served=" + (v || "").slice(0, 8), "matches=" + String(o.served && o.served.matchesProcess));
+                  if (b !== process.argv[1] || v !== process.argv[1]) process.exit(3);
+                });' "$TARGET" && break
+            fi
+            echo "attempt $i: /health does not agree yet"
+            sleep 5
+            [ "$i" -lt 30 ] || { echo "::error::/health never reported $TARGET"; exit 1; }
+          done
+          hdr=$(curl -fsSI "https://fibemate.net/?v=$(date +%s%N)" | tr -d '\r')
+          echo "$hdr" | grep -i '^x-app-version:' || true
+          echo "$hdr" | grep -qi "x-app-version:.*($SHORT)" || { echo "::error::X-App-Version does not carry $SHORT"; exit 1; }
+
+      - name: Alignment after the deploy
+        env:
+          MAX_DEBT: ${{ inputs.max_debt }}
+        run: |
+          set -eu
+          git fetch --no-tags origin main
+          node scripts/check-deploy-alignment.cjs --repo . --ref origin/main --max-debt "$MAX_DEBT" | tee align.out
+          {
+            echo ""
+            echo "### After the deploy"
+            echo '```'
+            grep -E 'ALIGNED|BEHIND|DRIFT|UNKNOWN' align.out || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Cross-check the disk manifest against /health
+        env:
+          DEPLOY_KEY: ${{ secrets.DEPLOY_READ_KEY }}
+          DEPLOY_HOST: ${{ vars.DEPLOY_HOST || vars.NGINX_HOST }}
+          DEPLOY_USER: ${{ vars.DEPLOY_USER || vars.NGINX_USER || 'root' }}
+          DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
+          TARGET: ${{ steps.target.outputs.target }}
+        run: |
+          set -euo pipefail
+          if [ -z "${DEPLOY_KEY:-}" ]; then
+            echo "::notice::DEPLOY_READ_KEY is not set; skipping the disk cross-check"
+            exit 0
+          fi
+          mkdir -p "$HOME/.ssh"
+          install -m 600 /dev/null "$HOME/.ssh/id_ed25519_readonly"
+          printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/id_ed25519_readonly"
+          out=$(ssh -i "$HOME/.ssh/id_ed25519_readonly" -p "$DEPLOY_PORT" \
+                  -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
+                  "$DEPLOY_USER@$DEPLOY_HOST" "id" 2>&1)
+          disk=$(printf '%s' "$out" | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>{try{console.log(JSON.parse(s).commit||"")}catch{console.log("")}})')
+          echo "disk manifest commit: ${disk:-<none>}"
+          if [ "$disk" != "$TARGET" ]; then
+            echo "::error::the disk manifest says ${disk:-<none>} but $TARGET was deployed"
+            exit 1
+          fi
+          echo "PASS disk manifest and /health name the same commit"
