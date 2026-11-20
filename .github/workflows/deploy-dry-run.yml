@@ -187,8 +187,11 @@ jobs:
         run: |
           set -euo pipefail
           [ "$DRY_RUN" = "true" ] || { echo "::error::DRY_RUN latch not set"; exit 1; }
+          # The manifest is a few hundred KB. Read it whole: cutting the pipe short
+          # makes the server see SIGPIPE, and pipefail turns that into a failed step
+          # that looks like a permissions problem.
           out=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
-            -i ~/.ssh/id_ed25519_readonly -p "$READ_PORT" "$READ_USER@$READ_HOST" 2>/dev/null | head -c 4000)
+            -i ~/.ssh/id_ed25519_readonly -p "$READ_PORT" "$READ_USER@$READ_HOST" 2>/dev/null)
           commit=$(printf '%s' "$out" | tr -d '\r' | grep -m1 '"commit"' | sed 's/.*: *"//; s/".*//' || true)
           echo "manifest commit: ${commit:-<unreadable>}"
           echo "health   commit: ${SERVED:-<not read>}"
