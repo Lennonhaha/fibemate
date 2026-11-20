@@ -31,7 +31,8 @@
     "check:action-pins": "node scripts/check-action-pins.cjs",
     "check:action-pins:self-test": "node scripts/check-action-pins.cjs --self-test",
     "verify:release": "node scripts/verify-release.cjs",
-    "verify:all": "node scripts/verify-all.cjs"
+    "verify:all": "node scripts/verify-all.cjs",
+    "check:patrol": "node scripts/gh-patrol.cjs --self-test"
   },
   "dependencies": {
     "@alicloud/dysmsapi20170525": "4.6.0",
