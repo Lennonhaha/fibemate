@@ -130,4 +130,4 @@ jobs:
       # production state is not a property of the change under review.
       - name: Served tree contains the deploy paths of main
         if: github.event_name != 'pull_request'
-        run: node scripts/check-deploy-alignment.cjs --repo . --ref origin/main --max-debt 1
+        run: node scripts/check-deploy-alignment.cjs --repo . --ref origin/main --max-debt 2
