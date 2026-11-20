@@ -102,6 +102,7 @@ restore_original() {
   printf 'FAIL: %s\n' "$reason" >&2
   printf 'FAIL: switching back to %s\n' "$ORIGINAL" >&2
   switch_current "$ORIGINAL" || printf 'FAIL: could not point current back at %s\n' "$ORIGINAL" >&2
+  stamp_version_header "$ORIGINAL" "$(basename "$ORIGINAL")" || true
   start_app "$ORIGINAL" || printf 'FAIL: could not restart %s from %s\n' "$PM2_APP" "$ORIGINAL" >&2
   wait_for_health "$EXPECT_BACKEND" "$HEALTH_TIMEOUT" >/dev/null \
     || printf 'FAIL: the original release does not report %s either\n' "$EXPECT_BACKEND" >&2
@@ -110,13 +111,20 @@ restore_original() {
 
 switch_current "$TARGET" || restore_original "could not switch current to $TARGET"
 log "current -> $TARGET"
+stamp_version_header "$TARGET" "$(basename "$TARGET")" || restore_original "could not stamp X-App-Version for $TARGET"
 start_app "$TARGET" || restore_original "could not start $PM2_APP from $TARGET"
 
 if ! SEEN="$(wait_for_health "$EXPECT_BACKEND" "$HEALTH_TIMEOUT")"; then
   restore_original "$HEALTH_JSON_URL reports $SEEN, expected $EXPECT_BACKEND"
 fi
 
+# A rollback that leaves the header or the served manifest naming the release that is no
+# longer current is the same defect in the other direction, so it is checked, not assumed.
+if ! ALIGN="$(wait_for_alignment "$(basename "$TARGET" | cut -c1-7)" "$HEALTH_TIMEOUT")"; then
+  restore_original "$HEALTH_JSON_URL does not agree with $(basename "$TARGET") ($ALIGN)"
+fi
+
 ELAPSED=$(( $(date +%s) - START_TS ))
 echo
-echo "ROLLBACK OK: $(basename "$TARGET") is current, mlkem.backend=$SEEN, ${ELAPSED}s"
+echo "ROLLBACK OK: $(basename "$TARGET") is current, mlkem.backend=$SEEN, ${ELAPSED}s, $ALIGN"
 log "forward again with: bash scripts/deploy-release.sh --sha $(basename "$TARGET")"

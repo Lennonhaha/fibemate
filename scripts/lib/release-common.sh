@@ -83,9 +83,93 @@ switch_current() {
 # must reach the caller, or a rollback would report success for a process that is
 # not running.
 start_app() {
-  local dir="$1"
+  local dir="$1" static_root
+  # #603: the process must be told which tree the web server serves. Without this the
+  # /health `served` block reports "not-configured" and the comparison that exists to
+  # make a skew visible has nothing to compare. $CURRENT_LINK is the symlink nginx
+  # follows, not $dir, so a --no-restart deploy still shows up as a skew instead of
+  # being washed away by pointing at the process's own tree.
+  static_root="${FIBEMATE_STATIC_ROOT:-${CURRENT_LINK:-$dir}/www}"
   "$PM2_CMD" delete "$PM2_APP" >/dev/null 2>&1 || true
-  "$PM2_CMD" start "$dir/src/index.js" --name "$PM2_APP" --cwd "$dir" >/dev/null || return 1
+  FIBEMATE_STATIC_ROOT="$static_root" \
+    "$PM2_CMD" start "$dir/src/index.js" --name "$PM2_APP" --cwd "$dir" >/dev/null || return 1
   "$PM2_CMD" save >/dev/null 2>&1 || printf 'WARN: pm2 save failed; the started process is not persisted\n' >&2
   return 0
+}
+
+# The nginx header is the only version a plain HTTP client sees. deploy-fibemate.sh
+# stamped it from the checkout; the release path left it to a human, so a release could
+# be current while the header still named the previous commit (2026-11-20). Writes from
+# the release's own package.json and the SHA being deployed, so it cannot go stale.
+stamp_version_header() {
+  local dir="$1" sha="$2" snippet="${NGINX_SNIPPET:-/etc/nginx/snippets/x-app-version.conf}" version
+  if [ "${SKIP_NGINX_STAMP:-0}" = "1" ]; then
+    log "version stamp skipped (SKIP_NGINX_STAMP=1)"
+    return 0
+  fi
+  if ! command -v nginx >/dev/null 2>&1; then
+    log "nginx not found; version stamp skipped"
+    return 0
+  fi
+  # Read the file through argv, not through a JS string literal: a Windows path in a
+  # quoted literal loses its backslashes before node ever sees it.
+  version="$(node -e 'try { process.stdout.write(String(require(process.argv[1]).version || "")); } catch (e) { }' "$dir/package.json" 2>/dev/null || true)"
+  if [ -z "$version" ]; then
+    printf 'FAIL: cannot read version from %s/package.json\n' "$dir" >&2
+    return 1
+  fi
+  mkdir -p "$(dirname "$snippet")" || return 1
+  [ -f "$snippet" ] && cp "$snippet" "$snippet.bak"
+  printf '%s\n' "add_header X-App-Version \"v$version (${sha:0:8})\" always;" > "$snippet" || return 1
+  if nginx -t >/dev/null 2>&1; then
+    nginx -s reload
+    log "X-App-Version: v$version (${sha:0:8})"
+  else
+    printf 'FAIL: nginx -t rejected the stamped config; restoring the previous snippet\n' >&2
+    if [ -f "$snippet.bak" ]; then mv -f "$snippet.bak" "$snippet"; else rm -f "$snippet"; fi
+    nginx -t >&2 || true
+    return 1
+  fi
+}
+
+# One machine-readable line about the two commits /health reports.
+# Prints: "aligned <short>" | "skew build=<b> served=<s> matches=<m>" | "unreachable".
+health_alignment() {
+  local body
+  body="$(curl -fsS --max-time 5 "$HEALTH_JSON_URL" 2>/dev/null || true)"
+  if [ -z "$body" ]; then
+    printf 'unreachable'
+    return 0
+  fi
+  printf '%s' "$body" | node -e '
+let d = "";
+process.stdin.on("data", (c) => { d += c; });
+process.stdin.on("end", () => {
+  let j;
+  try { j = JSON.parse(d); } catch { process.stdout.write("unparseable"); return; }
+  const b = (j.build && j.build.commit) || "none";
+  const s = (j.served && j.served.commit) || "none";
+  const m = (j.served && typeof j.served.matches_process === "boolean") ? String(j.served.matches_process) : "null";
+  if (b === s && m === "true") process.stdout.write("aligned " + b);
+  else process.stdout.write("skew build=" + b + " served=" + s + " matches=" + m);
+});'
+}
+
+# Poll until /health says the served tree is the release just deployed. Waiting for the
+# backend alone made "the deploy printed OK" and "the site reports this commit" two
+# different statements, which is the shape of every false green this project has had.
+# $1 = expected short sha, $2 = seconds
+wait_for_alignment() {
+  local want="$1" secs="${2:-60}" i=0 seen='unreachable'
+  while [ "$i" -lt "$secs" ]; do
+    seen="$(health_alignment)"
+    if [ "$seen" = "aligned $want" ]; then
+      printf '%s' "$seen"
+      return 0
+    fi
+    sleep 1
+    i=$((i + 1))
+  done
+  printf '%s' "$seen"
+  return 1
 }
