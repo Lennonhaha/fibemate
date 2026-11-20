@@ -20,6 +20,8 @@ Every number below can be re-measured with the command next to it. If it does no
 
 > 🧭 **安全左移 / Shift-left security.** 侧信道威胁模型不是"以后补"的文档，是架构资产：[Falcon 侧信道威胁模型](docs/research/falcon-sidechannel-threat-model.md)。每条威胁都带可复现的判据与测量记录；测不出的写 `unquantified`，不写"安全"。
 
+> 🔎 **人话 / Plainly.** FIBEMATE 检查文档里写的密码声明与代码实际是否一致，并生成国密合规自查报告；说不清的项写「未评估」，不写「安全」。
+
 > ⚠️ **安全声明 / Security Notice**
 >
 > - **工程验证组件**（ML-KEM-768、SLH-DSA、SM2/SM3/SM4）通过了功能验证、KAT 与软件 TVLA，**尚未经过第三方安全审计**。
