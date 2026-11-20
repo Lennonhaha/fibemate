@@ -615,6 +615,18 @@ workflow that built it. The CBOM toolset ships as `cbom-tools`, `verifact` and `
 [`docs/cbom-tools-tutorial.md`](https://github.com/Lennonhaha/fibemate-tools/blob/main/docs/cbom-tools-tutorial.md)
 in `fibemate-tools` walks through a full ECDH/SM2 → ML-KEM migration with real output at every step.
 
+The five-line version, run against the published tarball rather than the source tree:
+
+```js
+const { generateKeypair, encapsulate, decapsulate } = require('fibemate-core');
+const { publicKey, secretKey } = generateKeypair();
+const { ciphertext, sharedSecret } = encapsulate(publicKey);
+const recovered = decapsulate(secretKey, ciphertext);
+console.log(Buffer.from(recovered).equals(Buffer.from(sharedSecret))); // true
+```
+
+`true` on Node 22. `decapsulate` takes `(secretKey, ciphertext)`, the reverse of some libraries.
+
 Integration guidance: use the Apache-2.0 packages and repositories as the embedding surface, and run
 the GPL-3.0 / AGPL-3.0 components as separately deployed services. Network copyleft applies to
 `mixnet/` only; nothing else in this repository is affected by it.
