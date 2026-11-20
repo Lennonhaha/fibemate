@@ -54,7 +54,13 @@ function repo(files, links) {
     git(dir, ['update-index', '--add', '--cacheinfo', '120000,' + blob + ',' + rel]);
   }
   const tree = git(dir, ['write-tree']).trim();
-  const commit = git(dir, ['commit-tree', tree, '-m', 'fixture']).trim();
+  // commit-tree needs an identity. A CI runner has none configured, and relying on the
+  // developer machine has one is how this test passed locally and failed on ubuntu/windows.
+  const commit = git(dir, [
+    '-c', 'user.name=manifest fixture',
+    '-c', 'user.email=fixture@example.invalid',
+    'commit-tree', tree, '-m', 'fixture',
+  ]).trim();
   return { dir, commit, out: fs.mkdtempSync(path.join(os.tmpdir(), 'wbm-out-')) };
 }
 
