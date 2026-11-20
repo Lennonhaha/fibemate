@@ -80,24 +80,38 @@ function main() {
       const rel = rec.slice(tab + 1);
       return { mode, sha, type, rel };
     });
+    // A symlink is a blob whose mode is 120000 and whose content is the target path.
+    // It is not a file with those bytes, so hashing it as one would certify a path
+    // string as if it were the linked content. It is recorded separately instead:
+    // the integrity check still covers every regular file, and the links become
+    // visible rather than silently excluded (issue #602).
     const files = entries.filter((e) => e.type === 'blob' && e.mode !== '120000');
-    if (files.length === 0) throw new Error('commit ' + commit + ' contains no blobs - refusing to write an empty manifest');
+    const links = entries.filter((e) => e.type === 'blob' && e.mode === '120000');
+    if (files.length === 0 && links.length === 0) {
+      throw new Error('commit ' + commit + ' contains no blobs - refusing to write an empty manifest');
+    }
     if (process.env.WBM_DEBUG) {
-      process.stderr.write(`debug: repo=${o.repo} commit=${commit} entries=${entries.length} files=${files.length}\n`);
+      process.stderr.write(
+        `debug: repo=${o.repo} commit=${commit} entries=${entries.length} files=${files.length} symlinks=${links.length}\n`,
+      );
     }
 
     // One `git cat-file --batch` for the whole tree: ~2300 blobs in well under a second.
-    const batch = git(o.repo, ['cat-file', '--batch'], files.map((f) => f.sha).join('\n') + '\n');
+    const asked = files.concat(links);
+    const batch = git(o.repo, ['cat-file', '--batch'], asked.map((f) => f.sha).join('\n') + '\n');
     const map = {};
+    const symlinks = {};
     let off = 0;
-    for (const f of files) {
+    for (const f of asked) {
       const nl = batch.indexOf(0x0a, off);
       if (nl < 0) throw new Error('truncated git cat-file output at ' + f.rel);
       const header = batch.slice(off, nl).toString('utf8').split(' ');
       if (header[1] !== 'blob') throw new Error('not a blob: ' + f.rel);
       const size = Number(header[2]);
       const start = nl + 1;
-      map[f.rel] = sha256(batch.slice(start, start + size));
+      const bytes = batch.slice(start, start + size);
+      if (f.mode === '120000') symlinks[f.rel] = bytes.toString('utf8');
+      else map[f.rel] = sha256(bytes);
       off = start + size + 1;
     }
 
@@ -109,11 +123,16 @@ function main() {
       builtAt: new Date().toISOString(),
       fileCount: Object.keys(map).length,
       files: map,
+      // Additive since #602: fileCount still counts regular files only, so the number
+      // /health reports and the number a manifest carries keep the same meaning.
+      treeEntryCount: entries.length,
+      symlinkCount: Object.keys(symlinks).length,
+      symlinks,
     };
     const dest = path.join(o.out, o.outName);
     fs.writeFileSync(dest, JSON.stringify(body, null, 1) + '\n', 'utf8');
     process.stdout.write(
-      `write-build-manifest: ${body.commitShort} ${body.fileCount} files -> ${dest} (${fs.statSync(dest).size} B)\n`,
+      `write-build-manifest: ${body.commitShort} ${body.fileCount} files (${body.symlinkCount} symlinks) -> ${dest} (${fs.statSync(dest).size} B)\n`,
     );
 
     if (o.verify) {
