@@ -1,0 +1,162 @@
+name: deploy-apply-rehearsal
+
+# Day 3 of issue #617.
+#
+# This is the first workflow that has to *name* scripts/deploy-release.sh --apply,
+# because the point is to show the shape of the real invocation. It never runs it
+# for real:
+#
+#   * every step is behind DRY_RUN=true, and the step that touches the deployer
+#     refuses to continue unless that latch is exactly "true";
+#   * the deployer itself is only ever invoked with --dry-run, which prints the
+#     eight steps it would take and returns before the root check, before the
+#     release directory is created, and before anything is switched or restarted;
+#   * the workflow lives behind the `production` environment, so it cannot start
+#     the gated job without an approval;
+#   * check-dry-run-guard.cjs --allow-intent rejects the same words outside a
+#     printed string, and rejects --dry-run together with --apply on one line.
+#
+# Exit: green means "the rehearsal ran". It does not mean "a release was published".
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: Commit to rehearse. Empty means the commit that triggered the run.
+        required: false
+        default: ''
+      max_debt:
+        description: Runtime commits the served tree may lag behind before this is red.
+        required: false
+        default: '2'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-apply-rehearsal-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  DRY_RUN: "true"
+
+jobs:
+  guard:
+    name: This file may name the deployer, never run it for real
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: The guard's own two directions
+        run: node scripts/check-dry-run-guard.cjs --self-test
+      - name: This workflow names the deployer only in printed strings
+        run: node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-apply-rehearsal.yml --allow-intent
+      - name: The earlier workflows still carry no marker at all
+        run: |
+          node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-dry-run.yml
+          node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-rehearsal.yml
+
+  rehearsal:
+    name: Approval gate, then a preview that cannot publish
+    needs: guard
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: The rehearsal latch must be on before anything else
+        run: |
+          if [ "$DRY_RUN" != "true" ]; then
+            echo "::error::This workflow is a rehearsal. It must not write."
+            exit 1
+          fi
+          echo "PASS DRY_RUN=$DRY_RUN"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the commit under rehearsal
+        id: target
+        run: |
+          set -euo pipefail
+          want="${{ inputs.sha }}"
+          [ -n "$want" ] || want="${{ github.sha }}"
+          git fetch --no-tags origin main
+          sha="$(git rev-parse --verify --quiet "$want^{commit}")" || {
+            echo "::error::$want is not a commit in this checkout"; exit 1; }
+          if ! git merge-base --is-ancestor "$sha" origin/main; then
+            echo "::error::$sha is not on main; a rehearsal of something that cannot be deployed proves nothing"
+            exit 1
+          fi
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "target: $sha"
+
+      - name: Print the invocation this workflow refuses to run
+        run: |
+          set -euo pipefail
+          SHA="${{ steps.target.outputs.sha }}"
+          echo "DRY_RUN: Skipping actual deploy."
+          echo "Would run: bash scripts/deploy-release.sh --sha $SHA --apply"
+          {
+            echo "### Rehearsal: what would run, and what actually ran"
+            echo ""
+            echo "| item | value |"
+            echo "|---|---|"
+            echo "| intended command | \`bash scripts/deploy-release.sh --sha $SHA --apply\` |"
+            echo "| executed instead | \`bash scripts/deploy-release.sh --sha $SHA --dry-run\` |"
+            echo "| DRY_RUN | \`$DRY_RUN\` |"
+            echo "| approval | production environment, required reviewer |"
+            echo "| publishes anything | no |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Ask the real argument parser what it would do
+        run: |
+          set -euo pipefail
+          SHA="${{ steps.target.outputs.sha }}"
+          REPO_DIR="$GITHUB_WORKSPACE" bash scripts/deploy-release.sh --sha "$SHA" --dry-run | tee plan.txt
+          echo
+          grep -q '\[dry-run\] would:' plan.txt || {
+            echo "::error::the deployer did not print a plan; has --dry-run changed meaning?"; exit 1; }
+          grep -q 'rename into' plan.txt || {
+            echo "::error::the plan no longer describes the switch step"; exit 1; }
+          if grep -q 'DEPLOY OK' plan.txt; then
+            echo "::error::a preview printed DEPLOY OK, which means something ran for real"; exit 1
+          fi
+          if [ -e /opt/fibemate/releases ]; then
+            echo "::error::a release directory exists on this runner"; exit 1
+          fi
+          echo "PASS the preview printed a plan and created nothing"
+
+      - name: The read-only key cannot be repurposed into a write
+        env:
+          READ_KEY: ${{ secrets.DEPLOY_READ_KEY }}
+          READ_HOST: ${{ vars.DEPLOY_HOST || vars.NGINX_HOST }}
+          READ_USER: ${{ vars.DEPLOY_USER || vars.NGINX_USER || 'root' }}
+          READ_PORT: ${{ vars.DEPLOY_PORT || vars.NGINX_PORT || '22' }}
+        run: |
+          set -euo pipefail
+          if [ -z "${READ_KEY:-}" ]; then
+            echo "::notice::DEPLOY_READ_KEY is not configured; skipping the transport check"
+            exit 0
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$READ_KEY" > ~/.ssh/id_ed25519_readonly
+          chmod 600 ~/.ssh/id_ed25519_readonly
+          ssh-keyscan -p "$READ_PORT" -H "$READ_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          # The host-side entry is a forced command. Asking for anything else has to
+          # come back as the manifest, not as the result of the request.
+          out=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
+            -i ~/.ssh/id_ed25519_readonly -p "$READ_PORT" "$READ_USER@$READ_HOST" \
+            'touch /tmp/pwned-by-ci; id' 2>&1) || true
+          case "$out" in
+            *'"schema": "fibemate.build/v1"'*)
+              echo "PASS the forced command answered, so the request was ignored" ;;
+            *)
+              echo "::error::unexpected answer from the read-only key; it may no longer be restricted"
+              printf '%s\n' "$out" | sed -n '1,5p'
+              exit 1 ;;
+          esac
+
+      - name: Nothing in this job can publish
+        run: |
+          set -euo pipefail
+          echo "DRY_RUN: Skipping actual deploy."
+          echo "REFUSED: this workflow does not publish a release. Day 4 is where --apply runs for real."
