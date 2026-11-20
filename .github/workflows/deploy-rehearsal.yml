@@ -1,0 +1,140 @@
+name: deploy-rehearsal
+
+# A rehearsal of the real deployment flow with every safety catch wired up and
+# no way to ship anything:
+#   - dispatch only (nothing runs on push, schedule or pull_request)
+#   - the write job sits behind the `production` environment, so it waits for
+#     approval, sees environment-scoped variables, and nothing else does
+#   - DRY_RUN is latched to true, and a step fails the job if the latch is lost
+#   - the workflow contains no deployer call at all; the guard job proves it
+#
+# What this exercises: the approval gate, environment isolation, key mounting,
+# and the read-only production path. What it cannot exercise: the deployer
+# itself, which stays untouched until the observation period is over.
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_debt:
+        description: Runtime commit budget for the alignment check
+        required: false
+        default: "2"
+
+permissions:
+  contents: read
+
+env:
+  DRY_RUN: "true"
+
+concurrency:
+  group: deploy-rehearsal
+  cancel-in-progress: false
+
+jobs:
+  guard:
+    name: No write path exists in these workflows
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Guard self-test
+        run: node scripts/check-dry-run-guard.cjs --self-test
+      - name: This workflow can only read
+        run: node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-rehearsal.yml
+      - name: The dry-run workflow still can only read
+        run: node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-dry-run.yml
+
+  outside:
+    name: The environment's secrets do not leak outside it
+    runs-on: ubuntu-latest
+    needs: guard
+    steps:
+      - name: The canary must be invisible here
+        env:
+          CANARY: ${{ secrets.REHEARSAL_CANARY }}
+          MODE: ${{ vars.DEPLOY_MODE }}
+        run: |
+          if [ -n "$CANARY" ]; then
+            echo "::error::environment secret is visible to a job without the environment"
+            exit 1
+          fi
+          if [ -n "$MODE" ]; then
+            echo "::error::environment variable is visible to a job without the environment"
+            exit 1
+          fi
+          echo "PASS canary and mode are invisible outside the environment"
+
+  gated:
+    name: Approval gate, key mount and read-only production check
+    runs-on: ubuntu-latest
+    needs: outside
+    environment: production
+    env:
+      READ_KEY: ${{ secrets.DEPLOY_READ_KEY }}
+      READ_HOST: ${{ vars.DEPLOY_HOST }}
+      READ_USER: ${{ vars.DEPLOY_USER }}
+      READ_PORT: ${{ vars.DEPLOY_PORT }}
+      MODE: ${{ vars.DEPLOY_MODE }}
+      CANARY: ${{ secrets.REHEARSAL_CANARY }}
+      MAX_DEBT: ${{ inputs.max_debt }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: The dry-run latch must still be on
+        run: |
+          [ "$DRY_RUN" = "true" ] || { echo "::error::DRY_RUN latch not set"; exit 1; }
+          echo "PASS DRY_RUN=$DRY_RUN"
+
+      - name: This job can see the environment scope
+        run: |
+          [ -n "$CANARY" ] || { echo "::error::environment secret missing inside the environment"; exit 1; }
+          [ "$MODE" = "rehearsal" ] || { echo "::error::DEPLOY_MODE is '${MODE}', expected 'rehearsal'"; exit 1; }
+          [ -n "$READ_HOST" ] || { echo "::error::DEPLOY_HOST is empty"; exit 1; }
+          [ -n "$READ_USER" ] || { echo "::error::DEPLOY_USER is empty"; exit 1; }
+          echo "PASS mode=$MODE host=$READ_HOST user=$READ_USER port=$READ_PORT canary=present"
+
+      - name: Mount the read-only key and read the served manifest
+        run: |
+          if [ -z "$READ_KEY" ]; then
+            echo "::error::DEPLOY_READ_KEY is empty"
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$READ_KEY" > ~/.ssh/id_ed25519_readonly
+          chmod 600 ~/.ssh/id_ed25519_readonly
+          # Whole read, never a truncated pipe: the manifest is a few hundred KB
+          # and closing the pipe early shows up as a permissions error.
+          out=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
+            -i ~/.ssh/id_ed25519_readonly -p "$READ_PORT" "$READ_USER@$READ_HOST" 2>/dev/null) || true
+          commit=$(printf '%s\n' "$out" | sed -n 's/.*"commit": "\([0-9a-f]\{40\}\)".*/\1/p' | head -1)
+          [ -n "$commit" ] || { echo "::error::the host answered but no commit could be parsed"; exit 1; }
+          echo "manifest commit: $commit"
+          {
+            echo "### Rehearsal: production is readable, nothing was written"
+            echo ""
+            echo "| read path | value |"
+            echo "|---|---|"
+            echo "| served manifest | \`${commit:0:7}\` |"
+            echo "| host | \`$READ_USER@$READ_HOST:$READ_PORT\` |"
+            echo "| approval | granted by an environment reviewer |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Where the real deploy would start, and why this one does not
+        run: |
+          node scripts/check-deploy-alignment.cjs --repo . --ref origin/main --max-debt "$MAX_DEBT" | tee align.out || true
+          verdict=$(grep -Eo '(ALIGNED|BEHIND|DRIFT|UNKNOWN)[^\"]*' align.out | head -1)
+          echo "alignment: ${verdict:-<unparseable>}"
+          cat <<'EOF'
+          REFUSED: this workflow does not deploy anything.
+          The real flow would hand the release script the commit named above, after
+          a green alignment check and a human approval. That script is deliberately
+          absent from this repository's workflows until the observation period ends.
+          Copying it in here, or adding a write flag, fails the guard job above.
+          EOF
