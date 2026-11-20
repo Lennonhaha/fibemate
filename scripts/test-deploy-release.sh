@@ -58,7 +58,7 @@ cat > "$SANDBOX/bin/pm2" <<'PM2'
 # behind the `current` symlink, not the symlink itself.
 log_static="${FIBEMATE_STATIC_ROOT:-}"
 if [ -n "$log_static" ]; then
-  log_static="$(cd "$(dirname "$log_static")" 2>/dev/null && pwd -P)/$(basename "$log_static")"
+  log_static="$log_static"
 fi
 echo "pm2 $* static=$log_static" >> "$PM2_LOG"
 if [ -n "${PM2_FAIL_PATTERN:-}" ] && printf %s "$*" | grep -q -- "$PM2_FAIL_PATTERN"; then
@@ -71,6 +71,10 @@ chmod +x "$SANDBOX/bin/pm2"
 cat > "$SANDBOX/bin/nginx" <<'EOF'
 #!/bin/bash
 printf '%s\n' "$*" >> "$NGINX_LOG"
+if [ "$1" = "-t" ] && [ -e "${NGINX_FAIL_T:-/nonexistent}" ]; then
+  echo "nginx: [emerg] simulated config test failure" >&2
+  exit 1
+fi
 exit 0
 EOF
 chmod +x "$SANDBOX/bin/nginx"
@@ -102,7 +106,7 @@ http
       const cwd = (/--cwd (\S+)/.exec(last) || [])[1] || '';
       const stat = (/static=(\S*)/.exec(last) || [])[1] || '';
       build = commitOf(cwd);
-      served = stat ? commitOf(path.dirname(stat)) : null;
+      served = stat ? commitOf(path.dirname(fs.realpathSync(stat))) : null;
     } catch (e) { /* first case: no start yet */ }
     if (fs.existsSync(overrideFile)) {
       try {
@@ -157,6 +161,7 @@ export HEALTH_TIMEOUT=3
 export PATH="$SANDBOX/bin:$PATH"
 export NGINX_LOG="$SANDBOX/nginx.log"
 export NGINX_SNIPPET="$SANDBOX/nginx/x-app-version.conf"
+export NGINX_FAIL_T="$SANDBOX/health/nginx-fail-t"
 : > "$PM2_LOG"
 
 deploy() {
@@ -234,6 +239,39 @@ rm -f "$SANDBOX/health/override.json"
 [ "$rc" -ne 0 ] && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$B" ] \
   && grep -q "does not agree" "$SANDBOX/deploy.log"
 check "alignment skew fails the deploy and restores the previous release" "$?"
+
+# --------------------------------------------------------------- case 10
+# The process keeps the env var, not a resolved path. A --no-restart deploy moves
+# `current` and leaves the old process running, so /health must report the split.
+# If start_app had passed $dir instead of $CURRENT_LINK/www, served would stay on the
+# old release and this case would go green while the site was actually skewed.
+deploy --sha "$B"
+rc=$?
+deploy --sha "$A" --no-restart
+rc2=$?
+body="$(curl -fsS --max-time 5 "$HEALTH_JSON_URL" 2>/dev/null || true)"
+build="$(printf '%s' "$body" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{process.stdout.write(String(JSON.parse(d).build.commit))}catch(e){process.stdout.write("none")}})')"
+served="$(printf '%s' "$body" | node -e 'let d="";process.stdin.on("data",c=>d+=c).on("end",()=>{try{process.stdout.write(String(JSON.parse(d).served.commit))}catch(e){process.stdout.write("none")}})')"
+[ "$rc" -eq 0 ] && [ "$rc2" -eq 0 ] && [ "$build" = "${B:0:7}" ] && [ "$served" = "${A:0:7}" ]
+check "no-restart deploy leaves build on the old release and served on the new one" "$?"
+
+# --------------------------------------------------------------- case 11
+# nginx rejecting the stamped config must not leave the site on a release the
+# process never started: the deploy fails and the previous snippet comes back byte
+# for byte.
+# First put the sandbox back into an aligned state, because case 10 left the process
+# on one release and \`current\` on the other.
+deploy --sha "$B"
+before="$(sha256sum "$NGINX_SNIPPET" | cut -d' ' -f1)"
+: > "$NGINX_FAIL_T"
+deploy --sha "$A"
+rc=$?
+rm -f "$NGINX_FAIL_T"
+after="$(sha256sum "$NGINX_SNIPPET" | cut -d' ' -f1)"
+[ "$rc" -ne 0 ] && [ "$before" = "$after" ] \
+  && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$B" ] \
+  && grep -q "nginx -t rejected" "$SANDBOX/deploy.log"
+check "a rejected nginx config fails the deploy and restores the previous snippet" "$?"
 
 echo
 echo "$PASS passed, $FAIL failed"
