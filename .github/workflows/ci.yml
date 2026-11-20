@@ -151,6 +151,13 @@ jobs:
       - name: Run aggregated suite (test/test-all.js)
         run: node test/test-all.js
 
+      # /health reports two commits: the one this process started from and the one the
+      # static tree on disk was built from (#603). This asserts the comparison cannot say
+      # "match" while they differ, and cannot say "differ" when it simply cannot tell.
+      # Static on purpose: no network, no database, no native addon, so it gates every OS.
+      - name: /health never claims a match while the commits differ
+        run: node scripts/test-health-same-source.cjs
+
       # N3 single source: docs/metrics.json is the only place an external number may be
       # written down. This recomputes the four git-derived counters and rejects the
       # retired transposed figure named in the discipline annex, anywhere in the tree. Design: docs/ENGINEERING-DISCIPLINE.md
