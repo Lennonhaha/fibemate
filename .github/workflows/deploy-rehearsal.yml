@@ -109,12 +109,18 @@ jobs:
           install -m 700 -d ~/.ssh
           printf '%s\n' "$READ_KEY" > ~/.ssh/id_ed25519_readonly
           chmod 600 ~/.ssh/id_ed25519_readonly
+          ssh-keyscan -p "$READ_PORT" -H "$READ_HOST" >> ~/.ssh/known_hosts 2>/dev/null
           # Whole read, never a truncated pipe: the manifest is a few hundred KB
           # and closing the pipe early shows up as a permissions error.
-          out=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
-            -i ~/.ssh/id_ed25519_readonly -p "$READ_PORT" "$READ_USER@$READ_HOST" 2>/dev/null) || true
+          err=$(mktemp)
+          if ! out=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
+            -i ~/.ssh/id_ed25519_readonly -p "$READ_PORT" "$READ_USER@$READ_HOST" 2>"$err"); then
+            echo "::error::ssh to $READ_USER@$READ_HOST:$READ_PORT failed"
+            sed -n '1,5p' "$err"
+            exit 1
+          fi
           commit=$(printf '%s\n' "$out" | sed -n 's/.*"commit": "\([0-9a-f]\{40\}\)".*/\1/p' | head -1)
-          [ -n "$commit" ] || { echo "::error::the host answered but no commit could be parsed"; exit 1; }
+          [ -n "$commit" ] || { echo "::error::the host answered but no commit could be parsed from ${#out} bytes"; exit 1; }
           echo "manifest commit: $commit"
           {
             echo "### Rehearsal: production is readable, nothing was written"
