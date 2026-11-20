@@ -17,6 +17,7 @@
     "check:live": "node scripts/check-live.cjs",
     "test:integrity": "node test/test-fibemate.js",
     "test:health-same-source": "node scripts/test-health-same-source.cjs",
+    "check:alignment": "node scripts/check-deploy-alignment.cjs --repo . --ref origin/main",
     "lint": "eslint packages/pqc-kem/src/ test/ --max-warnings 0",
     "lint:quiet": "eslint packages/pqc-kem/src/ scripts/ test/ --max-warnings 0",
     "spdx:check": "node tools/add-spdx-headers.cjs check --root .",

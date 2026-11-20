@@ -368,3 +368,24 @@ README、站点与 PR 描述里的"published <timestamp> at commit <sha>"每 pus
 **判据**：对外文案只写相对表述（例如 `as of the latest published record`），或由 CI 从 `docs/metrics.json` / 上游 API 动态渲染；确需引用某一次具体测量时，把时间与 SHA 放进证据文件或 CI 产物，正文只链接它。
 
 **自检**：`git grep -nE 'published 20[0-9]{2}-[0-9]{2}-[0-9]{2}T|at commit [0-9a-f]{7,40}' -- README.md 'docs/*.md'` 应为 0 命中；历史归档与变更日志需显式 allowlist，且 allowlist 要打印命中数，防止静默增长。
+
+## 20.13 部署对齐门禁（D26，2026-11-20）
+
+"合并了"与"部署了"是两件事，"部署了"与"nginx 服务的是这一版"是第三件。PR #610 让部署脚本自己保证内部一致（`/health` 的 build 与 served 必须相同，否则回滚）；本节管的是外部一致：`/health` 报的提交，是否已经包含部署分支上最新的运行时改动。
+
+**为什么不是"落后 0 就红"**：`prod == PR head` 时 PR 尚未合并，永不可能已部署，恒红；`prod == origin/main` 时合并即违约，文档 PR 也被卡。门禁能约束的是债务上限，不是零落后，故 `N=1` 起步，由自动部署把常态压到 0 之后再收紧。
+
+**规则**
+
+1. `R = git log -1 --format=%H origin/main -- src packages www`。这三个路径必须与 `deploy-release.sh` 的 `verify-tree-sha.cjs --tree` 完全一致，门禁与部署读同一处定义。
+2. 判据是祖先关系，不是相等：对齐当且仅当 `git merge-base --is-ancestor "$R" "$SERVED"`。相等判据在中间夹了文档提交时恒红。
+3. 债务计数必须带路径过滤：`git rev-list --count "$SERVED".."$R" -- src packages www`。不带过滤会把文档提交记到运行时头上（分母错觉）。
+4. 四态，且只有 DRIFT 允许红：`ALIGNED`（debt=0）、`BEHIND`（debt 在预算内，退 0 但日志留痕）、`DRIFT`（debt 超预算）、`UNKNOWN`（传输失败、响应不可解析、SERVED 不属于本仓、两端已分叉）。UNKNOWN 不阻断合并，否则一次生产重启会冻结整个仓库。
+5. 读取 `/health` 必须破缓存：加 `?v=<ts>`，并在响应带 `X-Cache: HIT` 或 `Age` 时判 UNKNOWN、重试。缓存过的负响应与缓存过的旧 JSON 都会制造假红或假绿（D24）。
+6. 不把当日的 SHA 写进纪律（D25）。本节只写命令，实测值进证据文件或 PR。
+
+**刻意区分两件事**：内部一致性（build == served）由部署脚本自检；外部一致性（served == R）由本节的门禁测量。两者都要，但不能用同一个检查表达。
+
+**为何推翻"live 检查不 gate PR"**：`nginx-drift.yml` 的既有决定是"生产抖动不能把文档 PR 弄红"，防的是可用性问题变成开发阻塞；本节防的是已合并未部署的运行时债务。共存条件是四态里的 UNKNOWN 不阻断、先非 required 跑一段时间、负向控制证明它会红。在自动部署存在之前设 required，等于把部署债务改写成合并阻断。
+
+**自检**：`node scripts/check-deploy-alignment.cjs --self-test` 必须以 5/5 退出 0，且其中 "a docs commit is not counted as runtime debt" 一条的 debt 必须小于未过滤时的提交数；对真实状态跑 `--max-debt 0` 与 `--max-debt 1` 必须给出不同的结论（DRIFT 与 BEHIND），否则说明预算参数没有生效。
