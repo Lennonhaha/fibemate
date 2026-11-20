@@ -4,6 +4,11 @@
 #
 #   usage: bash scripts/deploy-release.sh --sha <commit> [--artifact-dir <dir>]
 #                                         [--dry-run] [--no-restart] [--skip-npm]
+#                                         [--apply]
+#
+# --apply is required when stdin is not a terminal. A job that publishes a release has
+# nobody to answer a question, so it must say out loud that it means to publish: without
+# the flag the script refuses instead of guessing. --dry-run never needs it.
 #
 # Why this exists: the API runs from /opt/fibemate/releases/<sha> (pm2 cwd) and
 # nginx serves /opt/fibemate/current/www. The in-place tree (/opt/fibemate-full)
@@ -40,15 +45,19 @@ HEALTH_JSON_URL="${HEALTH_JSON_URL:-http://127.0.0.1:3001/health}"
 MLKEM_REQUIRE_NATIVE="${MLKEM_REQUIRE_NATIVE:-1}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-60}"
 
+harden_noninteractive
+
 SHA=""
 ARTIFACT_DIR=""
 DRY_RUN=0
 NO_RESTART=0
 SKIP_NPM=0
+APPLY=0
 
 usage() {
   printf 'usage: bash scripts/deploy-release.sh --sha <commit> [--artifact-dir <dir>]\n'
   printf '                                      [--dry-run] [--no-restart] [--skip-npm]\n'
+  printf '                                      [--apply]\n'
 }
 
 while [ $# -gt 0 ]; do
@@ -58,12 +67,21 @@ while [ $# -gt 0 ]; do
     --dry-run) DRY_RUN=1; shift ;;
     --no-restart) NO_RESTART=1; shift ;;
     --skip-npm) SKIP_NPM=1; shift ;;
+    --apply) APPLY=1; shift ;;
     -h | --help) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
   esac
 done
 
 [ -n "$SHA" ] || { usage >&2; exit 2; }
+
+# Refuse before doing anything at all when nobody is there to answer: --dry-run is the
+# safe way to preview, and automation says --apply. Failing here keeps the previous
+# release untouched and the reason in the log, instead of discovering the problem three
+# steps later in the middle of a build.
+if [ "$DRY_RUN" -eq 0 ] && [ "$APPLY" -ne 1 ] && [ ! -t 0 ]; then
+  die "stdin is not a terminal and --apply was not given; refusing to publish (preview with --dry-run, or pass --apply from automation)"
+fi
 
 echo "=== FIBEMATE release deploy ==="
 echo "root:    $ROOT"
@@ -328,4 +346,4 @@ fi
 echo
 echo "DEPLOY OK: $FULL_SHA is current, mlkem.backend=$SEEN, $ALIGN"
 log "previous: ${CURRENT_BEFORE:-<none>}"
-log "roll back with: bash scripts/rollback-release.sh --to ${CURRENT_BEFORE:-<sha>}"
+log "roll back with: bash scripts/rollback-release.sh --to ${CURRENT_BEFORE:-<sha>} --apply"

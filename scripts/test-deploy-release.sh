@@ -14,6 +14,14 @@
 #   5. a rollback whose target does not start puts the original release back
 #   6. rollback --dry-run changes nothing
 #   7. the legacy in-place script refuses to run once a release is serving
+#   8. a successful deploy stamps the version header and reports the aligned tree
+#   9. a served/build skew fails the deploy and restores the previous release
+#  10. --no-restart keeps the skew visible instead of hiding it behind the new tree
+#  11. a rejected nginx config fails the deploy and restores the previous snippet
+#  12. no terminal on stdin and no --apply: refused before anything is touched
+#  13. the hardening closes git/ssh prompts when stdin is not a terminal
+#  14. a credential-requiring remote fails fast under the hardening, and the control
+#      shows the same request hanging when an askpass is allowed to wait
 #
 # Exit: 0 all cases passed, 1 a case failed.
 set -uo pipefail
@@ -170,7 +178,7 @@ export NGINX_FAIL_T="$SANDBOX/health/nginx-fail-t"
 deploy() {
   MLKEM_REQUIRE_NATIVE="${MLKEM_REQUIRE_NATIVE:-0}" \
     MLKEM_EXPECT_BACKEND="${MLKEM_EXPECT_BACKEND:-}" \
-    bash "$HERE/deploy-release.sh" --skip-npm "$@" >"$SANDBOX/deploy.log" 2>&1
+    bash "$HERE/deploy-release.sh" --skip-npm --apply "$@" >"$SANDBOX/deploy.log" 2>&1 </dev/null
 }
 
 # ---------------------------------------------------------------- case 1
@@ -196,7 +204,7 @@ rc=$?
 check "second deploy moves current to the new release" "$?"
 
 # ---------------------------------------------------------------- case 4
-out="$(MLKEM_REQUIRE_NATIVE=0 MLKEM_EXPECT_BACKEND="" bash "$HERE/rollback-release.sh" --to "$A" 2>&1)"
+out="$(MLKEM_REQUIRE_NATIVE=0 MLKEM_EXPECT_BACKEND="" bash "$HERE/rollback-release.sh" --to "$A" --apply 2>&1 </dev/null)"
 rc=$?
 [ "$rc" -eq 0 ] && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$A" ] \
   && printf '%s' "$out" | grep -q "ROLLBACK OK"
@@ -204,14 +212,14 @@ check "rollback --to restores the earlier release" "$?"
 
 # ---------------------------------------------------------------- case 5
 MLKEM_REQUIRE_NATIVE=0 PM2_FAIL_PATTERN="releases/$B" \
-  bash "$HERE/rollback-release.sh" --to "$B" >"$SANDBOX/rb-fail.log" 2>&1
+  bash "$HERE/rollback-release.sh" --to "$B" --apply >"$SANDBOX/rb-fail.log" 2>&1 </dev/null
 rc=$?
 printf '      rc=%s current=%s (expected %s)\n' "$rc" "$(readlink -f "$SANDBOX/fibemate/current")" "$SANDBOX/fibemate/releases/$A"
 [ "$rc" -ne 0 ] && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$A" ]
 check "rollback restores the original when the target does not start" "$?"
 
 # ---------------------------------------------------------------- case 6
-MLKEM_REQUIRE_NATIVE=0 bash "$HERE/rollback-release.sh" --dry-run >"$SANDBOX/dry.log" 2>&1
+MLKEM_REQUIRE_NATIVE=0 bash "$HERE/rollback-release.sh" --dry-run >"$SANDBOX/dry.log" 2>&1 </dev/null
 rc=$?
 [ "$rc" -eq 0 ] && grep -q "would switch" "$SANDBOX/dry.log" \
   && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$A" ]
@@ -275,6 +283,87 @@ after="$(sha256sum "$NGINX_SNIPPET" | cut -d' ' -f1)"
   && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$B" ] \
   && grep -q "nginx -t rejected" "$SANDBOX/deploy.log"
 check "a rejected nginx config fails the deploy and restores the previous snippet" "$?"
+
+# --------------------------------------------------------------- case 12
+# Nobody is on the other end and the caller did not say --apply, so the answer is no.
+# The check is that "no" happens before anything moves: same release, same process, no
+# new log line, and a message that names the missing flag rather than a random failure
+# three steps later.
+current_before="$(readlink -f "$SANDBOX/fibemate/current")"
+pm2_before="$(wc -l < "$PM2_LOG" | tr -d ' ')"
+out="$(MLKEM_REQUIRE_NATIVE=0 bash "$HERE/deploy-release.sh" --sha "$A" --skip-npm 2>&1 </dev/null)"
+rc=$?
+current_after="$(readlink -f "$SANDBOX/fibemate/current")"
+pm2_after="$(wc -l < "$PM2_LOG" | tr -d ' ')"
+[ "$rc" -ne 0 ] && [ "$current_before" = "$current_after" ] && [ "$pm2_before" = "$pm2_after" ] \
+  && printf '%s' "$out" | grep -q "refusing to publish"
+check "no TTY and no --apply is refused before anything moves" "$?"
+
+# --------------------------------------------------------------- case 13
+# The hardening itself, read back from the environment a child would receive. Prompts
+# disabled is not enough on its own: a credential helper can answer a 401 by opening a
+# window, so the helper list is cleared too, with an empty credential.helper entry.
+bash -c '. "$1/lib/release-common.sh"; harden_noninteractive >/dev/null; env' _ "$HERE" >"$SANDBOX/env.probe" 2>&1 </dev/null
+ok=0
+grep -qx "GIT_TERMINAL_PROMPT=0" "$SANDBOX/env.probe" || ok=1
+grep -q "^GIT_SSH_COMMAND=.*BatchMode=yes" "$SANDBOX/env.probe" || ok=1
+grep -qx "npm_config_yes=true" "$SANDBOX/env.probe" || ok=1
+grep -qx "GIT_CONFIG_KEY_0=credential.helper" "$SANDBOX/env.probe" || ok=1
+grep -qx "GIT_CONFIG_VALUE_0=" "$SANDBOX/env.probe" || ok=1
+if [ "$ok" != "0" ]; then grep -E "GIT_|npm_config_yes" "$SANDBOX/env.probe" | head -8; fi
+check "non-interactive hardening disables prompts, helpers, ssh passwords and npm questions" "$ok"
+
+# --------------------------------------------------------------- case 14
+# What "fail instead of wait" means when a remote wants a credential. The fixture can
+# hang: the control below hands git an askpass that sleeps, and git does wait. With the
+# hardening in place the same request is answered by /bin/false within a couple of
+# seconds, which is the difference between a red job that names a cause and a job that
+# burns its timeout.
+AUTH_PORT=$(( (RANDOM % 20000) + 30000 ))
+cat > "$SANDBOX/health/auth.cjs" <<'NODE'
+const http = require('http');
+http
+  .createServer((req, res) => {
+    res.writeHead(401, { 'WWW-Authenticate': 'Basic realm="fixture"' });
+    res.end('no');
+  })
+  .listen(Number(process.argv[2]));
+NODE
+cat > "$SANDBOX/health/slow-askpass.sh" <<'SH'
+#!/bin/bash
+sleep 30
+printf 'someone\n'
+SH
+chmod +x "$SANDBOX/health/slow-askpass.sh"
+node "$SANDBOX/health/auth.cjs" "$AUTH_PORT" &
+AUTH_PID=$!
+sleep 0.5
+URL="http://127.0.0.1:$AUTH_PORT/fixture.git"
+
+start="$(date +%s)"
+out="$(bash -c '. "$1/lib/release-common.sh"; harden_noninteractive >/dev/null; exec git ls-remote "$2"' _ "$HERE" "$URL" 2>&1 </dev/null)"
+rc=$?
+elapsed=$(( $(date +%s) - start ))
+if [ "$rc" -ne 0 ] && [ "$rc" -ne 124 ] && [ "$elapsed" -lt 10 ] \
+  && printf '%s' "$out" | grep -qiE "could not read Username|terminal prompts disabled|Authentication failed"; then
+  ok=0
+else
+  ok=1
+  echo "      rc=$rc elapsed=${elapsed}s"
+  printf '%s\n' "$out" | tail -4
+fi
+check "a credential-requiring remote fails fast under the hardening" "$ok"
+
+# Negative control: if this one does not hang, the case above proves nothing.
+start="$(date +%s)"
+GIT_ASKPASS="$SANDBOX/health/slow-askpass.sh" GIT_TERMINAL_PROMPT=1 \
+  timeout 6 git ls-remote "$URL" >"$SANDBOX/noharden.log" 2>&1 </dev/null
+rc2=$?
+elapsed2=$(( $(date +%s) - start ))
+kill "$AUTH_PID" 2>/dev/null
+if [ "$rc2" -ne 124 ]; then echo "      control rc=$rc2 elapsed=${elapsed2}s (expected a timeout)"; fi
+[ "$rc2" -eq 124 ]
+check "negative control: with an askpass that waits, the same request times out" "$?"
 
 echo
 echo "$PASS passed, $FAIL failed"

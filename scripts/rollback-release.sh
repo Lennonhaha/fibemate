@@ -2,7 +2,11 @@
 # SPDX-License-Identifier: GPL-3.0-only
 # Put a previous release back and restart the API, in one command.
 #
-#   usage: bash scripts/rollback-release.sh [--to <sha>] [--dry-run]
+#   usage: bash scripts/rollback-release.sh [--to <sha>] [--dry-run] [--apply]
+#
+# --apply is required when stdin is not a terminal, for the same reason as
+# deploy-release.sh: a rollback moves what the site serves, so unattended callers state
+# that they mean it.
 #
 # Default target is the most recent release directory that is not the current one.
 # --to accepts a full or abbreviated sha (it must match exactly one release).
@@ -30,21 +34,29 @@ HEALTH_JSON_URL="${HEALTH_JSON_URL:-http://127.0.0.1:3001/health}"
 MLKEM_REQUIRE_NATIVE="${MLKEM_REQUIRE_NATIVE:-1}"
 HEALTH_TIMEOUT="${HEALTH_TIMEOUT:-60}"
 
+harden_noninteractive
+
 TO=""
 DRY_RUN=0
+APPLY=0
 
 usage() {
-  printf 'usage: bash scripts/rollback-release.sh [--to <sha>] [--dry-run]\n'
+  printf 'usage: bash scripts/rollback-release.sh [--to <sha>] [--dry-run] [--apply]\n'
 }
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --to) TO="${2:?--to needs a commit}"; shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
+    --apply) APPLY=1; shift ;;
     -h | --help) usage; exit 0 ;;
     *) usage >&2; exit 2 ;;
   esac
 done
+
+if [ "$DRY_RUN" -eq 0 ] && [ "$APPLY" -ne 1 ] && [ ! -t 0 ]; then
+  die "stdin is not a terminal and --apply was not given; refusing to roll back (preview with --dry-run, or pass --apply from automation)"
+fi
 
 echo "=== FIBEMATE release rollback ==="
 
@@ -127,4 +139,4 @@ fi
 ELAPSED=$(( $(date +%s) - START_TS ))
 echo
 echo "ROLLBACK OK: $(basename "$TARGET") is current, mlkem.backend=$SEEN, ${ELAPSED}s, $ALIGN"
-log "forward again with: bash scripts/deploy-release.sh --sha $(basename "$TARGET")"
+log "forward again with: bash scripts/deploy-release.sh --sha $(basename "$TARGET") --apply"
