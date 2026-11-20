@@ -207,7 +207,10 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 | `crypto.subtle` (browser) | WebCrypto SHA3 | 浏览器原生 |
 | `crypto` (Node.js) | Node 内置 SHA3 | 标准 Node API |
 
+
 所有依赖均可通过 `keccak` 内联实现兜底，无外部强制依赖链。
+
+供应链与资产校验现在有可执行的门禁：`falcon-gate` 把资产扫描（`cbom-tools scan`）与文档数字核对（`verifact verify`）串进同一个退出码，任一阶段无法运行即判失败，不允许「跳过即通过」；实现见 fibemate-tools 仓 `falcon/falcon-gate.cjs`。它覆盖的是供应链与资产一致性，**不包含侧信道分析**——侧信道结论仍受 `docs/research/falcon-sidechannel-threat-model.md` 的判据约束，其中 T2 记为 `unquantified`（墙钟无法分辨，周期计数留待 native 阶段），T1/T3 仅为第三方实现的首次测量，不能外推为本仓实现的性质。
 
 ---
 

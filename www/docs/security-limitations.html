@@ -210,6 +210,8 @@ footer a { color:var(--accent2); }
 
 <p>所有依赖均可通过 <code>keccak</code> 内联实现兜底，无外部强制依赖链。</p>
 
+<p>供应链与资产校验现在有可执行的门禁：<code>falcon-gate</code> 把资产扫描（<code>cbom-tools scan</code>）与文档数字核对（<code>verifact verify</code>）串进同一个退出码，任一阶段无法运行即判失败，不允许「跳过即通过」；实现见 fibemate-tools 仓 <code>falcon/falcon-gate.cjs</code>。它覆盖的是供应链与资产一致性，<strong>不包含侧信道分析</strong>——侧信道结论仍受 <a href="https://github.com/Lennonhaha/fibemate/blob/main/docs/research/falcon-sidechannel-threat-model.md">Falcon 侧信道威胁模型</a> 的判据约束，其中 T2 记为 <code>unquantified</code>（墙钟无法分辨，周期计数留待 native 阶段），T1/T3 仅为第三方实现的首次测量，不能外推为本仓实现的性质。</p>
+
 <p>---</p>
 
 <h2 id='10.-代码安全与运行稳定性优先级声明'>10. 代码安全与运行稳定性优先级声明</h2>
