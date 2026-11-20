@@ -148,6 +148,7 @@ restore_previous() {
   }
   log "restoring $CURRENT_BEFORE"
   switch_current "$CURRENT_BEFORE" || printf 'FAIL: could not point current back at %s\n' "$CURRENT_BEFORE" >&2
+  stamp_version_header "$CURRENT_BEFORE" "$(basename "$CURRENT_BEFORE")" || true
   start_app "$CURRENT_BEFORE" || {
     printf 'FAIL: could not restart %s from %s\n' "$PM2_APP" "$CURRENT_BEFORE" >&2
     return 1
@@ -307,6 +308,7 @@ if [ -z "$EXPECT_BACKEND" ]; then
   EXPECT_BACKEND="native"
   [ "$MLKEM_REQUIRE_NATIVE" = "1" ] || EXPECT_BACKEND="any"
 fi
+stamp_version_header "$TARGET" "$FULL_SHA"
 start_app "$TARGET"
 if ! SEEN="$(wait_for_health "$EXPECT_BACKEND" "$HEALTH_TIMEOUT")"; then
   printf 'FAIL: %s reports %s after the restart, expected %s\n' "$HEALTH_JSON_URL" "$SEEN" "$EXPECT_BACKEND" >&2
@@ -314,7 +316,16 @@ if ! SEEN="$(wait_for_health "$EXPECT_BACKEND" "$HEALTH_TIMEOUT")"; then
   exit 1
 fi
 
+# "Deployed" used to mean "pm2 started". It now means "/health says the tree nginx serves
+# is this commit", which is the only statement a monitor can check. --no-restart exits
+# above on purpose: there the skew is expected and must stay visible.
+if ! ALIGN="$(wait_for_alignment "${FULL_SHA:0:7}" "$HEALTH_TIMEOUT")"; then
+  printf 'FAIL: %s does not agree with %s (%s); rolling back\n' "$HEALTH_JSON_URL" "${FULL_SHA:0:7}" "$ALIGN" >&2
+  restore_previous
+  exit 1
+fi
+
 echo
-echo "DEPLOY OK: $FULL_SHA is current, mlkem.backend=$SEEN"
+echo "DEPLOY OK: $FULL_SHA is current, mlkem.backend=$SEEN, $ALIGN"
 log "previous: ${CURRENT_BEFORE:-<none>}"
 log "roll back with: bash scripts/rollback-release.sh --to ${CURRENT_BEFORE:-<sha>}"

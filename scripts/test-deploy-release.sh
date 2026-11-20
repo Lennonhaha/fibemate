@@ -52,26 +52,80 @@ check() {
 # ---------------------------------------------------------------- sandbox fixtures
 mkdir -p "$SANDBOX/repo/src" "$SANDBOX/fibemate/releases" "$SANDBOX/fibemate/shared" "$SANDBOX/bin" "$SANDBOX/health"
 printf 'JWT_SECRET=%s\n' "$(printf 'x%.0s' $(seq 1 40))" > "$SANDBOX/fibemate/shared/.env"
-printf '#!/bin/bash\necho "pm2 $*" >> "$PM2_LOG"\nif [ -n "${PM2_FAIL_PATTERN:-}" ] && printf %s "$*" | grep -q -- "$PM2_FAIL_PATTERN"; then\n  echo "pm2: simulated start failure" >&2\n  exit 1\nfi\nexit 0\n' > "$SANDBOX/bin/pm2"
+cat > "$SANDBOX/bin/pm2" <<'PM2'
+#!/bin/bash
+# Resolve the static root the way the real process would see it: the release path
+# behind the `current` symlink, not the symlink itself.
+log_static="${FIBEMATE_STATIC_ROOT:-}"
+if [ -n "$log_static" ]; then
+  log_static="$(cd "$(dirname "$log_static")" 2>/dev/null && pwd -P)/$(basename "$log_static")"
+fi
+echo "pm2 $* static=$log_static" >> "$PM2_LOG"
+if [ -n "${PM2_FAIL_PATTERN:-}" ] && printf %s "$*" | grep -q -- "$PM2_FAIL_PATTERN"; then
+  echo "pm2: simulated start failure" >&2
+  exit 1
+fi
+exit 0
+PM2
 chmod +x "$SANDBOX/bin/pm2"
+cat > "$SANDBOX/bin/nginx" <<'EOF'
+#!/bin/bash
+printf '%s\n' "$*" >> "$NGINX_LOG"
+exit 0
+EOF
+chmod +x "$SANDBOX/bin/nginx"
 
 cat > "$SANDBOX/health/server.cjs" <<'NODE'
+// Reports what a real process would: the commit it was started from, and the commit of
+// the tree the web server serves. Both are read from the fake pm2 log, so the assertion
+// covers the env var actually reaching the process, not just the JSON shape.
 const http = require('http');
 const fs = require('fs');
+const path = require('path');
 const port = Number(process.argv[2]);
-const file = process.argv[3];
+const backendFile = process.argv[3];
+const pm2Log = process.argv[4];
+const overrideFile = process.argv[5];
+
+function commitOf(dir) {
+  return dir ? path.basename(dir).slice(0, 7) : null;
+}
+
 http
   .createServer((req, res) => {
-    const backend = fs.existsSync(file) ? fs.readFileSync(file, 'utf8').trim() : 'native';
+    const backend = fs.existsSync(backendFile) ? fs.readFileSync(backendFile, 'utf8').trim() : 'native';
+    let build = null;
+    let served = null;
+    try {
+      const lines = fs.readFileSync(pm2Log, 'utf8').trim().split('\n').filter((l) => l.includes('--cwd'));
+      const last = lines[lines.length - 1] || '';
+      const cwd = (/--cwd (\S+)/.exec(last) || [])[1] || '';
+      const stat = (/static=(\S*)/.exec(last) || [])[1] || '';
+      build = commitOf(cwd);
+      served = stat ? commitOf(path.dirname(stat)) : null;
+    } catch (e) { /* first case: no start yet */ }
+    if (fs.existsSync(overrideFile)) {
+      try {
+        const o = JSON.parse(fs.readFileSync(overrideFile, 'utf8'));
+        if (o.build !== undefined) build = o.build;
+        if (o.served !== undefined) served = o.served;
+      } catch (e) { /* ignore */ }
+    }
     res.setHeader('content-type', 'application/json');
-    res.end(JSON.stringify({ status: 'ok', mlkem: { backend } }));
+    res.end(JSON.stringify({
+      status: 'ok',
+      mlkem: { backend },
+      build: { commit: build },
+      served: { commit: served, matches_process: served ? served === build : null },
+    }));
   })
   .listen(port);
 NODE
 
+
 printf 'native' > "$SANDBOX/health/backend"
 HEALTH_PORT=$(( (RANDOM % 20000) + 20000 ))
-node "$SANDBOX/health/server.cjs" "$HEALTH_PORT" "$SANDBOX/health/backend" &
+node "$SANDBOX/health/server.cjs" "$HEALTH_PORT" "$SANDBOX/health/backend" "$SANDBOX/pm2.log" "$SANDBOX/health/override.json" &
 HEALTH_PID=$!
 for _ in $(seq 1 40); do
   curl -fsS "http://127.0.0.1:$HEALTH_PORT/health" >/dev/null 2>&1 && break
@@ -100,6 +154,9 @@ export CURRENT_MARKER="$SANDBOX/fibemate/current"
 export LEGACY_ALLOW=0
 export ALLOW_NON_ROOT=1
 export HEALTH_TIMEOUT=3
+export PATH="$SANDBOX/bin:$PATH"
+export NGINX_LOG="$SANDBOX/nginx.log"
+export NGINX_SNIPPET="$SANDBOX/nginx/x-app-version.conf"
 : > "$PM2_LOG"
 
 deploy() {
@@ -158,6 +215,25 @@ CURRENT_MARKER="$SANDBOX/fibemate/current" REPO_DIR="$SANDBOX/repo" \
 rc=$?
 [ "$rc" -eq 2 ] && grep -q "uses the release layout" "$SANDBOX/legacy.log"
 check "legacy deploy refuses when the release layout is present" "$?"
+
+# ---------------------------------------------------------------- case 8
+# A successful deploy must stamp the header from the release it just switched to.
+deploy --sha "$B"
+rc=$?
+[ "$rc" -eq 0 ] && grep -q "v0.0.0 (${B:0:8})" "$NGINX_SNIPPET" && grep -q "aligned ${B:0:7}" "$SANDBOX/deploy.log"
+check "deploy stamps X-App-Version and reports an aligned tree" "$?"
+
+# ---------------------------------------------------------------- case 9
+# The failure this whole change exists for: the API starts, the backend answers, and the
+# tree nginx serves is a different commit. That deploy must fail and restore the previous
+# release rather than print OK.
+printf '{"served":"deadbee"}' > "$SANDBOX/health/override.json"
+deploy --sha "$A"
+rc=$?
+rm -f "$SANDBOX/health/override.json"
+[ "$rc" -ne 0 ] && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$SANDBOX/fibemate/releases/$B" ] \
+  && grep -q "does not agree" "$SANDBOX/deploy.log"
+check "alignment skew fails the deploy and restores the previous release" "$?"
 
 echo
 echo "$PASS passed, $FAIL failed"
