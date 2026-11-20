@@ -246,18 +246,10 @@ const BUILD_REPORT = {
 // bug in whichever one the reader happened to check first. FIBEMATE_STATIC_ROOT names the
 // tree the web server serves; unset means "not configured", which is a distinguishable
 // answer, not a silent zero.
-const { readServedTree } = require('./lib/served-tree');
-function servedReport() {
-  const served = readServedTree(process.env.FIBEMATE_STATIC_ROOT || '');
-  return {
-    commit: served.commit,
-    source: served.source,
-    files: typeof served.files === 'number' ? served.files : null,
-    // null, not false, when the served tree cannot be read: "cannot tell" and "differs"
-    // lead to opposite actions.
-    matches_process: served.commit ? served.commit === BUILD_IDENTITY.commit : null,
-  };
-}
+// The comparison lives in served-tree.js so a test can assert it without booting the
+// server. It is three-valued (true / false / null) and the three values are asserted
+// in scripts/test-health-same-source.cjs.
+const { servedReport } = require('./lib/served-tree');
 // The version itself stays the single-source file from #501; package.json is the fallback
 // for a checkout where VERSION.json has not been generated yet.
 const APP_VERSION = (() => {
@@ -1086,7 +1078,7 @@ app.get('/health', (req, res) => {
     version: '1.0.0', architecture: 'zero-knowledge',
     mlkem: { backend: mlkemBackend, detail: mlkemBackendDetail || undefined },
     build: BUILD_REPORT,
-    served: servedReport(),
+    served: servedReport(BUILD_IDENTITY.commit, process.env.FIBEMATE_STATIC_ROOT),
     phases: { p1: 'zk-identity', p2: 'pir-search', p3: 'mixnet', p4: 'sphinx-nym' },
     uptime: Math.floor(process.uptime())
   });
@@ -1099,7 +1091,7 @@ app.get('/api/health', (req, res) => {
     version: '1.0.0', timestamp: new Date().toISOString(),
     mlkem: { backend: mlkemBackend, detail: mlkemBackendDetail || undefined },
     build: BUILD_REPORT,
-    served: servedReport(),
+    served: servedReport(BUILD_IDENTITY.commit, process.env.FIBEMATE_STATIC_ROOT),
     uptime: Math.floor(process.uptime())
   });
 });

@@ -82,9 +82,33 @@ function readServedTree(staticRoot) {
   return { commit: null, source: 'absent' };
 }
 
+/**
+ * The `served` block of /health, including the one comparison that must never lie.
+ *
+ * `matches_process` is three-valued on purpose: true (same commit), false (a readable
+ * manifest names a different commit), null (no manifest, so "cannot tell"). Collapsing
+ * null into false would make an unreadable tree look like a skew, and collapsing it
+ * into true would make the field decorative. #603 exists because the two numbers were
+ * reported side by side with no comparison at all.
+ *
+ * @param {string} buildCommit the commit this process was started from
+ * @param {string} staticRoot directory the web server serves
+ */
+function servedReport(buildCommit, staticRoot) {
+  const served = readServedTree(staticRoot || '');
+  return {
+    commit: served.commit,
+    source: served.source,
+    files: typeof served.files === 'number' ? served.files : null,
+    // null, not false, when the served tree cannot be read: "cannot tell" and "differs"
+    // lead to opposite actions.
+    matches_process: served.commit ? served.commit === buildCommit : null,
+  };
+}
+
 /** Test hook: forget cached mtimes. */
 function clearCache() {
   cache.clear();
 }
 
-module.exports = { readServedTree, clearCache, candidateManifests };
+module.exports = { readServedTree, servedReport, clearCache, candidateManifests };
