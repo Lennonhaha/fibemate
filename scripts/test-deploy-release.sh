@@ -106,7 +106,10 @@ http
       const cwd = (/--cwd (\S+)/.exec(last) || [])[1] || '';
       const stat = (/static=(\S*)/.exec(last) || [])[1] || '';
       build = commitOf(cwd);
-      served = stat ? commitOf(path.dirname(fs.realpathSync(stat))) : null;
+      // Resolve the release directory behind `current`, not the static root itself:
+      // the fixture repo has no www/, and realpath on a missing leaf would throw and
+      // silently turn a skew into "served=none".
+      served = stat ? commitOf(fs.realpathSync(path.dirname(stat))) : null;
     } catch (e) { /* first case: no start yet */ }
     if (fs.existsSync(overrideFile)) {
       try {
