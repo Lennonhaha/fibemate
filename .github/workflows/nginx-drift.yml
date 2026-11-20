@@ -19,6 +19,13 @@ on:
   push:
     branches: [ main ]
     paths:
+      # Deploy debt is created by merging runtime code, not by editing this workflow.
+      # Without src/packages/www here, the alignment job only woke up when someone
+      # touched its own files: the one event it exists to measure never triggered it.
+      # (Observed 2026-11-20: three merges to main after #611, one drift run.)
+      - 'src/**'
+      - 'packages/**'
+      - 'www/**'
       - 'deploy/nginx/**'
       - 'scripts/check-nginx-drift.cjs'
       - 'scripts/probe-live-http.cjs'
