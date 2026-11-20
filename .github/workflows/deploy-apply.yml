@@ -90,6 +90,7 @@ jobs:
           fi
           echo "target=$sha" >> "$GITHUB_OUTPUT"
           echo "short=$(git rev-parse --short=8 "$sha")" >> "$GITHUB_OUTPUT"
+          echo "short7=$(git rev-parse --short=7 "$sha")" >> "$GITHUB_OUTPUT"
 
       - name: Say what is about to change, and what is current now
         run: |
@@ -138,24 +139,30 @@ jobs:
         env:
           TARGET: ${{ steps.target.outputs.target }}
           SHORT: ${{ steps.target.outputs.short }}
+          SHORT7: ${{ steps.target.outputs.short7 }}
         run: |
           set -eu
           for i in $(seq 1 30); do
             body=$(curl -fsS "https://fibemate.net/health?v=$(date +%s%N)" || true)
             if [ -n "$body" ]; then
+              rc=0
               echo "$body" | node -e '
                 let s = "";
                 process.stdin.on("data", (d) => (s += d)).on("end", () => {
                   const o = JSON.parse(s);
-                  const b = o.build && o.build.commit;
-                  const v = o.served && o.served.commit;
-                  console.log("build=" + (b || "").slice(0, 8), "served=" + (v || "").slice(0, 8), "matches=" + String(o.served && o.served.matchesProcess));
+                  const b = (o.build && o.build.commit) || "";
+                  const v = (o.served && o.served.commit) || "";
+                  const m = o.served && o.served.matches_process;
+                  console.log("build=" + b, "served=" + v, "matches_process=" + String(m));
+                  if (m !== true) { console.log("::error::/health says the served tree and the running process disagree"); process.exit(4); }
                   if (b !== process.argv[1] || v !== process.argv[1]) process.exit(3);
-                });' "$TARGET" && break
+                });' "$SHORT7" || rc=$?
+              if [ "$rc" -eq 0 ]; then break; fi
+              if [ "$rc" -eq 4 ]; then exit 1; fi
             fi
             echo "attempt $i: /health does not agree yet"
             sleep 5
-            [ "$i" -lt 30 ] || { echo "::error::/health never reported $TARGET"; exit 1; }
+            [ "$i" -lt 30 ] || { echo "::error::/health never reported $TARGET (expected build/served commit $SHORT7)"; exit 1; }
           done
           hdr=$(curl -fsSI "https://fibemate.net/?v=$(date +%s%N)" | tr -d '\r')
           echo "$hdr" | grep -i '^x-app-version:' || true
@@ -192,6 +199,7 @@ jobs:
           mkdir -p "$HOME/.ssh"
           install -m 600 /dev/null "$HOME/.ssh/id_ed25519_readonly"
           printf '%s\n' "$DEPLOY_KEY" > "$HOME/.ssh/id_ed25519_readonly"
+          ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> "$HOME/.ssh/known_hosts" 2>/dev/null
           out=$(ssh -i "$HOME/.ssh/id_ed25519_readonly" -p "$DEPLOY_PORT" \
                   -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=yes \
                   "$DEPLOY_USER@$DEPLOY_HOST" "id" 2>&1)
