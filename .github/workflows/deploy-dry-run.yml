@@ -1,0 +1,212 @@
+# deploy-dry-run -- look at production, change nothing. Day 1 of #617.
+#
+# Why a separate workflow instead of a flag on the deployer: the read path and
+# the write path must not share a file. A workflow that could reach the host and
+# also had a way to ship is one edit away from shipping by accident; this one has
+# no edit that ships, because it holds no code that ships.
+#
+# The read key, when configured, is restricted on the host to a single command:
+#   restrict,command="cat /opt/fibemate/current/BUILD-MANIFEST.json"
+# so even a compromised runner cannot run anything else as that key.
+#
+# What it proves: the commit named by the served manifest on disk, and the commit
+# named by /health over HTTP, are the same commit -- and how far origin/main has
+# moved past it. Two independent read paths, no write path.
+#
+# Every step carries DRY_RUN: "true" and exits non-zero if the latch is not set,
+# so a copy of a step into another workflow cannot silently become a real run.
+# scripts/check-dry-run-guard.cjs asserts the structural part: this file contains
+# no way to start a write and does carry the latch.
+
+name: deploy-dry-run
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      max_debt:
+        description: 'Runtime commits main may be ahead of production'
+        required: false
+        default: '2'
+  push:
+    branches: [ main ]
+    paths:
+      # A merge that lands runtime code is what moves the served commit; without
+      # these three paths the dry-run would only wake up when edited itself.
+      - 'src/**'
+      - 'packages/**'
+      - 'www/**'
+      - 'scripts/check-deploy-alignment.cjs'
+      - 'scripts/check-dry-run-guard.cjs'
+      - '.github/workflows/deploy-dry-run.yml'
+  pull_request:
+    paths:
+      - 'scripts/check-deploy-alignment.cjs'
+      - 'scripts/check-dry-run-guard.cjs'
+      - '.github/workflows/deploy-dry-run.yml'
+
+concurrency:
+  group: deploy-dry-run-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+
+      # Negative controls first: the guard must reject a release call, an apply
+      # flag, a missing dispatch trigger and a missing latch. If it cannot fail,
+      # the assertion below is decoration.
+      - name: Guard rejects a writable workflow (self-test)
+        env:
+          DRY_RUN: "true"
+        run: |
+          [ "$DRY_RUN" = "true" ] || { echo "::error::DRY_RUN latch not set"; exit 1; }
+          node scripts/check-dry-run-guard.cjs --self-test
+
+      - name: This workflow can only read
+        env:
+          DRY_RUN: "true"
+        run: |
+          [ "$DRY_RUN" = "true" ] || { echo "::error::DRY_RUN latch not set"; exit 1; }
+          node scripts/check-dry-run-guard.cjs --file .github/workflows/deploy-dry-run.yml
+
+  observe:
+    runs-on: ubuntu-latest
+    needs: guard
+    outputs:
+      served: ${{ steps.align.outputs.served }}
+      verdict: ${{ steps.align.outputs.verdict }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: 22
+
+      - name: Classifier rejects a behind tree (self-test)
+        env:
+          DRY_RUN: "true"
+        run: |
+          [ "$DRY_RUN" = "true" ] || { echo "::error::DRY_RUN latch not set"; exit 1; }
+          node scripts/check-deploy-alignment.cjs --self-test
+
+      # A production hiccup is not a property of the pull request under review,
+      # same policy as nginx-drift: the live read runs on dispatch and on push,
+      # not on every PR.
+      - name: Production read skipped on pull_request
+        if: github.event_name == 'pull_request'
+        env:
+          DRY_RUN: "true"
+        run: 'echo "::notice::read-only production read runs on workflow_dispatch and push, not on pull_request"'
+
+      - name: Served commit vs origin/main (read-only)
+        id: align
+        if: github.event_name != 'pull_request'
+        shell: bash
+        env:
+          DRY_RUN: "true"
+          MAX_DEBT: ${{ inputs.max_debt || '2' }}
+        run: |
+          set -euo pipefail
+          [ "$DRY_RUN" = "true" ] || { echo "::error::DRY_RUN latch not set"; exit 1; }
+          set -o pipefail
+          node scripts/check-deploy-alignment.cjs --repo . --ref origin/main --max-debt "$MAX_DEBT" | tee align.out
+          verdict=$(head -1 align.out | tr -d '\r')
+          served=$(printf '%s\n' "$verdict" | grep -oE 'served=[0-9a-f]+' | head -1 | cut -d= -f2 || true)
+          echo "served=${served}" >> "$GITHUB_OUTPUT"
+          echo "verdict=${verdict}" >> "$GITHUB_OUTPUT"
+
+      - name: Record the evidence triple
+        if: always()
+        shell: bash
+        env:
+          DRY_RUN: "true"
+        run: |
+          served="${{ steps.align.outputs.served }}"
+          verdict="${{ steps.align.outputs.verdict }}"
+          {
+            echo "### deploy dry-run (read-only, no writes)"
+            echo
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| workflow | ${{ github.workflow }} |"
+            echo "| run id | ${{ github.run_id }} |"
+            echo "| head SHA | ${GITHUB_SHA} |"
+            echo "| event | ${{ github.event_name }} |"
+            echo "| ref | ${{ github.ref_name }} |"
+            echo "| served | ${served:-not read on this event} |"
+            echo "| verdict | ${verdict:-not read on this event} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  pointer:
+    runs-on: ubuntu-latest
+    needs: observe
+    if: github.event_name != 'pull_request'
+    env:
+      READ_KEY: ${{ secrets.DEPLOY_READ_KEY }}
+      READ_HOST: ${{ vars.DEPLOY_HOST || vars.NGINX_HOST }}
+      READ_USER: ${{ vars.DEPLOY_USER || vars.NGINX_USER || 'root' }}
+      READ_PORT: ${{ vars.DEPLOY_PORT || vars.NGINX_PORT || '22' }}
+      SERVED: ${{ needs.observe.outputs.served }}
+    steps:
+      - name: Read-only key is not configured
+        if: env.READ_KEY == '' || env.READ_HOST == ''
+        env:
+          DRY_RUN: "true"
+        run: |
+          echo "::notice::skipped: add secret DEPLOY_READ_KEY and var DEPLOY_HOST to enable the on-disk cross-check"
+          echo "The HTTP path above still ran; only the disk cross-check is missing." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Install the read-only key
+        if: env.READ_KEY != '' && env.READ_HOST != ''
+        env:
+          DRY_RUN: "true"
+        run: |
+          [ "$DRY_RUN" = "true" ] || { echo "::error::DRY_RUN latch not set"; exit 1; }
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$READ_KEY" > ~/.ssh/id_ed25519_readonly
+          chmod 600 ~/.ssh/id_ed25519_readonly
+          ssh-keyscan -p "$READ_PORT" -H "$READ_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      # The key is restricted host-side to one cat, so this command sends nothing
+      # and cannot be widened by editing this file.
+      - name: The served manifest on disk names the same commit
+        if: env.READ_KEY != '' && env.READ_HOST != ''
+        shell: bash
+        env:
+          DRY_RUN: "true"
+        run: |
+          set -euo pipefail
+          [ "$DRY_RUN" = "true" ] || { echo "::error::DRY_RUN latch not set"; exit 1; }
+          out=$(ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
+            -i ~/.ssh/id_ed25519_readonly -p "$READ_PORT" "$READ_USER@$READ_HOST" 2>/dev/null | head -c 4000)
+          commit=$(printf '%s' "$out" | tr -d '\r' | grep -m1 '"commit"' | sed 's/.*: *"//; s/".*//' || true)
+          echo "manifest commit: ${commit:-<unreadable>}"
+          echo "health   commit: ${SERVED:-<not read>}"
+          if [ -z "${commit}" ]; then
+            echo "::error::the host answered but no commit could be read from the served manifest"
+            exit 1
+          fi
+          if [ -n "${SERVED}" ] && [ "${SERVED:0:7}" != "${commit:0:7}" ]; then
+            echo "::error::/health and the served manifest disagree: ${SERVED:0:7} vs ${commit:0:7}"
+            exit 1
+          fi
+          {
+            echo "### on-disk cross-check"
+            echo
+            echo "| source | commit |"
+            echo "|---|---|"
+            echo "| served manifest | ${commit:0:12} |"
+            echo "| /health | ${SERVED:-not read} |"
+            echo
+            echo "Both read paths agree. Nothing was written."
+          } >> "$GITHUB_STEP_SUMMARY"
