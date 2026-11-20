@@ -73,7 +73,7 @@ done
 if [ -e "${CURRENT_MARKER:-/opt/fibemate/current}" ] && [ "${LEGACY_ALLOW:-0}" != "1" ]; then
   echo "FAIL: production uses the release layout (${CURRENT_MARKER:-/opt/fibemate/current} -> $(readlink -f "${CURRENT_MARKER:-/opt/fibemate/current}" 2>/dev/null))" >&2
   echo "      this script syncs $RUNTIME_DIR, which the API no longer serves" >&2
-  echo "      use: bash scripts/deploy-release.sh --sha <commit>" >&2
+  echo "      use: bash scripts/deploy-release.sh --sha <commit> --apply" >&2
   echo "      to deploy the in-place tree anyway: --legacy-allow (it will not change the live API)" >&2
   exit 2
 fi

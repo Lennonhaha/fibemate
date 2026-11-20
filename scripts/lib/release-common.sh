@@ -9,6 +9,53 @@
 
 log() { printf '      %s\n' "$*"; }
 
+# Unattended runs must fail, they must not wait. A prompt in a runner is
+# indistinguishable from a hang: nothing is printed, the job burns its timeout, and the
+# report says "timed out" instead of naming the command that wanted input.
+#
+# A terminal on stdin is the only signal that someone can answer, so that is the only
+# case where prompts stay open. Everything else closes every interactive entry point:
+# git stops asking for a credential, ssh stops asking for a password or a host key, and
+# npm stops asking to install. Values the caller already set are kept when they already
+# say what we need; a caller who pinned GIT_SSH_COMMAND had a reason.
+harden_noninteractive() {
+  if [ -t 0 ]; then
+    log "stdin is a terminal: credential prompts stay available"
+    return 0
+  fi
+  export GIT_TERMINAL_PROMPT=0
+  export GIT_ASKPASS="${GIT_ASKPASS:-/bin/false}"
+  export SSH_ASKPASS=/bin/false
+  export SSH_ASKPASS_REQUIRE=never
+  case "${GIT_SSH_COMMAND:-}" in
+    *BatchMode*) : ;;
+    '') export GIT_SSH_COMMAND='ssh -o BatchMode=yes -o ConnectTimeout=15' ;;
+    *) export GIT_SSH_COMMAND="$GIT_SSH_COMMAND -o BatchMode=yes -o ConnectTimeout=15" ;;
+  esac
+  # GIT_TERMINAL_PROMPT=0 stops git from asking, but it does not stop a credential
+  # HELPER from answering - and a helper can open a window and wait for a human. The
+  # Windows git installer ships exactly such a helper, so "prompts disabled" was not
+  # enough: on this laptop the first version of this function still hung on a 401.
+  # An empty credential.helper resets the list, so no helper is consulted at all.
+  # A deploy that genuinely needs a credential passes it in the environment or the URL;
+  # FIBEMATE_ALLOW_CREDENTIAL_HELPERS=1 keeps the helpers for a host that needs them.
+  if [ "${FIBEMATE_ALLOW_CREDENTIAL_HELPERS:-0}" != "1" ]; then
+    if [ -z "${GIT_CONFIG_COUNT:-}" ]; then
+      export GIT_CONFIG_COUNT=1
+      export GIT_CONFIG_KEY_0=credential.helper
+      export GIT_CONFIG_VALUE_0=
+    else
+      local_n="$GIT_CONFIG_COUNT"
+      export "GIT_CONFIG_KEY_$local_n=credential.helper"
+      export "GIT_CONFIG_VALUE_$local_n="
+      export GIT_CONFIG_COUNT=$((local_n + 1))
+    fi
+  fi
+  export npm_config_yes=true
+  export DEBIAN_FRONTEND=noninteractive
+  log "stdin is not a terminal: git prompts off and credential helpers cleared, ssh BatchMode=yes, npm --yes - a prompt now fails instead of waiting"
+}
+
 die() {
   printf 'FAIL: %s\n' "$*" >&2
   exit 1
