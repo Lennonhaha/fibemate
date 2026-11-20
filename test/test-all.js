@@ -32,6 +32,7 @@ const suites = [
   ['ML-KEM-768 WASM artifact (FIPS 203 vs noble)', ['node', '--test', 'test/mlkem-wasm-fips.test.cjs']],
   ['Regression guards', ['node', '--test', 'test/regression-guards.test.js']],
   ['Delivery gate: expected-bytes source (git vs build manifest)', ['node', '--test', 'test/expected-source.test.js']],
+  ['Build manifest records symlinks (#602)', ['node', 'scripts/test-build-manifest-symlinks.cjs']],
   ['JWT secret guard (#527)', ['node', 'test/jwt-secret-guard.test.js']],
   ['ML-DSA verify constant-time', ['node', 'packages/fml-dsa/test/verify-constant-time.test.js']],
   ['ML-DSA sk encoding contract', ['node', 'packages/fml-dsa/test/sk-encoding.test.js']],
