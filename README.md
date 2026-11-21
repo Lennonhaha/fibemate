@@ -438,6 +438,41 @@ FIBEMATE implements a **defense-in-depth** architecture across three layers (res
 
 > **Important**: LookingGlass (v1 archived, v2 algebraic group experiment) and VWZ are **experimental, default-off research components**. They are purely lossless linear-transform binary obfuscation experiments with **no cryptographic security guarantees**. Neither improves LWE lattice hardness. Default-closed, never in the production encryption path.
 
+### Signature interoperability — measured against an independent implementation
+
+Two implementations can each pass their own tests and still disagree with each other, so
+this is measured on the pair, not on either side alone:
+
+```bash
+node scripts/interop/dsa-matrix.mjs        # writes docs/interop-matrix.json
+```
+
+| suite | cells | result |
+|---|---:|---|
+| ML-DSA-44 | 21/21 | PASS |
+| ML-DSA-65 | 21/21 | PASS |
+| ML-DSA-87 | 21/21 | PASS |
+
+Run against `@noble/post-quantum@0.7.1` (oracle), `fml-dsa@0.1.0`, Node 22. Report
+sha256 `9cbe13b560d0c2fb729043616b25efc2baa5b62ca394a317294d0cfb87d94e81`
+(`docs/interop-matrix.json`, canonical JSON, no timestamps).
+
+What the cells actually say:
+
+- **seeded keygen is byte-identical** — same 32-byte seed produces the same public *and*
+  secret key on both sides, for three seeds per suite;
+- **deterministic signing is byte-identical** — with `extraEntropy: false` the signature
+  bytes match, so the disagreement is not hiding inside randomisation;
+- **cross-verification holds in both directions** — our signature verifies in the oracle,
+  and the oracle's randomised signature verifies here;
+- **the negatives fail** — a signature with one flipped byte and a signature checked
+  against a different message are both rejected by both sides. Without these two cells
+  the four above would be a round trip proving only self-consistency.
+
+Signatures from *randomised* signing differ byte-wise by design (different `rnd`); that
+is why the deterministic cell exists and why the cross-verify cells use fresh signatures
+rather than comparing bytes.
+
 ### Research Components — Honest Characterization
 
 | Component | What it is | What it is NOT |
