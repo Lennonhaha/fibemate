@@ -62,7 +62,7 @@
     {
       "@type": "TechArticle",
       "headline": "FIBEMATE 密码合规自查：把文档里的密码声明与代码里的实际算法对上账",
-      "description": "从 NTT 蝶形运算到 FPGA 硬件加速、从 SM2 国密到 NIST PQC 标准的全栈密码学工程验证。KAT 10K 一致性、TVLA 侧信道、TLA+ 形式化、364 份 .tsr 存证（256 个不同 basename、93 个 lg-NNN 令牌）。",
+      "description": "从 NTT 蝶形运算到 FPGA 硬件加速、从 SM2 国密到 NIST PQC 标准的全栈密码学工程验证。KAT 一致性、TVLA 侧信道、TLA+ 形式化、RFC 3161 时间戳存证（清单以 docs/tsa/timestamp-manifest.json 为准）。",
       "url": "https://fibemate.net",
       "inLanguage": "zh-CN",
       "proficiencyLevel": "Expert",
@@ -731,7 +731,7 @@
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
       "name": "FIBEMATE",
-      "description": "Post-Quantum Cryptography (PQC) engineering validation platform. ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, TLA+ formal verification, 364 timestamped evidence files (256 distinct basenames, 93 lg-NNN tokens, 108 byte-identical copies, 212 without an lg number; measured 2026-11-19). Educational/validation use only — not a production cryptographic product.",
+      "description": "Post-Quantum Cryptography (PQC) engineering validation platform. ML-KEM-768 (FIPS 203), ML-DSA-65 (FIPS 204), SLH-DSA-128s (FIPS 205), SM2/SM3/SM4, FPGA NTT accelerator, TLA+ formal verification, and RFC 3161 timestamped evidence (the inventory and its counts live in docs/tsa/timestamp-manifest.json). Educational/validation use only — not a production cryptographic product.",
       "applicationCategory": "SecurityApplication",
       "operatingSystem": "Linux, macOS, Windows",
       "license": "https://spdx.org/licenses/GPL-3.0-or-later",
@@ -1005,7 +1005,7 @@
                     <div class="layer-number">2</div>
                     <div class="layer-title">后量子密钥交换</div>
                 </div>
-                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：按 FIPS 203 规范实现，纯 JavaScript，FIPS 203 官方 KAT 参照向量 9/9 通过 · 自跑 10,000 轮 roundtrip 一致性 10,000/10,000（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
+                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：按 FIPS 203 规范实现，纯 JavaScript，FIPS 203 官方 KAT 参照向量 9/9 通过 · 自跑 10,000 轮 roundtrip 一致性全通过（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
             </div>
 
             <div class="layer-card">
@@ -1208,7 +1208,7 @@
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <div class="feature-title">PQC 工程验证</div>
-                <div class="feature-desc">ML-KEM-768/1024 参考实现，按 FIPS 203 规范实现 · 官方 KAT 9/9；self-consistency roundtrip 10,000/10,000 通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>） · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
+                <div class="feature-desc">ML-KEM-768/1024 参考实现，按 FIPS 203 规范实现 · 官方 KAT 9/9；self-consistency roundtrip 10,000 轮全通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>） · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
             </div>
 
             <div class="feature-card">
@@ -2148,7 +2148,7 @@
             <a href="/docs/status-2026-11.html" class="doc-card blue" title="FIBEMATE 2026-11 工程状态：OpenSSF Silver 银牌">
               <div class="dc-icon">🏅</div>
               <div class="dc-name">2026-11 工程状态</div>
-              <div class="dc-desc">Silver 银牌 44/44 · 覆盖率 80.53%（2026-11-10 实测）· 回归覆盖 57.5%</div>
+              <div class="dc-desc">Silver 银牌（自认证）· 语句覆盖率 &gt; 80%（CI 门禁强制）· 回归覆盖见最新 CI 报告</div>
               <span class="dc-tag blue">状态</span>
             </a>
           </div>
@@ -2232,7 +2232,7 @@
             <a href="https://github.com/Lennonhaha/fibemate/blob/main/docs/REGRESSION-TESTS.md" class="doc-card purple">
               <div class="dc-icon">🔁</div>
               <div class="dc-name">回归测试报告</div>
-              <div class="dc-desc">历史缺陷覆盖 57.5% · 逐条映射与未覆盖理由</div>
+              <div class="dc-desc">历史缺陷覆盖矩阵 · 逐条映射与未覆盖理由（数字以仓内报告为准）</div>
               <span class="dc-tag purple">回归</span>
             </a>
             <a href="https://github.com/Lennonhaha/fibemate/blob/main/docs/INPUT-VALIDATION.md" class="doc-card purple">
@@ -2416,7 +2416,7 @@
       <h2>PQC 工程验证 · 时间戳存证</h2>
       <p class="section-subtitle">
         FIBEMATE 使用 <strong>ML-KEM-768</strong> (NIST FIPS 203) 作为后量子密钥封装机制。<br>
-        所有核心实现已通过三线测试套件；全仓另存有 364 份 RFC 3161 时间戳存证（存证证明某时刻该文件存在，不构成可复核验证）。
+        所有核心实现已通过三线测试套件；全仓另存 RFC 3161 时间戳存证（清单与计数见 <code>docs/tsa/timestamp-manifest.json</code>；存证证明某时刻该文件存在，不构成可复核验证）。
       </p>
 
       <div class="verification-grid">
@@ -2459,7 +2459,7 @@
           <ul>
             <li>RFC 3161 标准时间戳</li>
             <li>FreeTSA 授时链</li>
-            <li>9 个核心文件已存证（2026-06-08 快照；当前累计 364 份）</li>
+            <li>核心文件已存证（首批快照 2026-06-08；当前清单见 <code>docs/tsa/</code>）</li>
             <li><code>/docs/tsa/2026-06-08/</code> &middot; 最新存证见 <code>docs/tsa/</code></li>
           </ul>
         </div>
@@ -2469,7 +2469,7 @@
           <h3>外部认证与评分</h3>
           <ul>
             <li>OpenSSF Best Practices · Silver（主仓，44/44 MUST）· Passing（桌面端）</li>
-            <li>OpenSSF Scorecard · fibemate 8.1（v5.6.0，2026-11-12）/ tauri 7.5（v5.5.0，2026-11-11）/ tools 6.8（v5.6.0，2026-11-12）</li>
+            <li>OpenSSF Scorecard · fibemate / tauri / tools 三仓分数以各自最新报告为准（每仓 README 链到对应 Scorecard）</li>
             <li>CII Best Practices 项目号 13695 · 15379</li>
           </ul>
         </div>
@@ -2598,7 +2598,7 @@
             FIBEMATE is an open-source project licensed under GPL-3.0. &nbsp;·&nbsp; Contact: <a href="mailto:research@fibemate.net" style="color:#00d4aa;">research@fibemate.net</a>
         </p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：2026-11-16 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 364 份 .tsr (lg-001~lg-116，空号不复用) ✓<br>
+            最后更新：以仓库 CHANGELOG 为准 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 存证清单见 <code>docs/tsa/</code>（lg-001~lg-116，空号不复用） ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · FIPS 204 层本仓自研 · 已发布 npm 0.1.0 带 Sigstore 证明)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; 发布核验：<code>verify-all</code> 10 项一键自证 + <code>verify-release</code> 对注册表核验 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
@@ -2609,10 +2609,10 @@
                 <a href="https://github.com/Lennonhaha/fibemate-tauri" style="color:#00d4aa;">fibemate-tauri</a>（Tauri 桌面 · Rust + WebView2 · 三平台 CI 50/50）·
                 <a href="https://github.com/Lennonhaha/fibemate/tree/experimental/vwz-lg" style="color:#00d4aa;">experimental/vwz-lg</a>（实验研究分支）·
 <a href="https://github.com/Lennonhaha/vwz-formalization" style="color:#00d4aa;">vwz-formalization</a>（VWZ 形式化验证 · Isabelle/HOL · 56 条义务 / 4 未闭合，2026-11-10）。<br>
-                所有核心代码对应 <strong>364 份</strong> RFC 3161 时间戳存证（256 个不同 basename、93 个 lg-NNN 令牌、212 个不带 lg 编号的 basename，2026-11-19 实测；签发者 FreeTSA 197 份、DigiCert 167 份（364 份中 10 份不是有效 token））；其中 241 份当前无法做 imprint 复核，存证不证明归属，只证明某时刻该字节存在。<br>
+                所有核心代码对应 RFC 3161 时间戳存证，逐条清单与计数见 <code>docs/tsa/timestamp-manifest.json</code>，签发者归属见 <code>docs/TIMESTAMP-ISSUERS.md</code>。存证只证明某时刻该字节存在，不证明归属；其中一部分无法做 imprint 复核，原因写在那两份清单里。<br>
                 验证报告（KAT、TVLA）开源后可独立验证。开源不替代独立第三方审计。
                 <a href="/docs/security-limitations.html" style="color:#f59e0b;text-decoration:underline;">⚠ 安全限制声明</a>
-                · <a href="/docs/launch-announcement-2026-08-31.html" style="color:#58a6ff;text-decoration:underline;">发布公告</a><br><small style="color:#646c78;">&#x1F4C5; 最新: 2026-11-14 · v3.3.3 发布（ML-DSA 解码器 4 处非规范编码漏洞已修）· OpenSSF Silver 44/44 MUST · 保证案例补 G-8/G-9 · 覆盖率基线 80.53% · Dependabot 清零 · 全栈验证：KAT 10,000/10,000 ✅ · ML-KEM-768 NTT 域独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000</small>
+                · <a href="/docs/launch-announcement-2026-08-31.html" style="color:#58a6ff;text-decoration:underline;">发布公告</a><br><small style="color:#646c78;">&#x1F4C5; 版本与修复记录以 <a href="https://github.com/Lennonhaha/fibemate/blob/main/CHANGELOG.md" style="color:#58a6ff;">CHANGELOG</a> 为准 · OpenSSF Silver（自认证）· 覆盖率以 CI 门禁为准 · 全栈验证结果见各报告</small>
             </p>
         </div>
         <p class="footer-beian" style="margin-top:0.3rem;font-size:0.82rem;color:#94a3b8;">
@@ -2792,7 +2792,7 @@
             <a href="mailto:support@fibemate.net">support@fibemate.net</a>
             <div class="timestamp-proof" style="max-width: 900px; margin: 2rem auto 0; padding: 1.5rem 2rem; background: rgba(0,212,170,0.05); border: 1px solid rgba(0,212,170,0.2); border-radius: 8px; text-align: left;">
         <h4 id="ts-proof" style="margin:0 0 0.5rem;font-size:1rem;color:#00d4aa;">&#x1F4DC; 可信时间戳存证 (RFC 3161)</h4>
-        <p style="margin:0 0 1rem;font-size:0.85rem;color:#c9d1d9;"><strong>可信时间戳存证（RFC 3161）· 全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）</strong></p>
+        <p style="margin:0 0 1rem;font-size:0.85rem;color:#c9d1d9;"><strong>可信时间戳存证（RFC 3161）：令牌内嵌签名证书的可判 FreeTSA / DigiCert 两源，其余不内嵌签名证书、签发者无法仅凭文件判定 —— 逐文件归属见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>，计数以 <code>docs/tsa/timestamp-manifest.json</code> 为准</strong></p>
         <details style="cursor:pointer;">
         <summary style="color:#00d4aa;font-size:0.85rem;margin-bottom:0.8rem;">&#x1F4CB; 查看存证清单 (SHA-256)</summary>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin:0.8rem 0;">
@@ -2909,7 +2909,7 @@
         </details>
         <p style="margin:1rem 0 0;font-size:0.72rem;color:#646c78;line-height:1.6;">
         <small>验证: <code style="font-size:0.7rem;">openssl ts -verify -data [file] -in [file].tsr -CAfile cacert.pem</code>（仅对携带签名证书的 token 适用；served tree 241 份中 186 份不含证书）</small><br>
-        <small>完整清单（逐条 364 行，与本节同口径，CI 对账）: <code style="font-size:0.7rem;">docs/tsa/timestamp-manifest.json</code> | 共 364 份 .tsr 文件（2026-11-19 实测；计数口径：<code>git ls-files '*.tsr'</code> 全仓已追踪文件 —— 其中 256 个不同 basename、93 个 lg-NNN 令牌、212 个不带 lg 编号的 basename、108 份为逐字节副本） | FreeTSA + DigiCert 双源存证</small>
+        <small>完整清单（逐条一行，与本节同口径，CI 对账）: <code style="font-size:0.7rem;">docs/tsa/timestamp-manifest.json</code> | 计数口径：<code>git ls-files '*.tsr'</code> 全仓已追踪文件，按 basename / lg-NNN 令牌 / 逐字节副本分组 | FreeTSA + DigiCert 双源存证</small>
         </p>
         <p style="margin: 0.8rem 0 0; font-size: 0.8rem; color: #646c78;">GPLv3 已开源 (2026-08-31) · 独立技术研究项目 · 非商业运营 · <a href="/docs/security-limitations.html" style="color:#f59e0b;text-decoration:underline;">⚠ 安全限制声明</a></p>
 
