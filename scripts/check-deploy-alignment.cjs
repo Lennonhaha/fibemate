@@ -10,6 +10,7 @@
 'use strict';
 
 const { execFileSync } = require('child_process');
+const { RUNTIME_PATHS } = require('./runtime-paths.cjs');
 const https = require('https');
 const http = require('http');
 
@@ -17,7 +18,7 @@ const DEFAULTS = {
   url: 'https://fibemate.net/health',
   repo: process.cwd(),
   ref: 'origin/main',
-  paths: ['src', 'packages', 'www'],
+  paths: [...RUNTIME_PATHS],
   maxDebt: 1,
   timeoutMs: 8000,
 };

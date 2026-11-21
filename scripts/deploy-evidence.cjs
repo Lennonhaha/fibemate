@@ -26,6 +26,7 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 const { execFileSync } = require('child_process');
+const { RUNTIME_PATHS } = require('./runtime-paths.cjs');
 
 const REPO = 'Lennonhaha/fibemate';
 const BASE = 'https://fibemate.net';
@@ -168,6 +169,15 @@ function firstDivergence(a, b) {
   lines.push('- that the release is correct, safe, or free of defects — a perfectly aligned deploy can ship a bug;');
   lines.push('- that anything outside `/` and `/health` was checked — no API behaviour, no database, no TLS configuration;');
   lines.push('- that tests passed — test results live in CI, not here. This is an alignment record, not a quality record.');
+  lines.push('');
+  lines.push('## Runtime paths');
+  lines.push('');
+  lines.push('`' + RUNTIME_PATHS.join('`, `') + '` — read from `scripts/runtime-paths.cjs`, the same constant the deploy gate uses.');
+  lines.push('A commit that touches none of them cannot make production stale:');
+  lines.push('');
+  lines.push('```bash');
+  lines.push('git log ' + sha.slice(0, 8) + '..HEAD --oneline -- ' + RUNTIME_PATHS.join(' '));
+  lines.push('```');
   lines.push('');
   lines.push('Reproduce: `node scripts/deploy-evidence.cjs' + (runId ? ' --run ' + runId : '') + '`');
   lines.push('');

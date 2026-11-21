@@ -41,9 +41,21 @@ manifest commit: e0394fec83a1ff3f48c1d689719ea12f3271d8e8
 ```
 
 So "main is ahead of production" is not automatically a problem: it matters **which paths**
-moved. A `git log served..main --oneline -- src packages www scripts` with no output is the
-statement that nothing runtime-relevant is missing. That command is also what the deploy gate
-uses, which is why the record can be committed without forcing a redeploy.
+moved. A `git log served..main --oneline -- src packages www` with no output is the statement that
+nothing runtime-relevant is missing. That command is also what the deploy gate uses, which is
+why the record can be committed without forcing a redeploy.
+
+## The runtime path set has one definition
+
+`src packages www` is not written twice. It comes from `scripts/runtime-paths.cjs`, which both
+`check-deploy-alignment.cjs` (the gate) and `deploy-evidence.cjs` (this record) require.
+
+The risk of two literals was not a typo, it was agreement: if the set is wrong, both the gate
+and the record are wrong in the same way and then endorse each other — the same shape as three
+numbers that add up to 364 while all three are false. The shared constant removes one of the two
+copies; `scripts/deploy-evidence-selftest.cjs` removes the other failure mode by comparing the
+constant against the `--tree` arguments in `scripts/deploy-release.sh`, which is where the set is
+actually enforced. Disagree with the deploy script and the self-test goes red.
 
 ## Where these files are, and are not
 
