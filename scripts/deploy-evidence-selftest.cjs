@@ -120,7 +120,21 @@ function firstFail(stderr) {
 
   // 4. the served commit must pass, or the mechanism is rejecting everything
   if (live) {
-    const tmpC = fs.mkdtempSync(path.join(os.tmpdir(), 'ev-c-'));
+    const tmpDelta = fs.mkdtempSync(path.join(os.tmpdir(), 'ev-d-'));
+  const d = runEvidence(['--prev', ancestor], tmpDelta);
+  const dFile = fs.existsSync(tmpDelta) ? fs.readdirSync(tmpDelta).map((f) => path.join(tmpDelta, f)) : [];
+  const dText = dFile.length ? fs.readFileSync(dFile[0], 'utf8') : '';
+  const deltaLine = (dText.split('\n').find((l) => l.startsWith('Against ')) || '').trim();
+  const deltaOk = d.code === 0 && /^Against `[0-9a-f]{8}`: \*\*[+-]?\d+\*\* file\(s\)/.test(deltaLine);
+  results.push({
+    name: 'a moved file count is attributed, not left as a bare number',
+    input: '--prev ' + ancestor.slice(0, 8),
+    expect: 'exit 0, record names the delta',
+    got: 'exit ' + d.code + ', ' + (deltaLine || 'no delta line'),
+    ok: deltaOk,
+  });
+
+  const tmpC = fs.mkdtempSync(path.join(os.tmpdir(), 'ev-c-'));
     const c = runEvidence([], tmpC);
     results.push({
       name: 'the served commit is accepted',

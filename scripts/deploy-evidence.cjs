@@ -17,6 +17,7 @@
 //   node scripts/deploy-evidence.cjs --sha <sha>
 //   node scripts/deploy-evidence.cjs --run <run_id>  # attach workflow metadata (needs gh)
 //   node scripts/deploy-evidence.cjs --out <dir>     # default docs/deploy-evidence
+//   node scripts/deploy-evidence.cjs --prev <sha>    # explain the served file-count delta
 //
 // Exit: 0 aligned, 1 mismatch (no record written), 2 usage or network failure.
 
@@ -33,6 +34,15 @@ const REPO = 'Lennonhaha/fibemate';
 const BASE = 'https://fibemate.net';
 const RAW = 'https://raw.githubusercontent.com/' + REPO;
 
+// git output, or null when git fails. Local-only concern: the reader may not have the
+// previous commit fetched, and that must read as "not attributed" rather than as a crash.
+function git(args) {
+  try {
+    return execFileSync('git', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+  } catch (e) {
+    return null;
+  }
+}
 function arg(name, fallback) {
   const i = process.argv.indexOf('--' + name);
   return i > -1 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--') ? process.argv[i + 1] : fallback;
@@ -93,11 +103,30 @@ function firstDivergence(a, b) {
     ['build.commit equals recorded commit', build === sha, build],
     ['served.commit equals recorded commit', served === sha, served],
     ['served manifest matches the running process', !!(h.served && h.served.matches_process), h.served && h.served.matches_process],
-    ['served file count', !!(h.served && h.served.files), h.served && h.served.files],
+    ['served file count (a count, not a checksum: any commit that adds or removes a file changes it)', !!(h.served && h.served.files), h.served && h.served.files],
     ['mlkem backend', true, (h.mlkem && h.mlkem.backend) || 'unknown'],
     ['live / matches www/index.html at ' + sha.slice(0, 8), identical, identical ? liveBytes + ' bytes, byte-identical' : 'first divergence at char ' + at],
     ['x-app-version header', true, home.headers['x-app-version'] || '-'],
   ];
+
+  // A file count that moved is not drift until the move is attributed. Given --prev, name the
+  // files: additions minus deletions must equal the change in the served count, and a
+  // modification changes content without changing the count. Two numbers compared without
+  // both commits named is the denominator mistake this repo keeps meeting.
+  let fileDelta = null;
+  const prev = arg('prev', null);
+  if (prev) {
+    const names = git(['diff', '--name-status', prev + '..' + sha]);
+    if (names === null) {
+      fileDelta = { error: 'could not read git diff ' + prev + '..' + sha + ' (is the commit local?)' };
+    } else {
+      const rows = names.split('\n').filter(Boolean).map((l) => l.split('\t'));
+      const added = rows.filter((r) => r[0] === 'A').map((r) => r[1]);
+      const deleted = rows.filter((r) => r[0] === 'D').map((r) => r[1]);
+      const modified = rows.filter((r) => r[0] === 'M').map((r) => r[1]);
+      fileDelta = { prev: prev, added: added, deleted: deleted, modified: modified };
+    }
+  }
 
   let runInfo = null;
   const runId = arg('run', null);
@@ -157,6 +186,33 @@ function firstDivergence(a, b) {
       if (runInfo[k]) lines.push('| ' + k + ' | ' + runInfo[k] + ' |');
     }
     if (runInfo.event === 'workflow_dispatch') lines.push('| triggered by | a human dispatching the workflow (not a push) |');
+    lines.push('');
+  }
+  if (fileDelta) {
+    lines.push('## Served file count');
+    lines.push('');
+    lines.push('`/health` reports `served.files = ' + ((h.served && h.served.files) || '?') + '`. That is a count, not a checksum:');
+    lines.push('any commit that adds or removes a file changes it -- including documentation and scripts, which');
+    lines.push('cannot make production stale. A count that moved is not drift until the move is attributed, and');
+    lines.push('two counts compared without both commits named is a denominator error, not a finding.');
+    lines.push('');
+    if (fileDelta.error) {
+      lines.push('*Delta not attributed:* ' + escapeMdTable(fileDelta.error) + '.');
+    } else {
+      const delta = fileDelta.added.length - fileDelta.deleted.length;
+      lines.push('Against `' + fileDelta.prev.slice(0, 8) + '`: **' + (delta >= 0 ? '+' : '') + delta + '** file(s) -- ' +
+        fileDelta.added.length + ' added, ' + fileDelta.deleted.length + ' deleted, ' + fileDelta.modified.length +
+        ' modified (a modification changes content, not the count).');
+      lines.push('');
+      if (fileDelta.added.length || fileDelta.deleted.length) {
+        lines.push('| change | path |');
+        lines.push('|---|---|');
+        for (const f of fileDelta.added) lines.push('| added | ' + escapeMdTable(f) + ' |');
+        for (const f of fileDelta.deleted) lines.push('| deleted | ' + escapeMdTable(f) + ' |');
+        lines.push('');
+      }
+      lines.push('Command: `git diff --name-status ' + fileDelta.prev.slice(0, 8) + '..' + sha.slice(0, 8) + '`');
+    }
     lines.push('');
   }
   lines.push('## What this record proves');

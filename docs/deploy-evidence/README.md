@@ -57,6 +57,33 @@ copies; `scripts/deploy-evidence-selftest.cjs` removes the other failure mode by
 constant against the `--tree` arguments in `scripts/deploy-release.sh`, which is where the set is
 actually enforced. Disagree with the deploy script and the self-test goes red.
 
+## Reading `served.files`
+
+`/health` reports `served.files` as a number. It is a count, not a checksum: any commit that
+adds or removes a file moves it, including commits under `docs/` and `scripts/` that cannot
+make production stale. Consecutive records here went 2347 → 2350 → 2357, which reads like drift
+and was not: the last step was exactly the seven files added between the two commits.
+
+So the rule is the usual one: a moved number is not a finding until it is attributed, and two
+counts compared without both commits named is a denominator error. Pass `--prev` and the record
+attributes the move itself:
+
+```bash
+node scripts/deploy-evidence.cjs --prev e0394fe
+```
+
+produces:
+
+```
+Against `e0394fe`: **+7** file(s) -- 7 added, 0 deleted, 2 modified (a modification changes
+content, not the count).
+```
+
+followed by the added and deleted paths, and the command that reproduces the list. If the
+previous commit is not fetched locally the line says *delta not attributed* rather than
+guessing, and the self-test asserts the attributed form exists — so a `--prev` that silently
+stopped working fails the check rather than printing a bare number.
+
 ## Reading a cancelled job
 
 A cancelled job is not automatically a failure, but it is not automatically noise either.
