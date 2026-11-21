@@ -26,6 +26,25 @@ cannot produce a failure, would be decoration.
 Each generated file repeats the two lists above, so a record read outside this directory
 cannot lose the caveat.
 
+## Committing a record never creates deploy debt
+
+These records live under `docs/`, and `docs/` is not a runtime path. The alignment check
+computes `R` = the newest **runtime** commit and reports `debt` = runtime commits after the
+served one, so adding a record advances `main` without touching `R`.
+
+Measured right after this directory was merged (`docs` commit `5e35746` on top of served
+`e0394fe`):
+
+```
+ALIGNED served=e0394fe R=e0394fec83a1ff3f48c1d689719ea12f3271d8e8 debt=0
+manifest commit: e0394fec83a1ff3f48c1d689719ea12f3271d8e8
+```
+
+So "main is ahead of production" is not automatically a problem: it matters **which paths**
+moved. A `git log served..main --oneline -- src packages www scripts` with no output is the
+statement that nothing runtime-relevant is missing. That command is also what the deploy gate
+uses, which is why the record can be committed without forcing a redeploy.
+
 ## Where these files are, and are not
 
 `docs/` is **not** part of the served tree — nginx serves `/opt/fibemate/current/www`.
