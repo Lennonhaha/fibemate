@@ -23,6 +23,9 @@
 'use strict';
 
 // ---- Parse ----
+// Accepted truthy spellings are deliberately narrow: a flag that turns on
+// experimental subsystems should not be enabled by accident, so anything other
+// than 1/true/yes/on leaves the flag off.
 const isSet = (name) => {
   const v = process.env[name];
   if (v === undefined || v === null || v === '') return false;
