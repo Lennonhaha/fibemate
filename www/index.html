@@ -927,7 +927,7 @@
                 <summary style="cursor:pointer;color:#8b949e;font-size:0.85rem;list-style:none;">▸ 展开：算法栈与验证指标</summary>
                 <div style="margin-top:14px;">
                 <div class="hero-badge">
-                    🔒 v3.3.3 | ML-KEM-768 · SM2 · SLH-DSA · ML-DSA-44/65/87 (fml-dsa · 已发布 npm 0.1.0，带 Sigstore 证明 · 75 条 NIST ACVP KAT 逐字节通过) · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 (v1.3) + Mersenne 快速约减 1.8× · SLH-DSA WASM · OPK 预密钥协议
+                    🔒 Web v3.3.3 | ML-KEM-768 · SM2 · SLH-DSA · ML-DSA-44/65/87 (fml-dsa · 已发布 npm 0.1.0，带 Sigstore 证明 · 75 条 NIST ACVP KAT 逐字节通过) · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 (v1.3) + Mersenne 快速约减 1.8× · SLH-DSA WASM · OPK 预密钥协议
                 </div>
                 <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);">🏆 ML-KEM-768 通过 KAT 10,000 轮一致性验证 + TVLA v2 Enhanced (N=10,000) 时序侧信道验证 · <br><small style="color:#646c78;">C Native Addon (AVX2) 做了恒定时间实现尝试（未经独立 fuzzing / 侧信道审计，self-assessment）⚠ | 纯 JS 参考实现 时域泄漏评估见报告</small> · <a href="/crypto/test-ml-kem-kat.html" style="color:#00E5C3;text-decoration:underline;font-weight:600;">查看 KAT 10,000 轮验证报告 →</a></div>
                 <div class="hero-badge" style="margin-top:8px;background:rgba(255,165,0,0.06);border:1px solid rgba(255,165,0,0.15);">⚡ FPGA 合成通过 · ILA+L4 确认闭环 · UART 调试已打通 ✅ · Artix-7 35T 时序收敛 · <a href="/docs/fpga-report.html" style="color:#10b981;text-decoration:underline;font-weight:600;">查看硬件文档 ↓</a></div>
@@ -1005,7 +1005,7 @@
                     <div class="layer-number">2</div>
                     <div class="layer-title">后量子密钥交换</div>
                 </div>
-                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：按 FIPS 203 规范实现，纯 JavaScript，FIPS 203 官方 KAT 参照向量全通过（CI 断言 100 向量 / 500 断言） · 自跑 10,000 轮 roundtrip 一致性全通过（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
+                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：按 FIPS 203 规范实现，纯 JavaScript，FIPS 203 官方 KAT 参照向量全通过（CI 断言 100 向量 / 500 断言） · 自跑 10,000 轮 roundtrip 一致性全通过（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 存证全仓 364 份令牌（2026-11-21 实测）：全部 <code>Status: Granted</code>；无一份在 token 内嵌签名证书，故离线 <code>-CAfile</code> 校验对它们均不适用，须自备 TSA 根证书；TSTInfo 带 TSA 名称字段的 197 份均指向 FreeTSA，其余 167 份缺该字段、签发者无法仅凭文件判定（命令：<code>openssl ts -reply -in &lt;file&gt; -text</code>；逐文件见 逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
             </div>
 
             <div class="layer-card">
@@ -1261,7 +1261,7 @@
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <div class="feature-title">PQC 工程验证</div>
-                <div class="feature-desc">ML-KEM-768/1024 参考实现，按 FIPS 203 规范实现 · 官方 KAT 100/100（CI 断言 500 项）；self-consistency roundtrip 10,000 轮全通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>） · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
+                <div class="feature-desc">ML-KEM-768/1024 参考实现，按 FIPS 203 规范实现 · 官方 KAT 100/100（CI 断言 500 项）；self-consistency roundtrip 10,000 轮全通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 存证全仓 364 份令牌（2026-11-21 实测）：全部 <code>Status: Granted</code>；无一份在 token 内嵌签名证书，故离线 <code>-CAfile</code> 校验对它们均不适用，须自备 TSA 根证书；TSTInfo 带 TSA 名称字段的 197 份均指向 FreeTSA，其余 167 份缺该字段、签发者无法仅凭文件判定（命令：<code>openssl ts -reply -in &lt;file&gt; -text</code>；逐文件见 逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>） · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
             </div>
 
             <div class="feature-card">
@@ -1315,7 +1315,7 @@
             <div class="feature-card">
                 <div class="feature-icon">📱</div>
                 <div class="feature-title">多平台支持</div>
-                <div class="feature-desc">已闭环：Electron + Tauri v2 桌面端（v3.3.7 · Windows x64 · cosign 签名 + SLSA provenance）+ React Native 移动端（clean-break 迁移完成，待真机 E2E 验证）· FPGA 合成 + ILA/L4 验证通过</div>
+                <div class="feature-desc">已闭环：Electron + Tauri v2 桌面端（桌面线独立发版 v3.3.7 · 本站为 Web v3.3.3 · Windows x64 · cosign 签名 + SLSA provenance）+ React Native 移动端（clean-break 迁移完成，待真机 E2E 验证）· FPGA 合成 + ILA/L4 验证通过</div>
             </div>
 
             <div class="feature-card">
@@ -2651,7 +2651,7 @@
             FIBEMATE is an open-source project licensed under GPL-3.0. &nbsp;·&nbsp; Contact: <a href="mailto:research@fibemate.net" style="color:#00d4aa;">research@fibemate.net</a>
         </p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：以仓库 CHANGELOG 为准 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归：所有套件通过（`node test/test-all.js`） ✅ &nbsp;|&nbsp; TSR 存证清单见 <code>docs/tsa/</code>（lg-001~lg-116，空号不复用） ✓<br>
+            最后更新：以仓库 CHANGELOG 为准 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归：所有套件通过（`node test/test-all.js`） ✅ &nbsp;|&nbsp; TSR 存证清单见 <code>docs/tsa/</code>（编号段 lg-001~lg-116，空号不复用；编号数 ≠ 文件数） ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · FIPS 204 层本仓自研 · 已发布 npm 0.1.0 带 Sigstore 证明)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; 发布核验：<code>verify-all</code> 10 项一键自证 + <code>verify-release</code> 对注册表核验 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
@@ -2961,8 +2961,8 @@
         </div>
         </details>
         <p style="margin:1rem 0 0;font-size:0.72rem;color:#646c78;line-height:1.6;">
-        <small>验证: <code style="font-size:0.7rem;">openssl ts -verify -data [file] -in [file].tsr -CAfile cacert.pem</code>（仅对携带签名证书的 token 适用；served tree 241 份中 186 份不含证书）</small><br>
-        <small>完整清单（逐条一行，与本节同口径，CI 对账）: <code style="font-size:0.7rem;">docs/tsa/timestamp-manifest.json</code> | 计数口径：<code>git ls-files '*.tsr'</code> 全仓已追踪文件，按 basename / lg-NNN 令牌 / 逐字节副本分组 | FreeTSA + DigiCert 双源存证</small>
+        <small>验证: <code style="font-size:0.7rem;">openssl ts -verify -data [file] -in [file].tsr -CAfile cacert.pem</code>（仅对携带签名证书的 token 适用；本目录 240 份 token 均未内嵌签名证书，故须自备 TSA 根证书。三个分母：全仓 tracked 364 / 本目录 240 / 编号段 lg-001~lg-116 共 89 个编号）</small><br>
+        <small>完整清单（逐条一行，与本节同口径，CI 对账）: <code style="font-size:0.7rem;">docs/tsa/timestamp-manifest.json</code> | 计数口径：<code>git ls-files '*.tsr'</code> 全仓已追踪文件，按 basename / lg-NNN 令牌 / 逐字节副本分组 | 签发者以 token 内 TSA 字段为准：197 份指向 FreeTSA，167 份该字段缺失</small>
         </p>
         <p style="margin: 0.8rem 0 0; font-size: 0.8rem; color: #646c78;">GPLv3 已开源 (2026-08-31) · 独立技术研究项目 · 非商业运营 · <a href="/docs/security-limitations.html" style="color:#f59e0b;text-decoration:underline;">⚠ 安全限制声明</a></p>
 
