@@ -1,0 +1,413 @@
+{
+  "schema": "fibemate.interop-matrix/1",
+  "subject": "ML-DSA (FIPS 204) signature interoperability",
+  "provenance": {
+    "ours": {
+      "package": "fml-dsa",
+      "version": "0.1.0",
+      "file": "packages/fml-dsa/src/index.js",
+      "sha256": "015df39680c3109f5cf3a370f0a6e4059152e17b3c77d261c499cf5f9cf3ff38"
+    },
+    "noble": {
+      "package": "@noble/post-quantum",
+      "version": "0.7.1",
+      "file": "node_modules/@noble/post-quantum/ml-dsa.js",
+      "sha256": "7c64e733930b115b72bd0585731d8202f1caa819e081cc1e682a19d1fcbcfbda"
+    },
+    "node": "v22.22.3"
+  },
+  "inputs": {
+    "seeds": [
+      {
+        "id": "seed-00",
+        "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+      },
+      {
+        "id": "seed-a5",
+        "sha256": "fc8b64001c5fdd0f2f40fb67dae4a865a2c5bd17836676d6d5b58b7917e33717"
+      },
+      {
+        "id": "seed-7f",
+        "sha256": "17a7384bf1c50a94b712ce507c5ccd58638cd091278078c6e7dc00ae0aa152fc"
+      }
+    ],
+    "messages": [
+      {
+        "id": "empty",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "id": "32-bytes",
+        "bytes": 32,
+        "sha256": "60bf07c488aad18fda339df07e4fbc47b4f00be71711936f18d04d352ad01890"
+      },
+      {
+        "id": "1024-bytes",
+        "bytes": 1024,
+        "sha256": "785b0751fc2c53dc14a4ce3d800e69ef9ce1009eb327ccf458afe09c242c26c9"
+      }
+    ]
+  },
+  "suites": [
+    {
+      "id": "ML-DSA-44",
+      "params": {
+        "publicKeyBytes": 1312,
+        "secretKeyBytes": 2560,
+        "signatureBytes": 2420
+      },
+      "judged": 21,
+      "passed": 21,
+      "cells": [
+        {
+          "name": "keygen-pk-identical/seed-00",
+          "pass": true,
+          "detail": "eb4e7302842153b0"
+        },
+        {
+          "name": "keygen-sk-identical/seed-00",
+          "pass": true,
+          "detail": "0f9086044d77b6d6"
+        },
+        {
+          "name": "keygen-pk-identical/seed-a5",
+          "pass": true,
+          "detail": "95b022f18fe91ac9"
+        },
+        {
+          "name": "keygen-sk-identical/seed-a5",
+          "pass": true,
+          "detail": "1bd1e6a7ff225cc0"
+        },
+        {
+          "name": "keygen-pk-identical/seed-7f",
+          "pass": true,
+          "detail": "57ce3a03c1dad44c"
+        },
+        {
+          "name": "keygen-sk-identical/seed-7f",
+          "pass": true,
+          "detail": "ec25e8031d3abafb"
+        },
+        {
+          "name": "sign-det-identical/empty",
+          "pass": true,
+          "detail": "a16b509583984159"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/empty",
+          "pass": true,
+          "detail": "sig=a16b509583984159"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/empty",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/empty",
+          "pass": true,
+          "detail": "flipped byte 1210"
+        },
+        {
+          "name": "reject-wrong-message/empty",
+          "pass": true,
+          "detail": "appended one byte"
+        },
+        {
+          "name": "sign-det-identical/32-bytes",
+          "pass": true,
+          "detail": "3b0348477f1d6348"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/32-bytes",
+          "pass": true,
+          "detail": "sig=3b0348477f1d6348"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/32-bytes",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/32-bytes",
+          "pass": true,
+          "detail": "flipped byte 1210"
+        },
+        {
+          "name": "reject-wrong-message/32-bytes",
+          "pass": true,
+          "detail": "appended one byte"
+        },
+        {
+          "name": "sign-det-identical/1024-bytes",
+          "pass": true,
+          "detail": "fe2998111364709f"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/1024-bytes",
+          "pass": true,
+          "detail": "sig=fe2998111364709f"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/1024-bytes",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/1024-bytes",
+          "pass": true,
+          "detail": "flipped byte 1210"
+        },
+        {
+          "name": "reject-wrong-message/1024-bytes",
+          "pass": true,
+          "detail": "appended one byte"
+        }
+      ]
+    },
+    {
+      "id": "ML-DSA-65",
+      "params": {
+        "publicKeyBytes": 1952,
+        "secretKeyBytes": 4032,
+        "signatureBytes": 3309
+      },
+      "judged": 21,
+      "passed": 21,
+      "cells": [
+        {
+          "name": "keygen-pk-identical/seed-00",
+          "pass": true,
+          "detail": "085ba380ff386dd5"
+        },
+        {
+          "name": "keygen-sk-identical/seed-00",
+          "pass": true,
+          "detail": "cfcb5e7edf4348f7"
+        },
+        {
+          "name": "keygen-pk-identical/seed-a5",
+          "pass": true,
+          "detail": "21ea692df8056616"
+        },
+        {
+          "name": "keygen-sk-identical/seed-a5",
+          "pass": true,
+          "detail": "1150b2c09426727f"
+        },
+        {
+          "name": "keygen-pk-identical/seed-7f",
+          "pass": true,
+          "detail": "caa0876650d165e0"
+        },
+        {
+          "name": "keygen-sk-identical/seed-7f",
+          "pass": true,
+          "detail": "7dd4d9d1992273d2"
+        },
+        {
+          "name": "sign-det-identical/empty",
+          "pass": true,
+          "detail": "b836cc1c743e3510"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/empty",
+          "pass": true,
+          "detail": "sig=b836cc1c743e3510"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/empty",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/empty",
+          "pass": true,
+          "detail": "flipped byte 1654"
+        },
+        {
+          "name": "reject-wrong-message/empty",
+          "pass": true,
+          "detail": "appended one byte"
+        },
+        {
+          "name": "sign-det-identical/32-bytes",
+          "pass": true,
+          "detail": "c025a11ddacedcc7"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/32-bytes",
+          "pass": true,
+          "detail": "sig=c025a11ddacedcc7"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/32-bytes",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/32-bytes",
+          "pass": true,
+          "detail": "flipped byte 1654"
+        },
+        {
+          "name": "reject-wrong-message/32-bytes",
+          "pass": true,
+          "detail": "appended one byte"
+        },
+        {
+          "name": "sign-det-identical/1024-bytes",
+          "pass": true,
+          "detail": "47e53f1e692fb2e6"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/1024-bytes",
+          "pass": true,
+          "detail": "sig=47e53f1e692fb2e6"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/1024-bytes",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/1024-bytes",
+          "pass": true,
+          "detail": "flipped byte 1654"
+        },
+        {
+          "name": "reject-wrong-message/1024-bytes",
+          "pass": true,
+          "detail": "appended one byte"
+        }
+      ]
+    },
+    {
+      "id": "ML-DSA-87",
+      "params": {
+        "publicKeyBytes": 2592,
+        "secretKeyBytes": 4896,
+        "signatureBytes": 4627
+      },
+      "judged": 21,
+      "passed": 21,
+      "cells": [
+        {
+          "name": "keygen-pk-identical/seed-00",
+          "pass": true,
+          "detail": "1d4a461707fc50a7"
+        },
+        {
+          "name": "keygen-sk-identical/seed-00",
+          "pass": true,
+          "detail": "370d670bcc5cac39"
+        },
+        {
+          "name": "keygen-pk-identical/seed-a5",
+          "pass": true,
+          "detail": "7ce75535458b5207"
+        },
+        {
+          "name": "keygen-sk-identical/seed-a5",
+          "pass": true,
+          "detail": "1b46d2c3d14bf451"
+        },
+        {
+          "name": "keygen-pk-identical/seed-7f",
+          "pass": true,
+          "detail": "ad7e98a1ddd75815"
+        },
+        {
+          "name": "keygen-sk-identical/seed-7f",
+          "pass": true,
+          "detail": "269978767c5a2415"
+        },
+        {
+          "name": "sign-det-identical/empty",
+          "pass": true,
+          "detail": "27355c60013bf211"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/empty",
+          "pass": true,
+          "detail": "sig=27355c60013bf211"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/empty",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/empty",
+          "pass": true,
+          "detail": "flipped byte 2313"
+        },
+        {
+          "name": "reject-wrong-message/empty",
+          "pass": true,
+          "detail": "appended one byte"
+        },
+        {
+          "name": "sign-det-identical/32-bytes",
+          "pass": true,
+          "detail": "2a3f92fdcce6e4b5"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/32-bytes",
+          "pass": true,
+          "detail": "sig=2a3f92fdcce6e4b5"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/32-bytes",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/32-bytes",
+          "pass": true,
+          "detail": "flipped byte 2313"
+        },
+        {
+          "name": "reject-wrong-message/32-bytes",
+          "pass": true,
+          "detail": "appended one byte"
+        },
+        {
+          "name": "sign-det-identical/1024-bytes",
+          "pass": true,
+          "detail": "53a0f0320901ae10"
+        },
+        {
+          "name": "cross-verify-ours-to-noble/1024-bytes",
+          "pass": true,
+          "detail": "sig=53a0f0320901ae10"
+        },
+        {
+          "name": "cross-verify-noble-to-ours/1024-bytes",
+          "pass": true,
+          "detail": "randomised signature"
+        },
+        {
+          "name": "reject-tampered-signature/1024-bytes",
+          "pass": true,
+          "detail": "flipped byte 2313"
+        },
+        {
+          "name": "reject-wrong-message/1024-bytes",
+          "pass": true,
+          "detail": "appended one byte"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "suites": 3,
+    "judgedCells": 63,
+    "passedCells": 63,
+    "failedCells": 0
+  },
+  "verdict": "PASS",
+  "reportSha256": "9cbe13b560d0c2fb729043616b25efc2baa5b62ca394a317294d0cfb87d94e81"
+}

@@ -313,6 +313,66 @@ Published alongside this revision, with the bytes that are live:
 7. **Timestamps prove existence, not correctness.** A token over a wrong answer is still a
    token over a wrong answer.
 
+## 7.1 TVLA: the six of nine that do not pass
+
+This section exists because the number is easy to quote and easy to misread. The
+summary says "TVLA 9/9"; the result is 3 PASS, 6 FAIL. Both statements are true, and
+neither is a safety verdict on its own.
+
+Measured 2026-06-04 on the JavaScript ML-KEM-768 implementation, N = 5,000 samples
+per class, threshold |t| > 4.5 (NIST SP 800-90B style). Raw material:
+`evidence/tvla/tvla-9of9-summary.md`, `docs/paper-response-2026-06-04.md`.
+
+### The three that pass
+
+| operation | \|t\| | inputs |
+|---|---:|---|
+| generateKeypair | 0.29 | secret |
+| encapsulate | 0.69 | secret |
+| decapsulate | 0.69 | secret |
+
+These are the three operations that touch the private key. `decapsulate` uses a
+constant-time select (`ctMask`) rather than branching on secret data.
+
+### The six that fail, split by what their inputs actually are
+
+| operation | \|t\| | input | why it fails | what it means |
+|---|---:|---|---|---|
+| byteEncode | 60.58 | ciphertext (public) | V8 optimises on value distribution | no secret input, no secret to leak |
+| byteDecode | 67.46 | ciphertext (public) | same | same |
+| compress | 89.36 | public key (public) | same | same |
+| decompress | 98.41 | ciphertext (public) | same | same |
+| polyMul | 63.77 | **secret** | value-dependent multiplication in V8 | timing difference is real; it was tested for exploitability, not assumed harmless |
+| matVecMul | 8.43 | **secret** | same | same |
+
+### What "not exploitable" is based on
+
+For `polyMul` and `matVecMul` the claim is **not** "public data, therefore fine".
+Their inputs include secret material, so a timing difference there is a real signal
+that has to be argued away with evidence. Experiment #5 did three things:
+
+1. correlation between ciphertext byte 0 and wall time: Pearson **-0.005389**;
+2. direct A/B on `matVecMul` with two different matrices: \|t\| = **0.11** (threshold 4.5);
+3. Wilcoxon median difference: **9.38 µs**.
+
+That is one experiment, on one implementation, on one machine. It supports
+"no exploit was found", not "none exists". The distinction is the whole point of
+listing these six instead of reporting a single PASS.
+
+### What we are not claiming
+
+- Not "constant time". A JS implementation on a JIT engine cannot promise that.
+- Not "side-channel free". 6 of 9 operations show |t| far above the threshold.
+- Not "these six are irrelevant". Four are irrelevant *because their inputs are public*;
+  the other two are argued down by measurement, which can be re-run and, in principle,
+  contradicted.
+
+If you are evaluating this work, the honest summary is: **the three secret-key
+operations pass at |t| < 0.7; the other six fail the threshold for reasons that are
+respectively structural (public inputs) and empirical (measured non-exploitability).**
+
+---
+
 ## 8. Reproduce
 
 ```bash
