@@ -1130,6 +1130,59 @@
 
 <!-- ==================== /通道选择说明 ==================== -->
 
+    <section class="privacy-stack" id="november">
+        <h2 class="section-title">2026 年 11 月：四件可以被复核的事</h2>
+        <p class="section-subtitle">不是"我们完成了什么"，而是"你怎么自己确认"。每条都附一条可执行的核对路径。<br><span style="font-size:0.85rem;color:#6e7681;">本站在做工程验证与证据生成，不提供生产密码服务，也不承诺安全性</span></p>
+
+        <div class="layers-container">
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">1</div>
+                    <div class="layer-title">自动化部署闭环：线上字节可追溯到 commit</div>
+                </div>
+                <div class="layer-desc">
+                    每次上线后核对三件事：线上 <code>/health</code> 的 <code>build.commit</code> 与 <code>served.commit</code> 相同、且等于仓库 HEAD；页面字节与仓库文件逐字节一致；对齐检查给出 <code>debt=0</code>。<br>
+                    核对路径：<code>curl -s https://fibemate.net/health</code> 看两个 commit 字段；<code>node scripts/check-live.cjs</code> 比对线上与本地字节。<br>
+                    ⚠️ <strong>诚实标注</strong>：对齐脚本按"服务端 manifest 与构建产物一致"判定，它证明的是"线上跑的就是这份产物"，不证明产物本身正确。
+                </div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">2</div>
+                    <div class="layer-title">假红与假绿零容忍：门禁必须先证明它会红</div>
+                </div>
+                <div class="layer-desc">
+                    四类"绿灯但没验到东西"的形态被写进纪律：退出码恒 0 的空覆盖、只覆盖一小部分的分母错觉、把错误吞掉的 <code>|| true</code>、以及在<b>错的提交/错的 base</b> 上验证。门禁要能报红才算门禁。<br>
+                    核对路径：<code>node scripts/verify-all.cjs</code>——十项检查里含两项自检，专门验证"自检脚本不能在结果为 FAIL 时继续打印 PASS"。另有实测记录：用一个含替换字符的探针文件触发 <code>bom-check</code>，CI 当场变红并点名该文件。
+                </div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">3</div>
+                    <div class="layer-title">从极客工具到可交付的自查产品</div>
+                </div>
+                <div class="layer-desc">
+                    <code>cbom-tools</code> 从"能扫出算法名"走到"能交给测评机构当输入证据"：报告带口径、边界、四种结论（合规 / 建议整改 / 高风险 / 无法判定），并把结论映射到 <b>GB/T 39786-2021 第三级第 8 章</b>的条款（只映射第 8 章，第四级不猜）。<br>
+                    同时公开了一次真实的错误：在一份约 194 万行的 C 密码库上，它把 18 处"已废止算法"全部报错（DSA 与 SHA-1 全部来自注释与名称子串）。修复后 DSA 15→0、SHA-1 3→0，结论由"高风险"降为"建议整改"。<br>
+                    核对路径：<code>npx cbom-tools cbom-compliance --bom &lt;file&gt; --dir &lt;src&gt; --redact</code>；映射文档见仓库 <code>cbom-tools/docs/gb-t-39786-mapping.md</code>。
+                </div>
+            </div>
+
+            <div class="layer-card">
+                <div class="layer-header">
+                    <div class="layer-number">4</div>
+                    <div class="layer-title">进入外部生态：两个上游合并</div>
+                </div>
+                <div class="layer-desc">
+                    <a href="https://github.com/CycloneDX/tool-center/pull/170" target="_blank" rel="noopener" style="color:#58a6ff;">CycloneDX/tool-center #170</a>（2026-11-05 合并）把 <code>cbom-tools</code> 收进官方工具目录；<a href="https://github.com/RiccardoBiosas/awesome-cbom/pull/1" target="_blank" rel="noopener" style="color:#58a6ff;">awesome-cbom #1</a>（2026-10-08 合并）收进 CBOM 生态清单。<br>
+                    ⚠️ <strong>如实标注</strong>：这是两个社区的<b>收录</b>，不是认证，也不代表它们评估过代码质量。另有若干上游 PR 仍在评审中，未被收录前不计入。
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section class="privacy-stack" id="audit">
         <h2 class="section-title">系统审计与证据链</h2>
         <p class="section-subtitle">不是"我们认为正确"，而是"你可以自己复核" · 2026-10-30 基线快照（G-8/G-9 见保证案例）<br><span style="font-size:0.85rem;color:#6e7681;">本站做的是工程验证与证据生成，不提供生产密码服务，也不承诺安全性</span></p>
@@ -1141,7 +1194,7 @@
                     <div class="layer-title">独立 Oracle 对拍</div>
                 </div>
                 <div class="layer-desc">
-                    3 组固定种子，Rust / WASM / <code>@noble/post-quantum</code> 三端逐字节比对：pk 1184 B · sk 2400 B · ct 1088 B · ss 32 B 全等，每种子 <strong>12/12</strong> 通过；互操作矩阵 <strong>62/62</strong>（12 行 · 6 基线 · 0 失败）。<br>
+                    3 组固定种子，Rust / WASM / <code>@noble/post-quantum</code> 三端逐字节比对：pk 1184 B · sk 2400 B · ct 1088 B · ss 32 B 全等，每种子 <strong>12/12</strong> 通过；互操作矩阵 <strong>62/62</strong>（12 行 · 6 基线 · 0 失败）；ML-DSA 侧另有 <strong>63/63</strong> 格（3 套参数 × 21 格，含"翻转一个签名字节"与"换一条消息"两项必须被拒绝的负控）。<br>
                     ⚠️ 如实标注：Rust 与 WASM <strong>同源于 libcrux</strong>，真正独立的参照只有 noble —— 不把"三端一致"说成三次独立验证。
                 </div>
             </div>
