@@ -27,6 +27,7 @@ const path = require('path');
 const https = require('https');
 const { execFileSync } = require('child_process');
 const { RUNTIME_PATHS } = require('./runtime-paths.cjs');
+const { escapeMdTable } = require('./md-escape.cjs');
 
 const REPO = 'Lennonhaha/fibemate';
 const BASE = 'https://fibemate.net';
@@ -145,7 +146,7 @@ function firstDivergence(a, b) {
   lines.push('');
   lines.push('| check | value |');
   lines.push('|---|---|');
-  for (const [name, , value] of checks) lines.push('| ' + name + ' | ' + String(value).replace(/\\/g, '\\\\').replace(/\|/g, '\\|') + ' |');
+  for (const [name, , value] of checks) lines.push('| ' + name + ' | ' + escapeMdTable(value) + ' |');
   lines.push('');
   if (runInfo) {
     lines.push('## Deploy run');

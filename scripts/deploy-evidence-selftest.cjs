@@ -27,6 +27,7 @@ const path = require('path');
 const https = require('https');
 const { execFileSync, spawnSync } = require('child_process');
 const { RUNTIME_PATHS } = require('./runtime-paths.cjs');
+const { escapeMdTable } = require('./md-escape.cjs');
 
 const HERE = __dirname;
 const write = process.argv.includes('--write');
@@ -75,6 +76,18 @@ function firstFail(stderr) {
     expect: RUNTIME_PATHS.join(' '),
     got: sameSet ? 'same set' : 'DIFFERENT: ' + uniqueTrees.join(' '),
     ok: sameSet,
+  });
+
+  // 1b. the table escaper, which was written by hand twice and got it wrong once each time
+  const escapeProbe = 'a\\b|c';
+  const escapeWant = 'a\\\\b\\|c';
+  const escapeGot = escapeMdTable(escapeProbe);
+  results.push({
+    name: 'table escaping doubles backslashes before escaping pipes',
+    input: JSON.stringify(escapeProbe),
+    expect: JSON.stringify(escapeWant),
+    got: JSON.stringify(escapeGot),
+    ok: escapeGot === escapeWant,
   });
 
   // 2. unknown sha: content does not exist anywhere
@@ -138,7 +151,7 @@ function firstFail(stderr) {
     lines.push('| case | input | expected | actual | result |');
     lines.push('|---|---|---|---|---|');
     for (const r of results) {
-      lines.push('| ' + r.name + ' | `' + r.input + '` | ' + r.expect + ' | ' + r.got.replace(/\\/g, '\\\\').replace(/\|/g, '\\|') + ' | ' + (r.ok ? 'pass' : 'FAIL') + ' |');
+      lines.push('| ' + r.name + ' | `' + r.input + '` | ' + r.expect + ' | ' + escapeMdTable(r.got) + ' | ' + (r.ok ? 'pass' : 'FAIL') + ' |');
     }
     lines.push('');
     lines.push('## Why the third case is the load-bearing one');

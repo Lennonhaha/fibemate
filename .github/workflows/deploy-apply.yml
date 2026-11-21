@@ -212,3 +212,26 @@ jobs:
             exit 1
           fi
           echo "PASS disk manifest and /health name the same commit"
+
+      # Runs after the deploy, writes only to the run summary. It does not touch the
+      # repository: a workflow that commits its own evidence advances main, which is the
+      # loop this check exists to observe from the outside. If it ever needs to persist the
+      # record, that decision belongs with a human reviewing an unattended branch.
+      - name: Prove the evidence checker still rejects a wrong commit
+        run: |
+          set -uo pipefail
+          rc=0
+          node scripts/deploy-evidence-selftest.cjs > selftest.out 2>&1 || rc=$?
+          cat selftest.out
+          {
+            echo ""
+            echo "### Negative controls for the evidence checker"
+            echo ""
+            echo "A checker that cannot fail is decoration. These cases must be refused,"
+            echo "run against the commit this deploy just made live."
+            echo ""
+            echo '```'
+            cat selftest.out
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$rc"
