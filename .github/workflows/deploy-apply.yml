@@ -88,9 +88,11 @@ jobs:
             echo "::error::$sha is not an ancestor of origin/main; refusing to deploy it"
             exit 1
           fi
-          echo "target=$sha" >> "$GITHUB_OUTPUT"
-          echo "short=$(git rev-parse --short=8 "$sha")" >> "$GITHUB_OUTPUT"
-          echo "short7=$(git rev-parse --short=7 "$sha")" >> "$GITHUB_OUTPUT"
+          {
+            echo "target=$sha"
+            echo "short=$(git rev-parse --short=8 "$sha")"
+            echo "short7=$(git rev-parse --short=7 "$sha")"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Say what is about to change, and what is current now
         run: |
