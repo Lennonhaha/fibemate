@@ -57,6 +57,27 @@ copies; `scripts/deploy-evidence-selftest.cjs` removes the other failure mode by
 constant against the `--tree` arguments in `scripts/deploy-release.sh`, which is where the set is
 actually enforced. Disagree with the deploy script and the self-test goes red.
 
+## Reading a cancelled job
+
+A cancelled job is not automatically a failure, but it is not automatically noise either.
+The rule, in both directions:
+
+> **Cancelled may be ignored only when the same commit has a success for the same check
+> name. Otherwise the cancelled job is the newest evidence for that check and blocks.**
+
+Two runs on one commit in the same concurrency group is the common cause: a push-triggered
+run starts, a dispatch supersedes it, GitHub cancels the first. Seen here on `fba1646` —
+`44894469620` (push) cancelled, `44894481383` (dispatch) success, same `deploy-dry-run`:
+
+```
+gh run list -R Lennonhaha/fibemate --workflow deploy-dry-run.yml -L 3 \
+  --json headSha,event,conclusion | jq '.[] | select(.headSha=="fba1646")'
+```
+
+If no success exists for that commit, "it was only cancelled" is a guess, and a required
+check that never ran is the same as a check that failed — the pull request shows no green,
+which is exactly what a red would have produced.
+
 ## Where these files are, and are not
 
 `docs/` is **not** part of the served tree — nginx serves `/opt/fibemate/current/www`.
