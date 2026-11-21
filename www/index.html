@@ -1005,7 +1005,7 @@
                     <div class="layer-number">2</div>
                     <div class="layer-title">后量子密钥交换</div>
                 </div>
-                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：按 FIPS 203 规范实现，纯 JavaScript，FIPS 203 官方 KAT 参照向量 9/9 通过 · 自跑 10,000 轮 roundtrip 一致性全通过（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
+                <div class="layer-desc">ML‑KEM‑768<br>· JS 参考实现：按 FIPS 203 规范实现，纯 JavaScript，FIPS 203 官方 KAT 参照向量全通过（CI 断言 100 向量 / 500 断言） · 自跑 10,000 轮 roundtrip 一致性全通过（self-consistency） · 5.55ms/轮 (10,000 轮实测 ~55s)<br>· C Native addon（Node.js 原生模块）：AVX2 优化，keygen 48µs / encaps 51µs / decaps 105µs (10,000 轮 ~2.9s)<br>⚡ WASM 模块（Rust/libcrux → wasm-bindgen，FIPS 203）：<strong>139,929 B raw / 33.4 KiB gzip</strong>（gzip -9，opt-level=s + lto + strip）<br>· TVLA N=10,000 通过（self-assessment，非独立侧信道审计）<br>· 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>）<br>📦 双实现 + WASM 可选：覆盖浏览器、Node.js、高性能场景 · JS 18.3 KiB + WASM 136.6 KiB（gzip -9 分别 5.5 / 33.4 KiB，glue 另 7.8 KiB）<br>· <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">查看 KAT 报告</a></div>
             </div>
 
             <div class="layer-card">
@@ -1208,7 +1208,7 @@
             <div class="feature-card">
                 <div class="feature-icon">🔐</div>
                 <div class="feature-title">PQC 工程验证</div>
-                <div class="feature-desc">ML-KEM-768/1024 参考实现，按 FIPS 203 规范实现 · 官方 KAT 9/9；self-consistency roundtrip 10,000 轮全通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>） · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
+                <div class="feature-desc">ML-KEM-768/1024 参考实现，按 FIPS 203 规范实现 · 官方 KAT 100/100（CI 断言 500 项）；self-consistency roundtrip 10,000 轮全通过 · 桌面端（Rust/WASM）由 <strong>libcrux</strong> 驱动（hax/F* 形式化验证；未验证的 <code>kyber</code> 变体未启用） · 路径 A (X25519MLKEM768 NamedGroup)：✅ Active 2026-07-17（OpenSSL 3.x provider + systemd override，保留编译产出）；路径 C-2 (SM2+ML-KEM-768)：应用层混合 KEX 验证通过（E2E 测试页 5/5，API 端点就绪），当前 TLS Record 层仍为经典 ECDHE X25519 · 存证全仓 364 份令牌：令牌内嵌签名证书的为 FreeTSA 83 份、DigiCert 18 份，其余 263 份不内嵌签名证书、签发者无法仅凭文件判定（2026-11-19 实测，逐文件见 <a href="/docs/TIMESTAMP-ISSUERS.md" style="color:#58a6ff;">归属表</a>） · <a href="/crypto/test-ml-kem-kat.html" style="color:#00d4aa;text-decoration:underline;">KAT 报告</a></div>
             </div>
 
             <div class="feature-card">
@@ -1395,7 +1395,7 @@
         </div>
 
         <p class="section-subtitle" style="max-width:760px;margin:1.25rem auto 0;font-size:0.85rem;color:#8b949e;">
-            按 OpenSSF 最佳实践标准自评达 Silver 银牌（自认证，非第三方认证）· Scorecard 主仓 8.1（2026-11-12）/ 桌面端 7.5（2026-11-11）/ 工具仓 6.8（2026-11-12）· 时间戳存证（TSR）链路持续运行
+            按 OpenSSF 最佳实践标准自评达 Silver 银牌（自认证，非第三方认证）· Scorecard 各仓分数与检查明细以 <a href="https://securityscorecards.dev/viewer/?uri=github.com/Lennonhaha/fibemate" style="color:#58a6ff;">Scorecard 页面</a>为准· 时间戳存证（TSR）链路持续运行
         </p>
     </section>
 
@@ -2424,7 +2424,7 @@
           <div class="card-icon">✅</div>
           <h3>正式验证</h3>
           <ul>
-            <li>KAT 向量 9/9 全通过</li>
+            <li>KAT 向量 100/100 全通过（500 项断言）</li>
             <li>IND-CPA roundtrip 14/14 全通过 ✅ · NTT 域完全重写 · 独立参照实现 200/200 交叉验证</li>
             <li>隐式拒绝安全特性</li>
             <li>FIPS 203 常量一致性</li>
@@ -2468,7 +2468,7 @@
           <div class="card-icon">🏅</div>
           <h3>外部认证与评分</h3>
           <ul>
-            <li>OpenSSF Best Practices · Silver（主仓，44/44 MUST）· Passing（桌面端）</li>
+            <li>OpenSSF Best Practices · Silver（主仓，自认证）· Passing（桌面端）</li>
             <li>OpenSSF Scorecard · fibemate / tauri / tools 三仓分数以各自最新报告为准（每仓 README 链到对应 Scorecard）</li>
             <li>CII Best Practices 项目号 13695 · 15379</li>
           </ul>
@@ -2598,7 +2598,7 @@
             FIBEMATE is an open-source project licensed under GPL-3.0. &nbsp;·&nbsp; Contact: <a href="mailto:research@fibemate.net" style="color:#00d4aa;">research@fibemate.net</a>
         </p>
         <p style="margin:8px 0;font-size:0.8rem;color:#94a3b8;line-height:1.6;">
-            最后更新：以仓库 CHANGELOG 为准 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归 480/480 ✅ &nbsp;|&nbsp; TSR 存证清单见 <code>docs/tsa/</code>（lg-001~lg-116，空号不复用） ✓<br>
+            最后更新：以仓库 CHANGELOG 为准 &nbsp;|&nbsp; 路径 A ✅ Active (OpenSSL 3.x provider) · 路径 C-2 ✅ 验证通过 &nbsp;|&nbsp; FPGA v5 256/256 &nbsp;|&nbsp; LG v2.4.0 ❄️🔥 36 passed, 2 ignored &nbsp;|&nbsp; SM2 11/11 (v1.3) &nbsp;|&nbsp; SLH-DSA WASM &nbsp;|&nbsp; ML-KEM-768 NTT 域 ✅ 独立实现 ✓ 200/200 · FIPS 203 参照 ✓ 10,000/10,000 &nbsp;|&nbsp; 全回归：所有套件通过（`node test/test-all.js`） ✅ &nbsp;|&nbsp; TSR 存证清单见 <code>docs/tsa/</code>（lg-001~lg-116，空号不复用） ✓<br>
             后量子密码参考实现：ML-KEM-768 (WASM + C Native) + SLH-DSA (FIPS 205) + <strong style="color:#7ee787;">fml-dsa (ML-DSA-44/65/87 纯 JS · FIPS 204 层本仓自研 · 已发布 npm 0.1.0 带 Sigstore 证明)</strong> + OpenSSL 3.x 编译链就绪 (路径 A ✅ Active via systemd override) &nbsp;|&nbsp; SM2-SM4 Hybrid 混合加密 &nbsp;|&nbsp; 发布核验：<code>verify-all</code> 10 项一键自证 + <code>verify-release</code> 对注册表核验 &nbsp;|&nbsp; A2A 接口：v1.0
         </p>
         <div class="oss-statement" style="margin-top:12px;padding:12px 20px;background:rgba(0,212,170,0.04);border:1px solid rgba(0,212,170,0.15);border-radius:8px;display:inline-block;text-align:left;">
