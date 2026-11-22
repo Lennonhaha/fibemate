@@ -532,3 +532,20 @@ Out-File -Encoding utf8   62 B  首字节 ef bb bf  严格解码 ok      0 个 U
 差异全部来自编码，不来自文本。第一行就是「我读到 8 个假乱码」的来源。
 
 **同族**：D30（扫描器先自证）、20.11（工具同化）。共同点是——**先证明「我读到的是数据本身」，再谈数据对错**。
+
+## 20.19 交付给接口的正文：BOM 不是编码瑕疵，是内容（D32，2026-11-23）
+
+给 PR 写一条备注，用 PowerShell `Out-File -Encoding utf8` 生成 body 文件，`gh api -F body=@file` 发出去。网页上看完全正常。读回时 `body.codePointAt(0)` 是 **U+FEFF** —— BOM 成了正文的第一个字符。
+
+**为什么 D31 抓不到它**：§20.18 那张实测表里，`Out-File -Encoding utf8` 一行写的是「严格解码 ok / 0 个 U+FFFD」——**这句是对的**。BOM（`EF BB BF`）是合法 UTF-8，严格解码器不会报错，U+FFFD 计数也是 0。所以 D31 的判据（严格解码 + U+FFFD 计数）**在结构上抓不到 BOM**：它治的是「解不出来」，BOM 是「解出来了但多了东西」。
+
+**规则**
+
+1. **凡是内容会被原样消费的文件**——API body、模板、配置、提交信息、SQL 脚本——一律 `fs.writeFileSync(p, s, 'utf8')`。禁止 `>`、`>>`、`Out-File`、`Tee-Object`、`Set-Content`。
+2. PS 5.1 的 `Out-File -Encoding utf8` 与 `Set-Content -Encoding utf8` 都是 **UTF-8 with BOM**；无 BOM 只有 `[IO.File]::WriteAllText($p, $s, [Text.UTF8Encoding]::new($false))`。
+3. **判定三件套，缺一不可**：首三字节（`EF BB BF` 即不合格）＋严格解码＋**首字符码点**。第三项专抓 BOM——它会被解码成一个 U+FEFF 字符：只看字节容易漏，只解码看不见。
+4. **发现即回滚重发**，不写「下次注意」：`DELETE` 旧评论 → Node 重写 body → 重发 → 读回 `codePointAt(0)` 复核（本次 `FEFF → 4D`）。
+
+**为什么只在交付侧才算致命**：同样的文件若只是本地阅读，BOM 无害；一旦被当作 payload，它就成了内容的一部分，而**下游无法区分「作者写了个 U+FEFF」和「工具加了 BOM」**。
+
+**同族**：D31（多字节只走字节通道）、20.17（扫描器先自证）、20.11（工具同化）。一句话——**编码正确 ≠ 内容正确；「解码成功」本身就是一层假绿**。
