@@ -120,10 +120,11 @@ FIPS 206（FN-DSA）**尚未发布**（2026-11-19 复核，结论与 11-17 一�
 - 判据：① 每个部署目标（Node 进程、WASM、原生 addon）分别写明内存完整性假设——**这是假设，不是测量**；② 把「拒绝异常短签名」这条缓解在验证端**测出来**（构造短签名，断言拒绝），在签名端明确**不做**过滤（过滤会破坏采样分布，§9 第 5 条）；③ API 暴露严格验证模式；④ 互操作核对交集成方，并写进集成文档。
 - 如果我们无法在某个目标上施加缓解，**记录决策与理由**，不写「已处理」。状态只能写 `not mitigated`，并写三件事：该目标暴露的是什么、为什么不施加、影响面多大。没有理由的「可接受风险」同样不算记录。
 
-### 5.3 两条边界引用（各一句，不展开）
+### 5.3 三条边界引用（各一句，不展开）
 
 - **R11（ML-KEM 密钥重用审计）**：R11 的 signal leakage 攻击在专用加固之后仍然成立，所以本文涉及密钥重用的边界（T6 的 salt 与密钥隔离、T9 的共享依赖）以这类攻击为审计参照系——**参照系，不是本仓结论**；本仓的密钥重用策略尚未评估。
 - **R12（格签名第三条路线）**：R12 用高斯卷积替代 flooding 与拒绝采样、无 abort，是 Falcon 类格签名之外的第三条路线。本文的 T1/T3 只覆盖拒绝采样采样器，**不覆盖 R12 的证明结构**，也不对其安全性作任何陈述。
+- **R14（Falcon 密钥解码路径）**：R14 报告 FALCON 的**密钥解码**（签名前必经步骤）存在 profiled template attack。本文的 T1/T3 只覆盖拒绝采样与高斯采样路径，**不覆盖解码路径**；因此把解码路径登记为**后续审计的扩展边界**——既不写「已防护」，也不写「已确认可利用」。编号与结论据 2026-11-22 简报；本地网络未能取到 ePrint 原页（超时），标题与署名**待核**，引用前须回原页抄录，不得转写二手标题。
 
 ## 6. 评估计划
 
@@ -411,6 +412,7 @@ tokens that look like polynomial data: none
 | 「Every Signing Leaks」（Zhou 等，2026-09） | 二手线索，**未定位到论文页**，故未写入正文与参考文献 | 找到页面后再补 |
 | FIPS 206 是否出现初始公开草案 | 未发布（核对 2026-11-19，与 11-17 一致） | 发布前重核 |
 | 各 runtime 的实测数据（T1–T11 全部「未开始」） | 无移植、无实现 | 实现落地后 |
+| FALCON 解码路径（R14）是否落在 T1–T11 之外 | **已在 §5.3 登记为扩展边界（2026-11-22）**；本仓无任何解码路径测量 | 下一次侧信道审计前补测；未补测前不得声称覆盖 |
 
 ## 9. 设计原则（2026-11-18 已确认，正文不留 open question）
 
@@ -440,7 +442,7 @@ tokens that look like polynomial data: none
 
 > For T1, T2, and T11, the sign-off must cite the exact command, sample size, and output artifact. A generic 'looks good' is not a valid sign-off.
 
-## 11. 参考文献（核对日期 2026-11-19）
+## 11. 参考文献（核对日期 2026-11-19；2026-11-22 补 R14，署名未核）
 
 正文只引用短名 R1–R10。**全称不在本表转写**：需要引用全称时回原页抄，避免把二手转写当成标题。作者栏凡标「ePrint 页」者，均为 2026-11-19 当日从该页署名抄录。
 
@@ -459,3 +461,4 @@ tokens that look like polynomial data: none
 | R11 | eCK Security of MQV-Style LWE-Based AKE | Ruoyu Ding, Tianrun Yu, Yanbin Pan, Chi Cheng, Jian Weng（ePrint 页） | ePrint 2026/2017（rev 2026-11-18） | ePrint 页标题与署名已核；仅作密钥重用审计的参照系引用 |
 | R12 | G+G（卷积高斯 FS 签名） | Julien Devevey, Alain Passelègue, Damien Stehlé（ePrint 页） | ePrint 2023/1477（ASIACRYPT 2023 的 minor revision，rev 2026-11-18） | ePrint 页标题、署名与 publication info 已核；仅作路线对照引用 |
 | R13 | Rényi Bounds for Falcon's Fixed-Point FFT Sampler（Vencent Hwang） | ePrint 页 | ePrint 2026/2902 | **Preprint，未见刊**：ePrint 页标题与署名已核；仅作 T2 精度线的参数对照，不作已证结论引用 |
+| R14 | FALCON 密钥解码路径的 profiled template attack | **待核**（ePrint 页未取到，2026-11-22） | ePrint 2026/2908（pubDate 2026-11-16，approved 2026-11-21） | **仅据简报编号登记**：标题与署名未核，须回原页抄录；本文只作解码路径的审计边界引用，不作结论引用 |
