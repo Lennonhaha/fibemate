@@ -31,8 +31,8 @@ keywords:
   - TLA+
   - formal verification
 license: GPL-3.0-only
-version: 3.3.0
-date-released: '2026-08-31'
+version: 3.3.3
+date-released: '2026-11-14'
 references:
   - type: report
     title: >-
