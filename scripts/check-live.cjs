@@ -115,6 +115,14 @@ const CITATIONS = [
   { id: 'orcid', url: 'https://orcid.org/0009-0009-1407-686X', token: '0009-0009-1407-686X' },
 ];
 
+// Deterministic negative control for this gate: with CHECK_LIVE_TEST_UNREACHABLE set,
+// the probe list gains one entry that points at an address nothing listens on. The
+// gate must then go red and name reason=timeout_or_unreachable. Without the variable
+// the list is exactly CITATIONS, so a normal run proves nothing extra.
+const CITATION_PROBES = process.env.CHECK_LIVE_TEST_UNREACHABLE
+  ? CITATIONS.concat([{ id: '__test_unreachable__', url: process.env.CHECK_LIVE_TEST_UNREACHABLE, token: 'TEST-UNREACHABLE' }])
+  : CITATIONS;
+
 // doi.org and github.com sit behind WAFs that answer 403 to requests carrying
 // Node's default `node` User-Agent while answering the same request from the same
 // IP with 200 once a browser-style UA is present. Measured 2026-10-30 on
@@ -597,17 +605,19 @@ async function checkCitations(opts) {
   // that 404s or a repository that was renamed is worse than no citation, because
   // the row still looks like proof.
   if (opts.external) {
-    for (const c of CITATIONS) {
+    for (const c of CITATION_PROBES) {
       if (isDoi(c)) {
         let verdict;
         try {
           verdict = await probeDoi(c, opts);
         } catch (err) {
-          if (isTransportError(err)) {
-            result.unresolved.push({ id: c.id, detail: err.message });
-          } else {
-            result.failures.push({ id: c.id, stage: 'unreachable', detail: err.message });
-          }
+          // fetchWithRetry already spent 3 attempts plus the curl fallback. What is
+          // left is a target that could not be verified at all, and "could not
+          // verify" may not be spent as a pass: from here an unreachable citation
+          // and a withdrawn one look identical, so it fails and names the reason.
+          const why = isTransportError(err) ? 'reason=timeout_or_unreachable' : 'reason=probe_error';
+          result.unresolved.push({ id: c.id, detail: err.message });
+          result.failures.push({ id: c.id, stage: 'unreachable', detail: why + '; ' + err.message });
           continue;
         }
         if (!verdict.ok) {
@@ -621,11 +631,9 @@ async function checkCitations(opts) {
       try {
         res = await fetchWithRetry(c.url, opts, c.url);
       } catch (err) {
-        if (isTransportError(err)) {
-          result.unresolved.push({ id: c.id, detail: err.message });
-        } else {
-          result.failures.push({ id: c.id, stage: 'unreachable', detail: err.message });
-        }
+        const why = isTransportError(err) ? 'reason=timeout_or_unreachable' : 'reason=probe_error';
+        result.unresolved.push({ id: c.id, detail: err.message });
+        result.failures.push({ id: c.id, stage: 'unreachable', detail: why + '; ' + err.message });
         continue;
       }
       if (res.status !== 200) {
@@ -646,25 +654,18 @@ async function checkCitations(opts) {
     result.skipped = 'link probes skipped (--no-external)';
   }
 
-  // A transport failure is "not checked", not "broken" - but it may not be used to
-  // turn the check green either: if nothing at all could be verified, the gate says
-  // so instead of passing on an empty result.
-  const nothingVerified = result.resolved === 0 && result.unresolved.length > 0;
-  result.ok = result.failures.length === 0 && !nothingVerified;
+  // A transport failure is not "broken", but it may not become a pass either: an
+  // unreachable citation and a dead one are indistinguishable from here, so both are
+  // red. The retry budget is fetchWithRetry's (3 attempts plus the curl fallback),
+  // which is more than the single retry this gate promises.
+  result.ok = result.failures.length === 0;
   if (result.ok) {
     result.reason = '';
-  } else if (result.failures.length > 0) {
+  } else {
     result.reason =
       result.failures.length +
       ' citation assertion(s) failed: ' +
-      result.failures.map((f) => f.id + ' [' + f.stage + '] ' + f.detail).join('; ') +
-      (result.unresolved.length ? ' (' + result.unresolved.length + ' more could not be checked)' : '');
-  } else {
-    result.reason =
-      'no citation could be verified: all ' +
-      result.unresolved.length +
-      ' target(s) were unreachable from this host - ' +
-      result.unresolved.map((f) => f.id + ': ' + f.detail).join('; ');
+      result.failures.map((f) => f.id + ' [' + f.stage + '] ' + f.detail).join('; ');
   }
   return result;
 }
@@ -799,8 +800,7 @@ async function main() {
         const cited = c.section
           ? c.skipped
             ? ' ' + c.onPage + '/' + c.checked + ' ledger rows present [' + c.skipped + ']'
-            : ' ' + c.resolved + '/' + c.checked + ' citation links resolve' +
-              (c.unresolved && c.unresolved.length ? ', ' + c.unresolved.length + ' unreachable (not counted)' : '')
+            : ' ' + c.resolved + '/' + c.checked + ' citation links resolve'
           : '';
         process.stdout.write('[PASS] ' + c.id + hash + counted + tree + cited + '\n');
       } else {
