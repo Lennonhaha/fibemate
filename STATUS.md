@@ -8,7 +8,7 @@ FIBEMATE is a post-quantum cryptography full-stack engineering demonstration and
 
 **License:** GPL-3.0
 **Repository:** [github.com/Lennonhaha/fibemate](https://github.com/Lennonhaha/fibemate)
-**Current version:** v3.3.0
+**Current version:** v3.3.3
 
 ## Security Posture
 

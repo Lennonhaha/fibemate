@@ -1,6 +1,6 @@
 # FIBEMATE - 下一代后量子密码通信协议
 
-**v3.3.0** | 2026-07-16
+**v3.3.3** | 2026-11-14
 TSR 序列: lg-001 ~ lg-108（部分编号因历史原因跳号） | 许可证: GNU GPLv3
 [fibemate.net](https://fibemate.net) | [PQC 就绪状态](https://fibemate.net/docs/pqc-readiness.html)
 
