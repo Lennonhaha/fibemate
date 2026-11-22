@@ -60,6 +60,19 @@ check() {
 # ---------------------------------------------------------------- sandbox fixtures
 mkdir -p "$SANDBOX/repo/src" "$SANDBOX/fibemate/releases" "$SANDBOX/fibemate/shared" "$SANDBOX/bin" "$SANDBOX/health"
 printf 'JWT_SECRET=%s\n' "$(printf 'x%.0s' $(seq 1 40))" > "$SANDBOX/fibemate/shared/.env"
+
+# The shared database is part of the fixture: deploys now refuse to run without it
+# (a release must never boot its own empty one). HAVE_SQLITE gates the one check that
+# needs a real count instead of pretending to have run it.
+mkdir -p "$SANDBOX/fibemate/shared/data"
+if command -v sqlite3 >/dev/null 2>&1; then
+  sqlite3 "$SANDBOX/fibemate/shared/data/fibemate.db" \
+    "create table users(id text primary key, raw_json text); insert into users values('u1','{}');"
+  HAVE_SQLITE=1
+else
+  : > "$SANDBOX/fibemate/shared/data/fibemate.db"
+  HAVE_SQLITE=0
+fi
 cat > "$SANDBOX/bin/pm2" <<'PM2'
 #!/bin/bash
 # Resolve the static root the way the real process would see it: the release path
@@ -158,6 +171,9 @@ A="$(git -C "$SANDBOX/repo" rev-parse HEAD)"
 printf 'console.log("B");\n' > "$SANDBOX/repo/src/index.js"
 git -C "$SANDBOX/repo" commit -qam "B"
 B="$(git -C "$SANDBOX/repo" rev-parse HEAD)"
+printf 'console.log("C");\n' > "$SANDBOX/repo/src/index.js"
+git -C "$SANDBOX/repo" commit -qam "C"
+C="$(git -C "$SANDBOX/repo" rev-parse HEAD)"
 
 export FIBEMATE_ROOT="$SANDBOX/fibemate"
 export REPO_DIR="$SANDBOX/repo"
@@ -364,6 +380,49 @@ kill "$AUTH_PID" 2>/dev/null
 if [ "$rc2" -ne 124 ]; then echo "      control rc=$rc2 elapsed=${elapsed2}s (expected a timeout)"; fi
 [ "$rc2" -eq 124 ]
 check "negative control: with an askpass that waits, the same request times out" "$?"
+
+echo
+# ---------------------------------------------------------------- cases 15-18: the shared database
+# 2026-11-18..22: twelve releases booted empty databases and /api/auth/login answered 401
+# in 1 ms for every existing account. These four cases are the regression net.
+deploy --sha "$C"
+rc=$?
+[ "$rc" -eq 0 ] && [ "$(readlink "$SANDBOX/fibemate/releases/$C/data" 2>/dev/null)" = "$SANDBOX/fibemate/shared/data" ]
+check "a deployed release links data/ to shared/data" "$?"
+
+MLKEM_REQUIRE_NATIVE=0 MLKEM_EXPECT_BACKEND="" \
+  bash "$HERE/rollback-release.sh" --to "$A" --apply >/dev/null 2>&1 </dev/null
+current_before="$(readlink -f "$SANDBOX/fibemate/current")"
+rm -f "$SANDBOX/fibemate/releases/$C/data"
+mkdir -p "$SANDBOX/fibemate/releases/$C/data"
+printf 'x\n' > "$SANDBOX/fibemate/releases/$C/data/fibemate.db"
+deploy --sha "$C"
+rc=$?
+[ "$rc" -ne 0 ] && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$current_before" ] \
+  && grep -q "is a real directory, not a symlink" "$SANDBOX/deploy.log"
+check "a release whose data/ is a real directory is refused before the switch" "$?"
+rm -rf "$SANDBOX/fibemate/releases/$C/data"
+
+mv "$SANDBOX/fibemate/shared/data" "$SANDBOX/fibemate/shared/data.away"
+deploy --sha "$B"
+rc=$?
+mv "$SANDBOX/fibemate/shared/data.away" "$SANDBOX/fibemate/shared/data"
+[ "$rc" -ne 0 ] && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$current_before" ] \
+  && grep -q "shared data directory is missing" "$SANDBOX/deploy.log"
+check "a missing shared data directory aborts the deploy" "$?"
+
+if [ "$HAVE_SQLITE" = "1" ]; then
+  cp "$SANDBOX/fibemate/shared/data/fibemate.db" "$SANDBOX/shared-db.backup"
+  sqlite3 "$SANDBOX/fibemate/shared/data/fibemate.db" "delete from users;"
+  deploy --sha "$B"
+  rc=$?
+  cp "$SANDBOX/shared-db.backup" "$SANDBOX/fibemate/shared/data/fibemate.db"
+  [ "$rc" -ne 0 ] && [ "$(readlink -f "$SANDBOX/fibemate/current")" = "$current_before" ] \
+    && grep -q "expected at least 1" "$SANDBOX/deploy.log"
+  check "an empty shared database fails the deploy (the 2026-11-18 failure mode)" "$?"
+else
+  echo "SKIP an empty shared database fails the deploy (sqlite3 not installed here)"
+fi
 
 echo
 echo "$PASS passed, $FAIL failed"

@@ -25,6 +25,7 @@
 # this path never unlocks 4.5k files and therefore cannot leave them unlocked.
 #
 # Overridable: FIBEMATE_ROOT (default /opt/fibemate), REPO_DIR, ENV_SOURCE,
+#              SHARED_DATA, MIN_USERS (default 1; 0 only on a genuinely new host),
 #              PM2_APP, PM2_CMD, HEALTH_JSON_URL, MLKEM_REQUIRE_NATIVE (default 1).
 #
 # Exit: 0 deployed and healthy, 1 failed (previous release still current), 2 usage.
@@ -211,6 +212,43 @@ if [ -e "$ENV_SOURCE" ]; then
   log ".env -> $(readlink "$NEW_DIR/.env" 2>/dev/null || echo "$ENV_SOURCE")"
 else
   log "WARN: $ENV_SOURCE is absent; the API will start without it" >&2
+fi
+
+# The database lives outside the release tree on purpose. Every release is a fresh
+# directory, so a data/ inside it starts empty — and that is not hypothetical: between
+# 2026-11-18 and 2026-11-22 every release booted its own empty database, so
+# /api/auth/login answered 401 in 1 ms (before bcrypt ever ran) for all 65 existing
+# accounts. A deploy that creates an empty database looks completely healthy; only the
+# login is broken. So the link is not an optimisation, it is part of being deployed.
+echo "[2b/8] linking the shared data directory"
+SHARED_DATA="${SHARED_DATA:-$ROOT/shared/data}"
+if [ ! -d "$SHARED_DATA" ]; then
+  die "shared data directory is missing: $SHARED_DATA (a release must never create its own empty one; set SHARED_DATA=... only if it was moved on purpose)"
+fi
+if [ -L "$NEW_DIR/data" ]; then
+  log "data already linked"
+elif [ -e "$NEW_DIR/data" ]; then
+  die "$NEW_DIR/data is a real directory, not a symlink; refusing to deploy (it may hold rows written while the link was missing). Move it aside and retry."
+else
+  ln -s "$SHARED_DATA" "$NEW_DIR/data"
+fi
+DATA_LINK="$(readlink "$NEW_DIR/data" || true)"
+[ "$DATA_LINK" = "$SHARED_DATA" ] || die "data/ points at '$DATA_LINK', expected '$SHARED_DATA'"
+
+# Second net, and advisory where it has to be: without sqlite3 we cannot count rows, so we
+# say so out loud instead of printing a pass we did not earn.
+MIN_USERS="${MIN_USERS:-1}"
+if [ "$MIN_USERS" -gt 0 ]; then
+  if command -v sqlite3 >/dev/null 2>&1; then
+    USER_COUNT="$(sqlite3 "$SHARED_DATA/fibemate.db" 'select count(*) from users;' 2>/dev/null || true)"
+    [ -n "$USER_COUNT" ] || die "cannot read table users in $SHARED_DATA/fibemate.db"
+    [ "$USER_COUNT" -ge "$MIN_USERS" ] || die "shared database holds $USER_COUNT user(s), expected at least $MIN_USERS (set MIN_USERS=0 only on a genuinely new host)"
+    log "data -> $DATA_LINK (users: $USER_COUNT)"
+  else
+    log "WARN advisory: sqlite3 not installed, user-count check SKIPPED (symlink check still enforced)" >&2
+  fi
+else
+  log "data -> $DATA_LINK (user-count check disabled by MIN_USERS=0)"
 fi
 
 echo "[3/8] installing production dependencies"
