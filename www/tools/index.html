@@ -60,12 +60,13 @@
 
   <div class="tool">
     <h2><span class="num">1</span>cbom-tools · 物料清单生成器</h2>
-    <p class="meta">npm <code>cbom-tools@0.3.1</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/cbom-tools">源码</a></p>
+    <p class="meta">npm <code>cbom-tools@0.3.2</code> · Node.js · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/cbom-tools">源码</a></p>
     <p>扫描代码库，产出符合 OWASP CycloneDX 1.7 的 CBOM：算法、模式、曲线、密钥长度按官方 schema 校验，而不是按自己的解析器「能吃回去」。</p>
     <p><code>npx cbom-tools scan --dir ./project --out cbom.json --spec 1.7</code>（旧版可用 <code>--spec 1.6</code>）</p>
     <p>v0.2.7 起：<code>cbom-scan --dir &lt;path&gt;</code> 路径不存在或不是目录时返回退出码 2；旧版输出空 BOM 并退出 0。</p>
     <p>v0.3.0 起：置信度按证据技术给分——源码命中 0.9，仅在依赖清单出现 0.7，不再取决于算法名是否带参数族。</p>
     <p>v0.3.1 起：可识别 liboqs / PQClean 的紧凑拼写（<code>frodokem640aes</code>、<code>mceliece348864</code>、<code>ntruhps2048509</code>、<code>ntrulpr653</code>），此前这类命名 0 命中；与连字符形式互不重复计数。</p>
+    <p>v0.3.2 起：注释不再算作算法证据——<code>ML-DSA</code> 里的 <code>DSA</code>、NEON 注释里的指令名 <code>SHA1</code> 都从匹配范围里剔除；同一棵 liboqs 树上 <code>DSA</code>／<code>SHA-1</code> 计数归零，结论从「高风险」回到「建议整改」。</p>
   </div>
 
   <div class="tool">
@@ -86,7 +87,7 @@
 
   <div class="tool">
     <h2><span class="num">4</span>fibemate-xdiff · 差分哨兵</h2>
-    <p class="meta">npm <code>fibemate-xdiff@0.1.0</code> · Node.js · 命令仍叫 <code>xdiff</code> · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/xdiff">源码</a></p>
+    <p class="meta">npm <code>fibemate-xdiff@0.1.1</code> · Node.js · 命令仍叫 <code>xdiff</code> · <a href="https://github.com/Lennonhaha/fibemate-tools/tree/main/xdiff">源码</a></p>
     <p>拿两份同一算法的实现比对派生路径与 KAT 输出：悄悄改了一处常量、少了一个域分隔字节，就红。</p>
     <p><code>npm i -g fibemate-xdiff</code></p>
   </div>
