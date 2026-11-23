@@ -16,6 +16,8 @@
 //   node scripts/check-site-versions.cjs --url https://fibemate.net/tools/
 //   node scripts/check-site-versions.cjs --file www/tools/index.html
 //   node scripts/check-site-versions.cjs --no-cache --verbose
+//   node scripts/check-site-versions.cjs --retries 2            # 400ms, 800ms backoff
+//   node scripts/check-site-versions.cjs --allow-advisory       # 3 -> 0, loudly
 //   node scripts/check-site-versions.cjs --selftest            # no network
 //
 // Exit codes (a green run means "checked, and every checked package matched"):
@@ -51,6 +53,8 @@ function parseArgs(argv) {
     noCache: false,
     selftest: false,
     verbose: false,
+    allowAdvisory: false,
+    retries: 0,
     timeoutMs: 15000,
   };
   for (let i = 0; i < argv.length; i++) {
@@ -60,6 +64,8 @@ function parseArgs(argv) {
     else if (a === '--cache') opts.cache = path.resolve(argv[++i]);
     else if (a === '--cache-ttl') opts.cacheTtlMs = Number(argv[++i]) * 1000;
     else if (a === '--no-cache') opts.noCache = true;
+    else if (a === '--allow-advisory') opts.allowAdvisory = true;
+    else if (a === '--retries') opts.retries = Number(argv[++i]);
     else if (a === '--selftest') opts.selftest = true;
     else if (a === '--verbose') opts.verbose = true;
     else if (a === '--timeout') opts.timeoutMs = Number(argv[++i]) * 1000;
@@ -73,6 +79,10 @@ function parseArgs(argv) {
   }
   if (!Number.isFinite(opts.cacheTtlMs) || opts.cacheTtlMs < 0) {
     console.error('--cache-ttl must be a non-negative number of seconds');
+    process.exit(2);
+  }
+  if (!Number.isFinite(opts.retries) || opts.retries < 0) {
+    console.error('--retries must be a non-negative number of attempts');
     process.exit(2);
   }
   return opts;
@@ -214,10 +224,14 @@ async function latestVersion(entry, opts, cache) {
 async function runCompare(entries, opts, fetcher) {
   const cache = opts.noCache ? {} : readCache(opts.cache);
   const rows = [];
+  const attempts = 1 + (Number.isFinite(opts.retries) ? opts.retries : 0);
   for (const entry of entries) {
-    const got = fetcher
-      ? await fetcher(entry)
-      : await latestVersion(entry, opts, cache);
+    let got = null;
+    for (let a = 0; a < attempts; a++) {
+      got = fetcher ? await fetcher(entry) : await latestVersion(entry, opts, cache);
+      if (got.ok) break;
+      if (a + 1 < attempts) await new Promise((r) => setTimeout(r, 400 * Math.pow(2, a)));
+    }
     if (!got.ok) rows.push({ state: 'unknown', entry, error: got.error });
     else if (got.version === entry.version) rows.push({ state: 'pass', entry, registry: got.version, cached: got.cached });
     else rows.push({ state: 'mismatch', entry, registry: got.version });
@@ -249,6 +263,10 @@ function report(rows, opts) {
     return 1;
   }
   if (unknown > 0) {
+    if (opts && opts.allowAdvisory) {
+      console.log('ADVISORY (allowed by --allow-advisory; this is NOT a pass): ' + unknown + ' package(s) were not compared.');
+      return 0;
+    }
     console.log('ADVISORY (not a pass): at least one registry was unreachable, so those packages were not compared.');
     return 3;
   }
@@ -306,13 +324,31 @@ async function selftest() {
   //    and sent anyway. `@scope/../etc` fits the loose token regex on purpose:
   //    the shape check is what stops it, and that is what this asserts.
   console.log('');
-  const dirty = extractVersions(page('@scope/../etc', '1.0.0', 'npm') + page('ok-pkg', '1.0.0', 'npm'), 'fixture-dirty');
-  cases.push({
+  const dirty = extractVersions(page('@scope/../etc', '1.0.0', 'npm') + page('ok-pkg', '1.0.0', 'npm'), 'fixture-dirty');  cases.push({
     name: 'unsafe package name rejected, safe one kept',
     expect: 'rejected=@scope/../etc kept=ok-pkg',
     got: 'rejected=' + dirty.rejected.map((r) => r.pkg).join(',') + ' kept=' + dirty.found.map((f) => f.pkg).join(','),
     ok: dirty.rejected.length === 1 && dirty.found.length === 1 && dirty.rejected[0].pkg === '@scope/../etc',
   });
+
+  // 7. One transient registry failure is retried, not escalated to a red job.
+  console.log('');
+  let calls = 0;
+  const flaky = async () => {
+    calls++;
+    return calls === 1 ? { ok: false, error: 'ETIMEDOUT (fixture)' } : { ok: true, version: '0.3.2' };
+  };
+  rows = await runCompare(extractVersions(page('cbom-tools', '0.3.2', 'npm'), 'fixture-flaky').found, { noCache: true, retries: 1 }, flaky);
+  code = report(rows, {});
+  cases.push({ name: 'one transient failure retried, then green', expect: 0, got: code, ok: code === 0 && calls === 2 });
+
+  // 8. `--allow-advisory` maps "could not verify" to 0 for the advisory job, and
+  //    says so in the output. The rows still read `unknown`, so nothing here can
+  //    be mistaken for a comparison that happened.
+  console.log('');
+  rows = await runCompare(extractVersions(page('cbom-tools', '0.3.2', 'npm'), 'fixture-allow').found, { noCache: true, retries: 0 }, fixed({}));
+  code = report(rows, { allowAdvisory: true });
+  cases.push({ name: '--allow-advisory returns 0 but leaves the row unknown', expect: 0, got: code, ok: code === 0 && rows[0].state === 'unknown' });
 
   console.log('');
   let bad = 0;

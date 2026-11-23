@@ -5,10 +5,17 @@ name: site-versions
 # www/** is excluded from verifact's scan.
 #
 # Exit codes from scripts/check-site-versions.cjs:
-#   0 matched  1 mismatch (real drift)  2 parse/usage  3 registry unreachable
-# A red run prints which of the four it was, so 3 (cannot verify) is never
-# mistaken for 1 (verified drift). No `|| true` anywhere: a step that cannot fail
-# is not a gate.
+#   0 matched   1 mismatch (real drift)   2 parse/usage   3 registry unreachable
+#
+# Alert level, decided 2026-11-23 after measuring the noise: three runs in one
+# hour produced two transient registry failures. Exit 3 therefore does not block
+# on the paths where a human is mid-change:
+#   - page-in-tree      blocking: the tree is ours, the registry is only a lookup
+#   - live (scheduled)  blocking: once a day, a site that lags main is news
+#   - live (advisory)   not a gate: named "advisory" so its green is never read
+#                       as "the live site was verified"
+# No `|| true` anywhere. The advisory job passes --allow-advisory, which prints
+# ADVISORY (not a pass) and leaves every row `unknown`.
 on:
   schedule:
     - cron: '30 1 * * *'
@@ -17,6 +24,10 @@ on:
     branches: [main]
     paths:
       - 'www/tools/**.html'
+      - 'scripts/check-site-versions.cjs'
+      - '.github/workflows/site-versions.yml'
+  pull_request:
+    paths:
       - 'scripts/check-site-versions.cjs'
       - '.github/workflows/site-versions.yml'
 
@@ -28,23 +39,42 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  versions:
-    name: tools page vs registries
+  page-in-tree:
+    name: page in tree vs registries
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-
-      # The gate must be able to go red before it is allowed to go green.
-      - name: selftest - old version must fail, match must pass, no-network must not pass
+      - name: selftest - red on old version, red on no-network
         run: node scripts/check-site-versions.cjs --selftest
+      - name: compare the tree
+        run: node scripts/check-site-versions.cjs --no-cache --verbose --retries 3
 
-      - name: page in this tree vs registries
-        run: node scripts/check-site-versions.cjs --no-cache --verbose
+  live-scheduled:
+    name: live site (scheduled gate)
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: compare the live page
+        run: node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose --retries 3
 
-      - name: live site vs registries
-        run: node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose
+  live-advisory:
+    name: live site (advisory, not a gate)
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: compare the live page (network failure is not a verdict)
+        run: node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose --retries 2 --allow-advisory
