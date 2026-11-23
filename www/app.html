@@ -494,64 +494,22 @@
 
       <!-- Register link (login tab) -->
       <p class="register-link">
-        还没有账号？ <a onclick="switchForm('register')" id="goRegister">立即注册 →</a>
+        还没有账号？请使用 <a href="/#download">FIBEMATE 客户端</a> 注册
       </p>
 
       <!-- Register form (register tab) -->
-      <form class="auth-form hidden" id="registerForm" onsubmit="handleRegister(event)">
-        <div class="input-group">
-          <input type="text" id="regUsername" placeholder="设置用户名（至少3位）"
-            minlength="3" maxlength="30" autocomplete="off" spellcheck="false"
-            aria-label="用户名" oninput="validateInput(this, 3)">
-        </div>
-        <div class="input-group">
-          <input type="email" id="regEmail" placeholder="邮箱地址"
-            autocomplete="off" aria-label="邮箱" oninput="validateEmail(this)">
-        </div>
-        <div class="input-group">
-          <input type="password" id="regPassword" placeholder="设置密码（至少8位）"
-            minlength="8" autocomplete="off" oninput="onPasswordChange()"
-            aria-label="密码">
-          <div class="strength-bar" id="strengthBar">
-            <div class="strength-segment" id="seg1"></div>
-            <div class="strength-segment" id="seg2"></div>
-            <div class="strength-segment" id="seg3"></div>
-            <div class="strength-segment" id="seg4"></div>
-          </div>
-          <div class="strength-label" id="strengthLabel"></div>
-        </div>
-        <div class="input-group">
-          <input type="password" id="regPassword2" placeholder="确认密码"
-            autocomplete="off" aria-label="确认密码" oninput="validatePasswordMatch()">
-          <div class="input-error-msg" id="pwMatchError" style="display:none;color:var(--error);font-size:11px;margin-top:4px;">两次密码不一致</div>
-        </div>
-
-        <!-- ZK mode toggle -->
-        <div class="zk-toggle" id="zkToggle" onclick="toggleZKMode()">
-          <div class="toggle-switch" id="zkToggleSwitch"></div>
-          <div class="zk-toggle-text">
-            <strong>🔐 ZK 匿名注册（推荐）</strong>
-            <span>零知识证明，保护你的身份信息</span>
-          </div>
-        </div>
-
-        <div id="registerError" class="error-msg"></div>
-        <div class="zk-progress" id="zkProgress">
-          <div class="zk-progress-label" id="zkProgressLabel">正在初始化 ZK 证明...</div>
-          <div class="progress-bar"><div class="progress-bar-fill" id="zkProgressBar" style="width:0%"></div></div>
-        </div>
-        <button type="submit" class="btn-primary" id="registerBtn">
-          <svg width="14" height="16" viewBox="0 0 14 16" fill="none" style="margin-right:4px">
-            <rect x="2" y="7" width="10" height="8" rx="1.5" stroke="currentColor" stroke-width="1.3" fill="none"/>
-            <path d="M4 7V5C4 3.34 5.34 2 7 2C8.66 2 10 3.34 10 5V7" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
-            <circle cx="7" cy="11" r="1" fill="currentColor"/>
-          </svg>
-          <span id="registerBtnText">注册 FIBEMATE</span>
-        </button>
-        <p class="register-link">
-          已有账号？ <a onclick="switchForm('login')" id="goLogin">返回登录 →</a>
+      <!-- Web signup is disabled on purpose: POST /api/auth/register requires a
+           publicKey, and the only maintained key-generation path is the desktop
+           client (src/fibemate-zk-polyfill.js). Re-implementing the generator in
+           the page would mean two implementations of the same key material. -->
+      <div class="auth-form hidden" id="registerForm">
+        <p class="register-link" style="line-height:1.8">
+          <strong>网页注册已停用</strong><br>
+          账号需在 FIBEMATE 桌面客户端中创建，注册所需密钥必须在本地生成。
         </p>
-      </form>
+        <p class="register-link"><a href="/#download">下载客户端 →</a></p>
+        <div id="registerError" class="error-msg"></div>
+      </div>
 
       <!-- Agreement links -->
       <div class="agreement-links">
@@ -649,7 +607,8 @@
 
     function toggleZKMode() {
       zkModeEnabled = !zkModeEnabled;
-      document.getElementById('zkToggle').classList.toggle('active', zkModeEnabled);
+      const el = document.getElementById('zkToggle');
+      if (el) el.classList.toggle('active', zkModeEnabled);
     }
 
     // Input validation
@@ -688,8 +647,11 @@
     }
 
     function validatePasswordMatch() {
-      const p1 = document.getElementById('regPassword').value;
-      const p2 = document.getElementById('regPassword2').value;
+      const el1 = document.getElementById('regPassword');
+      const el2 = document.getElementById('regPassword2');
+      if (!el1 || !el2) return; // web signup form removed (see #registerForm notice)
+      const p1 = el1.value;
+      const p2 = el2.value;
       const errEl = document.getElementById('pwMatchError');
       const input = document.getElementById('regPassword2');
       if (p2.length > 0) {
@@ -711,14 +673,18 @@
     function onPasswordChange() {
       checkPasswordStrength();
       // Re-check match if confirmation was filled
-      const p2 = document.getElementById('regPassword2').value;
-      if (p2.length > 0) validatePasswordMatch();
+      const el2 = document.getElementById('regPassword2');
+      if (!el2) return; // web signup form removed
+      if (el2.value.length > 0) validatePasswordMatch();
     }
 
     function checkPasswordStrength() {
-      const pwd = document.getElementById('regPassword').value;
+      const pwdEl = document.getElementById('regPassword');
+      if (!pwdEl) return; // web signup form removed
+      const pwd = pwdEl.value;
       const segs = [1,2,3,4].map(i => document.getElementById('seg' + i));
       const label = document.getElementById('strengthLabel');
+      if (!label) return;
       if (!pwd) { segs.forEach(s => s.style.background = ''); label.textContent = ''; return; }
       let strength = 0;
       if (pwd.length >= 8) strength++;
@@ -734,9 +700,12 @@
 
     function updateZKProgress(pct, text) {
       const el = document.getElementById('zkProgress');
+      if (!el) return; // web signup form removed
       el.classList.add('active');
-      document.getElementById('zkProgressLabel').textContent = text;
-      document.getElementById('zkProgressBar').style.width = pct + '%';
+      const label = document.getElementById('zkProgressLabel');
+      const bar = document.getElementById('zkProgressBar');
+      if (label) label.textContent = text;
+      if (bar) bar.style.width = pct + '%';
     }
 
     function showToast(msg, type) {
@@ -849,52 +818,14 @@
     }
 
     async function handleRegister(e) {
-      e.preventDefault();
-      const btn = document.getElementById('registerBtn');
+      if (e && e.preventDefault) e.preventDefault();
       const errEl = document.getElementById('registerError');
-      errEl.style.display = 'none';
-      const username = document.getElementById('regUsername').value.trim();
-      const email = document.getElementById('regEmail').value.trim();
-      const password = document.getElementById('regPassword').value;
-      const password2 = document.getElementById('regPassword2').value;
-
-      if (!username || !email || !password) { showError(errEl, '请填写所有字段'); return; }
-      if (username.length < 3) { showError(errEl, '用户名至少3个字符'); return; }
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError(errEl, '邮箱格式不正确'); return; }
-      if (password.length < 8) { showError(errEl, '密码至少8位'); return; }
-      if (password !== password2) { showError(errEl, '两次密码不一致'); return; }
-
-      setLoading(btn, true);
-      if (zkModeEnabled) updateZKProgress(10, '正在初始化 ZK 证明...');
-
-      try {
-        if (zkModeEnabled) {
-          updateZKProgress(20, '正在获取 ZK 参数...');
-          try { await fetch(`${API_BASE}/auth/zk-info`, { timeout: 5000 }); } catch (_) {}
-          updateZKProgress(40, '正在生成 ZK 证明...');
-        }
-        const displayName = username;
-        const deviceId = 'device_' + Math.random().toString(36).substr(2, 12);
-        updateZKProgress(zkModeEnabled ? 60 : 20, '正在提交注册...');
-        const res = await fetch(`${API_BASE}/auth/register`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, email, password, displayName, deviceId, zkMode: zkModeEnabled })
-        });
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(data.error || `注册失败 (${res.status})`);
-        updateZKProgress(zkModeEnabled ? 90 : 60, '正在完成设置...');
-        saveAuth(data);
-        updateZKProgress(100, '完成！');
-        showToast(zkModeEnabled ? '🔐 ZK 注册成功！' : '注册成功！', 'success');
-        setTimeout(() => window.location.href = 'main-tiled.html', 800);
-      } catch (err) {
-        showError(errEl, err.message);
-        document.getElementById('zkProgress').classList.remove('active');
-        setLoading(btn, false);
+      if (errEl) {
+        errEl.textContent = '网页注册已停用，请使用 FIBEMATE 客户端注册。';
+        errEl.style.display = 'block';
       }
+      showToast('网页注册已停用，请使用客户端', 'info');
     }
-
-    function handleGuestLogin() {
       showToast('👤 正在以游客身份进入...', 'info');
       localStorage.setItem('fk_guest', 'true');
       localStorage.setItem('fk_uid', 'guest_' + Math.random().toString(36).substr(2, 8));

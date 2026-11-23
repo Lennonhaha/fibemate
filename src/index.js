@@ -26,6 +26,7 @@ const flags = require('./flags');
 
 const { safeCompare, safeCompareHex, safeFind, safeFindByField, timingSafe404 } = require('./lib/constant-time');
 const { isUnreadForDevice } = require('./lib/offline-replay');
+const { classify: classifyUser, isTestUsername } = require('./lib/test-user');
 
 /**
  * Noir Backend - 端到端加密社交服务器
@@ -1106,10 +1107,16 @@ app.get('/api/users/count', authMiddleware, (req, res) => {
   try {
     const users = db.data.users || {};
     const totalUsers = Object.keys(users).length;
-    const testUsers = Object.values(users).filter(u => u.isTestUser).length;
+    // Counted by rule, not by the stored flag: every account created before
+    // this rule existed was written with the flag forced on by the registration
+    // handler, so reading the flag back would report testUsers === totalUsers
+    // regardless of what the accounts actually are. See src/lib/test-user.js.
+    const testUsers = Object.values(users).filter(u => isTestUsername(u.username)).length;
     res.json({
       totalUsers,
       testUsers,
+      realUsers: totalUsers - testUsers,
+      classifiedBy: 'username-rule',
       maxUsers: MAX_USERS,
       remainingSlots: Math.max(0, MAX_USERS - totalUsers),
       isFull: totalUsers >= MAX_USERS
@@ -1215,7 +1222,7 @@ app.post('/api/auth/register', rateLimitMiddleware, async (req, res) => {
       securityScore: 60,
       lastSeen: null,
       createdAt: now,
-      isTestUser: true,
+      isTestUser: classifyUser(username).isTest,
       updatedAt: now
     });
 
@@ -1227,7 +1234,7 @@ app.post('/api/auth/register', rateLimitMiddleware, async (req, res) => {
       publicKey,
       isActive: true,
       createdAt: now,
-      isTestUser: true,
+      isTestUser: classifyUser(username).isTest,
       lastActive: now
     });
 
@@ -1235,7 +1242,7 @@ app.post('/api/auth/register', rateLimitMiddleware, async (req, res) => {
 
     const token = genToken({ id: userId, username, deviceId });
     const refreshToken = genRefreshToken({ id: userId, username, deviceId });
-    logSecurity('register', userId, { username });
+    logSecurity('register', userId, { username, isTestUser: classifyUser(username).isTest }, req);
 
     res.status(201).json({ userId, deviceId, token, refreshToken, message: '注册成功' });
   } catch (e) {
@@ -1255,7 +1262,7 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
     if (lockStatus.locked) {
       const min = Math.floor(lockStatus.remainingSec / 60);
       const sec = lockStatus.remainingSec % 60;
-      logSecurity('login_blocked', null, { username, remainingSec: lockStatus.remainingSec });
+      logSecurity('login_blocked', null, { username, remainingSec: lockStatus.remainingSec }, req);
       return res.status(429).json({
         error: `账户已锁定，请 ${min} 分 ${sec} 秒后重试`,
         lockoutRemaining: (lockStatus && lockStatus.remainingSec) || 0
@@ -1265,7 +1272,7 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
     const user = db.getUserByUsername(username);
     if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
       recordFailedLogin(username, req.ip);
-      logSecurity('login_fail', null, { username });
+      logSecurity('login_fail', null, { username }, req);
       return res.status(401).json({ error: '用户名或密码错误' });
     }
 
@@ -1298,7 +1305,7 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
     db.updateUser(user.id, { isOnline: 1, lastSeen: Date.now() });
     db.setPresence(user.id, true);
     resetLoginAttempts(username);
-    logSecurity('login', user.id, { deviceId });
+    logSecurity('login', user.id, { deviceId }, req);
 
     res.json({
       userId: user.id,
