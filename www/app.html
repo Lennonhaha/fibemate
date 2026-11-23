@@ -826,6 +826,7 @@
       }
       showToast('网页注册已停用，请使用客户端', 'info');
     }
+    async function handleGuestLogin() {
       showToast('👤 正在以游客身份进入...', 'info');
       localStorage.setItem('fk_guest', 'true');
       localStorage.setItem('fk_uid', 'guest_' + Math.random().toString(36).substr(2, 8));
