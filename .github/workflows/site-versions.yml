@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-3.0-only
+# SPDX-License-Identifier: GPL-3.0-only
 name: site-versions
 # Fails when www/tools/ advertises a package version the registry does not call
 # latest - the failure mode that stayed green for hours on 2026-11-23 because

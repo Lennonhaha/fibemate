@@ -38,7 +38,7 @@ const https = require('https');
 
 const REPO_ROOT = path.resolve(__dirname, '..');
 const DEFAULT_FILE = path.join(REPO_ROOT, 'www', 'tools', 'index.html');
-const DEFAULT_CACHE = path.join(os.tmpdir(), 'fibemate-site-versions-cache.json');
+const DEFAULT_CACHE = path.join(os.homedir(), '.cache', 'fibemate', 'site-versions.json');
 const NPM_REGISTRY = 'https://registry.npmjs.org';
 const PYPI_REGISTRY = 'https://pypi.org/pypi';
 
@@ -159,7 +159,14 @@ function readCache(file) {
 }
 
 function writeCache(file, data) {
-  try { fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n', 'utf8'); } catch (e) { /* cache is best effort */ }
+  // Not os.tmpdir(): a predictable path in a world-writable directory is a
+  // symlink target, and CodeQL is right to call that an insecure temporary
+  // file. A private directory under the user's home, created 0700 and written
+  // 0600, has no such property. Still best effort - a cache miss is not an error.
+  try {
+    fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+    fs.writeFileSync(file, JSON.stringify(data, null, 2) + '\n', { encoding: 'utf8', mode: 0o600 });
+  } catch (e) { /* cache is best effort */ }
 }
 
 async function latestVersion(entry, opts, cache) {
@@ -168,9 +175,14 @@ async function latestVersion(entry, opts, cache) {
   if (!opts.noCache && cached && Date.now() - cached.at < opts.cacheTtlMs) {
     return { ok: true, version: cached.version, cached: true };
   }
+  // encodeURIComponent escapes the scope marker in `@scope/name`; the registry
+  // accepts either form, but leave the leading @ alone so the URL a human reads
+  // in --verbose matches the package name. split/join instead of replace()
+  // because replace() with a string argument only touches the first match.
+  const npmPath = encodeURIComponent(entry.pkg).split('%40').join('@');
   const url = entry.registry === 'pypi'
     ? PYPI_REGISTRY + '/' + encodeURIComponent(entry.pkg) + '/json'
-    : NPM_REGISTRY + '/' + encodeURIComponent(entry.pkg).replace('%40', '@');
+    : NPM_REGISTRY + '/' + npmPath;
   const res = await fetchJson(url, opts.timeoutMs);
   if (!res.ok) return { ok: false, error: res.error };
   let version;
