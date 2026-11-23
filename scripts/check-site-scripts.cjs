@@ -52,7 +52,11 @@ function walkHtml(dir, acc = []) {
 
 function findBlocks(html) {
   const blocks = [];
-  const re = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+  // `</script\s*>` is not pedantry: HTML allows `</script >` and `</script\n>`,
+  // and CodeQL js/bad-tag-filter flags the stricter form because a filter that
+  // misses it can be walked past. Here it would silently merge the remainder of
+  // the page into one block.
+  const re = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
   let m;
   while ((m = re.exec(html)) !== null) {
     const attrs = m[1] || '';
@@ -159,6 +163,16 @@ function selftest() {
 
     // 4. module syntax must be accepted under type=module
     write('esm/module.html', '<html><script type="module">import x from "./x.js";\nexport default x;\n</script></html>');
+
+    // 4b. an end tag with whitespace before `>` still closes the block
+    write('spaced/close.html', '<html><script>const y = 2;</script ><p>after</p></html>');
+
+    const spacedResult = checkRoot(path.join(root, 'spaced'));
+    cases.push({
+      name: 'end tag with trailing whitespace still closes the block',
+      pass: spacedResult.blocks === 1 && spacedResult.failures.length === 0,
+      detail: `blocks=${spacedResult.blocks} failures=${spacedResult.failures.length}`,
+    });
 
     const okRun = runCli(['--root', path.join(root, 'ok')]);
     cases.push({
