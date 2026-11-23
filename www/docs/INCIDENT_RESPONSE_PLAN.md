@@ -50,9 +50,9 @@
 
 | 角色 | 职责 | 当前负责人 | 联系方式 |
 |------|------|-----------|----------|
-| **事件指挥官** | 协调整体响应、决策 | Tianhe Liu | 27202998@qq.com |
-| **技术响应** | 技术调查、修复 | Tianhe Liu | 27202998@qq.com |
-| **通信协调** | 对外沟通、公告发布 | Tianhe Liu | 27202998@qq.com |
+| **事件指挥官** | 协调整体响应、决策 | Tianhe Liu | security@fibemate.net |
+| **技术响应** | 技术调查、修复 | Tianhe Liu | security@fibemate.net |
+| **通信协调** | 对外沟通、公告发布 | Tianhe Liu | security@fibemate.net |
 | **法务顾问** | 合规评估、法律风险 | - | 待补充 |
 
 ### 3.2 外部支持
@@ -244,7 +244,7 @@
 ### 5.1 内部通信
 
 **通知渠道**:
-- 邮件: 27202998@qq.com
+- 邮件: security@fibemate.net
 - GitHub: @Lennonhaha
 - 即时通讯: 待建立
 
@@ -504,7 +504,7 @@
 ### 7.3 联系人清单
 
 **内部联系人**:
-- Tianhe Liu (维护者): 27202998@qq.com, GitHub: @Lennonhaha
+- Tianhe Liu (维护者): security@fibemate.net, GitHub: @Lennonhaha
 
 **外部联系人**:
 - GitHub Support: support@github.com

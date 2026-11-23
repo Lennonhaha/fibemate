@@ -383,8 +383,8 @@ if(typeof THREE==='undefined') { document.body.innerHTML='<div style="color:red;
                 },
                 {
                     file:'git log analysis', lines:'476 commits',
-                    finding:'<strong>⚠️ Bus Factor = 1 (硬伤)：全 476 commits 来自同一邮箱 27202998@qq.com + AI agent (dev@fibemate.net)。所有贡献者可归约到 1 个自然人。这是从 OpenSSF Silver 到 Gold 的最大阻塞项。',
-                    code:'$ git shortlog -sn --all\n 275  FIBEMATE <dev@fibemate.net>     (AI agent)\n  39  Tianhe Liu <...@fibemate.net>\n   3  Lennonhaha <27202998@qq.com>\n  15+ liuguowei1983 <27202998@qq.com>\n─────────────────────────────\n  Bus Factor = 1  (经邮箱去重证实)',
+                    finding:'<strong>⚠️ Bus Factor = 1 (硬伤)：全 476 commits 来自同一邮箱（个人邮箱，地址略）+ AI agent (dev@fibemate.net)。所有贡献者可归约到 1 个自然人。这是从 OpenSSF Silver 到 Gold 的最大阻塞项。',
+                    code:'$ git shortlog -sn --all\n 275  FIBEMATE <dev@fibemate.net>     (AI agent)\n  39  Tianhe Liu <...@fibemate.net>\n   3  Lennonhaha <personal mailbox>\n  15+ liuguowei1983 <personal mailbox>\n─────────────────────────────\n  Bus Factor = 1  (经邮箱去重证实)',
                     tags:['risk']
                 },
                 {

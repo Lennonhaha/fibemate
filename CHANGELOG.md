@@ -259,7 +259,7 @@ changes whether the project's own claims can be trusted without re-reading the c
 
 ### Security
 
-- Credential leak file deleted (`UsersmaivsAppDataLocalTempgit-cred.txt`)
+- Credential leak file deleted (local temp credential file; path not reproduced here)
 - `jsonwebtoken` ghost dependency removed (zero code references)
 - OpenSSF Scorecard passing · CodeQL integrated · Repolinter compliant
 - 11 security governance documents (GDPR/LGPD/IRP/BCP/CryptoLaw)
