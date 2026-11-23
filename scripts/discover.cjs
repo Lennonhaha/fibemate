@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { _execSync } = require('child_process');
-const BASE = 'C:/Users/maivs/.qclaw/workspace-tfxjjhfnjialcuju';
+const BASE = process.env.FIBEMATE_BASE || path.resolve(__dirname, '..');
 
 function findFiles(pattern, dir) {
   const results = [];
@@ -15,7 +15,7 @@ function findFiles(pattern, dir) {
         if (e.isDirectory() && !e.name.startsWith('.') && e.name !== 'node_modules') {
           walk(full);
         } else if (e.isFile() && pattern.test(e.name)) {
-          results.push(full.replace(BASE + '/', ''));
+          results.push(path.relative(BASE, full).split(path.sep).join('/'));
         }
       }
     } catch (_) {}

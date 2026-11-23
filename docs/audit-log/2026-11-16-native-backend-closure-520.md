@@ -82,7 +82,7 @@ Cron job `mlkem-native-watch-24h` (isolated, every 30 min, read-only over SSH):
 - no new fallback lines in `error.log`
 - `check-live` 4/4
 
-On any anomaly it writes `tmp/mlkem-ALERT.md`, emails `27202998@qq.com` with subject prefix
+On any anomaly it writes `tmp/mlkem-ALERT.md`, emails the maintainer mailbox (address not reproduced here) with subject prefix
 `[mlkem-watch][P0]`, and appends to `tmp/mlkem-watch.jsonl`. It never restarts, deploys, or edits a
 server file. The 24 h window started 2026-11-16T10:05Z and ends ~2026-11-17T10:05Z.
 
