@@ -86,8 +86,22 @@ function parseArgs(argv) {
 // install.
 const TOKEN = /^(@[^/@\s]+\/[^@\s]+|[A-Za-z0-9._-]+)@(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)$/;
 
+// A package name lifted off a page ends up inside a request path, so it has to
+// look like a package name and nothing else. The page is ours, but "ours" is a
+// claim about today; the shape is checked on every run and an unrecognised name
+// is a named failure (exit 2), not something to encode and send anyway.
+const NPM_NAME = /^(@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/;
+const PYPI_NAME = /^[A-Za-z0-9][A-Za-z0-9._-]*$/;
+
+function isSafeName(name, registry) {
+  if (!name || name.length > 214) return false;
+  if (name.includes('..')) return false;
+  return registry === 'pypi' ? PYPI_NAME.test(name) : NPM_NAME.test(name);
+}
+
 function extractVersions(html, sourceLabel) {
   const found = [];
+  const rejected = [];
   const blocks = html.split('<p class="meta">').slice(1);
   for (const raw of blocks) {
     const block = raw.split('</p>')[0];
@@ -99,10 +113,14 @@ function extractVersions(html, sourceLabel) {
     for (const code of codes) {
       const m = TOKEN.exec(code);
       if (!m) continue;
+      if (!isSafeName(m[1], registry)) {
+        rejected.push({ pkg: m[1], version: m[2], registry, source: sourceLabel });
+        continue;
+      }
       found.push({ pkg: m[1], version: m[2], registry, source: sourceLabel });
     }
   }
-  return found;
+  return { found, rejected };
 }
 
 function fetchJson(url, timeoutMs) {
@@ -252,36 +270,48 @@ async function selftest() {
   };
 
   // 1. RED: page says 0.3.1, registry says 0.3.2
-  let rows = await runCompare(extractVersions(page('cbom-tools', '0.3.1', 'npm'), 'fixture-red'), { noCache: true }, fixed({ 'cbom-tools': '0.3.2' }));
+  let rows = await runCompare(extractVersions(page('cbom-tools', '0.3.1', 'npm'), 'fixture-red').found, { noCache: true }, fixed({ 'cbom-tools': '0.3.2' }));
   let code = report(rows, {});
   cases.push({ name: 'old version must be red', expect: 1, got: code, ok: code === 1, expectName: rows[0] && rows[0].state === 'mismatch' && rows[0].registry === '0.3.2' });
 
   // 2. GREEN: control group - same input, matching version
   console.log('');
-  rows = await runCompare(extractVersions(page('cbom-tools', '0.3.2', 'npm'), 'fixture-green'), { noCache: true }, fixed({ 'cbom-tools': '0.3.2' }));
+  rows = await runCompare(extractVersions(page('cbom-tools', '0.3.2', 'npm'), 'fixture-green').found, { noCache: true }, fixed({ 'cbom-tools': '0.3.2' }));
   code = report(rows, {});
   cases.push({ name: 'matching version must be green', expect: 0, got: code, ok: code === 0 });
 
   // 3. ADVISORY: unreachable registry must not read as green
   console.log('');
-  rows = await runCompare(extractVersions(page('cbom-tools', '0.3.2', 'npm'), 'fixture-netfail'), { noCache: true }, fixed({}));
+  rows = await runCompare(extractVersions(page('cbom-tools', '0.3.2', 'npm'), 'fixture-netfail').found, { noCache: true }, fixed({}));
   code = report(rows, {});
   cases.push({ name: 'unreachable registry must be 3, never 0', expect: 3, got: code, ok: code === 3 });
 
   // 4. ZERO COVERAGE: a page with no version tokens may not exit 0
   console.log('');
-  rows = await runCompare(extractVersions('<p>no packages here</p>', 'fixture-empty'), { noCache: true }, fixed({}));
+  rows = await runCompare(extractVersions('<p>no packages here</p>', 'fixture-empty').found, { noCache: true }, fixed({}));
   code = report(rows, {});
   cases.push({ name: 'parsed 0 packages must be 2, never 0', expect: 2, got: code, ok: code === 2 });
 
   // 5. PyPI path and a scoped npm name still parse
   console.log('');
-  const mixed = extractVersions(page('crypto-time-machine', '0.1.2', 'pypi') + page('@scope/pkg', '1.4.0', 'npm'), 'fixture-parse');
+  const mixed = extractVersions(page('crypto-time-machine', '0.1.2', 'pypi') + page('@scope/pkg', '1.4.0', 'npm'), 'fixture-parse').found;
   cases.push({
     name: 'parse: pypi + scoped package',
     expect: 'pypi:crypto-time-machine=0.1.2,npm:@scope/pkg=1.4.0',
     got: mixed.map((m) => m.registry + ':' + m.pkg + '=' + m.version).join(','),
     ok: mixed.length === 2 && mixed[0].registry === 'pypi' && mixed[1].pkg === '@scope/pkg',
+  });
+
+  // 6. A name that cannot be a registry name is refused by shape, not encoded
+  //    and sent anyway. `@scope/../etc` fits the loose token regex on purpose:
+  //    the shape check is what stops it, and that is what this asserts.
+  console.log('');
+  const dirty = extractVersions(page('@scope/../etc', '1.0.0', 'npm') + page('ok-pkg', '1.0.0', 'npm'), 'fixture-dirty');
+  cases.push({
+    name: 'unsafe package name rejected, safe one kept',
+    expect: 'rejected=@scope/../etc kept=ok-pkg',
+    got: 'rejected=' + dirty.rejected.map((r) => r.pkg).join(',') + ' kept=' + dirty.found.map((f) => f.pkg).join(','),
+    ok: dirty.rejected.length === 1 && dirty.found.length === 1 && dirty.rejected[0].pkg === '@scope/../etc',
   });
 
   console.log('');
@@ -318,8 +348,14 @@ async function main() {
     label = path.relative(REPO_ROOT, opts.file).replace(/\\/g, '/');
   }
 
-  const entries = extractVersions(html, label);
+  const { found: entries, rejected } = extractVersions(html, label);
   if (opts.verbose) console.log('parsed ' + entries.length + ' package(s) from ' + label);
+  if (rejected.length) {
+    for (const r of rejected) console.log('REJECTED  ' + r.pkg + ' (' + r.registry + ') - not a valid registry name, so it is not requested');
+    console.log('');
+    console.log('FAIL: ' + rejected.length + ' package name(s) on the page cannot be a registry name. Fix the page.');
+    process.exit(2);
+  }
   const rows = await runCompare(entries, opts);
   process.exit(report(rows, opts));
 }
