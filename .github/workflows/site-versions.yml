@@ -28,6 +28,7 @@ on:
       - '.github/workflows/site-versions.yml'
   pull_request:
     paths:
+      - 'www/tools/**.html'
       - 'scripts/check-site-versions.cjs'
       - '.github/workflows/site-versions.yml'
 
