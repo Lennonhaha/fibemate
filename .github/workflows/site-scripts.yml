@@ -1,0 +1,52 @@
+# SPDX-License-Identifier: GPL-3.0-only
+name: site-scripts
+# Catches the class of defect that CodeQL logged as a note on 2026-11-23 and
+# nothing treated as fatal: an inline <script> block in www/ that does not
+# parse. app.html has one block, so one stray brace there killed every handler
+# on the page while the page itself still rendered.
+#
+# Exit codes from scripts/check-site-scripts.cjs:
+#   0 every inline block parses
+#   1 at least one block failed (each failure is named file:line)
+#   2 nothing was checked (no HTML / no inline JS) or bad usage
+#
+# Exit 2 is deliberate: a scan that covered nothing must not read as clean.
+# No `|| true` anywhere - this job is a gate, and its green means parsing
+# was actually exercised (the selftest step proves the checker can go red).
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'www/**.html'
+      - 'www/**.htm'
+      - 'scripts/check-site-scripts.cjs'
+      - '.github/workflows/site-scripts.yml'
+  pull_request:
+    paths:
+      - 'www/**.html'
+      - 'www/**.htm'
+      - 'scripts/check-site-scripts.cjs'
+      - '.github/workflows/site-scripts.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-scripts-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  inline-scripts:
+    name: inline scripts parse
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: selftest - red on an orphaned body, red on an empty tree
+        run: node scripts/check-site-scripts.cjs --selftest
+      - name: check every inline block under www/
+        run: node scripts/check-site-scripts.cjs --verbose
