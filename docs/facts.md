@@ -47,7 +47,7 @@ The name "FIBEMATE" is a coined word with no relation to any industry term in fi
 
 - **Web**: 14 interactive 3D visualization dashboards (Three.js)
 - **Server**: Express.js + PostgreSQL/MySQL/better-sqlite3
-- **Validation**: TLA+ formal verification (10 invariants, 101K states), TVLA side-channel testing (31/36 PASS), KAT 10,000-round zero-bias
+- **Validation**: TLA+ formal verification (7 invariants, 101K states), TVLA side-channel testing (31/36 PASS), KAT 10,000-round zero-bias
 - **Hardware**: FPGA NTT accelerator (Xilinx Artix-7, WNS 9.755ns)
 - **Evidence Chain**: 100+ FreeTSA/DigiCert timestamped signature records (TSR)
 

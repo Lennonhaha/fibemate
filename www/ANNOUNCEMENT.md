@@ -57,7 +57,7 @@ NIST 在 2024 年完成了后量子密码学标准化（FIPS 203/204/205）。�
   │  路径 C 应用层 KEX (gm.js 能力协商)           │
   │  pqc-hybrid-server · WebSocket 安全会话       │
   ├─ 验证 ──────────────────────────────────────┤
-  │  TLA+ 形式化验证 (10 不变式 · 101K states)    │
+  │  TLA+ 形式化验证 (7 不变式 · 101K states)    │
   │  TVLA 侧信道测试（逐项结果见 docs/tvla-dashboard.html）                │
   │  KAT 10,000 轮零偏差                          │
   │  100+ TSR 时间戳存证链                        │

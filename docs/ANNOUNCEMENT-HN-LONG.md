@@ -45,7 +45,7 @@ All algorithms verified with **KAT (Known Answer Tests) — 10,000 rounds, zero 
 ### Hybrid key exchange: SM2 + ML-KEM-768
 
 TLS 1.3 hybrid key exchange (IANA #4590) with double-ratchet protocol stack, verified via:
-- TLA+ formal verification (10 invariants · 101K states)
+- TLA+ formal verification (7 invariants · 101K states)
 - End-to-end integration tests (5/5 PASS)
 - One-time pre-generated key OPK tests (7/7 PASS)
 
