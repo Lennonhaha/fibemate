@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: GPL-3.0-only
+name: copy-drift
+# Files published from more than one path must stay byte-identical.
+#
+# 2026-11-23: message-crypto.js existed three times; two copies had been fixed,
+# one had not - it still threw `ReferenceError: request is not defined` in
+# saveSession() and passed an argument initAsInitiator() does not take. Nothing
+# noticed because no gate compared copies and no page loaded that path.
+#
+# scripts/check-copy-drift.cjs holds the manifest. `--selftest` proves the gate
+# goes red (changed byte / missing copy) before it is believed green.
+on:
+  push:
+    paths:
+      - 'scripts/check-copy-drift.cjs'
+      - 'message-crypto.js'
+      - 'www/message-crypto.js'
+      - 'www/js/message-crypto.js'
+      - '.github/workflows/copy-drift.yml'
+  pull_request:
+    paths:
+      - 'scripts/check-copy-drift.cjs'
+      - 'message-crypto.js'
+      - 'www/message-crypto.js'
+      - 'www/js/message-crypto.js'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  copies:
+    name: copies are identical
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: selftest - changed byte and missing copy must both fail
+        run: node scripts/check-copy-drift.cjs --selftest
+      - name: compare the manifest
+        run: node scripts/check-copy-drift.cjs

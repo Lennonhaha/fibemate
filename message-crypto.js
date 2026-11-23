@@ -61,12 +61,12 @@ const MessageCrypto = (() => {
       const tx = db.transaction(STORE_NAME, 'readwrite');
       const store = tx.objectStore(STORE_NAME);
       const exported = DoubleRatchet.exportState(state);
+      const request = store.put({ peerId, state: exported });
       request.onerror = () => reject(request.error);
       request.onsuccess = () => {
-        console.log(`[MessageCrypto] Saved session for ${peerId}`);
+        console.log('[MessageCrypto] Saved session for ' + peerId);
         resolve();
       };
-      store.put({ peerId, state: exported });
     });
   }
 
@@ -289,7 +289,6 @@ const MessageCrypto = (() => {
     // 初始化Double Ratchet作为发起方
     const state = await DoubleRatchet.initAsInitiator(
       rootKey,
-      ephemeralKey,
       new Uint8Array(bobPublic)  // remote DH public
     );
     
