@@ -1,0 +1,50 @@
+// SPDX-License-Identifier: GPL-3.0-only
+name: site-versions
+# Fails when www/tools/ advertises a package version the registry does not call
+# latest - the failure mode that stayed green for hours on 2026-11-23 because
+# www/** is excluded from verifact's scan.
+#
+# Exit codes from scripts/check-site-versions.cjs:
+#   0 matched  1 mismatch (real drift)  2 parse/usage  3 registry unreachable
+# A red run prints which of the four it was, so 3 (cannot verify) is never
+# mistaken for 1 (verified drift). No `|| true` anywhere: a step that cannot fail
+# is not a gate.
+on:
+  schedule:
+    - cron: '30 1 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'www/tools/**.html'
+      - 'scripts/check-site-versions.cjs'
+      - '.github/workflows/site-versions.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: site-versions-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  versions:
+    name: tools page vs registries
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # The gate must be able to go red before it is allowed to go green.
+      - name: selftest - old version must fail, match must pass, no-network must not pass
+        run: node scripts/check-site-versions.cjs --selftest
+
+      - name: page in this tree vs registries
+        run: node scripts/check-site-versions.cjs --no-cache --verbose
+
+      - name: live site vs registries
+        run: node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose
