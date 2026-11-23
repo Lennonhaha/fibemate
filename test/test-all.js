@@ -30,6 +30,7 @@ const suites = [
   ['Backend load smoke (TDZ/init)', ['node', 'test/smoke-backend.js']],
   ['Offline replay predicate (readBy *)', ['node', '--test', 'test/offline-replay.test.js']],
   ['Account test-user rule + security-log req wiring', ['node', '--test', 'test/test-user-rule.test.js']],
+  ['Client IP source (realClientKey)', ['node', '--test', 'test/client-ip.test.js']],
   ['ML-KEM-768 oracle interop', ['node', '--test', 'test/ml-kem-768-oracle-interop.test.js']],
   ['ML-KEM-768 WASM artifact (FIPS 203 vs noble)', ['node', '--test', 'test/mlkem-wasm-fips.test.cjs']],
   ['Regression guards', ['node', '--test', 'test/regression-guards.test.js']],

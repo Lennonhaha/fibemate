@@ -27,6 +27,7 @@ const flags = require('./flags');
 const { safeCompare, safeCompareHex, safeFind, safeFindByField, timingSafe404 } = require('./lib/constant-time');
 const { isUnreadForDevice } = require('./lib/offline-replay');
 const { classify: classifyUser, isTestUsername } = require('./lib/test-user');
+const { realClientKey } = require('./lib/client-ip');
 
 /**
  * Noir Backend - 端到端加密社交服务器
@@ -470,7 +471,10 @@ const logSecurity = (event, userId, details = {}, req = null) => {
   db.addSecurityLog({
     event,
     userId,
-    ip: req?.ip || req?.socket?.remoteAddress || null,
+    // Must be realClientKey, not req.ip: behind the nginx stream hop req.ip is
+    // the proxy socket (127.0.0.1) for every client, so req.ip turned this
+    // column into a constant (see src/lib/client-ip.js).
+    ip: req ? realClientKey(req) : null,
     userAgent: req?.headers?.['user-agent'] || null,
     details
   });
@@ -523,21 +527,10 @@ const genRefreshToken = (user) => jwt.sign(
 const rateLimit = require('express-rate-limit');
 const RATE_LIMIT_WINDOW = 15 * 60_000; // 窗口期 15 分钟（三档共用）
 // 真实客户端 IP：只取 nginx 注入的 X-Real-IP（$remote_addr）。
-//
-// 2026-11-15 生产事故：nginx 的 stream(443) → http(8443) 两跳未开 PROXY protocol，
-// 导致 $remote_addr 对所有外部客户端恒为 127.0.0.1，全站共用一个限流桶；
-// 页面重载环把 30 次/15 分钟的额度烧穿后，正常用户被锁死。
-// 当时加过「X-Real-IP 是回环就回退 X-Forwarded-For」的止损补丁。现在 nginx 两跳都已
-// 启用 PROXY protocol（stream `proxy_protocol on` + `listen 8443 ssl proxy_protocol`
-// + `real_ip_header proxy_protocol`），$remote_addr 恒为真实客户端 IP，补丁已无必要。
-// X-Forwarded-For 客户端可任意伪造（实测伪造后能切到全新桶），保留回退等于给限流器
-// 留一个免检通道，故删除：不使用 req.ip（反代下退化为共桶），也不信任 XFF。
-function realClientKey(req) {
-  const header = req.headers && req.headers['x-real-ip'];
-  const xr = Array.isArray(header) ? header[header.length - 1] : header;
-  if (xr && String(xr).trim()) return String(xr).trim();
-  return (req.socket && req.socket.remoteAddress) || 'unknown';
-}
+// 实现与背景（2026-11-15 限流事故）见 src/lib/client-ip.js —— 限流器与
+// 安全日志共用同一份判定，避免"同一事实两种取法"（2026-11-23 教训：日志
+// 曾用 req.ip，反代下把 ip 记成常量 127.0.0.1）。
+// require 放在文件顶部的 lib 区，避免 logSecurity 先定义、后绑定造成的 TDZ 隐患。
 const rateLimitMiddleware = rateLimit({
   keyGenerator: realClientKey,
   windowMs: RATE_LIMIT_WINDOW,
