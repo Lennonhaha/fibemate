@@ -25,6 +25,7 @@
 const flags = require('./flags');
 
 const { safeCompare, safeCompareHex, safeFind, safeFindByField, timingSafe404 } = require('./lib/constant-time');
+const { isUnreadForDevice } = require('./lib/offline-replay');
 
 /**
  * Noir Backend - 端到端加密社交服务器
@@ -808,7 +809,11 @@ try {
           convs.forEach(c => {
             const msgs = c.messages || [];
             msgs.forEach(m => {
-              if (m.recipientUserId === userId && !m.readBy?.includes(deviceId)) {
+              // readBy 存的是「已读的 deviceId 列表」；'*' 是 2026-11-22 批量写入的
+              // “全员已读”标记，真实 deviceId 永远不会等于它。谓词见
+              // src/lib/offline-replay.js —— 单用 includes(deviceId) 会把带 '*'
+              // 的消息永久判成未读（实测每次 WS 认证重放 498 条）。
+              if (isUnreadForDevice(m, userId, deviceId)) {
                 offline.push(m);
               }
             });
