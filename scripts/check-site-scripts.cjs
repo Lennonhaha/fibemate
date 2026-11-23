@@ -50,18 +50,56 @@ function walkHtml(dir, acc = []) {
   return acc;
 }
 
+// Find the closing tag for a script block starting at `from`.
+//
+// No regex on purpose. CodeQL js/bad-tag-filter rejected two regex forms in a
+// row ("does not match </script >", then "does not match </script\t\n bar>"),
+// and it is right: an HTML end tag is `</script` + optional whitespace +
+// optional attributes + `>`, and a pattern that misses a form silently pulls
+// the rest of the page into one block. A linear scan is both simpler to reason
+// about and impossible to fool that way.
+//
+// `</scripty>` is a different tag name, so it does not close this block.
+const END = '</script';
+
+function isNameChar(c) {
+  return (c >= 97 && c <= 122) || (c >= 65 && c <= 90) || (c >= 48 && c <= 57) || c === 45 || c === 95;
+}
+
+function findScriptEnd(html, from) {
+  for (let i = from; i + END.length <= html.length; i++) {
+    if (html.charCodeAt(i) !== 60) continue; // '<'
+    let k = 1;
+    let same = true;
+    for (; k < END.length; k++) {
+      const c = html.charCodeAt(i + k) | 0x20; // ASCII lowercase
+      if (c !== END.charCodeAt(k)) { same = false; break; }
+    }
+    if (!same) continue;
+    const after = i + END.length;
+    if (after < html.length && isNameChar(html.charCodeAt(after))) continue;
+    const gt = html.indexOf('>', after);
+    if (gt < 0) return null;
+    return { endStart: i, after: gt + 1 };
+  }
+  return null;
+}
+
 function findBlocks(html) {
   const blocks = [];
-  // `</script\s*>` is not pedantry: HTML allows `</script >` and `</script\n>`,
-  // and CodeQL js/bad-tag-filter flags the stricter form because a filter that
-  // misses it can be walked past. Here it would silently merge the remainder of
-  // the page into one block.
-  const re = /<script\b([^>]*)>([\s\S]*?)<\/script\s*>/gi;
+  const openRe = /<script\b([^>]*)>/gi;
   let m;
-  while ((m = re.exec(html)) !== null) {
+  while ((m = openRe.exec(html)) !== null) {
     const attrs = m[1] || '';
-    const code = m[2] || '';
-    const startLine = html.slice(0, m.index + m[0].indexOf('>') + 1).split('\n').length;
+    const bodyStart = m.index + m[0].length;
+    const startLine = html.slice(0, bodyStart).split('\n').length;
+    const end = findScriptEnd(html, bodyStart);
+    if (end === null) {
+      blocks.push({ code: html.slice(bodyStart), startLine, isModule: false, type: '', unterminated: true });
+      break;
+    }
+    openRe.lastIndex = end.after;
+    const code = html.slice(bodyStart, end.endStart);
     if (/\bsrc\s*=/i.test(attrs)) continue;
     const typeMatch = attrs.match(/\btype\s*=\s*["']?([^"'\s>]+)/i);
     const type = typeMatch ? typeMatch[1] : '';
@@ -99,6 +137,15 @@ function checkRoot(root) {
       skipped += (html.match(/<script\b/gi) || []).length - found.length;
       found.forEach((block, i) => {
         blocks += 1;
+        if (block.unterminated) {
+          failures.push({
+            file: rel,
+            block: i + 1,
+            htmlLine: block.startLine - 1,
+            detail: 'unterminated <script> tag: no closing tag before end of file',
+          });
+          return;
+        }
         const name = `${rel.replace(/[\\/]/g, '_')}.${i + 1}${block.isModule ? '.mjs' : '.js'}`;
         const target = path.join(scratch, name);
         fs.writeFileSync(target, block.code, 'utf8');
@@ -172,6 +219,32 @@ function selftest() {
       name: 'end tag with trailing whitespace still closes the block',
       pass: spacedResult.blocks === 1 && spacedResult.failures.length === 0,
       detail: `blocks=${spacedResult.blocks} failures=${spacedResult.failures.length}`,
+    });
+
+    // 4c. the form CodeQL named second: `</script\t\n bar>`
+    write('odd/close.html', '<html><script>const q = 3;</script\t\n bar><p>after</p></html>');
+    const oddResult = checkRoot(path.join(root, 'odd'));
+    cases.push({
+      name: 'end tag with tabs, newline and junk attributes closes the block',
+      pass: oddResult.blocks === 1 && oddResult.failures.length === 0,
+      detail: `blocks=${oddResult.blocks} failures=${oddResult.failures.length}`,
+    });
+
+    // 4d. `</scripty>` is a different tag name and must not close the block
+    const notEnd = findBlocks('<script>z()</scripty></script>');
+    cases.push({
+      name: 'a different tag name does not close the block',
+      pass: notEnd.length === 1 && notEnd[0].code === 'z()</scripty>',
+      detail: notEnd.length ? JSON.stringify(notEnd[0].code) : 'no block found',
+    });
+
+    // 4e. an unclosed script tag is a defect, not a silent skip
+    write('open/tag.html', '<html>\n<script>\nconst w = 4;\n');
+    const openRun = runCli(['--root', path.join(root, 'open'), '--verbose']);
+    cases.push({
+      name: 'unterminated script tag exits 1 and says so',
+      pass: openRun.code === 1 && /unterminated/.test(openRun.out),
+      detail: `exit=${openRun.code}`,
     });
 
     const okRun = runCli(['--root', path.join(root, 'ok')]);
