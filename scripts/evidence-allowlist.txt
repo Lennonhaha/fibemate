@@ -1,0 +1,18 @@
+# Evidence allowlist (G-06) -- format: <path><TAB><reason>
+#
+# scripts/check-evidence-immutable.cjs refuses to let a PR modify, rename,
+# type-change or delete an existing .tsr / .tsq / SHA256SUMS file, because a
+# timestamp cannot be re-issued and the manifest is the only record of what was
+# stamped. Add a line only when the removal is deliberate and you can say why.
+#
+# Rules:
+#   - One path per line, separated from the reason by a TAB.
+#   - A line without a reason is ignored on purpose (silently disabling a gate is
+#     the failure mode this file exists to prevent).
+#   - Reasons are printed in CI output, so write them for a reviewer.
+#   - Prefer restoring the file. This file records decisions, it does not fix them.
+#
+# Examples of legitimate entries:
+#   docs/tsa/deploy_sh.tsr	retired: never a timestamp token, see #595
+#
+# (No entries today: main has never rewritten shipped evidence.)
