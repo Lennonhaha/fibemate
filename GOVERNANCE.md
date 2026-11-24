@@ -64,6 +64,21 @@ numeric conventions, dependency and SBOM handling) are normative in
 That annex governs commits, CI, dependency updates and external materials; this
 document remains normative for roles, decision-making and succession.
 
+### Verification states: deploy, CI, and functional green (2026-11-25)
+
+Three claims are distinct and must be reported separately. One does not imply another.
+
+| State | Definition |
+|:---|:---|
+| **Deploy green** | `deploy-release.sh` finishes 8/8; `current` resolves to the new release; `/health` has `build.commit == served.commit == target` and `matches_process=true`; `current/data` resolves to `/opt/fibemate/shared/data` with the expected user count. |
+| **CI green** | On the exact commit, all required status checks and the monitored non-required workflows (Fuzz, nightly) are `success`; a skipped workflow is not a pass unless the skip is the designed path. |
+| **Functional green** | A real user on a real path (desktop client, real WebSocket, real database query) completes the target flow and the data actually lands — for example, `readBy` contains the recipient's real `deviceId`. |
+
+**Deploy green + CI green does not imply functional green.** On 2026-11-24 the
+`839e119` deployment passed 8/8 and `/health` was aligned, and CI was green, but V3
+still failed: post-deploy messages had `readBy=[]`; the target flow was not verified.
+A report that says only "green" without naming one of the three states is incomplete.
+
 ### Discipline amendments N1–N5 (2026-11-14)
 
 These five rules are binding on all commits, CI gates and external materials. The
