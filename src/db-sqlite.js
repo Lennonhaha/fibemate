@@ -447,6 +447,23 @@ class SqliteDB {
   }
 
   /**
+   * Cache a device without bracket-assignment into a user-keyed object.
+   * Object.defineProperty creates an own property even for keys such as
+   * "__proto__", so a client-controlled id cannot reach Object.prototype.
+   */
+  _putDeviceInCache(userId, deviceId, device) {
+    if (!this.data || !this.data.devices) return;
+    if (!Object.prototype.hasOwnProperty.call(this.data.devices, userId)) {
+      Object.defineProperty(this.data.devices, userId, {
+        value: Object.create(null), enumerable: true, configurable: true, writable: true
+      });
+    }
+    Object.defineProperty(this.data.devices[userId], deviceId, {
+      value: device, enumerable: true, configurable: true, writable: true
+    });
+  }
+
+  /**
    * Insert a device only if the id is still free. Returns null when the id is
    * already owned (by any user): callers must not overwrite another account's
    * device row, because devices.id is the primary key.
@@ -455,10 +472,7 @@ class SqliteDB {
     const info = this._db.prepare('INSERT OR IGNORE INTO devices (id, userId, raw_json) VALUES (?, ?, ?)')
       .run(device.id, device.userId, JSON.stringify(device));
     if (!info || info.changes === 0) return null;
-    if (this.data && this.data.devices) {
-      if (!this.data.devices[device.userId]) this.data.devices[device.userId] = {};
-      this.data.devices[device.userId][device.id] = device;
-    }
+    this._putDeviceInCache(device.userId, device.id, device);
     return device;
   }
 
@@ -472,9 +486,7 @@ class SqliteDB {
       lastActive: patch.lastActive || Date.now()
     });
     this._db.prepare('UPDATE devices SET raw_json = ? WHERE id = ?').run(JSON.stringify(next), deviceId);
-    if (this.data && this.data.devices && this.data.devices[userId]) {
-      this.data.devices[userId][deviceId] = next;
-    }
+    this._putDeviceInCache(userId, deviceId, next);
     return next;
   }
 
@@ -492,9 +504,7 @@ class SqliteDB {
       if ((device.lastActive || 0) >= cutoff) continue;
       device.isActive = false;
       this._db.prepare('UPDATE devices SET raw_json = ? WHERE id = ?').run(JSON.stringify(device), device.id);
-      if (this.data && this.data.devices && this.data.devices[userId]) {
-        this.data.devices[userId][device.id] = device;
-      }
+      this._putDeviceInCache(userId, device.id, device);
       changed += 1;
     }
     return changed;
