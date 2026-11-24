@@ -16,6 +16,24 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+/**
+ * G-06: required-field assertion.
+ *
+ * A missing identity field used to make device-scoped writes return null and the
+ * write vanished with no log line at all: production 2026-11-24 showed readBy
+ * stuck at [] for weeks while every call "succeeded". Silence is the bug, so a
+ * missing field now throws a typed error the caller cannot ignore by accident.
+ */
+function requiredString(value, field) {
+  if (typeof value !== 'string' || value.length === 0) {
+    const err = new TypeError(`${field} is required and must be a non-empty string`);
+    err.code = 'E_REQUIRED_FIELD';
+    err.field = field;
+    throw err;
+  }
+  return value;
+}
+
 class SqliteDB {
   constructor(filePath) {
     this.filePath = filePath;
@@ -437,9 +455,10 @@ class SqliteDB {
    * offline queue never converged and replay stayed at 44 frames per connect.
    */
   markMessageReadByDevice(messageId, userId, deviceId) {
-    if (typeof messageId !== 'string' || !messageId) return null;
-    if (typeof userId !== 'string' || !userId) return null;
-    if (typeof deviceId !== 'string' || !deviceId) return null;
+    // Required identity fields throw (G-06); lookup outcomes stay null.
+    requiredString(messageId, 'messageId');
+    requiredString(userId, 'userId');
+    requiredString(deviceId, 'deviceId');
     const row = this._db.prepare('SELECT raw_json FROM messages WHERE id = ?').get(messageId);
     if (!row) return null;
     const m = JSON.parse(row.raw_json);
@@ -706,4 +725,5 @@ class SqliteDB {
   }
 }
 
+SqliteDB.requiredString = requiredString;
 module.exports = SqliteDB;

@@ -786,6 +786,13 @@ try {
           userId = decoded.userId;
           deviceId = decoded.deviceId;
 
+          // G-06: deviceId is a required claim for device-scoped read receipts.
+          // Log only the fact, never the value -- the claim is client-controlled
+          // and would be a log-injection surface (CodeQL 851).
+          if (typeof deviceId !== 'string' || deviceId.length === 0) {
+            console.warn('[ws] auth token carries no deviceId claim; device-scoped read receipts will be rejected');
+          }
+
           db.updateUser(userId, { isOnline: 1, lastSeen: Date.now() });
           db.setPresence(userId, true);
 
@@ -975,6 +982,13 @@ try {
             }
           }
           if (ackIds.length === 0) break;
+          // G-06: with no deviceId claim there is nothing to attribute the ack to.
+          // Reject the batch once instead of throwing per message, so the failure
+          // is visible in the log without spamming one line per acked id.
+          if (typeof deviceId !== 'string' || deviceId.length === 0) {
+            console.warn('[read_receipt] rejected: no deviceId claim in token');
+            break;
+          }
           // 旧实现改的是 getConversationsByUserId() 返回的 JSON.parse 副本，save() 又是空实现，
           // 写入被静默丢弃：生产库 readBy 至今只有 [] 与 ['*']（2026-11-24 实测）。
           const acked = [];
