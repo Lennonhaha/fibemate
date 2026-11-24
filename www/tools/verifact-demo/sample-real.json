@@ -137,7 +137,7 @@
           "ratio": 1
         },
         "raw": "10000/10000",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.95,
       "cmp": {
@@ -203,7 +203,7 @@
           "base": 9.755
         },
         "raw": "9.755ns",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.7999999999999999,
       "cmp": {
@@ -313,7 +313,7 @@
           "ratio": 1
         },
         "raw": "10000/10000",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.6500000000000001,
       "cmp": {
@@ -382,7 +382,7 @@
           "ratio": 1
         },
         "raw": "3/3",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.7250000000000001,
       "cmp": {
@@ -451,7 +451,7 @@
           "ratio": 1
         },
         "raw": "75/75",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.6500000000000001,
       "cmp": {
@@ -519,7 +519,7 @@
           "ratio": 1
         },
         "raw": "3/3",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.7250000000000001,
       "cmp": {
@@ -587,7 +587,7 @@
           "ratio": 1
         },
         "raw": "36/36",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.6500000000000001,
       "cmp": {
@@ -669,7 +669,7 @@
           "ratio": 1
         },
         "raw": "30/30,",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.6500000000000001,
       "cmp": {
@@ -742,7 +742,7 @@
           "base": null
         },
         "raw": "0.365",
-        "abs": "D:\\FIBEMATE\\fibemate-tools\\bench\\bench-js-results.json"
+        "abs": "fibemate-tools/bench/bench-js-results.json"
       },
       "score": 0.7250000000000001,
       "cmp": {
@@ -872,7 +872,7 @@
           "ratio": 1
         },
         "raw": "7/7",
-        "abs": "D:\\FIBEMATE\\lookingglass\\package-lock.json"
+        "abs": "lookingglass/package-lock.json"
       },
       "score": 0.525,
       "cmp": {
@@ -931,7 +931,7 @@
           "ratio": 0.9950980392156863
         },
         "raw": "聚焦 NIST 标准化算法族 (FIPS 203/204):",
-        "abs": "D:\\FIBEMATE\\pqc-hw-bench\\reports\\benchmark-2026Q3.md"
+        "abs": "pqc-hw-bench/reports/benchmark-2026Q3.md"
       },
       "score": 0.75,
       "cmp": {
@@ -1001,7 +1001,7 @@
           "ratio": 1
         },
         "raw": "10000/10000",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.7250000000000001,
       "cmp": {

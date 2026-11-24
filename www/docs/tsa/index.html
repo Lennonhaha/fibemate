@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FIBEMATE 证据链存档 · docs/tsa</title>
+<style>
+  :root { color-scheme: dark; }
+  body { margin: 0; padding: 40px 20px; background: #0b0e13; color: #e6edf3;
+         font: 15px/1.7 -apple-system, "Segoe UI", "Microsoft YaHei", sans-serif; }
+  .wrap { max-width: 860px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 8px; }
+  h2 { font-size: 15px; margin: 28px 0 10px; color: #9fb0c3; letter-spacing: .04em; text-transform: uppercase; }
+  p { color: #a9b7c6; margin: 0 0 10px; }
+  ul { list-style: none; padding: 0; margin: 0; display: grid;
+       grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 6px 18px; }
+  a { color: #00e5c3; text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  code { background: #161b22; padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  .note { border-left: 3px solid #00e5c3; padding: 10px 14px; background: #10151c; border-radius: 4px; }
+  footer { margin-top: 36px; color: #6b7a8c; font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>FIBEMATE 证据链存档</h1>
+  <p>本目录为证据链存档，文件按日期组织，<code>SHA256SUMS</code> 在各自子目录。每个目录内含
+     <code>.tsq</code>/<code>.tsr</code> 时间戳请求与响应（RFC 3161），可用 <code>openssl ts -verify</code> 独立核验。</p>
+
+  <h2>核验说明</h2>
+  <div class="note">
+    <p><code>SHA256SUMS</code> 清单对应 2026-10-28 快照。其中 3 项 <code>www/</code> 文件
+       （<code>DEPLOY_ZK_GUIDE.md</code>、<code>docs/openapi.yaml</code>、<code>package-lock.json</code>）
+       已于 2026-11-24 从发布目录移除，<strong>清单未改动</strong>，以保持其 TSA 时间戳验证链有效。
+       校验时这 3 项报 <code>No such file</code> 属预期。</p>
+  </div>
+
+  <h2>按日期（31）</h2>
+  <ul>
+    <li><a href="2026-05-25/">2026-05-25/</a></li>
+    <li><a href="2026-06-08/">2026-06-08/</a></li>
+    <li><a href="2026-06-11/">2026-06-11/</a></li>
+    <li><a href="2026-06-25/">2026-06-25/</a></li>
+    <li><a href="2026-06-26/">2026-06-26/</a></li>
+    <li><a href="2026-06-28/">2026-06-28/</a></li>
+    <li><a href="2026-06-30/">2026-06-30/</a></li>
+    <li><a href="2026-07-01/">2026-07-01/</a></li>
+    <li><a href="2026-07-06/">2026-07-06/</a></li>
+    <li><a href="2026-07-07/">2026-07-07/</a></li>
+    <li><a href="2026-07-09/">2026-07-09/</a></li>
+    <li><a href="2026-07-10/">2026-07-10/</a></li>
+    <li><a href="2026-07-11/">2026-07-11/</a></li>
+    <li><a href="2026-07-14/">2026-07-14/</a></li>
+    <li><a href="2026-07-15/">2026-07-15/</a></li>
+    <li><a href="2026-07-16/">2026-07-16/</a></li>
+    <li><a href="2026-07-17-lg-gen/">2026-07-17-lg-gen/</a></li>
+    <li><a href="2026-07-18/">2026-07-18/</a></li>
+    <li><a href="2026-07-21/">2026-07-21/</a></li>
+    <li><a href="2026-07-22/">2026-07-22/</a></li>
+    <li><a href="2026-07-22-ci-milestone/">2026-07-22-ci-milestone/</a></li>
+    <li><a href="2026-07-23/">2026-07-23/</a></li>
+    <li><a href="2026-07-23-tvla-gradient/">2026-07-23-tvla-gradient/</a></li>
+    <li><a href="2026-07-23-verify-fix/">2026-07-23-verify-fix/</a></li>
+    <li><a href="2026-07-24-fpga-milestone/">2026-07-24-fpga-milestone/</a></li>
+    <li><a href="2026-08-17-lg-v24-watchdog/">2026-08-17-lg-v24-watchdog/</a></li>
+    <li><a href="2026-09-06-vwz-rank2/">2026-09-06-vwz-rank2/</a></li>
+    <li><a href="2026-10/">2026-10/</a></li>
+    <li><a href="2026-10-28-interop-matrix/">2026-10-28-interop-matrix/</a></li>
+    <li><a href="2026-10-28-retire-ml-kem-768-td/">2026-10-28-retire-ml-kem-768-td/</a></li>
+    <li><a href="cfca/">cfca/</a></li>
+  </ul>
+
+  <h2>时间戳与清单（22）</h2>
+  <ul>
+    <li><a href="lg-080.sha256">lg-080.sha256</a></li>
+    <li><a href="lg-080.tsq">lg-080.tsq</a></li>
+    <li><a href="lg-080.tsr">lg-080.tsr</a></li>
+    <li><a href="lg-082.sha256">lg-082.sha256</a></li>
+    <li><a href="lg-082.tsq">lg-082.tsq</a></li>
+    <li><a href="lg-082.tsr">lg-082.tsr</a></li>
+    <li><a href="lg-101-phase0-20260805.sha256">lg-101-phase0-20260805.sha256</a></li>
+    <li><a href="lg-101-phase0-20260805.tsq">lg-101-phase0-20260805.tsq</a></li>
+    <li><a href="lg-101-phase0-20260805.tsr">lg-101-phase0-20260805.tsr</a></li>
+    <li><a href="lg-101-phase0-20260805.txt">lg-101-phase0-20260805.txt</a></li>
+    <li><a href="lg-forensic-report-20260701.md">lg-forensic-report-20260701.md</a></li>
+    <li><a href="ml-kem-768_%E5%AD%98%E8%AF%81%E6%B8%85%E5%8D%95.json">ml-kem-768_存证清单.json</a></li>
+    <li><a href="timestamp-manifest.json">timestamp-manifest.json</a></li>
+    <li><a href="traffic-shaping.js.tsq">traffic-shaping.js.tsq</a></li>
+    <li><a href="traffic-shaping.js.tsr">traffic-shaping.js.tsr</a></li>
+    <li><a href="tvla_p0_evidence_20260604_023333.tar.gz.sha256">tvla_p0_evidence_20260604_023333.tar.gz.sha256</a></li>
+    <li><a href="tvla_p0_timestamped_20260604_023738.tar.gz.sha256">tvla_p0_timestamped_20260604_023738.tar.gz.sha256</a></li>
+    <li><a href="tvla_p0_timestamped_FINAL_20260604_024127.tar.gz.sha256">tvla_p0_timestamped_FINAL_20260604_024127.tar.gz.sha256</a></li>
+    <li><a href="unified-traffic-obfuscator.js.tsq">unified-traffic-obfuscator.js.tsq</a></li>
+    <li><a href="unified-traffic-obfuscator.js.tsr">unified-traffic-obfuscator.js.tsr</a></li>
+    <li><a href="ws-padding.js.tsq">ws-padding.js.tsq</a></li>
+    <li><a href="ws-padding.js.tsr">ws-padding.js.tsr</a></li>
+  </ul>
+
+  <footer>FIBEMATE · 后量子密码学全栈工程验证平台 · 证据链公开为产品主张的一部分</footer>
+</div>
+</body>
+</html>
