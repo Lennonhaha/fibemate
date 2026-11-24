@@ -441,6 +441,75 @@ class SqliteDB {
     ).all(userId).map(r => JSON.parse(r.raw_json));
   }
 
+  getDeviceById(deviceId) {
+    const row = this._db.prepare('SELECT raw_json FROM devices WHERE id = ?').get(deviceId);
+    return row ? JSON.parse(row.raw_json) : null;
+  }
+
+  /**
+   * Cache a device without bracket-assignment into a user-keyed object.
+   * Object.defineProperty creates an own property even for keys such as
+   * "__proto__", so a client-controlled id cannot reach Object.prototype.
+   */
+  _putDeviceInCache(userId, deviceId, device) {
+    if (!this.data || !this.data.devices) return;
+    if (!Object.prototype.hasOwnProperty.call(this.data.devices, userId)) {
+      Object.defineProperty(this.data.devices, userId, {
+        value: Object.create(null), enumerable: true, configurable: true, writable: true
+      });
+    }
+    Object.defineProperty(this.data.devices[userId], deviceId, {
+      value: device, enumerable: true, configurable: true, writable: true
+    });
+  }
+
+  /**
+   * Insert a device only if the id is still free. Returns null when the id is
+   * already owned (by any user): callers must not overwrite another account's
+   * device row, because devices.id is the primary key.
+   */
+  createDeviceIfAbsent(device) {
+    const info = this._db.prepare('INSERT OR IGNORE INTO devices (id, userId, raw_json) VALUES (?, ?, ?)')
+      .run(device.id, device.userId, JSON.stringify(device));
+    if (!info || info.changes === 0) return null;
+    this._putDeviceInCache(device.userId, device.id, device);
+    return device;
+  }
+
+  /** Update lastActive (and optional fields) for a device owned by userId. */
+  touchDevice(deviceId, userId, patch = {}) {
+    const current = this.getDeviceById(deviceId);
+    if (!current || current.userId !== userId) return null;
+    const next = Object.assign({}, current, patch, {
+      id: deviceId,
+      userId,
+      lastActive: patch.lastActive || Date.now()
+    });
+    this._db.prepare('UPDATE devices SET raw_json = ? WHERE id = ?').run(JSON.stringify(next), deviceId);
+    this._putDeviceInCache(userId, deviceId, next);
+    return next;
+  }
+
+  /**
+   * Deactivate a user's devices that have not been seen since `cutoff`.
+   * Returns the number of rows changed. The freshly touched device is newer
+   * than the cutoff, so it is never included.
+   */
+  deactivateStaleDevices(userId, cutoff) {
+    const rows = this._db.prepare('SELECT id, raw_json FROM devices WHERE userId = ?').all(userId);
+    let changed = 0;
+    for (const row of rows) {
+      const device = JSON.parse(row.raw_json);
+      if (!device.isActive) continue;
+      if ((device.lastActive || 0) >= cutoff) continue;
+      device.isActive = false;
+      this._db.prepare('UPDATE devices SET raw_json = ? WHERE id = ?').run(JSON.stringify(device), device.id);
+      this._putDeviceInCache(userId, device.id, device);
+      changed += 1;
+    }
+    return changed;
+  }
+
   /**
    * Mark one message as received by one device.
    *

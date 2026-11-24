@@ -28,6 +28,7 @@ const { safeCompare, safeCompareHex, safeFind, safeFindByField, timingSafe404 } 
 const { isUnreadForDevice } = require('./lib/offline-replay');
 const { classify: classifyUser, isTestUsername } = require('./lib/test-user');
 const { realClientKey } = require('./lib/client-ip');
+const { normalizeDeviceId, staleCutoff } = require('./device-id');
 
 /**
  * Noir Backend - 端到端加密社交服务器
@@ -1009,7 +1010,7 @@ try {
               type: 'read_receipt',
               messageId: m.id,
               messageIds: [m.id],
-              readBy: userId,
+              readBy: Array.isArray(m.readBy) ? m.readBy : [],
               readAt: Date.now(),
               isRead: !!m.isRead
             });
@@ -1284,8 +1285,44 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
       return res.status(401).json({ error: '用户名或密码错误' });
     }
 
-    let deviceId = req.body.deviceId;
-    if (devicePublicKey && !deviceId) {
+    const parsedDevice = normalizeDeviceId(req.body.deviceId);
+    if (!parsedDevice.ok) {
+      return res.status(400).json({ error: 'deviceId 格式无效', code: 'E_DEVICE_ID' });
+    }
+    let deviceId = parsedDevice.value;
+
+    if (deviceId) {
+      const existing = db.getDeviceById(deviceId);
+      if (existing && existing.userId !== user.id) {
+        logSecurity('login_device_owned', user.id, { reason: 'device_owned' }, req);
+        return res.status(400).json({ error: 'deviceId 已被其他账号使用', code: 'E_DEVICE_OWNED' });
+      }
+      if (!existing) {
+        const created = db.createDeviceIfAbsent({
+          id: deviceId,
+          userId: user.id,
+          deviceName: req.headers['x-device-name'] || '新设备',
+          registrationId: crypto.randomInt(1, 65535),
+          publicKey: devicePublicKey || null,
+          isActive: true,
+          createdAt: Date.now(),
+          lastActive: Date.now()
+        });
+        if (!created) {
+          const raced = db.getDeviceById(deviceId);
+          if (!raced || raced.userId !== user.id) {
+            logSecurity('login_device_owned', user.id, { reason: 'device_race' }, req);
+            return res.status(400).json({ error: 'deviceId 已被其他账号使用', code: 'E_DEVICE_OWNED' });
+          }
+          db.touchDevice(deviceId, user.id, devicePublicKey ? { publicKey: devicePublicKey } : {});
+        }
+      } else {
+        db.touchDevice(deviceId, user.id, devicePublicKey ? { publicKey: devicePublicKey } : {});
+      }
+      // Devices last seen before the cutoff are no longer counted for isRead;
+      // otherwise the two 2026-08 rows would block isRead forever.
+      db.deactivateStaleDevices(user.id, staleCutoff());
+    } else if (devicePublicKey) {
       deviceId = uuidv4();
       db.createDevice({
         id: deviceId,

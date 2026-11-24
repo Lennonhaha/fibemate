@@ -201,6 +201,8 @@ test('read_receipt {messageId} persists and stops offline replay', async () => {
 
   const receipt = await wa.next((m) => m.type === 'read_receipt' && m.messageId === messageId);
   assert.deepEqual(receipt.messageIds, [messageId], 'legacy clients read .messageIds');
+  assert.ok(Array.isArray(receipt.readBy), 'readBy must be the persisted array, not a userId string');
+  assert.deepEqual(receipt.readBy, [b.deviceId]);
 
   const row = dbRow(messageId);
   assert.deepEqual(row.readBy, [b.deviceId], 'the ack must be on disk, keyed by device id');
