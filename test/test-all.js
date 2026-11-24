@@ -30,6 +30,8 @@ const suites = [
   ['Backend load smoke (TDZ/init)', ['node', 'test/smoke-backend.js']],
   ['Offline replay predicate (readBy *)', ['node', '--test', 'test/offline-replay.test.js']],
   ['DB readBy write path (negative control)', ['node', '--test', 'test/db-readby.test.js']],
+  ['Device identity (UUID + ownership + stale)', ['node', '--test', 'test/device-id.test.js']],
+  ['Device login binding end-to-end', ['node', '--test', 'test/device-login.test.js']],
   ['WS read_receipt end-to-end (disk + replay)', ['node', '--test', 'test/ws-read-receipt.test.js']],
   ['Account test-user rule + security-log req wiring', ['node', '--test', 'test/test-user-rule.test.js']],
   ['Client IP source (realClientKey)', ['node', '--test', 'test/client-ip.test.js']],

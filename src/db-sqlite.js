@@ -441,6 +441,65 @@ class SqliteDB {
     ).all(userId).map(r => JSON.parse(r.raw_json));
   }
 
+  getDeviceById(deviceId) {
+    const row = this._db.prepare('SELECT raw_json FROM devices WHERE id = ?').get(deviceId);
+    return row ? JSON.parse(row.raw_json) : null;
+  }
+
+  /**
+   * Insert a device only if the id is still free. Returns null when the id is
+   * already owned (by any user): callers must not overwrite another account's
+   * device row, because devices.id is the primary key.
+   */
+  createDeviceIfAbsent(device) {
+    const info = this._db.prepare('INSERT OR IGNORE INTO devices (id, userId, raw_json) VALUES (?, ?, ?)')
+      .run(device.id, device.userId, JSON.stringify(device));
+    if (!info || info.changes === 0) return null;
+    if (this.data && this.data.devices) {
+      if (!this.data.devices[device.userId]) this.data.devices[device.userId] = {};
+      this.data.devices[device.userId][device.id] = device;
+    }
+    return device;
+  }
+
+  /** Update lastActive (and optional fields) for a device owned by userId. */
+  touchDevice(deviceId, userId, patch = {}) {
+    const current = this.getDeviceById(deviceId);
+    if (!current || current.userId !== userId) return null;
+    const next = Object.assign({}, current, patch, {
+      id: deviceId,
+      userId,
+      lastActive: patch.lastActive || Date.now()
+    });
+    this._db.prepare('UPDATE devices SET raw_json = ? WHERE id = ?').run(JSON.stringify(next), deviceId);
+    if (this.data && this.data.devices && this.data.devices[userId]) {
+      this.data.devices[userId][deviceId] = next;
+    }
+    return next;
+  }
+
+  /**
+   * Deactivate a user's devices that have not been seen since `cutoff`.
+   * Returns the number of rows changed. The freshly touched device is newer
+   * than the cutoff, so it is never included.
+   */
+  deactivateStaleDevices(userId, cutoff) {
+    const rows = this._db.prepare('SELECT id, raw_json FROM devices WHERE userId = ?').all(userId);
+    let changed = 0;
+    for (const row of rows) {
+      const device = JSON.parse(row.raw_json);
+      if (!device.isActive) continue;
+      if ((device.lastActive || 0) >= cutoff) continue;
+      device.isActive = false;
+      this._db.prepare('UPDATE devices SET raw_json = ? WHERE id = ?').run(JSON.stringify(device), device.id);
+      if (this.data && this.data.devices && this.data.devices[userId]) {
+        this.data.devices[userId][device.id] = device;
+      }
+      changed += 1;
+    }
+    return changed;
+  }
+
   /**
    * Mark one message as received by one device.
    *
