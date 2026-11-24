@@ -404,7 +404,7 @@ README、站点与 PR 描述里的"published <timestamp> at commit <sha>"每 pus
 5. 读取 `/health` 必须破缓存：加 `?v=<ts>`，并在响应带 `X-Cache: HIT` 或 `Age` 时判 UNKNOWN、重试。缓存过的负响应与缓存过的旧 JSON 都会制造假红或假绿（D24）。
 6. 不把当日的 SHA 写进纪律（D25）。本节只写命令，实测值进证据文件或 PR。
 
-**预算现为 2（当日由 1 上调，理由见下）**：main 领先生产一个 commit 是可见债务，不是"绿 = 没问题"。上调的直接原因：一个只改 `www/` 静态页面的合并（`docs/security-limitations.html`）落在 `R` 的 `--tree src packages www` 内，把 debt 从 1 推到 2，门禁按设计变红。这不是回归，是"文档也进 www"这一事实第一次被真正度量到。上调承认的是一类提交（一个 www 改动），不是"落后多少都行"：此后每多一个运行时提交仍会红。设 `--max-debt=0` 的前提依旧是自动部署就位。**手敲 `deploy-release.sh` 在这一条上被明确禁止**：把债务归零的唯一合规路径是 #617 的四步 rollout，不得因为一次变红就提前动生产。判据始终是"债务是否被记录"，不是"灯是否绿"——`BEHIND` 必须打印 `served`、`R`、`debt`、`budget` 四项，缺一项就退化成又一个绿灯。**另一条证据纪律**：本节的 workflow 在 `pull_request` 上跳过，PR 期间全绿只证明"跑过的检查绿"；合并后的 push run 才是第一次真实测量，PR 绿 ≠ 合并后绿，被 skip 的检查等于没证据（D24 的延伸）。
+**预算现为 2（当日由 1 上调，理由见下）**：main 领先生产一个 commit 是可见债务，不是"绿 = 没问题"。上调的直接原因：一个只改 `www/` 静态页面的合并（`docs/security-limitations.html`）落在 `R` 的 `--tree src packages www` 内，把 debt 从 1 推到 2，门禁按设计变红。这不是回归，是"文档也进 www"这一事实第一次被真正度量到。上调承认的是一类提交（一个 www 改动），不是"落后多少都行"：此后每多一个运行时提交仍会红。设 `--max-debt=0` 的前提依旧是自动部署就位。**常规部署的唯一合规路径是 `deploy-apply` workflow（#617 四步 rollout 已落地：dry-run → rehearsal → apply）**。手工 `deploy-release.sh` 不再是常规路径；仅事故处置可使用，且必须记录审批人、sha、8/8 输出与回滚点。不得因为一次变红就提前动生产。判据始终是"债务是否被记录"，不是"灯是否绿"——`BEHIND` 必须打印 `served`、`R`、`debt`、`budget` 四项，缺一项就退化成又一个绿灯。**另一条证据纪律**：本节的 workflow 在 `pull_request` 上跳过，PR 期间全绿只证明"跑过的检查绿"；合并后的 push run 才是第一次真实测量，PR 绿 ≠ 合并后绿，被 skip 的检查等于没证据（D24 的延伸）。
 **刻意区分两件事**：内部一致性（build == served）由部署脚本自检；外部一致性（served == R）由本节的门禁测量。两者都要，但不能用同一个检查表达。
 
 **为何推翻"live 检查不 gate PR"**：`nginx-drift.yml` 的既有决定是"生产抖动不能把文档 PR 弄红"，防的是可用性问题变成开发阻塞；本节防的是已合并未部署的运行时债务。共存条件是四态里的 UNKNOWN 不阻断、先非 required 跑一段时间、负向控制证明它会红。在自动部署存在之前设 required，等于把部署债务改写成合并阻断。
@@ -422,10 +422,10 @@ README、站点与 PR 描述里的"published <timestamp> at commit <sha>"每 pus
 报告 #1 把 #610 计入「窗口内 3 PR」，同时自己注明该 PR 合并于右边界后 28 秒。既然越界，就不该计入；要提，就放进单列的「窗口后新增」。判据：`t >= start && t < end`，两端都不含糊；边界外事件另起一节，不混入统计分母。
 
 **3. 仓库必须动态枚举，且枚举本身要被核对。**
-报告写「7 个仓」，实际账号下 23 个（10 产品 / 6 fork / 4 归档 / 3 无关 private）。写死清单的后果不是漏报一次，而是**下次它们红了也看不见**。三条实现事实：
+报告写「7 个仓」，实际账号下 24 个（截至 2026-11-24：6 fork / 4 归档 / 4 private / 11 public 非 fork 非归档；11-21 新增 `cbom-scan-action`）。写死清单的后果不是漏报一次，而是**下次它们红了也看不见**。三条实现事实：
 
 - 本账号是 **user 不是 org**，`/orgs/<name>/repos` 直接 404；退到 `/users/<name>/repos` 又会**静默漏掉 private 仓**（`fibemate-vwz` 是 private + archived，正是在这条路径上消失的）。
-- 正确入口是 **`/user/repos?affiliation=owner&visibility=all`**，返回 23。
+- 正确入口是 **`/user/repos?affiliation=owner&visibility=all`**，返回 24（2026-11-24 实测；数字会变，必须现取）。
 - 枚举完必须与 `gh repo list <name>` 交叉核对，少一个就要红；不能靠「看起来齐了」。
 
 归档仓单列一节、标 `ARCHIVED`，不计入「健康」。把已归档仓标 ✅ 会让人以为还在维护。
