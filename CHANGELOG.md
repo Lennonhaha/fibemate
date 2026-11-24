@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+> **Version / served alignment (2026-11-25).** `main.commit=f10b78f`,
+> `served.commit=2dde110`, `VERSION.json=3.3.3`. `served` is the `3.3.3`
+> production build; `main` is ahead of it. This is a served/main divergence,
+> not an "unreleased vs released" binary. The entries below are merged on
+> `main` (`f10b78f`) but have not shipped in a release; deployment alignment
+> is tracked in the Layer 1 #693 pre-deploy check.
+
 ### Fixed
 
 - **Deterministic ML-DSA signatures are now byte-identical to FIPS 204.** Three
@@ -76,6 +83,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The regression suite that proves it (`verify-canonical-signature.test.js --strict`)
   runs in CI. It was written on 2026-11-14 in audit mode precisely so it would not turn
   red before the fix existed; the fix and the gate land together.
+
+### Build, deployment, and gates
+
+- **The served tree no longer publishes internal artefacts.**
+  `www/DEPLOY_ZK_GUIDE.md`, `www/docs/openapi.yaml` and `www/package-lock.json`
+  are no longer published; drive-letter paths in the demo JSON and docs are now
+  repo-relative ([#686](https://github.com/Lennonhaha/fibemate/pull/686)).
+- **Required fields fail loudly instead of returning `null`.**
+  `markMessageReadByDevice` now asserts `messageId`, `userId` and `deviceId`; an
+  empty value raises a `TypeError` with `code=E_REQUIRED_FIELD`, while unknown
+  messages and non-recipients still return `null`
+  ([#687](https://github.com/Lennonhaha/fibemate/pull/687)).
+- **Evidence files are immutable in CI.** `scripts/check-evidence-immutable.cjs`
+  and its workflow reject any byte change to `*.tsr`, `*.tsq` or `SHA256SUMS`
+  ([#688](https://github.com/Lennonhaha/fibemate/pull/688)).
+- **PR baseline gate.** `scripts/check-pr-baseline.cjs` catches content already
+  squash-merged into the base and verifies the post-merge tree byte-for-byte
+  ([#689](https://github.com/Lennonhaha/fibemate/pull/689)).
+- **nginx drift compares with LCS, not line numbers.** An insertion no longer
+  cascades into dozens of false differences; the tracked config is synced to the
+  live 281-line file ([#690](https://github.com/Lennonhaha/fibemate/pull/690)).
+
+### Docs
+
+- **Deploy, CI, and functional green are now separate claims.** `GOVERNANCE.md`
+  defines each state and states that deploy green plus CI green does not imply
+  functional green; the 2026-11-24 `839e119` V3 run (`readBy=[]` after a fully
+  green deploy) is the counter-example ([GOVERNANCE.md](./GOVERNANCE.md)).
 
 ### Note
 
