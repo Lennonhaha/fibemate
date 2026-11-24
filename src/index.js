@@ -966,37 +966,38 @@ try {
         }
 
         case 'read_receipt': {
-          const { messageId } = msg;
-          if (!messageId) break;
-          // 标记消息已读
-          const convs = db.getConversationsByUserId(userId);
-          convs.forEach(conv => {
-            const msgs = conv.messages || [];
-            const m = msgs.find(x => x.id === messageId);
-            if (m && m.recipientUserId === userId) {
-              if (!m.readBy) m.readBy = [];
-              if (!m.readBy.includes(deviceId)) {
-                m.readBy.push(deviceId);
-                if (m.readBy.length === db.getDevicesByUserId(m.senderUserId).length) {
-                  m.isRead = true;
-                  m.readAt = Date.now();
-                }
-              }
+          // 两种载荷都收：新客户端逐条发 messageId，旧客户端发 messageIds 数组。
+          const ackIds = [];
+          if (typeof msg.messageId === 'string' && msg.messageId) ackIds.push(msg.messageId);
+          if (Array.isArray(msg.messageIds)) {
+            for (const id of msg.messageIds) {
+              if (typeof id === 'string' && id) ackIds.push(id);
             }
-          });
-          db.save();
-          const convs2 = db.getConversationsByUserId(userId);
-          let senderId = null;
-          convs2.forEach(c => {
-            const m = (c.messages || []).find(x => x.id === messageId);
-            if (m) senderId = m.senderUserId;
-          });
-          if (senderId) {
-            sendToUser(senderId, {
+          }
+          if (ackIds.length === 0) break;
+          // 旧实现改的是 getConversationsByUserId() 返回的 JSON.parse 副本，save() 又是空实现，
+          // 写入被静默丢弃：生产库 readBy 至今只有 [] 与 ['*']（2026-11-24 实测）。
+          const acked = [];
+          // 日志不带 messageId：它是客户端给的字符串，进日志就是 log injection 面。
+          // 序号只用于把同一次批量的失败对上号，不含用户数据。
+          for (const [ackIndex, id] of [...new Set(ackIds)].entries()) {
+            try {
+              const m = db.markMessageReadByDevice(id, userId, deviceId);
+              if (m) acked.push(m);
+            } catch (e) {
+              console.error(`[read_receipt] persist failed on ack #${ackIndex}:`, e && e.code);
+            }
+          }
+          // 逐条回给发件人，并同时带 messageId 与 messageIds——旧客户端只读 messageIds。
+          // 用 markMessageReadByDevice 返回的实体（含 senderUserId），不再扫全部会话。
+          for (const m of acked) {
+            sendToUser(m.senderUserId, {
               type: 'read_receipt',
-              messageId,
+              messageId: m.id,
+              messageIds: [m.id],
               readBy: userId,
-              readAt: Date.now()
+              readAt: Date.now(),
+              isRead: !!m.isRead
             });
           }
           break;

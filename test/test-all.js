@@ -29,6 +29,8 @@ const suites = [
   ['Account lockout', ['node', 'test/lockout.test.js']],
   ['Backend load smoke (TDZ/init)', ['node', 'test/smoke-backend.js']],
   ['Offline replay predicate (readBy *)', ['node', '--test', 'test/offline-replay.test.js']],
+  ['DB readBy write path (negative control)', ['node', '--test', 'test/db-readby.test.js']],
+  ['WS read_receipt end-to-end (disk + replay)', ['node', '--test', 'test/ws-read-receipt.test.js']],
   ['Account test-user rule + security-log req wiring', ['node', '--test', 'test/test-user-rule.test.js']],
   ['Client IP source (realClientKey)', ['node', '--test', 'test/client-ip.test.js']],
   ['ML-KEM-768 oracle interop', ['node', '--test', 'test/ml-kem-768-oracle-interop.test.js']],
