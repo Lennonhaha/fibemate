@@ -85,21 +85,98 @@ function codeLines(text) {
     .filter((l) => l.trim() !== '' && !l.trim().startsWith('#'));
 }
 
-function unified(a, b, labelA, labelB, limit) {
-  const out = [];
-  const n = Math.max(a.length, b.length);
-  let shown = 0;
-  for (let i = 0; i < n && shown < limit; i += 1) {
-    if (a[i] !== b[i]) {
-      if (a[i] !== undefined) out.push('- ' + labelA + ':' + (i + 1) + ': ' + a[i]);
-      if (b[i] !== undefined) out.push('+ ' + labelB + ':' + (i + 1) + ': ' + b[i]);
-      shown += 1;
+// Longest-common-subsequence diff. The previous version compared line i with
+// line i, so a single inserted line reported every following line as drift:
+// a real four-line change (2026-11-24) printed a wall of phantom differences and
+// taught readers to skim the output. Insertions and deletions must be located by
+// content, not by index.
+function lcsOps(a, b) {
+  const n = a.length;
+  const m = b.length;
+  const dp = Array.from({ length: n + 1 }, () => new Uint32Array(m + 1));
+  for (let i = n - 1; i >= 0; i -= 1) {
+    for (let j = m - 1; j >= 0; j -= 1) {
+      dp[i][j] = a[i] === b[j]
+        ? dp[i + 1][j + 1] + 1
+        : Math.max(dp[i + 1][j], dp[i][j + 1]);
     }
   }
+  const ops = [];
+  let i = 0;
+  let j = 0;
+  while (i < n && j < m) {
+    if (a[i] === b[j]) {
+      ops.push({ t: 'same', ai: i, bi: j, text: a[i] });
+      i += 1;
+      j += 1;
+    } else if (dp[i + 1][j] >= dp[i][j + 1]) {
+      ops.push({ t: 'del', ai: i, bi: j, text: a[i] });
+      i += 1;
+    } else {
+      ops.push({ t: 'ins', ai: i, bi: j, text: b[j] });
+      j += 1;
+    }
+  }
+  while (i < n) { ops.push({ t: 'del', ai: i, bi: j, text: a[i] }); i += 1; }
+  while (j < m) { ops.push({ t: 'ins', ai: i, bi: j, text: b[j] }); j += 1; }
+  return ops;
+}
+
+function countChanges(ops) {
+  return ops.filter((o) => o.t !== 'same').length;
+}
+
+function renderDiff(ops, labelA, labelB, limit) {
+  const out = [];
+  let changes = 0;
+  let cut = false;
+  for (const o of ops) {
+    if (o.t === 'same') continue;
+    changes += 1;
+    if (changes > limit) { cut = true; continue; }
+    if (o.t === 'del') out.push('- ' + labelA + ':' + (o.ai + 1) + ': ' + o.text);
+    else out.push('+ ' + labelB + ':' + (o.bi + 1) + ': ' + o.text);
+  }
+  if (cut) out.push('  ... and ' + (changes - limit) + ' more changed line(s)');
   return out;
 }
 
+// Proves the diff locates insertions instead of cascading through the tail.
+function selfTest() {
+  const cases = [];
+  const same = (a, b) => countChanges(lcsOps(a, b)) === 0;
+  const kinds = (a, b) => {
+    const o = lcsOps(a, b).filter((x) => x.t !== 'same');
+    return o.map((x) => x.t).sort().join(',');
+  };
+
+  cases.push(['identical input has no changes', same(['a', 'b', 'c'], ['a', 'b', 'c'])]);
+  cases.push(['one insertion is one change, not a cascade', kinds(['a', 'b', 'c'], ['a', 'x', 'b', 'c']) === 'ins']);
+  cases.push(['one deletion is one change', kinds(['a', 'b', 'c'], ['a', 'c']) === 'del']);
+  cases.push(['one edit is one delete plus one insert', kinds(['a', 'b'], ['a', 'B']) === 'del,ins']);
+  cases.push(['insertion near the top does not mark the tail', countChanges(lcsOps(
+    ['l1', 'l2', 'l3', 'l4', 'l5'],
+    ['l0', 'l1', 'l2', 'l3', 'l4', 'l5'],
+  )) === 1]);
+  cases.push(['renderer numbers the live side for insertions', renderDiff(
+    lcsOps(['a'], ['a', 'b']), 'tracked', 'live', 20,
+  )[0] === '+ live:2: b']);
+
+  let failed = 0;
+  for (const [name, ok] of cases) {
+    if (!ok) failed += 1;
+    console.log((ok ? 'PASS' : 'FAIL') + '  ' + name);
+  }
+  if (failed > 0) {
+    console.error('\nSELFTEST FAILED: ' + failed + '/' + cases.length);
+    process.exit(1);
+  }
+  console.log('\nSELFTEST OK: ' + cases.length + '/' + cases.length);
+  process.exit(0);
+}
+
 function main() {
+  if (process.argv.includes('--self-test')) return selfTest();
   const opts = parseArgs(process.argv.slice(2));
   let localText;
   try {
@@ -148,12 +225,13 @@ function main() {
 
   const mine = codeLines(localText);
   const live = codeLines(res.stdout);
-  if (mine.length === live.length && mine.every((l, i) => l === live[i])) {
+  const ops = lcsOps(mine, live);
+  if (countChanges(ops) === 0) {
     if (!opts.quiet) console.log('drift: none (' + mine.length + ' code lines match the live file)');
     return;
   }
 
-  const diff = unified(mine, live, 'tracked', 'live', 20);
+  const diff = renderDiff(ops, 'tracked', 'live', 20);
   console.error('drift: tracked copy differs from ' + target + ':' + opts.remote);
   for (const line of diff) console.error(line);
   const extra = mine.length !== live.length ? ' (code lines: tracked ' + mine.length + ', live ' + live.length + ')' : '';
@@ -161,4 +239,5 @@ function main() {
   process.exit(2);
 }
 
-main();
+if (require.main === module) main();
+else module.exports = { lcsOps, codeLines, countChanges, renderDiff };
