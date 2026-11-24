@@ -1,0 +1,47 @@
+# Evidence immutability (G-06)
+#
+# A .tsr cannot be re-stamped and a SHA256SUMS file is the only record of what was
+# stamped. Every other gate reads the current tree, so an edit to evidence would be
+# validated against the edited evidence and stay green. This job compares the PR
+# against its base and fails on any modified/renamed/deleted evidence path that is
+# not explicitly allowlisted with a reason.
+#
+# The second step is the point of the first: it proves the gate goes red.
+name: evidence-immutable
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  evidence-immutable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Full history: the gate diffs the PR against its base commit.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+
+      - name: Prove the gate can fail
+        run: node scripts/check-evidence-immutable.cjs --self-test
+
+      - name: Refuse to rewrite shipped evidence
+        run: node scripts/check-evidence-immutable.cjs --base "${{ github.event.pull_request.base.sha || github.event.before }}"
+
+      - name: Attribute - evidence verdict
+        if: always()
+        run: |
+          echo "### Evidence immutability"
+          echo ""
+          echo "gate: scripts/check-evidence-immutable.cjs"
+          echo "allowlist: scripts/evidence-allowlist.txt"
+          echo "range: ${{ github.event.pull_request.base.sha || github.event.before }}..HEAD"
