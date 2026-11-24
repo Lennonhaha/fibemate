@@ -978,12 +978,14 @@ try {
           // 旧实现改的是 getConversationsByUserId() 返回的 JSON.parse 副本，save() 又是空实现，
           // 写入被静默丢弃：生产库 readBy 至今只有 [] 与 ['*']（2026-11-24 实测）。
           const acked = [];
-          for (const id of new Set(ackIds)) {
+          // 日志不带 messageId：它是客户端给的字符串，进日志就是 log injection 面。
+          // 序号只用于把同一次批量的失败对上号，不含用户数据。
+          for (const [ackIndex, id] of [...new Set(ackIds)].entries()) {
             try {
               const m = db.markMessageReadByDevice(id, userId, deviceId);
               if (m) acked.push(m);
             } catch (e) {
-              console.error('[read_receipt] persist failed:', id, e && e.message);
+              console.error(`[read_receipt] persist failed on ack #${ackIndex}:`, e && e.code);
             }
           }
           // 逐条回给发件人，并同时带 messageId 与 messageIds——旧客户端只读 messageIds。

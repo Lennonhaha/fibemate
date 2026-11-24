@@ -60,11 +60,12 @@ async function waitForServer(url, timeoutMs = 30000) {
   return false;
 }
 
-async function api(method, route, body) {
+async function api(method, route, body = null) {
+  const hasBody = body !== null;
   const res = await fetch(base + route, {
     method,
-    headers: body === undefined ? {} : { 'content-type': 'application/json' },
-    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: hasBody ? { 'content-type': 'application/json' } : {},
+    body: hasBody ? JSON.stringify(body) : undefined,
   });
   const text = await res.text();
   let json = null;
