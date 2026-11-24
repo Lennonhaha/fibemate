@@ -52,9 +52,9 @@ function freshDb() {
     createdAt: now, lastMessageAt: now
   });
   // devices need the NOT NULL userId column, so createDevice(), not _upsert().
-  ctx.db.createDevice({ id: DEV_A, userId: UID, deviceName: 'A', isActive: 1 });
-  ctx.db.createDevice({ id: DEV_B, userId: UID, deviceName: 'B', isActive: 1 });
-  ctx.db.createDevice({ id: DEV_OFF, userId: UID, deviceName: 'OFF', isActive: 0 });
+  ctx.db.createDevice({ id: DEV_A, userId: UID, deviceName: 'A', isActive: 1, lastActive: now });
+  ctx.db.createDevice({ id: DEV_B, userId: UID, deviceName: 'B', isActive: 1, lastActive: now });
+  ctx.db.createDevice({ id: DEV_OFF, userId: UID, deviceName: 'OFF', isActive: 0, lastActive: now });
   ctx.db._upsert('messages', MID, {
     id: MID, conversationId: CONV, senderUserId: PEER, senderDeviceId: 'peer-dev',
     recipientUserId: UID, ciphertext: 'x', envelope: null, messageType: 'text',
@@ -132,6 +132,59 @@ test('isRead flips only when every active device has acked', () => {
     ctx.db.markMessageReadByDevice(MID, UID, DEV_B);
     assert.equal(isRead(ctx.db), true, 'inactive devices must not hold isRead back');
     assert.deepEqual(readBy(ctx.db).sort(), [DEV_A, DEV_B]);
+  } finally { ctx.cleanup(); }
+});
+
+test('markMessagesRead without a deviceId keeps legacy isRead but never writes readBy', () => {
+  const ctx = freshDb();
+  try {
+    ctx.db.markMessagesRead(CONV, UID);
+    assert.equal(isRead(ctx.db), true, 'legacy path preserves the old isRead behaviour');
+    assert.deepEqual(readBy(ctx.db), [], 'an empty deviceId must never enter readBy');
+  } finally { ctx.cleanup(); }
+});
+
+test('markMessagesRead records the JWT deviceId and waits for every active device', () => {
+  const ctx = freshDb();
+  try {
+    ctx.db.markMessagesRead(CONV, UID, DEV_A);
+    assert.deepEqual(readBy(ctx.db), [DEV_A]);
+    assert.equal(isRead(ctx.db), false, 'DEV_B is still active and has not acked');
+
+    ctx.db.markMessageReadByDevice(MID, UID, DEV_B);
+    assert.equal(isRead(ctx.db), true);
+    assert.deepEqual(readBy(ctx.db).sort(), [DEV_A, DEV_B]);
+  } finally { ctx.cleanup(); }
+});
+
+test('a stale active device does not hold isRead back', () => {
+  const ctx = freshDb();
+  try {
+    ctx.db.createDevice({
+      id: DEV_B, userId: UID, deviceName: 'B', isActive: 1,
+      lastActive: Date.now() - 31 * 24 * 60 * 60 * 1000
+    });
+    ctx.db.markMessagesRead(CONV, UID, DEV_A);
+    assert.equal(isRead(ctx.db), true, 'only DEV_A is inside the 30-day window');
+    assert.deepEqual(readBy(ctx.db), [DEV_A]);
+  } finally { ctx.cleanup(); }
+});
+
+test('duplicate ack recomputes isRead after the other device goes stale', () => {
+  const ctx = freshDb();
+  try {
+    const first = ctx.db.markMessageReadByDevice(MID, UID, DEV_A);
+    assert.ok(first, 'the first ack should persist readBy');
+    assert.equal(isRead(ctx.db), false);
+
+    ctx.db.createDevice({
+      id: DEV_B, userId: UID, deviceName: 'B', isActive: 1,
+      lastActive: Date.now() - 31 * 24 * 60 * 60 * 1000
+    });
+
+    const updated = ctx.db.markMessageReadByDevice(MID, UID, DEV_A);
+    assert.ok(updated, 'the duplicate ack must return the newly completed message');
+    assert.equal(isRead(ctx.db), true);
   } finally { ctx.cleanup(); }
 });
 

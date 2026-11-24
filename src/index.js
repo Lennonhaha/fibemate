@@ -1734,7 +1734,7 @@ app.get('/api/conversations/:conversationId/messages', authMiddleware, (req, res
   let msgs = [...(conv.messages || [])].sort((a, b) => a.createdAt - b.createdAt);
   if (before) msgs = msgs.filter(m => m.createdAt < parseInt(before));
   const result = msgs.slice(-parseInt(limit));
-  db.markMessagesRead(req.params.conversationId, req.user.userId);
+  db.markMessagesRead(req.params.conversationId, req.user.userId, req.user.deviceId || '');
   res.json({ messages: result });
 });
 
