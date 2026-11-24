@@ -423,6 +423,47 @@ class SqliteDB {
     ).all(userId).map(r => JSON.parse(r.raw_json));
   }
 
+  /**
+   * Mark one message as received by one device.
+   *
+   * Returns the updated message, or null when nothing changed (missing message,
+   * not the recipient, already acked, or already marked '*' = every device).
+   *
+   * Why this method exists: the websocket handler used to mutate the object
+   * returned by getConversationsByUserId() and then call save(). That object is
+   * a fresh JSON.parse() copy and save() is a no-op, so every write was thrown
+   * away in silence. Measured on production 2026-11-24: readBy only ever held
+   * [] (never acked) or ['*'] (bulk stamp from 2026-11-22), which is why the
+   * offline queue never converged and replay stayed at 44 frames per connect.
+   */
+  markMessageReadByDevice(messageId, userId, deviceId) {
+    if (typeof messageId !== 'string' || !messageId) return null;
+    if (typeof userId !== 'string' || !userId) return null;
+    if (typeof deviceId !== 'string' || !deviceId) return null;
+    const row = this._db.prepare('SELECT raw_json FROM messages WHERE id = ?').get(messageId);
+    if (!row) return null;
+    const m = JSON.parse(row.raw_json);
+    if (m.recipientUserId !== userId) return null;
+    const readBy = Array.isArray(m.readBy) ? m.readBy : [];
+    if (readBy.includes('*') || readBy.includes(deviceId)) return null;
+
+    readBy.push(deviceId);
+    m.readBy = readBy;
+
+    // isRead means "every active device of the *recipient* has it". The old
+    // code compared against the sender's device count, so it fired early.
+    const deviceIds = this._db.prepare(
+      "SELECT id FROM devices WHERE userId = ? AND CAST(json_extract(raw_json, '$.isActive') AS INTEGER) = 1"
+    ).all(m.recipientUserId).map(r => r.id);
+    if (deviceIds.length > 0 && deviceIds.every(id => readBy.includes(id))) {
+      m.isRead = true;
+      m.readAt = Date.now();
+    }
+
+    this._upsert('messages', messageId, m);
+    return m;
+  }
+
   // ── Conversations ──────────────────────────────────────
 
   getOrCreateConversation(userAId, userBId) {
