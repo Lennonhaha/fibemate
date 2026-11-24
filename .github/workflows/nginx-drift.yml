@@ -56,6 +56,12 @@ jobs:
       - name: Tracked copy has no secrets, addresses or mojibake
         run: node scripts/check-nginx-drift.cjs --offline
 
+      # The comparison used to walk both files by index, so one inserted line made
+      # every following line look different: a real four-line drift (2026-11-24)
+      # printed dozens of phantom lines. Drift that noisy is drift nobody reads.
+      - name: Comparison locates insertions instead of cascading
+        run: node scripts/check-nginx-drift.cjs --self-test
+
   live:
     runs-on: ubuntu-latest
     needs: offline
