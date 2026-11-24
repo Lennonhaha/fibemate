@@ -1,0 +1,38 @@
+# PR baseline (G-07)
+#
+# Two incidents, one gate:
+#   - a branch cut from a pre-squash head carried an entire merged PR into a new one
+#   - a squash merge that no longer reproduced the reviewed change
+#
+# The first is checked here on every PR using patch identity (`git cherry`), which
+# survives rebases and squash merges -- ancestry checks do not, which is why the
+# first incident was invisible.
+name: pr-baseline
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pr-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          # Both ends of the comparison must exist locally.
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+
+      - name: Prove the gate can fail
+        run: node scripts/check-pr-baseline.cjs --self-test
+
+      - name: Refuse a branch that carries already-merged patches
+        run: node scripts/check-pr-baseline.cjs --base "${{ github.event.pull_request.base.sha || 'origin/main' }}" --head "${{ github.event.pull_request.head.sha || 'HEAD' }}"
