@@ -143,13 +143,48 @@ test('rejects a non-recipient', () => {
   } finally { ctx.cleanup(); }
 });
 
-test('rejects unknown message and bad arguments', () => {
+test('unknown message returns null (lookup outcome, not misuse)', () => {
   const ctx = freshDb();
   try {
     assert.equal(ctx.db.markMessageReadByDevice('nope', UID, DEV_A), null);
-    assert.equal(ctx.db.markMessageReadByDevice(MID, UID, ''), null);
-    assert.equal(ctx.db.markMessageReadByDevice(MID, null, DEV_A), null);
-    assert.equal(ctx.db.markMessageReadByDevice(null, UID, DEV_A), null);
+  } finally { ctx.cleanup(); }
+});
+
+// G-06 negative control: a missing identity field must throw, not return null.
+// Before the fix all four of these returned null and the caller treated that as
+// "nothing to do", which is exactly how an empty deviceId stayed invisible.
+test('negative control: empty deviceId throws E_REQUIRED_FIELD instead of returning null', () => {
+  const ctx = freshDb();
+  try {
+    assert.throws(
+      () => ctx.db.markMessageReadByDevice(MID, UID, ''),
+      (e) => e instanceof TypeError && e.code === 'E_REQUIRED_FIELD' && e.field === 'deviceId',
+      'empty deviceId must throw E_REQUIRED_FIELD'
+    );
+    assert.throws(
+      () => ctx.db.markMessageReadByDevice(MID, UID),
+      (e) => e.code === 'E_REQUIRED_FIELD' && e.field === 'deviceId',
+      'undefined deviceId must throw E_REQUIRED_FIELD'
+    );
+    assert.deepEqual(readBy(ctx.db), [], 'a rejected call must not write anything');
+  } finally { ctx.cleanup(); }
+});
+
+test('missing messageId or userId throws E_REQUIRED_FIELD', () => {
+  const ctx = freshDb();
+  try {
+    assert.throws(() => ctx.db.markMessageReadByDevice(null, UID, DEV_A),
+      (e) => e.code === 'E_REQUIRED_FIELD' && e.field === 'messageId');
+    assert.throws(() => ctx.db.markMessageReadByDevice('', UID, DEV_A),
+      (e) => e.code === 'E_REQUIRED_FIELD' && e.field === 'messageId');
+    assert.throws(() => ctx.db.markMessageReadByDevice(MID, null, DEV_A),
+      (e) => e.code === 'E_REQUIRED_FIELD' && e.field === 'userId');
+    assert.throws(() => ctx.db.markMessageReadByDevice(MID, '', DEV_A),
+      (e) => e.code === 'E_REQUIRED_FIELD' && e.field === 'userId');
+    assert.throws(() => ctx.db.markMessageReadByDevice(MID, UID, 42),
+      (e) => e.code === 'E_REQUIRED_FIELD' && e.field === 'deviceId',
+      'non-string deviceId must throw as well');
+    assert.deepEqual(readBy(ctx.db), []);
   } finally { ctx.cleanup(); }
 });
 
