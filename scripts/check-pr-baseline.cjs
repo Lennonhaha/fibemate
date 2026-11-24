@@ -128,11 +128,15 @@ function postMerge({ base, head, postMerge }) {
     console.log(`OK: squash ${postMerge.slice(0, 12)} changes ${base} identically to reviewed head ${head.slice(0, 12)} (${reviewed.length} patch bytes)`);
     process.exit(0);
   }
-  fs.mkdirSync(path.join(os.tmpdir(), 'pr-baseline'), { recursive: true });
-  const a = path.join(os.tmpdir(), 'pr-baseline', 'reviewed.patch');
-  const b = path.join(os.tmpdir(), 'pr-baseline', 'merged.patch');
-  fs.writeFileSync(a, reviewed);
-  fs.writeFileSync(b, merged);
+  // A unique directory per run: a fixed name in the shared temp dir is a
+  // predictable path that another local process can pre-create (CodeQL
+  // js/insecure-temporary-file). mkdtempSync returns a path only this process
+  // knows, and 'wx' refuses to follow anything already there.
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'pr-baseline-'));
+  const a = path.join(dir, 'reviewed.patch');
+  const b = path.join(dir, 'merged.patch');
+  fs.writeFileSync(a, reviewed, { flag: 'wx' });
+  fs.writeFileSync(b, merged, { flag: 'wx' });
   console.error(`FAIL: squash ${postMerge.slice(0, 12)} does not reproduce the reviewed change.`);
   console.error(`  reviewed patch: ${reviewed.length} B (${a})`);
   console.error(`  merged patch:   ${merged.length} B (${b})`);
