@@ -1548,15 +1548,10 @@
 
         <div class="verification-card">
           <div class="card-icon">&#x1F6A7;</div>
-          <h3>SM4 S-box 位切片 · TVLA lg-080 ✅</h3>
-          <table style="width:100%;font-size:0.78rem;margin:0.5rem 0;border-collapse:collapse;">
-            <thead><tr style="background:rgba(255,255,255,0.04);"><th style="text-align:left;padding:3px 6px;">操作</th><th style="text-align:right;padding:3px 6px;">|t| (位切片)</th><th style="text-align:right;padding:3px 6px;">|t| (标准 S-box)</th><th style="text-align:center;padding:3px 6px;">结果</th></tr></thead>
-            <tbody>
-              <tr><td style="padding:2px 6px;">加密</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>通过</strong></td><td style="text-align:right;padding:2px 6px;color:#f87171;">缓存泄漏</td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; 消除</td></tr>
-              <tr><td style="padding:2px 6px;">解密</td><td style="text-align:right;padding:2px 6px;color:#00d4aa;"><strong>通过</strong></td><td style="text-align:right;padding:2px 6px;color:#f87171;">缓存泄漏</td><td style="text-align:center;padding:2px 6px;color:#00d4aa;">&#x2705; 消除</td></tr>
-            </tbody>
-          </table>
-          <p style="font-size:0.7rem;color:#00d4aa;margin:0.3rem 0 0;">&#x1F4CC; 位切片实现：S-box 查表 → 逐比特逻辑运算等效变换，零缓存时序依赖 · DigiCert lg-080 TSR 存证 ✅</p>
+          <h3>SM4 S-box 位切片（历史实验记录，非当前实现）</h3>
+          <p style="font-size:0.78rem;color:#f59e0b;line-height:1.6;">
+            早期 TVLA 实验记录（lg-080，2026-07-17，FreeTSA）。该存证绑定的是历史清单，不能证明当前 <code>www/crypto/sm4-browser.js</code>；当前 Web 端仍使用 8-bit S-box 查表。A7 将重新对当前实现做 TVLA 并打新 TSR。
+          </p>
         </div>
 
         <div class="verification-card">
