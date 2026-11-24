@@ -68,7 +68,7 @@
 | `~/.ssh/fibemate_final.pem` | SSH 私钥 | High | ✅ 仅本地 |
 | `/etc/letsencrypt/<provider>.ini` | API Key | Medium | 定期轮换 |
 | `~/.gitconfig` (credential) | GitHub Token | Medium | ⚠️ 可能已过期 |
-| `D:\FIBEMATE\` | 本地备份 | Medium | ✅ 本地 |
+| `<repo>/` | 本地备份 | Medium | ✅ 本地 |
 | GitHub Secrets | CI/CD Token | Medium | ✅ 平台管理 |
 | 代码中的测试密钥 | SM2/VWZ/ML-KEM | Low | ✅ 仅测试用途 |
 | `CITATION.cff` | 无密钥 | N/A | ✅ |

@@ -82,7 +82,7 @@
           "ratio": 1
         },
         "raw": "10000/10000",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.95,
       "cmp": {
@@ -148,7 +148,7 @@
           "base": 9.755
         },
         "raw": "9.755ns",
-        "abs": "D:\\FIBEMATE\\fibemate\\tools\\cars-scorecard.json"
+        "abs": "fibemate/tools/cars-scorecard.json"
       },
       "score": 0.7999999999999999,
       "cmp": {
