@@ -36,7 +36,7 @@
 |--------|--------|
 | ML-KEM-768 | 100-vector KAT + 10,000-round round-trip ✅ |
 | SM2 | 11/11 tests (v1.3) ✅ |
-| SM4 | Bit-sliced constant-time S-box ✅ |
+| SM4 | 8-bit LUT; timing screen only, not a constant-time proof | WARN |
 | SLH-DSA-128s | WASM bridge (FIPS 205) ✅ |
 | LookingGlass | v2.2.3 cold/hot path (61/61) ✅ |
 | VWZ | 148/148 + C reference ✅ |
