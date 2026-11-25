@@ -15,6 +15,7 @@ const Database = require('better-sqlite3');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { staleCutoff } = require('./device-id');
 
 /**
  * G-06: required-field assertion.
@@ -441,6 +442,18 @@ class SqliteDB {
     ).all(userId).map(r => JSON.parse(r.raw_json));
   }
 
+  /**
+   * Active devices for isRead, using the same 30-day window as
+   * deactivateStaleDevices(). A device can still be isActive=1 in the table
+   * between logins; it must not keep an old message unread forever.
+   */
+  _activeDeviceIds(userId, now = Date.now()) {
+    const cutoff = staleCutoff(now);
+    return this._db.prepare(
+      "SELECT id FROM devices WHERE userId = ? AND CAST(json_extract(raw_json, '$.isActive') AS INTEGER) = 1 AND CAST(json_extract(raw_json, '$.lastActive') AS INTEGER) >= ?"
+    ).all(userId, cutoff).map(r => r.id);
+  }
+
   getDeviceById(deviceId) {
     const row = this._db.prepare('SELECT raw_json FROM devices WHERE id = ?').get(deviceId);
     return row ? JSON.parse(row.raw_json) : null;
@@ -533,21 +546,27 @@ class SqliteDB {
     const m = JSON.parse(row.raw_json);
     if (m.recipientUserId !== userId) return null;
     const readBy = Array.isArray(m.readBy) ? m.readBy : [];
-    if (readBy.includes('*') || readBy.includes(deviceId)) return null;
+    if (readBy.includes('*')) return null;
 
-    readBy.push(deviceId);
+    let changed = false;
+    if (!readBy.includes(deviceId)) {
+      readBy.push(deviceId);
+      changed = true;
+    }
     m.readBy = readBy;
 
-    // isRead means "every active device of the *recipient* has it". The old
-    // code compared against the sender's device count, so it fired early.
-    const deviceIds = this._db.prepare(
-      "SELECT id FROM devices WHERE userId = ? AND CAST(json_extract(raw_json, '$.isActive') AS INTEGER) = 1"
-    ).all(m.recipientUserId).map(r => r.id);
-    if (deviceIds.length > 0 && deviceIds.every(id => readBy.includes(id))) {
+    // isRead means "every active device of the *recipient* has it". Recompute
+    // on duplicate acks too: a previously active device may have gone stale
+    // while this device was already in readBy, and the old early return left
+    // the message stuck at isRead:false forever.
+    const deviceIds = this._activeDeviceIds(m.recipientUserId);
+    if (deviceIds.length > 0 && deviceIds.every(id => readBy.includes(id)) && !m.isRead) {
       m.isRead = true;
       m.readAt = Date.now();
+      changed = true;
     }
 
+    if (!changed) return null;
     this._upsert('messages', messageId, m);
     return m;
   }
@@ -659,27 +678,59 @@ class SqliteDB {
     return stmt.all(conversationId, limit).map(r => JSON.parse(r.raw_json));
   }
 
-  markMessagesRead(conversationId, userId) {
+  markMessagesRead(conversationId, userId, deviceId = '') {
     const conv = this._get('conversations', conversationId);
-    if (!conv) return;
+    if (!conv) return 0;
 
-    const updated = [];
     const allMsgs = this._db.prepare(
       "SELECT id, raw_json FROM messages WHERE conversationId = ?"
     ).all(conversationId);
 
+    let changes = 0;
     const tx = this._db.transaction(() => {
+      const activeDeviceIds = deviceId ? this._activeDeviceIds(userId) : null;
       for (const row of allMsgs) {
         const m = JSON.parse(row.raw_json);
-        if (m.recipientUserId === userId && !m.isRead) {
+        if (m.recipientUserId !== userId) continue;
+
+        // Legacy clients do not send a deviceId. Preserve their old behaviour,
+        // but never write an empty id into readBy.
+        if (!deviceId) {
+          if (!m.isRead) {
+            m.isRead = true;
+            m.readAt = Date.now();
+            this._upsert('messages', row.id, m);
+            changes += 1;
+          }
+          continue;
+        }
+
+        const readBy = Array.isArray(m.readBy) ? m.readBy : [];
+        if (readBy.includes('*')) continue;
+
+        let changed = false;
+        if (!readBy.includes(deviceId)) {
+          readBy.push(deviceId);
+          changed = true;
+        }
+        m.readBy = readBy;
+
+        if (activeDeviceIds.length > 0 &&
+            activeDeviceIds.every(id => readBy.includes(id)) &&
+            !m.isRead) {
           m.isRead = true;
           m.readAt = Date.now();
-          this._upsert('messages', row.id, m);
+          changed = true;
         }
-        updated.push(m);
+
+        if (changed) {
+          this._upsert('messages', row.id, m);
+          changes += 1;
+        }
       }
     });
     tx();
+    return changes;
 
     // 更新未读计数
     // TODO：conversation 的 unreadCountX 在原始数据中是互动态化的，
