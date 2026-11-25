@@ -93,6 +93,21 @@ All research components (LookingGlass v1/v2, VWZ) are **default-off** and **not 
 
 ---
 
+## Order Deviation After the v3.3.15 Package (2026-11-26)
+
+### Decision
+The 2026-11-25 decision "hybrid downgrade fix before 3.3.15 UI" was **not** followed literally. The 3.3.15 package exposed two user-facing defects (2FA setup crash; conversation list and unread badge not refreshing), so the bad-package fix (client PR #111, commit `3cc78d8`) was handled first. The hybrid downgrade invariants in `SECURITY-BOUNDARY.md` §9.2 have **not** been started.
+
+### Why this is an exception, not a re-prioritisation
+- The package was already on users' machines and was unusable for 2FA enrolment and visible unread state. Leaving it while starting a wire-protocol change would have kept a known-bad client in the field.
+- No client Release was published: v3.3.15 remains a draft, and the 3.3.16 installer remains local-only. The exception therefore did not ship a second release ahead of the security fix.
+- The server-only deployment (`7b93f933`, per-device unread count) is backward compatible and does not touch the client release train.
+
+### Binding consequence
+The §9.2 hybrid downgrade fix (sticky hybrid, envelope protocol check, reject classical rebuild of a stored hybrid session) remains a **P0 gate for v3.4.0 and for lifting the client release freeze**. It must be implemented with red-before-green negative tests before any 3.3.16 installer is published. This entry is the decision-log correction; it does not relax that gate.
+
+---
+
 ## File Naming Conventions
 
 ### TSR Evidence Files
