@@ -1408,6 +1408,20 @@ app.post('/api/auth/update-keys', authMiddleware, rateLimitMiddleware, (req, res
 //  2FA — TOTP (RFC 6238) routes
 // ═══════════════════════════════════════════════════════
 
+// Enrolment is closed until the login flow can carry device identity.
+// /api/auth/2fa/verify-login issues tokens with deviceId:'' (see the comment
+// on that line), so an account that enables 2FA can never acknowledge a
+// message: its id never reaches readBy and isRead never flips. Refusing
+// enrolment is the harmless half of that bug; leaving enrolment open is not.
+// Flip this back to false only together with a verify-login that returns the
+// deviceId registered at login, plus a test proving read receipts work for a
+// 2FA account end to end.
+const TWO_FA_ENROLMENT_BLOCKED = true;
+const TWO_FA_ENROLMENT_BLOCKED_BODY = {
+  error: '2FA enrolment is temporarily unavailable: device identity binding is not complete',
+  code: 'E_2FA_DEVICE_IDENTITY_PENDING',
+};
+
 // Verify 2FA credential without performing sensitive operations.
 // Returns { ok: true, consumeRecovery?: number } on success, { ok: false } on failure.
 // Caller is responsible for consuming the recovery code index and performing db.updateUser.
@@ -1442,6 +1456,7 @@ app.get('/api/auth/2fa/status', authMiddleware, rateLimitMiddleware, (req, res) 
 
 // POST /api/auth/2fa/enable — step 1: generate secret, return for QR
 app.post('/api/auth/2fa/enable', authMiddleware, rateLimitMiddleware, (req, res) => {
+  if (TWO_FA_ENROLMENT_BLOCKED) return res.status(403).json(TWO_FA_ENROLMENT_BLOCKED_BODY);
   const user = db.getUserById(req.user.userId);
   if (!user) return res.status(404).json({ error: '用户不存在' });
   if (user.twoFAEnabled) return res.status(409).json({ error: '2FA 已启用' });
@@ -1457,6 +1472,7 @@ app.post('/api/auth/2fa/enable', authMiddleware, rateLimitMiddleware, (req, res)
 
 // POST /api/auth/2fa/confirm-enable — step 2: verify first code, enable 2FA
 app.post('/api/auth/2fa/confirm-enable', authMiddleware, rateLimitMiddleware, (req, res) => {
+  if (TWO_FA_ENROLMENT_BLOCKED) return res.status(403).json(TWO_FA_ENROLMENT_BLOCKED_BODY);
   const { code } = req.body;
   if (!code) return res.status(400).json({ error: '请输入验证码' });
 
@@ -1540,6 +1556,10 @@ app.post('/api/auth/2fa/verify-login', rateLimitMiddleware, (req, res) => {
 
   // Success — issue real tokens
   twoFATickets.delete(ticket);
+  // deviceId stays empty here: the ticket never carried it (login does the
+  // device work, then returns twoFARequired without a token). That is why
+  // enrolment is blocked above: until this line returns the id registered at
+  // login, a 2FA account cannot acknowledge anything.
   const token = genToken({ id: user.id, username: user.username, deviceId: '' });
   const refreshToken = genRefreshToken({ id: user.id, username: user.username, deviceId: '' });
   db.updateUser(user.id, { isOnline: 1, lastSeen: Date.now() });
