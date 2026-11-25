@@ -1339,7 +1339,7 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
     // 2FA: if user has 2FA enabled, return ticket instead of token
     if (user.twoFAEnabled) {
       const ticket = crypto.randomBytes(32).toString('hex');
-      twoFATickets.set(ticket, { userId: user.id, expiresAt: Date.now() + 60000, attempts: 0 });
+      twoFATickets.set(ticket, { userId: user.id, deviceId: deviceId || '', expiresAt: Date.now() + 60000, attempts: 0 });
       resetLoginAttempts(username);
       logSecurity('login_2fa_required', user.id, { ticket: ticket.slice(0, 8) + '...' });
       return res.json({ twoFARequired: true, ticket });
@@ -1408,19 +1408,9 @@ app.post('/api/auth/update-keys', authMiddleware, rateLimitMiddleware, (req, res
 //  2FA — TOTP (RFC 6238) routes
 // ═══════════════════════════════════════════════════════
 
-// Enrolment is closed until the login flow can carry device identity.
-// /api/auth/2fa/verify-login issues tokens with deviceId:'' (see the comment
-// on that line), so an account that enables 2FA can never acknowledge a
-// message: its id never reaches readBy and isRead never flips. Refusing
-// enrolment is the harmless half of that bug; leaving enrolment open is not.
-// Flip this back to false only together with a verify-login that returns the
-// deviceId registered at login, plus a test proving read receipts work for a
-// 2FA account end to end.
-const TWO_FA_ENROLMENT_BLOCKED = true;
-const TWO_FA_ENROLMENT_BLOCKED_BODY = {
-  error: '2FA enrolment is temporarily unavailable: device identity binding is not complete',
-  code: 'E_2FA_DEVICE_IDENTITY_PENDING',
-};
+// Enrolment is open: /api/auth/2fa/verify-login carries the deviceId that
+// the first factor validated and registered, so a 2FA account keeps device
+// scoped read receipts. See test/2fa-device-id.test.js for the end-to-end proof.
 
 // Verify 2FA credential without performing sensitive operations.
 // Returns { ok: true, consumeRecovery?: number } on success, { ok: false } on failure.
@@ -1456,7 +1446,6 @@ app.get('/api/auth/2fa/status', authMiddleware, rateLimitMiddleware, (req, res) 
 
 // POST /api/auth/2fa/enable — step 1: generate secret, return for QR
 app.post('/api/auth/2fa/enable', authMiddleware, rateLimitMiddleware, (req, res) => {
-  if (TWO_FA_ENROLMENT_BLOCKED) return res.status(403).json(TWO_FA_ENROLMENT_BLOCKED_BODY);
   const user = db.getUserById(req.user.userId);
   if (!user) return res.status(404).json({ error: '用户不存在' });
   if (user.twoFAEnabled) return res.status(409).json({ error: '2FA 已启用' });
@@ -1472,7 +1461,6 @@ app.post('/api/auth/2fa/enable', authMiddleware, rateLimitMiddleware, (req, res)
 
 // POST /api/auth/2fa/confirm-enable — step 2: verify first code, enable 2FA
 app.post('/api/auth/2fa/confirm-enable', authMiddleware, rateLimitMiddleware, (req, res) => {
-  if (TWO_FA_ENROLMENT_BLOCKED) return res.status(403).json(TWO_FA_ENROLMENT_BLOCKED_BODY);
   const { code } = req.body;
   if (!code) return res.status(400).json({ error: '请输入验证码' });
 
@@ -1556,21 +1544,64 @@ app.post('/api/auth/2fa/verify-login', rateLimitMiddleware, (req, res) => {
 
   // Success — issue real tokens
   twoFATickets.delete(ticket);
-  // deviceId stays empty here: the ticket never carried it (login does the
-  // device work, then returns twoFARequired without a token). That is why
-  // enrolment is blocked above: until this line returns the id registered at
-  // login, a 2FA account cannot acknowledge anything.
-  const token = genToken({ id: user.id, username: user.username, deviceId: '' });
-  const refreshToken = genRefreshToken({ id: user.id, username: user.username, deviceId: '' });
+  // The first factor already validated and registered the device, and the
+  // ticket carries that id. A client may also resend it here; ownership is
+  // re-checked because the row could have changed hands between the two steps.
+  let resolvedDeviceId = ticketData.deviceId || '';
+  const bodyDevice = normalizeDeviceId(req.body.deviceId);
+  if (!bodyDevice.ok) {
+    logSecurity('2fa_login_device_invalid', user.id, { reason: 'device_id_format' }, req);
+    return res.status(400).json({ error: 'deviceId 格式无效', code: 'E_DEVICE_ID' });
+  }
+  if (bodyDevice.value) {
+    const existing = db.getDeviceById(bodyDevice.value);
+    if (existing && existing.userId !== user.id) {
+      logSecurity('2fa_login_device_owned', user.id, { reason: 'device_owned' }, req);
+      return res.status(400).json({ error: 'deviceId 已被其他账号使用', code: 'E_DEVICE_OWNED' });
+    }
+    if (!existing) {
+      db.createDeviceIfAbsent({
+        id: bodyDevice.value,
+        userId: user.id,
+        deviceName: req.headers['x-device-name'] || '新设备',
+        registrationId: crypto.randomInt(1, 65535),
+        publicKey: null,
+        isActive: true,
+        createdAt: Date.now(),
+        lastActive: Date.now()
+      });
+    } else {
+      db.touchDevice(bodyDevice.value, user.id, {});
+    }
+    resolvedDeviceId = bodyDevice.value;
+  }
+  if (!resolvedDeviceId) {
+    // Neither step supplied a device. Mint one rather than issue a device-less
+    // token: the client receives it in the response and uses it from then on.
+    resolvedDeviceId = uuidv4();
+    db.createDeviceIfAbsent({
+      id: resolvedDeviceId,
+      userId: user.id,
+      deviceName: req.headers['x-device-name'] || '新设备',
+      registrationId: crypto.randomInt(1, 65535),
+      publicKey: null,
+      isActive: true,
+      createdAt: Date.now(),
+      lastActive: Date.now()
+    });
+  }
+  const token = genToken({ id: user.id, username: user.username, deviceId: resolvedDeviceId });
+  const refreshToken = genRefreshToken({ id: user.id, username: user.username, deviceId: resolvedDeviceId });
   db.updateUser(user.id, { isOnline: 1, lastSeen: Date.now() });
   db.setPresence(user.id, true);
-  logSecurity('2fa_login', user.id);
+  logSecurity('2fa_login', user.id, { deviceId: resolvedDeviceId });
 
   res.json({
     userId: user.id,
     username: user.username,
     displayName: user.displayName,
     publicKey: user.publicKey,
+    deviceId: resolvedDeviceId,
     token,
     refreshToken,
     securityScore: user.securityScore,

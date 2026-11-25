@@ -31,13 +31,11 @@ const TwoFactorAuth = (() => {
   let secretKey = null;
   let setupPhase = false; // 设置阶段（验证中）
 
-  // Enrolment is closed until the login flow can carry device identity.
-  // /api/auth/2fa/verify-login returns tokens with deviceId:'', so an account
-  // that enables 2FA stops acking messages: readBy stays empty and isRead never
-  // flips. The server refuses /api/auth/2fa/enable with 403 for the same
-  // reason; this flag keeps the button from inviting users into that refusal.
-  // Turning 2FA off stays available for anyone already in that state.
-  const ENROLMENT_AVAILABLE = false;
+  // Enrolment is open again: /api/auth/2fa/verify-login now carries the
+  // deviceId that the first factor validated, so a 2FA account keeps device
+  // scoped read receipts (server side proven by test/2fa-device-id.test.js).
+  // Keep this flag as the single switch for a future hold.
+  const ENROLMENT_AVAILABLE = true;
   const ENROLMENT_UNAVAILABLE_HINT = 'Temporarily unavailable: device identity binding is not complete.';
 
   // ── 初始化 ──
