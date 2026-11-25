@@ -1,0 +1,68 @@
+{
+  "package": "SM4 TVLA timing screen, 2026-11-25",
+  "issue": "#697",
+  "supersedes": null,
+  "old_token": {
+    "file": "lg-080.tsr",
+    "status": "historical only",
+    "reason": "lg-080 timestamps a different sm4-browser.js object (368b30d8…, 2026-07-17); it is not reused or modified"
+  },
+  "object": {
+    "file": "www/crypto/sm4-browser.js",
+    "bytes": 15619,
+    "sha256": "8058ab76058a0780a45b41b2e47521930a2585048d9891a2ea77709f677e39ef",
+    "git_commit": "4465ab8c34b61abd3c09acc5a021f89b9d9b78eb"
+  },
+  "evidence": [
+    {
+      "file": "evidence/tvla/tvla-sm4-5000-main-20261125.json",
+      "bytes": 3480,
+      "sha256": "9e3e8abc3e7be95aa34458a83327fcda746f59ca0fc1f1313d0069966ae5e83e",
+      "runs": 3,
+      "n_per_group": 5000,
+      "abs_t": [0.1827300064409446, 0.7156974960438965, 0.6446161284157284],
+      "negative_control_abs_t": [67.31136750318828, 64.36966732802425, 68.76186210990423],
+      "self_test": "pass",
+      "overall": "pass"
+    },
+    {
+      "file": "evidence/tvla/tvla-sm4-5000-20261125.json",
+      "bytes": 3478,
+      "sha256": "fe2b80424f64375e8f3cdcfcdb2b1449ef3568694b611feee7e09f447a822667",
+      "runs": 3,
+      "n_per_group": 5000,
+      "abs_t": [1.0131259031182889, 0.8104587209484094, 0.6402959102348236],
+      "negative_control_abs_t": [61.383342122370244, 60.31702947900227, 62.53943747039165],
+      "self_test": "pass",
+      "overall": "pass"
+    }
+  ],
+  "manifest": {
+    "file": "docs/tsa/2026-11-25-tvla-sm4/SHA256SUMS",
+    "bytes": 313,
+    "sha256": "55530deedd9ae3d6a3abaa99d927348ffaa050eae1efc375e23c0da852f5715d",
+    "covers": [
+      "evidence/tvla/tvla-sm4-5000-20261125.json",
+      "evidence/tvla/tvla-sm4-5000-main-20261125.json",
+      "www/crypto/sm4-browser.js"
+    ]
+  },
+  "token": {
+    "id": "lg-117",
+    "tsq": "lg-117-tvla-sm4-20261125.tsq",
+    "tsq_bytes": 70,
+    "tsq_sha256": "62cc2f638b83f6d4d77b7e9ab158197dc6b1d37d41b0f6a1639cecbe54990b98",
+    "tsr": "lg-117-tvla-sm4-20261125.tsr",
+    "tsr_bytes": 4644,
+    "tsr_sha256": "da0e437bb06a6e932fc8d84bc229469b23b3a73a4396cdeb65c91ba6f7c2c4f1",
+    "tsa": "FreeTSA",
+    "tsa_url": "https://freetsa.org/tsr",
+    "serial": "0x0A97626A",
+    "timestamp": "Nov 25 19:58:48 2026 GMT",
+    "status": "Granted",
+    "signature_verified_against": "docs/tsa/2026-09-06-vwz-rank2/freetsa-root-ca.pem",
+    "openssl_verify": "OK",
+    "imprint_matches_sha256sums": true
+  },
+  "claim_boundary": "The token timestamps the SHA256SUMS file and therefore the listed evidence objects. It does not turn a Node/V8 timing screen into a formal constant-time proof."
+}
