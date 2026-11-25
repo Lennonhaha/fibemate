@@ -141,6 +141,7 @@ jobs:
           node --test test/2fa-integration.test.js
           node --test test/2fa-enrolment-guard.test.js
           node --test test/ratchet-pq.test.js
+          node --test test/check-needed-results.test.js
           node test/lockout.test.js
           node test/smoke-backend.js
 
@@ -529,3 +530,30 @@ jobs:
 
       - name: Check public-facing wording (R1 — CII / BP mixed spelling)
         run: node scripts/check-claims.cjs
+
+  # --- Aggregate gate: did the jobs that were supposed to run, run? -------
+  # GitHub counts a skipped required check as a pass, and only blocks on
+  # cancelled when that exact context is required. On 2026-11-25 PR #703
+  # merged with node-test (macos-latest, 22) = CANCELLED and
+  # mergeStateStatus=UNSTABLE, because no matrix leg was a required context.
+  # This job turns that into an explicit verdict over `needs`: failure,
+  # cancelled and timed_out always block; skipped blocks only when the job is
+  # in the must-run list (path-filtered skips are legitimate and are named).
+  # Keep it out of the ruleset until it has run green once on a real PR.
+  all-checks:
+    name: all-checks
+    if: always()
+    needs: [gm-crossval, mlkem-kat, node-test, native-parity, bench, sbom, lint, docs-check, bom-check, cbom, claim-check]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+
+      - name: Nothing that was supposed to run was skipped, cancelled or failed
+        env:
+          NEEDS_JSON: ${{ toJSON(needs) }}
+        run: node scripts/check-needed-results.cjs
