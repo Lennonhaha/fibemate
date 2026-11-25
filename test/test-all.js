@@ -30,6 +30,7 @@ const suites = [
   ['Account lockout', ['node', 'test/lockout.test.js']],
   ['Backend load smoke (TDZ/init)', ['node', 'test/smoke-backend.js']],
   ['Offline replay predicate (readBy *)', ['node', '--test', 'test/offline-replay.test.js']],
+  ['Conversation unread badge is device-scoped', ['node', '--test', 'test/unread-count.test.js']],
   ['DB readBy write path (negative control)', ['node', '--test', 'test/db-readby.test.js']],
   ['Device identity (UUID + ownership + stale)', ['node', '--test', 'test/device-id.test.js']],
   ['Device login binding end-to-end', ['node', '--test', 'test/device-login.test.js']],

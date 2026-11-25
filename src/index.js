@@ -26,6 +26,7 @@ const flags = require('./flags');
 
 const { safeCompare, safeCompareHex, safeFind, safeFindByField, timingSafe404 } = require('./lib/constant-time');
 const { isUnreadForDevice } = require('./lib/offline-replay');
+const { countUnreadForDevice } = require('./lib/unread-count');
 const { classify: classifyUser, isTestUsername } = require('./lib/test-user');
 const { realClientKey } = require('./lib/client-ip');
 const { normalizeDeviceId, staleCutoff } = require('./device-id');
@@ -1742,7 +1743,12 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
     const other = db.getUserById(otherId);
     const msgs = conv.messages || [];
     const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
-    const unreadCount = conv.userAId === req.user.userId ? (conv.unreadCountA || 0) : (conv.unreadCountB || 0);
+    const legacyUnread = conv.userAId === req.user.userId ? (conv.unreadCountA || 0) : (conv.unreadCountB || 0);
+    // Device-scoped on purpose: the stored counters only go up, and isRead waits
+    // for every device inside the 30-day window. A reinstalled app leaves the old
+    // device "active", so a badge derived from isRead or the counter would never
+    // clear. The count is what *this* device still has to ack.
+    const unreadCount = countUnreadForDevice(msgs, req.user.userId, req.user.deviceId, legacyUnread);
     return {
       id: conv.id,
       otherUser: other ? { id: other.id, username: other.username, displayName: other.displayName, isOnline: !!other.isOnline } : null,
