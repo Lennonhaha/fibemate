@@ -1,0 +1,138 @@
+{
+  "schema": "fibemate.sm4-tvla.v1",
+  "generatedAt": "2026-11-25T11:13:44.828Z",
+  "command": "D:\\Program Files\\QClaw\\v0.2.37.630\\resources\\node\\node.exe D:\\FIBEMATE\\fibemate\\scripts\\tvla-sm4-live.cjs --n 5000 --runs 3 --negative-control --negative-control-runs 3 --out tmp\\tvla-sm4-5000-20261125.json",
+  "object": {
+    "file": "www/crypto/sm4-browser.js",
+    "sha256_before": "8058ab76058a0780a45b41b2e47521930a2585048d9891a2ea77709f677e39ef",
+    "sha256_after": "8058ab76058a0780a45b41b2e47521930a2585048d9891a2ea77709f677e39ef",
+    "unchanged": true,
+    "git_commit": "5c20f6a3820e69f58c18e06673ad7288bef3468f",
+    "bytes": 15619
+  },
+  "methodology": {
+    "groups": "fixed plaintext vs random plaintext, same key",
+    "plaintext_bytes": 32,
+    "plaintext_encoding": "utf8 hex string (64 chars)",
+    "key": "fixed 16-byte hex key",
+    "iv": "fresh random 12-byte IV per sample, generated outside timer",
+    "warmup": "10% of N, both groups",
+    "order": "alternating A/B per sample",
+    "timer": "process.hrtime.bigint()",
+    "test": "Welch t-test, two-sided; pass <= 4.5, warn 4.5-10, fail >= 10",
+    "caveat": "Node/V8 timing screen; noisy by nature; not a formal constant-time proof"
+  },
+  "runs": [
+    {
+      "label": "run-1",
+      "n": 5000,
+      "samples": {
+        "a": 5000,
+        "b": 5000
+      },
+      "meanA": 137153.9,
+      "meanB": 136633.4,
+      "se": 513.7564821884022,
+      "t": 1.0131259031182889,
+      "verdict": "pass",
+      "threshold": {
+        "pass": 4.5,
+        "hardFail": 10
+      }
+    },
+    {
+      "label": "run-2",
+      "n": 5000,
+      "samples": {
+        "a": 5000,
+        "b": 5000
+      },
+      "meanA": 139609.7,
+      "meanB": 138969.9,
+      "se": 789.4294718074168,
+      "t": 0.8104587209484094,
+      "verdict": "pass",
+      "threshold": {
+        "pass": 4.5,
+        "hardFail": 10
+      }
+    },
+    {
+      "label": "run-3",
+      "n": 5000,
+      "samples": {
+        "a": 5000,
+        "b": 5000
+      },
+      "meanA": 150645.44,
+      "meanB": 151089.44,
+      "se": 693.4293861679773,
+      "t": 0.6402959102348236,
+      "verdict": "pass",
+      "threshold": {
+        "pass": 4.5,
+        "hardFail": 10
+      }
+    }
+  ],
+  "negativeControl": [
+    {
+      "label": "negative-control-1",
+      "n": 5000,
+      "samples": {
+        "a": 5000,
+        "b": 5000
+      },
+      "meanA": 161783.68,
+      "meanB": 290683.42,
+      "se": 2099.9140083156926,
+      "t": 61.383342122370244,
+      "verdict": "fail",
+      "threshold": {
+        "pass": 4.5,
+        "hardFail": 10
+      },
+      "expected": "warn-or-fail"
+    },
+    {
+      "label": "negative-control-2",
+      "n": 5000,
+      "samples": {
+        "a": 5000,
+        "b": 5000
+      },
+      "meanA": 173991.38,
+      "meanB": 303880.08,
+      "se": 2153.43330269965,
+      "t": 60.31702947900227,
+      "verdict": "fail",
+      "threshold": {
+        "pass": 4.5,
+        "hardFail": 10
+      },
+      "expected": "warn-or-fail"
+    },
+    {
+      "label": "negative-control-3",
+      "n": 5000,
+      "samples": {
+        "a": 5000,
+        "b": 5000
+      },
+      "meanA": 158485.14,
+      "meanB": 285456.5,
+      "se": 2030.2606664812529,
+      "t": 62.53943747039165,
+      "verdict": "fail",
+      "threshold": {
+        "pass": 4.5,
+        "hardFail": 10
+      },
+      "expected": "warn-or-fail"
+    }
+  ],
+  "negativeControlRuns": 3,
+  "overall": "pass",
+  "selfTest": "pass",
+  "exitCode": 0
+}
