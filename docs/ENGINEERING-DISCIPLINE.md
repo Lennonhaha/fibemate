@@ -96,7 +96,7 @@ PR 落后 base 导致 `mergeable_state=behind` / required checks 无法落位时
 
 **第十条【数字口径三要素】**
 任何数字必须同时给出：**口径 + 生成日期 + 可复现命令**。示例：
-- TSR：`364 份 .tsr（2026-11-19，git ls-files '*.tsr' | wc -l），其中 256 个不同 basename、93 个 lg-NNN 令牌（sha256 去重）、108 份为逐字节副本`
+- TSR：`365 份 .tsr（2026-11-25，git ls-files '*.tsr' | wc -l），其中 257 个不同 basename、94 个 lg-NNN 令牌（sha256 去重）、108 份为逐字节副本`
 - TLA+：`generated 133,891 / distinct 26,115`（两个数必须成对出现，禁止只写其一）
 - Scorecard：`8.1（2026-11-14 api.securityscorecards.dev 实测，commit <sha>）`
 

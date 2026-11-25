@@ -11,7 +11,7 @@ Every number below can be re-measured with the command next to it. If it does no
 | 锚点 | 值 | 测量时间 | 复核命令 |
 | :-- | :-- | :-- | :-- |
 | ML-KEM-768 KAT | **100/100 向量（500 断言）** | 2026-11-17 | `node scripts/ci-mlkem-kat.cjs` |
-| 时间戳证据链 | **364 个 `.tsr`**（256 个不同 basename，93 个 `lg-NNN` 令牌） | 2026-11-19 · main `49bace3` | `node scripts/count-tsr.cjs` |
+| 时间戳证据链 | **365 个 `.tsr`**（257 个不同 basename，94 个 `lg-NNN` 令牌） | 2026-11-25 | `node scripts/count-tsr.cjs` |
 | 文档-证据一致 | **drift 0**（denied 9） | 2026-11-17 · fibemate-tools `bb7ced4` | `verifact verify --no-cache` |
 
 > 第三个锚点的意思：仓库里 2,241 条"文档声称的数字"被逐条绑定到真实产物，漂移 0 条。被拒绑的 9 条不是"关掉了"，每条的"真值在哪、候选为什么不算"都写在 `verifact.json` 的 `note` 里。
@@ -49,7 +49,7 @@ Every number below can be re-measured with the command next to it. If it does no
 
 > **五条设计原则** → [不假装完整 · 证据链优先 · 边界公开 · 发布前预检 · 诚实纠错](PRINCIPLES.md)
 
-**v3.3.3** · 2026-11-14 · TSR 令牌 `lg-001`~`lg-116`（空号不回收；93 个令牌、261 个 basename，口径见 `scripts/count-tsr.cjs`）· [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html) · [TSR Manifest 2026-10-29](docs/TSR-MANIFEST-20261029.md)（冻结快照；更早的 [TSR-MANIFEST.md](docs/TSR-MANIFEST.md) 是 2026-09-04 快照，其摘要被封存在时间戳包内）
+**v3.3.3** · 2026-11-14 · TSR 令牌 `lg-001`~`lg-117`（空号不回收；94 个令牌、257 个 basename，口径见 `scripts/count-tsr.cjs`）· [fibemate.net](https://fibemate.net) · [PQC Readiness](https://fibemate.net/docs/pqc-readiness.html) · [TSR Manifest 2026-10-29](docs/TSR-MANIFEST-20261029.md)（冻结快照；更早的 [TSR-MANIFEST.md](docs/TSR-MANIFEST.md) 是 2026-09-04 快照，其摘要被封存在时间戳包内）
 
 > **Engineering evaluation platform — not production ready**: 🟢 Verified (default-on, self-tested) | 🔬 Experimental (default-off, no security guarantees). Experimental components are **never in the production encryption path**. See [Security Model](#security-model).
 
@@ -403,7 +403,7 @@ fibemate/
 ├── www/                 # Frontend resources
 │   ├── index.html       # Main site
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
-│   └── docs/            # Documentation + TSR evidence (lg-001~lg-116, gaps not reused)
+│   └── docs/            # Documentation + TSR evidence (lg-001~lg-117, gaps not reused)
 ├── fpga/rtl/            # FPGA RTL (Verilog) — 26 modules, published in full
 │   └── (prebuilt bitstreams under fpga/releases/)
 ├── c-stm32/             # STM32 C framework
