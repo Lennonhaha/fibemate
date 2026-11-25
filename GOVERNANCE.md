@@ -24,6 +24,31 @@ Mitigation:
 - Ongoing effort: actively seeking additional maintainers through community channels and
   university partnerships.
 
+## Review capacity and single-maintainer exemption (2026-11-25)
+
+`main` keeps `required_approving_review_count: 0`. The repository has one maintainer,
+and GitHub does not allow a pull-request author to approve their own pull request;
+setting the requirement to 1 without a second reviewer would block every PR rather
+than add review.
+
+This is an explicit exemption, not a claim that changes receive two-person review.
+Compensating controls are automated and remain mandatory:
+
+- every change lands through a pull request (no direct pushes; linear history);
+- required checks (lint, bom-check, bench, sbom, docs-check) and the PR workflows
+  (CodeQL, DCO, scope, evidence-immutable, pr-baseline) must pass on the exact head;
+- deployment and evidence gates are separate from review; a green check does not
+  authorise a deploy;
+- security-critical changes still require the Project Lead's explicit approval in
+  the PR and a functional-green verification before release.
+
+**First human reviewer is P0 for Q1 2027.** The intended path is a mutual-review
+agreement with a CycloneDX maintainer already known through upstream work, or with an
+independent maintainer of comparable project size. The goal is a real second pair of
+eyes, not a second account: creating a sock-puppet account or self-approving is
+prohibited. When a reviewer accepts and is added with write access, restore
+`required_approving_review_count: 1` and record the change in this section.
+
 ## Succession
 
 If the Project Lead becomes unavailable, any individual or organization may fork the
