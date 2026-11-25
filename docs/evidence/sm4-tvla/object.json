@@ -1,0 +1,18 @@
+{
+  "schema": "fibemate.sm4-tvla-object.v1",
+  "issue": 697,
+  "object": "www/crypto/sm4-browser.js",
+  "sha256": "8058ab76058a0780a45b41b2e47521930a2585048d9891a2ea77709f677e39ef",
+  "size": 15619,
+  "last_content_commit": "4064ba85c9919851269abe0102af26691f5e5428",
+  "last_content_date": "2026-10-28T16:42:07+08:00",
+  "recorded_at_repository_commit": "4465ab8c34b61abd3c09acc5a021f89b9d9b78eb",
+  "build": "static served UMD file; no build step",
+  "implementation": "8-bit lookup table (SBOX[aa[0]]), not bit-sliced",
+  "evidence": [
+    "evidence/tvla/tvla-sm4-5000-20261125.json",
+    "evidence/tvla/tvla-sm4-5000-main-20261125.json",
+    "docs/tsa/2026-11-25-tvla-sm4/timestamp-manifest.json"
+  ],
+  "claim_boundary": "Node/V8 timing screen with 3 runs x 5000 samples; not a formal constant-time proof and not a physical side-channel measurement."
+}
