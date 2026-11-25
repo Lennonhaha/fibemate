@@ -213,7 +213,6 @@ function main() {
 
   const key = '0123456789abcdef'.repeat(2);
   const fixedPt = 'a'.repeat(64);
-  const fixedPts = new Array(args.n).fill(fixedPt);
   const randomPts = Array.from({ length: args.n }, () => crypto.randomBytes(32).toString('hex'));
   const ivs = Array.from({ length: args.n }, () => crypto.randomBytes(12).toString('hex'));
 
