@@ -1268,7 +1268,7 @@
                 <div class="feature-icon">&#x1F1E8;&#x1F1F3;</div>
                 <div class="feature-title">国密算法（技术验证）</div>
                 <div class="feature-desc" style="line-height:1.7;">
-                    SM2/SM3/SM4 国密算法技术验证与工程实现 · SM2 密钥协商 + SM4-αGCM 认证加密（常数时间 S-box，位切片实现 ✅），ML-KEM-768 后量子增强。
+                    SM2/SM3/SM4 国密算法技术验证与工程实现 · SM2 密钥协商 + SM4-αGCM 认证加密（当前 8-bit S-box 查表，非恒定时间；位切片为 P2 待办），ML-KEM-768 后量子增强。
                     <br><br>
                     <strong style="color:#00d4aa;">&#x1F4CA; SM2 TVLA v1.3 Montgomery Ladder N=5,000 · 1-4 阶矩高阶验证 · Welch's t-test 阈值 4.5</strong>
                     <table style="width:100%;font-size:0.8rem;margin:0.5rem 0;border-collapse:collapse;">
@@ -1548,9 +1548,9 @@
 
         <div class="verification-card">
           <div class="card-icon">&#x1F6A7;</div>
-          <h3>SM4 S-box 位切片（历史实验记录，非当前实现）</h3>
+          <h3>SM4 当前实现（8-bit S-box 查表）</h3>
           <p style="font-size:0.78rem;color:#f59e0b;line-height:1.6;">
-            早期 TVLA 实验记录（lg-080，2026-07-17，FreeTSA）。该存证绑定的是历史清单，不能证明当前 <code>www/crypto/sm4-browser.js</code>；当前 Web 端仍使用 8-bit S-box 查表。A7 将重新对当前实现做 TVLA 并打新 TSR。
+            早期 lg-080（2026-07-17，FreeTSA）绑定的是历史清单，不能证明当前 <code>www/crypto/sm4-browser.js</code>。当前 Web 端仍使用 8-bit S-box 查表；2026-11-25 已对当前对象完成 3×5000 计时筛查（<code>abs(t)</code> 均 &lt;1，<a href="/docs/tsa/2026-11-25-tvla-sm4/README.md" style="color:#00d4aa;">证据</a>），但这只是计时筛查，不是恒定时间证明。
           </p>
         </div>
 
