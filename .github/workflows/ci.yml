@@ -139,7 +139,7 @@ jobs:
           node test/test-fibemate.js
           node --test test/totp.test.js
           node --test test/2fa-integration.test.js
-          node --test test/2fa-enrolment-guard.test.js
+          node --test test/2fa-device-id.test.js
           node --test test/ratchet-pq.test.js
           node --test test/check-needed-results.test.js
           node test/lockout.test.js

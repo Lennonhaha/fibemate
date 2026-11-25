@@ -25,7 +25,7 @@ const suites = [
   ['ML-KEM roundtrip CI', ['node', 'scripts/ci-mlkem-kat.cjs']],
   ['TOTP (RFC 6238)', ['node', '--test', 'test/totp.test.js']],
   ['2FA integration', ['node', '--test', 'test/2fa-integration.test.js']],
-  ['2FA enrolment guard (403 until device identity)', ['node', '--test', 'test/2fa-enrolment-guard.test.js']],
+  ['2FA device identity (#707)', ['node', '--test', 'test/2fa-device-id.test.js']],
   ['Key exchange peer resolution', ['node', '--test', 'test/key-exchange-recipient.test.js']],
   ['Account lockout', ['node', 'test/lockout.test.js']],
   ['Backend load smoke (TDZ/init)', ['node', 'test/smoke-backend.js']],
