@@ -599,6 +599,22 @@ append 工具返回 `before=1364`，第一反应是「统计口径变了」，�
 **正解**
 `unitNamedInKey()` 三条规则并用：分隔符锚定 `[._-]ms$`、驼峰锚定 `[a-z0-9]Ms$`、裸 token 精确相等。回归用例把两侧都钉住：`p95_ms = 81.2` 必须能与文档 `78.5 ms` 比对，`max_score = 100` 必须判不可比。一句话：**「以 X 结尾」不是判据，「以 X 结尾且前面有词边界」才是。**
 
+## 23. 验证产物文件名必须带 step 标记，否则坐标不清
+
+**怎么发生的（2026-11-26）**
+修 verifact #228 的过程中我一共跑了六次 verify，产物依次叫 `vf.json`、`vf-after.json`、`vf-after2`…`vf-after5`。最后交付时我引用的是 `vf-after5.json`，但同一个目录里还留着 `vf-after4.json` —— 那是加第三个守卫**之前**的中间态，`drift=2`。审阅侧打开 `vf-after4.json`，看到 `counts.drift=2`、`gate.failed=true`，据此判断「PR 声称 drift 归零，但报告里还是 2」，合并被驳回一次。
+
+**当时的误判**
+我以为 `after4` → `after5` 的序号已经说明了先后。但对不在现场的人来说，序号只说明「跑过很多次」，不说明**哪一次对应哪一版代码**：`after4` 是「句界已修、单 token 守卫未加」，`after5` 才是「全部改完」，两者差一个功能点，drift 之差是 2 与 0。序号编码了顺序，没有编码状态。
+
+**判据**
+1. 验证产物文件名必须包含 **step-N** 或 **final-<timestamp>**：`vf-step2-clause.json`、`vf-final-20261126T1103Z.json`。只写 `afterN` 等同于没有坐标。
+2. 交付时只引用 **final 那份**，并在正文里写出文件名 + 生成时间 + 对应 commit：三者缺一，红绿都不算数。
+3. 中间态要么删掉，要么文件名自带「中间」标记（`-mid`）并放进子目录。留着一个语义模糊的中间态在同级目录，就是给下一次误读留门。
+
+**正解**
+把「坐标」写进名字：`verifact-verify-<commit7>-step<k>-<purpose>.json`，最后一份加 `final`。本次的补救是给六个产物补了对照表（哪个 commit、哪个 step、drift 多少）并写进 PR 正文，使读者不必靠序号猜。一句话：**序号只证明跑过，不证明跑的是哪一版；名字里没有 commit 和 step，就没有坐标。**
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
