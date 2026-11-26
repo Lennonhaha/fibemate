@@ -96,7 +96,7 @@ All research components (LookingGlass v1/v2, VWZ) are **default-off** and **not 
 ## Order Deviation After the v3.3.15 Package (2026-11-26)
 
 ### Decision
-The 2026-11-25 decision "hybrid downgrade fix before 3.3.15 UI" was **not** followed literally. The 3.3.15 package exposed two user-facing defects (2FA setup crash; conversation list and unread badge not refreshing), so the bad-package fix (client PR #111, commit `3cc78d8`) was handled first. The hybrid downgrade invariants in `SECURITY-BOUNDARY.md` §9.2 have **not** been started.
+The 2026-11-25 decision "hybrid downgrade fix before 3.3.15 UI" was **not** followed literally. The 3.3.15 package exposed two user-facing defects (2FA setup crash; conversation list and unread badge not refreshing), so the bad-package fix (client PR #111, commit `3cc78d8`) was handled first. The hybrid downgrade invariants in `SECURITY-BOUNDARY.md` §9.2 were implemented with red-before-green negative tests on 2026-11-26 (client PR #117, merge commit `4c1118f`). Scope of that fix: it only applies when both ends run this build; a peer on an older build can still downgrade, so the guarantee is pairwise-version dependent, not global. `SECURITY-BOUNDARY.md` §9 carries the enforceable invariants and their test identifiers; this file only records the decision and does not duplicate the test map.
 
 ### Why this is an exception, not a re-prioritisation
 - The package was already on users' machines and was unusable for 2FA enrolment and visible unread state. Leaving it while starting a wire-protocol change would have kept a known-bad client in the field.
@@ -104,7 +104,7 @@ The 2026-11-25 decision "hybrid downgrade fix before 3.3.15 UI" was **not** foll
 - The server-only deployment (`7b93f933`, per-device unread count) is backward compatible and does not touch the client release train.
 
 ### Binding consequence
-The §9.2 hybrid downgrade fix (sticky hybrid, envelope protocol check, reject classical rebuild of a stored hybrid session) remains a **P0 gate for v3.4.0 and for lifting the client release freeze**. It must be implemented with red-before-green negative tests before any 3.3.16 installer is published. This entry is the decision-log correction; it does not relax that gate.
+The §9.2 hybrid downgrade fix (sticky hybrid, envelope protocol check, reject classical rebuild of a stored hybrid session) was a **P0 gate for v3.4.0 and for lifting the client release freeze**. It is implemented and covered by red-before-green negative tests as of 2026-11-26 (client PR #117, merge commit `4c1118f`), so it no longer blocks the gate. The remaining pre-publish gate for 3.3.16 is the multi-device readBy ordering fix. Boundary unchanged: the refusal holds only between two ends running this build; an older peer can still accept a downgrade.
 
 ---
 
