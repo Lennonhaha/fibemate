@@ -1748,7 +1748,11 @@ app.get('/api/conversations', authMiddleware, (req, res) => {
     // for every device inside the 30-day window. A reinstalled app leaves the old
     // device "active", so a badge derived from isRead or the counter would never
     // clear. The count is what *this* device still has to ack.
-    const unreadCount = countUnreadForDevice(msgs, req.user.userId, req.user.deviceId, legacyUnread);
+    const device = req.user.deviceId ? db.getDeviceById(req.user.deviceId) : null;
+    const unreadCount = countUnreadForDevice(
+      msgs, req.user.userId, req.user.deviceId, legacyUnread,
+      device ? device.createdAt : 0
+    );
     return {
       id: conv.id,
       otherUser: other ? { id: other.id, username: other.username, displayName: other.displayName, isOnline: !!other.isOnline } : null,
