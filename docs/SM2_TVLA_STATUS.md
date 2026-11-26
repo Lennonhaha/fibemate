@@ -1,5 +1,8 @@
 # SM2 TVLA 侧信道测试状态说明
 
+> **先读这一行再引用通过数**：表里 3 项失败（jsbn verify / jsbn decrypt / BigInt verify）来自**故意不设防的裸 wNAF 实现**，即负对照（negative control）。它们失败恰恰说明检测器抓到了泄漏；设防版本 v1.2 masked 5/5、v1.3 Ladder 20/20 全过。把负对照计入「未通过」，等于罚测试套件「你把该漏的测出来了」。
+
+
 > **关于「36」这个数字**：仓库里没有任何一份 TVLA 报告包含 36 条结果，也没有任何一次运行支持「3 个实现 × 12 项测试全部通过」这一说法。
 > 实际证据是：masked v1.2 的 5 项全过（N=5,000）、Montgomery Ladder v1.3 的 20 项全过（N=10,000，归档实现），
 > 以及暴露版 v3 的 12 项中 9 过 3 失（jsbn verify / jsbn decrypt / BigInt verify）——后者的失败恰恰是本文件记录的 wNAF 泄漏证据。
