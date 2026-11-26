@@ -7,6 +7,8 @@
 
 ---
 
+> **更正（2026-11-26）**：本文 §2.3、§4.2 与 §5-Q2 把 6 项未通过 TVLA 的原语统一描述为「只处理公开数据」。按调用点复核，该前提不成立：`polyMul` / `matVecMul` 的输入含私钥，`byteEncode` / `byteDecode` / `decompress` 在 keygen / encaps 中也处理私钥或秘密消息。以 `docs/security-limitations.md` §3.6 与 `AUDIT.md` §7.1 为准；本文保留为 2026-06-04 的历史记录，不再作为安全结论引用。
+
 ## Executive Summary
 
 We have conducted **two independent evaluations** of our FIBEMATE ML-KEM-768 pure-JavaScript implementation:

@@ -97,6 +97,23 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 - **影响面**：纯 JS 路径对「能测量执行时间的本地或同机攻击者」存在计时侧信道；不适合放进敌手可观测时间的场景。需要恒定时间保证时走 native / WASM 路径。
 - **门禁现状（2026-11-18）**：`scripts/tvla-live-gate.cjs` 每晚对当前代码跑真实 TVLA，允许清单 = `NTT` + `invNTT`（两条都已在本节量化并登记），**其他任何原语 \|t\| > 10 仍然 FAIL**、4.5–10 记 WARN；`scripts/tvla-summary.js` 同步带 `--allow-leak=NTT,invNTT` 与最少样本数下限。**把 invNTT 放进清单是权宜之计，不是结论**——它等价于「已知、已量化、接受」，恒定时间化归入 Q1 2027 计划，跟踪在 issue #547（`Constant-time invNTT (Pure JS path)`），清单条目退场即该 issue 完成。
 
+### 3.6 六项未通过 TVLA 的原语：输入分类与缺口（2026-11-26 更正）
+
+2026-06-04 的 `paper-response-2026-06-04.md` 曾把 6 项未通过 TVLA 的原语统一描述为「只处理公开数据，不要求恒定时间」。按代码调用点复核（`packages/fml-dsa/src/core/sign.js`、`packages/pqc-kem/src/ml-kem-768.js`），该前提不成立；本节取代该说法。
+
+| 原语（实测 \|t\|） | TVLA 夹具的输入 | 生产调用点中的输入 | 能否按「公开数据」豁免 |
+|---|---:|---|---|
+| byteEncode (60.58) | 密文字节（公开） | `keygen` 用 `byteEncode(s,12)` 编码私钥向量 `s` | ❌ 含 secret |
+| byteDecode (67.46) | 密文字节（公开） | `decaps` 用 `byteDecode(sk,…)` 解私钥 | ❌ 含 secret |
+| compress (89.36) | 公钥 / 密文（公开） | `encaps` 压缩即将公开的 `u,v`；`decaps` 重加密路径的 `u2,v2` 由秘密 `r'` 派生 | ⚠️ 主要公开，重加密路径为 secret 派生 |
+| decompress (98.41) | 密文（公开） | `decaps` 解压公开密文 `u,v` | ✅ 可豁免（公开输入） |
+| polyMul (63.77) | 随机多项式 | `sign` 的 `polyMul(cNtt, s1Ntt/s2Ntt/t0Ntt)`；ML-KEM 经 `matVecMulNTT` 传入 `s` / `rr` | ❌ 含 secret |
+| matVecMul (8.43) | 随机矩阵 / 向量 | `fml-dsa` 的 `matVecMulNtt(A, s1)` / `matVecMulNtt(A, y)`；ML-KEM 的 `matVecMulNTT(A, s)` / `matVecMulNTT(AT, rr)` | ❌ 含 secret |
+
+**结论**：`polyMul` 与 `matVecMul` 的输入包含 secret，属**已知缺口**；受限于 V8 的 value-dependent 乘法，当前未做恒定时间重构。`byteEncode`（keygen 编码私钥向量 `s`）、`byteDecode`（decaps 解私钥）与 `compress`（decaps 重加密路径由秘密 r′ 派生）同样存在 secret 或 secret 派生输入，不能按「公开数据」豁免。六项中只有 `decompress` 可以按公开输入豁免：它只在 decaps 中解压公开密文。
+
+**判定依据**：`AUDIT.md` §7.1 已把 `polyMul` / `matVecMul` 标为 `secret`，并明确写下「结论不是『公开数据所以没问题』，而是『实测不可利用』的一次实验结果」。门禁现状不变：`scripts/tvla-live-gate.cjs` 只放行 `NTT` + `invNTT`，本节六项若在生产路径出现 \|t\| > 10 仍判 FAIL。
+
 ## 4. 协议与生态局限（P2 低风险）
 
 - **TLS Path A（X25519MLKEM768）永久搁置** — 因浏览器/Nginx 生态兼容问题无法用于标准 TLS 层后量子迁移，仅保留代码归档
@@ -156,7 +173,7 @@ TLA+ 形式化验证仅覆盖 SM2+ML-KEM C-2 混合握手协议逻辑（7 条不
 | 限制 | 影响 | 计划 |
 |:---|:---|:---|
 | **纯 JavaScript** — 无原生 ASAN/UBSAN 覆盖 | 内存安全问题无法自动检测 | liboqs C 交叉验证作为补偿 |
-| **非恒定时间** — BigInt/展开循环可能有分支 | 存在时序侧信道泄漏风险 | Barrett reduction 已减少风险; C 端口远期 |
+| **非恒定时间** — BigInt/展开循环可能有分支 | 存在时序侧信道泄漏风险（`polyMul` / `matVecMul` 输入含 secret，见 §3.6） | Barrett reduction 已减少风险; C 端口远期 |
 | **JS 引擎 GC** — 密钥可能残留在堆中 | 冷启动攻击面较大 | v4 探索 WebAssembly GC 或手动擦除 |
 | **预硅功耗 TVLA 流水线** | ✅ 2026-09-07 完成（B1/B2/B3，NTT 核双模式 TVLA + ADLA 双统计量 PASS） | 评估能力已具备 |
 | **芯片级物理 TVLA（ChipWhisperer）** | 仍无法实测功耗/EM 侧信道 | Q4 2026 计划 |
