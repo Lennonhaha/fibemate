@@ -1,0 +1,33 @@
+name: do-not-merge-audit
+
+# A label is not a gate. all-checks refuses the label while it is present; this
+# workflow keeps the record honest after the fact: if a PR with do-not-merge was
+# merged anyway, the merge commit gets a red check (the #103 lesson, 2026-11-25).
+on:
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  audit:
+    name: do-not-merge-audit
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail when a merged PR carried do-not-merge
+        env:
+          LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          norm="$(printf '%s' "$LABELS" | tr '[:upper:]' '[:lower:]')"
+          case "$norm" in
+            *'"do-not-merge"'*)
+              echo "::error::PR #${NUMBER} was merged while carrying do-not-merge."
+              exit 1
+              ;;
+          esac
+          echo "No do-not-merge label at merge time."

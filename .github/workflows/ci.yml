@@ -577,6 +577,12 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Refuse the do-not-merge label
+        if: github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'do-not-merge')
+        run: |
+          echo "::error::This PR carries the do-not-merge label. Remove it before merging."
+          exit 1
+
       - name: Nothing that was supposed to run was skipped, cancelled or failed
         env:
           NEEDS_JSON: ${{ toJSON(needs) }}
