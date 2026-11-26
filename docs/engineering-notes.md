@@ -565,6 +565,24 @@ gh api "repos/Lennonhaha/fibemate/code-scanning/alerts?state=open&pr=721"
 网页链接里，不是 API 参数。同族错误见本文第 16 条（旧保护端点给的是不完整数据）：
 两次都不是数据假，是**坐标假**。
 
+
+## 21. 累积型文件被整写覆盖：先查 delta，再从段文件恢复
+
+**怎么发生的（2026-11-26）**
+`memory/2026-11-26.md` 从 33,165 B 降到 1,364 B，只剩最后一段。触发点是当日一个写日志的内联脚本用了 `fs.writeFileSync(target, segment)` 而不是追加——正是 TOOLS.md 已明令禁止的 write-not-append。
+
+**当时的误判**
+append 工具返回 `before=1364`，第一反应是「统计口径变了」，而不是「文件真的变小了」。如果按记忆重写，20 KB 已发生的内容会变成「我以为发生过的事」，而且读起来同样连贯。
+
+**判据**
+1. 累积型文件（`memory/*.md`、`TOOLS.md`、`MEMORY.md`、`docs/engineering-notes.md`）只允许追加，禁止整写；写入器必须打印 `before / after / delta`。
+2. `delta` 与段文件字节数对不上时，先怀疑重复或覆盖，再谈内容。本次 `before=1364` 与早间实测 33,165 B 相差 31,801 B，两个独立数字同时异常，才确认是丢失而不是显示问题。
+3. 恢复用证据，不用记忆：9 个段文件在 `tmp/seg-*.md` 原样存在，按 `.segledger.json` 的时间顺序重放；另外 3 段没有段文件，用 patch 拦截 `appendFileSync` 拿到原文本。
+4. 先重建到临时文件并校验，通过后才覆盖：唯一 marker 数、标题无重复、U+FFFD=0、NUL=0；覆盖后再核字节完全相同。
+
+**正解**
+所有累积型写入走 `tools/append-memory.cjs`（段标记幂等守卫 + 字节级 before/after/delta + BOM/NUL/U+FFFD 体检）。本次恢复到 29,244 B / 14 段 / 02:30→11:5x 连续，残缺版留档 `tmp/memory-2026-11-26.broken-20261126T1205.md`。一句话：**「我记得写过」不是证据，段文件字节数和 delta 才是。**
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
