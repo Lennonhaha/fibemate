@@ -583,6 +583,22 @@ append 工具返回 `before=1364`，第一反应是「统计口径变了」，�
 **正解**
 所有累积型写入走 `tools/append-memory.cjs`（段标记幂等守卫 + 字节级 before/after/delta + BOM/NUL/U+FFFD 体检）。本次恢复到 29,244 B / 14 段 / 02:30→11:5x 连续，残缺版留档 `tmp/memory-2026-11-26.broken-20261126T1205.md`。一句话：**「我记得写过」不是证据，段文件字节数和 delta 才是。**
 
+## 22. 以 `ms` 结尾的不都是毫秒：单位后缀必须要求词边界
+
+**怎么发生的（2026-11-26）**
+修 verifact 的量纲判据时（fibemate-tools#228），要判断「产出物的键名有没有写单位」。第一版用「键名以 `ms` 结尾」当条件，于是 `dimensions.crypto_inventory.algorithms` 被判成毫秒。那一版一跑，verified 从 108 掉到 98 —— 十条真实核验消失，原因不是量纲判据方向错了，是「谁有单位」认错了。
+
+**当时的误判**
+把「听起来对」当判据。更早一步的自检探针里，我自己写的 `msKey` 正则先把 `algorithms` 计成了毫秒；探针打出 `{msKey: true}` 时我只确认了「有单位」，没有核对**命中的是哪一个键**。判据本身没被核，于是它给出的绿灯也不可信。
+
+**判据**
+1. 单位后缀必须带词边界：`p95_ms` / `latency.ms` / `avgMs` / `p99Ms` 算写了单位；`algorithms` 不算（`ms` 前是小写 `r`，既不是分隔符也不是驼峰）。
+2. 校验时把**命中的具体键名打出来**，不要只看布尔值。`keys ending in ms: dimensions.crypto_inventory.algorithms` 一眼能看出问题；`msKey: true` 看不出来。
+3. 单位别名显式列出（`µs/μs/us`、`%/pct/percent`），不做「包含」判断——包含关系会把噪声词当单位。
+
+**正解**
+`unitNamedInKey()` 三条规则并用：分隔符锚定 `[._-]ms$`、驼峰锚定 `[a-z0-9]Ms$`、裸 token 精确相等。回归用例把两侧都钉住：`p95_ms = 81.2` 必须能与文档 `78.5 ms` 比对，`max_score = 100` 必须判不可比。一句话：**「以 X 结尾」不是判据，「以 X 结尾且前面有词边界」才是。**
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
