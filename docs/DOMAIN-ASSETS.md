@@ -6,8 +6,8 @@ Status: current as of 2026-11-26.
 
 | Domain | Role | Where it points | Certificate |
 |---|---|---|---|
-| `fibemate.net` | primary site | this host (A record `8.156.77.68`) | Let's Encrypt, `fibemate.net` + `www.fibemate.net`, valid to 2027-02-13 |
-| `fibemate.link` | brand asset, **redirect only** | same host (A record `8.156.77.68`) | Let's Encrypt, `fibemate.link`, valid to 2027-01-07 |
+| `fibemate.net` | primary site | this host (A record `<server-ip>`) | Let's Encrypt, `fibemate.net` + `www.fibemate.net`, valid to 2027-02-13 |
+| `fibemate.link` | brand asset, **redirect only** | same host (A record `<server-ip>`) | Let's Encrypt, `fibemate.link`, valid to 2027-01-07 |
 
 `fibemate.link` is kept for two reasons: it is cheap to keep, and it preserves the
 option of switching to it if `.net` ever becomes unusable (DNS, filing, or access
