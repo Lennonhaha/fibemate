@@ -529,6 +529,42 @@ try=3 apex_code=200 docs_location=https://fibemate.link/docs/
 判据：备份的定位标识必须是**文件名里的时间戳**，或者脚本自己打印出来的路径（`BACKUP=/root/fibemate.link.bak-<epoch>`），
 不是 mtime。凡是「按最新」取文件的地方，都要先问一句：这个时间是谁的时间。
 
+
+## 20. `/code-scanning/alerts?pr=N` 的 `pr` 参数被静默忽略
+
+**怎么发生的（2026-11-26）**
+复核 PR #721 时，checks 全绿（51 success / 4 skipped / 0 failed），但 PR 上挂着三条
+`github-advanced-security[bot]` 的评论。为了确认"这个 PR 到底还有没有告警"，查了：
+
+```bash
+gh api "repos/Lennonhaha/fibemate/code-scanning/alerts?state=open&pr=721"
+```
+
+返回 `[]`。
+
+**当时的误判**
+把 `[]` 读成"这个 PR 零告警"。差一点据此宣布 CodeQL 收口 —— 而当时 PR 上确实有三条
+告警评论（两条 `</script>` 过滤正则、一条未使用的 `CI_DIR`）。
+
+**真实原因**
+`pr` 不是这个端点的过滤器，**被静默丢弃**，请求退化成"全仓 open 告警"。那一天全仓恰好是 0 条，
+所以无论 PR 有几条告警，都会显示 `[]`。**不报错、不提示、不忽略参数报 400** —— 这是最难识别的
+一种假绿：命令是真的、返回是真的、只有"验的是谁"是错的。
+
+**判据**
+1. 取 PR 的告警，用 `?state=open&ref=refs/pull/N/merge`，返回 0 才算干净。
+2. 或者读 CodeQL check run 的 `output.title`，应为
+   `No new alerts in code changed by this pull request`。
+3. `Analyze (*)` / `CodeQL` 在 checks 里是 `success` 只说明"分析跑完了"，不说明"没有告警"；
+   `neutral` 才是等待。**告警为零与 job 状态是两件事，不能互相替代。**
+4. 看见一个"刚好是我想要的"空数组时，先问该端点是否真的接受这个参数：换一个**已知非空**的
+   过滤条件做对照（例如按 `ref=` 取旧 commit），能返回非空才说明过滤生效。
+
+**正解**
+查 PR 的 code scanning 一律走 `ref=refs/pull/N/merge` 或 check run title；`pr=` 只出现在
+网页链接里，不是 API 参数。同族错误见本文第 16 条（旧保护端点给的是不完整数据）：
+两次都不是数据假，是**坐标假**。
+
 ## 附注：DCO 署名里的中文名 vs 纯 ASCII 硬闸门
 
 对外文本（PR body、commit message、release notes）走纯 ASCII 校验时，`Signed-off-by: 刘天赫 <research@fibemate.net>` 会被判 3 个非 ASCII 字符。
