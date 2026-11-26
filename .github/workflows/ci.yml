@@ -531,6 +531,27 @@ jobs:
       - name: Check public-facing wording (R1 — CII / BP mixed spelling)
         run: node scripts/check-claims.cjs
 
+  # Is every declared contract bound to a check that this workflow actually runs?
+  # The gate validates both halves: the script exists, and the named job's run:
+  # block invokes it. A script that exists but is never executed is the same
+  # false green as a job that exists but never runs.
+  claim-coverage:
+    name: claim-coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+
+      - name: Every contract is bound to a check CI runs
+        run: node scripts/claims/coverage.cjs
+
+      - name: Check the claim-coverage gate can fail
+        run: node scripts/claims/coverage.cjs --self-test
+
   # --- Aggregate gate: did the jobs that were supposed to run, run? -------
   # GitHub counts a skipped required check as a pass, and only blocks on
   # cancelled when that exact context is required. On 2026-11-25 PR #703
@@ -543,7 +564,7 @@ jobs:
   all-checks:
     name: all-checks
     if: always()
-    needs: [gm-crossval, mlkem-kat, node-test, native-parity, bench, sbom, lint, docs-check, bom-check, cbom, claim-check]
+    needs: [gm-crossval, mlkem-kat, node-test, native-parity, bench, sbom, lint, docs-check, bom-check, cbom, claim-check, claim-coverage]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

@@ -29,7 +29,7 @@
  * Exit: 0 ok, 1 something did not run or did not pass, 2 bad input.
  */
 
-const MUST_RUN = new Set(['lint', 'bench', 'sbom', 'bom-check', 'docs-check']);
+const MUST_RUN = new Set(['lint', 'bench', 'sbom', 'bom-check', 'docs-check', 'claim-check', 'claim-coverage']);
 const BAD = new Set(['failure', 'cancelled', 'timed_out']);
 
 function classify(results) {
