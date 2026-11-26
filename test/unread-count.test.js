@@ -9,8 +9,8 @@ const USER = 'user-1';
 const DEVICE_A = 'device-a';
 const DEVICE_B = 'device-b';
 
-function message(readBy, recipientUserId = USER) {
-  return { recipientUserId, readBy };
+function message(readBy, recipientUserId = USER, createdAt = 0) {
+  return { recipientUserId, readBy, createdAt };
 }
 
 test('counts only messages this device has not acked', () => {
@@ -50,4 +50,22 @@ test('legacy clients without a deviceId keep the stored counter', () => {
 test('non-array input cannot throw or report a stale count', () => {
   assert.equal(countUnreadForDevice(null, USER, DEVICE_A), 0);
   assert.equal(countUnreadForDevice(undefined, USER, DEVICE_A), 0);
+});
+
+test('a device is not shown messages that predate its registration', () => {
+  // Production 2026-11-26: a fresh 009 device (createdAt 1795649461476) was
+  // shown 101 unread messages that had already been read on the other devices.
+  const registered = 1_795_649_461_476;
+  const messages = [
+    message([], USER, registered - 1),
+    message([], USER, registered),
+    message([], USER, registered + 1),
+    message([DEVICE_A], USER, registered + 2),
+  ];
+  assert.equal(countUnreadForDevice(messages, USER, DEVICE_A, 0, registered), 2);
+});
+
+test('without a device creation time the old device-scoped count is unchanged', () => {
+  const messages = [message([], USER, 10), message([], USER, 20)];
+  assert.equal(countUnreadForDevice(messages, USER, DEVICE_A, 0, 0), 2);
 });
