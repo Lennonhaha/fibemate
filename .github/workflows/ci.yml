@@ -552,6 +552,9 @@ jobs:
       - name: Check the claim-coverage gate can fail
         run: node scripts/claims/coverage.cjs --self-test
 
+      - name: Check the claim inventory tag skipper can fail
+        run: node scripts/claims/inventory.cjs --self-test
+
   # --- Aggregate gate: did the jobs that were supposed to run, run? -------
   # GitHub counts a skipped required check as a pass, and only blocks on
   # cancelled when that exact context is required. On 2026-11-25 PR #703

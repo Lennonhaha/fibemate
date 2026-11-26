@@ -17,6 +17,7 @@
 //   node scripts/claims/inventory.cjs            # summary by tier guess
 //   node scripts/claims/inventory.cjs --json     # full inventory on stdout
 //   node scripts/claims/inventory.cjs --list must
+//   node scripts/claims/inventory.cjs --self-test  # prove the tag skipper can fail
 //
 // Exit: 0 always (this is a measurement, not a gate). coverage.cjs is the gate.
 
@@ -126,6 +127,52 @@ function blockTracker() {
   };
 }
 
+// The two forms CodeQL reported are the reason this is a state machine and not a
+// regex: "</script >" and "</script<TAB>" + newline + junk. A regex that requires
+// the exact "</script>" leaves the body in the corpus, which inflates the
+// denominator silently. These cases fail if anyone reintroduces one.
+function selfTest() {
+  const cases = [];
+  const skip = (t, lines) => lines.map((l) => t(l));
+
+  (() => {
+    const t = blockTracker();
+    const got = skip(t, ['var a = 1;', '<script>var a = 2;</script>', 'after']);
+    cases.push(['single-line body is skipped, scanning resumes', got[0] === false && got[1] === true && got[2] === false]);
+  })();
+
+  (() => {
+    const t = blockTracker();
+    const got = skip(t, ['<script>', 'var a = 1;', '</script >', 'after']);
+    cases.push(['end tag with a space before > closes the block', got[1] === true && got[3] === false]);
+  })();
+
+  (() => {
+    const t = blockTracker();
+    const got = skip(t, ['<script>', 'var a = 1;', '</script\t', ' bar>', 'after']);
+    cases.push(['end tag with a tab and junk attribute closes the block', got[1] === true && got[3] === false && got[4] === false]);
+  })();
+
+  (() => {
+    const t = blockTracker();
+    const got = skip(t, ['<style>', 'body { color: red }', '</style >', 'after']);
+    cases.push(['style bodies are skipped the same way', got[1] === true && got[3] === false]);
+  })();
+
+  (() => {
+    const t = blockTracker();
+    cases.push(['the word script without a tag is not a block', t('the script does this') === false]);
+  })();
+
+  let ok = true;
+  for (const [name, pass] of cases) {
+    console.log(`${pass ? 'ok  ' : 'FAIL'} self-test: ${name}`);
+    if (!pass) ok = false;
+  }
+  if (!ok) process.exitCode = 1;
+  else console.log(`self-test: pass (${cases.length} cases)`);
+}
+
 function tierOf(text) {
   for (const r of TIER_RULES) if (r.re.test(text)) return r.tier;
   return 'descriptive';
@@ -194,6 +241,9 @@ function main() {
   console.log('  tier is a keyword guess; docs/claims/registry.json is authoritative.');
 }
 
-if (require.main === module) main();
+if (require.main === module) {
+  if (process.argv.includes('--self-test')) selfTest();
+  else main();
+}
 
-module.exports = { inventory };
+module.exports = { inventory, blockTracker };
