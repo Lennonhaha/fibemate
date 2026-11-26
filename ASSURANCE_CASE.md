@@ -222,6 +222,13 @@ claim look identical until someone runs the checker.
 
 ### 6.2 VWZ — Isabelle/HOL research corpus (**not shipped**)
 
+> **Warning for any reviewer counting passes:** the Isabelle/HOL corpus contains
+> **41 `sorry` placeholders** — 4 in the aligned obligation ledger (T2 two, T3 two)
+> and 37 in `skeleton/VWZ_A3_Skeleton.thy` — and it is built with
+> `quick_and_dirty`. A green `isabelle build` therefore proves only that the
+> non-`sorry` steps type-check. This corpus is **not a complete formal proof** of
+> VWZ, and no security claim in this project rests on it.
+
 - Location: separate repository `vwz-formalization` (the authoritative tree).
   `fibemate-vwz` was a snapshot frozen on 2026-10-19 and is archived as of
   2026-11-10; its figures are history, not status.  The VWZ construction is
