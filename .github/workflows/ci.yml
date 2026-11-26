@@ -16,6 +16,13 @@ on:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
+    # A label added after the PR opened used to leave `all-checks` green: the
+    # workflow ran before the label existed, and `pull_request` defaults to
+    # opened/synchronize/reopened, so adding a label did not re-run it. #733
+    # (2026-11-26) carried `do-not-merge` and still reported 51 SUCCESS / 0
+    # FAILURE. Listing the label types makes the guard re-evaluate when the
+    # label appears or disappears, which is the only moment it can change.
+    types: [ opened, synchronize, reopened, labeled, unlabeled ]
 
 env:
   CARGO_TERM_COLOR: always
