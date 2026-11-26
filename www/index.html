@@ -858,7 +858,7 @@
 
 <div class="countdown-banner">
   <span class="countdown-icon">&#x1F513;</span>
-  <span>FIBEMATE v3.3.3 opensource &mdash; <strong>2026-08-31</strong> 已开源</span>
+  <span>FIBEMATE &mdash; <strong>2026-08-31</strong> 已开源</span>
   <span>· <a href="https://github.com/Lennonhaha/fibemate">GitHub</a></span>
 </div>
 
@@ -913,7 +913,7 @@
             </p>
             <div class="hero-badge" style="margin:1rem auto 0;">🔒 许可分层：核心 Apache-2.0 / fml-dsa GPL-3.0 · 全部证据可本地复现</div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(0,212,170,0.06);border:1px solid rgba(0,212,170,0.22);">🔎 <strong>cbom-tools</strong> · 零依赖静态清点 + 脱敏自查报告（npm 发布，扫描期零网络）</div>
-            <div class="hero-badge" id="live-run-badge" style="margin-top:8px;display:none;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.22);">🛰 线上运行：<strong id="live-app-version">—</strong>（读自 <code>/health</code> 的 <code>X-App-Version</code> 响应头）</div>
+            <div class="hero-badge" id="live-run-badge" style="margin-top:8px;display:none;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.22);">🛰 线上运行：<strong id="live-app-version"></strong>（读自 <code>/health</code> 的 <code>X-App-Version</code> 响应头）</div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);border:1px solid rgba(0,229,195,0.22);">🔬 引擎：<strong>libcrux</strong>（hax/F* 形式化验证，未验证的 <code>kyber</code> 变体未启用）· 互操作参照 <strong>@noble/post-quantum</strong></div>
             <div class="hero-badge" style="margin-top:8px;background:rgba(126,231,135,0.06);border:1px solid rgba(126,231,135,0.22);">✅ <strong>182</strong> 项 Rust 测试全过，<strong>0</strong> 项 <code>#[ignore]</code> · NIST ACVP KAT（ML-KEM-768 / ML-DSA-65 keygen·siggen·sigver）真实执行</div>
             <div class="hero-buttons">
@@ -927,7 +927,7 @@
                 <summary style="cursor:pointer;color:#8b949e;font-size:0.85rem;list-style:none;">▸ 展开：算法栈与验证指标</summary>
                 <div style="margin-top:14px;">
                 <div class="hero-badge">
-                    🔒 Web v3.3.3 | ML-KEM-768 · SM2 · SLH-DSA · ML-DSA-44/65/87 (fml-dsa · 已发布 npm 0.1.0，带 Sigstore 证明 · 75 条 NIST ACVP KAT 逐字节通过) · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 (v1.3) + Mersenne 快速约减 1.8× · SLH-DSA WASM · OPK 预密钥协议
+                    🔒 Web <span id="web-app-version">v3.3.3</span> | ML-KEM-768 · SM2 · SLH-DSA · ML-DSA-44/65/87 (fml-dsa · 已发布 npm 0.1.0，带 Sigstore 证明 · 75 条 NIST ACVP KAT 逐字节通过) · OPK · FPGA v5 · ML-KEM-768 KAT 10,000 · SM2 11/11 (v1.3) + Mersenne 快速约减 1.8× · SLH-DSA WASM · OPK 预密钥协议
                 </div>
                 <div class="hero-badge" style="margin-top:8px;background:rgba(0,229,195,0.06);">🏆 ML-KEM-768 通过 KAT 10,000 轮一致性验证 + TVLA v2 Enhanced (N=10,000) 时序侧信道验证 · <br><small style="color:#646c78;">C Native Addon (AVX2) 做了恒定时间实现尝试（未经独立 fuzzing / 侧信道审计，self-assessment）⚠ | 纯 JS 参考实现 时域泄漏评估见报告</small> · <a href="/crypto/test-ml-kem-kat.html" style="color:#00E5C3;text-decoration:underline;font-weight:600;">查看 KAT 10,000 轮验证报告 →</a></div>
                 <div class="hero-badge" style="margin-top:8px;background:rgba(255,165,0,0.06);border:1px solid rgba(255,165,0,0.15);">⚡ FPGA 合成通过 · ILA+L4 确认闭环 · UART 调试已打通 ✅ · Artix-7 35T 时序收敛 · <a href="/docs/fpga-report.html" style="color:#10b981;text-decoration:underline;font-weight:600;">查看硬件文档 ↓</a></div>
@@ -1315,7 +1315,7 @@
             <div class="feature-card">
                 <div class="feature-icon">📱</div>
                 <div class="feature-title">多平台支持</div>
-                <div class="feature-desc">已闭环：Electron + Tauri v2 桌面端（桌面线独立发版 v3.3.7 · 本站为 Web v3.3.3 · Windows x64 · cosign 签名 + SLSA provenance）+ React Native 移动端（clean-break 迁移完成，待真机 E2E 验证）· FPGA 合成 + ILA/L4 验证通过</div>
+                <div class="feature-desc">已闭环：Electron + Tauri v2 桌面端（桌面线独立发版 v3.3.14 · 本站为 Web v3.3.3 · Windows x64 · cosign 签名 + SLSA provenance）+ React Native 移动端（clean-break 迁移完成，待真机 E2E 验证）· FPGA 合成 + ILA/L4 验证通过</div>
             </div>
 
             <div class="feature-card">
@@ -2246,7 +2246,7 @@
             <a href="/docs/project-timeline.html" class="doc-card purple">
               <div class="dc-icon">🚀</div>
               <div class="dc-name">开源里程碑</div>
-              <div class="dc-desc">开源已发布 · v3.3.7 · Tauri 桌面端</div>
+              <div class="dc-desc">开源已发布 · v3.3.14 · Tauri 桌面端</div>
               <span class="dc-tag purple">里程碑</span>
             </a>
             <a href="/BUILD.md" class="doc-card purple">
@@ -2731,7 +2731,7 @@
         </div>
         <div class="status-card">
           <span class="status-icon">&#x1F6E0;</span>
-          <span class="status-name">Tauri v2 桌面端（v3.3.7）</span>
+          <span class="status-name">Tauri v2 桌面端（v3.3.14）</span>
           <span class="status-badge active">&#x2705; 核心模块就绪</span>
         </div>
         <div class="status-card">
@@ -3186,15 +3186,27 @@ const canvas = document.getElementById('particles-canvas');
 </main>
 <script>
 (function () {
-  // 展示线上实际运行的版本（取自 /health 响应头），而不是把 commit 写死在页面里。
+  // Show the version that is actually serving, taken from the /health response
+  // header. The badge stays hidden until the value is known: a placeholder such as
+  // a dash would be a defect rendered to visitors, and a hard-coded version drifts
+  // silently the moment the app is bumped.
+  var badge = document.getElementById('live-run-badge');
+  var label = document.getElementById('live-app-version');
+  var web = document.getElementById('web-app-version');
+  if (!badge || !label) return;
   fetch('/health', { method: 'HEAD', cache: 'no-store' })
     .then(function (r) {
       var v = r.headers.get('X-App-Version');
       if (!v) throw new Error('no header');
-      document.getElementById('live-app-version').textContent = v;
-      document.getElementById('live-run-badge').style.display = '';
+      label.textContent = v;
+      var m = /^v?(\d+\.\d+\.\d+)/.exec(v);
+      if (web && m) web.textContent = 'v' + m[1];
+      badge.style.display = '';
     })
-    .catch(function () {});
+    .catch(function () {
+      // Fail quiet: keep the module hidden rather than expose a dash or a stale claim.
+      badge.style.display = 'none';
+    });
 })();
 </script>
 </body>
