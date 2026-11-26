@@ -1,0 +1,314 @@
+{
+  "version": 1,
+  "note": "Seed set. A contract is one assertion that must stay true, bound to a script that CI actually runs. Backlog entries are known must-bind statements with no automated check yet: visible, not gated.",
+  "contracts": [
+    {
+      "id": "gm-sm2-vectors",
+      "tier": "must",
+      "statement": "SM2 sign/verify and encrypt/decrypt pass 100 published vectors.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "gm-crossval",
+        "script": "scripts/ci-gm-sm2.cjs",
+        "command": "node scripts/ci-gm-sm2.cjs"
+      }
+    },
+    {
+      "id": "gm-sm4-vectors",
+      "tier": "must",
+      "statement": "SM4-GCM passes 30 published vectors.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "gm-crossval",
+        "script": "scripts/ci-gm-sm4.cjs",
+        "command": "node scripts/ci-gm-sm4.cjs"
+      }
+    },
+    {
+      "id": "mlkem-internal-invariants",
+      "tier": "must",
+      "statement": "ML-KEM internal steps (NTT, codec, compress, samplers) satisfy their invariants.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "mlkem-kat",
+        "script": "packages/pqc-kem/test/internal-invariants.test.js",
+        "command": "node packages/pqc-kem/test/internal-invariants.test.js"
+      }
+    },
+    {
+      "id": "health-same-source",
+      "tier": "must",
+      "statement": "/health never claims build == served while the commits differ.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "node-test",
+        "script": "scripts/test-health-same-source.cjs",
+        "command": "node scripts/test-health-same-source.cjs"
+      }
+    },
+    {
+      "id": "fml-dsa-oracle",
+      "tier": "must",
+      "statement": "fml-dsa output matches the byte-level oracle.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "node-test",
+        "script": "packages/fml-dsa/test/interop-oracle.test.js",
+        "command": "node packages/fml-dsa/test/interop-oracle.test.js"
+      }
+    },
+    {
+      "id": "fml-dsa-canonical",
+      "tier": "must",
+      "statement": "fml-dsa rejects non-canonical signatures.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "node-test",
+        "script": "packages/fml-dsa/test/verify-canonical-signature.test.js",
+        "command": "node packages/fml-dsa/test/verify-canonical-signature.test.js --strict"
+      }
+    },
+    {
+      "id": "mlkem-wasm-fips203",
+      "tier": "must",
+      "statement": "The shipped ML-KEM-768 WASM artifact is FIPS 203 when compared against noble.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "node-test",
+        "script": "test/mlkem-wasm-fips.test.cjs",
+        "command": "node --test test/mlkem-wasm-fips.test.cjs"
+      }
+    },
+    {
+      "id": "selftest-throws",
+      "tier": "must",
+      "statement": "No self-test prints FAIL without failing the process.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "node-test",
+        "script": "scripts/check-selftest-throws.cjs",
+        "command": "node scripts/check-selftest-throws.cjs"
+      }
+    },
+    {
+      "id": "native-parity",
+      "tier": "must",
+      "statement": "The native addon and the JS implementation agree on deterministic vectors, implicit rejection and input validation.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "native-parity",
+        "script": "packages/pqc-kem/test/native-parity.test.js",
+        "command": "node packages/pqc-kem/test/native-parity.test.js"
+      }
+    },
+    {
+      "id": "sbom-committed",
+      "tier": "must",
+      "statement": "The committed SBOM is byte-identical to what the generator produces now.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "sbom",
+        "script": "scripts/gen-sbom.js",
+        "command": "node scripts/gen-sbom.js /tmp/sbom.cdx.json"
+      }
+    },
+    {
+      "id": "tsr-copy-numbers",
+      "tier": "must",
+      "statement": "Every public TSR count matches the counter of tracked .tsr files.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "lint",
+        "script": "scripts/check-tsr-copy.cjs",
+        "command": "node scripts/check-tsr-copy.cjs"
+      }
+    },
+    {
+      "id": "tsr-manifest-coverage",
+      "tier": "must",
+      "statement": "The TSR manifest lists every tracked .tsr and nothing else.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "lint",
+        "script": "scripts/build-tsr-manifest.cjs",
+        "command": "node scripts/build-tsr-manifest.cjs --check"
+      }
+    },
+    {
+      "id": "tsr-measured-date",
+      "tier": "must",
+      "statement": "Every published TSR count is accompanied by the measurement date.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "lint",
+        "script": "scripts/check-measured-date.cjs",
+        "command": "node scripts/check-measured-date.cjs"
+      }
+    },
+    {
+      "id": "tsa-claims-evidenced",
+      "tier": "must",
+      "statement": "A page may only name a timestamp issuer whose token is actually present.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "lint",
+        "script": "scripts/check-tsa-claims.cjs",
+        "command": "node scripts/check-tsa-claims.cjs"
+      }
+    },
+    {
+      "id": "tsa-issuer-table",
+      "tier": "must",
+      "statement": "The issuer table covers every tracked timestamp token.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "lint",
+        "script": "scripts/tsa-issuers.cjs",
+        "command": "node scripts/tsa-issuers.cjs --check"
+      }
+    },
+    {
+      "id": "version-consistency",
+      "tier": "must",
+      "statement": "VERSION.json is the single source and every other version field agrees with it.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "docs-check",
+        "script": "scripts/check-version-consistency.cjs",
+        "command": "node scripts/check-version-consistency.cjs"
+      }
+    },
+    {
+      "id": "sitemap-resolves",
+      "tier": "must",
+      "statement": "Every URL in sitemap.xml resolves to a file under www/.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "docs-check",
+        "script": "scripts/check-sitemap.cjs",
+        "command": "node scripts/check-sitemap.cjs"
+      }
+    },
+    {
+      "id": "tvla-thresholds",
+      "tier": "must",
+      "statement": "TVLA summaries stay inside the documented threshold, and the gate can fail.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "docs-check",
+        "script": "scripts/test-tvla-gates.cjs",
+        "command": "node scripts/test-tvla-gates.cjs"
+      }
+    },
+    {
+      "id": "bom-present",
+      "tier": "must",
+      "statement": "No tracked text file carries a UTF-8 BOM.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "bom-check",
+        "script": "scripts/check-bom.cjs",
+        "command": "node scripts/check-bom.cjs"
+      }
+    },
+    {
+      "id": "encoding-clean",
+      "tier": "must",
+      "statement": "No tracked text file contains U+FFFD, GBK-mojibake or NUL.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "bom-check",
+        "script": "scripts/check-encoding.cjs",
+        "command": "node scripts/check-encoding.cjs"
+      }
+    },
+    {
+      "id": "experimental-isolation",
+      "tier": "must",
+      "statement": "Experimental research code is not reachable from the production entry points.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "bom-check",
+        "script": "scripts/check-experimental-isolation.cjs",
+        "command": "node scripts/check-experimental-isolation.cjs"
+      }
+    },
+    {
+      "id": "cbom-drift",
+      "tier": "must",
+      "statement": "The committed CBOM matches what the generator produces now.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "cbom",
+        "script": "scripts/build-cbom.js",
+        "command": "node scripts/build-cbom.js --check"
+      }
+    },
+    {
+      "id": "wording-r1",
+      "tier": "must",
+      "statement": "Public copy never mixes the abbreviation as \"CII / BP\".",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "claim-check",
+        "script": "scripts/check-claims.cjs",
+        "command": "node scripts/check-claims.cjs"
+      }
+    },
+    {
+      "id": "deploy-tree-digest",
+      "tier": "must",
+      "statement": "A deployed tree is only accepted when its digest matches the recorded build.",
+      "binding": {
+        "workflow": ".github/workflows/ci.yml",
+        "job": "lint",
+        "script": "scripts/test-verify-tree-sha.cjs",
+        "command": "node scripts/test-verify-tree-sha.cjs"
+      }
+    }
+  ],
+  "backlog": [
+    {
+      "id": "prod-db-symlink",
+      "tier": "must",
+      "statement": "The production release's data/ is a symlink to /opt/fibemate/shared/data, so every release reads the one database.",
+      "why": "scripts/deploy-release.sh asserts it at deploy time, but nothing checks the live tree between deploys."
+    },
+    {
+      "id": "prod-sha-equals-main",
+      "tier": "must",
+      "statement": "The SHA serving production equals the SHA recorded as released.",
+      "why": "Checked by hand in each deploy record; no scheduled comparison."
+    },
+    {
+      "id": "readby-legacy-star",
+      "tier": "must",
+      "statement": "Legacy readBy [\"*\"] rows are known, bounded and never re-introduced.",
+      "why": "Issue #705 tracks the migration; no gate counts them."
+    },
+    {
+      "id": "twofa-enabled-count",
+      "tier": "must",
+      "statement": "The number of accounts with 2FA enabled is known and matches the audit.",
+      "why": "Read once from the live database; no recurring check."
+    },
+    {
+      "id": "site-version-matches-release",
+      "tier": "must",
+      "statement": "The version served by fibemate.net matches the released version.",
+      "why": "check-site-versions compares the registry and pages, not the live deployment."
+    },
+    {
+      "id": "health-alignment-in-prod",
+      "tier": "must",
+      "statement": "In production, /health reports build == served.",
+      "why": "The rule is unit-tested; the live response is only inspected manually."
+    },
+    {
+      "id": "npm-provenance-published",
+      "tier": "must",
+      "statement": "Every published npm package carries Sigstore provenance for its tarball.",
+      "why": "release-verify.yml exists but is not part of the PR gate."
+    }
+  ]
+}
