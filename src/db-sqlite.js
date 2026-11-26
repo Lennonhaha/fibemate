@@ -447,11 +447,32 @@ class SqliteDB {
    * deactivateStaleDevices(). A device can still be isActive=1 in the table
    * between logins; it must not keep an old message unread forever.
    */
-  _activeDeviceIds(userId, now = Date.now()) {
+  _activeDevices(userId, now = Date.now()) {
     const cutoff = staleCutoff(now);
     return this._db.prepare(
-      "SELECT id FROM devices WHERE userId = ? AND CAST(json_extract(raw_json, '$.isActive') AS INTEGER) = 1 AND CAST(json_extract(raw_json, '$.lastActive') AS INTEGER) >= ?"
-    ).all(userId, cutoff).map(r => r.id);
+      "SELECT raw_json FROM devices WHERE userId = ? AND CAST(json_extract(raw_json, '$.isActive') AS INTEGER) = 1 AND CAST(json_extract(raw_json, '$.lastActive') AS INTEGER) >= ?"
+    ).all(userId, cutoff).map(r => JSON.parse(r.raw_json));
+  }
+
+  /**
+   * Active devices that could have received a message created at
+   * `messageCreatedAt`.
+   *
+   * A device registered after the message was sent has no way to have read it,
+   * and the unread badge already excludes pre-install history for exactly that
+   * reason (src/lib/unread-count.js). If isRead kept counting such a device it
+   * could never flip: the recipient's badge shows 0 unread while the sender
+   * still sees the message as unread. Rows with no createdAt predate the field,
+   * so their age is unknown and they keep counting.
+   */
+  _activeDeviceIds(userId, now = Date.now(), messageCreatedAt = 0) {
+    const floor = Number.isFinite(messageCreatedAt) && messageCreatedAt > 0 ? messageCreatedAt : 0;
+    return this._activeDevices(userId, now)
+      .filter(d => {
+        const created = Number(d.createdAt) || 0;
+        return floor === 0 || created === 0 || created <= floor;
+      })
+      .map(d => d.id);
   }
 
   getDeviceById(deviceId) {
@@ -559,7 +580,7 @@ class SqliteDB {
     // on duplicate acks too: a previously active device may have gone stale
     // while this device was already in readBy, and the old early return left
     // the message stuck at isRead:false forever.
-    const deviceIds = this._activeDeviceIds(m.recipientUserId);
+    const deviceIds = this._activeDeviceIds(m.recipientUserId, Date.now(), m.createdAt);
     if (deviceIds.length > 0 && deviceIds.every(id => readBy.includes(id)) && !m.isRead) {
       m.isRead = true;
       m.readAt = Date.now();
@@ -688,7 +709,9 @@ class SqliteDB {
 
     let changes = 0;
     const tx = this._db.transaction(() => {
-      const activeDeviceIds = deviceId ? this._activeDeviceIds(userId) : null;
+      // Recompute per message: a device registered after this message cannot be
+      // expected to ack it, so the eligible set is message-epoch dependent.
+      const activeDevices = deviceId ? this._activeDevices(userId) : null;
       for (const row of allMsgs) {
         const m = JSON.parse(row.raw_json);
         if (m.recipientUserId !== userId) continue;
@@ -715,6 +738,13 @@ class SqliteDB {
         }
         m.readBy = readBy;
 
+        const sentAt = Number(m.createdAt) || 0;
+        const activeDeviceIds = activeDevices
+          ? activeDevices.filter(d => {
+            const created = Number(d.createdAt) || 0;
+            return sentAt === 0 || created === 0 || created <= sentAt;
+          }).map(d => d.id)
+          : [];
         if (activeDeviceIds.length > 0 &&
             activeDeviceIds.every(id => readBy.includes(id)) &&
             !m.isRead) {
