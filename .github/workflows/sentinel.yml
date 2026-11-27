@@ -44,9 +44,13 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
         with:
           node-version: '22'
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          repository: LennonHaha/fibemate-core
+          path: fibemate-core
       - name: Install @noble/post-quantum (no-save)
         working-directory: fibemate
         run: npm install @noble/post-quantum --no-save
-      - name: Run xdiff (main + noble; cp/liboqs unavailable in CI)
+      - name: Run xdiff (cp + main + noble; liboqs disabled)
         working-directory: .sentinel-tools/xdiff
-        run: node bin/xdiff.js run --require-impl 2
+        run: node bin/xdiff.js run --require-impl 3
