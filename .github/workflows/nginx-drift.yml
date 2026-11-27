@@ -32,12 +32,9 @@ on:
       - 'scripts/check-deploy-alignment.cjs'
       - '.github/workflows/nginx-drift.yml'
   pull_request:
-    paths:
-      - 'deploy/nginx/**'
-      - 'scripts/check-nginx-drift.cjs'
-      - 'scripts/probe-live-http.cjs'
-      - 'scripts/check-deploy-alignment.cjs'
-      - '.github/workflows/nginx-drift.yml'
+    # No path filter. This workflow is a required check on main: a path-filtered
+    # required check never runs on unrelated PRs, and a check that never runs can
+    # never be satisfied, so those PRs sit blocked forever.
   schedule:
     # 03:17 UTC = 11:17 Asia/Shanghai. The path filter above means this gate only
     # woke up when someone edited nginx; the schedule makes rot surface on its own.
@@ -46,6 +43,7 @@ on:
 
 jobs:
   offline:
+    name: nginx-drift-offline
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -63,6 +61,7 @@ jobs:
         run: node scripts/check-nginx-drift.cjs --self-test
 
   live:
+    name: nginx-drift-live
     runs-on: ubuntu-latest
     needs: offline
     env:
@@ -95,6 +94,7 @@ jobs:
         run: node scripts/check-nginx-drift.cjs --host "$NGINX_HOST" --user "$NGINX_USER" --port "$NGINX_PORT"
 
   http:
+    name: nginx-drift-http
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -117,6 +117,7 @@ jobs:
   # real gap between main and what nginx serves, but it must not block merges until
   # the negative controls have been seen failing for a while.
   alignment:
+    name: nginx-drift-alignment
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
