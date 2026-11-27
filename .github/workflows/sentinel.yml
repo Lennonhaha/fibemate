@@ -7,6 +7,7 @@ on:
   pull_request:
     paths:
       - 'www/docs/**'
+      - 'docs/**'
       - 'packages/**'
       - '.github/workflows/sentinel.yml'
 
@@ -28,7 +29,7 @@ jobs:
           node-version: '22'
       - name: Run verifact
         working-directory: .sentinel-tools/verifact
-        run: node bin/verifact.js verify --docs ../../fibemate/www/docs --fail-on drift --no-cache
+        run: node bin/verifact.js verify --docs ../../fibemate --docs ../../fibemate-tools --docs ../../fibemate-core --fail-on drift --no-cache
 
   xdiff:
     runs-on: ubuntu-latest
