@@ -646,9 +646,10 @@ Two companion repositories are Apache-2.0 and can be embedded in closed products
 [`fibemate-tools`](https://github.com/Lennonhaha/fibemate-tools) (verifact and the CBOM toolset).
 
 `fibemate-core` is published on npm as
-[`fibemate-core@0.1.0`](https://www.npmjs.com/package/fibemate-core) — `npm install fibemate-core`,
+[`fibemate-core@0.1.1`](https://www.npmjs.com/package/fibemate-core) — `npm install fibemate-core@0.1.1`,
 released from GitHub Actions with Sigstore provenance, so the tarball can be tied to the commit and
-workflow that built it. The CBOM toolset ships as `cbom-tools`, `verifact` and `fibemate-xdiff`;
+workflow that built it. `0.1.0` is deprecated: it is not FIPS 203 and fails silently against standard
+ML-KEM implementations; use `>=0.1.1`. The CBOM toolset ships as `cbom-tools`, `verifact` and `fibemate-xdiff`;
 [`docs/cbom-tools-tutorial.md`](https://github.com/Lennonhaha/fibemate-tools/blob/main/docs/cbom-tools-tutorial.md)
 in `fibemate-tools` walks through a full ECDH/SM2 → ML-KEM migration with real output at every step.
 
