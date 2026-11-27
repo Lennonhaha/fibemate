@@ -131,6 +131,10 @@ function ntt(f) {
     return f;
 }
 
+// NOTE: this pure-JS iNTT is not constant-time. V8's JIT makes the timing of
+// the modular operations input-dependent; do not use this path where an attacker
+// can measure latency. The native addon is the supported path for
+// side-channel-sensitive use. Tracked in #547.
 function intt(f) {
     let step = 1;
     for (let s = 2; s <= 8; s++) {

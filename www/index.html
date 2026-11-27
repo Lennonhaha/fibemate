@@ -747,6 +747,9 @@
 </head>
 <body>
 <a href="#main-content" class="skip-link" style="position:absolute;top:-9999px;left:0;z-index:9999;background:#1a1a2e;color:#00E5C3;padding:12px 20px;text-decoration:none;border-radius:0 0 6px 0;font-size:14px;" onfocus="this.style.top='0'" onblur="this.style.top='-9999px'">跳过导航，直接进入正文 (Skip to main content)</a>
+<div role="note" style="background:#3b0d0d;color:#ffe3e3;text-align:center;padding:10px 16px;font-size:14px;border-bottom:2px solid #ff6b6b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
+  <strong>不可作为生产依赖：</strong>本项目为开源验证平台，无第三方安全审计，不可作为商业/生产环境的直接密码依赖。
+</div>
 <style>
 .skip-link:focus{top:0!important;outline:2px solid #00E5C3;}
 .countdown-banner {
@@ -1315,7 +1318,7 @@
             <div class="feature-card">
                 <div class="feature-icon">📱</div>
                 <div class="feature-title">多平台支持</div>
-                <div class="feature-desc">已闭环：Electron + Tauri v2 桌面端（桌面线独立发版 v3.3.14 · 本站为 Web v3.3.3 · Windows x64 · cosign 签名 + SLSA provenance）+ React Native 移动端（clean-break 迁移完成，待真机 E2E 验证）· FPGA 合成 + ILA/L4 验证通过</div>
+                <div class="feature-desc">已闭环：Electron + Tauri v2 桌面端（桌面线独立发版（版本见 GitHub Releases） · 本站为 Web v3.3.3 · Windows x64 · cosign 签名 + SLSA provenance）+ React Native 移动端（clean-break 迁移完成，待真机 E2E 验证）· FPGA 合成 + ILA/L4 验证通过</div>
             </div>
 
             <div class="feature-card">
@@ -2246,7 +2249,7 @@
             <a href="/docs/project-timeline.html" class="doc-card purple">
               <div class="dc-icon">🚀</div>
               <div class="dc-name">开源里程碑</div>
-              <div class="dc-desc">开源已发布 · v3.3.14 · Tauri 桌面端</div>
+              <div class="dc-desc">开源已发布 · Tauri 桌面端</div>
               <span class="dc-tag purple">里程碑</span>
             </a>
             <a href="/BUILD.md" class="doc-card purple">
@@ -2731,7 +2734,7 @@
         </div>
         <div class="status-card">
           <span class="status-icon">&#x1F6E0;</span>
-          <span class="status-name">Tauri v2 桌面端（v3.3.14）</span>
+          <span class="status-name">Tauri v2 桌面端</span>
           <span class="status-badge active">&#x2705; 核心模块就绪</span>
         </div>
         <div class="status-card">

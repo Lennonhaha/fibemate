@@ -15,7 +15,7 @@ FIBEMATE is a post-quantum cryptography engineering demonstration platform. It i
 
 ### Known Limitations (Non-Exhaustive)
 
-- Pure JavaScript implementations are **not constant-time**
+- Pure JavaScript implementations are **not constant-time**. In particular `invNTT` (`packages/pqc-kem/src/ml-kem-768.js`) runs on V8, whose JIT makes per-operation timing input-dependent; it must not be used where an attacker can measure latency. High-assurance use must go through the native addon and assess its side-channel properties independently (#547).
 - No hardware side-channel countermeasures beyond software simulation
 - C native addon has not undergone fuzzing
 - Experimental signature research line (VWZ) is published for cryptanalysis only and is not deployed anywhere in this project — see [docs/VWZ-STATUS.md](docs/VWZ-STATUS.md)
