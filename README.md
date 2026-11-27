@@ -1,3 +1,7 @@
+> [!WARNING]
+> **本项目为开源验证平台，无第三方安全审计，不可作为商业/生产环境的直接密码依赖。**
+> This is an open-source verification platform. It has not had an independent security audit and must not be used as a direct cryptographic dependency in commercial or production systems.
+
 # FIBEMATE — PQC 工程验证平台 · 可执行教科书 / A PQC Engineering Verification Platform
 
 > **一句话定位 / One line.** FIBEMATE 把 FIPS 203/204/205 与 SM2/SM3/SM4 的数学、参考实现、硬件加速和证据链放进同一棵可复现的树 —— 它不是密码库，是"能被第三方重跑"的公开验证平台。同名端到端加密聊天软件是另一个项目 → [fibemate.net](https://fibemate.net)
@@ -12,11 +16,11 @@ Every number below can be re-measured with the command next to it. If it does no
 | :-- | :-- | :-- | :-- |
 | ML-KEM-768 KAT | **100/100 向量（500 断言）** | 2026-11-17 | `node scripts/ci-mlkem-kat.cjs` |
 | 时间戳证据链 | **365 个 `.tsr`**（257 个不同 basename，94 个 `lg-NNN` 令牌） | 2026-11-25 | `node scripts/count-tsr.cjs` |
-| 文档-证据一致 | **drift 0**（denied 9） | 2026-11-17 · fibemate-tools `bb7ced4` | `verifact verify --no-cache` |
+| 文档-证据一致 | **drift 0**（denied 10） | 2026-11-27 · fibemate-tools `38d469a` | `verifact verify --no-cache` |
 
-> 第三个锚点的意思：仓库里 2,241 条"文档声称的数字"被逐条绑定到真实产物，漂移 0 条。被拒绑的 9 条不是"关掉了"，每条的"真值在哪、候选为什么不算"都写在 `verifact.json` 的 `note` 里。
+> 第三个锚点的意思：仓库里 1,410 条“文档声称的代码数字”被逐条评估，105 条已绑定到真实产物（drift 0）。被拒绑的 10 条不是“关掉了”，每条的“真值在哪、候选为什么不算”都写在 `verifact.json` 的 `note` 里。
 >
-> **核验率按真实口径写**：verified 136 / code-artifact 2,241 = **6.07%**（对全部受判 2,322 条为 5.86%）。剩下的 220 ambiguous + 1,867 unbound 是**待补的工作量**，不当作已完成，也不靠换分母把它做高。
+> **核验率按真实口径写**：verified 105 / code-artifact 1,410 = **7.45%**（对全部受判 1,498 条为 7.01%）。剩下的 135 ambiguous + 1,160 unbound 是**待补的工作量**，不当作已完成，也不靠换分母把它做高。2026-11-27 复测。
 
 > 🧭 **安全左移 / Shift-left security.** 侧信道威胁模型不是"以后补"的文档，是架构资产：[Falcon 侧信道威胁模型](docs/research/falcon-sidechannel-threat-model.md)。每条威胁都带可复现的判据与测量记录；测不出的写 `unquantified`，不写"安全"。
 
