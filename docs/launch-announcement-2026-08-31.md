@@ -126,7 +126,7 @@ Live demo: [fibemate.net/demo](https://fibemate.net/demo/)
 | ML-KEM-768 Native keygen | 49.1 µs（Ryzen 5 5600U, 2026-10） |
 | ML-KEM cross-validation | 20,000/20,000 (noble + liboqs) |
 | NTT Barrett reduction speedup | 14× |
-| SM2 software TVLA | 36/36 PASS (N=10,000) |
+| SM2 software TVLA | 35/36 PASS (N=10,000) |
 | ML-KEM-768 TVLA | corrected (V8 JIT artifact, no exploitable leak) |
 | ML-KEM-1024 TVLA | 3/3 PASS (Noble, N=10,000) |
 | TLA+ verified states | 101,467 |
