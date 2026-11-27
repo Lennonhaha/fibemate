@@ -8,6 +8,7 @@ on:
     paths:
       - 'www/docs/**'
       - 'packages/**'
+      - '.github/workflows/sentinel.yml'
 
 jobs:
   verifact:
