@@ -186,3 +186,43 @@ crash/完整性检测类（Fuzz、KAT、evidence-immutable、编码门禁）每�
 | docs-sync | README 数字 ↔ run 记录 | 门禁能否变红 |
 | pr-baseline | PR 是否夹带已入 base 的提交 | workflow 是否真的执行 |
 | 本制度 | 动作有效性、门禁能红、配置回读、部署断言 | 密码学正确性（由 KAT/TVLA 负责） |
+
+## Enforced rules (2026-11-27)
+
+These are not aspirational. Each one names the check that fails, and where it runs.
+
+### R1 — A crypto package cannot be published without an external anchor
+
+- `fibemate-core` release workflow runs, before `npm publish`: the 100-record KAT corpus, the 80
+  NIST ACVP cases (keyGen / encapsulation / decapsulation / key checks), and a 100-round
+  differential against `@noble/post-quantum` in both directions.
+- Missing file, failing case, or a skipped step fails the job, so the tag cannot produce a publish.
+- Registry truth is asserted after publish: if `npm` has the version but the run reports failure, an
+  issue is opened instead of the failure being believed. (2026-11-15: publish succeeded, the confirm
+  step read a 404, and the run stayed red for 11 days.)
+
+### R2 — Deployment and configuration must be measured, not assumed
+
+- `nginx-drift` compares three tracked configs against the live host on every PR and on a nightly
+  schedule; all four jobs are required checks on `main`.
+- The live job holds a key whose forced command is a whitelist reader — it can read three files and
+  nothing else. Before 2026-11-27 that key could only read one file, which made a three-file
+  comparison silently compare one file three times.
+- `deploy-apply` is `workflow_dispatch` only and therefore cannot be a required check: a required
+  check that never runs blocks every PR forever. Deploy truth is enforced after the fact by the
+  manifest/health alignment assertion and by registry truth in R1.
+
+### R3 — UI regressions that only a human would see must fail in CI
+
+- `fibemate-tauri` runs `scripts/test-client-dom.cjs` on every PR: it mounts the real 2FA and
+  conversation-list modules, dispatches the click, and fails on a thrown exception or an unrendered
+  badge. The job `ui-dom` is a required check, so a PR that breaks the setup flow cannot merge.
+- The harness is a deliberate shim, not a browser. It covers the surfaces these modules touch; it is
+  not a claim of end-to-end coverage.
+
+### R4 — Claims and descriptions are part of the build
+
+- `verifact` (drift) and `xdiff` (three-implementation differential) are required checks on `main`.
+- `pr-body-gate` requires **Action / Evidence / Delta** in every PR description. Bots are exempt.
+- The evidence-binding rate is published as measured (105/1,410 = 7.45% on 2026-11-27), not rounded
+  up to "core algorithm fully bound".

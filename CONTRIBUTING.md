@@ -399,3 +399,24 @@ We welcome everyone regardless of experience level. If you're stuck, ask in
 > Active contributors who submit 2–3 quality PRs may be invited as Collaborators
 > with write access.
 
+
+## What a reviewable PR looks like
+
+Every PR description has three headings. The `pr-body-gate` check fails without them:
+
+- **Action** — what changed, in one paragraph, no marketing.
+- **Evidence** — the command, CI run, or file that proves it. `N/A` is allowed only for pure prose.
+- **Delta** — what is different for a user, an operator, or an attacker. "Nothing" is a valid answer.
+
+Small PRs are easier to review than large ones. If a change touches cryptography, the KEM/KAT gates
+must be green and the PR must say which test would fail if the change were wrong.
+
+## Reviewing (and how to become a reviewer)
+
+We have zero third-party approvals today and we are not going to manufacture them. If you want to
+review, pick any open PR, read the Evidence section, and leave one concrete comment — a wrong
+comment, an untested edge case, or a missing negative test are all useful. Sustained, specific
+review earns commit access; drive-by approvals do not.
+
+Response expectation: best effort within 5 working days. Security reports go through
+[SECURITY.md](SECURITY.md), not the issue tracker.

@@ -430,6 +430,12 @@ fibemate/
 
 ---
 
+## Formal verification
+
+The Isabelle models prove properties of a model under stated assumptions, with explicit `sorry`
+holes. Measured list and what each assumption hides:
+[docs/FORMAL-VERIFICATION-LIMITS.md](docs/FORMAL-VERIFICATION-LIMITS.md).
+
 ## Security Model
 
 FIBEMATE implements a **defense-in-depth** architecture across three layers (research components excluded):
