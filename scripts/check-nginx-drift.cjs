@@ -11,8 +11,14 @@
 //       key material, no external addresses, no long hex blobs.
 //
 //   node scripts/check-nginx-drift.cjs --host fibemate
-//       Fetch /etc/nginx/sites-enabled/fibemate.net over ssh and compare the
-//       code lines (comments and blank lines ignored). Exit 2 on drift.
+//       Fetch every tracked production config over ssh and compare the code
+//       lines (comments and blank lines ignored). Covers:
+//         deploy/nginx/fibemate.net.conf  -> sites-enabled/fibemate.net
+//         deploy/nginx/fibemate.link.conf -> sites-enabled/fibemate.link
+//         deploy/nginx/nginx.conf         -> nginx.conf (stream SNI map)
+//       Exit 2 on drift in any file. The SNI map used to be invisible to this
+//       gate (#590), which is how www.fibemate.link stayed dead in production
+//       while the tracked copy already carried the route (#584).
 //
 // Exit codes: 0 same, 1 usage/io, 2 drift, 3 remote fetch failed.
 
@@ -25,6 +31,14 @@ const path = require('node:path');
 const DEFAULT_LOCAL = path.join(__dirname, '..', 'deploy', 'nginx', 'fibemate.net.conf');
 const DEFAULT_REMOTE = '/etc/nginx/sites-enabled/fibemate.net';
 
+// Every production config that has a tracked copy. nginx.conf is included
+// because the stream-layer SNI map lives there, outside sites-enabled.
+const TARGETS = [
+  { local: path.join(__dirname, '..', 'deploy', 'nginx', 'fibemate.net.conf'), remote: '/etc/nginx/sites-enabled/fibemate.net' },
+  { local: path.join(__dirname, '..', 'deploy', 'nginx', 'fibemate.link.conf'), remote: '/etc/nginx/sites-enabled/fibemate.link' },
+  { local: path.join(__dirname, '..', 'deploy', 'nginx', 'nginx.conf'), remote: '/etc/nginx/nginx.conf' }
+];
+
 function parseArgs(argv) {
   const opts = {
     offline: false,
@@ -32,8 +46,8 @@ function parseArgs(argv) {
     user: null,
     port: null,
     identity: null,
-    local: DEFAULT_LOCAL,
-    remote: DEFAULT_REMOTE,
+    local: null,
+    remote: null,
     quiet: false
   };
   for (let i = 0; i < argv.length; i += 1) {
@@ -178,65 +192,75 @@ function selfTest() {
 function main() {
   if (process.argv.includes('--self-test')) return selfTest();
   const opts = parseArgs(process.argv.slice(2));
-  let localText;
-  try {
-    localText = fs.readFileSync(opts.local, 'utf8');
-  } catch (err) {
-    console.error('cannot read ' + opts.local + ': ' + err.message);
-    process.exit(1);
-  }
 
-  const problems = checkLocalInvariants(localText);
-  if (problems.length > 0) {
-    console.error('tracked copy fails offline invariants:');
-    for (const p of problems) console.error('  - ' + p);
-    process.exit(1);
-  }
-  if (!opts.quiet) console.log('offline: ' + path.relative(process.cwd(), opts.local) + ' ok (no secrets, no external addresses)');
+  const targets = (opts.local || opts.remote)
+    ? [{ local: opts.local || DEFAULT_LOCAL, remote: opts.remote || DEFAULT_REMOTE }]
+    : TARGETS;
 
-  if (opts.offline) return;
-
-  if (!opts.host) {
+  if (!opts.offline && !opts.host) {
     console.error('no --host given and --offline not set');
     process.exit(1);
   }
 
-  const target = (opts.user ? opts.user + '@' : '') + opts.host;
+  const target = opts.host ? (opts.user ? opts.user + '@' : '') + opts.host : null;
   const sshArgs = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=15'];
   if (opts.port) sshArgs.push('-p', String(opts.port));
   if (opts.identity) sshArgs.push('-i', opts.identity);
-  sshArgs.push(target, 'sudo cat ' + opts.remote);
 
-  const res = spawnSync('ssh', sshArgs, {
-    encoding: 'utf8',
-    maxBuffer: 32 * 1024 * 1024
-  });
-  if (res.status !== 0) {
-    console.error('remote fetch failed (ssh ' + target + ', exit ' + res.status + ')');
-    if (res.stderr) console.error(res.stderr.trim().split('\n').slice(0, 5).join('\n'));
-    process.exit(3);
+  let drifted = 0;
+
+  for (const t of targets) {
+    let localText;
+    try {
+      localText = fs.readFileSync(t.local, 'utf8');
+    } catch (err) {
+      console.error('cannot read ' + t.local + ': ' + err.message);
+      process.exit(1);
+    }
+
+    const problems = checkLocalInvariants(localText);
+    if (problems.length > 0) {
+      console.error('tracked copy fails offline invariants: ' + t.local);
+      for (const p of problems) console.error('  - ' + p);
+      process.exit(1);
+    }
+    if (!opts.quiet) console.log('offline: ' + path.relative(process.cwd(), t.local) + ' ok (no secrets, no external addresses)');
+
+    if (opts.offline) continue;
+
+    const res = spawnSync('ssh', sshArgs.concat([target, 'sudo cat ' + t.remote]), {
+      encoding: 'utf8',
+      maxBuffer: 32 * 1024 * 1024
+    });
+    if (res.status !== 0) {
+      console.error('remote fetch failed (ssh ' + target + ', exit ' + res.status + ', file ' + t.remote + ')');
+      if (res.stderr) console.error(res.stderr.trim().split('\n').slice(0, 5).join('\n'));
+      process.exit(3);
+    }
+
+    const liveProblems = checkLocalInvariants(res.stdout);
+    if (liveProblems.length > 0 && !opts.quiet) {
+      console.log('note: the live file trips offline invariants (expected for addresses/hex): ' + t.remote);
+      for (const p of liveProblems) console.log('  - ' + p);
+    }
+
+    const mine = codeLines(localText);
+    const live = codeLines(res.stdout);
+    const ops = lcsOps(mine, live);
+    if (countChanges(ops) === 0) {
+      if (!opts.quiet) console.log('drift: none in ' + t.remote + ' (' + mine.length + ' code lines match)');
+      continue;
+    }
+
+    drifted += 1;
+    const diff = renderDiff(ops, 'tracked', 'live', 20);
+    console.error('drift: tracked copy differs from ' + target + ':' + t.remote);
+    for (const line of diff) console.error(line);
+    const extra = mine.length !== live.length ? ' (code lines: tracked ' + mine.length + ', live ' + live.length + ')' : '';
+    console.error('update ' + path.relative(process.cwd(), t.local) + ' from the live file, or fix the server.' + extra);
   }
 
-  const liveProblems = checkLocalInvariants(res.stdout);
-  if (liveProblems.length > 0 && !opts.quiet) {
-    console.log('note: the live file trips offline invariants (expected for addresses/hex):');
-    for (const p of liveProblems) console.log('  - ' + p);
-  }
-
-  const mine = codeLines(localText);
-  const live = codeLines(res.stdout);
-  const ops = lcsOps(mine, live);
-  if (countChanges(ops) === 0) {
-    if (!opts.quiet) console.log('drift: none (' + mine.length + ' code lines match the live file)');
-    return;
-  }
-
-  const diff = renderDiff(ops, 'tracked', 'live', 20);
-  console.error('drift: tracked copy differs from ' + target + ':' + opts.remote);
-  for (const line of diff) console.error(line);
-  const extra = mine.length !== live.length ? ' (code lines: tracked ' + mine.length + ', live ' + live.length + ')' : '';
-  console.error('update deploy/nginx/fibemate.net.conf from the live file, or fix the server.' + extra);
-  process.exit(2);
+  if (drifted > 0) process.exit(2);
 }
 
 if (require.main === module) main();
