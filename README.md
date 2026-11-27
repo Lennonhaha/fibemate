@@ -405,7 +405,7 @@ fibemate/
 │   ├── crypto/          # Browser crypto modules (ML-KEM, SM2, SM3, SM4, PQC hybrid)
 │   └── docs/            # Documentation + TSR evidence (lg-001~lg-117, gaps not reused)
 ├── fpga/rtl/            # FPGA RTL (Verilog) — 26 modules, published in full
-│   └── (prebuilt bitstreams under fpga/releases/)
+│   └── (bitstreams: release fpga-bitstreams-v4, SHA-256 in README.md)
 ├── c-stm32/             # STM32 C framework
 ├── scripts/             # CI / build / TVLA cross-verify
 ├── papers/              # Publications: VWZ ePrint 2026/110618
@@ -530,7 +530,7 @@ rop: ≈2^143.8, red: ≈2^143.8, δ: 1.003941, β: 406, d: 998, tag: usvp
 - **Security Audits:** This project has not undergone a formal, third-party security audit. It is an engineering demonstration.
 - **Cryptographic Reductions:** Research components (VWZ) are experimental and lack a formal reduction to standard lattice assumptions. Its Isabelle/HOL corpus currently contains **41 `sorry` placeholders** (4 in the obligation ledger, 37 scaffolding) and is built with `quick_and_dirty`, so it is **not a complete formal proof**.
 - **Physical Side-Channel:** Hardware TVLA (ChipWhisperer) is pending due to a level shifter issue (Q4 2026 target).
-- **Hardware Provisioning:** The FPGA source is published in this repository: 26 Verilog modules under `fpga/rtl/` (23 of them the NTT pipeline under `fpga/rtl/ntt/`), plus 13 prebuilt bitstreams under `fpga/releases/`. Nothing in it is held back: the whole design is buildable from source in the tree. What the RTL has **not** had is independent review: per `SECURITY.md` it is In Development, not Signoff, and the physical TVLA run is still pending, so it is published without a security claim attached to it. The same sources are also preserved as timestamped evidence in the TSR archive (`docs/tsa/2026-06-25/hardware/`, e.g. `ntt_core.v`, `ntt_core_pipe.v`). One exception, so this is not read as a blanket claim: the VWZ research-line BRAM solver RTL is a separate artifact and remains withheld pending an internal readiness assessment (see `SECURITY.md`).
+- **Hardware Provisioning:** The FPGA source is published in this repository: 26 Verilog modules under `fpga/rtl/` (23 of them the NTT pipeline under `fpga/rtl/ntt/`), plus 13 prebuilt bitstreams published as the [`fpga-bitstreams-v4` release asset](https://github.com/Lennonhaha/fibemate/releases/tag/fpga-bitstreams-v4) (not in the source tree; SHA-256 in `fpga/releases/README.md`). Nothing in it is held back: the whole design is buildable from source in the tree. What the RTL has **not** had is independent review: per `SECURITY.md` it is In Development, not Signoff, and the physical TVLA run is still pending, so it is published without a security claim attached to it. The same sources are also preserved as timestamped evidence in the TSR archive (`docs/tsa/2026-06-25/hardware/`, e.g. `ntt_core.v`, `ntt_core_pipe.v`). One exception, so this is not read as a blanket claim: the VWZ research-line BRAM solver RTL is a separate artifact and remains withheld pending an internal readiness assessment (see `SECURITY.md`).
 
 ### Future Roadmap
 

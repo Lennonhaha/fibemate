@@ -180,7 +180,7 @@ fpga/
 │   └── program.tcl             # 一键 JTAG 烧录
 └── releases/
     └── v4/
-        └── fibemate_fpga_top.bit    # 已验证的 bitstream
+        └── README.md                # 指向 release 资产（bitstream 不入源码树）
 
 docs/
 └── hardware.md                 # 本文档
