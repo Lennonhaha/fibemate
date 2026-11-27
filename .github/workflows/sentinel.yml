@@ -5,11 +5,7 @@ permissions:
 
 on:
   pull_request:
-    paths:
-      - 'www/docs/**'
-      - 'docs/**'
-      - 'packages/**'
-      - '.github/workflows/sentinel.yml'
+  workflow_dispatch:
 
 jobs:
   verifact:
