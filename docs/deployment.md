@@ -310,7 +310,7 @@ pm2 restart fibemate
 ## 八、生产配置外置（ALLOWED_ORIGINS 等敏感配置）
 
 > 新增于 2026-09-09。根因：生产服务器 `/opt/fibemate-full`（历史债务目录）的 `src/index.js`
-> 曾硬编码生产公网 IP `8.156.77.68` 的三个 origin 变体，导致：① 服务器 `git pull` 会冲掉该配置；
+> 曾硬编码生产公网 IP `<SERVER_IP>` 的三个 origin 变体，导致：① 服务器 `git pull` 会冲掉该配置；
 > ② 生产 IP 暴露在公开仓库。现通过环境变量外置解决。
 
 ### 规则
@@ -326,7 +326,7 @@ pm2 restart fibemate
        }
      }
      ```
-   - 部署侧 `.env`：`ALLOWED_ORIGINS_EXTRA=http://8.156.77.68,http://8.156.77.68:3001,https://8.156.77.68`
+   - 部署侧 `.env`：`ALLOWED_ORIGINS_EXTRA=http://<SERVER_IP>,http://<SERVER_IP>:3001,https://<SERVER_IP>`
    - `.env` 不进 Git，仅存于服务器并备份至 E 盘备份目录（见 AGENTS.md 备份纪律）
 
 2. **任何环境相关配置（端口、域名、生产 IP、密钥路径）一律外置为 `.env`**
@@ -340,13 +340,13 @@ pm2 restart fibemate
 4. **公开仓库禁止含生产敏感信息**
    - 不得在代码中硬编码生产服务器 IP / 域名 / AccessKey / 数据库连接串
    - 公开文档示例用占位符（如 `PRODUCTION_IP` / `example.com`）
-   - 发版前用 `git grep -n '8.156.77.68'` 扫描是否存在误提交的生产 IP
+   - 发版前用 `git grep -n '<SERVER_IP>'` 扫描是否存在误提交的生产 IP
 
 ### 迁移步骤（清历史脏树用，非日常）
 
 ```bash
 # 1. 部署侧写 .env
-echo 'ALLOWED_ORIGINS_EXTRA=http://8.156.77.68,http://8.156.77.68:3001,https://8.156.77.68' >> /opt/fibemate-repo/.env
+echo 'ALLOWED_ORIGINS_EXTRA=http://<SERVER_IP>,http://<SERVER_IP>:3001,https://<SERVER_IP>' >> /opt/fibemate-repo/.env
 # 2. 清代码内硬编码（git checkout 会用 main 的干净版本覆盖）
 cd /opt/fibemate-repo && git checkout -- src/index.js
 # 3. 拉取含 env 扩展能力的 main
@@ -366,4 +366,4 @@ pm2 restart fibemate --update-env
 
 ---
 
-> 当前生产环境: Alibaba Cloud ECS (fibemate.net, 8.156.77.68) | Ubuntu 22.04 | Nginx 1.24 | pm2
+> 当前生产环境: Alibaba Cloud ECS (fibemate.net, <SERVER_IP>) | Ubuntu 22.04 | Nginx 1.24 | pm2
