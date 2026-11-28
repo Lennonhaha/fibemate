@@ -15,7 +15,7 @@ Every number below can be re-measured with the command next to it. If it does no
 | 锚点 | 值 | 测量时间 | 复核命令 |
 | :-- | :-- | :-- | :-- |
 | ML-KEM-768 KAT | **100/100 向量（500 断言）** | 2026-11-17 | `node scripts/ci-mlkem-kat.cjs` |
-| 时间戳证据链 | **365 个 `.tsr`**（257 个不同 basename，94 个 `lg-NNN` 令牌） | 2026-11-25 | `node scripts/count-tsr.cjs` |
+| 时间戳证据链 | **366 个 `.tsr`**（257 个不同 basename，94 个 `lg-NNN` 令牌） | 2026-11-25 | `node scripts/count-tsr.cjs` |
 | 文档-证据一致 | **drift 0**（denied 10） | 2026-11-27 · fibemate-tools `38d469a` | `verifact verify --no-cache` |
 
 > 第三个锚点的意思：仓库里 1,410 条“文档声称的代码数字”被逐条评估，105 条已绑定到真实产物（drift 0）。被拒绑的 10 条不是“关掉了”，每条的“真值在哪、候选为什么不算”都写在 `verifact.json` 的 `note` 里。
