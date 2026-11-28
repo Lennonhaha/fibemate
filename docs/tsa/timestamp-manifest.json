@@ -2379,5 +2379,11 @@
     "sha256": "da0e437bb06a6e932fc8d84bc229469b23b3a73a4396cdeb65c91ba6f7c2c4f1",
     "dir": "docs/tsa/2026-11-25-tvla-sm4",
     "size": 4644
+  },
+  {
+    "tsr": "lg-117-tvla-sm4-20261125.tsr",
+    "sha256": "da0e437bb06a6e932fc8d84bc229469b23b3a73a4396cdeb65c91ba6f7c2c4f1",
+    "dir": "www/docs/tsa/2026-11-25-tvla-sm4",
+    "size": 4644
   }
 ]
