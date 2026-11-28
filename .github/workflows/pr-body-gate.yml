@@ -16,7 +16,10 @@ permissions:
 jobs:
   pr-body-gate:
     runs-on: ubuntu-latest
-    if: github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]'
+    # Skip the bot branches, not just the bot actor: a maintainer who rebases or
+    # edits a Dependabot PR becomes the actor, and the bump still cannot fill a
+    # template. The dependency review happens on the PR, not in this gate.
+    if: github.actor != 'dependabot[bot]' && github.actor != 'renovate[bot]' && !startsWith(github.head_ref, 'dependabot/')
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
