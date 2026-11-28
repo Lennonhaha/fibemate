@@ -752,6 +752,10 @@
 </div>
 <style>
 .skip-link:focus{top:0!important;outline:2px solid #00E5C3;}
+/* nav is position:fixed, so the first in-flow blocks would render underneath it.
+   The production-use notice is the first thing a reader should see, not a 6px sliver. */
+body > div[role="note"]{margin-top:72px;}
+@media (max-width:768px){body > div[role="note"]{margin-top:64px;}}
 .countdown-banner {
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #e2e8f0;
