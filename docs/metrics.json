@@ -1,13 +1,13 @@
 {
   "schemaVersion": 1,
-  "updated": "2026-11-25",
+  "updated": "2026-11-28",
   "policy": "N3 single source: external numbers must come from this file. Every entry carries value + scope + date + reproducible command. scripts/check-metrics.cjs recomputes the git-derived entries and fails on drift.",
   "metrics": {
     "tsr.files": {
-      "value": 365,
+      "value": 366,
       "unit": "files",
       "scope": "tracked RFC 3161 .tsr files, git ls-files (no dedupe); ten saved error pages removed 2026-11-19 (issue #579), every remaining file classified valid by scripts/count-tsr.cjs",
-      "date": "2026-11-25",
+      "date": "2026-11-28",
       "command": "git ls-files '*.tsr' | wc -l",
       "recompute": "git"
     },
@@ -20,10 +20,10 @@
       "recompute": "git"
     },
     "tsq.files": {
-      "value": 244,
+      "value": 245,
       "unit": "files",
       "scope": "tracked RFC 3161 .tsq files, git ls-files (no dedupe)",
-      "date": "2026-11-25",
+      "date": "2026-11-28",
       "command": "git ls-files '*.tsq' | wc -l",
       "recompute": "git"
     },
