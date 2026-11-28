@@ -395,8 +395,6 @@ const TwoFactorAuth = (() => {
 
     // Step 1: 生成密钥 + QR码
     _renderSetupStep1(modal);
-
-    document.body.appendChild(modal.overlay);
   }
 
   function _renderSetupStep1(modal) {
@@ -426,13 +424,13 @@ const TwoFactorAuth = (() => {
     const newSecret = _generateBase32Secret();
     secretKey = newSecret;
 
-    document.getElementById('twofaSecretDisplay').textContent = _formatSecretKey(newSecret);
+    body.querySelector('#twofaSecretDisplay').textContent = _formatSecretKey(newSecret);
 
     // 生成 QR 码（使用简单的 SVG 方式，避免外部依赖）
     _generateQRCode(newSecret, username);
 
-    document.getElementById('btn2FACancel')?.addEventListener('click', () => _closeModal(modal));
-    document.getElementById('btn2FANext')?.addEventListener('click', () => _renderSetupStep2(modal));
+    body.querySelector('#btn2FACancel')?.addEventListener('click', () => _closeModal(modal));
+    body.querySelector('#btn2FANext')?.addEventListener('click', () => _renderSetupStep2(modal));
   }
 
   function _renderSetupStep2(modal) {
@@ -474,7 +472,7 @@ const TwoFactorAuth = (() => {
 
         // 6位输满自动验证
         if (_getOTPValue().length === 6) {
-          setTimeout(() => document.getElementById('btn2FAVerify')?.click(), 200);
+          setTimeout(() => body.querySelector('#btn2FAVerify')?.click(), 200);
         }
       });
 
@@ -497,15 +495,15 @@ const TwoFactorAuth = (() => {
           }
         }
         if (pasted.length >= 6) {
-          setTimeout(() => document.getElementById('btn2FAVerify')?.click(), 200);
+          setTimeout(() => body.querySelector('#btn2FAVerify')?.click(), 200);
         }
       });
     });
 
     digits[0]?.focus();
 
-    document.getElementById('btn2FABack')?.addEventListener('click', () => _renderSetupStep1(modal));
-    document.getElementById('btn2FAVerify')?.addEventListener('click', () => _verifyAndEnable(modal));
+    body.querySelector('#btn2FABack')?.addEventListener('click', () => _renderSetupStep1(modal));
+    body.querySelector('#btn2FAVerify')?.addEventListener('click', () => _verifyAndEnable(modal));
   }
 
   async function _verifyAndEnable(modal) {
@@ -574,13 +572,13 @@ const TwoFactorAuth = (() => {
       el.textContent = String(recoveryCodes[i]);
     });
 
-    document.getElementById('btn2FACopyCodes')?.addEventListener('click', () => {
+    body.querySelector('#btn2FACopyCodes')?.addEventListener('click', () => {
       navigator.clipboard.writeText(recoveryCodes.join('\n')).then(() => {
         showToast('恢复码已复制', 'success');
       });
     });
 
-    document.getElementById('btn2FADone')?.addEventListener('click', () => {
+    body.querySelector('#btn2FADone')?.addEventListener('click', () => {
       _closeModal(modal);
       _updateSettingsUI();
       showToast('2FA 已启用', 'success');
@@ -632,8 +630,8 @@ const TwoFactorAuth = (() => {
 
     digits[0]?.focus();
 
-    document.getElementById('btn2FACancelDisable')?.addEventListener('click', () => _closeModal(modal));
-    document.getElementById('btn2FAConfirmDisable')?.addEventListener('click', async () => {
+    body.querySelector('#btn2FACancelDisable')?.addEventListener('click', () => _closeModal(modal));
+    body.querySelector('#btn2FAConfirmDisable')?.addEventListener('click', async () => {
       const code = _getOTPValue();
       try {
         const token = localStorage.getItem('fk_token');
@@ -665,7 +663,6 @@ const TwoFactorAuth = (() => {
       }
     });
 
-    document.body.appendChild(modal.overlay);
   }
 
   // ── 登录时2FA验证（供登录流程调用） ──
@@ -712,8 +709,8 @@ const TwoFactorAuth = (() => {
 
     digits[0]?.focus();
 
-    document.getElementById('btn2FACancelLogin')?.addEventListener('click', () => _closeModal(modal));
-    document.getElementById('btn2FAVerifyLogin')?.addEventListener('click', async () => {
+    body.querySelector('#btn2FACancelLogin')?.addEventListener('click', () => _closeModal(modal));
+    body.querySelector('#btn2FAVerifyLogin')?.addEventListener('click', async () => {
       const code = _getOTPValue();
       try {
         const res = await fetch(`${API_BASE}/auth/2fa/verify-login`, {
@@ -732,7 +729,6 @@ const TwoFactorAuth = (() => {
       }
     });
 
-    document.body.appendChild(modal.overlay);
   }
 
   // ── TOTP 核心算法 ──
@@ -901,6 +897,12 @@ const TwoFactorAuth = (() => {
     modal.appendChild(body);
 
     overlay.appendChild(modal);
+
+    // Mount before the caller renders into it. Every render helper below
+    // resolves its own nodes, and a detached tree answers null: that is what
+    // made "Enable 2FA" throw on twofaSecretDisplay and left the Disable and
+    // Login dialogs with no button handlers.
+    document.body.appendChild(overlay);
 
     // 点击遮罩关闭
     overlay.addEventListener('click', (e) => {
