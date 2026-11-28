@@ -32,7 +32,7 @@ const { realClientKey } = require('./lib/client-ip');
 const { normalizeDeviceId, staleCutoff } = require('./device-id');
 
 /**
- * Noir Backend - 端到端加密社交服务器
+ * FIBEMATE Backend - 端到端加密社交服务器
  * 架构: 服务器零知识 - 只转发密文，不解密、不存储消息内容
  */
 
@@ -1090,8 +1090,8 @@ try {
 // 健康检查
 app.get('/health', (req, res) => {
   res.json({
-    status: 'ok', service: 'Noir E2E Backend',
-    version: '1.0.0', architecture: 'zero-knowledge',
+    status: 'ok', service: 'FIBEMATE',
+    version: APP_VERSION, architecture: 'zero-knowledge',
     mlkem: { backend: mlkemBackend, detail: mlkemBackendDetail || undefined },
     build: BUILD_REPORT,
     served: servedReport(BUILD_IDENTITY.commit, process.env.FIBEMATE_STATIC_ROOT),
@@ -1103,8 +1103,8 @@ app.get('/health', (req, res) => {
 // API 健康检查别名（兼容监控脚本）
 app.get('/api/health', (req, res) => {
   res.json({
-    status: 'ok', service: 'Noir E2E Backend',
-    version: '1.0.0', timestamp: new Date().toISOString(),
+    status: 'ok', service: 'FIBEMATE',
+    version: APP_VERSION, timestamp: new Date().toISOString(),
     mlkem: { backend: mlkemBackend, detail: mlkemBackendDetail || undefined },
     build: BUILD_REPORT,
     served: servedReport(BUILD_IDENTITY.commit, process.env.FIBEMATE_STATIC_ROOT),
@@ -2168,7 +2168,7 @@ app.get('/api/mlkem/test-batch-purejs', batchTestAuth, (req, res) => {
 server.listen(CONFIG.PORT, '127.0.0.1', () => {
   console.log('');
   console.log('═══════════════════════════════════════════════');
-  console.log('  🔒  Noir E2E Encrypted Backend Server');
+  console.log('  🔒  FIBEMATE Backend Server');
   console.log('═══════════════════════════════════════════════');
   console.log(`  HTTP:      http://127.0.0.1:${CONFIG.PORT}`);
   console.log(`  WebSocket: ws://127.0.0.1:${CONFIG.PORT}/ws`);
