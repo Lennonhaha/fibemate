@@ -17,7 +17,10 @@ name: site-versions
 #   - page-in-tree      blocking: the tree is ours, the registry is only a lookup
 #   - live (scheduled)  blocking: once a day, a site that lags main is news
 #   - live (advisory)   not a gate: named "advisory" so its green is never read
-#                       as "the live site was verified"
+#                       as "the live site was verified". It also passes
+#                       --allow-stale: a live page still carrying the previous
+#                       release is what "not deployed yet" looks like, not a defect,
+#                       so a version-bumping PR cannot go red for being early.
 # No `|| true` anywhere. The advisory job passes --allow-advisory, which prints
 # ADVISORY (not a pass) and leaves every row `unknown`.
 on:
@@ -89,5 +92,5 @@ jobs:
           node-version: '22'
       - name: compare the live page (network failure is not a verdict)
         run: |
-          node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose --retries 2 --allow-advisory
-          node scripts/check-site-versions.cjs --url https://fibemate.net/ --no-cache --verbose --retries 2 --allow-advisory
+          node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose --retries 2 --allow-advisory --allow-stale
+          node scripts/check-site-versions.cjs --url https://fibemate.net/ --no-cache --verbose --retries 2 --allow-advisory --allow-stale

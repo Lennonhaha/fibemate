@@ -18,6 +18,7 @@
 //   node scripts/check-site-versions.cjs --no-cache --verbose
 //   node scripts/check-site-versions.cjs --retries 2            # 400ms, 800ms backoff
 //   node scripts/check-site-versions.cjs --allow-advisory       # 3 -> 0, loudly
+//   node scripts/check-site-versions.cjs --allow-stale          # 1 -> 0, loudly (pre-deploy live only)
 //   node scripts/check-site-versions.cjs --selftest            # no network
 //
 // Exit codes (a green run means "checked, and every checked package matched"):
@@ -54,6 +55,7 @@ function parseArgs(argv) {
     selftest: false,
     verbose: false,
     allowAdvisory: false,
+    allowStale: false,
     retries: 0,
     timeoutMs: 15000,
   };
@@ -65,6 +67,7 @@ function parseArgs(argv) {
     else if (a === '--cache-ttl') opts.cacheTtlMs = Number(argv[++i]) * 1000;
     else if (a === '--no-cache') opts.noCache = true;
     else if (a === '--allow-advisory') opts.allowAdvisory = true;
+    else if (a === '--allow-stale') opts.allowStale = true;
     else if (a === '--retries') opts.retries = Number(argv[++i]);
     else if (a === '--selftest') opts.selftest = true;
     else if (a === '--verbose') opts.verbose = true;
@@ -293,6 +296,14 @@ function report(rows, opts) {
   console.log('');
   console.log('summary: checked=' + rows.length + ' pass=' + pass + ' mismatch=' + mismatch + ' unknown=' + unknown);
   if (mismatch > 0) {
+    if (opts && opts.allowStale) {
+      // A live page is the previous release until the deploy lands, so on PR/push a
+      // mismatch says "this change has not shipped yet", not "the page is wrong".
+      // The rows keep their MISMATCH label: nothing here may read as a pass.
+      console.log('ADVISORY (allowed by --allow-stale; this is NOT a pass): ' + mismatch + ' package(s) still advertise an older version.');
+      console.log('The live page is the previous release until the deploy lands; it is judged after the switch.');
+      return 0;
+    }
     console.log('FAIL: the page advertises a version the registry does not call latest. Fix the page, or say why the pin is deliberate.');
     return 1;
   }
@@ -414,6 +425,17 @@ async function selftest() {
   );
   code = report(rows, {});
   cases.push({ name: 'stale homepage badge must be red', expect: 1, got: code, ok: code === 1 && !!rows[0] && rows[0].state === 'mismatch' });
+
+  // 11. `--allow-stale` is for the pre-deploy live job only: the live page is the
+  //     previous release, so lag cannot be a red. It must not turn the row into a pass.
+  console.log('');
+  rows = await runCompare(
+    extractVersions(badge('fibemate-xdiff', '0.1.1', 'npm'), 'fixture-stale-allowed').found,
+    { noCache: true },
+    fixed({ 'fibemate-xdiff': '0.1.2' })
+  );
+  code = report(rows, { allowStale: true });
+  cases.push({ name: '--allow-stale returns 0 but the row stays mismatch', expect: 0, got: code, ok: code === 0 && rows[0].state === 'mismatch' });
 
   console.log('');
   let bad = 0;
