@@ -170,6 +170,17 @@ jobs:
           echo "$hdr" | grep -i '^x-app-version:' || true
           echo "$hdr" | grep -qi "x-app-version:.*($SHORT)" || { echo "::error::X-App-Version does not carry $SHORT"; exit 1; }
 
+      - name: Advertised versions match the registries, now that it is live
+        run: |
+          set -eu
+          # Before the switch this check is advisory (site-versions.yml, live-advisory):
+          # the page still describes the previous release while a change is in flight.
+          # After the switch there is no such excuse, so it blocks. Both pages are
+          # checked: the homepage carries the same packages in badge markup, and that is
+          # where fibemate-xdiff sat a release behind.
+          node scripts/check-site-versions.cjs --url "https://fibemate.net/tools/" --no-cache --verbose --retries 3
+          node scripts/check-site-versions.cjs --url "https://fibemate.net/" --no-cache --verbose --retries 3
+
       - name: Alignment after the deploy
         env:
           MAX_DEBT: ${{ inputs.max_debt }}

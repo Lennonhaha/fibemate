@@ -4,6 +4,10 @@ name: site-versions
 # latest - the failure mode that stayed green for hours on 2026-11-23 because
 # www/** is excluded from verifact's scan.
 #
+# www/index.html advertises the same npm/PyPI versions in badge markup; the parser reads
+# both shapes, and the homepage is checked here so a stale badge cannot hide behind a
+# green tools page.
+#
 # Exit codes from scripts/check-site-versions.cjs:
 #   0 matched   1 mismatch (real drift)   2 parse/usage   3 registry unreachable
 #
@@ -13,7 +17,10 @@ name: site-versions
 #   - page-in-tree      blocking: the tree is ours, the registry is only a lookup
 #   - live (scheduled)  blocking: once a day, a site that lags main is news
 #   - live (advisory)   not a gate: named "advisory" so its green is never read
-#                       as "the live site was verified"
+#                       as "the live site was verified". It also passes
+#                       --allow-stale: a live page still carrying the previous
+#                       release is what "not deployed yet" looks like, not a defect,
+#                       so a version-bumping PR cannot go red for being early.
 # No `|| true` anywhere. The advisory job passes --allow-advisory, which prints
 # ADVISORY (not a pass) and leaves every row `unknown`.
 on:
@@ -24,11 +31,13 @@ on:
     branches: [main]
     paths:
       - 'www/tools/**.html'
+      - 'www/index.html'
       - 'scripts/check-site-versions.cjs'
       - '.github/workflows/site-versions.yml'
   pull_request:
     paths:
       - 'www/tools/**.html'
+      - 'www/index.html'
       - 'scripts/check-site-versions.cjs'
       - '.github/workflows/site-versions.yml'
 
@@ -53,6 +62,8 @@ jobs:
         run: node scripts/check-site-versions.cjs --selftest
       - name: compare the tree
         run: node scripts/check-site-versions.cjs --no-cache --verbose --retries 3
+      - name: compare the homepage badges in the tree
+        run: node scripts/check-site-versions.cjs --file www/index.html --no-cache --verbose --retries 3
 
   live-scheduled:
     name: live site (scheduled gate)
@@ -65,7 +76,9 @@ jobs:
         with:
           node-version: '22'
       - name: compare the live page
-        run: node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose --retries 3
+        run: |
+          node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose --retries 3
+          node scripts/check-site-versions.cjs --url https://fibemate.net/ --no-cache --verbose --retries 3
 
   live-advisory:
     name: live site (advisory, not a gate)
@@ -78,4 +91,6 @@ jobs:
         with:
           node-version: '22'
       - name: compare the live page (network failure is not a verdict)
-        run: node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose --retries 2 --allow-advisory
+        run: |
+          node scripts/check-site-versions.cjs --url https://fibemate.net/tools/ --no-cache --verbose --retries 2 --allow-advisory --allow-stale
+          node scripts/check-site-versions.cjs --url https://fibemate.net/ --no-cache --verbose --retries 2 --allow-advisory --allow-stale

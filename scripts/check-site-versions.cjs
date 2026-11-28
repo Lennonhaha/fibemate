@@ -18,6 +18,7 @@
 //   node scripts/check-site-versions.cjs --no-cache --verbose
 //   node scripts/check-site-versions.cjs --retries 2            # 400ms, 800ms backoff
 //   node scripts/check-site-versions.cjs --allow-advisory       # 3 -> 0, loudly
+//   node scripts/check-site-versions.cjs --allow-stale          # 1 -> 0, loudly (pre-deploy live only)
 //   node scripts/check-site-versions.cjs --selftest            # no network
 //
 // Exit codes (a green run means "checked, and every checked package matched"):
@@ -54,6 +55,7 @@ function parseArgs(argv) {
     selftest: false,
     verbose: false,
     allowAdvisory: false,
+    allowStale: false,
     retries: 0,
     timeoutMs: 15000,
   };
@@ -65,6 +67,7 @@ function parseArgs(argv) {
     else if (a === '--cache-ttl') opts.cacheTtlMs = Number(argv[++i]) * 1000;
     else if (a === '--no-cache') opts.noCache = true;
     else if (a === '--allow-advisory') opts.allowAdvisory = true;
+    else if (a === '--allow-stale') opts.allowStale = true;
     else if (a === '--retries') opts.retries = Number(argv[++i]);
     else if (a === '--selftest') opts.selftest = true;
     else if (a === '--verbose') opts.verbose = true;
@@ -128,6 +131,40 @@ function extractVersions(html, sourceLabel) {
         continue;
       }
       found.push({ pkg: m[1], version: m[2], registry, source: sourceLabel });
+    }
+  }
+
+  // The homepage does not use <code>pkg@ver</code>. It links the package and puts the
+  // version in a badge inside that same anchor:
+  //   <a href="https://www.npmjs.com/package/fibemate-xdiff"> ... <span>v0.1.2</span>
+  // The name comes from the link, the version from the badge under the same link, so a
+  // badge can never be read against a different package. An anchor with no version
+  // badge is skipped rather than guessed at: prose links make no install claim.
+  // The <p class="meta"> path above cannot see homepage markup, which is how
+  // fibemate-xdiff sat at 0.1.1 while the registry served 0.1.2.
+  const seen = new Set(found.map((f) => f.registry + ':' + f.pkg + '=' + f.version));
+  const anchors = [
+    [/<a\b[^>]*href="https:\/\/(?:www\.)?npmjs\.com\/package\/([^"#?]+)"[^>]*>([\s\S]{0,600}?)<\/a>/g, 'npm'],
+    [/<a\b[^>]*href="https:\/\/pypi\.org\/project\/([^"#?]+)\/?"[^>]*>([\s\S]{0,600}?)<\/a>/g, 'pypi'],
+  ];
+  for (const [re, registry] of anchors) {
+    for (const m of html.matchAll(re)) {
+      const vm = /\bv(\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?)\b/.exec(m[2]);
+      if (!vm) continue;
+      let name;
+      try {
+        name = decodeURIComponent(m[1]).replace(/\/+$/, '');
+      } catch {
+        continue;
+      }
+      const key = registry + ':' + name + '=' + vm[1];
+      if (seen.has(key)) continue;
+      if (!isSafeName(name, registry)) {
+        rejected.push({ pkg: name, version: vm[1], registry, source: sourceLabel });
+        continue;
+      }
+      seen.add(key);
+      found.push({ pkg: name, version: vm[1], registry, source: sourceLabel });
     }
   }
   return { found, rejected };
@@ -259,6 +296,14 @@ function report(rows, opts) {
   console.log('');
   console.log('summary: checked=' + rows.length + ' pass=' + pass + ' mismatch=' + mismatch + ' unknown=' + unknown);
   if (mismatch > 0) {
+    if (opts && opts.allowStale) {
+      // A live page is the previous release until the deploy lands, so on PR/push a
+      // mismatch says "this change has not shipped yet", not "the page is wrong".
+      // The rows keep their MISMATCH label: nothing here may read as a pass.
+      console.log('ADVISORY (allowed by --allow-stale; this is NOT a pass): ' + mismatch + ' package(s) still advertise an older version.');
+      console.log('The live page is the previous release until the deploy lands; it is judged after the switch.');
+      return 0;
+    }
     console.log('FAIL: the page advertises a version the registry does not call latest. Fix the page, or say why the pin is deliberate.');
     return 1;
   }
@@ -349,6 +394,48 @@ async function selftest() {
   rows = await runCompare(extractVersions(page('cbom-tools', '0.3.2', 'npm'), 'fixture-allow').found, { noCache: true, retries: 0 }, fixed({}));
   code = report(rows, { allowAdvisory: true });
   cases.push({ name: '--allow-advisory returns 0 but leaves the row unknown', expect: 0, got: code, ok: code === 0 && rows[0].state === 'unknown' });
+
+  // 9. The homepage advertises versions in badge markup under the package link. That
+  //    markup has to be read, or the page is 0-coverage and drifts unnoticed; a link
+  //    with no version badge is skipped, not guessed.
+  console.log('');
+  const badge = (pkg, ver, reg) =>
+    '<a href="https://' + (reg === 'pypi' ? 'pypi.org/project/' + pkg : 'www.npmjs.com/package/' + pkg) +
+    '" style="x"><span>npm</span><span>v' + ver + '</span></span><span>' + pkg + ' &middot; x</span></a>';
+  const stamped = extractVersions(
+    badge('fibemate-xdiff', '0.1.2', 'npm') +
+      badge('crypto-time-machine', '0.1.2', 'pypi') +
+      '<a href="https://www.npmjs.com/package/no-badge">docs</a>',
+    'fixture-badge'
+  );
+  cases.push({
+    name: 'parse: homepage badge markup, badge-less link skipped',
+    expect: 'npm:fibemate-xdiff=0.1.2,pypi:crypto-time-machine=0.1.2',
+    got: stamped.found.map((m) => m.registry + ':' + m.pkg + '=' + m.version).join(','),
+    ok: stamped.found.length === 2 && stamped.found[0].version === '0.1.2' && stamped.found[1].registry === 'pypi',
+  });
+
+  // 10. NEGATIVE: a stale badge must read as stale, not be skipped. This is the exact
+  //     shape the homepage had (xdiff v0.1.1 while the registry served v0.1.2).
+  console.log('');
+  rows = await runCompare(
+    extractVersions(badge('fibemate-xdiff', '0.1.1', 'npm'), 'fixture-stale-badge').found,
+    { noCache: true },
+    fixed({ 'fibemate-xdiff': '0.1.2' })
+  );
+  code = report(rows, {});
+  cases.push({ name: 'stale homepage badge must be red', expect: 1, got: code, ok: code === 1 && !!rows[0] && rows[0].state === 'mismatch' });
+
+  // 11. `--allow-stale` is for the pre-deploy live job only: the live page is the
+  //     previous release, so lag cannot be a red. It must not turn the row into a pass.
+  console.log('');
+  rows = await runCompare(
+    extractVersions(badge('fibemate-xdiff', '0.1.1', 'npm'), 'fixture-stale-allowed').found,
+    { noCache: true },
+    fixed({ 'fibemate-xdiff': '0.1.2' })
+  );
+  code = report(rows, { allowStale: true });
+  cases.push({ name: '--allow-stale returns 0 but the row stays mismatch', expect: 0, got: code, ok: code === 0 && rows[0].state === 'mismatch' });
 
   console.log('');
   let bad = 0;
