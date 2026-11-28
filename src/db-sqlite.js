@@ -545,6 +545,32 @@ class SqliteDB {
   }
 
   /**
+   * Keep one live device per account at login time.
+   *
+   * Reinstalling mints a new deviceId (#691/#752). The old rows stay isActive
+   * for 30 days, and isRead only flips when *every* active device has acked —
+   * so an account that reinstall twice inside that window can never mark
+   * anything read again. Deactivating the previous rows bounds the table and
+   * restores the predicate. Returns how many rows changed.
+   */
+  deactivateOtherDevices(userId, keepDeviceId) {
+    requiredString(userId, 'userId');
+    requiredString(keepDeviceId, 'keepDeviceId');
+    let changed = 0;
+    const rows = this._db.prepare('SELECT id, raw_json FROM devices WHERE userId = ?').all(userId);
+    for (const row of rows) {
+      if (row.id === keepDeviceId) continue;
+      const device = JSON.parse(row.raw_json);
+      if (!device.isActive) continue;
+      device.isActive = false;
+      this._db.prepare('UPDATE devices SET raw_json = ? WHERE id = ?').run(JSON.stringify(device), row.id);
+      this._putDeviceInCache(userId, row.id, device);
+      changed += 1;
+    }
+    return changed;
+  }
+
+  /**
    * Mark one message as received by one device.
    *
    * Returns the updated message, or null when nothing changed (missing message,

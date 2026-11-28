@@ -1337,6 +1337,11 @@ app.post('/api/auth/login', rateLimitMiddleware, async (req, res) => {
       });
     }
 
+    // One account, one live device. Reinstalling used to leave the previous
+    // rows active for 30 days; since isRead requires every active device to
+    // ack, those orphan rows blocked read receipts forever (#752).
+    if (deviceId) db.deactivateOtherDevices(user.id, deviceId);
+
     // 2FA: if user has 2FA enabled, return ticket instead of token
     if (user.twoFAEnabled) {
       const ticket = crypto.randomBytes(32).toString('hex');
