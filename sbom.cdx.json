@@ -1,7 +1,7 @@
 {
   "bomFormat": "CycloneDX",
   "specVersion": "1.4",
-  "serialNumber": "urn:uuid:3b739323-d185-5008-c1d7-3296f24a8482",
+  "serialNumber": "urn:uuid:8736a057-a609-59e5-6739-f84d18bdda0d",
   "version": 1,
   "metadata": {
     "timestamp": "1970-01-01T00:00:00.000Z",
@@ -2032,10 +2032,10 @@
     },
     {
       "type": "library",
-      "bom-ref": "express-rate-limit@8.7.4",
+      "bom-ref": "express-rate-limit@8.7.5",
       "name": "express-rate-limit",
-      "version": "8.7.4",
-      "purl": "pkg:npm/express-rate-limit@8.7.4",
+      "version": "8.7.5",
+      "purl": "pkg:npm/express-rate-limit@8.7.5",
       "licenses": [
         {
           "license": {
