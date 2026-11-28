@@ -1,0 +1,24 @@
+# SPDX-License-Identifier: Apache-2.0
+name: settings audit
+
+on:
+  schedule:
+    - cron: '0 2 * * 1'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verify repository settings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: read the settings back
+        env:
+          # Needs administration:read on every listed repo. Without it the API
+          # omits security_and_analysis and the script fails instead of
+          # reporting a green it cannot prove.
+          GH_TOKEN: ${{ secrets.SETTINGS_TOKEN || github.token }}
+        run: node scripts/verify-github-settings.cjs
