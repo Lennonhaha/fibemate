@@ -550,7 +550,7 @@ const TwoFactorAuth = (() => {
 
   function _renderSetupStep3(modal, recoveryCodes) {
     const body = modal.bodyEl;
-    const codesHTML = recoveryCodes.map(c => `<div class="twofa-recovery-code">${c}</div>`).join('');
+    const codesHTML = recoveryCodes.map(c => '<div class="twofa-recovery-code"></div>').join('');
 
     body.innerHTML = `
       <div class="twofa-steps">
@@ -568,6 +568,11 @@ const TwoFactorAuth = (() => {
         <button class="twofa-btn-enable" id="btn2FADone">Done</button>
       </div>
     `;
+    // Filled as text below: a recovery code is server-issued, but this sink
+    // must not depend on the server's idea of safe formatting.
+    body.querySelectorAll('.twofa-recovery-code').forEach((el, i) => {
+      el.textContent = String(recoveryCodes[i]);
+    });
 
     document.getElementById('btn2FACopyCodes')?.addEventListener('click', () => {
       navigator.clipboard.writeText(recoveryCodes.join('\n')).then(() => {
@@ -671,7 +676,7 @@ const TwoFactorAuth = (() => {
     body.innerHTML = `
       <div class="twofa-login-icon">🔐</div>
       <div class="twofa-login-title">Two-Factor Auth</div>
-      <div class="twofa-login-desc">Enter the code from your authenticator app for ${username}</div>
+      <div class="twofa-login-desc">Enter the code from your authenticator app for <span id="twofaLoginUsername"></span></div>
       <div class="twofa-code-input" id="twofaLoginCodeInput">
         <input type="text" class="twofa-code-digit" maxlength="1" data-index="0" inputmode="numeric">
         <input type="text" class="twofa-code-digit" maxlength="1" data-index="1" inputmode="numeric">
@@ -688,6 +693,10 @@ const TwoFactorAuth = (() => {
         <button class="twofa-btn-enable" id="btn2FAVerifyLogin">Verify</button>
       </div>
     `;
+    // textContent, not the template: usernames are chosen by the account holder,
+    // and interpolating one into innerHTML is the DOM XSS this line used to be.
+    const loginNameEl = body.querySelector('#twofaLoginUsername');
+    if (loginNameEl) loginNameEl.textContent = String(username == null ? '' : username);
 
     const digits = body.querySelectorAll('.twofa-code-digit');
     digits.forEach((input, i) => {
@@ -806,7 +815,7 @@ const TwoFactorAuth = (() => {
     const canvas = document.getElementById('twofaQRCanvas');
     if (!canvas) return;
 
-    const otpauth = `otpauth://totp/FIBEMATE:${username}?secret=${secret}&issuer=FIBEMATE&algorithm=SHA1&digits=6&period=30`;
+    const otpauth = `otpauth://totp/FIBEMATE:${encodeURIComponent(username)}?secret=${encodeURIComponent(secret)}&issuer=FIBEMATE&algorithm=SHA1&digits=6&period=30`;
 
     // 简单的 QR 替代：显示文字信息 + 可点击链接
     const ctx = canvas.getContext('2d');
